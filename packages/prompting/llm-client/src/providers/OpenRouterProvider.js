@@ -68,6 +68,38 @@ export class OpenRouterProvider {
         return content;
     }
 
+    /**
+     * Complete with rich message format and tool support
+     */
+    async completeMessages(messages, model, options = {}) {
+        const requestBody = {
+            model,
+            messages: messages,
+            max_tokens: options.maxTokens || 1000
+        };
+
+        // Add supported parameters
+        if (options.temperature !== undefined) requestBody.temperature = options.temperature;
+        if (options.topP !== undefined) requestBody.top_p = options.topP;
+        if (options.frequencyPenalty !== undefined) requestBody.frequency_penalty = options.frequencyPenalty;
+        if (options.presencePenalty !== undefined) requestBody.presence_penalty = options.presencePenalty;
+        
+        // Add tools if provided
+        if (options.tools && Array.isArray(options.tools)) {
+            requestBody.tools = options.tools;
+            if (options.toolChoice) requestBody.tool_choice = options.toolChoice;
+        }
+
+        const completion = await this.client.chat.completions.create(requestBody);
+
+        const content = completion.choices[0]?.message?.content;
+        if (!content) {
+            throw new Error('No response content received from OpenRouter');
+        }
+
+        return content;
+    }
+
     async sendAndReceiveResponse(messages, options = {}) {
         const model = options.model || 'anthropic/claude-3-sonnet';
         const response = await this.client.chat.completions.create({

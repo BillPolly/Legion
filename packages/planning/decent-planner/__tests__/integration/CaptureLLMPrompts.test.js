@@ -23,9 +23,11 @@ describe('Capture LLM Prompts', () => {
     
     // Capture LLM interactions
     const llmClient = decentPlanner.dependencies.llmClient;
-    llmClient.on('interaction', (event) => {
-      llmInteractions.push(event);
-      console.log(`LLM ${event.type}: ${event.id}`);
+    llmClient.subscribe((eventName, eventData) => {
+      if (eventName === 'interaction') {
+        llmInteractions.push(eventData);
+        console.log(`LLM ${eventData.type}: ${eventData.id}`);
+      }
     });
   }, 30000);
 

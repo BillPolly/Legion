@@ -99,6 +99,161 @@ export class PromptManager {
   }
 
   /**
+   * Unified request method that accepts rich request objects
+   * Combines the power of PromptManager's orchestration with LLMClient's provider adaptation
+   * @param {Object} requestObj - Rich request object with all desired features
+   * @param {Object} options - Execution options
+   * @returns {Object} Execution result with structured response
+   */
+  async request(requestObj, options = {}) {
+    const executionId = this._generateExecutionId();
+    const startTime = Date.now();
+
+    try {
+      // Input validation
+      if (!requestObj || typeof requestObj !== 'object') {
+        throw new Error('Request object must be a non-null object');
+      }
+
+      // Execute with retry logic using the unified interface
+      const result = await this.retryHandler.executeWithRetry(
+        (attempt, lastError) => this._executeUnifiedRequestAttempt(requestObj, options, attempt, lastError),
+        options
+      );
+
+      // Add execution metadata
+      result.metadata = {
+        ...result.metadata,
+        executionId: executionId,
+        executionTimeMs: Date.now() - startTime,
+        interface: 'unified_request'
+      };
+
+      // Store in history
+      this.executionHistory.push({
+        executionId: executionId,
+        timestamp: new Date().toISOString(),
+        success: result.success,
+        attempts: result.metadata?.attempts || 1,
+        durationMs: Date.now() - startTime,
+        interface: 'unified_request'
+      });
+
+      return result;
+
+    } catch (error) {
+      // Fatal error - return immediately
+      const errorResult = {
+        success: false,
+        stage: 'fatal',
+        error: error.message,
+        metadata: {
+          executionId: executionId,
+          executionTimeMs: Date.now() - startTime,
+          interface: 'unified_request'
+        }
+      };
+
+      this.executionHistory.push({
+        executionId: executionId,
+        timestamp: new Date().toISOString(),
+        success: false,
+        error: error.message,
+        durationMs: Date.now() - startTime,
+        interface: 'unified_request'
+      });
+
+      return errorResult;
+    }
+  }
+
+  /**
+   * Execute single unified request attempt
+   * @private
+   */
+  async _executeUnifiedRequestAttempt(requestObj, options = {}, attempt = 1, lastError = null) {
+    const metadata = { interface: 'unified_request' };
+
+    // Step 1: Prepare LLM request with PromptManager enhancements
+    const llmStart = Date.now();
+    await this._ensureLLMClient();
+
+    // Enhanced request object that combines requestObj with PromptManager capabilities
+    let enhancedRequest = { ...requestObj };
+
+    // Step 2: Add output schema instructions if configured
+    if (this.responseValidator && requestObj.outputSchema !== false) {
+      const exampleData = this._generateExampleFromSchema();
+      const outputInstructions = this.responseValidator.generateInstructions(exampleData);
+      
+      // Add schema instructions to system prompt
+      const schemaInstructions = `\n\nResponse format requirements:\n${outputInstructions}`;
+      enhancedRequest.systemPrompt = (enhancedRequest.systemPrompt || '') + schemaInstructions;
+      metadata.addedSchemaInstructions = true;
+    }
+
+    // Step 3: Apply error feedback on retry attempts
+    if (attempt > 1 && lastError && this.retryConfig.errorFeedback.enabled) {
+      const errorFeedback = this.retryHandler.generateErrorFeedback(lastError.errors || [], enhancedRequest.prompt || '');
+      enhancedRequest.prompt = errorFeedback;
+      metadata.appliedErrorFeedback = true;
+    }
+
+    // Step 4: Use LLMClient's unified request interface
+    const llmResponse = await this.llmClient.request(enhancedRequest, options);
+    
+    metadata.llmCall = {
+      durationMs: Date.now() - llmStart,
+      model: llmResponse.metadata?.model,
+      provider: llmResponse.metadata?.provider,
+      adaptations: llmResponse.metadata?.adaptations
+    };
+
+    // Step 5: Response validation (if configured)
+    if (this.responseValidator && requestObj.outputSchema !== false) {
+      const validationStart = Date.now();
+      const validationResult = this.responseValidator.process(llmResponse.content);
+      
+      metadata.outputSchema = {
+        durationMs: Date.now() - validationStart,
+        format: validationResult.format,
+        confidence: validationResult.confidence,
+        validationPassed: validationResult.success
+      };
+
+      // If validation failed, return error for retry
+      if (!validationResult.success && validationResult.errors) {
+        return {
+          success: false,
+          stage: 'validation',
+          errors: validationResult.errors,
+          response: llmResponse.content,
+          metadata
+        };
+      }
+
+      // Return successful result with parsed data
+      return {
+        success: true,
+        stage: 'completed',
+        data: validationResult.data,
+        rawResponse: llmResponse.content,
+        toolCalls: llmResponse.toolCalls,
+        metadata
+      };
+    }
+
+    // Return successful result without validation
+    return {
+      success: true,
+      stage: 'completed',
+      content: llmResponse.content,
+      toolCalls: llmResponse.toolCalls,
+      metadata
+    };
+  }
+
+  /**
    * Execute single pipeline attempt
    * @private
    */
