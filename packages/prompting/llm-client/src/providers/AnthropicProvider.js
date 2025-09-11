@@ -78,8 +78,43 @@ export class AnthropicProvider {
     }
   }
 
+  /**
+   * Complete with rich message format and system prompt support
+   */
+  async completeMessages(messages, model, options = {}) {
+    const requestBody = {
+      model,
+      max_tokens: options.maxTokens || 1000,
+      messages: messages.filter(msg => msg.role !== 'system')
+    };
+
+    // Handle system prompt
+    const systemMessage = messages.find(msg => msg.role === 'system');
+    if (systemMessage) {
+      requestBody.system = systemMessage.content;
+    } else if (options.system) {
+      requestBody.system = options.system;
+    }
+
+    // Add other supported parameters
+    if (options.temperature !== undefined) requestBody.temperature = options.temperature;
+
+    const response = await this.client.messages.create(requestBody);
+
+    if (!response || !response.content || response.content.length === 0) {
+      throw new Error('Empty or invalid response from Anthropic');
+    }
+
+    const content = response.content[0];
+    if (content && content.type === 'text') {
+      return content.text;
+    } else {
+      throw new Error('Unexpected response content type from Anthropic');
+    }
+  }
+
   getProviderName() {
-    return 'Anthropic';
+    return 'anthropic';
   }
 
   isReady() {

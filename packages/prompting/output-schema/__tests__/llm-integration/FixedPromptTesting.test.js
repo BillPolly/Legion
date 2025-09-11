@@ -5,10 +5,11 @@
 
 import { describe, test, expect, beforeAll } from '@jest/globals';
 import { ResponseValidator } from '../../src/ResponseValidator.js';
+import { SimplePromptClient } from '../../../llm-client/src/SimplePromptClient.js';
 import { ResourceManager } from '@legion/resource-manager';
 
 describe('Fixed Prompt Testing with Real LLMs', () => {
-  let llmClient;
+  let simpleClient;
 
   beforeAll(async () => {
     const resourceManager = await ResourceManager.getInstance();
@@ -19,7 +20,11 @@ describe('Fixed Prompt Testing with Real LLMs', () => {
     }
     
     // Use ResourceManager to get LLM client
-    llmClient = await resourceManager.get('llmClient');
+    // Create SimplePromptClient directly
+    simpleClient = new SimplePromptClient({
+      provider: 'anthropic',
+      apiKey: apiKey
+    });
   });
 
   describe('Corrected XML Format Testing', () => {
@@ -69,7 +74,7 @@ function calculateTotal(items) {
 ${instructions}`;
 
       console.log('Testing XML with Claude...');
-      const response = await llmClient.complete(prompt);
+      const response = await simpleClient.chat(prompt);
       
       console.log('Claude XML Response:');
       console.log(response);
@@ -126,7 +131,7 @@ ${instructions}`;
 ${instructions}`;
 
       console.log('Testing Delimited with Claude...');
-      const response = await llmClient.complete(prompt);
+      const response = await simpleClient.chat(prompt);
       
       console.log('Claude Delimited Response:');
       console.log(response);
@@ -192,7 +197,7 @@ ${instructions}`;
 ${instructions}`;
 
       console.log('Testing YAML with Claude...');
-      const response = await llmClient.complete(prompt);
+      const response = await simpleClient.chat(prompt);
       
       console.log('Claude YAML Response:');
       console.log(response);
@@ -251,7 +256,7 @@ ${instructions}`;
 ${jsonInstructions}`;
 
       console.log('\nTesting Code Generation with Claude...');
-      const response = await llmClient.complete(codePrompt);
+      const response = await simpleClient.chat(codePrompt);
       
       console.log('Claude Code Response:');
       console.log(response);
@@ -322,7 +327,7 @@ ${jsonInstructions}`;
 ${markdownInstructions}`;
 
       console.log('\nTesting Markdown Generation with Claude...');
-      const response = await llmClient.complete(prompt);
+      const response = await simpleClient.chat(prompt);
       
       console.log('Claude Markdown Response:');
       console.log(response);
@@ -386,7 +391,7 @@ ${markdownInstructions}`;
         console.log(`${format} instruction preview:`, instructions.substring(0, 200) + '...');
         
         try {
-          const response = await llmClient.complete(fullPrompt);
+          const response = await simpleClient.chat(fullPrompt);
           console.log(`${format} response preview:`, response.substring(0, 150) + '...');
           
           const result = validator.process(response);
@@ -476,7 +481,7 @@ ${markdownInstructions}`;
 ${instructions}`;
 
       console.log('\nTesting Code Content with Claude...');
-      const response = await llmClient.complete(prompt);
+      const response = await simpleClient.chat(prompt);
       
       console.log('Claude Code Response:');
       console.log(response);

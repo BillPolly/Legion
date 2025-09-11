@@ -3,6 +3,32 @@
  */
 export class RobustJsonParser {
   /**
+   * Parse JSON from text (alias for parse)
+   */
+  static parseFromText(text) {
+    if (!text || typeof text !== 'string') {
+      throw new Error('Input text is empty or not a string');
+    }
+    return this.parse(text);
+  }
+
+  /**
+   * Parse JSON and validate it has expected keys
+   */
+  static parseAndValidate(text, expectedKeys = []) {
+    const parsed = this.parseFromText(text);
+    
+    if (expectedKeys.length > 0) {
+      const missingKeys = expectedKeys.filter(key => !(key in parsed));
+      if (missingKeys.length > 0) {
+        throw new Error(`Parsed JSON missing expected keys: ${expectedKeys.join(', ')}`);
+      }
+    }
+    
+    return parsed;
+  }
+
+  /**
    * Parse JSON with robust error handling and recovery
    */
   static parse(jsonString) {
@@ -44,7 +70,7 @@ export class RobustJsonParser {
       }
     }
 
-    throw new Error(`Failed to parse JSON with all recovery strategies. Last error: ${lastError?.message}`);
+    throw new Error(`Failed to parse JSON from text. Last error: ${lastError?.message}`);
   }
 
   /**
@@ -114,6 +140,11 @@ export class RobustJsonParser {
         // Skip invalid lines
         continue;
       }
+    }
+
+    // Don't return empty arrays - let the main function handle this as a failure
+    if (results.length === 0) {
+      return null;
     }
 
     return results.length === 1 ? results[0] : results;

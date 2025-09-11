@@ -12,6 +12,8 @@ export {
   ValidationError 
 } from './LLMClient.js';
 
+export { SimplePromptClient } from './SimplePromptClient.js';
+
 export { RobustJsonParser } from './utils/RobustJsonParser.js';
 export { OpenAIProvider } from './providers/OpenAIProvider.js';
 export { MockProvider } from './providers/MockProvider.js';

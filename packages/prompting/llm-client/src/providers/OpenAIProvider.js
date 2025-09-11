@@ -67,6 +67,52 @@ export class OpenAIProvider {
     return content;
   }
 
+  /**
+   * Complete with rich message format and tool support
+   */
+  async completeMessages(messages, model, options = {}) {
+    const requestBody = {
+      model,
+      messages: messages,
+      max_tokens: options.maxTokens || 1000
+    };
+
+    // Add supported parameters
+    if (options.temperature !== undefined) requestBody.temperature = options.temperature;
+    if (options.topP !== undefined) requestBody.top_p = options.topP;
+    if (options.frequencyPenalty !== undefined) requestBody.frequency_penalty = options.frequencyPenalty;
+    if (options.presencePenalty !== undefined) requestBody.presence_penalty = options.presencePenalty;
+    
+    // Add tools if provided
+    if (options.tools && Array.isArray(options.tools)) {
+      requestBody.tools = options.tools;
+      if (options.toolChoice) requestBody.tool_choice = options.toolChoice;
+    }
+
+    const completion = await this.client.chat.completions.create(requestBody);
+
+    const message = completion.choices[0]?.message;
+    if (!message) {
+      throw new Error('No response message received from OpenAI');
+    }
+
+    // Handle tool calls - OpenAI might return tool calls without text content
+    if (message.tool_calls && message.tool_calls.length > 0) {
+      const toolCallsText = message.tool_calls.map(tc => 
+        `Tool Call: ${tc.function.name}(${tc.function.arguments})`
+      ).join('\n');
+      
+      return message.content || toolCallsText;
+    }
+
+    const content = message.content;
+    if (!content) {
+      throw new Error('No response content received from OpenAI');
+    }
+
+    return content;
+  }
+
   async generateEmbeddings(text, model = 'text-embedding-3-small') {
     const input = Array.isArray(text) ? text : [text];
     

@@ -1,7 +1,7 @@
 {
-  "name": "@legion/llm",
+  "name": "@legion/llm-client",
   "version": "1.0.0",
-  "description": "LLM client package with retry logic and error handling",
+  "description": "Low-level LLM client with provider abstraction and automatic adaptation",
   "type": "module",
   "main": "./src/index.js",
   "scripts": {

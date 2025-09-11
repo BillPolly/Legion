@@ -12,7 +12,7 @@ describe('LLMClient', () => {
     describe('constructor', () => {
         it('should create client with mock provider', () => {
             expect(client).toBeDefined();
-            expect(client.getProviderName()).toBe('Mock');
+            expect(client.getProviderName()).toBe('mock');
         });
 
         it('should generate unique client ID', () => {
@@ -88,11 +88,16 @@ describe('LLMClient', () => {
 
     describe('embeddings', () => {
         it('should check if provider supports embeddings', () => {
-            expect(client.supportsEmbeddings()).toBe(false);
+            expect(client.supportsEmbeddings()).toBe(true);
         });
 
-        it('should throw error when provider does not support embeddings', async () => {
-            await expect(client.generateEmbeddings('test')).rejects.toThrow('Provider Mock does not support embeddings');
+        it('should generate embeddings successfully with mock provider', async () => {
+            const embeddings = await client.generateEmbeddings('test');
+            expect(embeddings).toBeDefined();
+            expect(Array.isArray(embeddings)).toBe(true);
+            expect(embeddings.length).toBe(1);
+            expect(Array.isArray(embeddings[0])).toBe(true);
+            expect(embeddings[0].length).toBe(1536); // Mock provider returns 1536-dimensional embeddings
         });
     });
 });

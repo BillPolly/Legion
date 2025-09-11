@@ -6,12 +6,13 @@
 
 import { describe, test, expect, beforeAll } from '@jest/globals';
 import { ResponseValidator } from '../../src/ResponseValidator.js';
+import { SimplePromptClient } from '../../../llm-client/src/SimplePromptClient.js';
 import { ResourceManager } from '@legion/resource-manager';
 
 describe('Basic LLM Response Testing', () => {
   let anthropicClient;
   let resourceManager;
-  let llmClient;
+  let simpleClient;
 
   beforeAll(async () => {
     // Initialize ResourceManager (loads .env automatically)
@@ -23,10 +24,13 @@ describe('Basic LLM Response Testing', () => {
       throw new Error('ANTHROPIC_API_KEY not found in .env - required for LLM testing');
     }
     
-    // Use ResourceManager to get LLM client
-    llmClient = await resourceManager.get('llmClient');
+    // Create SimplePromptClient directly to avoid import issues
+    simpleClient = new SimplePromptClient({
+      provider: 'anthropic',
+      apiKey: apiKey
+    });
 
-    console.log('✅ LLM client initialized for real API testing');
+    console.log('✅ SimplePromptClient initialized for real API testing');
   });
 
   describe('JSON Format Testing with Real LLM', () => {
@@ -88,7 +92,7 @@ describe('Basic LLM Response Testing', () => {
 ${instructions}`;
 
       console.log('Sending to Claude...');
-      const llmResponse = await llmClient.complete(fullPrompt);
+      const llmResponse = await simpleClient.chat(fullPrompt);
       console.log('Claude Response:');
       console.log(llmResponse);
       console.log('\n');
@@ -170,7 +174,7 @@ ${instructions}`;
 
 ${instructions}`;
 
-      const llmResponse = await llmClient.complete(taskPrompt);
+      const llmResponse = await simpleClient.chat(taskPrompt);
       console.log('\nClaude Complex Response:');
       console.log(llmResponse);
 
@@ -244,7 +248,7 @@ function processData(input) {
 
 ${xmlInstructions}`;
 
-      const llmResponse = await llmClient.complete(taskPrompt);
+      const llmResponse = await simpleClient.chat(taskPrompt);
       console.log('\nClaude XML Response:');
       console.log(llmResponse);
 
@@ -291,7 +295,7 @@ ${xmlInstructions}`;
 
 ${delimitedInstructions}`;
 
-      const llmResponse = await llmClient.complete(taskPrompt);
+      const llmResponse = await simpleClient.chat(taskPrompt);
       console.log('\nClaude Delimited Response:');
       console.log(llmResponse);
 
@@ -345,7 +349,7 @@ ${delimitedInstructions}`;
 
 ${instructions}`;
 
-      const firstResponse = await llmClient.complete(vaguePrompt);
+      const firstResponse = await simpleClient.chat(vaguePrompt);
       console.log('First Claude Response:');
       console.log(firstResponse);
 
@@ -367,7 +371,7 @@ ${errorFeedback}
 
 Please provide a corrected response that meets all requirements.`;
 
-        const secondResponse = await llmClient.complete(reprompt);
+        const secondResponse = await simpleClient.chat(reprompt);
         console.log('\nSecond Claude Response (after error feedback):');
         console.log(secondResponse);
 
@@ -423,7 +427,7 @@ Please provide a corrected response that meets all requirements.`;
 
 ${instructions}`;
 
-        const response = await llmClient.complete(prompt);
+        const response = await simpleClient.chat(prompt);
         console.log(`${format} Response:`, response.substring(0, 300) + '...');
 
         const result = validator.process(response);
@@ -507,7 +511,7 @@ ${instructions}`;
 
 ${instructions}`;
 
-      const llmResponse = await llmClient.complete(prompt);
+      const llmResponse = await simpleClient.chat(prompt);
       console.log('Constraint Test Response:');
       console.log(llmResponse);
 
@@ -596,7 +600,7 @@ ${instructions}`;
         const instructions = validator.generateInstructions(testCase.example);
         const fullPrompt = `${testCase.prompt}\n\n${instructions}`;
 
-        const response = await llmClient.complete(fullPrompt);
+        const response = await simpleClient.chat(fullPrompt);
         const result = validator.process(response);
 
         console.log(`${testCase.name} Success: ${result.success}, Format: ${result.format}, Confidence: ${Math.round(result.confidence * 100)}%`);

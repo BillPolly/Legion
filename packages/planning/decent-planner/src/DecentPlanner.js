@@ -162,10 +162,10 @@ export class DecentPlanner {
     }
 
     if (this.dependencies.llmClient) {
-      this.dependencies.llmClient.on('interaction', (event) => {
+      this.dependencies.llmClient.subscribe((eventName, eventData) => {
         // Only send response events (which include both prompt and response)
-        if (event.type === 'response') {
-          this.eventForwardingCallback(event);
+        if (eventName === 'interaction' && eventData.type === 'response') {
+          this.eventForwardingCallback(eventData);
         }
       });
     }
