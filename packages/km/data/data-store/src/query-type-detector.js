@@ -74,12 +74,9 @@ export class QueryTypeDetector {
       
       // For entity queries with result-based decisions:
       if (results.length === 0) {
-        // Empty result - check if this could be a multi-entity query
-        if (this._couldReturnMultipleEntities(querySpec)) {
-          return 'CollectionProxy';
-        }
-        // Single entity queries with no results return EntityProxy (invalid/empty entity)
-        return 'EntityProxy';
+        // Empty result - always return CollectionProxy for empty collections
+        // This ensures consistent behavior and allows for chaining operations on empty collections
+        return 'CollectionProxy';
       } else if (results.length === 1) {
         // Single entity result - return EntityProxy for direct entity access
         return 'EntityProxy';
@@ -242,6 +239,10 @@ export class QueryTypeDetector {
         // Variable
         analysis.hasVariables = true;
         analysis.variables.push(item);
+      } else if (typeof item === 'number') {
+        // Entity ID directly in find clause
+        analysis.hasEntityId = true;
+        analysis.entityId = item;
       }
     });
     
@@ -369,6 +370,12 @@ export class QueryTypeDetector {
     
     if (analysis.hasAggregates) {
       return 'aggregate';
+    }
+    
+    // Check if we have an entity ID directly in the find clause
+    // This happens when EntityProxy replaces ?this with the entity ID
+    if (analysis.hasEntityId) {
+      return 'entity';
     }
     
     if (analysis.variableCount === 0) {

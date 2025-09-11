@@ -52,13 +52,20 @@ export class DataStoreProxy {
   
   /**
    * Execute query and return appropriate proxy object
-   * @param {Object} querySpec - DataScript query specification
+   * @param {Object} querySpec - DataScript query specification with optional update
    * @returns {StreamProxy|EntityProxy|CollectionProxy} Appropriate proxy for results
    */
   query(querySpec) {
     // Validate query spec
     if (!querySpec) {
       throw new Error('Query spec is required');
+    }
+    
+    // Handle optional update field
+    let tempids = null;
+    if (querySpec.update) {
+      const txResult = this._executeUpdate(querySpec.update);
+      tempids = txResult.tempids;
     }
     
     if (!querySpec.find) {
@@ -73,11 +80,17 @@ export class DataStoreProxy {
       throw new Error('Query spec must have where clause');
     }
     
-    // Prepare query spec - add appropriate findType for aggregates
+    // Prepare query spec - remove update field and add appropriate findType for aggregates
     let processedQuerySpec = { ...querySpec };
+    delete processedQuerySpec.update; // Remove update field from query
+    
+    // Bind tempids to query variables if needed
+    if (tempids) {
+      processedQuerySpec = this._bindTempids(processedQuerySpec, tempids);
+    }
     
     // Automatically set findType for aggregate queries to get scalar results
-    if (this.queryTypeDetector.isAggregateQuery(querySpec) && !processedQuerySpec.findType) {
+    if (this.queryTypeDetector.isAggregateQuery(processedQuerySpec) && !processedQuerySpec.findType) {
       processedQuerySpec.findType = 'scalar';
     }
     
@@ -85,10 +98,10 @@ export class DataStoreProxy {
     const results = this.dataStore.query(processedQuerySpec);
     
     // Determine appropriate proxy type
-    const proxyType = this.queryTypeDetector.detectProxyType(querySpec, results);
+    const proxyType = this.queryTypeDetector.detectProxyType(processedQuerySpec, results);
     
     // Create and return appropriate proxy
-    return this._createProxy(proxyType, querySpec, results);
+    return this._createProxy(proxyType, processedQuerySpec, results);
   }
   
   /**
@@ -147,8 +160,8 @@ export class DataStoreProxy {
       }
     }
     
-    // Create new EntityProxy and cache it
-    const newProxy = new EntityProxy(entityId, this.dataStore);
+    // Create new EntityProxy with dataStoreProxy reference and cache it
+    const newProxy = new EntityProxy(entityId, this.dataStore, this);
     this._proxyCache.set(entityId, newProxy);
     return newProxy;
   }
@@ -190,6 +203,158 @@ export class DataStoreProxy {
       where: [['?e', ':synthetic/items', '?item']]
     };
     return new CollectionProxy(this.dataStore, items, defaultQuerySpec, this);
+  }
+  
+  /**
+   * Execute update transaction
+   * @private
+   * @param {Object|Array} updateSpec - Update specification
+   * @returns {Object} Transaction result with tempids and dbAfter
+   */
+  _executeUpdate(updateSpec) {
+    if (!updateSpec) {
+      return { tempids: new Map(), dbAfter: this.dataStore.db() };
+    }
+    
+    // Handle different update formats
+    let txData;
+    
+    if (Array.isArray(updateSpec)) {
+      // Direct transaction data - array of entities
+      txData = updateSpec.map((item, index) => {
+        // Clone the item to avoid mutation
+        const processedItem = { ...item };
+        
+        // Handle entity ID properly - DataScript expects :db/id to be present for updates
+        let entityId = processedItem[':db/id'];
+        
+        // If we have an existing entity ID (positive number), keep it for update
+        if (typeof entityId === 'number' && entityId > 0) {
+          // Keep the entity ID for updates to existing entities
+          // DataScript will handle it correctly
+        } else if (entityId === undefined || entityId === null) {
+          // For new entities without an ID, add a tempid
+          processedItem[':db/id'] = -(index + 1);
+        } else if (typeof entityId === 'number' && entityId < 0) {
+          // Already a tempid, keep it
+        } else {
+          // Invalid entity ID format
+          throw new Error(`Invalid entity ID format: ${entityId}`);
+        }
+        
+        // Replace ?new-N variables with actual tempids in reference attributes
+        for (const [key, value] of Object.entries(processedItem)) {
+          if (typeof value === 'string' && value.startsWith('?new-')) {
+            const tempidNum = parseInt(value.substring(5), 10);
+            if (!isNaN(tempidNum)) {
+              processedItem[key] = -tempidNum; // Convert ?new-1 to -1
+            }
+          }
+        }
+        
+        return processedItem;
+      });
+    } else if (typeof updateSpec === 'object') {
+      // Single entity update
+      const processedItem = { ...updateSpec };
+      
+      // Handle entity ID properly - DataScript expects :db/id to be present for updates
+      let entityId = processedItem[':db/id'];
+      
+      // If we have an existing entity ID (positive number), keep it for update
+      if (typeof entityId === 'number' && entityId > 0) {
+        // Keep the entity ID for updates to existing entities
+        // DataScript will handle it correctly
+      } else if (entityId === undefined || entityId === null) {
+        // For new entities without an ID, add a tempid
+        processedItem[':db/id'] = -1;
+      } else if (typeof entityId === 'number' && entityId < 0) {
+        // Already a tempid, keep it
+      } else {
+        // Invalid entity ID format
+        throw new Error(`Invalid entity ID format: ${entityId}`);
+      }
+      
+      // Replace ?new-N variables in single entity
+      for (const [key, value] of Object.entries(processedItem)) {
+        if (typeof value === 'string' && value.startsWith('?new-')) {
+          const tempidNum = parseInt(value.substring(5), 10);
+          if (!isNaN(tempidNum)) {
+            processedItem[key] = -tempidNum;
+          }
+        }
+      }
+      
+      txData = [processedItem];
+    } else {
+      throw new Error('Update spec must be an object or array');
+    }
+    
+    // Execute transaction using DataStore's conn
+    const result = this.dataStore.conn.transact(txData);
+    return {
+      tempids: result.tempids,
+      dbAfter: result.dbAfter,
+      tx: result.tx
+    };
+  }
+  
+  /**
+   * Bind tempids from transaction to query variables
+   * @private
+   * @param {Object} querySpec - Query specification
+   * @param {Map} tempids - Map of tempids to entity IDs
+   * @returns {Object} Query spec with tempids bound to variables
+   */
+  _bindTempids(querySpec, tempids) {
+    if (!tempids || tempids.size === 0) {
+      return querySpec;
+    }
+    
+    // Deep clone the query spec to avoid mutations
+    const processed = JSON.parse(JSON.stringify(querySpec));
+    
+    // Create replacer function for mapping ?new-N variables to tempids
+    const replacer = (variable) => {
+      if (typeof variable === 'string' && variable.startsWith('?new-')) {
+        const tempidNum = parseInt(variable.substring(5), 10);
+        if (!isNaN(tempidNum) && tempids.has(-tempidNum)) {
+          return tempids.get(-tempidNum);
+        }
+      }
+      return variable;
+    };
+    
+    // Replace variables throughout the query structure
+    this._replaceVariables(processed, replacer);
+    
+    return processed;
+  }
+  
+  /**
+   * Recursively replace variables in a query structure
+   * @private
+   * @param {*} obj - Object, array, or primitive to process
+   * @param {Function} replacer - Function to replace variables
+   */
+  _replaceVariables(obj, replacer) {
+    if (Array.isArray(obj)) {
+      for (let i = 0; i < obj.length; i++) {
+        if (typeof obj[i] === 'string') {
+          obj[i] = replacer(obj[i]);
+        } else if (typeof obj[i] === 'object' && obj[i] !== null) {
+          this._replaceVariables(obj[i], replacer);
+        }
+      }
+    } else if (typeof obj === 'object' && obj !== null) {
+      for (const key in obj) {
+        if (typeof obj[key] === 'string') {
+          obj[key] = replacer(obj[key]);
+        } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+          this._replaceVariables(obj[key], replacer);
+        }
+      }
+    }
   }
   
   /**
@@ -236,14 +401,19 @@ export class DataStoreProxy {
           // Return an invalid EntityProxy for empty results
           // We need to use a special marker for "no entity"
           // Using -1 as a sentinel value for non-existent entities
-          const invalidProxy = new EntityProxy(-1, this.dataStore);
+          const invalidProxy = new EntityProxy(-1, this.dataStore, this);
           // Mark it as representing an empty query result
           invalidProxy._isEmpty = true;
           return invalidProxy;
         }
         
       case 'CollectionProxy':
-        // CollectionProxy expects (store, currentItems, querySpec)
+        // CollectionProxy expects (store, currentItems, querySpec, dataStoreProxy)
+        // Special case: if results is empty array but we detect it should be a collection
+        // (e.g., from an empty collection query), ensure we return CollectionProxy
+        if (results.length === 0 && querySpec.find && querySpec.find.length === 1) {
+          return new CollectionProxy(this.dataStore, [], querySpec, this);
+        }
         return new CollectionProxy(this.dataStore, results, querySpec, this);
         
       default:
