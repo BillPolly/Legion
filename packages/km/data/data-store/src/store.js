@@ -1,4 +1,4 @@
-import { createConn, q } from '../../index.js';
+import { createConn, q } from '../../datascript/index.js';
 import { ReactiveEngine } from './reactor.js';
 
 export class DataStore {

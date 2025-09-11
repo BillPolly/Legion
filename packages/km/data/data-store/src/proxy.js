@@ -1,4 +1,4 @@
-import { pull, q, retractEntity } from '../../index.js';
+import { pull, q, retractEntity } from '../../datascript/index.js';
 import { Subscription } from './subscription.js';
 import { ReactiveEngine } from './reactor.js';
 
@@ -46,6 +46,9 @@ export class EntityProxy {
       changeListeners: new Map(), // listenerId -> callback function
       deleteListeners: new Map() // listenerId -> callback function
     });
+    
+    // Dynamically create property getters from schema BEFORE freezing
+    this._setupDynamicProperties();
     
     // Freeze the instance to prevent mutation
     Object.freeze(this);
@@ -255,42 +258,35 @@ export class EntityProxy {
   }
 
   /**
-   * Convenient property getters for common attributes
+   * Setup dynamic property getters based on schema
+   * @private
    */
-  get name() { return this.get(':user/name'); }
-  get email() { return this.get(':user/email'); }
-  get age() { return this.get(':user/age'); }
-  get active() { return this.get(':user/active'); }
-  get id() { return this.get(':user/id'); }
-  get status() { return this.get(':user/status'); }
-  get tags() { return this.get(':user/tags'); }
-  get friends() { return this.get(':user/friends'); }
-  get profile() { return this.get(':user/profile'); }
-
-  /**
-   * Access computed properties through dynamic getter
-   */
-  get friendCount() { return this._getComputedProperty('friendCount'); }
-  get userInfo() { return this._getComputedProperty('userInfo'); }
-  get scoreGrade() { return this._getComputedProperty('scoreGrade'); }
-  get displayName() { return this._getComputedProperty('displayName'); }
-  get friendNames() { return this._getComputedProperty('friendNames'); }
-  get fullName() { return this._getComputedProperty('fullName'); }
-  get friendsInfo() { return this._getComputedProperty('friendsInfo'); }
-  get profileSummary() { return this._getComputedProperty('profileSummary'); }
-  get errorProp() { return this._getComputedProperty('errorProp'); }
-  get testProp() { return this._getComputedProperty('testProp'); }
-  get summary() { return this._getComputedProperty('summary'); }
-  get totalViews() { return this._getComputedProperty('totalViews'); }
-  get profileInfo() { return this._getComputedProperty('profileInfo'); }
-  get socialScore() { return this._getComputedProperty('socialScore'); }
-  get jobTitle() { return this._getComputedProperty('jobTitle'); }
-  get userStatus() { return this._getComputedProperty('userStatus'); }
-  get scoreLevel() { return this._getComputedProperty('scoreLevel'); }
-  get cycleSummary() { return this._getComputedProperty('cycleSummary'); }
-  get ageSummary() { return this._getComputedProperty('ageSummary'); }
-  get managerName() { return this._getComputedProperty('managerName'); }
-  get postCount() { return this._getComputedProperty('postCount'); }
+  _setupDynamicProperties() {
+    // Only set up properties if we have a schema
+    if (!this.store.schema) return;
+    
+    // Create getters for each attribute in the schema
+    for (const [attribute, spec] of Object.entries(this.store.schema)) {
+      // Extract property name from attribute (e.g., ':user/name' -> 'name')
+      const parts = attribute.split('/');
+      if (parts.length !== 2) continue; // Skip malformed attributes
+      
+      const propertyName = parts[1];
+      
+      // Skip if property already exists (e.g., from base class methods)
+      if (propertyName in this) continue;
+      
+      // Define getter that calls this.get() with the full attribute name
+      // Use arrow function to preserve 'this' context
+      Object.defineProperty(this, propertyName, {
+        get: () => {
+          return this.get(attribute);
+        },
+        enumerable: true,
+        configurable: true
+      });
+    }
+  }
 
   /**
    * String representation for debugging
