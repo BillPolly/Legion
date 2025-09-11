@@ -6,7 +6,7 @@
   "description": "File system storage provider for Legion Knowledge Graph",
   "main": "src/index.js",
   "scripts": {
-    "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest"
+    "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest --passWithNoTests"
   },
   "keywords": ["knowledge-graph", "storage", "file"],
   "author": "Legion Team",

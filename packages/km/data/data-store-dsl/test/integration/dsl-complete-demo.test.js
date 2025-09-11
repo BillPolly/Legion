@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { defineSchema, query, update } from '../../index.js';
-import { createDataStore, EntityProxy } from '../../../index.js';
+import { defineSchema, query, update } from '../index.js';
+import { createDataStore, EntityProxy } from '@legion/data-store';
 
 describe('Complete DSL Demonstration - End-to-End', () => {
   it('should demonstrate complete DSL workflow from schema to reactive operations', () => {

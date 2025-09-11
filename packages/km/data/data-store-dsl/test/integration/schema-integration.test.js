@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { defineSchema } from '../../src/schema-dsl.js';
-import { createDataStore, EntityProxy } from '../../../index.js';
+import { createDataStore, EntityProxy } from '@legion/data-store';
 
 describe('Schema DSL Integration - Real DataScript Validation', () => {
   describe('Schema Creation with Data-Store', () => {

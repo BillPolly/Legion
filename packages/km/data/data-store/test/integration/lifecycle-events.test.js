@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { EntityProxy } from '../../src/proxy.js';
 import { DataStore } from '../../src/store.js';
-import { retractEntity } from '../../../index.js';
+import { retractEntity } from 'datascript';
 
 describe('Proxy Lifecycle Events - Integration', () => {
   describe('Events Triggered by Database Changes', () => {

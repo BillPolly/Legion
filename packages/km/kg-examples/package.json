@@ -7,7 +7,7 @@
   "main": "src/index.js",
   "scripts": {
     "demo": "node src/demo.js",
-    "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest"
+    "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest --passWithNoTests"
   },
   "keywords": ["knowledge-graph", "examples"],
   "author": "Legion Team",

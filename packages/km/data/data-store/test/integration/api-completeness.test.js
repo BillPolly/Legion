@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { createDataStore, EntityProxy, DataStore, Subscription, ReactiveEngine } from '../../index.js';
+import { createDataStore, EntityProxy, DataStore, Subscription, ReactiveEngine } from '../index.js';
 import { SubscriptionRegistry } from '../../src/subscription.js';
 import { TransactionAnalyzer } from '../../src/reactor.js';
 

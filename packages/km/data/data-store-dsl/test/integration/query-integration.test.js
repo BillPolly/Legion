@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { query } from '../../src/query-dsl.js';
 import { defineSchema } from '../../src/schema-dsl.js';
-import { createDataStore, EntityProxy } from '../../../index.js';
+import { createDataStore, EntityProxy } from '@legion/data-store';
 
 describe('Query DSL Integration - Real DataScript Execution', () => {
   describe('Query Execution with Real Database', () => {
