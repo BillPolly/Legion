@@ -110,6 +110,7 @@ export class ConversationManager {
     // Add user message to history
     this.conversationHistory.push({
       id: `turn_${this.turnCounter}_user`,
+      role: 'user',
       type: 'user',
       content: userInput,
       tools: [],
@@ -194,6 +195,7 @@ export class ConversationManager {
       // Create response with all tool executions
       finalResponse = {
         id: `turn_${this.turnCounter}_assistant`,
+        role: 'assistant',
         type: 'assistant',
         content: `${validationResult.data.response}${toolOutput}`,
         tools: executedTools,
@@ -203,6 +205,7 @@ export class ConversationManager {
       // Regular conversation response
       finalResponse = {
         id: `turn_${this.turnCounter}_assistant`,
+        role: 'assistant',
         type: 'assistant',
         content: llmResponse,
         tools: [],

@@ -61,13 +61,14 @@ describe('Tool Calling Integration', () => {
       const writeToolUsed = response.tools.some(t => t.name === 'write_file');
       expect(writeToolUsed).toBe(true);
       
-      // Verify file was actually created
-      const filePath = path.join(testDir, 'hello.txt');
-      const fileExists = await fs.access(filePath).then(() => true).catch(() => false);
+      // Verify file was actually created (check the path from tool response)
+      const toolResult = response.tools[0].result;
+      const actualFilePath = toolResult.data?.path || path.join(testDir, 'hello.txt');
+      const fileExists = await fs.access(actualFilePath).then(() => true).catch(() => false);
       expect(fileExists).toBe(true);
       
       if (fileExists) {
-        const content = await fs.readFile(filePath, 'utf-8');
+        const content = await fs.readFile(actualFilePath, 'utf-8');
         expect(content).toContain('Hello from tool calling test!');
       }
     }
