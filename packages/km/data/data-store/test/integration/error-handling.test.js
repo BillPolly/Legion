@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { createDataStore, EntityProxy } from '../../index.js';
-import { DB } from '../../../index.js';
+import { createDataStore, EntityProxy } from '../index.js';
+import { DB } from 'datascript';
 
 describe('Error Handling Validation - End-to-End', () => {
   describe('Schema Constraint Violations', () => {

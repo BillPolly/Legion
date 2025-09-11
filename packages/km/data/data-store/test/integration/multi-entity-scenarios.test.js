@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { createDataStore, EntityProxy } from '../../index.js';
+import { createDataStore, EntityProxy } from '../index.js';
 
 describe('Multi-Entity Scenarios - End-to-End', () => {
   describe('Complex Entity Relationships', () => {

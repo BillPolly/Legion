@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { DataStore } from '../../src/store.js';
-import { DB, retractEntity } from '../../../index.js';
+import { DB, retractEntity } from 'datascript';
 
 describe('DataStore - DataScript Integration', () => {
   describe('DataScript Connection', () => {

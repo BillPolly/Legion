@@ -6,7 +6,7 @@
   "description": "JavaScript Knowledge Graph System",
   "main": "src/index.js",
   "scripts": {
-    "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest",
+    "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest --forceExit",
     "demo": "node scripts/simple-demo-runner.js",
     "test-examples": "node scripts/test-examples.js"
   },

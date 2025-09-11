@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { update } from '../../src/update-dsl.js';
 import { defineSchema } from '../../src/schema-dsl.js';
-import { createDataStore, EntityProxy } from '../../../index.js';
+import { createDataStore, EntityProxy } from '@legion/data-store';
 
 describe('Update DSL Integration - Real Data-Store Operations', () => {
   describe('Update Execution with Real Database', () => {

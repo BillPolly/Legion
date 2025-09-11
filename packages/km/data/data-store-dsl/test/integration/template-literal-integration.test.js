@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { DSLParser } from '../../src/parser.js';
-import { createDataStore, EntityProxy } from '../../../index.js';
+import { createDataStore, EntityProxy } from '@legion/data-store';
 
 describe('Template Literal Integration - Real JavaScript Processing', () => {
   describe('Actual Template Literal Parsing', () => {

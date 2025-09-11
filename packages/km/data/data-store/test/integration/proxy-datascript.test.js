@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { EntityProxy } from '../../src/proxy.js';
 import { DataStore } from '../../src/store.js';
-import { retractEntity, pull, q } from '../../../index.js';
+import datascript from 'datascript';
 
 describe('EntityProxy - DataScript Integration', () => {
   describe('Proxy Creation with Real Entities', () => {
