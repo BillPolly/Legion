@@ -294,12 +294,12 @@ describe('DataStoreProxy Integration Tests', () => {
     });
     
     test('should handle aggregation queries', () => {
-      // Create users with ages
+      // Create users with ages - using unique IDs to avoid conflicts with other tests
       proxyStore.createEntities([
-        { ':user/id': 'u1', ':user/name': 'Alice', ':user/age': 30 },
-        { ':user/id': 'u2', ':user/name': 'Bob', ':user/age': 25 },
-        { ':user/id': 'u3', ':user/name': 'Charlie', ':user/age': 35 },
-        { ':user/id': 'u4', ':user/name': 'Diana', ':user/age': 28 }
+        { ':user/id': 'agg-u1', ':user/name': 'Alice', ':user/age': 30 },
+        { ':user/id': 'agg-u2', ':user/name': 'Bob', ':user/age': 25 },
+        { ':user/id': 'agg-u3', ':user/name': 'Charlie', ':user/age': 35 },
+        { ':user/id': 'agg-u4', ':user/name': 'Diana', ':user/age': 28 }
       ]);
       
       // Count all users
@@ -309,6 +309,30 @@ describe('DataStoreProxy Integration Tests', () => {
       });
       
       expect(userCount).toBeInstanceOf(StreamProxy);
+      
+      // DEBUG: Check what users we actually have
+      const allUsers = proxyStore.query({
+        find: ['?e', '?name', '?age'],
+        where: [
+          ['?e', ':user/name', '?name'],
+          ['?e', ':user/age', '?age']
+        ]
+      });
+      const userData = allUsers.value();
+      console.log('DEBUG: Number of users =', userData.length);
+      if (userData.length > 0) {
+        const userDetails = userData.map(userEntry => {
+          if (Array.isArray(userEntry)) {
+            return userEntry; // Should be [entityId, name, age]
+          } else if (userEntry && userEntry.age) {
+            return [userEntry.entityId, userEntry.name.value(), userEntry.age.value()];
+          } else {
+            return ['unknown', 'unknown', 'unknown'];
+          }
+        });
+        console.log('DEBUG: User details =', userDetails);
+      }
+      
       expect(userCount.value()).toBe(4);
       
       // Get all ages
@@ -320,9 +344,23 @@ describe('DataStoreProxy Integration Tests', () => {
       expect(ages).toBeInstanceOf(CollectionProxy);
       expect(ages.length).toBe(4);
       
-      // Manual aggregation on collection
-      const ageValues = ages.value().map(([age]) => age);
-      const avgAge = ageValues.reduce((sum, age) => sum + age, 0) / ageValues.length;
+      // Manual aggregation on collection  
+      const ageValues = ages.value(); // Returns tuple format: [[30], [25], [35], [28]]
+      
+      console.log('DEBUG: ageValues from query =', ageValues);
+      
+      // Extract scalar values from tuples
+      const processedAges = ageValues.map(item => {
+        if (Array.isArray(item)) {
+          return item[0]; // Extract scalar from tuple
+        } else if (typeof item === 'number') {
+          return item; // Already a number
+        } else {
+          return 0; // Fallback for unexpected formats
+        }
+      });
+      
+      const avgAge = processedAges.reduce((sum, age) => sum + age, 0) / processedAges.length;
       expect(avgAge).toBe(29.5);
     });
   });

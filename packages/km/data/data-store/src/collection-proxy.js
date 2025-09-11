@@ -134,11 +134,42 @@ export class CollectionProxy {
    */
   value() {
     return this._currentItems.map(item => {
-      // If item is an entity ID (number), create EntityProxy for it
-      if (typeof item === 'number' && this.dataStoreProxy) {
-        return this.dataStoreProxy.getProxy(item);
+      // Handle DataScript query results which can be:
+      // 1. Entity IDs as numbers: 4
+      // 2. Entity IDs in tuples: [4] 
+      // 3. Multi-variable results: [4, "value"]
+      // 4. Scalar values in tuples: ["Alice", 30] or [30]
+      
+      // Check if this is an entity query that should return EntityProxy objects
+      const isEntityQuery = this._isEntityQuery();
+      
+      if (isEntityQuery) {
+        let entityId = null;
+        
+        if (typeof item === 'number') {
+          // Direct entity ID
+          entityId = item;
+        } else if (Array.isArray(item) && item.length >= 1 && typeof item[0] === 'number') {
+          // Entity ID in tuple (most common case from DataScript queries)
+          entityId = item[0];
+        }
+        
+        // If we found an entity ID and have dataStoreProxy, create EntityProxy
+        if (entityId !== null && this.dataStoreProxy) {
+          try {
+            // Verify it's a valid entity by checking if it exists
+            const db = this.dataStoreProxy.dataStore.db();
+            const entityData = db.entity(entityId);
+            if (entityData && entityData.id === entityId) {
+              return this.dataStoreProxy.getProxy(entityId);
+            }
+          } catch (error) {
+            // Not a valid entity ID, fall through to deep copy
+          }
+        }
       }
-      // Otherwise return deep copy
+      
+      // For scalar queries or when not an entity, return deep copy
       return this._deepCopy(item);
     });
   }
@@ -659,6 +690,51 @@ export class CollectionProxy {
     }
     
     return copy;
+  }
+
+  /**
+   * Check if this is an entity query that should return EntityProxy objects
+   * @private
+   */
+  _isEntityQuery() {
+    if (!this._querySpec || !this._querySpec.find || !this._querySpec.where) {
+      return false;
+    }
+    
+    const findClause = this._querySpec.find;
+    const whereClause = this._querySpec.where;
+    
+    // Must be a single variable query to potentially be an entity query
+    if (findClause.length !== 1 || typeof findClause[0] !== 'string' || !findClause[0].startsWith('?')) {
+      return false;
+    }
+    
+    const variable = findClause[0];
+    
+    // Check if variable appears as entity (first position) in where clauses
+    for (const clause of whereClause) {
+      if (Array.isArray(clause) && clause.length >= 3 && clause[0] === variable) {
+        return true; // Variable is used as entity, so it's an entity query
+      }
+    }
+    
+    // Check if variable appears as value in reference attributes
+    for (const clause of whereClause) {
+      if (Array.isArray(clause) && clause.length === 3) {
+        const [entity, attribute, value] = clause;
+        if (value === variable) {
+          // Check if the attribute is a reference type using schema
+          if (this.dataStoreProxy && this.dataStoreProxy.dataStore.schema) {
+            const schemaInfo = this.dataStoreProxy.dataStore.schema[attribute];
+            if (schemaInfo && schemaInfo.valueType === 'ref') {
+              return true; // Variable represents entity reference
+            }
+          }
+        }
+      }
+    }
+    
+    return false; // Scalar query
   }
 
   /**

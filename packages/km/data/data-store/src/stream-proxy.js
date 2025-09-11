@@ -7,7 +7,7 @@
 import { q } from '../../datascript/index.js';
 
 export class StreamProxy {
-  constructor(store, currentValue, querySpec) {
+  constructor(store, currentValue, querySpec, dataStoreProxy = null) {
     // Validate required parameters
     if (!store) {
       throw new Error('StreamProxy requires store parameter');
@@ -29,6 +29,7 @@ export class StreamProxy {
     this.store = store;
     this._currentValue = currentValue;
     this._querySpec = querySpec;
+    this._dataStoreProxy = dataStoreProxy;
     this._subscribers = new Set();
     this._subscriptionCleanup = null;
     
@@ -47,9 +48,20 @@ export class StreamProxy {
   /**
    * Get current scalar value (number, string, boolean, etc.)
    * Returns immutable copy for complex values
+   * For entity IDs, returns EntityProxy objects
    */
   value() {
     if (this._currentValue === null || this._currentValue === undefined) {
+      return this._currentValue;
+    }
+    
+    // Check if this is an entity ID by examining the query and value
+    if (typeof this._currentValue === 'number' && this._isEntityQuery()) {
+      // Use DataStoreProxy to create EntityProxy, if available
+      if (this._dataStoreProxy && this._dataStoreProxy.getProxy) {
+        return this._dataStoreProxy.getProxy(this._currentValue);
+      }
+      // Fallback: return the entity ID as-is 
       return this._currentValue;
     }
     
@@ -294,6 +306,57 @@ export class StreamProxy {
   }
 
   /**
+   * Check if this StreamProxy represents the result of an entity query
+   * @private
+   */
+  _isEntityQuery() {
+    if (!this._querySpec || !this._querySpec.find || !this._querySpec.where) {
+      return false;
+    }
+    
+    const findClause = this._querySpec.find;
+    const whereClause = this._querySpec.where;
+    
+    // Must have exactly one find variable
+    if (!Array.isArray(findClause) || findClause.length !== 1) {
+      return false;
+    }
+    
+    const findVar = findClause[0];
+    
+    // Must be a variable (not aggregate expression)
+    if (typeof findVar !== 'string' || !findVar.startsWith('?')) {
+      return false;
+    }
+    
+    // Check if the variable appears as an entity (first position) in where clauses
+    // OR if it appears as a value in reference attribute clauses
+    for (const clause of whereClause) {
+      if (Array.isArray(clause) && clause.length === 3) {
+        const [entity, attribute, value] = clause;
+        
+        // Variable appears as entity (first position)
+        if (entity === findVar) {
+          return true;
+        }
+        
+        // Variable appears as value in reference attribute
+        if (value === findVar) {
+          // Check if attribute is a reference type in the schema
+          if (this.store && this.store.schema && attribute) {
+            const schemaInfo = this.store.schema[attribute];
+            if (schemaInfo && schemaInfo.valueType === 'ref') {
+              return true;
+            }
+          }
+        }
+      }
+    }
+    
+    return false;
+  }
+
+  /**
    * Create deep copy of value to maintain immutability
    * @private
    */
@@ -320,6 +383,7 @@ export class StreamProxy {
     
     return copy;
   }
+
 
   /**
    * Clean up subscriptions and resources

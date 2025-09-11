@@ -73,8 +73,16 @@ export class DataStoreProxy {
       throw new Error('Query spec must have where clause');
     }
     
+    // Prepare query spec - add appropriate findType for aggregates
+    let processedQuerySpec = { ...querySpec };
+    
+    // Automatically set findType for aggregate queries to get scalar results
+    if (this.queryTypeDetector.isAggregateQuery(querySpec) && !processedQuerySpec.findType) {
+      processedQuerySpec.findType = 'scalar';
+    }
+    
     // Execute query using underlying DataStore
-    const results = this.dataStore.query(querySpec);
+    const results = this.dataStore.query(processedQuerySpec);
     
     // Determine appropriate proxy type
     const proxyType = this.queryTypeDetector.detectProxyType(querySpec, results);
@@ -157,7 +165,7 @@ export class DataStoreProxy {
       find: ['?value'], 
       where: [['?e', ':synthetic/value', '?value']]
     };
-    return new StreamProxy(this.dataStore, value, defaultQuerySpec);
+    return new StreamProxy(this.dataStore, value, defaultQuerySpec, this);
   }
   
   /**
@@ -215,7 +223,7 @@ export class DataStoreProxy {
           streamValue = results;
         }
         
-        return new StreamProxy(this.dataStore, streamValue, querySpec);
+        return new StreamProxy(this.dataStore, streamValue, querySpec, this);
         
       case 'EntityProxy':
         // For entity queries, results are arrays of entity IDs

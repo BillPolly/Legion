@@ -338,7 +338,7 @@ describe('End-to-End Integration Tests', () => {
       
       // Aggregate query: Get average price of all tech products (simplified)
       const avgPriceProxy = dataStoreProxy.query({
-        find: [['(avg ?price)']],
+        find: [['avg', '?price']],
         where: [
           ['?product', ':product/category', categoryIds[0]],
           ['?product', ':product/price', '?price']
@@ -393,7 +393,7 @@ describe('End-to-End Integration Tests', () => {
       
       // Chain entity-rooted aggregate: Get Alice's total completed order value
       const aliceTotalProxy = dataStoreProxy.query({
-        find: [['(sum ?total)']],
+        find: [['sum', '?total']],
         where: [
           ['?order', ':order/user', userIds[0]],
           ['?order', ':order/status', 'completed'],
@@ -740,20 +740,36 @@ describe('End-to-End Integration Tests', () => {
       expect(cityProxy.value()).toBe('San Francisco');
       
       // Query through deep relationships
-      const usersBySanFranciscoProxy = dataStoreProxy.query({
+      const querySpec = {
         find: ['?user'],
         where: [
           ['?user', ':user/address', '?addr'],
           ['?addr', ':address/city', 'San Francisco']
         ]
-      });
+      };
       
-      // Single result queries return StreamProxy, not CollectionProxy
-      expect(usersBySanFranciscoProxy).toBeInstanceOf(StreamProxy);
+      // Debug the query analysis
+      const results = dataStoreProxy.dataStore.query(querySpec);
+      const analysis = dataStoreProxy.queryTypeDetector.analyzeQuery(querySpec);
+      const proxyType = dataStoreProxy.queryTypeDetector.detectProxyType(querySpec, results);
       
-      const foundUser = usersBySanFranciscoProxy.value();
-      expect(foundUser).toBeInstanceOf(EntityProxy);
-      expect(foundUser[':user/name'].value()).toBe('Alice');
+      console.log('Debug query analysis:');
+      console.log('  Results:', results);
+      console.log('  Results length:', results.length);
+      console.log('  Analysis type:', analysis.type);
+      console.log('  Detected proxy type:', proxyType);
+      console.log('  Entity variable:', analysis.entityVariable);
+      console.log('  Scalar variable:', analysis.scalarVariable);
+      console.log('  _impliesSingleEntity:', dataStoreProxy.queryTypeDetector._impliesSingleEntity(querySpec));
+      console.log('  _couldReturnMultipleEntities:', dataStoreProxy.queryTypeDetector._couldReturnMultipleEntities(querySpec));
+      
+      const usersBySanFranciscoProxy = dataStoreProxy.query(querySpec);
+      
+      // Single entity result queries return EntityProxy
+      expect(usersBySanFranciscoProxy).toBeInstanceOf(EntityProxy);
+      
+      // Can access properties directly on the EntityProxy
+      expect(usersBySanFranciscoProxy[':user/name'].value()).toBe('Alice');
       
       console.log('✅ Deep property access with mixed types test passed!');
     });

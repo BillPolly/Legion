@@ -72,16 +72,16 @@ export class QueryTypeDetector {
         return 'EntityProxy'; // Query structure guarantees single entity
       }
       
-      // Default for entity queries based on result count
+      // For entity queries with result-based decisions:
       if (results.length === 0) {
-        // Empty result - for entity queries, still return appropriate entity type
-        // Check if this could be a multi-entity query
+        // Empty result - check if this could be a multi-entity query
         if (this._couldReturnMultipleEntities(querySpec)) {
           return 'CollectionProxy';
         }
-        return 'EntityProxy'; // Single entity query with no results
+        // Single entity queries with no results return EntityProxy (invalid/empty entity)
+        return 'EntityProxy';
       } else if (results.length === 1) {
-        // Single entity result - return EntityProxy for single entity queries
+        // Single entity result - return EntityProxy for direct entity access
         return 'EntityProxy';
       } else {
         return 'CollectionProxy'; // Multiple entities
