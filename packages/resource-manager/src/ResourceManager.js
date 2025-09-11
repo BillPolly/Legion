@@ -195,8 +195,12 @@ export class ResourceManager {
         this._resources.set('env', envVars);
       }
       
-      // Ensure required services are running
-      await this._ensureServicesRunning();
+      // Ensure required services are running (in background, don't block)
+      setImmediate(() => {
+        this._ensureServicesRunning().catch(error => {
+          console.warn('Background service initialization failed:', error.message);
+        });
+      });
       
       // Mark as initialized
       this.initialized = true;

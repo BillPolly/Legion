@@ -6,6 +6,7 @@
 import { SimplePromptClient } from '@legion/llm-client';
 import { ResourceManager } from '@legion/resource-manager';
 import { GeminiToolsModule } from '@legion/gemini-tools';
+import { ToolResultFormatter } from '../utils/ToolResultFormatter.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -19,6 +20,10 @@ export class ConversationManager {
     this.conversationHistory = [];
     this.turnCounter = 0;
     this.simpleClient = null;
+    
+    // Cache actual tool objects by name for easy invocation
+    this.toolsByName = new Map(); // Maps tool.name -> tool object
+    this.cachedToolsForLLM = null; // Cached tools array for SimplePromptClient
     
     // Load system prompt from file (sync)
     this._loadSystemPrompt();
@@ -38,6 +43,9 @@ export class ConversationManager {
       this.toolsModule = await GeminiToolsModule.create(this.resourceManager);
       console.log('✅ Tools initialized:', this.toolsModule.getStatistics().toolCount, 'tools');
       
+      // Cache tools by name for easy invocation
+      this._cacheTools();
+      
       // Initialize SimplePromptClient
       this.simpleClient = await this.resourceManager.get('simplePromptClient');
       console.log('✅ SimplePromptClient initialized');
@@ -47,6 +55,24 @@ export class ConversationManager {
       console.error('❌ Initialization failed:', error.message);
       throw error;
     }
+  }
+
+  /**
+   * Cache tools by name for easy invocation
+   */
+  _cacheTools() {
+    const tools = this.toolsModule.getTools();
+    this.toolsByName.clear();
+    
+    // Cache tool objects by their actual names
+    Object.values(tools).forEach(tool => {
+      const toolName = tool.name || tool.toolName;
+      if (toolName) {
+        this.toolsByName.set(toolName, tool);
+      }
+    });
+    
+    console.log('✅ Cached tools by name:', Array.from(this.toolsByName.keys()));
   }
 
   /**
@@ -108,26 +134,51 @@ export class ConversationManager {
 
       // Handle tool calls if present
       if (response.toolCalls && response.toolCalls.length > 0) {
+        console.log('🔧 Executing', response.toolCalls.length, 'tool calls...');
         const toolResults = [];
+        let updatedContent = response.content;
         
         for (const toolCall of response.toolCalls) {
           try {
-            const result = await this.toolsModule.invoke(toolCall.name, toolCall.args);
+            console.log('⚡ Executing tool:', toolCall.name, toolCall.args);
+            
+            // Use cached tool object for direct invocation
+            const tool = this.toolsByName.get(toolCall.name);
+            if (!tool) {
+              throw new Error(`Tool '${toolCall.name}' not found in cached tools`);
+            }
+            
+            const result = await tool.execute(toolCall.args);
+            console.log('✅ Tool result:', result);
+            
             toolResults.push({
               name: toolCall.name,
               args: toolCall.args,
               result: result
             });
+            
+            // Replace the XML tool call with beautifully formatted result
+            const toolUseRegex = new RegExp(`<tool_use name="${toolCall.name}"[^>]*>.*?</tool_use>`, 'g');
+            const formattedResult = ToolResultFormatter.format(toolCall.name, result);
+            updatedContent = updatedContent.replace(toolUseRegex, `\n\n${formattedResult}\n`);
+            
           } catch (error) {
+            console.error('❌ Tool execution failed:', toolCall.name, error.message);
             toolResults.push({
               name: toolCall.name,
               args: toolCall.args,
               error: error.message
             });
+            
+            // Replace with formatted error message
+            const toolUseRegex = new RegExp(`<tool_use name="${toolCall.name}"[^>]*>.*?</tool_use>`, 'g');
+            const formattedError = ToolResultFormatter.formatError(toolCall.name, { error: error.message });
+            updatedContent = updatedContent.replace(toolUseRegex, `\n\n${formattedError}\n`);
           }
         }
         
         assistantMessage.toolCalls = toolResults;
+        assistantMessage.content = updatedContent; // Use content with executed tool results
       }
 
       this.conversationHistory.push(assistantMessage);
@@ -140,7 +191,7 @@ export class ConversationManager {
       return {
         id: `turn_${this.turnCounter}`,
         type: 'assistant',
-        content: response.content,
+        content: assistantMessage.content, // Use updated content with tool results
         tools: assistantMessage.toolCalls || [],
         metadata: response.metadata,
         timestamp: assistantMessage.timestamp
@@ -171,20 +222,27 @@ export class ConversationManager {
    * Convert Gemini tools to SimplePromptClient format
    */
   _getToolsForSimpleClient() {
-    if (!this.toolsModule) {
+    // Return cached tools if available
+    if (this.cachedToolsForLLM) {
+      return this.cachedToolsForLLM;
+    }
+    
+    if (!this.toolsByName || this.toolsByName.size === 0) {
       return [];
     }
 
-    const tools = this.toolsModule.getTools();
-    return Object.entries(tools).map(([name, tool]) => ({
-      name: name,
-      description: tool.description || `Execute ${name}`,
+    // Create tools array from cached tools by name
+    this.cachedToolsForLLM = Array.from(this.toolsByName.values()).map(tool => ({
+      name: tool.name || tool.toolName,
+      description: tool.description || `Execute ${tool.name}`,
       parameters: tool.inputSchema || {
         type: 'object',
         properties: {},
         additionalProperties: true
       }
     }));
+    
+    return this.cachedToolsForLLM;
   }
 
   /**
