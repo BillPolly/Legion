@@ -23,10 +23,7 @@ describe('Tool Calling Integration', () => {
       buildSystemPrompt: async () => 'You are a helpful assistant that can use tools.'
     };
     
-    conversationManager = new ConversationManager({
-      promptManager: mockPromptManager,
-      resourceManager: resourceManager
-    });
+    conversationManager = new ConversationManager(resourceManager);
     
     // Create test directory
     testDir = path.join(os.tmpdir(), `tool-calling-test-${Date.now()}`);
@@ -50,7 +47,7 @@ describe('Tool Calling Integration', () => {
     
     const response = await conversationManager.processMessage(userInput);
     
-    expect(response.type).toBe('chat_response');
+    expect(response.type).toBe('assistant');
     expect(typeof response.content).toBe('string');
     
     console.log('Tool calling response:', response.content);
@@ -85,7 +82,7 @@ describe('Tool Calling Integration', () => {
     
     const response = await conversationManager.processMessage(userInput);
     
-    expect(response.type).toBe('chat_response');
+    expect(response.type).toBe('assistant');
     console.log('Read tool response:', response.content);
     console.log('Tools executed:', response.tools);
     
@@ -98,7 +95,7 @@ describe('Tool Calling Integration', () => {
     
     const response = await conversationManager.processMessage(userInput);
     
-    expect(response.type).toBe('chat_response');
+    expect(response.type).toBe('assistant');
     console.log('List files response:', response.content);
     console.log('Tools executed:', response.tools);
     
@@ -111,7 +108,7 @@ describe('Tool Calling Integration', () => {
     
     const response = await conversationManager.processMessage(userInput);
     
-    expect(response.type).toBe('chat_response');
+    expect(response.type).toBe('assistant');
     console.log('Multi-tool response:', response.content);
     console.log('Tools executed:', response.tools);
     
@@ -124,7 +121,7 @@ describe('Tool Calling Integration', () => {
     
     const response = await conversationManager.processMessage(userInput);
     
-    expect(response.type).toBe('chat_response');
+    expect(response.type).toBe('assistant');
     console.log('Shell command response:', response.content);
     console.log('Tools executed:', response.tools);
     
@@ -158,7 +155,7 @@ The file has been created successfully.`;
     
     const response = await conversationManager.processMessage(userInput);
     
-    expect(response.type).toBe('chat_response');
+    expect(response.type).toBe('assistant');
     console.log('No tools response:', response.content);
     
     // Should respond without tools

@@ -10,7 +10,13 @@ describe('GeminiPromptManager', () => {
 
   beforeEach(() => {
     mockResourceManager = {
-      get: () => 'mock-value'
+      get: (key) => {
+        if (key === 'env.PWD') return '/test/working/directory';
+        if (key === 'workingDirectory') return '/test/working/directory';
+        if (key === 'env.NODE_VERSION') return 'v18.0.0';
+        if (key === 'env.PLATFORM') return 'darwin';
+        return 'mock-value';
+      }
     };
     promptManager = new GeminiPromptManager(mockResourceManager);
   });
@@ -56,7 +62,7 @@ describe('GeminiPromptManager', () => {
     
     expect(dirContext).toContain('Current Directory');
     expect(dirContext).toContain('Working directory:');
-    expect(dirContext).toContain(process.cwd());
+    expect(dirContext).toContain('/test/working/directory'); // From mock ResourceManager
   });
 
   test('should build environment context', async () => {
@@ -65,8 +71,8 @@ describe('GeminiPromptManager', () => {
     expect(envContext).toContain('Environment');
     expect(envContext).toContain('Platform:');
     expect(envContext).toContain('Node.js:');
-    expect(envContext).toContain(process.platform);
-    expect(envContext).toContain(process.version);
+    expect(envContext).toContain('v18.0.0'); // Node version from mock
+    expect(envContext).toContain('darwin'); // Platform from mock
   });
 
   test('should build tool descriptions', async () => {

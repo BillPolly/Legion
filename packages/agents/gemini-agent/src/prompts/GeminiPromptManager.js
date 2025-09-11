@@ -1,3 +1,5 @@
+import { ResourceManager } from '@legion/resource-manager';
+
 export class GeminiPromptManager {
   constructor(resourceManager) {
     this.resourceManager = resourceManager;
@@ -39,29 +41,18 @@ ${toolDescriptions}${memorySection}`;
   }
 
   async getDirectoryContext() {
-    // Check if ResourceManager has the method, otherwise provide fallback
-    if (typeof this.resourceManager.getDirectoryContext === 'function') {
-      return await this.resourceManager.getDirectoryContext();
-    }
-    return `Current Directory Context:\nWorking directory: ${process.cwd()}`;
+    const workingDir = this.resourceManager.get('env.PWD') || this.resourceManager.get('workingDirectory');
+    return `Current Directory Context:\nWorking directory: ${workingDir}`;
   }
 
   async getEnvironmentContext() {
-    // Check if ResourceManager has the method, otherwise provide fallback
-    if (typeof this.resourceManager.getEnvironmentContext === 'function') {
-      return await this.resourceManager.getEnvironmentContext();
-    }
-    return `Environment Context:\nNode.js: ${process.version}\nPlatform: ${process.platform}`;
+    const nodeVersion = this.resourceManager.get('env.NODE_VERSION') || 'unknown';
+    const platform = this.resourceManager.get('env.PLATFORM') || 'unknown';
+    return `Environment Context:\nNode.js: ${nodeVersion}\nPlatform: ${platform}`;
   }
 
   async buildToolDescriptions() {
-    // Check if ResourceManager has the method, otherwise provide fallback
-    if (typeof this.resourceManager.getAvailableTools === 'function') {
-      const tools = await this.resourceManager.getAvailableTools();
-      return tools.map(tool => 
-        `${tool.name}: ${tool.description}`
-      ).join('\n');
-    }
+    // For now, return basic tool descriptions - this should be integrated with Legion's tool registry
     return `Available Tools:\n- read_file: Read file contents\n- write_file: Write file contents\n- edit_file: Edit file contents\n- list_files: List directory contents\n- shell_command: Execute shell commands\n- grep_search: Search within files`;
   }
 

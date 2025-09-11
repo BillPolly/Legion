@@ -3,8 +3,7 @@
  * Minimal wrapper around ToolCallingConversationManager with actor framework integration
  */
 
-import ToolCallingConversationManager from '../conversation/ToolCallingConversationManager.js';
-import ProjectManagementServerActor from './server/ProjectManagementServerActor.js';
+import ToolCallingConversationManager from '../../conversation/ToolCallingConversationManager.js';
 
 /**
  * Root server actor for Gemini agent (wraps existing functionality)
@@ -19,9 +18,6 @@ export default class GeminiRootServerActor {
     // Initialize ResourceManager from services or create one
     this.resourceManager = services.resourceManager || this._createResourceManager();
     
-    // Project management server actor
-    this.projectManagementActor = null;
-    
     console.log('🎭 GeminiRootServerActor created with services:', Object.keys(services));
   }
 
@@ -33,29 +29,6 @@ export default class GeminiRootServerActor {
     return await ResourceManager.getInstance();
   }
 
-  /**
-   * Initialize project management server actor
-   */
-  async _initializeProjectManagement() {
-    try {
-      // Create project management server actor
-      this.projectManagementActor = new ProjectManagementServerActor({
-        resourceManager: this.resourceManager
-      });
-      
-      // Set main actor reference
-      this.projectManagementActor.setMainActor(this);
-      
-      // Initialize the project management actor
-      await this.projectManagementActor.initialize();
-
-      console.log('🎯 [ACTOR] Project management server actor initialized');
-      
-    } catch (error) {
-      console.error('❌ Project management server actor initialization failed:', error.message);
-      // Don't fail the entire actor - project management is optional
-    }
-  }
 
   /**
    * Set remote actor connection (Legion actor framework pattern)
@@ -76,12 +49,6 @@ export default class GeminiRootServerActor {
       // Initialize existing conversation manager (no changes to it)
       this.conversationManager = new ToolCallingConversationManager(this.resourceManager);
       
-      // Initialize project management components
-      await this._initializeProjectManagement();
-      
-      // Project management actor is already initialized and connected
-      console.log('🔗 [ACTOR] ProjectManagementServerActor ready for dashboard connection');
-      
       // Wait for conversation manager to initialize
       await new Promise(resolve => setTimeout(resolve, 3000));
       
@@ -92,9 +59,7 @@ export default class GeminiRootServerActor {
         console.log('📤 [SERVER] Sending ready signal to client...');
         this.remoteActor.receive('ready', {
           timestamp: new Date().toISOString(),
-          tools: this.conversationManager.toolsModule?.getStatistics()?.toolCount || 0,
-          observability: !!this.conversationManager.observabilityService,
-          sdMethodology: !!this.conversationManager.sdMethodologyService
+          tools: this.conversationManager.toolsModule?.getStatistics()?.toolCount || 0
         });
         console.log('✅ [SERVER] Ready signal sent!');
       }, 1000); // Wait 1 second for client to fully initialize
@@ -133,42 +98,6 @@ export default class GeminiRootServerActor {
           await this._handleSlashCommand(data);
           break;
           
-        case 'observability_request':
-          await this._handleObservabilityRequest(data);
-          break;
-
-        case 'get_project_data':
-          if (this.projectManagementActor) {
-            try {
-              const response = await this.projectManagementActor.handleGetProjectData(data);
-              this.remoteActor.receive('project_data_response', response);
-            } catch (error) {
-              this.remoteActor.receive('project_data_error', {
-                projectId: data.projectId,
-                error: error.message
-              });
-            }
-          } else {
-            console.warn('⚠️ Project management not available');
-          }
-          break;
-
-        case 'get_deliverable_details':
-          if (this.projectManagementActor) {
-            try {
-              const response = await this.projectManagementActor.handleGetDeliverableDetails(data);
-              this.remoteActor.receive('deliverable_details_response', response);
-            } catch (error) {
-              this.remoteActor.receive('deliverable_details_response', {
-                deliverableId: data.deliverableId,
-                error: error.message,
-                found: false
-              });
-            }
-          } else {
-            console.warn('⚠️ Project management not available');
-          }
-          break;
           
         default:
           console.warn('⚠️ Unknown message type:', messageType);
@@ -198,18 +127,7 @@ export default class GeminiRootServerActor {
       const command = parts[0];
       const args = parts.slice(1);
       
-      // Check if it's a project command
-      if (command === 'project' && this.projectManagementActor) {
-        const response = await this.projectManagementActor.handleProjectCommand(args);
-        this.remoteActor.receive('project_response', {
-          type: 'response',
-          content: response,
-          isProjectCommand: true
-        });
-        return;
-      }
-      
-      // Handle regular slash command directly (not through LLM)
+      // Handle slash command directly (not through LLM)
       const response = await this._handleSlashCommandLegacy(command, args);
       
       // Send response through actor framework
@@ -224,18 +142,8 @@ export default class GeminiRootServerActor {
     
     console.log('💬 [ACTOR] Processing chat message through existing conversation manager');
     
-    // Add project context if available
-    let enhancedMessage = data.content;
-    if (this.projectManagementActor) {
-      const currentProject = this.projectManagementActor.getCurrentProject();
-      if (currentProject) {
-        const projectContext = await this.projectManagementActor.getProjectContext();
-        enhancedMessage = `${data.content}\n\n[Project Context: ${projectContext}]`;
-      }
-    }
-    
     // Use existing working conversation manager (no changes needed)
-    const response = await this.conversationManager.processMessage(enhancedMessage);
+    const response = await this.conversationManager.processMessage(data.content);
     
     console.log('📤 [ACTOR] Sending response through actor framework');
     
@@ -244,9 +152,7 @@ export default class GeminiRootServerActor {
       type: 'response',
       content: response.content,
       tools: response.tools || [],
-      timestamp: response.timestamp,
-      sdMethodologyApplied: response.sdMethodologyApplied || false,
-      projectContext: this.projectManagementActor?.getCurrentProject() || null
+      timestamp: response.timestamp
     });
   }
 
@@ -268,15 +174,6 @@ export default class GeminiRootServerActor {
     });
   }
 
-  /**
-   * Handle observability requests
-   * @param {Object} data - Observability request data
-   */
-  async _handleObservabilityRequest(data) {
-    const observabilityData = this.conversationManager.observabilityService?.getSystemStatus() || {};
-    
-    this.remoteActor.receive('observability_data', observabilityData);
-  }
 
   /**
    * Legacy slash command handling (preserve existing functionality)
@@ -312,13 +209,10 @@ Use \`/show <parameter>\` where parameter is:
             
           case 'all':
             const allStats = this.conversationManager.toolsModule?.getStatistics() || {};
-            const obsStats = this.conversationManager.observabilityService?.getSystemStatus() || {};
             return `**🎯 Complete State:**
 🔧 Tools: ${allStats.toolCount || 0}
 💬 Messages: ${this.conversationManager.getConversationHistory().length}
-📊 Active Executions: ${obsStats.activeExecutions || 0}
-💾 Memory: ${obsStats.memoryUsage || 'unknown'}
-🔍 Observability: ${obsStats.totalEvents || 0} events tracked`;
+💾 Memory: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`;
             
           default:
             return `Unknown parameter: ${param}`;
@@ -341,10 +235,7 @@ Use \`/show <parameter>\` where parameter is:
     return {
       isReady: this.isReady,
       conversationManagerReady: !!this.conversationManager,
-      toolsAvailable: this.conversationManager?.toolsModule?.getStatistics()?.toolCount || 0,
-      observabilityActive: !!this.conversationManager?.observabilityService,
-      sdMethodologyReady: !!this.conversationManager?.sdMethodologyService,
-      projectManagementReady: !!this.projectManagementActor
+      toolsAvailable: this.conversationManager?.toolsModule?.getStatistics()?.toolCount || 0
     };
   }
 }

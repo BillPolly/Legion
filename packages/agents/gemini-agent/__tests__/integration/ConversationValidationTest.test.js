@@ -17,10 +17,7 @@ describe('Conversation Validation Tests', () => {
       buildSystemPrompt: async () => 'Test system prompt'
     };
     
-    conversationManager = new ConversationManager({
-      promptManager: mockPromptManager,
-      resourceManager: resourceManager
-    });
+    conversationManager = new ConversationManager(resourceManager);
     validationHelper = new ValidationHelper();
   });
 

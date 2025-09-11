@@ -20,10 +20,7 @@ describe('Conversation Management Integration', () => {
       buildSystemPrompt: async () => 'You are a helpful assistant.'
     };
     
-    conversationManager = new ConversationManager({
-      promptManager: mockPromptManager,
-      resourceManager: resourceManager
-    });
+    conversationManager = new ConversationManager(resourceManager);
   });
 
   beforeEach(() => {
@@ -39,7 +36,7 @@ describe('Conversation Management Integration', () => {
     
     const response = await conversationManager.processMessage(userInput);
     
-    expect(response.type).toBe('chat_response');
+    expect(response.type).toBe('assistant');
     expect(typeof response.content).toBe('string');
     expect(response.content.length).toBeGreaterThan(0);
     expect(response.id).toBeDefined();

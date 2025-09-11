@@ -1,4 +1,4 @@
-import ToolCallingService from '../../src/services/ToolCallingService';
+import ToolCallingService from '../../src/services/ToolCallingService.js';
 
 describe('ToolCallingService', () => {
   let service;

@@ -79,15 +79,25 @@ describe('ConversationManager', () => {
     expect(context).toContain('**USER**: How are you?');
   });
 
-  test('should handle context management', () => {
+  test('should handle context management', async () => {
+    // Mock ResourceManager for testing
+    const mockResourceManager = {
+      get: (key) => {
+        if (key === 'env.PWD') return '/test/working/directory';
+        if (key === 'workingDirectory') return '/test/working/directory';
+        return 'mock-value';
+      }
+    };
+
     const currentContext = {
-      workingDirectory: process.cwd(),
+      workingDirectory: mockResourceManager.get('env.PWD'),
       recentFiles: [],
       environment: {}
     };
 
     // Test context structure
     expect(typeof currentContext.workingDirectory).toBe('string');
+    expect(currentContext.workingDirectory).toBe('/test/working/directory');
     expect(Array.isArray(currentContext.recentFiles)).toBe(true);
     expect(typeof currentContext.environment).toBe('object');
 

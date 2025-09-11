@@ -5,5 +5,12 @@ export default {
   ],
   verbose: true,
   testTimeout: 10000,
-  transform: {}
+  transform: {},
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1'
+  },
+  collectCoverageFrom: [
+    'src/**/*.js',
+    '!src/index.js'
+  ]
 };

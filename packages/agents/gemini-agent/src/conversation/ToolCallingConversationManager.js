@@ -4,20 +4,13 @@
  */
 
 import { ResponseValidator } from '@legion/output-schema';
+import { ResourceManager } from '@legion/resource-manager';
 import GeminiToolsModule from '../../../../modules/gemini-tools/src/GeminiToolsModule.js';
 import path from 'path';
-import ProjectContextService from '../services/ProjectContextService.js';
-import ConversationCompressionService from '../services/ConversationCompressionService.js';
 import { GeminiPromptManager } from '../prompts/GeminiPromptManager.js';
-import LoopDetectionService from '../services/LoopDetectionService.js';
-import AdvancedToolOrchestrationService from '../services/AdvancedToolOrchestrationService.js';
 import GitService from '../services/GitService.js';
 import ShellExecutionService from '../services/ShellExecutionService.js';
-import EnhancedChat from '../core/EnhancedChat.js';
 import ChatRecordingService from '../services/ChatRecordingService.js';
-// Import SD methodology service for professional development
-import SDMethodologyService from '../services/SDMethodologyService.js';
-import ObservabilityService from '../services/ObservabilityService.js';
 
 /**
  * Conversation manager with proper tool calling using Legion patterns
@@ -28,23 +21,12 @@ export class ToolCallingConversationManager {
     this.conversationHistory = [];
     this.turnCounter = 0;
     
-    // Initialize all core services (complete Gemini CLI service suite)
+    // Initialize core services only
     this._initializeToolsModule();
-    this.projectContextService = new ProjectContextService(resourceManager, null);
-    this.compressionService = new ConversationCompressionService(resourceManager);
     this.promptManager = new GeminiPromptManager(resourceManager);
-    this.loopDetectionService = new LoopDetectionService(resourceManager);
-    this.orchestrationService = null; // Will be initialized after tools module
     this.gitService = new GitService(resourceManager);
     this.shellExecutionService = new ShellExecutionService(resourceManager);
     this.chatRecordingService = new ChatRecordingService(resourceManager);
-    this.enhancedChat = new EnhancedChat(resourceManager, this.chatRecordingService);
-    
-    // Initialize SD methodology service for professional development
-    this.sdMethodologyService = new SDMethodologyService(resourceManager);
-    
-    // Initialize observability service for real-time monitoring
-    this.observabilityService = new ObservabilityService();
     
     // Initialize services
     this._initializeAllServices();
@@ -87,15 +69,12 @@ export class ToolCallingConversationManager {
   // SD module initialization removed - using SDMethodologyService instead
 
   /**
-   * Initialize all services (ported from Gemini CLI)
+   * Initialize all services
    */
   async _initializeAllServices() {
     try {
       // Initialize Git service with credentials
       await this.gitService.initialize();
-      
-      // Initialize enhanced chat
-      await this.enhancedChat.initialize();
       
       console.log('✅ All core services initialized');
     } catch (error) {
@@ -110,13 +89,6 @@ export class ToolCallingConversationManager {
     try {
       this.toolsModule = await GeminiToolsModule.create(this.resourceManager);
       console.log('✅ GeminiToolsModule initialized with', this.toolsModule.getStatistics().toolCount, 'tools');
-      
-      // Initialize orchestration service after tools are ready
-      this.orchestrationService = new AdvancedToolOrchestrationService(
-        this.resourceManager, 
-        this.toolsModule
-      );
-      console.log('✅ Advanced orchestration service initialized');
     } catch (error) {
       console.error('❌ Failed to initialize tools module:', error.message);
     }
@@ -130,6 +102,15 @@ export class ToolCallingConversationManager {
   async processMessage(userInput) {
     this.turnCounter++;
 
+    // Add user message to history
+    this.conversationHistory.push({
+      id: `turn_${this.turnCounter}_user`,
+      type: 'user',
+      content: userInput,
+      tools: [],
+      timestamp: new Date().toISOString()
+    });
+
     // Get LLM client
     const llmClient = await this.resourceManager.get('llmClient');
     
@@ -139,10 +120,7 @@ export class ToolCallingConversationManager {
     // Build tool calling prompt with project context
     const prompt = await this.buildToolCallingPrompt(userInput, context);
     
-    // Check if this is a professional development request (route to SD methodology)
-    if (this.sdMethodologyService?.shouldUseMethodology(userInput)) {
-      return await this._handleProfessionalDevelopmentRequest(userInput, llmClient);
-    }
+    // Process with basic tool calling (removed SD methodology routing)
     
     // Get LLM response for regular tool calling
     const llmResponse = await llmClient.complete(prompt);
@@ -160,79 +138,26 @@ export class ToolCallingConversationManager {
       const executedTools = [];
       let toolOutput = '';
       
-      // Execute all tools in sequence with advanced orchestration
+      // Execute all tools in sequence
       for (const toolCall of toolCalls) {
         try {
-          // Check for tool call loops (Gemini CLI safety)
-          const loopDetected = this.loopDetectionService.checkToolCallLoop(toolCall.name, toolCall.args);
-          if (loopDetected) {
-            throw new Error(`Tool call loop detected for ${toolCall.name}. Execution stopped for safety.`);
-          }
-          
           // Generate unique execution ID for tracking
           const executionId = `exec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
           
-          console.log('🚀 [OBSERVABILITY] Starting tool execution:', executionId);
-          
-          // Start observability tracking
-          this.observabilityService.trackToolStart(toolCall.name, toolCall.args, executionId);
-          
-          console.log('🔧 [OBSERVABILITY] Tool tracking started:', toolCall.name);
           console.log('🔧 Executing tool:', toolCall.name, toolCall.args);
           
-          // Use advanced orchestration if available, otherwise direct execution
-          let toolResult;
-          if (this.orchestrationService) {
-            const orchestrationResult = await this.orchestrationService.scheduleToolCall({
-              toolName: toolCall.name,
-              args: toolCall.args,
-              promptId: `turn_${this.turnCounter}`
-            });
-            
-            if (orchestrationResult.success) {
-              toolResult = orchestrationResult.result;
-            } else {
-              throw new Error(orchestrationResult.error);
-            }
-          } else {
-            // Fallback to direct execution
-            toolResult = await this.toolsModule.invoke(toolCall.name, toolCall.args);
-          }
+          // Direct tool execution through GeminiToolsModule
+          const toolResult = await this.toolsModule.invoke(toolCall.name, toolCall.args);
           
           console.log('✅ Tool result:', toolResult);
           
-          console.log('🏁 [OBSERVABILITY] Tracking tool completion:', executionId);
-          
-          // Track tool completion in observability service
-          this.observabilityService.trackToolComplete(executionId, toolResult);
-          
-          console.log('📊 [OBSERVABILITY] Tool completion tracked successfully');
-          
-          // Immediate file verification for write_file tools
-          if (toolCall.name === 'write_file' && toolCall.args.absolute_path) {
-            try {
-              const fs = await import('fs/promises');
-              const stats = await fs.stat(toolCall.args.absolute_path);
-              console.log(`📄 [VERIFICATION] File created: ${path.basename(toolCall.args.absolute_path)} (${stats.size} bytes)`);
-              
-              // Track file creation in observability
-              this.observabilityService.trackFileChange(toolCall.args.absolute_path, 'created', executionId);
-            } catch (error) {
-              console.error(`❌ [VERIFICATION] File creation failed: ${toolCall.args.absolute_path}`);
-            }
-          }
-          
+          // Store executed tool result
           executedTools.push({
             name: toolCall.name,
             args: toolCall.args,
             result: toolResult,
             executionId
           });
-          
-          // Track file access for context building (Gemini CLI pattern)
-          if (toolCall.args.absolute_path) {
-            this.projectContextService.trackFileAccess(toolCall.args.absolute_path, toolCall.name.split('_')[0]);
-          }
           
           // Handle MCP tool discovery and registration (fix integration)
           if (toolCall.name === 'mcp_client_manager' && toolResult.success && toolResult.data?.discoveredTools) {
@@ -249,9 +174,6 @@ export class ToolCallingConversationManager {
           
         } catch (toolError) {
           console.error('❌ Tool execution failed:', toolError.message);
-          
-          // Track tool failure in observability service
-          this.observabilityService.trackToolComplete(executionId, null, toolError);
           
           executedTools.push({
             name: toolCall.name,
@@ -293,28 +215,14 @@ export class ToolCallingConversationManager {
   }
 
   /**
-   * Check if compression is needed and compress if so (ported from Gemini CLI)
+   * Check if compression is needed (simplified for now)
    * @param {Object} llmClient - LLM client for compression
    */
   async _checkAndCompress(llmClient) {
-    if (this.compressionService.needsCompression(this.conversationHistory)) {
-      try {
-        console.log('🗜️ Compressing conversation (token limit approaching)...');
-        
-        const compressionPrompt = this.promptManager.getCompressionPrompt();
-        const compressionResult = await this.compressionService.compressConversation(
-          this.conversationHistory,
-          llmClient,
-          compressionPrompt
-        );
-        
-        if (compressionResult.compressionStatus === 'compressed') {
-          this.conversationHistory = compressionResult.compressedHistory;
-          console.log(`✅ Conversation compressed: ${compressionResult.originalTokenCount} → ${compressionResult.newTokenCount} tokens`);
-        }
-      } catch (compressionError) {
-        console.warn('⚠️ Compression failed:', compressionError.message);
-      }
+    // Basic compression - keep only last 50 messages
+    if (this.conversationHistory.length > 50) {
+      this.conversationHistory = this.conversationHistory.slice(-50);
+      console.log('✅ Conversation history trimmed to last 50 messages');
     }
   }
 
@@ -325,10 +233,10 @@ export class ToolCallingConversationManager {
    * @returns {string} Tool calling prompt
    */
   async buildToolCallingPrompt(userInput, context) {
-    const workingDir = process.cwd();
+    const workingDir = this.resourceManager.get('env.PWD') || this.resourceManager.get('workingDirectory') || process.cwd();
     
-    // Build rich context using project awareness (ported from Gemini CLI)
-    const projectContext = await this.projectContextService.buildCompleteContext(workingDir);
+    // Build basic project context
+    const projectContext = `Working Directory: ${workingDir}`;
     
     const systemPrompt = `You are an interactive web-based coding assistant specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
 
@@ -460,105 +368,81 @@ ${projectContext}`;
   }
 
   /**
-   * Check if user input is a software development request
-   * @param {string} input - User input
-   * @returns {boolean} Whether this is a development request
+   * Get conversation state (compatibility method)
    */
-  _isDevelopmentRequest(input) {
-    const developmentKeywords = [
-      'build', 'create', 'develop', 'implement', 'design',
-      'app', 'application', 'system', 'service', 'api',
-      'website', 'web app', 'microservice', 'architecture',
-      'todo app', 'chat app', 'e-commerce', 'dashboard'
-    ];
-    
-    const lowerInput = input.toLowerCase();
-    return developmentKeywords.some(keyword => lowerInput.includes(keyword)) &&
-           (lowerInput.includes('build') || lowerInput.includes('create') || lowerInput.includes('develop'));
+  getState() {
+    return {
+      messages: this.conversationHistory,
+      turnCounter: this.turnCounter,
+      timestamp: new Date().toISOString()
+    };
   }
 
   /**
-   * Handle professional development request using SD methodology
-   * @param {string} userInput - Development request
-   * @param {Object} llmClient - LLM client
-   * @returns {Promise<Object>} Professional development response
+   * Add message to history (compatibility method)
    */
-  async _handleProfessionalDevelopmentRequest(userInput, llmClient) {
-    try {
-      console.log('🏗️ Using professional SD methodology for sophisticated development');
-      
-      // Execute professional development methodology
-      const methodologyResult = await this.sdMethodologyService.performDevelopmentAnalysis(userInput);
-      
-      if (methodologyResult.success) {
-        const content = `🏗️ **Professional Development Methodology Applied**
-
-I've analyzed your request using sophisticated software development methodology:
-
-**📊 Professional Analysis Results:**
-- **Requirements**: ${methodologyResult.summary.totalRequirements} structured requirements (functional + non-functional)
-- **User Stories**: ${methodologyResult.summary.totalStories} professional user stories generated  
-- **Priority**: ${methodologyResult.summary.highPriorityStories} high-priority features identified
-- **Quality Gates**: ${methodologyResult.summary.methodologyCompliant ? '✅ PASSED' : '❌ FAILED'}
-- **Artifacts**: ${methodologyResult.summary.artifactsGenerated} design artifacts stored in database
-
-**🎯 Methodology Phases Completed:**
-✅ **Requirements Analysis** - ${methodologyResult.phases.requirements.qualityGate}
-✅ **User Story Generation** - ${methodologyResult.phases.userStories.qualityGate}
-
-**🔄 Next Phases Available:**
-- Domain Modeling (bounded contexts, entities)  
-- Clean Architecture Design (layers, dependencies)
-- Implementation Planning (code generation)
-- Quality Assurance (validation, testing)
-
-**🏆 Professional Advantage:**
-This systematic approach provides:
-- Structured requirements vs ad-hoc development
-- Quality gates and methodology compliance
-- Database artifact traceability  
-- Professional development standards
-
-**${methodologyResult.professionalAdvantage}**
-
-Would you like me to continue with Domain Modeling, or shall I proceed with implementation using the analyzed requirements?`;
-        
-        const response = {
-          id: `turn_${this.turnCounter}_assistant`,
-          type: 'assistant',
-          content,
-          tools: [], // No basic tools used - SD methodology instead
-          timestamp: new Date().toISOString(),
-          sdMethodologyApplied: true,
-          methodologyResult
-        };
-        
-        return response;
-      } else {
-        // SD methodology failed, fall back to basic tools
-        const fallbackResponse = {
-          id: `turn_${this.turnCounter}_assistant`,
-          type: 'assistant',
-          content: `I attempted professional development methodology but encountered issues: ${methodologyResult.error}. I'll use basic tools instead.`,
-          tools: [],
-          timestamp: new Date().toISOString()
-        };
-        return fallbackResponse;
-      }
-      
-    } catch (error) {
-      console.error('SD methodology handling failed:', error.message);
-      // Fall back to regular tool calling
-      const fallbackResponse = {
-        id: `turn_${this.turnCounter}_assistant`,
-        type: 'assistant',
-        content: `I understand you want to build something. I have sophisticated development methodology available, but I'll use basic tools for now. What specific files do you need help with?`,
-        tools: [],
-        timestamp: new Date().toISOString()
-      };
-      return fallbackResponse;
+  addMessage(message) {
+    if (!message || typeof message !== 'object') {
+      throw new Error('Message must be an object');
     }
+    if (!message.role || !message.content) {
+      throw new Error('Message must have role and content properties');
+    }
+    
+    this.conversationHistory.push({
+      ...message,
+      timestamp: message.timestamp || new Date().toISOString()
+    });
   }
+
+  /**
+   * Update working directory (compatibility method)
+   */
+  updateWorkingDirectory(directory) {
+    this.workingDirectory = directory;
+  }
+
+  /**
+   * Parse tool calls from response (compatibility method)
+   */
+  parseToolCalls(response) {
+    const toolCalls = [];
+    
+    // Find JSON blocks that contain tool calls
+    const jsonBlocks = [];
+    let braceCount = 0;
+    let start = -1;
+    
+    for (let i = 0; i < response.length; i++) {
+      if (response[i] === '{') {
+        if (braceCount === 0) start = i;
+        braceCount++;
+      } else if (response[i] === '}') {
+        braceCount--;
+        if (braceCount === 0 && start >= 0) {
+          const block = response.substring(start, i + 1);
+          jsonBlocks.push(block);
+        }
+      }
+    }
+    
+    for (const block of jsonBlocks) {
+      try {
+        const parsed = JSON.parse(block);
+        if (parsed.use_tool && parsed.use_tool.name && parsed.use_tool.args) {
+          toolCalls.push({
+            name: parsed.use_tool.name,
+            args: parsed.use_tool.args
+          });
+        }
+      } catch (error) {
+        // Skip invalid JSON
+      }
+    }
+    
+    return toolCalls;
+  }
+
 }
 
 export default ToolCallingConversationManager;

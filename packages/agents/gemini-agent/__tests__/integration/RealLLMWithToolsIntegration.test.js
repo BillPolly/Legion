@@ -25,10 +25,7 @@ describe('Real LLM with Tools Integration', () => {
       buildSystemPrompt: async () => 'You are a helpful assistant that can use tools.'
     };
     
-    conversationManager = new ConversationManager({
-      promptManager: mockPromptManager,
-      resourceManager: resourceManager
-    });
+    conversationManager = new ConversationManager(resourceManager);
     
     // Create real test directory
     testDir = path.join(os.tmpdir(), `llm-tools-integration-${Date.now()}`);
@@ -49,7 +46,7 @@ describe('Real LLM with Tools Integration', () => {
     
     const response = await conversationManager.processMessage(userInput);
     
-    expect(response.type).toBe('chat_response');
+    expect(response.type).toBe('assistant');
     expect(typeof response.content).toBe('string');
     expect(response.content.length).toBeGreaterThan(20);
     
@@ -64,7 +61,7 @@ describe('Real LLM with Tools Integration', () => {
     
     const response = await conversationManager.processMessage(userInput);
     
-    expect(response.type).toBe('chat_response');
+    expect(response.type).toBe('assistant');
     console.log('LLM Response about file capabilities:', response.content);
     
     // Should mention file-related capabilities since it has the system prompt
@@ -101,7 +98,7 @@ Please analyze this code and suggest one specific improvement. Keep your respons
       'Give me a very brief response about helping with JavaScript.'
     );
     
-    expect(taskResponse.type).toBe('chat_response');
+    expect(taskResponse.type).toBe('assistant');
     console.log('LLM Task Response:', taskResponse.content);
     
   }, 90000); // Longer timeout for multiple LLM calls
@@ -114,8 +111,8 @@ Please analyze this code and suggest one specific improvement. Keep your respons
     const turn1 = await conversationManager.processMessage('My name is TestUser');
     const turn2 = await conversationManager.processMessage('What is my name?');
     
-    expect(turn1.type).toBe('chat_response');
-    expect(turn2.type).toBe('chat_response');
+    expect(turn1.type).toBe('assistant');
+    expect(turn2.type).toBe('assistant');
     
     console.log('Turn 1 (introduce name):', turn1.content);
     console.log('Turn 2 (recall name):', turn2.content);

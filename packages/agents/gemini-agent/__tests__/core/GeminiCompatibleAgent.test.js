@@ -86,14 +86,24 @@ describe('GeminiCompatibleAgent', () => {
     expect(Array.isArray(response.tools)).toBe(true);
   });
 
-  test('should maintain conversation context structure', () => {
+  test('should maintain conversation context structure', async () => {
+    // Mock ResourceManager for testing
+    const mockResourceManager = {
+      get: (key) => {
+        if (key === 'env.PWD') return '/test/working/directory';
+        if (key === 'workingDirectory') return '/test/working/directory';
+        return 'mock-value';
+      }
+    };
+
     const context = {
-      workingDirectory: process.cwd(),
+      workingDirectory: mockResourceManager.get('env.PWD'),
       recentFiles: [],
       environment: {}
     };
 
     expect(typeof context.workingDirectory).toBe('string');
+    expect(context.workingDirectory).toBe('/test/working/directory');
     expect(Array.isArray(context.recentFiles)).toBe(true);
     expect(typeof context.environment).toBe('object');
   });
