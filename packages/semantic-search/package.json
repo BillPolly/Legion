@@ -1,0 +1,55 @@
+{
+  "name": "@legion/semantic-search",
+  "version": "0.1.0",
+  "description": "Semantic search provider for Legion framework using OpenAI embeddings and Qdrant vector database",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./provider": "./src/SemanticSearchProvider.js",
+    "./services": "./src/services/index.js",
+    "./utils": "./src/utils/index.js"
+  },
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:onnx": "NODE_OPTIONS='--experimental-vm-modules' jest --config jest.config.onnx.js",
+    "test:non-onnx": "NODE_OPTIONS='--experimental-vm-modules' jest --testPathIgnorePatterns='ONNX|LocalEmbedding'",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
+    "lint": "eslint src/**/*.js",
+    "docs": "jsdoc src/**/*.js -d docs/api"
+  },
+  "dependencies": {
+    "@legion/nomic": "^1.0.0",
+    "@qdrant/js-client-rest": "^1.8.2",
+    "lodash": "^4.17.21",
+    "openai": "^4.28.4",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  },
+  "keywords": [
+    "legion",
+    "semantic-search",
+    "vector-search",
+    "embeddings",
+    "openai",
+    "qdrant",
+    "ai",
+    "machine-learning"
+  ],
+  "author": "Legion Framework",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/legion/legion.git",
+    "directory": "packages/semantic-search"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

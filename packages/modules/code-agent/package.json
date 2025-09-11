@@ -43,7 +43,6 @@
   "dependencies": {
     "@babel/parser": "^7.23.6",
     "@babel/traverse": "^7.23.6",
-    "@legion/conan-the-deployer": "*",
     "@legion/jester": "file:../jester",
     "@legion/planner": "*",
     "@legion/playwright": "*",

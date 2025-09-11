@@ -14,7 +14,6 @@
     "@legion/bt-validator": "file:../bt-validator", 
     "@legion/tools-registry": "file:../../tools-registry",
     "@legion/prompt-manager": "file:../prompt-manager",
-    "@legion/module-loader": "file:../../core/module-loader",
     "zod": "^3.22.4"
   },
   "devDependencies": {

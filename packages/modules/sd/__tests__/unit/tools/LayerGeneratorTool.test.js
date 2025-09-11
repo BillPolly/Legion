@@ -15,7 +15,81 @@ describe('LayerGeneratorTool', () => {
 
     mockDependencies = {
       llmClient: {
-        complete: jest.fn().mockResolvedValue('Generated layers')
+        complete: jest.fn().mockResolvedValue(JSON.stringify({
+          architecture: {
+            style: 'Clean Architecture',
+            description: 'Layered architecture following Clean Architecture principles',
+            layers: [
+              {
+                id: 'domain',
+                name: 'Domain Layer',
+                description: 'Core business logic',
+                responsibility: 'Encapsulates business rules',
+                level: 1,
+                components: [
+                  {
+                    type: 'entity',
+                    name: 'UserEntity',
+                    description: 'User business entity',
+                    sourceEntity: 'user-entity-id'
+                  }
+                ],
+                dependencies: [],
+                dependents: ['application'],
+                interfaces: [],
+                patterns: ['Entity', 'Value Object'],
+                testingStrategy: 'Unit tests'
+              },
+              {
+                id: 'application',
+                name: 'Application Layer',
+                description: 'Application business rules',
+                responsibility: 'Orchestrates domain objects',
+                level: 2,
+                components: [
+                  {
+                    type: 'use_case',
+                    name: 'CreateUserUseCase',
+                    description: 'Creates new user',
+                    sourceEntity: 'user-aggregate'
+                  }
+                ],
+                dependencies: ['domain'],
+                dependents: ['infrastructure', 'presentation'],
+                interfaces: [],
+                patterns: ['Use Case'],
+                testingStrategy: 'Integration tests'
+              },
+              {
+                id: 'infrastructure',
+                name: 'Infrastructure Layer',
+                description: 'External concerns',
+                responsibility: 'Implements interfaces',
+                level: 3,
+                components: [],
+                dependencies: ['application', 'domain'],
+                dependents: [],
+                interfaces: [],
+                patterns: ['Repository'],
+                testingStrategy: 'Integration tests'
+              },
+              {
+                id: 'presentation',
+                name: 'Presentation Layer',
+                description: 'User interface',
+                responsibility: 'Handles user interaction',
+                level: 4,
+                components: [],
+                dependencies: ['application'],
+                dependents: [],
+                interfaces: [],
+                patterns: ['MVC'],
+                testingStrategy: 'E2E tests'
+              }
+            ],
+            dependencyRules: []
+          }
+        }))
       }
     };
 
@@ -31,46 +105,76 @@ describe('LayerGeneratorTool', () => {
   });
 
   describe('execute', () => {
-    it('should generate layers from aggregates', async () => {
+    it('should generate clean architecture from domain model', async () => {
+      const entities = [
+        {
+          id: 'ENT001',
+          name: 'User',
+          boundedContext: 'BC001'
+        }
+      ];
+      
+      const boundedContexts = [
+        {
+          id: 'BC001',
+          name: 'UserManagement',
+          description: 'User management context'
+        }
+      ];
+
       const result = await tool.execute({
-        aggregates: [
-          { 
-            id: 'AGG001', 
-            name: 'UserAggregate',
-            entities: ['User', 'Profile']
-          }
-        ],
-        interfaces: [
-          { id: 'I001', name: 'IUserService' }
-        ]
+        entities,
+        boundedContexts,
+        aggregates: [],
+        valueObjects: [],
+        domainEvents: [],
+        projectId: 'test-project'
       });
 
-      expect(result).toHaveProperty('layers');
-      expect(typeof result.layers).toBe('object');
-      expect(result.layers).toHaveProperty('domain');
-      expect(result.layers).toHaveProperty('application');
+      expect(result.success).toBe(true);
+      expect(result.data).toHaveProperty('architecture');
+      expect(result.data).toHaveProperty('artifactId');
+      expect(result.data).toHaveProperty('summary');
+      expect(result.data.architecture).toHaveProperty('layers');
+      expect(Array.isArray(result.data.architecture.layers)).toBe(true);
+      expect(result.data.architecture.layers).toHaveLength(4);
+      
+      const layerNames = result.data.architecture.layers.map(l => l.name);
+      expect(layerNames).toContain('Domain Layer');
+      expect(layerNames).toContain('Application Layer');
+      expect(layerNames).toContain('Infrastructure Layer');
+      expect(layerNames).toContain('Presentation Layer');
     });
 
-    it('should return default layers when no input', async () => {
+    it('should fail without required bounded contexts', async () => {
       const result = await tool.execute({});
 
-      expect(Object.keys(result.layers)).toHaveLength(4);
-      expect(result.layers.presentation).toHaveProperty('name', 'Presentation');
-      expect(result.layers.application).toHaveProperty('name', 'Application');
-      expect(result.layers.domain).toHaveProperty('name', 'Domain');
-      expect(result.layers.infrastructure).toHaveProperty('name', 'Infrastructure');
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Input validation failed');
     });
 
     it('should handle missing LLM client', async () => {
       tool.llmClient = null;
+      tool.resourceManager = null;
 
-      const result = await tool.execute({});
-      expect(Object.keys(result.layers)).toHaveLength(4);
-      const layerNames = Object.values(result.layers).map(l => l.name);
-      expect(layerNames).toContain('Presentation');
-      expect(layerNames).toContain('Application');
-      expect(layerNames).toContain('Domain');
-      expect(layerNames).toContain('Infrastructure');
+      const boundedContexts = [
+        {
+          id: 'BC001',
+          name: 'UserManagement',
+          description: 'User management context'
+        }
+      ];
+
+      const result = await tool.execute({
+        boundedContexts,
+        entities: [],
+        aggregates: [],
+        valueObjects: [],
+        domainEvents: []
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('LLM client not available');
     });
   });
 });

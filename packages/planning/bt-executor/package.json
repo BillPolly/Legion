@@ -13,7 +13,7 @@
   "dependencies": {
     "@legion/actor-bt": "file:../../shared/actor-BT",
     "@legion/tools-registry": "file:../../tools-registry",
-    "@legion/resource-manager": "file:../../core/resource-manager"
+    "@legion/resource-manager": "file:../../resource-manager"
   },
   "devDependencies": {
     "jest": "^29.0.0"
