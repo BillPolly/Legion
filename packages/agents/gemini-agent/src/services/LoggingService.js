@@ -1,0 +1,124 @@
+/**
+ * Service for centralized logging functionality with rotation and history management
+ * @class LoggingService
+ */
+export class LoggingService {
+  /**
+   * @param {Object} options - Logger options
+   * @param {string} [options.level='info'] - Minimum log level
+   * @param {number} [options.maxHistory=1000] - Maximum number of log entries to keep
+   * @param {boolean} [options.console=true] - Whether to log to console
+   */
+  /**
+   * @typedef {Object} LoggingOptions
+   * @property {string} [level='info'] - Logging level
+   * @property {boolean} [timestamps=true] - Include timestamps
+   * @property {string} [format='json'] - Log format
+   */
+
+  /**
+   * Creates a new LoggingService instance
+   * @param {LoggingOptions} options - Logging configuration options
+   */
+  constructor(options = {}) {
+    this.level = options.level || 'info';
+    this.maxHistory = options.maxHistory || 1000;
+    this.useConsole = options.console ?? true;
+    this.levels = ['error', 'warn', 'info', 'debug'];
+    this.history = [];
+  }
+
+  /**
+   * Log a message
+   * @param {string} level - Log level
+   * @param {string} message - Log message
+   * @param {Object} [meta={}] - Additional metadata
+   * @throws {Error} If level is invalid
+   */
+  log(level, message, meta = {}) {
+    if (!this.levels.includes(level)) {
+      throw new Error(`Invalid log level: ${level}`);
+    }
+
+    if (this.shouldLog(level)) {
+      const logEntry = {
+        timestamp: new Date().toISOString(),
+        level,
+        message,
+        meta
+      };
+
+      this.addToHistory(logEntry);
+
+      if (this.useConsole) {
+        console[level](message, meta);
+      }
+    }
+  }
+
+  /**
+   * Add entry to history with rotation
+   * @private
+   * @param {Object} entry - Log entry
+   */
+  addToHistory(entry) {
+    this.history.push(entry);
+    if (this.history.length > this.maxHistory) {
+      this.history = this.history.slice(-this.maxHistory);
+    }
+  }
+
+  /**
+   * Check if level should be logged
+   * @private
+   * @param {string} level - Log level to check
+   * @returns {boolean} Whether level should be logged
+   */
+  shouldLog(level) {
+    return this.levels.indexOf(level) <= this.levels.indexOf(this.level);
+  }
+
+  /**
+   * Log error message
+   * @param {string} message - Error message
+   * @param {Object} [meta] - Additional metadata
+   */
+  error(message, meta) { this.log('error', message, meta); }
+
+  /**
+   * Log warning message
+   * @param {string} message - Warning message
+   * @param {Object} [meta] - Additional metadata
+   */
+  warn(message, meta) { this.log('warn', message, meta); }
+
+  /**
+   * Log info message
+   * @param {string} message - Info message
+   * @param {Object} [meta] - Additional metadata
+   */
+  info(message, meta) { this.log('info', message, meta); }
+
+  /**
+   * Log debug message
+   * @param {string} message - Debug message
+   * @param {Object} [meta] - Additional metadata
+   */
+  debug(message, meta) { this.log('debug', message, meta); }
+
+  /**
+   * Get log history
+   * @param {number} [limit] - Maximum number of entries to return
+   * @returns {Array} Log history
+   */
+  getHistory(limit) {
+    return limit ? this.history.slice(-limit) : this.history;
+  }
+
+  /**
+   * Clear log history
+   */
+  clearHistory() {
+    this.history = [];
+  }
+}
