@@ -110,7 +110,8 @@ export function pull(db, pattern, eidSpec, opts = {}) {
     if (subpat == null && vals.length > 1000) vals.length = 1000;
     if (vals.length === 0) return;
     const cardMany = (db.schema[attr]?.card === 'many') || (vals.length > 1);
-    const val = cardMany ? vals : vals[0];
+    // Deduplicate values for many-cardinality attributes to handle duplicate datoms
+    const val = cardMany ? [...new Set(vals)] : vals[0];
     const effectiveSub = (subpat && subpat.__pullSub !== undefined) ? subpat.__pullSub : (subpat ?? (db.schema[attr]?.component ? '...' : null));
     if (subpat && subpat.__pullLimit !== undefined && Array.isArray(val)) {
       const lim = subpat.__pullLimit;

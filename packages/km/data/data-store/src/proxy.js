@@ -18,7 +18,7 @@ const proxyStates = new WeakMap();
  * Acts as a reactive handle that reflects current database state.
  */
 export class EntityProxy {
-  constructor(entityId, store) {
+  constructor(entityId, store, dataStoreProxy = null) {
     // Validate inputs
     if (!entityId && entityId !== 0) {
       throw new Error('Entity ID is required');
@@ -40,6 +40,7 @@ export class EntityProxy {
     // Store entity reference and store connection
     this.entityId = entityId;
     this.store = store;
+    this.dataStoreProxy = dataStoreProxy;
     
     // Initialize PropertyTypeDetector for this EntityProxy
     this._propertyTypeDetector = new PropertyTypeDetector(store.schema || {});
@@ -787,11 +788,37 @@ export class EntityProxy {
     }
 
     try {
-      // Bind ?this variable to this entity's ID
-      const boundQuery = this._bindThisVariable(querySpec);
+      // Handle optional update field
+      let tempids = null;
+      let dbToQuery = this.store.db(); // Default to current database
       
-      // Execute query against current database
-      const results = q(boundQuery, this.store.db());
+      if (querySpec.update) {
+        // Execute update through DataStoreProxy if available
+        const dataStoreProxy = this.dataStoreProxy;
+        if (dataStoreProxy) {
+          const txResult = dataStoreProxy._executeUpdate(querySpec.update);
+          tempids = txResult.tempids;
+          // Use the updated database for the query
+          dbToQuery = dataStoreProxy.dataStore.db();
+        } else {
+          throw new Error('Cannot execute updates without DataStoreProxy');
+        }
+      }
+      
+      // Prepare query spec - remove update field if present
+      let processedQuerySpec = { ...querySpec };
+      delete processedQuerySpec.update;
+      
+      // Bind tempids to query variables if needed
+      if (tempids && this.dataStoreProxy) {
+        processedQuerySpec = this.dataStoreProxy._bindTempids(processedQuerySpec, tempids);
+      }
+      
+      // Bind ?this variable to this entity's ID
+      const boundQuery = this._bindThisVariable(processedQuerySpec);
+      
+      // Execute query against the appropriate database (updated if there was an update)
+      const results = q(boundQuery, dbToQuery);
       
       // Determine appropriate proxy type based on query and results
       const proxyType = this._queryTypeDetector.detectProxyType(boundQuery, results);
@@ -808,7 +835,7 @@ export class EntityProxy {
         return this._createQueryResultProxy(proxyType, querySpec, []);
       } catch (detectionError) {
         // Fallback to StreamProxy with null value for complete failures
-        return new StreamProxy(this.store, null, querySpec);
+        return new StreamProxy(this.store, null, querySpec, this.dataStoreProxy);
       }
     }
   }
@@ -872,41 +899,61 @@ export class EntityProxy {
    * @private
    */
   _bindThisVariable(querySpec) {
-    const boundWhere = querySpec.where.map(clause => {
-      if (Array.isArray(clause)) {
-        // Handle different clause types
-        if (clause.length >= 3 && typeof clause[0] !== 'function') {
-          // Regular datom pattern: [e, a, v] or [e, a, v, tx]
-          return clause.map(term => {
-            if (term === '?this') {
-              return this.entityId;
-            }
-            return term;
-          });
-        } else if (clause.length >= 2 && typeof clause[0] === 'function') {
-          // Predicate clause: [predicate-fn, ...vars]
-          return clause.map((term, index) => {
-            if (index === 0) return term; // Keep predicate function as-is
-            if (term === '?this') {
-              return this.entityId;
-            }
-            return term;
-          });
-        } else if (clause.length === 2 && typeof clause[0] === 'string' && clause[0].startsWith('(')) {
-          // Function expression clause: ['(> ?age 18)', '?result']
-          // Replace ?this in the function expression string and bind it as a predicate
-          const functionExpr = clause[0].replace(/\?this/g, this.entityId);
-          // Convert to proper predicate format - DataScript expects [predicate-expr result-var]
-          return [functionExpr, clause[1]];
+    // Deep clone to avoid mutations
+    const boundQuery = JSON.parse(JSON.stringify(querySpec));
+    
+    // Special handling: if find clause contains ?this as the only variable,
+    // we need to ensure it returns the entity that matches both the constraints
+    // AND this entity's ID
+    if (boundQuery.find && boundQuery.find.length === 1 && boundQuery.find[0] === '?this') {
+      // Replace ?this with the entity ID directly in find clause
+      // This ensures we return this specific entity if it matches the constraints
+      boundQuery.find = [this.entityId];
+      
+      // Replace ?this references in where clauses with this entity's ID
+      boundQuery.where = boundQuery.where.map(clause => {
+        if (Array.isArray(clause)) {
+          return clause.map(term => term === '?this' ? this.entityId : term);
         }
-      }
-      return clause;
-    });
+        return clause;
+      });
+    } else {
+      // Standard binding - replace ?this in where clauses only
+      const boundWhere = boundQuery.where.map(clause => {
+        if (Array.isArray(clause)) {
+          // Handle different clause types
+          if (clause.length >= 3 && typeof clause[0] !== 'function') {
+            // Regular datom pattern: [e, a, v] or [e, a, v, tx]
+            return clause.map(term => {
+              if (term === '?this') {
+                return this.entityId;
+              }
+              return term;
+            });
+          } else if (clause.length >= 2 && typeof clause[0] === 'function') {
+            // Predicate clause: [predicate-fn, ...vars]
+            return clause.map((term, index) => {
+              if (index === 0) return term; // Keep predicate function as-is
+              if (term === '?this') {
+                return this.entityId;
+              }
+              return term;
+            });
+          } else if (clause.length === 2 && typeof clause[0] === 'string' && clause[0].startsWith('(')) {
+            // Function expression clause: ['(> ?age 18)', '?result']
+            // Replace ?this in the function expression string and bind it as a predicate
+            const functionExpr = clause[0].replace(/\?this/g, this.entityId);
+            // Convert to proper predicate format - DataScript expects [predicate-expr result-var]
+            return [functionExpr, clause[1]];
+          }
+        }
+        return clause;
+      });
+      
+      boundQuery.where = boundWhere;
+    }
 
-    return {
-      ...querySpec,
-      where: boundWhere
-    };
+    return boundQuery;
   }
 
   /**
@@ -917,24 +964,24 @@ export class EntityProxy {
     if (proxyType === 'StreamProxy') {
       // Extract single value from results
       const value = this._extractSingleValueFromResults(results);
-      return new StreamProxy(this.store, value, querySpec);
+      return new StreamProxy(this.store, value, querySpec, this.dataStoreProxy);
     } else if (proxyType === 'CollectionProxy') {
       // Extract collection from results and convert entities to EntityProxy instances
       const items = this._extractCollectionFromResults(results, querySpec);
-      return new CollectionProxy(this.store, items, querySpec);
+      return new CollectionProxy(this.store, items, querySpec, this.dataStoreProxy);
     } else if (proxyType === 'EntityProxy') {
       // Extract single entity ID and create EntityProxy
       const entityId = this._extractSingleEntityIdFromResults(results);
       if (entityId !== null && entityId !== undefined) {
-        return new EntityProxy(entityId, this.store);
+        return new EntityProxy(entityId, this.store, this.dataStoreProxy);
       } else {
         // Return StreamProxy with null for missing entity reference
-        return new StreamProxy(this.store, null, querySpec);
+        return new StreamProxy(this.store, null, querySpec, this.dataStoreProxy);
       }
     } else {
       // Fallback to StreamProxy
       const value = this._extractSingleValueFromResults(results);
-      return new StreamProxy(this.store, value, querySpec);
+      return new StreamProxy(this.store, value, querySpec, this.dataStoreProxy);
     }
   }
 

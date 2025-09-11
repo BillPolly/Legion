@@ -343,7 +343,7 @@ describe('QueryTypeDetector Integration Tests', () => {
       expect(results).toHaveLength(0);
       
       const proxyType = detector.detectProxyType(emptyEntityQuery, results);
-      expect(proxyType).toBe('EntityProxy'); // Single entity query, empty result
+      expect(proxyType).toBe('CollectionProxy'); // Empty results should be CollectionProxy
     });
     
     test('should handle empty results for multi-variable queries', () => {
