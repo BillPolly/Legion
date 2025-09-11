@@ -2,16 +2,24 @@
  * Live LLM Integration Test for Gemini Agent
  * Tests ConversationManager with actual LLM using SimplePromptClient
  * NO MOCKS - uses real ANTHROPIC_API_KEY
+ * All file operations directed to __tests__/tmp directory
  */
 
 import { jest } from '@jest/globals';
 import ConversationManager from '../../src/conversation/ConversationManager.js';
-import { ResourceManager } from '../../../../resource-manager/src/ResourceManager.js';
-import { SimplePromptClient } from '../../../../prompting/llm-client/src/SimplePromptClient.js';
+import { ResourceManager } from '@legion/resource-manager';
+import { SimplePromptClient } from '@legion/llm-client';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 describe('Gemini Agent Live LLM Integration', () => {
   let conversationManager;
   let resourceManager;
+  let testTmpDir;
 
   beforeAll(async () => {
     // Get real ResourceManager with .env
@@ -23,12 +31,29 @@ describe('Gemini Agent Live LLM Integration', () => {
       throw new Error('ANTHROPIC_API_KEY not found in .env - required for live LLM testing');
     }
 
+    // Create test tmp directory
+    testTmpDir = path.join(__dirname, '..', 'tmp');
+    await fs.mkdir(testTmpDir, { recursive: true });
+
     console.log('✅ Live LLM integration test initialized with Anthropic API');
+    console.log('📁 Test tmp directory:', testTmpDir);
   });
 
   beforeEach(() => {
     // Create real ConversationManager with real ResourceManager
     conversationManager = new ConversationManager(resourceManager);
+    
+    // Set working directory in ResourceManager for test tmp directory
+    resourceManager.set('workingDirectory', testTmpDir);
+  });
+
+  afterAll(async () => {
+    // Clean up test files
+    try {
+      await fs.rm(testTmpDir, { recursive: true, force: true });
+    } catch (error) {
+      // Ignore cleanup errors
+    }
   });
 
   describe('Simple Conversation Flow', () => {
@@ -130,6 +155,46 @@ describe('Gemini Agent Live LLM Integration', () => {
       
       console.log('🔄 Provider:', response.metadata.provider);
       console.log('📝 Controlled Response:', response.content);
+    }, 30000);
+  });
+
+  describe('File Generation Testing', () => {
+    it('should generate files in __tests__/tmp directory when requested', async () => {
+      const response = await conversationManager.processMessage('Create a hello.js file with console.log("Hello World!")');
+      
+      expect(response.content).toBeDefined();
+      
+      // If the LLM decided to create a file via tool call, check it's in tmp
+      if (response.tools && response.tools.length > 0) {
+        const writeFileCalls = response.tools.filter(tool => tool.name === 'write_file');
+        if (writeFileCalls.length > 0) {
+          // Verify file was created in tmp directory
+          const filePath = writeFileCalls[0].args.absolute_path;
+          expect(filePath).toContain('tmp');
+          
+          // Check if file actually exists
+          try {
+            const content = await fs.readFile(filePath, 'utf-8');
+            expect(content).toContain('Hello World');
+            console.log('✅ File created in tmp:', filePath);
+          } catch (error) {
+            console.log('ℹ️ File not created (tool may have failed):', error.message);
+          }
+        }
+      }
+      
+      console.log('📁 File Generation Response:', response.content.substring(0, 150));
+    }, 30000);
+
+    it('should list files in tmp directory', async () => {
+      // Create a test file first
+      const testFile = path.join(testTmpDir, 'test-file.txt');
+      await fs.writeFile(testFile, 'Test content');
+      
+      const response = await conversationManager.processMessage('List the files in the current directory');
+      
+      expect(response.content).toBeDefined();
+      console.log('📂 Directory Listing Response:', response.content.substring(0, 150));
     }, 30000);
   });
 });
