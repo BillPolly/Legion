@@ -12,7 +12,7 @@
   "dependencies": {
     "@legion/configurable-agent": "file:../configurable-agent",
     "@legion/gemini-tools": "file:../../modules/gemini-tools",
-    "@legion/llm": "file:../../llm",
+    "@legion/llm-client": "file:../../prompting/llm-client",
     "@legion/output-schema": "file:../../prompting/output-schema",
     "@legion/resource-manager": "file:../../resource-manager",
     "@legion/schema": "file:../../schema",

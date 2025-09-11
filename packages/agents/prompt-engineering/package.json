@@ -13,7 +13,7 @@
     "@legion/resource-manager": "*",
     "@legion/schema": "*",
     "@legion/agent-registry": "*",
-    "@legion/llm": "*"
+    "@legion/llm-client": "file:../../prompting/llm-client"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

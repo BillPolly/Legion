@@ -22,7 +22,7 @@
   "license": "MIT",
   "dependencies": {
     "@legion/kg": "*",
-    "@legion/llm": "*",
+    "@legion/llm-client": "file:../../prompting/llm-client",
     "@legion/resource-manager": "*"
   },
   "devDependencies": {

@@ -1,4 +1,4 @@
-import { LLMClient } from '@legion/llm';
+import { LLMClient } from '@legion/llm-client'
 import { ResourceManager } from '@legion/resource-manager';
 import path from 'path';
 import fs from 'fs/promises';

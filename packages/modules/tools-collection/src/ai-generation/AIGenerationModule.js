@@ -1,5 +1,5 @@
 import { Module } from '@legion/tools-registry';
-import { LLMClient } from '@legion/llm';
+import { LLMClient } from '@legion/llm-client'
 import { ImageGenerationTool } from './ImageGenerationTool.js';
 import { fileURLToPath } from 'url';
 

@@ -8,7 +8,7 @@ import SemanticSearchEngine from '../search/SemanticSearchEngine.js';
 import RAGEngine from '../search/RAGEngine.js';
 import DatabaseSchema from '../database/DatabaseSchema.js';
 import { MongoClient } from 'mongodb';
-import { LLMClient } from '@legion/llm';
+import { LLMClient } from '@legion/llm-client'
 
 export default class QueryRAGTool extends Tool {
   constructor(module, toolName) {

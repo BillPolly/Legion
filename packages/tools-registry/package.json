@@ -60,7 +60,7 @@
     "jest": "^29.7.0"
   },
   "dependencies": {
-    "@legion/llm": "*",
+    "@legion/llm-client": "file:../../prompting/llm-client",
     "@legion/resource-manager": "*",
     "@legion/schema": "*",
     "@legion/storage": "*",

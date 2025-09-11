@@ -5,7 +5,7 @@ import DatabaseSchema from '../src/database/DatabaseSchema.js';
 import DocumentIndexer from '../src/indexers/DocumentIndexer.js';
 import ContentProcessor from '../src/processors/ContentProcessor.js';
 import { ResourceManager } from '@legion/resource-manager';
-import { LLMClient } from '@legion/llm';
+import { LLMClient } from '@legion/llm-client'
 import { MongoClient } from 'mongodb';
 
 describe('RAGEngine', () => {

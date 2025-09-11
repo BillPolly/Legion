@@ -12,7 +12,7 @@
  * Phase 4: Quality Assurance (15-30 min)
  */
 
-import { LLMClient } from '@legion/llm';
+import { LLMClient } from '@legion/llm-client'
 import { DesignDatabaseService } from '../src/services/DesignDatabaseService.js';
 
 // Minimal ResourceManager that doesn't trigger auto-loading

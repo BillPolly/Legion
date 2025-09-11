@@ -34,7 +34,7 @@
   "dependencies": {
     "@legion/tools-registry": "file:../../tools-registry",
     "@legion/resource-manager": "file:../../resource-manager",
-    "@legion/llm": "file:../../llm",
+    "@legion/llm-client": "file:../../prompting/llm-client",
     "@legion/schema": "file:../../schema",
     "@legion/storage": "file:../../storage",
     "mongodb": "^6.0.0",

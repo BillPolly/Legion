@@ -6,7 +6,7 @@
  * NO FALLBACKS - all operations must succeed or throw errors
  */
 
-import { LLMClient } from '@legion/llm';
+import { LLMClient } from '@legion/llm-client'
 
 export default class RAGEngine {
   constructor({ searchEngine, llmClient, resourceManager, options = {} }) {

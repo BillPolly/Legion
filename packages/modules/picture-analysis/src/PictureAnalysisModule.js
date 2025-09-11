@@ -255,7 +255,7 @@ export default class PictureAnalysisModule extends Module {
       }
       
       // Import and create LLM client
-      const { LLMClient } = await import('@legion/llm');
+      const { LLMClient } = await import('@legion/llm-client);
       this.llmClient = new LLMClient({
         provider: provider,
         apiKey: apiKey,

@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@legion/bt-validator": "file:../../planning/bt-validator",
-    "@legion/llm": "file:../../llm",
+    "@legion/llm-client": "file:../../prompting/llm-client",
     "@legion/resource-manager": "file:../../resource-manager",
     "@legion/tools-registry": "file:../../tools-registry",
     "json5": "^2.2.3"

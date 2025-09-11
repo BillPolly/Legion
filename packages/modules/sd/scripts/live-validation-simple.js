@@ -62,7 +62,7 @@ class MinimalResourceManager {
 }
 
 // Import SD components
-import { LLMClient } from '@legion/llm';
+import { LLMClient } from '@legion/llm-client'
 import { DesignDatabaseService } from '../src/services/DesignDatabaseService.js';
 
 // Import agents
