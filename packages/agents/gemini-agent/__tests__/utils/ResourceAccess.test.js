@@ -1,9 +1,9 @@
 /**
  * Integration tests for ResourceAccess utilities
- * Uses real ResourceManager - no mocks to avoid jest.fn() issues
  */
 
-import { getResourceManager, getEnvVar, getLLMClient } from '../../src/utils/ResourceAccess.js';
+import { jest } from '@jest/globals';
+import { getResourceManager, getEnvVar, getSimplePromptClient, getLLMClient } from '../../src/utils/ResourceAccess.js';
 import { ResourceManager } from '@legion/resource-manager';
 
 describe('ResourceAccess', () => {
@@ -40,13 +40,39 @@ describe('ResourceAccess', () => {
     });
   });
 
-  describe('getLLMClient', () => {
-    test('should get LLM client through ResourceManager', async () => {
+  describe('getSimplePromptClient', () => {
+    test('should get SimplePromptClient through ResourceManager', async () => {
+      // Mock the ResourceManager to avoid dependency issues
+      const mockSimpleClient = { request: () => Promise.resolve('mock') };
+      resourceManager.get = jest.fn().mockImplementation((key) => {
+        if (key === 'simplePromptClient') {
+          return Promise.resolve(mockSimpleClient);
+        }
+        return Promise.resolve('mock-value');
+      });
+      
+      const result = await getSimplePromptClient();
+      expect(result).toBe(mockSimpleClient);
+      expect(resourceManager.get).toHaveBeenCalledWith('simplePromptClient');
+    });
+  });
+
+  describe('getLLMClient (deprecated)', () => {
+    test('should still work but show deprecation warning', async () => {
+      // Mock console.warn to capture deprecation warning
+      const originalWarn = console.warn;
+      console.warn = jest.fn();
+      
+      // Mock the ResourceManager
+      resourceManager.get = jest.fn().mockResolvedValue({ request: () => {} });
+      
       const result = await getLLMClient();
       
-      // Should return the LLM client from ResourceManager
       expect(result).toBeDefined();
-      // The result should be whatever ResourceManager provides
+      expect(console.warn).toHaveBeenCalledWith('getLLMClient() is deprecated, use getSimplePromptClient() instead');
+      
+      // Restore console.warn
+      console.warn = originalWarn;
     });
   });
 });

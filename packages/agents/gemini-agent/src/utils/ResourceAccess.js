@@ -26,10 +26,18 @@ export async function getEnvVar(key, defaultValue = null) {
 }
 
 /**
- * Get LLM client through ResourceManager
- * @returns {Promise<Object>} LLM client instance
+ * Get SimplePromptClient through ResourceManager
+ * @returns {Promise<Object>} SimplePromptClient instance
+ */
+export async function getSimplePromptClient() {
+  const resourceManager = await getResourceManager();
+  return await resourceManager.get('simplePromptClient');
+}
+
+/**
+ * @deprecated Use getSimplePromptClient() instead
  */
 export async function getLLMClient() {
-  const resourceManager = await getResourceManager();
-  return await resourceManager.get('llmClient');
+  console.warn('getLLMClient() is deprecated, use getSimplePromptClient() instead');
+  return await getSimplePromptClient();
 }

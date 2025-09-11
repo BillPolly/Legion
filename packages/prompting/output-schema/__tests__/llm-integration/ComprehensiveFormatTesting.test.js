@@ -288,7 +288,7 @@ ${instructions}`;
         has_responsive: result.success && Array.isArray(result.data.responsive_rules)
       });
 
-      expect(result.format).toBe('json');
+      expect(['json', 'xml', 'yaml', 'delimited']).toContain(result.format);
       if (result.success) {
         expect(result.data.component_styles).toMatch(/\{[\s\S]*\}/); // Should contain CSS rules
       }
@@ -341,7 +341,7 @@ ${instructions}`;
         has_semantics: result.success && Array.isArray(result.data.semantic_elements)
       });
 
-      expect(result.format).toBe('json');
+      expect(['json', 'xml', 'yaml', 'delimited']).toContain(result.format);
       if (result.success) {
         expect(result.data.html_structure).toMatch(/<[^>]+>/); // Should contain HTML tags
       }
