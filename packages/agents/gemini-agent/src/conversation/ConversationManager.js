@@ -56,7 +56,7 @@ export class ConversationManager {
     try {
       const promptsDir = path.resolve(__dirname, '../../prompts');
       this.systemPrompt = fs.readFileSync(
-        path.join(promptsDir, 'core-system-prompt.txt'), 
+        path.join(promptsDir, 'core-system-prompt.md'), 
         'utf-8'
       );
       console.log('✅ System prompt loaded');
