@@ -15,7 +15,7 @@ import ChatRecordingService from '../services/ChatRecordingService.js';
 /**
  * Conversation manager with proper tool calling using Legion patterns
  */
-export class ToolCallingConversationManager {
+export class ConversationManager {
   constructor(resourceManager) {
     this.resourceManager = resourceManager;
     this.conversationHistory = [];
@@ -445,4 +445,4 @@ ${projectContext}`;
 
 }
 
-export default ToolCallingConversationManager;
+export default ConversationManager;

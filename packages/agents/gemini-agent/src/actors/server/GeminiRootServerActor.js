@@ -3,7 +3,8 @@
  * Minimal wrapper around ToolCallingConversationManager with actor framework integration
  */
 
-import ToolCallingConversationManager from '../../conversation/ToolCallingConversationManager.js';
+import ConversationManager from '../../conversation/ToolCallingConversationManager.js';
+import { handleSlashCommand } from '../../services/SlashCommandService.js';
 
 /**
  * Root server actor for Gemini agent (wraps existing functionality)
@@ -47,7 +48,7 @@ export default class GeminiRootServerActor {
       console.log('🎭 Creating ToolCallingConversationManager with ResourceManager...');
       
       // Initialize existing conversation manager (no changes to it)
-      this.conversationManager = new ToolCallingConversationManager(this.resourceManager);
+      this.conversationManager = new ConversationManager(this.resourceManager);
       
       // Wait for conversation manager to initialize
       await new Promise(resolve => setTimeout(resolve, 3000));
@@ -128,7 +129,7 @@ export default class GeminiRootServerActor {
       const args = parts.slice(1);
       
       // Handle slash command directly (not through LLM)
-      const response = await this._handleSlashCommandLegacy(command, args);
+      const response = await handleSlashCommand(message, this.conversationManager);
       
       // Send response through actor framework
       this.remoteActor.receive('slash_response', {
@@ -163,8 +164,9 @@ export default class GeminiRootServerActor {
   async _handleSlashCommand(data) {
     console.log('⚡ [ACTOR] Processing slash command');
     
-    // Use existing slash command handling (from server.js)
-    const response = await this._handleSlashCommandLegacy(data.command, data.args);
+    // Use centralized slash command handling
+    const commandInput = `/${data.command}${data.args.length > 0 ? ' ' + data.args.join(' ') : ''}`;
+    const response = await handleSlashCommand(commandInput, this.conversationManager);
     
     // Send response through actor framework
     this.remoteActor.receive('slash_response', {
@@ -175,57 +177,6 @@ export default class GeminiRootServerActor {
   }
 
 
-  /**
-   * Legacy slash command handling (preserve existing functionality)
-   * @param {string} command - Slash command
-   * @param {Array} args - Command arguments
-   * @returns {string} Command response
-   */
-  async _handleSlashCommandLegacy(command, args = []) {
-    // Copy existing slash command logic from server.js
-    switch (command) {
-      case 'help':
-        return `**Available Slash Commands:**
-
-⚡ **/help** - Show this help message
-📊 **/show <param>** - Show agent state (tools, context, files, errors, debug, all)
-🧹 **/clear** - Clear conversation history
-
-Regular chat messages work as before for tool calling!`;
-
-      case 'show':
-        const param = args[0];
-        if (!param) {
-          return `**Show Command Usage:**
-
-Use \`/show <parameter>\` where parameter is:
-• tools, context, debug, all`;
-        }
-        
-        switch (param.toLowerCase()) {
-          case 'tools':
-            const toolsStats = this.conversationManager.toolsModule?.getStatistics();
-            return toolsStats ? `**🔧 Tools (${toolsStats.toolCount}):** ${toolsStats.tools.join(', ')}` : 'Tools not available';
-            
-          case 'all':
-            const allStats = this.conversationManager.toolsModule?.getStatistics() || {};
-            return `**🎯 Complete State:**
-🔧 Tools: ${allStats.toolCount || 0}
-💬 Messages: ${this.conversationManager.getConversationHistory().length}
-💾 Memory: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`;
-            
-          default:
-            return `Unknown parameter: ${param}`;
-        }
-
-      case 'clear':
-        this.conversationManager.clearHistory();
-        return '🧹 **Everything Cleared!**';
-
-      default:
-        return `❌ **Unknown Command:** /${command}`;
-    }
-  }
 
   /**
    * Get actor status

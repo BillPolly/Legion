@@ -1,6 +1,6 @@
 import { ConfigurableAgent } from '@legion/configurable-agent';
 import { ResourceManager } from '@legion/resource-manager';
-import { ConversationManager } from '../conversation/ConversationManager.js';
+import ConversationManager from '../conversation/ToolCallingConversationManager.js';
 import { GeminiPromptManager } from '../prompts/GeminiPromptManager.js';
 
 export class GeminiCompatibleAgent extends ConfigurableAgent {

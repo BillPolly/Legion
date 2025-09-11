@@ -1,15 +1,15 @@
 /**
- * Integration test for ToolCallingConversationManager
+ * Integration test for ConversationManager
  * NO MOCKS - uses real LLM, real tools, real file system
  */
 
-import ToolCallingConversationManager from '../../src/conversation/ToolCallingConversationManager.js';
+import ConversationManager from '../../src/conversation/ToolCallingConversationManager.js';
 import { ResourceManager } from '@legion/resource-manager';
 import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
 
-describe('ToolCallingConversationManager Integration', () => {
+describe('ConversationManager Integration', () => {
   let manager;
   let resourceManager;
   let testDir;
@@ -22,7 +22,7 @@ describe('ToolCallingConversationManager Integration', () => {
     testDir = path.join(os.tmpdir(), `tool-calling-manager-test-${Date.now()}`);
     await fs.mkdir(testDir, { recursive: true });
     
-    manager = new ToolCallingConversationManager(resourceManager);
+    manager = new ConversationManager(resourceManager);
     
     // Wait for tools to initialize
     await new Promise(resolve => setTimeout(resolve, 1000));

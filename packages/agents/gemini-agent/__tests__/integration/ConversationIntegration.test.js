@@ -4,7 +4,7 @@
  * NO MOCKS - uses real LLM client with Anthropic API
  */
 
-import { ConversationManager } from '../../src/conversation/ConversationManager.js';
+import ConversationManager from '../../src/conversation/ToolCallingConversationManager.js';
 import { ResourceManager } from '@legion/resource-manager';
 
 describe('Conversation Management Integration', () => {

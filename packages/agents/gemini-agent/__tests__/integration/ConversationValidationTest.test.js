@@ -1,4 +1,4 @@
-import { ConversationManager } from '../../src/conversation/ConversationManager.js';
+import ConversationManager from '../../src/conversation/ToolCallingConversationManager.js';
 import { ValidationHelper } from '../../src/utils/ValidationHelper.js';
 import { ResourceManager } from '@legion/resource-manager';
 
