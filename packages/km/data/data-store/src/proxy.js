@@ -1,6 +1,12 @@
-import { pull, q, retractEntity } from '../../index.js';
+import { pull, q, retractEntity } from '../../datascript/index.js';
 import { Subscription } from './subscription.js';
 import { ReactiveEngine } from './reactor.js';
+import { PropertyTypeDetector } from './property-type-detector.js';
+import { QueryTypeDetector } from './query-type-detector.js';
+
+// Direct imports - circular imports will be resolved by ES modules
+import { StreamProxy } from './stream-proxy.js';
+import { CollectionProxy } from './collection-proxy.js';
 
 // Private state storage for proxy instances
 const proxyStates = new WeakMap();
@@ -35,6 +41,12 @@ export class EntityProxy {
     this.entityId = entityId;
     this.store = store;
     
+    // Initialize PropertyTypeDetector for this EntityProxy
+    this._propertyTypeDetector = new PropertyTypeDetector(store.schema || {});
+    
+    // Initialize QueryTypeDetector for this EntityProxy
+    this._queryTypeDetector = new QueryTypeDetector(store);
+    
     // Initialize private state in WeakMap
     proxyStates.set(this, {
       isManuallyInvalidated: false,
@@ -44,11 +56,86 @@ export class EntityProxy {
       computedProperties: new Map(), // propertyName -> { query, transformer, cachedValue, isValid }
       computedPropertyGetters: new Map(), // propertyName -> getter function
       changeListeners: new Map(), // listenerId -> callback function
-      deleteListeners: new Map() // listenerId -> callback function
+      deleteListeners: new Map(), // listenerId -> callback function
+      propertyProxies: new Map() // propertyName -> proxy instance (for identity preservation)
     });
     
-    // Freeze the instance to prevent mutation
-    Object.freeze(this);
+    // Dynamically create property getters from schema BEFORE freezing
+    this._setupDynamicProperties();
+    
+    // Create a Proxy to intercept property access for unknown attributes
+    return new Proxy(this, {
+      get(target, property) {
+        // If property exists on target, use it
+        if (property in target || typeof property === 'symbol') {
+          const value = target[property];
+          // If it's a method, bind it to the target to preserve 'this' context
+          if (typeof value === 'function') {
+            return value.bind(target);
+          }
+          return value;
+        }
+        
+        // If it's a string property that could be an attribute, handle dynamically
+        if (typeof property === 'string') {
+          const state = proxyStates.get(target);
+          if (!state) return undefined;
+          
+          // Check if we already have a proxy for this property (for identity preservation)
+          if (state.propertyProxies.has(property)) {
+            return state.propertyProxies.get(property);
+          }
+          
+          // Handle both full attribute names and short property names
+          let attribute = null;
+          
+          // First, check if property is already a full attribute name (e.g., ':user/score')
+          if (property.includes('/') && target.store.schema && property in target.store.schema) {
+            attribute = property;
+          } else {
+            // Try to find attribute in schema that matches this property name (short form)
+            for (const schemaAttribute of Object.keys(target.store.schema || {})) {
+              const parts = schemaAttribute.split('/');
+              if (parts.length === 2 && parts[1] === property) {
+                attribute = schemaAttribute;
+                break;
+              }
+            }
+          }
+          
+          // If not found in schema, assume it's an unknown attribute and default to StreamProxy
+          if (!attribute) {
+            // For unknown attributes, we can't construct a meaningful query, 
+            // so return a StreamProxy with undefined value
+            const unknownQuery = {
+              find: ['?value'],
+              where: [
+                ['?entity', ':unknown/attribute', '?value'], // Dummy query
+                ['?entity', ':db/id', target.entityId]
+              ]
+            };
+            
+            if (StreamProxy) {
+              const unknownProxy = new StreamProxy(target.store, undefined, unknownQuery);
+              state.propertyProxies.set(property, unknownProxy);
+              return unknownProxy;
+            } else {
+              return undefined;
+            }
+          }
+          
+          // Get raw value using existing get() method
+          const rawValue = target.get(attribute);
+          
+          // Create appropriate proxy object synchronously
+          const proxyObject = target._createPropertyProxySync(attribute, rawValue);
+          state.propertyProxies.set(property, proxyObject);
+          return proxyObject;
+        }
+        
+        return undefined;
+      }
+    });
   }
 
   /**
@@ -255,42 +342,290 @@ export class EntityProxy {
   }
 
   /**
-   * Convenient property getters for common attributes
+   * Create appropriate proxy object for a property based on PropertyTypeDetector
+   * @private
+   * @param {string} attribute - Full attribute name (e.g., ':user/name')
+   * @param {*} rawValue - Raw value from DataScript
+   * @returns {StreamProxy|EntityProxy|CollectionProxy} Appropriate proxy object
    */
-  get name() { return this.get(':user/name'); }
-  get email() { return this.get(':user/email'); }
-  get age() { return this.get(':user/age'); }
-  get active() { return this.get(':user/active'); }
-  get id() { return this.get(':user/id'); }
-  get status() { return this.get(':user/status'); }
-  get tags() { return this.get(':user/tags'); }
-  get friends() { return this.get(':user/friends'); }
-  get profile() { return this.get(':user/profile'); }
+  async _createPropertyProxy(attribute, rawValue) {
+    const proxyType = this._propertyTypeDetector.detectProxyType(attribute);
+    
+    // Ensure proxy classes are loaded using dynamic imports
+    if (!StreamProxy || !CollectionProxy) {
+      try {
+        const [streamProxyModule, collectionProxyModule] = await Promise.all([
+          import('./stream-proxy.js'),
+          import('./collection-proxy.js')
+        ]);
+        StreamProxy = streamProxyModule.StreamProxy;
+        CollectionProxy = collectionProxyModule.CollectionProxy;
+      } catch (error) {
+        // If dynamic import fails, fall back to placeholder objects
+        if (proxyType === 'StreamProxy') {
+          return {
+            value: () => rawValue,
+            _currentValue: rawValue,
+            query: () => { throw new Error('StreamProxy not fully loaded yet'); },
+            subscribe: () => { throw new Error('StreamProxy not fully loaded yet'); }
+          };
+        } else {
+          const arrayValue = Array.isArray(rawValue) ? rawValue : (rawValue === undefined ? [] : [rawValue]);
+          return {
+            value: () => arrayValue,
+            length: arrayValue.length,
+            query: () => { throw new Error('CollectionProxy not fully loaded yet'); },
+            subscribe: () => { throw new Error('CollectionProxy not fully loaded yet'); }
+          };
+        }
+      }
+    }
+    
+    switch (proxyType) {
+      case 'StreamProxy':
+        // Create StreamProxy with entity-scoped query for this specific attribute
+        const streamQuery = {
+          find: ['?value'],
+          where: [
+            ['?entity', attribute, '?value'],
+            ['?entity', ':db/id', this.entityId]
+          ]
+        };
+        return new StreamProxy(this.store, rawValue, streamQuery);
+        
+      case 'CollectionProxy':
+        // Create CollectionProxy with entity-scoped query for this specific attribute
+        const collectionQuery = {
+          find: ['?value'],
+          where: [
+            ['?entity', attribute, '?value'],
+            ['?entity', ':db/id', this.entityId]
+          ]
+        };
+        // Ensure rawValue is an array for CollectionProxy
+        let arrayValue;
+        if (Array.isArray(rawValue)) {
+          arrayValue = rawValue;
+        } else if (rawValue === undefined) {
+          arrayValue = [];
+        } else {
+          arrayValue = [rawValue];
+        }
+        return new CollectionProxy(this.store, arrayValue, collectionQuery);
+        
+      case 'EntityProxy':
+        // For single references, if rawValue is available, create EntityProxy
+        if (rawValue !== undefined && rawValue !== null) {
+          if (typeof rawValue === 'number') {
+            return this._getOrCreateProxy(rawValue);
+          } else if (rawValue instanceof EntityProxy) {
+            // rawValue is already an EntityProxy from get() method, return it directly
+            return rawValue;
+          } else if (rawValue && typeof rawValue === 'object' && typeof rawValue.id === 'number') {
+            return this._getOrCreateProxy(rawValue.id);
+          }
+        }
+        // For missing single references, return StreamProxy with undefined value
+        const undefinedQuery = {
+          find: ['?value'],
+          where: [
+            ['?entity', attribute, '?value'],
+            ['?entity', ':db/id', this.entityId]
+          ]
+        };
+        return new StreamProxy(this.store, undefined, undefinedQuery);
+        
+      default:
+        // Fallback to StreamProxy for unknown types
+        const defaultQuery = {
+          find: ['?value'],
+          where: [
+            ['?entity', attribute, '?value'],
+            ['?entity', ':db/id', this.entityId]
+          ]
+        };
+        return new StreamProxy(this.store, rawValue, defaultQuery);
+    }
+  }
 
   /**
-   * Access computed properties through dynamic getter
+   * Create appropriate proxy type synchronously - assumes proxy classes are loaded
+   * @private 
+   * @param {string} attribute - Full attribute name (e.g., ':user/name')
+   * @param {any} rawValue - Raw value from DataScript query
+   * @returns {StreamProxy|EntityProxy|CollectionProxy} - Appropriate proxy type
    */
-  get friendCount() { return this._getComputedProperty('friendCount'); }
-  get userInfo() { return this._getComputedProperty('userInfo'); }
-  get scoreGrade() { return this._getComputedProperty('scoreGrade'); }
-  get displayName() { return this._getComputedProperty('displayName'); }
-  get friendNames() { return this._getComputedProperty('friendNames'); }
-  get fullName() { return this._getComputedProperty('fullName'); }
-  get friendsInfo() { return this._getComputedProperty('friendsInfo'); }
-  get profileSummary() { return this._getComputedProperty('profileSummary'); }
-  get errorProp() { return this._getComputedProperty('errorProp'); }
-  get testProp() { return this._getComputedProperty('testProp'); }
-  get summary() { return this._getComputedProperty('summary'); }
-  get totalViews() { return this._getComputedProperty('totalViews'); }
-  get profileInfo() { return this._getComputedProperty('profileInfo'); }
-  get socialScore() { return this._getComputedProperty('socialScore'); }
-  get jobTitle() { return this._getComputedProperty('jobTitle'); }
-  get userStatus() { return this._getComputedProperty('userStatus'); }
-  get scoreLevel() { return this._getComputedProperty('scoreLevel'); }
-  get cycleSummary() { return this._getComputedProperty('cycleSummary'); }
-  get ageSummary() { return this._getComputedProperty('ageSummary'); }
-  get managerName() { return this._getComputedProperty('managerName'); }
-  get postCount() { return this._getComputedProperty('postCount'); }
+  _createPropertyProxySync(attribute, rawValue) {
+    const proxyType = this._propertyTypeDetector.detectProxyType(attribute);
+    
+    switch (proxyType) {
+      case 'StreamProxy':
+        // Create StreamProxy with entity-scoped query for this specific attribute
+        const streamQuery = {
+          find: ['?value'],
+          where: [
+            ['?entity', attribute, '?value'],
+            ['?entity', ':db/id', this.entityId]
+          ]
+        };
+        return new StreamProxy(this.store, rawValue, streamQuery);
+        
+      case 'CollectionProxy':
+        // Create CollectionProxy with entity-scoped query for this specific attribute
+        const collectionQuery = {
+          find: ['?value'],
+          where: [
+            ['?entity', attribute, '?value'],
+            ['?entity', ':db/id', this.entityId]
+          ]
+        };
+        // Ensure rawValue is an array for CollectionProxy
+        let arrayValue;
+        if (Array.isArray(rawValue)) {
+          arrayValue = rawValue;
+        } else if (rawValue === undefined) {
+          arrayValue = [];
+        } else {
+          arrayValue = [rawValue];
+        }
+        return new CollectionProxy(this.store, arrayValue, collectionQuery);
+        
+      case 'EntityProxy':
+        // For single references, if rawValue is available, create EntityProxy
+        if (rawValue !== undefined && rawValue !== null) {
+          if (typeof rawValue === 'number') {
+            return this._getOrCreateProxy(rawValue);
+          } else if (rawValue instanceof EntityProxy) {
+            // rawValue is already an EntityProxy from get() method, return it directly
+            return rawValue;
+          } else if (rawValue && typeof rawValue === 'object' && typeof rawValue.id === 'number') {
+            return this._getOrCreateProxy(rawValue.id);
+          }
+        }
+        // For missing single references, return StreamProxy with undefined value
+        const undefinedQuery = {
+          find: ['?value'],
+          where: [
+            ['?entity', attribute, '?value'],
+            ['?entity', ':db/id', this.entityId]
+          ]
+        };
+        return new StreamProxy(this.store, undefined, undefinedQuery);
+        
+      default:
+        // Fallback to StreamProxy for unknown types
+        const defaultQuery = {
+          find: ['?value'],
+          where: [
+            ['?entity', attribute, '?value'],
+            ['?entity', ':db/id', this.entityId]
+          ]
+        };
+        return new StreamProxy(this.store, rawValue, defaultQuery);
+    }
+  }
+
+  /**
+   * Setup dynamic property getters based on schema
+   * @private
+   */
+  _setupDynamicProperties() {
+    // Only set up properties if we have a schema
+    if (!this.store.schema) return;
+    
+    // Create getters for each attribute in the schema
+    for (const [attribute, spec] of Object.entries(this.store.schema)) {
+      // Extract property name from attribute (e.g., ':user/name' -> 'name')
+      const parts = attribute.split('/');
+      if (parts.length !== 2) continue; // Skip malformed attributes
+      
+      const propertyName = parts[1];
+      
+      // Skip if property already exists (e.g., from base class methods)
+      if (propertyName in this) continue;
+      
+      // Define getter that returns appropriate proxy object
+      // Use arrow function to preserve 'this' context
+      Object.defineProperty(this, propertyName, {
+        get: () => {
+          const state = proxyStates.get(this);
+          if (!state) return undefined;
+          
+          // Check if we already have a proxy for this property (for identity preservation)
+          if (state.propertyProxies.has(propertyName)) {
+            return state.propertyProxies.get(propertyName);
+          }
+          
+          // Get raw value using existing get() method
+          const rawValue = this.get(attribute);
+          
+          // Create appropriate proxy object
+          const proxyObject = this._createPropertyProxySync(attribute, rawValue);
+          
+          // Cache the proxy for identity preservation
+          state.propertyProxies.set(propertyName, proxyObject);
+          
+          return proxyObject;
+        },
+        enumerable: true,
+        configurable: true
+      });
+    }
+  }
+
+  /**
+   * Invalidate all property proxy caches when entity data changes
+   * @private
+   */
+  _invalidatePropertyProxies() {
+    const state = proxyStates.get(this);
+    if (state) {
+      // Before clearing the cache, refresh existing proxy instances
+      for (const [propertyName, proxyInstance] of state.propertyProxies) {
+        try {
+          // For StreamProxy instances, update their current value
+          if (proxyInstance && proxyInstance._currentValue !== undefined) {
+            const attribute = this._getAttributeFromProperty(propertyName);
+            if (attribute) {
+              const newRawValue = this.get(attribute);
+              proxyInstance._currentValue = newRawValue;
+            }
+          }
+          // For CollectionProxy instances, update their current items  
+          else if (proxyInstance && proxyInstance._currentItems !== undefined) {
+            const attribute = this._getAttributeFromProperty(propertyName);
+            if (attribute) {
+              const newRawValue = this.get(attribute);
+              const arrayValue = Array.isArray(newRawValue) ? newRawValue : (newRawValue === undefined ? [] : [newRawValue]);
+              proxyInstance._currentItems = arrayValue;
+            }
+          }
+        } catch (error) {
+          // If refreshing fails, just continue - the proxy will be recreated when accessed next
+          console.warn('Failed to refresh proxy instance:', error);
+        }
+      }
+      
+      // Clear the cache so new instances are created on next access
+      state.propertyProxies.clear();
+    }
+  }
+
+  /**
+   * Get attribute name from property name by searching schema
+   * @private
+   */
+  _getAttributeFromProperty(propertyName) {
+    if (!this.store.schema) return null;
+    
+    for (const schemaAttribute of Object.keys(this.store.schema)) {
+      const parts = schemaAttribute.split('/');
+      if (parts.length === 2 && parts[1] === propertyName) {
+        return schemaAttribute;
+      }
+    }
+    return null;
+  }
 
   /**
    * String representation for debugging
@@ -382,6 +717,9 @@ export class EntityProxy {
       // Invalidate all computed properties after update
       this._invalidateAllComputedProperties();
       
+      // Invalidate property proxy caches since entity data has changed
+      this._invalidatePropertyProxies();
+      
       // Trigger onChange events
       this._triggerChange({
         type: 'update',
@@ -442,6 +780,12 @@ export class EntityProxy {
       throw new Error('Cannot query invalid entity');
     }
 
+    // Validate query attributes against schema
+    if (!this._validateQueryAttributes(querySpec)) {
+      // Malformed query - return StreamProxy with null
+      return new StreamProxy(this.store, null, querySpec);
+    }
+
     try {
       // Bind ?this variable to this entity's ID
       const boundQuery = this._bindThisVariable(querySpec);
@@ -449,11 +793,23 @@ export class EntityProxy {
       // Execute query against current database
       const results = q(boundQuery, this.store.db());
       
-      return results;
+      // Determine appropriate proxy type based on query and results
+      const proxyType = this._queryTypeDetector.detectProxyType(boundQuery, results);
+      
+      // Create and return appropriate proxy object
+      return this._createQueryResultProxy(proxyType, boundQuery, results);
     } catch (error) {
-      // Return empty results on query errors
+      // For query errors, return appropriate empty proxy based on expected result type
       console.error(`Query execution error for entity ${this.entityId}:`, error);
-      return [];
+      
+      try {
+        // Try to detect proxy type from query structure even without results
+        const proxyType = this._queryTypeDetector.detectProxyType(querySpec, []);
+        return this._createQueryResultProxy(proxyType, querySpec, []);
+      } catch (detectionError) {
+        // Fallback to StreamProxy with null value for complete failures
+        return new StreamProxy(this.store, null, querySpec);
+      }
     }
   }
 
@@ -477,6 +833,38 @@ export class EntityProxy {
     if (!Array.isArray(querySpec.find) || !Array.isArray(querySpec.where)) {
       throw new Error('Find and where clauses must be arrays');
     }
+  }
+
+  /**
+   * Validate query attributes against schema
+   * @private
+   */
+  _validateQueryAttributes(querySpec) {
+    if (!this.store.schema) return true; // No schema to validate against
+    
+    const whereClause = querySpec.where || [];
+    for (const clause of whereClause) {
+      if (Array.isArray(clause) && clause.length >= 2) {
+        const attribute = clause[1];
+        if (typeof attribute === 'string') {
+          // Check for malformed attributes
+          if (!attribute.startsWith(':') && !attribute.startsWith('?')) {
+            return false; // Not a valid attribute or variable
+          }
+          
+          // If it's an attribute (starts with ':'), check schema
+          if (attribute.startsWith(':') && !this.store.schema[attribute]) {
+            return false; // Invalid attribute not in schema
+          }
+          
+          // Check for obviously malformed attributes like '???'
+          if (attribute === '???' || attribute.match(/^\?{2,}/)) {
+            return false; // Malformed attribute
+          }
+        }
+      }
+    }
+    return true;
   }
 
   /**
@@ -504,6 +892,12 @@ export class EntityProxy {
             }
             return term;
           });
+        } else if (clause.length === 2 && typeof clause[0] === 'string' && clause[0].startsWith('(')) {
+          // Function expression clause: ['(> ?age 18)', '?result']
+          // Replace ?this in the function expression string and bind it as a predicate
+          const functionExpr = clause[0].replace(/\?this/g, this.entityId);
+          // Convert to proper predicate format - DataScript expects [predicate-expr result-var]
+          return [functionExpr, clause[1]];
         }
       }
       return clause;
@@ -516,12 +910,181 @@ export class EntityProxy {
   }
 
   /**
+   * Create appropriate proxy object for query results
+   * @private
+   */
+  _createQueryResultProxy(proxyType, querySpec, results) {
+    if (proxyType === 'StreamProxy') {
+      // Extract single value from results
+      const value = this._extractSingleValueFromResults(results);
+      return new StreamProxy(this.store, value, querySpec);
+    } else if (proxyType === 'CollectionProxy') {
+      // Extract collection from results and convert entities to EntityProxy instances
+      const items = this._extractCollectionFromResults(results, querySpec);
+      return new CollectionProxy(this.store, items, querySpec);
+    } else if (proxyType === 'EntityProxy') {
+      // Extract single entity ID and create EntityProxy
+      const entityId = this._extractSingleEntityIdFromResults(results);
+      if (entityId !== null && entityId !== undefined) {
+        return new EntityProxy(entityId, this.store);
+      } else {
+        // Return StreamProxy with null for missing entity reference
+        return new StreamProxy(this.store, null, querySpec);
+      }
+    } else {
+      // Fallback to StreamProxy
+      const value = this._extractSingleValueFromResults(results);
+      return new StreamProxy(this.store, value, querySpec);
+    }
+  }
+
+  /**
+   * Extract single value from DataScript query results
+   * @private
+   */
+  _extractSingleValueFromResults(results) {
+    if (!results || results.length === 0) {
+      return null;
+    }
+    
+    // Single result with single value
+    if (results.length === 1 && results[0].length === 1) {
+      return results[0][0];
+    }
+    
+    // Multiple results or multiple values - return first value
+    return results[0] ? results[0][0] : null;
+  }
+
+  /**
+   * Extract collection from DataScript query results
+   * @private
+   */
+  _extractCollectionFromResults(results, querySpec) {
+    if (!results || results.length === 0) {
+      return [];
+    }
+    
+    // Analyze query to determine if result should be entity proxies
+    const analysis = this._queryTypeDetector.analyzeQuery(querySpec);
+    
+    if (querySpec.find.length === 1) {
+      // Single variable query - check if it's entity results
+      const variable = querySpec.find[0];
+      
+      // Check if this variable represents entities in the query
+      const isEntityQuery = this._queryTypeDetector._isEntityVariable(variable, querySpec.where);
+      
+      if (isEntityQuery) {
+        // Convert entity IDs to EntityProxy instances
+        return results.map(result => {
+          const entityId = Array.isArray(result) ? result[0] : result;
+          if (typeof entityId === 'number') {
+            return new EntityProxy(entityId, this.store);
+          }
+          return entityId;
+        });
+      }
+    }
+    
+    // For multi-variable queries, return tuples as-is
+    if (querySpec.find.length > 1) {
+      return results.map(result => Array.isArray(result) ? result : [result]);
+    }
+    
+    // For scalar queries, extract first value from each result tuple
+    return results.map(result => Array.isArray(result) ? result[0] : result);
+  }
+
+  /**
+   * Extract single entity ID from DataScript query results
+   * @private
+   */
+  _extractSingleEntityIdFromResults(results) {
+    if (!results || results.length === 0) {
+      return null;
+    }
+    
+    // Single result with entity ID
+    if (results.length === 1 && results[0].length === 1) {
+      const value = results[0][0];
+      return (typeof value === 'number') ? value : null;
+    }
+    
+    // Multiple results - return first entity ID
+    const firstResult = results[0];
+    if (firstResult && firstResult.length > 0) {
+      const value = firstResult[0];
+      return (typeof value === 'number') ? value : null;
+    }
+    
+    return null;
+  }
+
+  /**
+   * Subscribe to entity changes or entity-rooted query results
+   * @param {Object|Function} querySpecOrCallback - Datalog query specification or callback function for general entity changes
+   * @param {Function} [callback] - Callback function for query results (when first param is querySpec)
+   * @returns {Function} Unsubscribe function
+   */
+  subscribe(querySpecOrCallback, callback) {
+    if (!this.isValid()) {
+      throw new Error('Cannot subscribe to invalid entity');
+    }
+
+    // Handle two usage patterns:
+    // 1. subscribe(callback) - general entity change subscription
+    // 2. subscribe(querySpec, callback) - entity-rooted query subscription
+    
+    if (typeof querySpecOrCallback === 'function' && !callback) {
+      // Pattern 1: Direct entity change subscription
+      return this._subscribeToEntityChanges(querySpecOrCallback);
+    } else if (typeof querySpecOrCallback === 'object' && typeof callback === 'function') {
+      // Pattern 2: Entity-rooted query subscription
+      return this._subscribeToQuery(querySpecOrCallback, callback);
+    } else {
+      throw new Error('Invalid subscription parameters. Use subscribe(callback) or subscribe(querySpec, callback)');
+    }
+  }
+
+  /**
+   * Subscribe to general entity changes
+   * @param {Function} callback - Callback function for entity changes
+   * @returns {Function} Unsubscribe function
+   */
+  _subscribeToEntityChanges(callback) {
+    if (typeof callback !== 'function') {
+      throw new Error('Callback must be a function');
+    }
+
+    const state = proxyStates.get(this);
+    if (!state) {
+      throw new Error('Cannot subscribe to invalid entity proxy');
+    }
+
+    // Initialize subscriber set if needed
+    if (!state.entitySubscribers) {
+      state.entitySubscribers = new Set();
+    }
+
+    // Add callback to subscriber set
+    state.entitySubscribers.add(callback);
+
+    // Return unsubscribe function
+    return () => {
+      if (state.entitySubscribers) {
+        state.entitySubscribers.delete(callback);
+      }
+    };
+  }
+
+  /**
    * Subscribe to entity-rooted query results
    * @param {Object} querySpec - Datalog query specification
    * @param {Function} callback - Callback function for results
    * @returns {Function} Unsubscribe function
    */
-  subscribe(querySpec, callback) {
+  _subscribeToQuery(querySpec, callback) {
     // Validate parameters
     this._validateQuery(querySpec);
     
@@ -531,10 +1094,6 @@ export class EntityProxy {
     
     if (typeof callback !== 'function') {
       throw new Error('Callback must be a function');
-    }
-    
-    if (!this.isValid()) {
-      throw new Error('Cannot subscribe to invalid entity');
     }
 
     // Generate unique subscription ID
@@ -855,6 +1414,9 @@ export class EntityProxy {
     // Invalidate computed properties since data changed
     this._invalidateAllComputedProperties();
     
+    // Invalidate property proxy caches since data has changed
+    this._invalidatePropertyProxies();
+    
     // Trigger onChange event
     this._triggerChange({
       type: 'relationAdded',
@@ -887,6 +1449,9 @@ export class EntityProxy {
     
     // Invalidate computed properties since data changed
     this._invalidateAllComputedProperties();
+    
+    // Invalidate property proxy caches since data has changed
+    this._invalidatePropertyProxies();
     
     // Trigger onChange event
     this._triggerChange({
@@ -1048,6 +1613,194 @@ export class EntityProxy {
     const state = proxyStates.get(this);
     if (state) {
       state.onCleanup = callback;
+    }
+  }
+
+  /**
+   * Get JavaScript representation of entity with expanded references
+   * Part of unified proxy architecture - Phase 2, Step 2.3
+   * 
+   * @param {Object} options - Options for value extraction
+   * @param {number} options.depth - Maximum depth for reference expansion (default: 10)
+   * @param {boolean} options.includeRefs - Whether to expand references (default: true)
+   * @param {Set} options._visited - Internal: Track visited entities to prevent infinite loops
+   * @returns {Object} Plain JavaScript object representation
+   */
+  value(options = {}) {
+    const {
+      depth = 10,
+      includeRefs = true,
+      _visited = new Set()
+    } = options;
+    
+    // Prevent infinite loops from circular references
+    if (_visited.has(this.entityId)) {
+      return this.entityId; // Return just the ID for circular refs
+    }
+    _visited.add(this.entityId);
+    
+    // Start with entityId
+    const result = {
+      entityId: this.entityId
+    };
+    
+    // Get entity data from database
+    const db = this.store.db();
+    const entityData = db.entity(this.entityId);
+    
+    if (!entityData) {
+      return result; // Entity doesn't exist
+    }
+    
+    // Process each attribute
+    for (const [attr, value] of Object.entries(entityData)) {
+      // Skip internal attributes
+      if (attr === 'id' || attr === ':db/id') {
+        continue;
+      }
+      
+      // Get schema info for this attribute
+      const schemaInfo = this.store.schema[attr];
+      
+      if (!schemaInfo) {
+        // Unknown attribute - include as-is
+        result[attr] = value;
+        continue;
+      }
+      
+      // Handle based on value type
+      if (schemaInfo.valueType === 'ref') {
+        if (!includeRefs || depth <= 0) {
+          // Don't expand references
+          result[attr] = value;
+        } else if (schemaInfo.card === 'many') {
+          // Multi-valued reference
+          if (Array.isArray(value) && value.length > 0) {
+            result[attr] = value.map(refId => {
+              // Check if this creates a circular reference
+              if (_visited.has(refId)) {
+                return refId; // Just return the ID
+              }
+              
+              // Create proxy for referenced entity and get its value
+              const refProxy = new EntityProxy(refId, this.store);
+              return refProxy.value({
+                depth: depth - 1,
+                includeRefs,
+                _visited // Pass same set to detect circular references
+              });
+            });
+          }
+        } else {
+          // Single-valued reference
+          if (value != null) {
+            // Check if this creates a circular reference
+            if (_visited.has(value)) {
+              result[attr] = value; // Just return the ID
+            } else {
+              // Create proxy for referenced entity and get its value
+              const refProxy = new EntityProxy(value, this.store);
+              result[attr] = refProxy.value({
+                depth: depth - 1,
+                includeRefs,
+                _visited // Pass same set to detect circular references
+              });
+            }
+          }
+        }
+      } else if (schemaInfo.valueType === 'instant' && value instanceof Date) {
+        // Clone Date objects
+        result[attr] = new Date(value.getTime());
+      } else if (schemaInfo.card === 'many' && Array.isArray(value)) {
+        // Multi-valued scalar - clone array
+        result[attr] = [...value];
+      } else {
+        // Regular scalar value
+        result[attr] = value;
+      }
+    }
+    
+    return result;
+  }
+
+  /**
+   * Clean up proxy resources and subscriptions
+   * Does not delete the entity from database - just cleans up the proxy
+   */
+  destroy() {
+    const state = proxyStates.get(this);
+    if (!state) {
+      return; // Already destroyed or not initialized
+    }
+
+    try {
+      // Clean up subscription engine if it exists
+      if (state.subscriptionEngine) {
+        state.subscriptionEngine.destroy();
+        state.subscriptionEngine = null;
+      }
+
+      // Clear property proxy references (but don't destroy them - they are independent once handed out)
+      state.propertyProxies.clear();
+
+      // Clean up entity change subscribers
+      if (state.entitySubscribers) {
+        state.entitySubscribers.clear();
+      }
+
+      // Clean up query subscriptions
+      if (state.subscriptions) {
+        for (const subscription of state.subscriptions.values()) {
+          try {
+            if (this.store._reactiveEngine) {
+              this.store._reactiveEngine.removeSubscription(subscription.id);
+            }
+          } catch (error) {
+            console.warn('Error removing subscription:', error);
+          }
+        }
+        state.subscriptions.clear();
+      }
+
+      // Mark as manually invalidated to prevent further use
+      state.isManuallyInvalidated = true;
+
+      // Remove from global proxy states
+      proxyStates.delete(this);
+
+    } catch (error) {
+      console.error('Error during EntityProxy destroy:', error);
+    }
+  }
+
+  /**
+   * Get subscribers (for compatibility with StreamProxy/CollectionProxy tests)
+   * @returns {Set} Set of entity change subscribers
+   */
+  get _subscribers() {
+    const state = proxyStates.get(this);
+    if (!state || !state.entitySubscribers) {
+      return new Set(); // Return empty set for compatibility
+    }
+    return state.entitySubscribers;
+  }
+
+  /**
+   * Notify entity change subscribers (for compatibility with StreamProxy/CollectionProxy tests)
+   * @param {*} data - Data to pass to subscribers
+   */
+  _notifySubscribers(data) {
+    const state = proxyStates.get(this);
+    if (!state || !state.entitySubscribers) {
+      return;
+    }
+
+    for (const callback of state.entitySubscribers) {
+      try {
+        callback(data);
+      } catch (error) {
+        console.error('EntityProxy subscriber callback error:', error);
+      }
     }
   }
 }
