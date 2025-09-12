@@ -6,7 +6,7 @@
 import { SimplePromptClient } from '@legion/llm-client';
 import { ResourceManager } from '@legion/resource-manager';
 import { GeminiToolsModule } from '@legion/gemini-tools';
-import { ToolResultFormatter } from '../utils/ToolResultFormatter.js';
+import { SmartToolResultFormatter } from '../utils/SmartToolResultFormatter.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -159,7 +159,7 @@ export class ConversationManager {
             
             // Replace the XML tool call with beautifully formatted result
             const toolUseRegex = new RegExp(`<tool_use name="${toolCall.name}"[^>]*>.*?</tool_use>`, 'g');
-            const formattedResult = ToolResultFormatter.format(toolCall.name, result);
+            const formattedResult = SmartToolResultFormatter.format(toolCall.name, result);
             updatedContent = updatedContent.replace(toolUseRegex, `\n\n${formattedResult}\n`);
             
           } catch (error) {
@@ -172,7 +172,7 @@ export class ConversationManager {
             
             // Replace with formatted error message
             const toolUseRegex = new RegExp(`<tool_use name="${toolCall.name}"[^>]*>.*?</tool_use>`, 'g');
-            const formattedError = ToolResultFormatter.formatError(toolCall.name, { error: error.message });
+            const formattedError = SmartToolResultFormatter.formatError(toolCall.name, { error: error.message });
             updatedContent = updatedContent.replace(toolUseRegex, `\n\n${formattedError}\n`);
           }
         }

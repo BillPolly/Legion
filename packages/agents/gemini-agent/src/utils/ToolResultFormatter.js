@@ -112,8 +112,8 @@ File has been successfully created and written.`;
    */
   static formatCommandOutput(result) {
     const command = result.data.command || 'unknown';
-    const output = result.data.output || '';
-    const exitCode = result.data.exitCode ?? 'unknown';
+    const output = result.data.stdout || result.data.output || '';
+    const exitCode = result.data.exit_code ?? result.data.exitCode ?? 'unknown';
     
     return `## 🔧 Command Result
 
