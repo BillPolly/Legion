@@ -5,6 +5,7 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
+    "start": "node src/server.js",
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
@@ -12,14 +13,15 @@
   "dependencies": {
     "@legion/configurable-agent": "file:../configurable-agent",
     "@legion/gemini-tools": "file:../../modules/gemini-tools",
-    "@legion/llm": "file:../../llm",
-    "@legion/output-schema": "file:../../prompting/output-schema",
+    "@legion/llm-client": "file:../../prompting/llm-client",
     "@legion/resource-manager": "file:../../resource-manager",
     "@legion/schema": "file:../../schema",
     "@legion/tools-registry": "file:../../tools-registry",
     "es-set-tostringtag": "^2.1.0",
     "express": "^4.18.2",
-    "ws": "^8.14.2"
+    "ws": "^8.14.2",
+    "markdown-it": "^14.0.0",
+    "highlight.js": "^11.9.0"
   },
   "devDependencies": {
     "jest": "^29.0.0",

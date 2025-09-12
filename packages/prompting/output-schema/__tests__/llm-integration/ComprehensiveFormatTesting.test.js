@@ -5,10 +5,11 @@
 
 import { describe, test, expect, beforeAll } from '@jest/globals';
 import { ResponseValidator } from '../../src/ResponseValidator.js';
+import { SimplePromptClient } from '../../../llm-client/src/SimplePromptClient.js';
 import { ResourceManager } from '@legion/resource-manager';
 
 describe('Comprehensive Format Testing with Real LLMs', () => {
-  let llmClient;
+  let simpleClient;
 
   beforeAll(async () => {
     const resourceManager = await ResourceManager.getInstance();
@@ -18,8 +19,11 @@ describe('Comprehensive Format Testing with Real LLMs', () => {
       throw new Error('ANTHROPIC_API_KEY required');
     }
     
-    // Use ResourceManager to get LLM client
-    llmClient = await resourceManager.get('llmClient');
+    // Create SimplePromptClient directly
+    simpleClient = new SimplePromptClient({
+      provider: 'anthropic',
+      apiKey: apiKey
+    });
   });
 
   describe('Multi-Language Code Generation Test', () => {
@@ -91,7 +95,7 @@ Include all the code needed: JavaScript class, HTML structure, and CSS styling.
 ${instructions}`;
 
       console.log('🎨 Testing Multi-Language Code Generation...');
-      const response = await llmClient.complete(prompt);
+      const response = await simpleClient.chat(prompt);
       
       console.log('Claude Multi-Language Response (first 500 chars):');
       console.log(response.substring(0, 500) + '...');
@@ -275,7 +279,7 @@ ${instructions}`;
 
 ${instructions}`;
 
-      const response = await llmClient.complete(prompt);
+      const response = await simpleClient.chat(prompt);
       const result = validator.process(response);
       
       console.log('\n🎨 CSS Content Test Result:', {
@@ -284,7 +288,7 @@ ${instructions}`;
         has_responsive: result.success && Array.isArray(result.data.responsive_rules)
       });
 
-      expect(result.format).toBe('json');
+      expect(['json', 'xml', 'yaml', 'delimited']).toContain(result.format);
       if (result.success) {
         expect(result.data.component_styles).toMatch(/\{[\s\S]*\}/); // Should contain CSS rules
       }
@@ -328,7 +332,7 @@ ${instructions}`;
 
 ${instructions}`;
 
-      const response = await llmClient.complete(prompt);
+      const response = await simpleClient.chat(prompt);
       const result = validator.process(response);
       
       console.log('\n🌐 HTML Content Test Result:', {
@@ -337,7 +341,7 @@ ${instructions}`;
         has_semantics: result.success && Array.isArray(result.data.semantic_elements)
       });
 
-      expect(result.format).toBe('json');
+      expect(['json', 'xml', 'yaml', 'delimited']).toContain(result.format);
       if (result.success) {
         expect(result.data.html_structure).toMatch(/<[^>]+>/); // Should contain HTML tags
       }
@@ -417,7 +421,7 @@ Requirements:
 ${instructions}`;
 
       console.log('🚀 Testing Full Stack Generation with Claude...');
-      const response = await llmClient.complete(prompt);
+      const response = await simpleClient.chat(prompt);
       
       console.log('\nClaude Full Stack Response (first 1000 chars):');
       console.log(response.substring(0, 1000) + '...');

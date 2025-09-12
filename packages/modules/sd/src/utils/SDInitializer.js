@@ -5,7 +5,7 @@
  * ResourceManager → LLMClient → Database → Agents
  */
 
-import { LLMClient } from '@legion/llm';
+import { LLMClient } from '@legion/llm-client'
 import { DesignDatabaseService } from '../services/DesignDatabaseService.js';
 
 export class SDInitializer {

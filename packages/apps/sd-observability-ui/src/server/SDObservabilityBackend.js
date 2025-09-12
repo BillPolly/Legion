@@ -13,7 +13,7 @@ import { fileURLToPath } from 'url';
 import { ActorSpace } from '../../../../shared/actors/src/ActorSpace.js';
 import { Actor } from '../../../../shared/actors/src/Actor.js';
 import { ResourceManager } from '@legion/tool-core';
-import { LLMClient } from '@legion/llm';
+import { LLMClient } from '@legion/llm-client'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

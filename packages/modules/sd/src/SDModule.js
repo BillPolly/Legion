@@ -114,18 +114,18 @@ export default class SDModule extends Module {
       throw new Error('ANTHROPIC_API_KEY not found. Please set it in your .env file.');
     }
 
-    // Import and create LLM client
-    const { LLMClient } = await import('@legion/llm');
-    const llmClient = new LLMClient({
+    // Import and create SimplePromptClient for better UX
+    const { SimplePromptClient } = await import('@legion/llm-client');
+    const simpleClient = new SimplePromptClient({
       provider: 'anthropic',
       apiKey: anthropicKey,
       model: 'claude-3-5-sonnet-20241022'
     });
 
     // Store for reuse
-    this.resourceManager.set('llmClient', llmClient);
+    this.resourceManager.set('simplePromptClient', simpleClient);
     
-    return llmClient;
+    return simpleClient;
   }
 
   /**

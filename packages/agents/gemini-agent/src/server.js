@@ -21,6 +21,31 @@ const wss = new WebSocketServer({ server });
 
 app.use(express.json());
 
+// Serve libraries directly from node_modules for markdown rendering
+app.get('/lib/markdown-it.min.js', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'node_modules', 'markdown-it', 'dist', 'markdown-it.min.js'));
+});
+
+app.get('/lib/highlight.min.js', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'node_modules', 'highlight.js', 'build', 'highlight.min.js'));
+});
+
+app.get('/lib/markdown-syntax.css', (req, res) => {
+  res.type('text/css');
+  res.send(`
+/* Syntax highlighting styles for gemini-agent */
+.hljs { background: #f8f9fa; color: #333; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+.theme-dark .hljs { background: #1e1e1e; color: #d4d4d4; }
+.hljs .keyword { color: #0066cc; font-weight: bold; }
+.hljs .string { color: #22863a; }
+.hljs .comment { color: #6a737d; font-style: italic; }
+.theme-dark .hljs .keyword { color: #569cd6; }
+.theme-dark .hljs .string { color: #ce9178; }
+.theme-dark .hljs .comment { color: #6a9955; }
+.copy-button { background: rgba(255,255,255,0.9); border: 1px solid #e1e5e9; border-radius: 4px; padding: 4px 8px; cursor: pointer; }
+  `);
+});
+
 // Initialize agent components
 let conversationManager;
 let resourceManager;
@@ -35,6 +60,9 @@ async function initializeAgent() {
   // Initialize tool calling conversation manager with real LLM and tools
   conversationManager = new ConversationManager(resourceManager);
   
+  // CRITICAL: Wait for async initialization to complete
+  await conversationManager._initializeAsync();
+  
   console.log('✅ Agent ready for UAT testing');
 }
 
@@ -47,6 +75,7 @@ app.get('/', (req, res) => {
     <title>Gemini-Compatible Agent UAT</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/lib/markdown-syntax.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
@@ -354,8 +383,7 @@ app.get('/', (req, res) => {
 wss.on('connection', (ws) => {
   console.log('🌐 UAT client connected to Gemini-Compatible Agent');
   
-  // Connect client to observability service for real-time monitoring
-  conversationManager.observabilityService.addWebSocketClient(ws);
+  // Direct WebSocket communication - no SD observability crap
   
   ws.on('message', async (message) => {
     try {

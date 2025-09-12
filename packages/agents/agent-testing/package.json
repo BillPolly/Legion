@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@legion/resource-manager": "^1.0.0",
-    "@legion/llm": "^1.0.0",
+    "@legion/llm-client": "file:../../prompting/llm-client",
     "@legion/configurable-agent": "^1.0.0",
     "@legion/prompt-engineering": "^1.0.0"
   },

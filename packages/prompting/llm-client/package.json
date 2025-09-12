@@ -1,0 +1,24 @@
+{
+  "name": "@legion/llm-client",
+  "version": "1.0.0",
+  "description": "Low-level LLM client with provider abstraction and automatic adaptation",
+  "type": "module",
+  "main": "./src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.24.3",
+    "json5": "^2.2.3",
+    "openai": "^4.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.5.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BillPolly/llm.git"
+  }
+}

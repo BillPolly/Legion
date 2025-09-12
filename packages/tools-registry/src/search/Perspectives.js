@@ -14,7 +14,7 @@ import { PerspectiveError } from '../errors/index.js';
 import { DatabaseInitializer } from '../core/DatabaseInitializer.js';
 import { PerspectiveTypeManager } from '../core/PerspectiveTypeManager.js';
 import { Logger } from '../utils/Logger.js';
-import { LLMClient } from '@legion/llm';
+import { SimplePromptClient } from '@legion/llm-client';
 
 export class Perspectives {
   constructor({ resourceManager, databaseStorage = null, options = {} }) {

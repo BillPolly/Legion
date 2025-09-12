@@ -128,3 +128,9 @@ THERE MUST be no fallbacks, FAIL FAST
 NO INLINE CSS style under ANY circustances, use classes and css-variables
 
 WE ALWAYS NEED 100% pass rate
+
+NO BASH Scripts, theis javascript ES6 project! if you need scritps they must be written in javascript and go in the script directory and get called from package.json
+
+LIVE TESTS MUST PASS, all the resoruces required are availble, if it didnt have to pass it would not be there!!!!
+
+where apropriate you must use the proper workspace improts ALWAYS so "@legion/ .... not relative imports to outside your package!

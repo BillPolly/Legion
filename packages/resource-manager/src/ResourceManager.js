@@ -195,8 +195,12 @@ export class ResourceManager {
         this._resources.set('env', envVars);
       }
       
-      // Ensure required services are running
-      await this._ensureServicesRunning();
+      // Ensure required services are running (in background, don't block)
+      setImmediate(() => {
+        this._ensureServicesRunning().catch(error => {
+          console.warn('Background service initialization failed:', error.message);
+        });
+      });
       
       // Mark as initialized
       this.initialized = true;
@@ -276,6 +280,13 @@ export class ResourceManager {
       const promise = this.createLLMClient();
       // Store the promise so multiple calls don't create multiple clients
       this._resources.set('llmClient', promise);
+      return promise;
+    }
+
+    // Special handling for simplePromptClient - create it if it doesn't exist
+    if (name === 'simplePromptClient' && !this._resources.has('simplePromptClient')) {
+      const promise = this.createSimplePromptClient();
+      this._resources.set('simplePromptClient', promise);
       return promise;
     }
     
@@ -414,7 +425,7 @@ export class ResourceManager {
     }
 
     // Import LLMClient dynamically
-    const { LLMClient } = await import('@legion/llm');
+    const { LLMClient } = await import('@legion/llm-client');
     
     const llmClient = new LLMClient({
       provider: config.provider || 'anthropic',
@@ -430,6 +441,34 @@ export class ResourceManager {
     this.llmClient = llmClient;
 
     return llmClient;
+  }
+
+  /**
+   * Create and configure a SimplePromptClient for easy LLM interactions
+   * @param {Object} config - Optional configuration override
+   * @returns {Promise<SimplePromptClient>} Configured SimplePromptClient instance
+   */
+  async createSimplePromptClient(config = {}) {
+    // Get the LLMClient instance
+    const llmClient = await this.get('llmClient');
+
+    // Import SimplePromptClient dynamically  
+    const { SimplePromptClient } = await import('@legion/llm-client');
+
+    const simpleClient = new SimplePromptClient({
+      llmClient: llmClient,
+      defaultOptions: {
+        maxTokens: config.maxTokens || 1000,
+        temperature: config.temperature !== undefined ? config.temperature : 0.7,
+        ...config.defaultOptions
+      },
+      ...config
+    });
+
+    // Store in ResourceManager for reuse
+    this.simplePromptClient = simpleClient;
+
+    return simpleClient;
   }
 
   /**

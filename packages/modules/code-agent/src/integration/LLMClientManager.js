@@ -32,7 +32,7 @@ class LLMClientManager {
         // Use mock client for testing
         this.llmClient = this._createMockClient();
       } else {
-        // Import the LLMClient from @legion/llm (using relative path for development)
+        // Import the LLMClient from @legion/llm-client'(using relative path for development)
         const { LLMClient } = await import('../../../../llm/src/index.js');
         
         // Create LLM client instance

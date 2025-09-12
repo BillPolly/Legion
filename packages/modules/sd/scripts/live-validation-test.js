@@ -10,7 +10,7 @@
  */
 
 import { ResourceManager } from '@legion/module-loader';
-import { LLMClient } from '@legion/llm';
+import { LLMClient } from '@legion/llm-client'
 
 import { RequirementsAgent } from '../src/agents/RequirementsAgent.js';
 import { DomainModelingAgent } from '../src/agents/DomainModelingAgent.js';

@@ -108,7 +108,7 @@ export default {
     '^@legion/planner/(.*)$': '<rootDir>/../../planning/planner/$1',
     '^@legion/planner$': '<rootDir>/../../planning/planner/src',
     '^@legion/resource-manager$': '<rootDir>/../../resource-manager/src',
-    '^@legion/llm$': '<rootDir>/../../llm/src',
+    '^@legion/llm-client': '<rootDir>/../../llm/src',
     '^@legion/jester$': '<rootDir>/../jester/src'
   }
 };

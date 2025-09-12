@@ -1,5 +1,5 @@
 import { Module } from '@legion/tools-registry';
-import { LLMClient } from '@legion/llm';
+import { LLMClient } from '@legion/llm-client'
 import { FileConverter } from './utils/FileConverter.js';
 import { fileURLToPath } from 'url';
 

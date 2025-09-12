@@ -4,7 +4,7 @@
 
 import { getToolRegistry } from '@legion/tools-registry';
 import { Planner } from '../src/core/Planner.js';
-import { LLMClient } from '@legion/llm';
+import { LLMClient } from '@legion/llm-client';
 
 describe('Planner InputSchema Fix', () => {
   let toolRegistry;

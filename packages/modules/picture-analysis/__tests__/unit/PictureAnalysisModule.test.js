@@ -61,10 +61,10 @@ describe('PictureAnalysisModule', () => {
         // Verify the LLM client was stored in ResourceManager
         expect(mockResourceManager.get('llmClient')).toBeDefined();
       } catch (error) {
-        // If @legion/llm is not available in test environment, that's okay
+        // If @legion/llm-client'is not available in test environment, that's okay
         // This test primarily validates the factory pattern logic
         if (error.message.includes('Cannot resolve module')) {
-          console.log('Skipping LLM client creation test - @legion/llm not available in test environment');
+          console.log('Skipping LLM client creation test - @legion/llm-client'not available in test environment');
         } else {
           throw error;
         }

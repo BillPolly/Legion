@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Test artifacts
+__tests__/tmp/
+__tests__/results/
+
+# Development files
+*.log
+.env.local
+.DS_Store
+
+# Build outputs
+dist/
+build/
+coverage/

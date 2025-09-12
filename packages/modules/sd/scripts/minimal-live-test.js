@@ -5,7 +5,7 @@
 
 import { DesignDatabaseService } from '../src/services/DesignDatabaseService.js';
 import { RequirementParserTool } from '../src/tools/requirements/RequirementParserTool.js';
-import { LLMClient } from '@legion/llm';
+import { LLMClient } from '@legion/llm-client'
 
 // Simple ResourceManager that just loads .env
 class SimpleResourceManager {

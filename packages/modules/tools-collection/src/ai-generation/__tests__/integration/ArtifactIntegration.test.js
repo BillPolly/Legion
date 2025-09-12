@@ -13,7 +13,7 @@ import AIGenerationModule from '../../AIGenerationModule.js';
 const mockGenerateImage = jest.fn();
 const mockSupportsImageGeneration = jest.fn();
 
-jest.mock('@legion/llm', () => {
+jest.mock('@legion/llm-client', () => {
   return {
     LLMClient: jest.fn().mockImplementation(() => ({
       generateImage: mockGenerateImage,
