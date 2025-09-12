@@ -340,21 +340,47 @@ export class ReactiveEngine {
 
     const affectedSubs = new Set();
     
-    // For each changed attribute, find relevant subscriptions
-    for (const changedAttr of analysis.changedAttributes) {
-      const attrSubs = this.findSubscriptionsByAttribute(changedAttr);
+    // Get all active subscriptions
+    const allSubs = this.getActiveSubscriptions();
+    
+    // Check each subscription to see if it's affected
+    for (const sub of allSubs) {
+      const metadata = sub.getQueryMetadata();
       
-      attrSubs.forEach(sub => {
-        if (!sub.isEntityRooted()) {
-          // General subscriptions: affected if their attributes changed
-          affectedSubs.add(sub);
-        } else {
-          // Entity-rooted subscriptions: affected if their attributes changed AND their entity changed
-          if (analysis.changedEntities.has(sub.rootEntity)) {
+      // Check if this subscription has specific attributes
+      if (metadata.attributes.length > 0) {
+        // Check if any of its attributes changed
+        for (const changedAttr of analysis.changedAttributes) {
+          if (metadata.attributes.includes(changedAttr)) {
             affectedSubs.add(sub);
+            break;
           }
         }
-      });
+      } else {
+        // This subscription uses variable attributes (e.g., [?e, '?attr', '?value'])
+        // It needs to be notified if ANY entity it's watching changed
+        
+        // Check if subscription query has entity constraints
+        let isAffected = false;
+        
+        if (sub.query && sub.query.where) {
+          for (const clause of sub.query.where) {
+            if (Array.isArray(clause) && clause.length >= 3) {
+              const [entity] = clause;
+              
+              // If the clause has a concrete entity ID that changed, this sub is affected
+              if (typeof entity === 'number' && analysis.changedEntities.has(entity)) {
+                isAffected = true;
+                break;
+              }
+            }
+          }
+        }
+        
+        if (isAffected) {
+          affectedSubs.add(sub);
+        }
+      }
     }
     
     // Filter out inactive subscriptions
@@ -394,9 +420,8 @@ export class ReactiveEngine {
     // Notify each affected subscription
     affectedSubscriptions.forEach(subscription => {
       try {
-        // For now, we'll provide empty results since we haven't implemented query execution yet
-        // This will be completed in Phase 4
-        const results = [];
+        // Execute the subscription's query to get current results
+        const results = this.store.query(subscription.query);
         subscription.notify(results, changes);
       } catch (error) {
         // Don't let subscription errors break other notifications
