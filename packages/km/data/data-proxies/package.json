@@ -1,0 +1,20 @@
+{
+  "name": "@legion/data-proxies",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Data proxy classes extending Handle base class for universal Actor system integration",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest"
+  },
+  "dependencies": {
+    "@legion/km-data-handle": "workspace:*"
+  },
+  "peerDependencies": {
+    "@legion/datascript": "workspace:*",
+    "@legion/data-store": "workspace:*"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  }
+}

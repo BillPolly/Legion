@@ -121,6 +121,33 @@ export class DataStore {
   }
 
   /**
+   * Update an existing entity with new data
+   */
+  updateEntity(entityId, entityData) {
+    // Validate inputs
+    if (!entityId || typeof entityId !== 'number') {
+      throw new Error('Entity ID is required and must be a number');
+    }
+    
+    this._validateEntityData(entityData);
+    
+    // Create transaction data with the entity ID
+    const txData = {
+      ':db/id': entityId,
+      ...entityData
+    };
+    
+    // Perform transaction
+    const { dbAfter, tempids } = this.conn.transact([txData]);
+    
+    return {
+      entityId,
+      tempids,
+      dbAfter
+    };
+  }
+
+  /**
    * Create multiple entities in a single transaction
    */
   createEntities(entitiesData) {
@@ -161,6 +188,152 @@ export class DataStore {
       entityIds,
       tempids,
       dbAfter
+    };
+  }
+
+  /**
+   * Execute update-then-query pattern atomically
+   * Updates are executed FIRST, then query sees the updated state
+   * 
+   * @param {Object} spec - Query-with-update specification
+   * @param {Array} spec.find - Find clause for the query
+   * @param {Array} spec.where - Where clause for the query
+   * @param {Array} spec.update - Array of update/creation operations
+   * @returns {Object} Result containing query results and tempid mappings
+   */
+  queryWithUpdate(spec) {
+    // Validate specification
+    if (!spec || typeof spec !== 'object') {
+      throw new Error('Query-with-update specification is required');
+    }
+    
+    // Validate query parts
+    if (!spec.find || (Array.isArray(spec.find) && spec.find.length === 0)) {
+      throw new Error('Query must have find clause');
+    }
+    
+    if (!spec.where) {
+      throw new Error('Query must have where clause');
+    }
+    
+    if (!Array.isArray(spec.where)) {
+      throw new Error('Where clause must be an array');
+    }
+    
+    // Validate update specification if provided
+    if (spec.update) {
+      if (!Array.isArray(spec.update)) {
+        throw new Error('Update must be an array');
+      }
+      
+      // Validate each update entry has :db/id
+      for (const updateData of spec.update) {
+        if (!updateData[':db/id']) {
+          throw new Error('Update must have :db/id');
+        }
+      }
+    }
+    
+    const tempIds = {};
+    let dbAfter = this.db();
+    
+    // Execute updates first if provided
+    if (spec.update && spec.update.length > 0) {
+      const txData = [];
+      
+      for (const updateData of spec.update) {
+        const entityId = updateData[':db/id'];
+        
+        if (typeof entityId === 'string' && entityId.startsWith('?')) {
+          // New entity with temp ID
+          const tempId = entityId;
+          const newEntity = { ...updateData };
+          
+          // Generate a numeric tempid for DataScript
+          const numericTempId = -(Object.keys(tempIds).length + 1);
+          newEntity[':db/id'] = numericTempId;
+          
+          // Store mapping for later resolution
+          tempIds[tempId] = numericTempId;
+          
+          // Transform ref attributes that reference tempids
+          for (const [attr, value] of Object.entries(newEntity)) {
+            if (typeof value === 'string' && value.startsWith('?')) {
+              // This is a tempid reference, resolve it
+              if (tempIds[value] !== undefined) {
+                newEntity[attr] = tempIds[value];
+              } else {
+                // Create a mapping for this tempid if it doesn't exist
+                const refNumericTempId = -(Object.keys(tempIds).length + 1);
+                tempIds[value] = refNumericTempId;
+                newEntity[attr] = refNumericTempId;
+              }
+            }
+          }
+          
+          txData.push(newEntity);
+          
+        } else if (typeof entityId === 'number') {
+          // Update existing entity - also check for tempid refs in attributes
+          const updatedEntity = { ...updateData };
+          
+          for (const [attr, value] of Object.entries(updatedEntity)) {
+            if (typeof value === 'string' && value.startsWith('?')) {
+              // This is a tempid reference, resolve it
+              if (tempIds[value] !== undefined) {
+                updatedEntity[attr] = tempIds[value];
+              } else {
+                // Create a mapping for this tempid if it doesn't exist
+                const refNumericTempId = -(Object.keys(tempIds).length + 1);
+                tempIds[value] = refNumericTempId;
+                updatedEntity[attr] = refNumericTempId;
+              }
+            }
+          }
+          
+          txData.push(updatedEntity);
+        } else {
+          throw new Error(`Invalid entity ID type: ${typeof entityId}`);
+        }
+      }
+      
+      // Execute all updates in a single transaction
+      if (txData.length > 0) {
+        const txResult = this.conn.transact(txData);
+        dbAfter = txResult.dbAfter;
+        
+        // Update tempid mappings with actual entity IDs
+        for (const [tempId, numericTempId] of Object.entries(tempIds)) {
+          if (txResult.tempids && txResult.tempids.has(numericTempId)) {
+            tempIds[tempId] = txResult.tempids.get(numericTempId);
+          }
+        }
+      }
+    }
+    
+    // Transform where clauses to use real IDs instead of temp IDs
+    const transformedWhere = spec.where.map(clause => {
+      if (Array.isArray(clause)) {
+        return clause.map(item => {
+          if (typeof item === 'string' && tempIds[item] !== undefined) {
+            return tempIds[item];
+          }
+          return item;
+        });
+      }
+      return clause;
+    });
+    
+    // Execute query on the updated database state
+    const queryResults = q({
+      find: spec.find,
+      where: transformedWhere
+    }, dbAfter);
+    
+    // Return results with tempId mapping
+    return {
+      results: queryResults,
+      tempIds: tempIds
     };
   }
 

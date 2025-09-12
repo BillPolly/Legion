@@ -1,0 +1,750 @@
+/**
+ * Memory Management and Resource Cleanup Test Suite
+ * Tests memory usage patterns, resource cleanup, and leak prevention
+ */
+
+import { DataStoreProxy } from '../src/DataStoreProxy.js';
+import { EntityProxy } from '../src/EntityProxy.js';
+import { StreamProxy } from '../src/StreamProxy.js';
+import { CollectionProxy } from '../src/CollectionProxy.js';
+import { createTestStore, createSampleData } from './setup.js';
+
+describe('Memory Management and Resource Cleanup', () => {
+  let mockStore;
+  let dataStoreProxy;
+  let sampleData;
+  
+  beforeEach(() => {
+    mockStore = createTestStore();
+    dataStoreProxy = new DataStoreProxy(mockStore, {
+      cacheMaxSize: 50,
+      cacheTTL: 10000,
+      enableCacheStatistics: true
+    });
+    sampleData = createSampleData(mockStore);
+  });
+  
+  afterEach(() => {
+    if (dataStoreProxy && !dataStoreProxy.isDestroyed()) {
+      dataStoreProxy.destroy();
+    }
+  });
+
+  describe('DataStoreProxy Memory Management', () => {
+    test('should properly initialize memory tracking', () => {
+      const stats = dataStoreProxy.getCacheStats();
+      
+      expect(stats.cache).toBeDefined();
+      expect(stats.memory).toBeDefined();
+      expect(stats.entityProxies).toBe(0);
+      expect(stats.cache.size).toBe(0);
+      expect(stats.memory.entries).toBe(0);
+      expect(stats.memory.estimatedBytes).toBe(0);
+    });
+
+    test('should track entity proxy creation and memory usage', () => {
+      // Create multiple entity proxies
+      const entities = [
+        sampleData.users.alice,
+        sampleData.users.bob,
+        sampleData.users.charlie
+      ];
+      
+      const proxies = entities.map(id => dataStoreProxy.entity(id));
+      
+      // Access values to populate cache
+      const values = proxies.map(proxy => proxy.value());
+      
+      const stats = dataStoreProxy.getCacheStats();
+      
+      // Should track entity proxies
+      expect(stats.entityProxies).toBe(3);
+      
+      // Should show cache usage
+      expect(stats.cache.size).toBeGreaterThan(0);
+      expect(stats.memory.entries).toBeGreaterThan(0);
+      expect(stats.memory.estimatedBytes).toBeGreaterThan(0);
+      // For small amounts of data, estimatedMB can be 0.00, so check estimatedBytes instead
+      expect(stats.memory.estimatedBytes).toBeGreaterThan(100);
+    });
+
+    test('should enforce cache size limits and perform LRU eviction', () => {
+      const cacheSize = 3;
+      const smallCacheProxy = new DataStoreProxy(mockStore, {
+        cacheMaxSize: cacheSize,
+        cacheTTL: 60000, // Long TTL to test size-based eviction
+        enableCacheStatistics: true
+      });
+      
+      try {
+        // Create more entities than cache size
+        const entities = [
+          sampleData.users.alice,
+          sampleData.users.bob, 
+          sampleData.users.charlie
+        ];
+        
+        // Access entities to fill cache
+        entities.forEach(id => {
+          const proxy = smallCacheProxy.entity(id);
+          proxy.value(); // This will cache the entity
+        });
+        
+        let stats = smallCacheProxy.getCacheStats();
+        expect(stats.cache.size).toBe(cacheSize);
+        
+        // Create one more entity using real DataStore method - should trigger LRU eviction
+        const newEntityResult = mockStore.createEntity({ ':user/name': 'New User' });
+        
+        const newProxy = smallCacheProxy.entity(newEntityResult.entityId);
+        newProxy.value();
+        
+        stats = smallCacheProxy.getCacheStats();
+        
+        // Cache should still be at max size
+        expect(stats.cache.size).toBeLessThanOrEqual(cacheSize);
+        
+        // Should have recorded evictions
+        expect(stats.cache.evictions).toBeGreaterThan(0);
+        
+      } finally {
+        smallCacheProxy.destroy();
+      }
+    });
+
+    test('should handle cache TTL expiration and memory cleanup', async () => {
+      const shortTTLProxy = new DataStoreProxy(mockStore, {
+        cacheMaxSize: 100,
+        cacheTTL: 100, // 100ms TTL
+        enableCacheStatistics: true
+      });
+      
+      try {
+        // Create entity and populate cache
+        const entityProxy = shortTTLProxy.entity(sampleData.users.alice);
+        entityProxy.value();
+        
+        let stats = shortTTLProxy.getCacheStats();
+        expect(stats.cache.size).toBeGreaterThan(0);
+        
+        // Wait for cache to expire
+        await new Promise(resolve => setTimeout(resolve, 150));
+        
+        // Access again - should miss cache and re-query
+        entityProxy.value();
+        
+        // TTL expiration should have cleaned up expired entries
+        stats = shortTTLProxy.getCacheStats();
+        expect(stats.cache.misses).toBeGreaterThan(0);
+        
+      } finally {
+        shortTTLProxy.destroy();
+      }
+    });
+
+    test('should properly cleanup resources on destroy', () => {
+      // Create resources to cleanup
+      const entityProxy1 = dataStoreProxy.entity(sampleData.users.alice);
+      const entityProxy2 = dataStoreProxy.entity(sampleData.users.bob);
+      
+      // Create subscriptions
+      const subscription1 = dataStoreProxy.subscribe(
+        { find: ['?e'], where: [['?e', ':user/active', true]] },
+        () => {}
+      );
+      
+      const subscription2 = entityProxy1.subscribe(() => {});
+      
+      // Populate cache
+      entityProxy1.value();
+      entityProxy2.value();
+      
+      let stats = dataStoreProxy.getCacheStats();
+      expect(stats.entityProxies).toBe(2);
+      expect(stats.cache.size).toBeGreaterThan(0);
+      
+      // Destroy should cleanup everything
+      dataStoreProxy.destroy();
+      
+      // Verify cleanup
+      expect(dataStoreProxy.isDestroyed()).toBe(true);
+      expect(entityProxy1.isDestroyed()).toBe(true);
+      expect(entityProxy2.isDestroyed()).toBe(true);
+      
+      // Should throw when accessing destroyed proxies
+      expect(() => dataStoreProxy.getCacheStats()).toThrow('Handle has been destroyed');
+      expect(() => entityProxy1.value()).toThrow('Handle has been destroyed');
+    });
+
+    test('should handle memory pressure with large datasets', () => {
+      const largeCacheProxy = new DataStoreProxy(mockStore, {
+        cacheMaxSize: 10,
+        cacheTTL: 30000,
+        enableCacheStatistics: true
+      });
+      
+      try {
+        // Create many entities using real DataStore method
+        const entityIds = [];
+        for (let i = 1000; i < 1020; i++) {
+          const result = mockStore.createEntity({
+            ':user/id': i,
+            ':user/name': `User${i}`,
+            ':user/data': new Array(100).fill(i).join('-') // Large data
+          });
+          entityIds.push(result.entityId);
+        }
+        
+        // Access all entities
+        entityIds.forEach(id => {
+          const proxy = largeCacheProxy.entity(id);
+          proxy.value();
+        });
+        
+        const stats = largeCacheProxy.getCacheStats();
+        
+        // Should have enforced cache limits
+        expect(stats.cache.size).toBeLessThanOrEqual(10);
+        expect(stats.cache.evictions).toBeGreaterThan(0);
+        
+        // Memory tracking should work
+        expect(stats.memory.estimatedBytes).toBeGreaterThan(1000);
+        
+      } finally {
+        largeCacheProxy.destroy();
+      }
+    });
+  });
+
+  describe('EntityProxy Memory Management', () => {
+    test('should manage local cache memory efficiently', () => {
+      const entityProxy = dataStoreProxy.entity(sampleData.users.alice);
+      
+      // Initially no cached data
+      expect(entityProxy._cachedData).toBeNull();
+      expect(entityProxy._cacheTimestamp).toBe(0);
+      
+      // Access data - should populate local cache
+      const data1 = entityProxy.value();
+      expect(entityProxy._cachedData).not.toBeNull();
+      expect(entityProxy._cacheTimestamp).toBeGreaterThan(0);
+      
+      // Second access should use cache
+      const data2 = entityProxy.value();
+      expect(data2).toBe(data1); // Same reference from cache
+    });
+
+    test('should invalidate local cache on updates', () => {
+      const entityProxy = dataStoreProxy.entity(sampleData.users.alice);
+      
+      // Populate cache
+      entityProxy.value();
+      const initialData = entityProxy._cachedData;
+      const initialTimestamp = entityProxy._cacheTimestamp;
+      
+      expect(initialData).not.toBeNull();
+      
+      // Update entity
+      entityProxy.update({ ':user/age': 31 });
+      
+      // Local cache should be invalidated
+      expect(entityProxy._cachedData).toBeNull();
+      expect(entityProxy._cacheTimestamp).toBe(0);
+    });
+
+    test('should cleanup subscriptions and cache on destroy', () => {
+      const entityProxy = dataStoreProxy.entity(sampleData.users.alice);
+      
+      // Create subscription and populate cache
+      const subscription = entityProxy.subscribe(() => {});
+      entityProxy.value();
+      
+      expect(entityProxy._subscriptions.size).toBeGreaterThan(0);
+      expect(entityProxy._cachedData).not.toBeNull();
+      
+      // Destroy should cleanup everything
+      entityProxy.destroy();
+      
+      expect(entityProxy.isDestroyed()).toBe(true);
+      expect(entityProxy._subscriptions.size).toBe(0);
+      expect(() => entityProxy.value()).toThrow('Handle has been destroyed');
+    });
+
+    test('should handle cache invalidation subscription cleanup', () => {
+      const entityProxy = dataStoreProxy.entity(sampleData.users.alice);
+      
+      // Access data to trigger cache invalidation subscription setup
+      entityProxy.value();
+      
+      // Should have cache invalidation subscription
+      expect(entityProxy._cacheInvalidationSub).toBeDefined();
+      expect(entityProxy._subscriptions.size).toBeGreaterThan(0);
+      
+      // Destroy should cleanup cache invalidation subscription
+      entityProxy.destroy();
+      
+      expect(entityProxy._cacheInvalidationSub).toBeNull();
+    });
+
+    test('should handle memory-efficient singleton pattern', () => {
+      // Create multiple references to same entity through DataStoreProxy
+      const entityProxy1 = dataStoreProxy.entity(sampleData.users.alice);
+      const entityProxy2 = dataStoreProxy.entity(sampleData.users.alice);
+      const entityProxy3 = dataStoreProxy.entity(sampleData.users.alice);
+      
+      // Should return same instance (singleton pattern)
+      expect(entityProxy1).toBe(entityProxy2);
+      expect(entityProxy2).toBe(entityProxy3);
+      
+      // Verify only one proxy is tracked
+      const stats = dataStoreProxy.getCacheStats();
+      expect(stats.entityProxies).toBe(1);
+    });
+  });
+
+  describe('StreamProxy Memory Management', () => {
+    test('should cleanup subscriptions and resources on destroy', () => {
+      const streamSpec = {
+        find: ['?e', '?name'],
+        where: [
+          ['?e', ':user/active', true],
+          ['?e', ':user/name', '?name']
+        ]
+      };
+      
+      const streamProxy = dataStoreProxy.stream(streamSpec);
+      
+      // Create subscription
+      const subscription = streamProxy.subscribe(() => {});
+      
+      expect(streamProxy._subscriptions.size).toBeGreaterThan(0);
+      
+      // Destroy should cleanup subscription
+      streamProxy.destroy();
+      
+      expect(streamProxy.isDestroyed()).toBe(true);
+      expect(streamProxy._subscriptions.size).toBe(0);
+      expect(() => streamProxy.value()).toThrow('Handle has been destroyed');
+    });
+
+    test('should handle multiple subscriptions cleanup', () => {
+      const streamSpec = {
+        find: ['?e'],
+        where: [['?e', ':user/active', true]]
+      };
+      
+      const streamProxy = dataStoreProxy.stream(streamSpec);
+      
+      // Create multiple subscriptions
+      const sub1 = streamProxy.subscribe(() => {});
+      const sub2 = streamProxy.subscribe(() => {});
+      const sub3 = streamProxy.subscribe(() => {});
+      
+      expect(streamProxy._subscriptions.size).toBe(3);
+      
+      // Individual unsubscribe should remove from tracking
+      sub2.unsubscribe();
+      expect(streamProxy._subscriptions.size).toBe(2);
+      
+      // Destroy should cleanup remaining subscriptions
+      streamProxy.destroy();
+      expect(streamProxy._subscriptions.size).toBe(0);
+    });
+  });
+
+  describe('CollectionProxy Memory Management', () => {
+    test('should cleanup cached entity proxies on destroy', () => {
+      const collectionSpec = {
+        find: ['?e'],
+        where: [['?e', ':user/active', true]],
+        entityKey: '?e'
+      };
+      
+      const collection = dataStoreProxy.collection(collectionSpec);
+      
+      // Access entities to populate cache
+      const entityIds = collection.value();
+      entityIds.forEach(id => collection.get(id));
+      
+      expect(collection._entityProxies.size).toBeGreaterThan(0);
+      
+      // Destroy should cleanup entity proxies
+      collection.destroy();
+      
+      expect(collection.isDestroyed()).toBe(true);
+      expect(collection._entityProxies.size).toBe(0);
+      expect(() => collection.value()).toThrow('Handle has been destroyed');
+    });
+
+    test('should share entity proxies with DataStoreProxy singleton pattern', () => {
+      const collectionSpec = {
+        find: ['?e'],
+        where: [['?e', ':user/active', true]],
+        entityKey: '?e'
+      };
+      
+      const collection = dataStoreProxy.collection(collectionSpec);
+      
+      // Get same entity through DataStoreProxy first to cache it
+      const directEntity = dataStoreProxy.entity(sampleData.users.alice);
+      
+      // Get entity through collection - should reuse cached instance
+      const collectionEntity = collection.get(sampleData.users.alice);
+      
+      // Should be same instance (singleton pattern)
+      expect(collectionEntity).toBe(directEntity);
+      
+      // Verify memory efficiency - only one entity proxy should be tracked
+      const stats = dataStoreProxy.getCacheStats();
+      expect(stats.entityProxies).toBe(1);
+    });
+
+    test('should handle bulk operation memory efficiently', () => {
+      const collectionSpec = {
+        find: ['?e'],
+        where: [['?e', ':user/name', '?name']],
+        entityKey: '?e'
+      };
+      
+      const collection = dataStoreProxy.collection(collectionSpec);
+      
+      // Perform bulk update
+      const result = collection.updateAll({ ':bulk_test': true });
+      
+      expect(result.success).toBe(true);
+      expect(result.updated).toBeGreaterThan(0);
+      
+      // Should not create excessive cached proxies
+      expect(collection._entityProxies.size).toBeLessThanOrEqual(result.updated);
+    });
+  });
+
+  describe('Subscription Memory Management', () => {
+    test('should prevent subscription memory leaks', () => {
+      const subscriptions = [];
+      
+      // Create many subscriptions
+      for (let i = 0; i < 10; i++) {
+        const subscription = dataStoreProxy.subscribe(
+          { find: ['?e'], where: [['?e', ':user/active', true]] },
+          () => {}
+        );
+        subscriptions.push(subscription);
+      }
+      
+      // DataStoreProxy has 1 cache invalidation subscription + 10 explicit subscriptions = 11 total
+      expect(dataStoreProxy._subscriptions.size).toBe(11);
+      
+      // Unsubscribe half
+      for (let i = 0; i < 5; i++) {
+        subscriptions[i].unsubscribe();
+      }
+      
+      // Should have 1 cache invalidation subscription + 5 remaining explicit subscriptions = 6 total
+      expect(dataStoreProxy._subscriptions.size).toBe(6);
+      
+      // Destroy should cleanup remaining subscriptions
+      dataStoreProxy.destroy();
+      expect(dataStoreProxy._subscriptions.size).toBe(0);
+    });
+
+    test('should handle subscription errors during cleanup gracefully', () => {
+      const flakyStore = {
+        ...mockStore,
+        query: mockStore.query.bind(mockStore),
+        subscribe: (querySpec, callback) => {
+          return {
+            id: 'test-sub',
+            unsubscribe: () => {
+              throw new Error('Unsubscribe failed');
+            }
+          };
+        }
+      };
+      
+      const flakyProxy = new DataStoreProxy(flakyStore);
+      
+      try {
+        // Create subscription that will fail on cleanup
+        const subscription = flakyProxy.subscribe(
+          { find: ['?e'], where: [['?e', ':user/active', true]] },
+          () => {}
+        );
+        
+        // FlakyProxy has 1 explicit subscription + 1 cache invalidation subscription = 2 total
+        expect(flakyProxy._subscriptions.size).toBe(2);
+        
+        // Destroy should complete despite subscription errors
+        expect(() => {
+          flakyProxy.destroy();
+        }).not.toThrow();
+        
+        expect(flakyProxy.isDestroyed()).toBe(true);
+        expect(flakyProxy._subscriptions.size).toBe(0);
+        
+      } finally {
+        if (!flakyProxy.isDestroyed()) {
+          flakyProxy.destroy();
+        }
+      }
+    });
+  });
+
+  describe('Cache Memory Management', () => {
+    test('should handle cache memory estimation accurately', () => {
+      // Create entities with different data sizes
+      const smallEntity = sampleData.users.alice;
+      
+      // Create large entity using real DataStore method
+      const largeEntityResult = mockStore.createEntity({
+        ':user/name': 'Large User',
+        ':user/bio': new Array(1000).fill('x').join(''), // Large string
+        ':user/tags': new Array(100).fill('tag'),  // Large array
+        ':user/metadata': {  // Nested object
+          created: new Date(),
+          settings: { theme: 'dark', lang: 'en' },
+          permissions: ['read', 'write', 'admin']
+        }
+      });
+      
+      // Access both entities
+      dataStoreProxy.entity(smallEntity).value();
+      dataStoreProxy.entity(largeEntityResult.entityId).value();
+      
+      const stats = dataStoreProxy.getCacheStats();
+      
+      // Memory estimation should show reasonable values
+      expect(stats.memory.entries).toBe(2);
+      expect(stats.memory.estimatedBytes).toBeGreaterThan(1000);
+      // For realistic data sizes, check bytes instead of MB to avoid floating point precision issues
+      expect(stats.memory.estimatedBytes).toBeGreaterThan(2000);
+    });
+
+    test('should handle cache expiration timer cleanup', () => {
+      const entityProxy = dataStoreProxy.entity(sampleData.users.alice);
+      entityProxy.value(); // Populate cache
+      
+      // Cache should have expiration timer
+      const cacheManager = dataStoreProxy.cacheManager;
+      expect(cacheManager.expirationTimers.size).toBeGreaterThan(0);
+      
+      // Destroy should clear all timers
+      dataStoreProxy.destroy();
+      
+      expect(cacheManager.cache.size).toBe(0);
+      expect(cacheManager.expirationTimers.size).toBe(0);
+    });
+
+    test('should handle cache invalidation without memory leaks', () => {
+      // Create and cache multiple entities
+      const entities = [
+        sampleData.users.alice,
+        sampleData.users.bob,
+        sampleData.users.charlie
+      ];
+      
+      entities.forEach(id => {
+        dataStoreProxy.entity(id).value();
+      });
+      
+      let stats = dataStoreProxy.getCacheStats();
+      const initialCacheSize = stats.cache.size;
+      
+      // Invalidate all entity caches
+      const invalidated = dataStoreProxy.invalidateCache('entity:');
+      
+      expect(invalidated).toBe(3);
+      
+      stats = dataStoreProxy.getCacheStats();
+      expect(stats.cache.size).toBe(initialCacheSize - 3);
+      expect(stats.cache.invalidations).toBe(3);
+    });
+  });
+
+  describe('Circular Reference Prevention', () => {
+    test('should prevent circular references in proxy relationships', () => {
+      // Create collection that references entities
+      const collectionSpec = {
+        find: ['?e'],
+        where: [['?e', ':user/active', true]],
+        entityKey: '?e'
+      };
+      
+      const collection = dataStoreProxy.collection(collectionSpec);
+      
+      // Get entity through collection
+      const entityProxy = collection.get(sampleData.users.alice);
+      
+      // Entity and collection should not create circular references
+      // Collection references entities, but entities don't reference collections
+      expect(entityProxy.store).toBe(mockStore);
+      expect(entityProxy).not.toHaveProperty('collection');
+      
+      // Both should be cleanly destroyable
+      expect(() => {
+        collection.destroy();
+      }).not.toThrow();
+      
+      expect(() => {
+        entityProxy.destroy();
+      }).not.toThrow();
+    });
+
+    test('should handle cache circular reference cleanup', () => {
+      const cacheManager = dataStoreProxy.cacheManager;
+      
+      // Create cache entry with potential circular reference
+      const testData = { name: 'test' };
+      testData.self = testData; // Create circular reference
+      
+      cacheManager.set('circular-test', testData);
+      
+      // Should handle cleanup gracefully
+      expect(() => {
+        dataStoreProxy.destroy();
+      }).not.toThrow();
+    });
+  });
+
+  describe('Resource Leak Prevention', () => {
+    test('should prevent event listener leaks', () => {
+      const entityProxy = dataStoreProxy.entity(sampleData.users.alice);
+      
+      // Create multiple subscriptions
+      const subscriptions = [];
+      for (let i = 0; i < 5; i++) {
+        subscriptions.push(entityProxy.subscribe(() => {}));
+      }
+      
+      // EntityProxy has 5 explicit subscriptions + 1 cache invalidation subscription = 6 total
+      expect(entityProxy._subscriptions.size).toBe(6);
+      
+      // Destroy should cleanup all event listeners
+      entityProxy.destroy();
+      
+      expect(entityProxy._subscriptions.size).toBe(0);
+    });
+
+    test('should prevent timer leaks', () => {
+      const shortTTLProxy = new DataStoreProxy(mockStore, {
+        cacheMaxSize: 10,
+        cacheTTL: 10000, // 10 second TTL
+        enableCacheStatistics: true
+      });
+      
+      try {
+        // Create cached entries with timers
+        shortTTLProxy.entity(sampleData.users.alice).value();
+        shortTTLProxy.entity(sampleData.users.bob).value();
+        
+        const cacheManager = shortTTLProxy.cacheManager;
+        expect(cacheManager.expirationTimers.size).toBeGreaterThan(0);
+        
+        // Destroy should clear all timers
+        shortTTLProxy.destroy();
+        
+        expect(cacheManager.expirationTimers.size).toBe(0);
+      } finally {
+        if (!shortTTLProxy.isDestroyed()) {
+          shortTTLProxy.destroy();
+        }
+      }
+    });
+
+    test('should prevent proxy registry leaks', () => {
+      // Create many entity proxies using real DataStore method
+      const entityIds = [];
+      for (let i = 0; i < 10; i++) {
+        const result = mockStore.createEntity({ ':user/name': `User${2000 + i}` });
+        entityIds.push(result.entityId);
+        dataStoreProxy.entity(result.entityId);
+      }
+      
+      let stats = dataStoreProxy.getCacheStats();
+      expect(stats.entityProxies).toBe(10);
+      
+      // Destroy should clear proxy registry
+      dataStoreProxy.destroy();
+      
+      // Verify all proxies are destroyed
+      for (const id of entityIds) {
+        const destroyed = dataStoreProxy._entityProxies.get(id);
+        expect(destroyed).toBeUndefined();
+      }
+    });
+  });
+
+  describe('Performance Under Memory Pressure', () => {
+    test('should maintain performance with large cache sizes', () => {
+      const largeCacheProxy = new DataStoreProxy(mockStore, {
+        cacheMaxSize: 1000,
+        cacheTTL: 60000,
+        enableCacheStatistics: true
+      });
+      
+      try {
+        const startTime = Date.now();
+        
+        // Create many cached entries using real DataStore method
+        const entityIds = [];
+        for (let i = 3000; i < 3100; i++) {
+          const result = mockStore.createEntity({ ':user/name': `User${i}` });
+          entityIds.push(result.entityId);
+          largeCacheProxy.entity(result.entityId).value();
+        }
+        
+        const endTime = Date.now();
+        const duration = endTime - startTime;
+        
+        // Should complete in reasonable time (less than 1 second)
+        expect(duration).toBeLessThan(1000);
+        
+        const stats = largeCacheProxy.getCacheStats();
+        expect(stats.cache.size).toBe(100);
+        expect(stats.entityProxies).toBe(100);
+        
+      } finally {
+        largeCacheProxy.destroy();
+      }
+    });
+
+    test('should gracefully degrade under memory constraints', () => {
+      const constrainedProxy = new DataStoreProxy(mockStore, {
+        cacheMaxSize: 2, // Very small cache
+        cacheTTL: 30000,
+        enableCacheStatistics: true
+      });
+      
+      try {
+        // Access more entities than cache can hold
+        const entities = [
+          sampleData.users.alice,
+          sampleData.users.bob,
+          sampleData.users.charlie
+        ];
+        
+        entities.forEach(id => {
+          const proxy = constrainedProxy.entity(id);
+          proxy.value();
+        });
+        
+        const stats = constrainedProxy.getCacheStats();
+        
+        // Should enforce cache limits
+        expect(stats.cache.size).toBeLessThanOrEqual(2);
+        
+        // Should show evictions occurred
+        expect(stats.cache.evictions).toBeGreaterThan(0);
+        
+        // Should still function correctly
+        const lastEntity = constrainedProxy.entity(sampleData.users.charlie);
+        const data = lastEntity.value();
+        expect(data).toBeDefined();
+        expect(data[':user/name']).toBe('Charlie');
+        
+      } finally {
+        constrainedProxy.destroy();
+      }
+    });
+  });
+});
