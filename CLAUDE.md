@@ -134,3 +134,17 @@ NO BASH Scripts, theis javascript ES6 project! if you need scritps they must be 
 LIVE TESTS MUST PASS, all the resoruces required are availble, if it didnt have to pass it would not be there!!!!
 
 where apropriate you must use the proper workspace improts ALWAYS so "@legion/ .... not relative imports to outside your package!
+
+ALL inter package imports should use "@legion/...  never relative imports outside a package.
+
+Jest must always be configured for ES6 modules.
+
+In general always run jest tests sequentially unless you absolutley know that they can run in parallel.
+
+Only ever use Jest for tests. no node test runner, no plain js scripts used as tests.
+
+If you do need to right js scripts for testing or debuging then always put them in a /tmp directory and remeber to clear them up
+
+NEVER pollute package root directories or monorepo root! they must be kept as clean as possible! any scripts must go in scripts directory. and test artifacts should go under /tmp in __tests__
+
+all tests go in __tests__ in the package root, not in src

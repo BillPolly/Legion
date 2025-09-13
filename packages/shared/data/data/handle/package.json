@@ -1,0 +1,26 @@
+{
+  "name": "@legion/data-handle",
+  "version": "1.0.0",
+  "description": "Universal Handle pattern for proxying monolithic resources with Actor system integration",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+  },
+  "keywords": [
+    "handle",
+    "proxy",
+    "actor",
+    "resource-management",
+    "universal-pattern",
+    "introspection"
+  ],
+  "dependencies": {
+    "@legion/actors": "*"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  }
+}

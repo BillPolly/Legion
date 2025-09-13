@@ -1,5 +1,5 @@
-import { createConn } from '../../../data/datascript/src/core/conn.js';
-import { q } from '../../../data/datascript/src/query/query.js';
+import { createConn } from '@legion/datascript/src/core/conn.js';
+import { q } from '@legion/datascript/src/query/query.js';
 
 describe('Direct DataScript Test', () => {
   test('verify DataScript works with entity maps', () => {

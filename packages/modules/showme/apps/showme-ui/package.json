@@ -9,8 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@legion/components": "workspace:*",
-    "@legion/actor-framework": "workspace:*"
+    "@legion/components": "*",
+    "@legion/actor-framework": "*"
   },
   "devDependencies": {
     "vite": "^5.0.0"
