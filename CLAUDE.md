@@ -98,6 +98,35 @@ NO fallbacks! FAIL FAST! raise an error
 
 WHEN you make changes you MUST fix up any tests and run full REGRESSION
 
+## Handle/Proxy Pattern (CRITICAL)
+
+**Handles are the universal proxy pattern providing a consistent interface for any resource type.**
+
+### Key Handle Concepts:
+- **NEVER create Handles directly** - Only ResourceManagers or parent Handles create them via projection
+- **Handles appear as local objects** but properly transact through ResourceManager hierarchy
+- **All Handle types extend from `@legion/handle`** - The universal base class
+- **Prototypes provide rich interfaces** - Dynamic properties based on resource schemas
+
+### Handle Usage:
+```javascript
+// ❌ WRONG - Never create directly
+const handle = new Handle(resourceManager);
+
+// ✅ CORRECT - Created by ResourceManager or projection
+const dataStore = resourceManager.createDataStore();
+const entity = dataStore.entity(123);  // Projection from parent
+entity.name = 'New Name';  // Appears local but routes through ResourceManager
+```
+
+### ResourceManager Interface for Handles:
+All ResourceManagers MUST implement these synchronous methods:
+- `query(querySpec)` - Execute queries (MUST be synchronous!)
+- `subscribe(querySpec, callback)` - Setup subscriptions (MUST be synchronous!)
+- `getSchema()` - Get resource schema for introspection
+
+See `/docs/HANDLES.md` for complete architectural documentation.
+
 ## Testing
 FOR tests there must be NO skipping and NO fallback under any circumstance, they must just FAIL in thoes circumstances.
 
@@ -134,3 +163,17 @@ NO BASH Scripts, theis javascript ES6 project! if you need scritps they must be 
 LIVE TESTS MUST PASS, all the resoruces required are availble, if it didnt have to pass it would not be there!!!!
 
 where apropriate you must use the proper workspace improts ALWAYS so "@legion/ .... not relative imports to outside your package!
+
+ALL inter package imports should use "@legion/...  never relative imports outside a package.
+
+Jest must always be configured for ES6 modules.
+
+In general always run jest tests sequentially unless you absolutley know that they can run in parallel.
+
+Only ever use Jest for tests. no node test runner, no plain js scripts used as tests.
+
+If you do need to right js scripts for testing or debuging then always put them in a /tmp directory and remeber to clear them up
+
+NEVER pollute package root directories or monorepo root! they must be kept as clean as possible! any scripts must go in scripts directory. and test artifacts should go under /tmp in __tests__
+
+all tests go in __tests__ in the package root, not in src

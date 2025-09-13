@@ -617,13 +617,15 @@ export class SlashCommandAgent {
       
       // Add appropriate data based on object type
       if (objectInfo.type === 'handle') {
+        // Use serialize() method for remote display
         requestData.handleData = targetObject.serialize();
         
         if (args.includeIntrospection) {
+          const introspection = targetObject.getIntrospectionInfo();
           requestData.introspectionData = {
-            methods: targetObject.type?.listMethods() || [],
-            attributes: targetObject.type?.listAttributes() || [],
-            typeName: targetObject.type?.name || 'Unknown'
+            methods: introspection.methods || [],
+            attributes: introspection.attributes || [],
+            typeName: targetObject.handleType
           };
         }
       } else {
@@ -656,14 +658,16 @@ export class SlashCommandAgent {
    * @returns {Object} Analysis result with type and metadata
    */
   _analyzeObject(obj) {
-    // Check if it's a handle (extends BaseHandle/Actor)
+    // Check if it's a handle (extends Handle/Actor)
+    // New Handle class extends Actor and has handleType property and serialize method
     if (obj && obj.isActor && obj.handleType && typeof obj.serialize === 'function') {
+      const introspection = obj.getIntrospectionInfo();
       return {
         type: 'handle',
         handleType: obj.handleType,
-        hasIntrospection: !!obj.type,
-        methods: obj.type?.listMethods() || [],
-        attributes: obj.type?.listAttributes() || []
+        hasIntrospection: true,
+        methods: introspection.methods || [],
+        attributes: introspection.attributes || []
       };
     }
     

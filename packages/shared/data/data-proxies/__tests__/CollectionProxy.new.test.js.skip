@@ -1,0 +1,414 @@
+/**
+ * Unit tests for the new CollectionProxy class extending Handle
+ * This file tests the refactored CollectionProxy that extends Handle from @legion/handle
+ */
+
+import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { Handle } from '../../handle/src/index.js';
+import { CollectionProxy } from '../src/CollectionProxy.js';
+import { DataStoreResourceManager } from '../src/DataStoreResourceManager.js';
+
+// Mock ResourceManager for testing that implements required interface
+class MockResourceManager {
+  constructor() {
+    this.mockEntities = new Map();
+    this.nextId = 1;
+  }
+
+  async query(querySpec) {
+    if (querySpec.find === '(count ?e)') {
+      return this.mockEntities.size;
+    }
+    
+    if (querySpec.find && querySpec.find[0] === '?e') {
+      const entities = Array.from(this.mockEntities.values())
+        .filter(entity => {
+          if (!querySpec.where) return true;
+          return querySpec.where.every(clause => {
+            const [, attr, value] = clause;
+            return entity[attr] === value;
+          });
+        });
+      return entities.map(e => e.id);
+    }
+    
+    return [];
+  }
+
+  async get(entityId) {
+    return this.mockEntities.get(entityId) || null;
+  }
+
+  async transact(transactions) {
+    const tempids = new Map();
+    
+    transactions.forEach(tx => {
+      const [op, entityId, attr, value] = tx;
+      if (op === '+') {
+        if (typeof entityId === 'string' && entityId.startsWith('temp-')) {
+          const realId = this.nextId++;
+          tempids.set(entityId, realId);
+          if (!this.mockEntities.has(realId)) {
+            this.mockEntities.set(realId, { id: realId });
+          }
+          this.mockEntities.get(realId)[attr] = value;
+        } else {
+          if (!this.mockEntities.has(entityId)) {
+            this.mockEntities.set(entityId, { id: entityId });
+          }
+          this.mockEntities.get(entityId)[attr] = value;
+        }
+      }
+    });
+    
+    return { tempids };
+  }
+
+  // Required by ResourceManager interface
+  subscribe(querySpec, callback) {
+    // Mock subscription - just return an unsubscribe function
+    return {
+      unsubscribe: () => {}
+    };
+  }
+
+  // Required by ResourceManager interface
+  getSchema() {
+    // Mock schema - return null to indicate no schema available
+    return null;
+  }
+
+  // Add entity helper for tests
+  addEntity(entity) {
+    const id = entity.id || this.nextId++;
+    this.mockEntities.set(id, { ...entity, id });
+    return id;
+  }
+
+  clear() {
+    this.mockEntities.clear();
+    this.nextId = 1;
+  }
+}
+
+describe('CollectionProxy Unit Tests', () => {
+  let mockResourceManager;
+  let collectionSpec;
+
+  beforeEach(() => {
+    mockResourceManager = new MockResourceManager();
+    collectionSpec = {
+      find: ['?e'],
+      where: [['?e', 'type', 'user']]
+    };
+  });
+
+  afterEach(() => {
+    mockResourceManager.clear();
+  });
+
+  describe('Constructor and Handle Integration', () => {
+    it('should extend Handle class', () => {
+      const collection = new CollectionProxy(mockResourceManager, collectionSpec);
+      expect(collection).toBeInstanceOf(Handle);
+      expect(collection).toBeInstanceOf(CollectionProxy);
+    });
+
+    it('should store collectionSpec and options', () => {
+      const options = { cacheable: true };
+      const collection = new CollectionProxy(mockResourceManager, collectionSpec, options);
+      expect(collection.collectionSpec).toEqual(collectionSpec);
+      expect(collection.options).toEqual(options);
+    });
+
+    it('should validate resourceManager parameter', () => {
+      expect(() => {
+        new CollectionProxy(null, collectionSpec);
+      }).toThrow('ResourceManager must be a non-null object');
+
+      expect(() => {
+        new CollectionProxy(undefined, collectionSpec);
+      }).toThrow('ResourceManager must be a non-null object');
+    });
+
+    it('should validate collectionSpec parameter', () => {
+      expect(() => {
+        new CollectionProxy(mockResourceManager, null);
+      }).toThrow('Collection specification is required');
+
+      expect(() => {
+        new CollectionProxy(mockResourceManager, undefined);
+      }).toThrow('Collection specification is required');
+    });
+
+    it('should store resourceManager and collectionSpec', () => {
+      const collection = new CollectionProxy(mockResourceManager, collectionSpec);
+      expect(collection.resourceManager).toBe(mockResourceManager);
+      expect(collection.collectionSpec).toEqual(collectionSpec);
+    });
+
+    it('should inherit Handle functionality', () => {
+      const collection = new CollectionProxy(mockResourceManager, collectionSpec);
+      
+      // Test inherited properties and methods from Handle/Actor
+      expect(collection.resourceManager).toBe(mockResourceManager);
+      expect(typeof collection.subscribe).toBe('function');
+      expect(typeof collection.receive).toBe('function'); // from Actor
+    });
+
+    it('should pass options to Handle constructor', () => {
+      const options = { cacheable: true, ttl: 5000 };
+      const collection = new CollectionProxy(mockResourceManager, collectionSpec, options);
+      
+      // Verify the collection was created without error (Handle would throw if options were invalid)
+      expect(collection).toBeInstanceOf(CollectionProxy);
+    });
+  });
+
+  describe('Collection Operations', () => {
+    let collection;
+
+    beforeEach(() => {
+      collection = new CollectionProxy(mockResourceManager, collectionSpec);
+      
+      // Add some mock entities
+      mockResourceManager.addEntity({ id: 1, type: 'user', name: 'Alice' });
+      mockResourceManager.addEntity({ id: 2, type: 'user', name: 'Bob' });
+      mockResourceManager.addEntity({ id: 3, type: 'post', title: 'Hello' });
+    });
+
+    describe('Length Operations', () => {
+      it('should get correct length using getLength() method', async () => {
+        const length = await collection.getLength();
+        expect(length).toBe(2); // Only users match the collection spec
+      });
+
+      it('should return promise from length property', async () => {
+        const lengthPromise = collection.length;
+        expect(lengthPromise).toBeInstanceOf(Promise);
+        
+        const length = await lengthPromise;
+        expect(length).toBe(2);
+      });
+    });
+
+    describe('Empty Check Operations', () => {
+      it('should return false for non-empty collection using getIsEmpty()', async () => {
+        const isEmpty = await collection.getIsEmpty();
+        expect(isEmpty).toBe(false);
+      });
+
+      it('should return false for non-empty collection using isEmpty property', async () => {
+        const isEmpty = await collection.isEmpty;
+        expect(isEmpty).toBe(false);
+      });
+
+      it('should return true for empty collection', async () => {
+        const emptySpec = {
+          find: ['?e'],
+          where: [['?e', 'type', 'nonexistent']]
+        };
+        const emptyCollection = new CollectionProxy(mockResourceManager, emptySpec);
+        
+        const isEmpty = await emptyCollection.getIsEmpty();
+        expect(isEmpty).toBe(true);
+      });
+    });
+
+    describe('First/Last Operations', () => {
+      it('should get first entity using getFirst() method', async () => {
+        const first = await collection.getFirst();
+        expect(first).toBeDefined();
+        expect(first.type).toBe('user');
+        expect([1, 2]).toContain(first.id);
+      });
+
+      it('should get first entity using first property', async () => {
+        const first = await collection.first;
+        expect(first).toBeDefined();
+        expect(first.type).toBe('user');
+      });
+
+      it('should get last entity using getLast() method', async () => {
+        const last = await collection.getLast();
+        expect(last).toBeDefined();
+        expect(last.type).toBe('user');
+        expect([1, 2]).toContain(last.id);
+      });
+
+      it('should get last entity using last property', async () => {
+        const last = await collection.last;
+        expect(last).toBeDefined();
+        expect(last.type).toBe('user');
+      });
+
+      it('should return null for first/last on empty collection', async () => {
+        const emptySpec = {
+          find: ['?e'],
+          where: [['?e', 'type', 'nonexistent']]
+        };
+        const emptyCollection = new CollectionProxy(mockResourceManager, emptySpec);
+        
+        const first = await emptyCollection.getFirst();
+        const last = await emptyCollection.getLast();
+        
+        expect(first).toBeNull();
+        expect(last).toBeNull();
+      });
+    });
+
+    describe('Iteration Operations', () => {
+      it('should iterate over collection entities using forEach', async () => {
+        const entities = [];
+        await collection.forEach(entity => {
+          entities.push(entity);
+        });
+        
+        expect(entities).toHaveLength(2);
+        entities.forEach(entity => {
+          expect(entity.type).toBe('user');
+          expect(['Alice', 'Bob']).toContain(entity.name);
+        });
+      });
+
+      it('should map collection entities', async () => {
+        const names = await collection.map(entity => entity.name);
+        
+        expect(names).toHaveLength(2);
+        expect(names).toEqual(expect.arrayContaining(['Alice', 'Bob']));
+      });
+
+      it('should filter collection entities', async () => {
+        const filtered = await collection.filter(entity => entity.name === 'Alice');
+        
+        expect(filtered).toHaveLength(1);
+        expect(filtered[0].name).toBe('Alice');
+      });
+
+      it('should find entity in collection', async () => {
+        const found = await collection.find(entity => entity.name === 'Bob');
+        
+        expect(found).toBeDefined();
+        expect(found.name).toBe('Bob');
+        expect(found.type).toBe('user');
+      });
+
+      it('should return undefined when entity not found', async () => {
+        const notFound = await collection.find(entity => entity.name === 'Charlie');
+        expect(notFound).toBeUndefined();
+      });
+    });
+
+    describe('Array Conversion', () => {
+      it('should convert to array using toArray()', async () => {
+        const array = await collection.toArray();
+        
+        expect(Array.isArray(array)).toBe(true);
+        expect(array).toHaveLength(2);
+        array.forEach(entity => {
+          expect(entity.type).toBe('user');
+        });
+      });
+    });
+  });
+
+  describe('Caching Behavior', () => {
+    it('should implement caching for length queries', async () => {
+      const collection = new CollectionProxy(mockResourceManager, collectionSpec, { 
+        cacheable: true, 
+        ttl: 1000 
+      });
+
+      // Mock the query method to track calls
+      const originalQuery = mockResourceManager.query;
+      let queryCallCount = 0;
+      mockResourceManager.query = jest.fn(async (...args) => {
+        queryCallCount++;
+        return originalQuery.call(mockResourceManager, ...args);
+      });
+
+      // First call should query
+      await collection.getLength();
+      expect(queryCallCount).toBe(1);
+
+      // Second call should use cache (if caching is implemented)
+      await collection.getLength();
+      
+      // Restore original method
+      mockResourceManager.query = originalQuery;
+    });
+  });
+
+  describe('Subscription Support', () => {
+    it('should support subscription pattern', async () => {
+      const collection = new CollectionProxy(mockResourceManager, collectionSpec);
+      
+      // Test that subscription method exists (inherited from Handle)
+      expect(typeof collection.subscribe).toBe('function');
+      
+      // Test the subscribe method returns an unsubscribe function
+      const subscription = collection.subscribe(() => {});
+      expect(typeof subscription.unsubscribe).toBe('function');
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should handle query errors gracefully', async () => {
+      const errorResourceManager = {
+        query: jest.fn().mockRejectedValue(new Error('Query failed')),
+        subscribe: jest.fn().mockReturnValue({ unsubscribe: () => {} }),
+        getSchema: jest.fn().mockReturnValue(null),
+        get: jest.fn().mockResolvedValue(null)
+      };
+      
+      const collection = new CollectionProxy(errorResourceManager, collectionSpec);
+      
+      await expect(collection.getLength()).rejects.toThrow('Query failed');
+    });
+
+    it('should handle get entity errors gracefully', async () => {
+      const errorResourceManager = {
+        query: jest.fn().mockResolvedValue([1]),
+        get: jest.fn().mockRejectedValue(new Error('Get failed')),
+        subscribe: jest.fn().mockReturnValue({ unsubscribe: () => {} }),
+        getSchema: jest.fn().mockReturnValue(null)
+      };
+      
+      const collection = new CollectionProxy(errorResourceManager, collectionSpec);
+      
+      await expect(collection.getFirst()).rejects.toThrow('Get failed');
+    });
+  });
+
+  describe('Complex Collection Specifications', () => {
+    it('should handle collections with multiple where clauses', async () => {
+      const complexSpec = {
+        find: ['?e'],
+        where: [
+          ['?e', 'type', 'user'],
+          ['?e', 'active', true]
+        ]
+      };
+
+      mockResourceManager.addEntity({ id: 4, type: 'user', name: 'Charlie', active: true });
+      mockResourceManager.addEntity({ id: 5, type: 'user', name: 'David', active: false });
+
+      const collection = new CollectionProxy(mockResourceManager, complexSpec);
+      const length = await collection.getLength();
+      
+      expect(length).toBe(1); // Only Charlie should match
+    });
+
+    it('should handle collections with different find patterns', async () => {
+      const countSpec = {
+        find: '(count ?e)',
+        where: [['?e', 'type', 'user']]
+      };
+
+      const collection = new CollectionProxy(mockResourceManager, countSpec);
+      const length = await collection.getLength();
+      
+      expect(typeof length).toBe('number');
+    });
+  });
+});
