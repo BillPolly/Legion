@@ -152,20 +152,30 @@ export class ConversationManager {
     const availableTools = this._getToolsForSimpleClient();
 
     try {
-      // Use SimplePromptClient to get raw LLM response
+      // Generate proper output format instructions using ResponseValidator
+      const formatInstructions = this.responseValidator.generateInstructions({
+        response: "I understand and will help you.",
+        use_tool: {
+          name: "shell_command",
+          args: { command: "echo example" }
+        }
+      });
+      
+      // Add format instructions to system prompt
+      const systemPromptWithInstructions = this.systemPrompt + '\n\n' + formatInstructions;
+      
+      // Use SimplePromptClient with proper format instructions
       const response = await this.simpleClient.request({
         prompt: userInput,
-        systemPrompt: this.systemPrompt,
+        systemPrompt: systemPromptWithInstructions,
         chatHistory: this.conversationHistory.slice(-10), // Last 10 messages
         tools: availableTools,
         maxTokens: 2000,
         temperature: 0.1
       });
 
-      // Process response through output-schema validator for proper tool extraction
-      // First, try to extract JSON from XML if present
-      const processedContent = this._preprocessResponseForValidation(response.content);
-      const validationResult = this.responseValidator.process(processedContent);
+      // Process response through output-schema validator (handles XML, JSON, etc. automatically)
+      const validationResult = this.responseValidator.process(response.content);
       
       let assistantMessage = {
         role: 'assistant', 
@@ -285,205 +295,8 @@ export class ConversationManager {
     return this.cachedToolsForLLM;
   }
 
-  /**
-   * Preprocess LLM response to convert Anthropic XML to JSON format for output-schema validation
-   * @private
-   */
-  _preprocessResponseForValidation(content) {
-    // Check if response contains Anthropic XML tool calls
-    const hasXMLTools = content.includes('<tool_use');
-    
-    if (!hasXMLTools) {
-      // No tool calls, return as simple response object
-      return JSON.stringify({
-        response: content
-      });
-    }
 
-    // Extract tool calls using manual parsing to handle complex nested quotes
-    const matches = this._extractToolCallsManually(content);
-    
-    if (matches.length === 0) {
-      // XML found but couldn't parse - return as simple response
-      return JSON.stringify({
-        response: content
-      });
-    }
 
-    // Extract the response text (everything before first tool call)
-    const responseText = content.split('<tool_use')[0].trim();
-    
-    try {
-      if (matches.length === 1) {
-        // Single tool call - use safer JSON parsing
-        const toolParams = this._safeJSONParse(matches[0][2]);
-        if (!toolParams) {
-          throw new Error('Failed to parse tool parameters');
-        }
-        
-        return JSON.stringify({
-          response: responseText,
-          use_tool: {
-            name: matches[0][1],
-            args: toolParams
-          }
-        });
-      } else {
-        // Multiple tool calls
-        const tools = [];
-        for (const match of matches) {
-          const toolParams = this._safeJSONParse(match[2]);
-          if (toolParams) {
-            tools.push({
-              name: match[1],
-              args: toolParams
-            });
-          } else {
-            console.warn('❌ Failed to parse tool parameters for:', match[1]);
-          }
-        }
-        
-        if (tools.length === 0) {
-          throw new Error('No valid tool calls parsed');
-        }
-        
-        return JSON.stringify({
-          response: responseText,
-          use_tools: tools
-        });
-      }
-    } catch (error) {
-      console.error('❌ XML preprocessing failed:', error.message);
-      return JSON.stringify({
-        response: content
-      });
-    }
-  }
-
-  /**
-   * Manually extract tool calls to handle complex nested quotes
-   * @private
-   */
-  _extractToolCallsManually(content) {
-    const matches = [];
-    let searchStart = 0;
-    
-    while (true) {
-      // Find next tool_use start
-      const startTag = content.indexOf('<tool_use name="', searchStart);
-      if (startTag === -1) break;
-      
-      // Extract name
-      const nameStart = startTag + 16; // Length of '<tool_use name="'
-      const nameEnd = content.indexOf('"', nameStart);
-      if (nameEnd === -1) break;
-      const name = content.substring(nameStart, nameEnd);
-      
-      // Find parameters start
-      const paramStart = content.indexOf(" parameters='", nameEnd);
-      if (paramStart === -1) break;
-      
-      // Find matching closing quote for parameters - handle nested quotes properly
-      const paramValueStart = paramStart + 13; // Length of " parameters='"
-      let paramValueEnd = paramValueStart;
-      let inQuotes = false;
-      let escaped = false;
-      
-      for (let i = paramValueStart; i < content.length; i++) {
-        const char = content[i];
-        
-        if (escaped) {
-          escaped = false;
-          continue;
-        }
-        
-        if (char === '\\') {
-          escaped = true;
-          continue;
-        }
-        
-        if (char === '"') {
-          inQuotes = !inQuotes;
-        } else if (char === "'" && !inQuotes) {
-          // Found the closing quote outside of JSON string quotes
-          paramValueEnd = i;
-          break;
-        }
-      }
-      
-      if (paramValueEnd === paramValueStart) break;
-      
-      // Extract parameters
-      const parameters = content.substring(paramValueStart, paramValueEnd);
-      
-      // Find closing tag
-      const closeTag = content.indexOf('</tool_use>', paramValueEnd);
-      if (closeTag === -1) break;
-      
-      matches.push([
-        content.substring(startTag, closeTag + 11), // Full match
-        name,
-        parameters
-      ]);
-      
-      searchStart = closeTag + 11;
-    }
-    
-    return matches;
-  }
-
-  /**
-   * Safely parse JSON with better error handling for complex nested quotes
-   * @private
-   */
-  _safeJSONParse(jsonString) {
-    try {
-      // First try normal JSON.parse
-      return JSON.parse(jsonString);
-    } catch (error) {
-      try {
-        // More aggressive JSON fixing for complex nested quotes
-        let fixed = jsonString;
-        
-        // Fix escaped quotes in nested JSON strings
-        fixed = fixed.replace(/\\\\"/g, '\\"'); // Fix double-escaped quotes
-        
-        // Handle nested single quotes in JSON values
-        // Look for patterns like: "key": "value with 'nested' quotes"
-        fixed = fixed.replace(/"([^"]*)'([^']*)'([^"]*)"/g, '"$1\\"$2\\"$3"');
-        
-        // Fix common curl command patterns
-        if (fixed.includes('curl') && fixed.includes('-d')) {
-          // Extract the curl command and properly escape it
-          const curlMatch = fixed.match(/"command":\s*"(curl[^"]*(?:\\.[^"]*)*)"/);
-          if (curlMatch) {
-            let curlCmd = curlMatch[1];
-            // Properly escape quotes in curl command
-            curlCmd = curlCmd.replace(/\\"/g, '\\\\"'); // Double escape quotes
-            fixed = fixed.replace(curlMatch[0], `"command": "${curlCmd}"`);
-          }
-        }
-        
-        return JSON.parse(fixed);
-      } catch (error2) {
-        // Last resort: Extract just the basic command structure manually
-        try {
-          const commandMatch = jsonString.match(/"command":\s*"([^"]+(?:\\.[^"]*)*)/);
-          if (commandMatch) {
-            return {
-              command: commandMatch[1].replace(/\\"/g, '"')
-            };
-          }
-        } catch (error3) {
-          // Complete failure
-        }
-        
-        console.error('❌ JSON parsing completely failed:', error.message);
-        console.error('❌ Failed content:', jsonString.substring(0, 100));
-        return null;
-      }
-    }
-  }
 
   /**
    * Get conversation history
