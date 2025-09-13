@@ -3,8 +3,6 @@
  * Uses standard chat history + tools pattern with minimal complexity
  */
 
-import { SimplePromptClient } from '@legion/llm-client';
-import { ResourceManager } from '@legion/resource-manager';
 import { GeminiToolsModule } from '@legion/gemini-tools';
 import { SmartToolResultFormatter } from '../utils/SmartToolResultFormatter.js';
 import { ResponseValidator } from '@legion/output-schema';
