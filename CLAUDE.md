@@ -98,6 +98,35 @@ NO fallbacks! FAIL FAST! raise an error
 
 WHEN you make changes you MUST fix up any tests and run full REGRESSION
 
+## Handle/Proxy Pattern (CRITICAL)
+
+**Handles are the universal proxy pattern providing a consistent interface for any resource type.**
+
+### Key Handle Concepts:
+- **NEVER create Handles directly** - Only ResourceManagers or parent Handles create them via projection
+- **Handles appear as local objects** but properly transact through ResourceManager hierarchy
+- **All Handle types extend from `@legion/handle`** - The universal base class
+- **Prototypes provide rich interfaces** - Dynamic properties based on resource schemas
+
+### Handle Usage:
+```javascript
+// ❌ WRONG - Never create directly
+const handle = new Handle(resourceManager);
+
+// ✅ CORRECT - Created by ResourceManager or projection
+const dataStore = resourceManager.createDataStore();
+const entity = dataStore.entity(123);  // Projection from parent
+entity.name = 'New Name';  // Appears local but routes through ResourceManager
+```
+
+### ResourceManager Interface for Handles:
+All ResourceManagers MUST implement these synchronous methods:
+- `query(querySpec)` - Execute queries (MUST be synchronous!)
+- `subscribe(querySpec, callback)` - Setup subscriptions (MUST be synchronous!)
+- `getSchema()` - Get resource schema for introspection
+
+See `/docs/HANDLES.md` for complete architectural documentation.
+
 ## Testing
 FOR tests there must be NO skipping and NO fallback under any circumstance, they must just FAIL in thoes circumstances.
 

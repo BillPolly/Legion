@@ -6,7 +6,7 @@
  */
 
 import { EntityProxy } from '../src/EntityProxy.js';
-import { Handle } from '@legion/data-handle';
+import { Handle } from '@legion/handle';
 
 // Import jest for spies and mocks
 import { jest } from '@jest/globals';

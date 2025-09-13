@@ -9,7 +9,7 @@
  * - Remote execution capability
  */
 
-import { Handle } from '@legion/data-handle';
+import { Handle } from '@legion/handle';
 
 export class EntityProxy extends Handle {
   constructor(resourceManager, entityId, options = {}) {
@@ -25,8 +25,7 @@ export class EntityProxy extends Handle {
     // Call Handle constructor (which validates resourceManager)
     super(resourceManager);
     
-    // Set handle type for Actor system
-    this.handleType = 'EntityProxy';
+    // Handle type is automatically set via getter (returns constructor.name)
     
     // Store entity-specific properties
     this.entityId = entityId;

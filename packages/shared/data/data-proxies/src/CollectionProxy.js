@@ -10,7 +10,7 @@
  * - Collection-wide subscriptions
  */
 
-import { Handle } from '@legion/data-handle';
+import { Handle } from '@legion/handle';
 import { EntityProxy } from './EntityProxy.js';
 
 export class CollectionProxy extends Handle {

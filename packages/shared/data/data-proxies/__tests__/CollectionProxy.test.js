@@ -4,7 +4,7 @@
  */
 
 import { CollectionProxy } from '../src/CollectionProxy.js';
-import { Handle } from '@legion/data-handle';
+import { Handle } from '@legion/handle';
 import { DataStoreResourceManager } from '../src/DataStoreResourceManager.js';
 import { createTestStore, createSampleData, assertions, validators, errorHelpers } from './setup.js';
 

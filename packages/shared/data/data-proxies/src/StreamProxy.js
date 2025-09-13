@@ -9,7 +9,7 @@
  * - Integration with DataStore's reactive system
  */
 
-import { Handle } from '@legion/data-handle';
+import { Handle } from '@legion/handle';
 
 export class StreamProxy extends Handle {
   constructor(resourceManager, querySpec) {

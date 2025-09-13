@@ -4,7 +4,7 @@
  */
 
 import { DataStoreProxy } from '../src/DataStoreProxy.js';
-import { Handle } from '@legion/data-handle';
+import { Handle } from '@legion/handle';
 import { EntityProxy } from '../src/EntityProxy.js';
 import { StreamProxy } from '../src/StreamProxy.js';
 import { CollectionProxy } from '../src/CollectionProxy.js';

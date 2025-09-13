@@ -416,6 +416,38 @@ export class PrototypeFactory {
    * @private
    */
   _registerDefaultAdapters() {
+    // Custom schema adapter for basic schemas
+    this.registerSchemaAdapter('custom', {
+      analyze: (schema) => {
+        const types = new Map();
+        const relationships = new Map();
+        const capabilities = new Map();
+        
+        // Basic schema with type field and attributes
+        if (schema.type && schema.attributes) {
+          const typeName = schema.type;
+          const typeInfo = {
+            name: typeName,
+            attributes: new Map()
+          };
+          
+          for (const [attrName, attrDef] of Object.entries(schema.attributes)) {
+            typeInfo.attributes.set(attrName, {
+              fullName: attrName,
+              type: attrDef.type || 'string',
+              cardinality: attrDef.cardinality || 'one',
+              required: attrDef.required || false,
+              definition: attrDef
+            });
+          }
+          
+          types.set(typeName, typeInfo);
+        }
+        
+        return { types, relationships, capabilities };
+      }
+    });
+    
     // DataScript schema adapter
     this.registerSchemaAdapter('datascript', {
       analyze: (schema) => {
@@ -513,6 +545,12 @@ export class PrototypeFactory {
    * @private
    */
   _detectSchemaFormat(schema) {
+    // Check if schema has explicit type field (custom format from DataStoreResourceManager)
+    if (schema.type === 'datascript' && schema.attributes) {
+      // This is actually our custom format, not real DataScript
+      return 'custom';
+    }
+    
     // Check for DataScript format (attributes with :namespace/name pattern)
     const hasDataScriptAttrs = Object.keys(schema).some(key => 
       key.startsWith(':') && key.includes('/')

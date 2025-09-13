@@ -1,10 +1,10 @@
 /**
  * Integration Tests for EntityProxy with real DataStore
  * 
- * Tests the new EntityProxy implementation that extends BaseHandle from @legion/handles
+ * Tests the new EntityProxy implementation that extends Handle from @legion/handle
  * with real DataStore and DataStoreResourceManager components.
  * 
- * NO MOCKS - Uses real DataStore, DataStoreResourceManager, and BaseHandle
+ * NO MOCKS - Uses real DataStore, DataStoreResourceManager, and Handle
  */
 
 import { jest } from '@jest/globals';

@@ -9,7 +9,7 @@
  * - Centralized subscription and memory management
  */
 
-import { Handle } from '@legion/data-handle';
+import { Handle } from '@legion/handle';
 import { EntityProxy } from './EntityProxy.js';
 import { StreamProxy } from './StreamProxy.js';
 import { CollectionProxy } from './CollectionProxy.js';

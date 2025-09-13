@@ -51,6 +51,14 @@ export class Handle extends Actor {
   }
   
   /**
+   * Convenience property to get the handle type name
+   * Returns the constructor name for easy identification
+   */
+  get handleType() {
+    return this.constructor.name;
+  }
+  
+  /**
    * Get current value - must be implemented by subclasses
    * CRITICAL: Must be synchronous - no await!
    */
@@ -125,6 +133,21 @@ export class Handle extends Actor {
     this._subscriptions.add(trackingWrapper);
     
     return trackingWrapper;
+  }
+  
+  /**
+   * Serialize handle for remote transmission
+   * Returns a simple object that can be sent over the wire
+   */
+  serialize() {
+    this._validateNotDestroyed();
+    
+    return {
+      __type: 'RemoteHandle',
+      handleType: this.handleType,
+      handleId: this.id || `handle-${Date.now()}`,
+      isDestroyed: this._destroyed
+    };
   }
   
   /**

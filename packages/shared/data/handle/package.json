@@ -1,5 +1,5 @@
 {
-  "name": "@legion/data-handle",
+  "name": "@legion/handle",
   "version": "1.0.0",
   "description": "Universal Handle pattern for proxying monolithic resources with Actor system integration",
   "type": "module",

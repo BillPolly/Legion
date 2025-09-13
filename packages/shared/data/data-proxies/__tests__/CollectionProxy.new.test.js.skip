@@ -1,6 +1,6 @@
 /**
  * Unit tests for the new CollectionProxy class extending Handle
- * This file tests the refactored CollectionProxy that extends Handle from @legion/handles
+ * This file tests the refactored CollectionProxy that extends Handle from @legion/handle
  */
 
 import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
