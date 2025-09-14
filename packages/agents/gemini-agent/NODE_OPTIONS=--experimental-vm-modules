@@ -1,0 +1,12 @@
+
+> @legion/gemini-agent@1.0.0 test
+> NODE_OPTIONS='--experimental-vm-modules' jest jest
+
+No tests found, exiting with code 1
+Run with `--passWithNoTests` to exit with code 0
+In /Users/williampearson/Documents/p/agents/Legion/packages/agents/gemini-agent
+  48 files checked.
+  testMatch: **/__tests__/**/*.test.js - 30 matches
+  testPathIgnorePatterns: /node_modules/ - 48 matches
+  testRegex:  - 0 matches
+Pattern: jest - 0 matches
