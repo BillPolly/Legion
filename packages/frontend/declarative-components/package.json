@@ -1,0 +1,41 @@
+{
+  "name": "@legion/declarative-components",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Declarative components system with unified JSON component definitions from CNL/DSL",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+  },
+  "dependencies": {
+    "@legion/handle": "workspace:*",
+    "@legion/data-store": "workspace:*",
+    "@legion/resource-manager": "workspace:*"
+  },
+  "devDependencies": {
+    "jest": "^29.5.0",
+    "jest-environment-jsdom": "^29.5.0"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": ["<rootDir>/__tests__/setup.js"],
+    "moduleFileExtensions": ["js"],
+    "transform": {},
+    "moduleNameMapper": {
+      "^@legion/handle$": "<rootDir>/../../shared/data/handle/src/index.js",
+      "^@legion/data-store$": "<rootDir>/../../shared/data/data-store/index.js",
+      "^@legion/data-proxies$": "<rootDir>/../../shared/data/data-proxies/src/index.js",
+      "^@legion/datascript$": "<rootDir>/../../shared/data/datascript/index.js",
+      "^@legion/resource-manager$": "<rootDir>/../../resource-manager/src/index.js"
+    },
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/index.js"
+    ]
+  }
+}

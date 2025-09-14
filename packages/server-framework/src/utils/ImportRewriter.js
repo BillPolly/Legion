@@ -100,10 +100,15 @@ export class ImportRewriter {
     if (context.baseUrl && context.requestPath) {
       const currentDir = context.requestPath.substring(0, context.requestPath.lastIndexOf('/'));
       
+      console.log(`ImportRewriter DEBUG: relativePath="${relativePath}", currentDir="${currentDir}", baseUrl="${context.baseUrl}", requestPath="${context.requestPath}"`);
+      
       if (relativePath.startsWith('./')) {
         // Same directory: ./Channel.js -> /legion/actors/Channel.js
         const cleanPath = relativePath.replace(/^\.\//, '');
-        return `${context.baseUrl}${currentDir}/${cleanPath}`;
+        // Use currentDir directly since it already contains the full path like "/legion/actors"
+        const result = `${currentDir}/${cleanPath}`;
+        console.log(`ImportRewriter RESULT: ${relativePath} -> ${result}`);
+        return result;
       } else if (relativePath.startsWith('../')) {
         // Parent directory: properly handle multiple ../
         let path = relativePath;
@@ -115,7 +120,7 @@ export class ImportRewriter {
           dir = dir.substring(0, dir.lastIndexOf('/'));
         }
         
-        const result = `${context.baseUrl}${dir}/${path}`;
+        const result = `${dir}/${path}`;
         console.log(`ImportRewriter: ${relativePath} from ${currentDir} -> ${result}`);
         return result;
       }

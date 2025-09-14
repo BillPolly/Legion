@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live CNL/DSL Editor - Declarative Components</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            opacity: 0.9;
+            margin-top: 0.25rem;
+        }
+        
+        .main-container {
+            flex: 1;
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            max-width: 1600px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        
+        .editor-panel {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .panel-header {
+            background: #f7fafc;
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .panel-title {
+            font-weight: 600;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .sync-status {
+            font-size: 0.85rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            background: #48bb78;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .sync-status.error {
+            background: #f56565;
+        }
+        
+        .editor-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+        }
+        
+        .code-editor {
+            width: 100%;
+            height: 100%;
+            padding: 1rem;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            border: none;
+            outline: none;
+            resize: none;
+            tab-size: 2;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
+        .cnl-editor {
+            color: #2b6cb0;
+        }
+        
+        .dsl-editor {
+            color: #805ad5;
+        }
+        
+        .preview-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .preview-container {
+            flex: 1;
+            padding: 2rem;
+            overflow: auto;
+        }
+        
+        .toolbar {
+            background: #f7fafc;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+        
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+        
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+        
+        .example-selector {
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid #cbd5e0;
+            background: white;
+            color: #4a5568;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        
+        .error-message {
+            background: #fed7d7;
+            color: #742a2a;
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .success-message {
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        /* Component styles for preview */
+        .counter {
+            padding: 2rem;
+            background: #f7fafc;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .counter h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #2d3748;
+        }
+        
+        .counter .controls {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+        
+        .counter button {
+            padding: 0.75rem 1.5rem;
+            font-size: 1.2rem;
+            border-radius: 6px;
+            border: none;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .counter button:hover {
+            background: #5a67d8;
+        }
+        
+        .data-grid {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .grid-container {
+            display: grid;
+            grid-template-columns: 2fr 1.5fr 1fr 1.5fr;
+        }
+        
+        .grid-header-row {
+            display: contents;
+        }
+        
+        .grid-header-row > div {
+            padding: 1rem;
+            background: #4a5568;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .grid-row {
+            display: contents;
+        }
+        
+        .grid-row > div {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .grid-row:hover > div {
+            background: #f7fafc;
+        }
+        
+        .popup-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 0.5rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            min-width: 200px;
+            z-index: 1000;
+        }
+        
+        .menu-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .menu-item:hover {
+            background: #f7fafc;
+        }
+        
+        .menu-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        @media (max-width: 1200px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .editor-panel {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🔄 Live CNL/DSL Editor</h1>
+        <p class="subtitle">Two-way editable with real-time preview</p>
+    </header>
+
+    <div class="toolbar">
+        <select id="exampleSelector" class="example-selector">
+            <option value="">Choose an example...</option>
+            <option value="counter">Counter Component</option>
+            <option value="conditional">Conditional Menu</option>
+            <option value="iteration">Todo List</option>
+            <option value="grid">Data Grid</option>
+            <option value="nested">Nested Structure</option>
+        </select>
+        <button id="syncBtn" class="btn btn-primary">
+            🔄 Sync Changes
+        </button>
+        <button id="formatBtn" class="btn btn-secondary">
+            ✨ Format Code
+        </button>
+        <button id="clearBtn" class="btn btn-secondary">
+            🗑️ Clear All
+        </button>
+    </div>
+
+    <div class="main-container">
+        <!-- CNL Editor -->
+        <div class="editor-panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    📝 CNL (Natural Language)
+                </div>
+                <div id="cnlStatus" class="sync-status">
+                    ✓ Valid
+                </div>
+            </div>
+            <div class="editor-container">
+                <textarea id="cnlEditor" class="code-editor cnl-editor" placeholder="Define YourComponent with data:
+  A container containing:
+    A heading showing &quot;Hello World&quot;
+    A button labeled &quot;Click Me&quot; that increments the count on click"></textarea>
+            </div>
+        </div>
+
+        <!-- DSL Editor -->
+        <div class="editor-panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    💻 DSL (Domain Language)
+                </div>
+                <div id="dslStatus" class="sync-status">
+                    ✓ Valid
+                </div>
+            </div>
+            <div class="editor-container">
+                <textarea id="dslEditor" class="code-editor dsl-editor" placeholder="YourComponent :: data =>
+  div [
+    h2 { &quot;Hello World&quot; }
+    button @click=&quot;count++&quot; { &quot;Click Me&quot; }
+  ]"></textarea>
+            </div>
+        </div>
+
+        <!-- Live Preview -->
+        <div class="preview-panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    👁️ Live Preview
+                </div>
+                <div id="previewStatus" class="sync-status">
+                    ✓ Rendered
+                </div>
+            </div>
+            <div id="previewContainer" class="preview-container">
+                <div class="success-message">
+                    Ready! Start typing in either editor to see live updates.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        const cacheBust = Date.now();
+        
+        // Load modules with cache busting
+        Promise.all([
+            import(`/legion/declarative-components/cnl/index.js?cb=${cacheBust}`).then(module => {
+                window.cnlToDSL = module.cnlToDSL;
+                window.dslToCNL = module.dslToCNL;
+                window.validateCNL = module.validateCNL;
+                window.validateDSL = module.validateDSL;
+            }),
+            import(`/legion/declarative-components/compiler/ComponentCompiler.js?cb=${cacheBust}`).then(module => {
+                window.ComponentCompiler = module.ComponentCompiler;
+            })
+        ]).then(() => {
+            // Now that modules are loaded, run the rest of the code
+            initializeApp();
+        });
+        
+        function initializeApp() {
+        // Example templates
+        const examples = {
+            counter: {
+                cnl: `Define Counter with state:
+  A container with class "counter" containing:
+    A heading showing the count
+    A button labeled "+1" that increments the count on click
+    A button labeled "-" that decrements the count on click
+    A button labeled "Reset" that sets the count to 0 on click`,
+                dsl: `Counter :: state =>
+  div.counter [
+    h2 { state.count }
+    button @click="state.count++" { "+1" }
+    button @click="state.count--" { "-" }
+    button @click="state.count = 0" { "Reset" }
+  ]`
+            },
+            conditional: {
+                cnl: `Define Menu with data:
+  A button that toggles menuOpen on click:
+    "Menu " + (if menuOpen then "▲" else "▼")
+  
+  When menuOpen is true:
+    A container with class "popup-menu" containing:
+      A container with class "menu-item" showing "New File"
+      A container with class "menu-item" showing "Open File"
+      A container with class "menu-item" showing "Save File"`,
+                dsl: `Menu :: data =>
+  div [
+    button @click="data.menuOpen = !data.menuOpen" { 
+      "Menu " + (data.menuOpen ? "▲" : "▼")
+    }
+    if (data.menuOpen) [
+      div.popup-menu [
+        div.menu-item { "New File" }
+        div.menu-item { "Open File" }
+        div.menu-item { "Save File" }
+      ]
+    ]
+  ]`
+            },
+            iteration: {
+                cnl: `Define TodoList with data:
+  A heading showing "My Tasks"
+  For each task in the tasks:
+    A container with class "task" containing:
+      A checkbox bound to the task's completed
+      A span showing the task's title`,
+                dsl: `TodoList :: data =>
+  div [
+    h2 { "My Tasks" }
+    for task in data.tasks [
+      div.task [
+        input[type=checkbox] @bind="task.completed"
+        span { task.title }
+      ]
+    ]
+  ]`
+            },
+            grid: {
+                cnl: `Define DataGrid with data:
+  Create a container with class "data-grid" containing:
+    A container with class "grid-container" containing:
+      A container with class "grid-header-row" containing:
+        A container showing "Name"
+        A container showing "Position"
+        A container showing "Age"
+        A container showing "Department"
+      
+      For each employee in the employees:
+        A container with class "grid-row" containing:
+          A container showing the employee's name
+          A container showing the employee's position
+          A container showing the employee's age
+          A container showing the employee's department`,
+                dsl: `DataGrid :: data =>
+  div.data-grid [
+    div.grid-container [
+      div.grid-header-row [
+        div { "Name" }
+        div { "Position" }
+        div { "Age" }
+        div { "Department" }
+      ]
+      for employee in data.employees [
+        div.grid-row [
+          div { employee.name }
+          div { employee.position }
+          div { employee.age }
+          div { employee.department }
+        ]
+      ]
+    ]
+  ]`
+            },
+            nested: {
+                cnl: `Define Card with data:
+  A container with class "card" containing:
+    A container with class "card-header" containing:
+      A heading showing the title
+      A container with class "card-actions" containing:
+        A button labeled "Edit" that calls edit on click
+        A button labeled "Delete" that calls remove on click
+    
+    A container with class "card-body" containing:
+      A paragraph showing the description
+      
+      When expanded is true:
+        A container with class "details" containing:
+          For each detail in the details:
+            A paragraph showing the detail`,
+                dsl: `Card :: data =>
+  div.card [
+    div.card-header [
+      h2 { data.title }
+      div.card-actions [
+        button @click="edit()" { "Edit" }
+        button @click="remove()" { "Delete" }
+      ]
+    ]
+    div.card-body [
+      p { data.description }
+      if (data.expanded) [
+        div.details [
+          for detail in data.details [
+            p { detail }
+          ]
+        ]
+      ]
+    ]
+  ]`
+            }
+        };
+
+        // Editor elements
+        const cnlEditor = document.getElementById('cnlEditor');
+        const dslEditor = document.getElementById('dslEditor');
+        const previewContainer = document.getElementById('previewContainer');
+        const cnlStatus = document.getElementById('cnlStatus');
+        const dslStatus = document.getElementById('dslStatus');
+        const previewStatus = document.getElementById('previewStatus');
+        const exampleSelector = document.getElementById('exampleSelector');
+        const syncBtn = document.getElementById('syncBtn');
+        const formatBtn = document.getElementById('formatBtn');
+        const clearBtn = document.getElementById('clearBtn');
+
+        // State
+        let compiler = null;
+        let currentComponent = null;
+        let isUpdating = false;
+        let lastSource = null; // Track which editor was last modified
+
+        // Initialize
+        async function initialize() {
+            compiler = new ComponentCompiler();
+            
+            // Load default example
+            loadExample('counter');
+        }
+
+        // Load example
+        function loadExample(name) {
+            if (!examples[name]) return;
+            
+            isUpdating = true;
+            cnlEditor.value = examples[name].cnl;
+            dslEditor.value = examples[name].dsl;
+            isUpdating = false;
+            
+            updatePreview('dsl');
+        }
+
+        // Update status indicator
+        function updateStatus(element, isValid, message = null) {
+            if (isValid) {
+                element.className = 'sync-status';
+                element.textContent = '✓ ' + (message || 'Valid');
+            } else {
+                element.className = 'sync-status error';
+                element.textContent = '✗ ' + (message || 'Invalid');
+            }
+        }
+
+        // Convert CNL to DSL
+        async function convertCNLToDSL() {
+            try {
+                const cnlText = cnlEditor.value.trim();
+                if (!cnlText) return;
+                
+                const validation = validateCNL(cnlText);
+                if (!validation.valid) {
+                    updateStatus(cnlStatus, false, validation.errors[0]);
+                    return;
+                }
+                
+                updateStatus(cnlStatus, true);
+                
+                const dslText = await cnlToDSL(cnlText);
+                isUpdating = true;
+                dslEditor.value = dslText;
+                isUpdating = false;
+                
+                updateStatus(dslStatus, true, 'Synced');
+                return dslText;
+            } catch (error) {
+                console.error('CNL to DSL conversion error:', error);
+                updateStatus(cnlStatus, false, error.message);
+                return null;
+            }
+        }
+
+        // Convert DSL to CNL
+        async function convertDSLToCNL() {
+            try {
+                const dslText = dslEditor.value.trim();
+                if (!dslText) return;
+                
+                const validation = validateDSL(dslText);
+                if (!validation.valid) {
+                    updateStatus(dslStatus, false, validation.errors[0]);
+                    return;
+                }
+                
+                updateStatus(dslStatus, true);
+                
+                const cnlText = await dslToCNL(dslText);
+                isUpdating = true;
+                cnlEditor.value = cnlText;
+                isUpdating = false;
+                
+                updateStatus(cnlStatus, true, 'Synced');
+                return cnlText;
+            } catch (error) {
+                console.error('DSL to CNL conversion error:', error);
+                updateStatus(dslStatus, false, error.message);
+                return null;
+            }
+        }
+
+        // Update preview
+        async function updatePreview(source) {
+            try {
+                let dslText = dslEditor.value.trim();
+                
+                if (!dslText) {
+                    previewContainer.innerHTML = '<div class="error-message">No code to preview</div>';
+                    return;
+                }
+                
+                // Unmount previous component if exists
+                if (currentComponent && currentComponent.unmount) {
+                    currentComponent.unmount();
+                }
+                
+                // Compile DSL
+                const compiledComponent = compiler.compile(dslText);
+                currentComponent = compiledComponent;
+                
+                // Create test data store with get/set methods for the component
+                const dataStore = {
+                    _data: {
+                        count: 0,
+                        menuOpen: false,
+                        isOpen: false,
+                        isActive: true,
+                        expanded: true,
+                        title: 'Example Card',
+                        description: 'This is a sample card component',
+                        currentUser: {
+                            name: 'John Doe',
+                            email: 'john@example.com'
+                        },
+                        tasks: [
+                            { title: 'Write documentation', completed: true },
+                            { title: 'Add tests', completed: false },
+                            { title: 'Deploy to production', completed: false }
+                        ],
+                        employees: [
+                            { name: 'Alice Johnson', position: 'Developer', age: 28, department: 'Engineering' },
+                            { name: 'Bob Smith', position: 'Designer', age: 32, department: 'Design' },
+                            { name: 'Carol White', position: 'Manager', age: 35, department: 'Management' }
+                        ],
+                        items: [
+                            { title: 'Item 1', name: 'First Item' },
+                            { title: 'Item 2', name: 'Second Item' }
+                        ],
+                        sections: [
+                            { title: 'Introduction', content: 'Welcome to our application' },
+                            { title: 'Features', content: 'Discover what we offer' }
+                        ],
+                        details: ['Detail 1', 'Detail 2', 'Detail 3'],
+                        name: 'Jane User',
+                        email: 'jane@example.com',
+                        totalClicks: 0
+                    },
+                    
+                    // Provide both direct access and get/set methods
+                    data: null, // Will be set below
+                    state: null, // Will be set below
+                    
+                    get(key) {
+                        return this._data[key];
+                    },
+                    
+                    set(key, value) {
+                        this._data[key] = value;
+                        
+                        // Notify subscribers
+                        if (this._subscribers && this._subscribers[key]) {
+                            for (const callback of this._subscribers[key]) {
+                                callback(value);
+                            }
+                        }
+                        
+                        // Update any bound elements
+                        if (currentComponent && currentComponent._boundElements) {
+                            const element = currentComponent._boundElements.get(key);
+                            if (element) {
+                                if (element.type === 'checkbox') {
+                                    element.checked = !!value;
+                                } else {
+                                    element.value = value || '';
+                                }
+                            }
+                        }
+                        return value;
+                    },
+                    
+                    subscribe(key, callback) {
+                        // Initialize subscribers storage if needed
+                        if (!this._subscribers) {
+                            this._subscribers = {};
+                        }
+                        
+                        // Initialize array for this key if needed
+                        if (!this._subscribers[key]) {
+                            this._subscribers[key] = [];
+                        }
+                        
+                        // Add the callback
+                        this._subscribers[key].push(callback);
+                        console.log('Subscribed to', key, '- total subscribers:', this._subscribers[key].length);
+                    }
+                };
+                
+                // Set data and state to reference _data for compatibility
+                dataStore.data = dataStore._data;
+                dataStore.state = dataStore._data;
+                
+                // Add action handlers
+                dataStore.edit = () => console.log('Edit clicked');
+                dataStore.remove = () => console.log('Remove clicked');
+                
+                // Clear container and mount
+                previewContainer.innerHTML = '';
+                await currentComponent.mount(previewContainer, dataStore);
+                
+                updateStatus(previewStatus, true, 'Rendered');
+            } catch (error) {
+                console.error('Preview error:', error);
+                previewContainer.innerHTML = `<div class="error-message">Preview Error: ${error.message}</div>`;
+                updateStatus(previewStatus, false, 'Error');
+            }
+        }
+
+        // Debounce function
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Event handlers
+        cnlEditor.addEventListener('input', debounce(async () => {
+            if (isUpdating) return;
+            lastSource = 'cnl';
+            const dslText = await convertCNLToDSL();
+            if (dslText) {
+                updatePreview('cnl');
+            }
+        }, 500));
+
+        dslEditor.addEventListener('input', debounce(async () => {
+            if (isUpdating) return;
+            lastSource = 'dsl';
+            await convertDSLToCNL();
+            updatePreview('dsl');
+        }, 500));
+
+        exampleSelector.addEventListener('change', (e) => {
+            if (e.target.value) {
+                loadExample(e.target.value);
+            }
+        });
+
+        syncBtn.addEventListener('click', async () => {
+            if (lastSource === 'cnl') {
+                await convertCNLToDSL();
+            } else {
+                await convertDSLToCNL();
+            }
+            updatePreview(lastSource);
+        });
+
+        formatBtn.addEventListener('click', async () => {
+            // Re-convert to get properly formatted versions
+            if (lastSource === 'cnl') {
+                const dslText = await convertCNLToDSL();
+                if (dslText) {
+                    await convertDSLToCNL();
+                }
+            } else {
+                const cnlText = await convertDSLToCNL();
+                if (cnlText) {
+                    await convertCNLToDSL();
+                }
+            }
+            updatePreview(lastSource);
+        });
+
+        clearBtn.addEventListener('click', () => {
+            cnlEditor.value = '';
+            dslEditor.value = '';
+            previewContainer.innerHTML = '<div class="success-message">Cleared! Start fresh.</div>';
+            updateStatus(cnlStatus, true, 'Empty');
+            updateStatus(dslStatus, true, 'Empty');
+            updateStatus(previewStatus, true, 'Empty');
+        });
+
+        // Handle tab key in editors
+        [cnlEditor, dslEditor].forEach(editor => {
+            editor.addEventListener('keydown', (e) => {
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    const start = editor.selectionStart;
+                    const end = editor.selectionEnd;
+                    editor.value = editor.value.substring(0, start) + '  ' + editor.value.substring(end);
+                    editor.selectionStart = editor.selectionEnd = start + 2;
+                }
+            });
+        });
+
+        // Initialize on load
+        initialize();
+        } // End of initializeApp function
+    </script>
+</body>
+</html>

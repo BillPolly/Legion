@@ -50,26 +50,8 @@ export class PackageDiscovery {
               packages.set(pkg.name, pkg);
             }
           } else {
-            // Check subdirectories (e.g., shared/actors)
-            const subEntries = await fs.readdir(entryPath);
-            
-            for (const subEntry of subEntries) {
-              const subPath = path.join(entryPath, subEntry);
-              
-              try {
-                const subStat = await fs.stat(subPath);
-                
-                if (subStat.isDirectory() && await this.isLegionPackage(subPath)) {
-                  const pkg = await this.loadPackage(subPath);
-                  if (pkg) {
-                    packages.set(pkg.name, pkg);
-                  }
-                }
-              } catch (error) {
-                // Skip entries that can't be accessed
-                console.debug(`Skipping ${subPath}: ${error.message}`);
-              }
-            }
+            // Recursively search for packages in subdirectories
+            await this.searchPackagesRecursively(entryPath, packages, 2); // Max depth of 2
           }
         } catch (error) {
           // Skip entries that can't be accessed
@@ -83,6 +65,50 @@ export class PackageDiscovery {
     } catch (error) {
       console.error(`Error discovering packages: ${error.message}`);
       return packages;
+    }
+  }
+
+  /**
+   * Recursively search for Legion packages in subdirectories
+   * @param {string} searchPath - Directory path to search
+   * @param {Map} packages - Map to add discovered packages to
+   * @param {number} maxDepth - Maximum depth to search
+   * @returns {Promise<void>}
+   */
+  async searchPackagesRecursively(searchPath, packages, maxDepth) {
+    if (maxDepth <= 0) return;
+    
+    try {
+      const entries = await fs.readdir(searchPath);
+      
+      for (const entry of entries) {
+        const entryPath = path.join(searchPath, entry);
+        
+        try {
+          const stat = await fs.stat(entryPath);
+          
+          if (!stat.isDirectory()) {
+            continue;
+          }
+          
+          // Check if this is a Legion package
+          if (await this.isLegionPackage(entryPath)) {
+            const pkg = await this.loadPackage(entryPath);
+            if (pkg) {
+              packages.set(pkg.name, pkg);
+            }
+          } else {
+            // Continue searching deeper
+            await this.searchPackagesRecursively(entryPath, packages, maxDepth - 1);
+          }
+        } catch (error) {
+          // Skip entries that can't be accessed
+          console.debug(`Skipping ${entryPath}: ${error.message}`);
+        }
+      }
+    } catch (error) {
+      // Skip directories that can't be read
+      console.debug(`Cannot read directory ${searchPath}: ${error.message}`);
     }
   }
 

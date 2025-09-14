@@ -1,0 +1,35 @@
+{
+  "name": "@legion/declarative-components-examples",
+  "version": "1.0.0",
+  "description": "Interactive examples for Legion Declarative Components",
+  "type": "module",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "node start.js",
+    "start": "node start.js",
+    "build": "echo 'No build step required for examples server'",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "debug": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/debug-legion-package-serving.test.js --verbose"
+  },
+  "dependencies": {
+    "@legion/server-framework": "workspace:*",
+    "@legion/resource-manager": "workspace:*",
+    "@legion/declarative-components": "workspace:*",
+    "@legion/data-store": "workspace:*"
+  },
+  "devDependencies": {
+    "jest": "^29.5.0",
+    "node-fetch": "^3.3.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "moduleFileExtensions": ["js"],
+    "transform": {},
+    "testMatch": ["**/__tests__/**/*.test.js"],
+    "collectCoverageFrom": ["src/**/*.js"],
+    "setupFilesAfterEnv": []
+  },
+  "keywords": ["legion", "declarative-components", "examples", "interactive"],
+  "author": "Legion Team",
+  "license": "MIT"
+}

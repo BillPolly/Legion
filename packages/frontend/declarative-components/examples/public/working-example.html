@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Declarative Components - CNL, DSL, and Component Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 3rem;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.95;
+        }
+        
+        .demo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .panel {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .panel h2 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: #2d3748;
+        }
+        
+        .panel-subtitle {
+            color: #718096;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .code-editor {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            min-height: 200px;
+            resize: vertical;
+            width: 100%;
+            outline: none;
+        }
+        
+        .code-editor:focus {
+            border-color: #667eea;
+        }
+        
+        .cnl-editor {
+            color: #2b6cb0;
+        }
+        
+        .dsl-editor {
+            color: #805ad5;
+        }
+        
+        .json-output {
+            background: #1a202c;
+            color: #68d391;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Monaco', monospace;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            overflow: auto;
+            max-height: 300px;
+            white-space: pre;
+        }
+        
+        .result-panel {
+            grid-column: span 3;
+        }
+        
+        .render-container {
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 2rem;
+            min-height: 200px;
+            margin-bottom: 1rem;
+        }
+        
+        .render-container.has-content {
+            border-style: solid;
+            border-color: #667eea;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+        
+        .btn-secondary {
+            background: #48bb78;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #38a169;
+        }
+        
+        .status {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .status.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+        
+        .status.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+        
+        /* Component Styles */
+        .user-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            max-width: 400px;
+        }
+        
+        .user-card h2 {
+            color: #2d3748;
+            margin-bottom: 1rem;
+        }
+        
+        .user-card .bio {
+            color: #718096;
+            font-style: italic;
+            margin-bottom: 1rem;
+        }
+        
+        .user-card .status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            background: #c6f6d5;
+            color: #22543d;
+            margin: 0;
+        }
+        
+        .counter {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 400px;
+        }
+        
+        .counter h2 {
+            font-size: 3rem;
+            margin: 1rem 0;
+        }
+        
+        .counter button {
+            margin: 0 0.5rem;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            border: 2px solid white;
+            background: transparent;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .counter button:hover {
+            background: white;
+            color: #667eea;
+        }
+        
+        .log {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-top: 1rem;
+            max-height: 150px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+        
+        .log-entry {
+            padding: 0.25rem 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Declarative Components Framework</h1>
+            <p class="subtitle">Write components in CNL (Natural Language) or DSL (Technical Syntax) - Both compile to JSON!</p>
+        </header>
+        
+        <!-- Example 1: User Card -->
+        <div class="demo-grid">
+            <div class="panel">
+                <h2>📝 CNL Input</h2>
+                <p class="panel-subtitle">Natural language for non-technical users</p>
+                <textarea id="cnl-input" class="code-editor cnl-editor">Define UserCard with user:
+  A div with class "user-card" containing:
+    A heading showing the name
+    A paragraph with class "bio" showing the bio
+    A div containing:
+      A span showing "Status: "
+      A span with class "status" showing "Active" if active otherwise "Inactive"</textarea>
+                <button class="btn btn-primary" onclick="compileCNL()" style="margin-top: 1rem">Compile CNL</button>
+            </div>
+            
+            <div class="panel">
+                <h2>🔧 DSL Input</h2>
+                <p class="panel-subtitle">Technical syntax for developers</p>
+                <textarea id="dsl-input" class="code-editor dsl-editor">UserCard :: user =>
+  div.user-card [
+    h2 { user.name }
+    p.bio { user.bio }
+    div [
+      span { "Status: " }
+      span.status { user.active ? "Active" : "Inactive" }
+    ]
+  ]</textarea>
+                <button class="btn btn-primary" onclick="compileDSL()" style="margin-top: 1rem">Compile DSL</button>
+            </div>
+            
+            <div class="panel">
+                <h2>📊 JSON Output</h2>
+                <p class="panel-subtitle">Unified component definition</p>
+                <div id="json-output" class="json-output">// Click "Compile CNL" or "Compile DSL" to see the JSON output</div>
+            </div>
+        </div>
+        
+        <!-- Rendered Component -->
+        <div class="panel result-panel">
+            <h2>🎨 Rendered Component</h2>
+            <p class="panel-subtitle">Live preview of the component with reactive data</p>
+            
+            <div class="controls">
+                <button class="btn btn-secondary" onclick="renderComponent()">Render Component</button>
+                <button class="btn btn-secondary" onclick="updateData()">Update Data</button>
+                <button class="btn btn-secondary" onclick="clearAll()">Clear All</button>
+            </div>
+            
+            <div id="render-container" class="render-container">
+                <!-- Component will be rendered here -->
+            </div>
+            
+            <div id="status-message"></div>
+            
+            <div id="event-log" class="log" style="display: none;">
+                <!-- Event log will appear here -->
+            </div>
+        </div>
+        
+        <!-- Example 2: Counter -->
+        <div class="panel result-panel" style="margin-top: 2rem;">
+            <h2>⚡ Interactive Counter Example</h2>
+            <p class="panel-subtitle">Demonstrating event handling and state management</p>
+            
+            <div class="controls">
+                <button class="btn btn-primary" onclick="createCounter()">Create Counter</button>
+            </div>
+            
+            <textarea class="code-editor dsl-editor" readonly style="margin-bottom: 1rem;">Counter :: state =>
+  div.counter [
+    h2 { state.count }
+    button @click="count++" { "+1" }
+    button @click="count--" { "-1" }
+    button @click="count = 0" { "Reset" }
+  ]</textarea>
+            
+            <div id="counter-container" class="render-container">
+                <!-- Counter will be rendered here -->
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        // Import the declarative components modules
+        import { 
+            ComponentCompiler,
+            CNLParser,
+            CNLTranspiler,
+            ComponentLifecycle,
+            EquationSolver
+        } from '../../src/index.js';
+        
+        // Make them globally available
+        window.DeclarativeComponents = {
+            ComponentCompiler,
+            CNLParser,
+            CNLTranspiler,
+            ComponentLifecycle,
+            EquationSolver
+        };
+        
+        // Store component definitions
+        window.currentComponentDef = null;
+        window.currentData = {
+            name: 'Alice Johnson',
+            bio: 'Full-stack developer with a passion for clean, declarative code',
+            active: true
+        };
+        
+        // Component lifecycle instance
+        window.lifecycle = new ComponentLifecycle();
+        window.currentInstance = null;
+        
+        console.log('✅ Declarative Components loaded:', window.DeclarativeComponents);
+    </script>
+    
+    <script>
+        // Helper functions
+        function addLog(message) {
+            const log = document.getElementById('event-log');
+            log.style.display = 'block';
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        function showStatus(message, type = 'success') {
+            const status = document.getElementById('status-message');
+            status.className = `status ${type}`;
+            status.textContent = message;
+            setTimeout(() => {
+                status.textContent = '';
+                status.className = '';
+            }, 3000);
+        }
+        
+        // Compile CNL
+        async function compileCNL() {
+            try {
+                const cnlText = document.getElementById('cnl-input').value;
+                const parser = new window.DeclarativeComponents.CNLParser();
+                const ast = parser.parse(cnlText);
+                
+                const transpiler = new window.DeclarativeComponents.CNLTranspiler();
+                const componentDef = transpiler.transpile(ast);
+                
+                window.currentComponentDef = componentDef;
+                document.getElementById('json-output').textContent = JSON.stringify(componentDef, null, 2);
+                
+                showStatus('✅ CNL compiled successfully!');
+                addLog('CNL compiled to JSON');
+            } catch (error) {
+                showStatus('❌ CNL compilation error: ' + error.message, 'error');
+                console.error(error);
+            }
+        }
+        
+        // Compile DSL
+        async function compileDSL() {
+            try {
+                const dslText = document.getElementById('dsl-input').value;
+                const compiler = new window.DeclarativeComponents.ComponentCompiler();
+                const componentDef = compiler.compile(dslText);
+                
+                window.currentComponentDef = componentDef;
+                document.getElementById('json-output').textContent = JSON.stringify(componentDef, null, 2);
+                
+                showStatus('✅ DSL compiled successfully!');
+                addLog('DSL compiled to JSON');
+            } catch (error) {
+                showStatus('❌ DSL compilation error: ' + error.message, 'error');
+                console.error(error);
+            }
+        }
+        
+        // Render component
+        async function renderComponent() {
+            try {
+                if (!window.currentComponentDef) {
+                    showStatus('⚠️ Please compile CNL or DSL first', 'error');
+                    return;
+                }
+                
+                const container = document.getElementById('render-container');
+                container.innerHTML = '';
+                container.classList.add('has-content');
+                
+                // Unmount previous instance if exists
+                if (window.currentInstance) {
+                    await window.lifecycle.unmount(window.currentInstance);
+                }
+                
+                // Mount new component
+                window.currentInstance = await window.lifecycle.mount(
+                    window.currentComponentDef,
+                    window.currentData,
+                    container
+                );
+                
+                showStatus('✅ Component rendered successfully!');
+                addLog('Component mounted with data: ' + JSON.stringify(window.currentData));
+            } catch (error) {
+                showStatus('❌ Render error: ' + error.message, 'error');
+                console.error(error);
+            }
+        }
+        
+        // Update data
+        function updateData() {
+            window.currentData.active = !window.currentData.active;
+            window.currentData.name = window.currentData.active ? 'Alice Johnson' : 'Alice J. (Inactive)';
+            window.currentData.bio = window.currentData.active 
+                ? 'Full-stack developer with a passion for clean, declarative code'
+                : 'Currently on sabbatical';
+            
+            if (window.currentInstance && window.currentInstance.solver) {
+                window.currentInstance.solver.evaluate();
+            }
+            
+            addLog('Data updated: active = ' + window.currentData.active);
+            showStatus('✅ Data updated!');
+        }
+        
+        // Clear all
+        function clearAll() {
+            document.getElementById('render-container').innerHTML = '';
+            document.getElementById('render-container').classList.remove('has-content');
+            document.getElementById('counter-container').innerHTML = '';
+            document.getElementById('counter-container').classList.remove('has-content');
+            document.getElementById('json-output').textContent = '// Click "Compile CNL" or "Compile DSL" to see the JSON output';
+            document.getElementById('event-log').innerHTML = '';
+            document.getElementById('event-log').style.display = 'none';
+            window.currentComponentDef = null;
+            window.currentInstance = null;
+            showStatus('✅ Cleared all components');
+        }
+        
+        // Create counter example
+        async function createCounter() {
+            try {
+                const dsl = `Counter :: state =>
+  div.counter [
+    h2 { state.count }
+    button @click="count++" { "+1" }
+    button @click="count--" { "-1" }
+    button @click="count = 0" { "Reset" }
+  ]`;
+                
+                const compiler = new window.DeclarativeComponents.ComponentCompiler();
+                const componentDef = compiler.compile(dsl);
+                
+                const container = document.getElementById('counter-container');
+                container.innerHTML = '';
+                container.classList.add('has-content');
+                
+                const counterData = { count: 0 };
+                const instance = await window.lifecycle.mount(componentDef, counterData, container);
+                
+                showStatus('✅ Counter created!');
+                addLog('Counter component mounted');
+            } catch (error) {
+                showStatus('❌ Counter error: ' + error.message, 'error');
+                console.error(error);
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            addLog('Application initialized');
+        });
+    </script>
+</body>
+</html>

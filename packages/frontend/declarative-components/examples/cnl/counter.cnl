@@ -1,0 +1,8 @@
+Define Counter with state:
+  Create a container with class "counter" containing:
+    A heading showing the count
+    A container with class "controls" containing:
+      A button labeled "+" that increments the count on click
+      A button labeled "-" that decrements the count on click
+      A button labeled "Reset" that sets the count to 0 on click
+    A paragraph showing "Current value: " + the count

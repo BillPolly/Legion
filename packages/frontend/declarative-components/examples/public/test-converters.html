@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Converter Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #2d3748;
+            margin-bottom: 2rem;
+        }
+        
+        .test-section {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+        }
+        
+        h2 {
+            color: #4a5568;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        
+        .output {
+            background: #f7fafc;
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: 'Menlo', 'Monaco', monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 1rem;
+        }
+        
+        .success { background: #c6f6d5; color: #22543d; }
+        .error { background: #fed7d7; color: #742a2a; }
+        .pending { background: #fef3c7; color: #92400e; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Converter Test Suite</h1>
+        
+        <div class="test-section">
+            <h2>Test 1: JSON to DSL Conversion <span id="test1-status" class="status pending">PENDING</span></h2>
+            <div id="test1-output" class="output">Loading...</div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test 2: JSON to CNL Conversion <span id="test2-status" class="status pending">PENDING</span></h2>
+            <div id="test2-output" class="output">Loading...</div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test 3: DSL to CNL (via JSON) <span id="test3-status" class="status pending">PENDING</span></h2>
+            <div id="test3-output" class="output">Loading...</div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test 4: Round Trip (JSON → DSL → JSON) <span id="test4-status" class="status pending">PENDING</span></h2>
+            <div id="test4-output" class="output">Loading...</div>
+        </div>
+    </div>
+    
+    <script type="module">
+        // Test data
+        const testJSON = {
+            "name": "SimpleCounter",
+            "entity": "counter",
+            "structure": {
+                "root": {
+                    "element": "div",
+                    "class": "counter-container",
+                    "parent": null
+                },
+                "root_child_0": {
+                    "element": "h2",
+                    "parent": "root"
+                },
+                "root_child_1": {
+                    "element": "button",
+                    "textContent": "Increment",
+                    "parent": "root"
+                }
+            },
+            "bindings": [
+                {
+                    "source": "counter.value",
+                    "target": "root_child_0.textContent",
+                    "transform": "identity"
+                }
+            ],
+            "events": [
+                {
+                    "element": "root_child_1",
+                    "event": "click",
+                    "action": "counter.value++",
+                    "modifiers": []
+                }
+            ]
+        };
+        
+        async function runTests() {
+            try {
+                // Import the converters
+                const module = await import('/legion/declarative-components/index.js');
+                console.log('Module loaded successfully:', Object.keys(module));
+                
+                const { jsonToDSL, jsonToCNL, ComponentCompiler, CNLParser } = module;
+                
+                // Test 1: JSON to DSL
+                try {
+                    const dsl = jsonToDSL(testJSON);
+                    document.getElementById('test1-output').textContent = dsl;
+                    document.getElementById('test1-status').textContent = 'PASSED';
+                    document.getElementById('test1-status').className = 'status success';
+                    console.log('✅ Test 1 passed: JSON to DSL');
+                } catch (error) {
+                    document.getElementById('test1-output').textContent = 'Error: ' + error.message;
+                    document.getElementById('test1-status').textContent = 'FAILED';
+                    document.getElementById('test1-status').className = 'status error';
+                    console.error('❌ Test 1 failed:', error);
+                }
+                
+                // Test 2: JSON to CNL
+                try {
+                    const cnl = jsonToCNL(testJSON);
+                    document.getElementById('test2-output').textContent = cnl;
+                    document.getElementById('test2-status').textContent = 'PASSED';
+                    document.getElementById('test2-status').className = 'status success';
+                    console.log('✅ Test 2 passed: JSON to CNL');
+                } catch (error) {
+                    document.getElementById('test2-output').textContent = 'Error: ' + error.message;
+                    document.getElementById('test2-status').textContent = 'FAILED';
+                    document.getElementById('test2-status').className = 'status error';
+                    console.error('❌ Test 2 failed:', error);
+                }
+                
+                // Test 3: DSL to CNL (via JSON)
+                try {
+                    const dsl = jsonToDSL(testJSON);
+                    const compiler = new ComponentCompiler();
+                    const jsonFromDSL = compiler.compile(dsl);
+                    const cnlFromJSON = jsonToCNL(jsonFromDSL);
+                    document.getElementById('test3-output').textContent = 
+                        'DSL:\n' + dsl + '\n\nCNL:\n' + cnlFromJSON;
+                    document.getElementById('test3-status').textContent = 'PASSED';
+                    document.getElementById('test3-status').className = 'status success';
+                    console.log('✅ Test 3 passed: DSL to CNL');
+                } catch (error) {
+                    document.getElementById('test3-output').textContent = 'Error: ' + error.message;
+                    document.getElementById('test3-status').textContent = 'FAILED';
+                    document.getElementById('test3-status').className = 'status error';
+                    console.error('❌ Test 3 failed:', error);
+                }
+                
+                // Test 4: Round Trip
+                try {
+                    const dsl = jsonToDSL(testJSON);
+                    const compiler = new ComponentCompiler();
+                    const jsonFromDSL = compiler.compile(dsl);
+                    
+                    // Compare key properties
+                    const match = (
+                        jsonFromDSL.name === testJSON.name &&
+                        jsonFromDSL.entity === testJSON.entity &&
+                        Object.keys(jsonFromDSL.structure).length === Object.keys(testJSON.structure).length
+                    );
+                    
+                    document.getElementById('test4-output').textContent = 
+                        'Original JSON:\n' + JSON.stringify(testJSON, null, 2).substring(0, 200) + '...\n\n' +
+                        'Round-trip JSON:\n' + JSON.stringify(jsonFromDSL, null, 2).substring(0, 200) + '...\n\n' +
+                        'Match: ' + (match ? 'YES ✅' : 'NO ❌');
+                    
+                    document.getElementById('test4-status').textContent = match ? 'PASSED' : 'PARTIAL';
+                    document.getElementById('test4-status').className = match ? 'status success' : 'status pending';
+                    console.log('✅ Test 4:', match ? 'Round trip successful' : 'Round trip with differences');
+                } catch (error) {
+                    document.getElementById('test4-output').textContent = 'Error: ' + error.message;
+                    document.getElementById('test4-status').textContent = 'FAILED';
+                    document.getElementById('test4-status').className = 'status error';
+                    console.error('❌ Test 4 failed:', error);
+                }
+                
+            } catch (error) {
+                console.error('Failed to load module:', error);
+                document.querySelectorAll('.output').forEach(el => {
+                    el.textContent = 'Failed to load module: ' + error.message;
+                });
+                document.querySelectorAll('.status').forEach(el => {
+                    el.textContent = 'ERROR';
+                    el.className = 'status error';
+                });
+            }
+        }
+        
+        // Run tests on load
+        runTests();
+    </script>
+</body>
+</html>

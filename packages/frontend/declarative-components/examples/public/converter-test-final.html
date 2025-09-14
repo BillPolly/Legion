@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Converter Final Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #2d3748;
+            margin-bottom: 2rem;
+        }
+        
+        .test-section {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+        }
+        
+        h2 {
+            color: #4a5568;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        
+        .output {
+            background: #f7fafc;
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: 'Menlo', 'Monaco', monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 1rem;
+        }
+        
+        .success { background: #c6f6d5; color: #22543d; }
+        .error { background: #fed7d7; color: #742a2a; }
+        .pending { background: #fef3c7; color: #92400e; }
+        
+        .stats {
+            background: #f7fafc;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 2rem;
+        }
+        
+        .stats h3 {
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-line {
+            color: #4a5568;
+            margin: 0.25rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Bidirectional Converter - Final UAT Test</h1>
+        
+        <div class="test-section">
+            <h2>Test 1: JSON to DSL Conversion <span id="test1-status" class="status pending">PENDING</span></h2>
+            <div id="test1-output" class="output">Loading...</div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test 2: JSON to CNL Conversion <span id="test2-status" class="status pending">PENDING</span></h2>
+            <div id="test2-output" class="output">Loading...</div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test 3: Round Trip (JSON → DSL → JSON) <span id="test3-status" class="status pending">PENDING</span></h2>
+            <div id="test3-output" class="output">Loading...</div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test 4: Complex TodoItem Component <span id="test4-status" class="status pending">PENDING</span></h2>
+            <div id="test4-output" class="output">Loading...</div>
+        </div>
+        
+        <div class="stats">
+            <h3>📊 Test Summary</h3>
+            <div id="summary" class="stat-line">Running tests...</div>
+        </div>
+    </div>
+    
+    <script type="module">
+        // Load converters from the actual source
+        async function loadConverters() {
+            const baseUrl = window.location.origin;
+            
+            // Load the converter modules
+            const [dslModule, cnlModule, compilerModule] = await Promise.all([
+                import('../../src/cnl/JsonToDSLConverter.js'),
+                import('../../src/cnl/JsonToCNLConverter.js'),
+                import('../../src/compiler/ComponentCompiler.js')
+            ]);
+            
+            return {
+                jsonToDSL: dslModule.jsonToDSL,
+                jsonToCNL: cnlModule.jsonToCNL,
+                ComponentCompiler: compilerModule.ComponentCompiler
+            };
+        }
+        
+        // Test data
+        const simpleJSON = {
+            name: "SimpleCounter",
+            entity: "counter",
+            structure: {
+                root: {
+                    element: "div",
+                    class: "counter-container",
+                    parent: null
+                },
+                root_child_0: {
+                    element: "h2",
+                    parent: "root"
+                },
+                root_child_1: {
+                    element: "button",
+                    textContent: "Increment",
+                    parent: "root"
+                }
+            },
+            bindings: [
+                {
+                    source: "counter.value",
+                    target: "root_child_0.textContent",
+                    transform: "identity"
+                }
+            ],
+            events: [
+                {
+                    element: "root_child_1",
+                    event: "click",
+                    action: "counter.value++",
+                    modifiers: []
+                }
+            ]
+        };
+        
+        const todoItemJSON = {
+            name: 'TodoItem',
+            entity: 'todo',
+            structure: {
+                root: {
+                    element: 'div',
+                    class: 'todo-item',
+                    parent: null
+                },
+                root_child_0: {
+                    element: 'input',
+                    parent: 'root',
+                    attributes: {
+                        type: 'checkbox'
+                    }
+                },
+                root_child_1: {
+                    element: 'span',
+                    class: 'todo-text',
+                    parent: 'root'
+                },
+                root_child_2: {
+                    element: 'button',
+                    textContent: 'Delete',
+                    class: 'delete-btn',
+                    parent: 'root'
+                }
+            },
+            bindings: [
+                {
+                    source: 'todo.completed',
+                    target: 'root_child_0.checked',
+                    transform: 'identity'
+                },
+                {
+                    source: 'todo.text',
+                    target: 'root_child_1.textContent',
+                    transform: 'identity'
+                }
+            ],
+            events: [
+                {
+                    element: 'root_child_0',
+                    event: 'change',
+                    action: 'todo.completed = !todo.completed',
+                    modifiers: []
+                },
+                {
+                    element: 'root_child_2',
+                    event: 'click',
+                    action: 'deleteTodo(todo.id)',
+                    modifiers: []
+                }
+            ]
+        };
+        
+        async function runTests() {
+            const results = { passed: 0, failed: 0, total: 4 };
+            
+            try {
+                const { jsonToDSL, jsonToCNL, ComponentCompiler } = await loadConverters();
+                const compiler = new ComponentCompiler();
+                
+                console.log('✅ Converters loaded successfully');
+                
+                // Test 1: JSON to DSL
+                try {
+                    const dsl = jsonToDSL(simpleJSON);
+                    document.getElementById('test1-output').textContent = dsl;
+                    document.getElementById('test1-status').textContent = 'PASSED';
+                    document.getElementById('test1-status').className = 'status success';
+                    results.passed++;
+                    console.log('✅ Test 1 passed: JSON to DSL');
+                } catch (error) {
+                    document.getElementById('test1-output').textContent = 'Error: ' + error.message;
+                    document.getElementById('test1-status').textContent = 'FAILED';
+                    document.getElementById('test1-status').className = 'status error';
+                    results.failed++;
+                    console.error('❌ Test 1 failed:', error);
+                }
+                
+                // Test 2: JSON to CNL
+                try {
+                    const cnl = jsonToCNL(simpleJSON);
+                    document.getElementById('test2-output').textContent = cnl;
+                    document.getElementById('test2-status').textContent = 'PASSED';
+                    document.getElementById('test2-status').className = 'status success';
+                    results.passed++;
+                    console.log('✅ Test 2 passed: JSON to CNL');
+                } catch (error) {
+                    document.getElementById('test2-output').textContent = 'Error: ' + error.message;
+                    document.getElementById('test2-status').textContent = 'FAILED';
+                    document.getElementById('test2-status').className = 'status error';
+                    results.failed++;
+                    console.error('❌ Test 2 failed:', error);
+                }
+                
+                // Test 3: Round trip (JSON → DSL → JSON)
+                try {
+                    const dsl = jsonToDSL(simpleJSON);
+                    const compiledJSON = compiler.compile(dsl);
+                    
+                    const match = (
+                        compiledJSON.name === simpleJSON.name &&
+                        compiledJSON.entity === simpleJSON.entity &&
+                        Object.keys(compiledJSON.structure).length === Object.keys(simpleJSON.structure).length &&
+                        compiledJSON.bindings.length === simpleJSON.bindings.length &&
+                        compiledJSON.events.length === simpleJSON.events.length
+                    );
+                    
+                    const output = `Original components: ${Object.keys(simpleJSON.structure).length}\n` +
+                                  `Compiled components: ${Object.keys(compiledJSON.structure).length}\n` +
+                                  `Original bindings: ${simpleJSON.bindings.length}\n` +
+                                  `Compiled bindings: ${compiledJSON.bindings.length}\n` +
+                                  `Original events: ${simpleJSON.events.length}\n` +
+                                  `Compiled events: ${compiledJSON.events.length}\n\n` +
+                                  `Round-trip match: ${match ? '✅ PERFECT' : '⚠️ PARTIAL'}`;
+                    
+                    document.getElementById('test3-output').textContent = output;
+                    document.getElementById('test3-status').textContent = match ? 'PASSED' : 'PARTIAL';
+                    document.getElementById('test3-status').className = match ? 'status success' : 'status pending';
+                    if (match) results.passed++; else results.failed++;
+                    console.log('✅ Test 3 result:', match ? 'PERFECT match' : 'Partial match');
+                } catch (error) {
+                    document.getElementById('test3-output').textContent = 'Error: ' + error.message;
+                    document.getElementById('test3-status').textContent = 'FAILED';
+                    document.getElementById('test3-status').className = 'status error';
+                    results.failed++;
+                    console.error('❌ Test 3 failed:', error);
+                }
+                
+                // Test 4: Complex TodoItem
+                try {
+                    const todoDSL = jsonToDSL(todoItemJSON);
+                    const todoCNL = jsonToCNL(todoItemJSON);
+                    
+                    const output = `DSL Output:\n${todoDSL}\n\n` +
+                                  `CNL Output:\n${todoCNL}`;
+                    
+                    document.getElementById('test4-output').textContent = output;
+                    document.getElementById('test4-status').textContent = 'PASSED';
+                    document.getElementById('test4-status').className = 'status success';
+                    results.passed++;
+                    console.log('✅ Test 4 passed: TodoItem conversion');
+                } catch (error) {
+                    document.getElementById('test4-output').textContent = 'Error: ' + error.message;
+                    document.getElementById('test4-status').textContent = 'FAILED';
+                    document.getElementById('test4-status').className = 'status error';
+                    results.failed++;
+                    console.error('❌ Test 4 failed:', error);
+                }
+                
+            } catch (error) {
+                console.error('Failed to load converters:', error);
+                document.querySelectorAll('.output').forEach(el => {
+                    el.textContent = 'Failed to load converters: ' + error.message;
+                });
+                document.querySelectorAll('.status').forEach(el => {
+                    el.textContent = 'ERROR';
+                    el.className = 'status error';
+                });
+                results.failed = results.total;
+            }
+            
+            // Update summary
+            const summaryEl = document.getElementById('summary');
+            summaryEl.innerHTML = `
+                <div>✅ Passed: ${results.passed}</div>
+                <div>❌ Failed: ${results.failed}</div>
+                <div>📊 Total: ${results.total}</div>
+                <div style="margin-top: 0.5rem; font-weight: bold;">
+                    ${results.passed === results.total ? '🎉 All tests passed!' : 
+                      results.failed === 0 ? '✅ Tests completed successfully' : 
+                      '⚠️ Some tests failed'}
+                </div>
+            `;
+        }
+        
+        // Run tests on load
+        runTests();
+    </script>
+</body>
+</html>

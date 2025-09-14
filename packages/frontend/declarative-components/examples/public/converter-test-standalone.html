@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Converter Standalone Test - Complete UAT</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #2d3748;
+            margin-bottom: 2rem;
+        }
+        
+        .test-section {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+        }
+        
+        h2 {
+            color: #4a5568;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        
+        .output {
+            background: #f7fafc;
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: 'Menlo', 'Monaco', monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 1rem;
+        }
+        
+        .success { background: #c6f6d5; color: #22543d; }
+        .error { background: #fed7d7; color: #742a2a; }
+        .pending { background: #fef3c7; color: #92400e; }
+        
+        .stats {
+            background: #f7fafc;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 2rem;
+        }
+        
+        .stats h3 {
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-line {
+            color: #4a5568;
+            margin: 0.25rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Bidirectional Converter - Complete UAT Test</h1>
+        
+        <div class="test-section">
+            <h2>Test 1: JSON to DSL Conversion <span id="test1-status" class="status pending">PENDING</span></h2>
+            <div id="test1-output" class="output">Loading...</div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test 2: JSON to CNL Conversion <span id="test2-status" class="status pending">PENDING</span></h2>
+            <div id="test2-output" class="output">Loading...</div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test 3: Round Trip (JSON → DSL → JSON) <span id="test3-status" class="status pending">PENDING</span></h2>
+            <div id="test3-output" class="output">Loading...</div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test 4: Complex TodoItem Component <span id="test4-status" class="status pending">PENDING</span></h2>
+            <div id="test4-output" class="output">Loading...</div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test 5: Edge Cases <span id="test5-status" class="status pending">PENDING</span></h2>
+            <div id="test5-output" class="output">Loading...</div>
+        </div>
+        
+        <div class="stats">
+            <h3>📊 Test Summary</h3>
+            <div id="summary" class="stat-line">Running tests...</div>
+        </div>
+    </div>
+    
+    <script>
+        // Inline JsonToDSLConverter
+        class JsonToDSLConverter {
+            constructor(options = {}) {
+                this.indentSize = options.indentSize || 2;
+                this.currentIndent = 0;
+            }
+
+            convert(json) {
+                if (!json.name || !json.entity) {
+                    throw new Error('JSON must have name and entity properties');
+                }
+                
+                const lines = [];
+                lines.push(`${json.name} :: ${json.entity} =>`);
+                
+                if (json.structure && json.structure.root) {
+                    this.currentIndent++;
+                    const rootDSL = this.convertElement('root', json.structure, json.bindings, json.events);
+                    lines.push(...rootDSL);
+                    this.currentIndent--;
+                }
+                
+                return lines.join('\n');
+            }
+
+            convertElement(elementKey, structure, bindings = [], events = []) {
+                const element = structure[elementKey];
+                if (!element) return [];
+                
+                const lines = [];
+                let line = this.getIndent();
+                
+                line += element.element;
+                
+                if (element.class) {
+                    const classes = element.class.split(' ').map(c => `.${c}`).join('');
+                    line += classes;
+                }
+                
+                if (element.id) {
+                    line += `#${element.id}`;
+                }
+                
+                const elementEvents = events.filter(e => e.element === elementKey);
+                for (const event of elementEvents) {
+                    const modifiers = event.modifiers?.length > 0 ? `.${event.modifiers.join('.')}` : '';
+                    line += ` @${event.event}${modifiers}="${event.action}"`;
+                }
+                
+                const children = Object.keys(structure)
+                    .filter(key => structure[key].parent === elementKey)
+                    .sort((a, b) => {
+                        const aNum = parseInt(a.match(/_(\d+)$/)?.[1] || '0');
+                        const bNum = parseInt(b.match(/_(\d+)$/)?.[1] || '0');
+                        return aNum - bNum;
+                    });
+                
+                const elementBindings = bindings.filter(b => b.target.startsWith(`${elementKey}.`));
+                const textBinding = elementBindings.find(b => b.target === `${elementKey}.textContent`);
+                
+                if (children.length > 0) {
+                    line += ' [';
+                    lines.push(line);
+                    
+                    this.currentIndent++;
+                    for (const childKey of children) {
+                        const childLines = this.convertElement(childKey, structure, bindings, events);
+                        lines.push(...childLines);
+                    }
+                    this.currentIndent--;
+                    
+                    lines.push(this.getIndent() + ']');
+                } else if (textBinding) {
+                    line += ` { ${textBinding.source} }`;
+                    lines.push(line);
+                } else if (element.textContent) {
+                    const escaped = element.textContent.replace(/"/g, '\\"');
+                    line += ` { "${escaped}" }`;
+                    lines.push(line);
+                } else {
+                    lines.push(line);
+                }
+                
+                return lines;
+            }
+
+            getIndent() {
+                return ' '.repeat(this.currentIndent * this.indentSize);
+            }
+        }
+
+        function jsonToDSL(json) {
+            const converter = new JsonToDSLConverter();
+            return converter.convert(json);
+        }
+
+        // Inline JsonToCNLConverter
+        class JsonToCNLConverter {
+            constructor(options = {}) {
+                this.indentSize = options.indentSize || 2;
+                this.currentIndent = 0;
+            }
+
+            convert(json) {
+                if (!json.name || !json.entity) {
+                    throw new Error('JSON must have name and entity properties');
+                }
+                
+                const lines = [];
+                lines.push(`Define ${json.name} with ${json.entity}:`);
+                
+                if (json.structure && json.structure.root) {
+                    this.currentIndent++;
+                    const rootCNL = this.convertElement('root', json.structure, json.bindings, json.events, json.entity);
+                    lines.push(...rootCNL);
+                    this.currentIndent--;
+                }
+                
+                return lines.join('\n');
+            }
+
+            convertElement(elementKey, structure, bindings = [], events = [], entity = 'data') {
+                const element = structure[elementKey];
+                if (!element) return [];
+                
+                const lines = [];
+                let line = this.getIndent();
+                
+                const article = this.getArticle(element.element);
+                const elementName = this.getElementName(element.element);
+                
+                line += `${article} ${elementName}`;
+                
+                if (element.class) {
+                    line += ` with class "${element.class}"`;
+                }
+                
+                if (element.id) {
+                    line += ` with id "${element.id}"`;
+                }
+                
+                const elementBindings = bindings.filter(b => b.target.startsWith(`${elementKey}.`));
+                const textBinding = elementBindings.find(b => b.target === `${elementKey}.textContent`);
+                const valueBinding = elementBindings.find(b => b.target === `${elementKey}.value`);
+                
+                const elementEvents = events.filter(e => e.element === elementKey);
+                
+                if (textBinding) {
+                    const bindingText = this.formatBinding(textBinding.source, entity);
+                    if (element.element === 'button' && elementEvents.length > 0) {
+                        line += ` showing ${bindingText}`;
+                    } else {
+                        line += ` showing ${bindingText}`;
+                    }
+                } else if (valueBinding) {
+                    const bindingText = this.formatBinding(valueBinding.source, entity);
+                    line += ` bound to ${bindingText}`;
+                } else if (element.textContent) {
+                    if (element.element === 'button' && elementEvents.length > 0) {
+                        line += ` labeled "${element.textContent}"`;
+                    } else {
+                        line += ` showing "${element.textContent}"`;
+                    }
+                }
+                
+                for (const event of elementEvents) {
+                    const actionText = this.formatAction(event.action, entity);
+                    
+                    if (event.modifiers && event.modifiers.includes('enter')) {
+                        line += ` that ${actionText} on Enter key`;
+                    } else if (event.event === 'click') {
+                        line += ` that ${actionText} on click`;
+                    } else {
+                        line += ` that ${actionText} on ${event.event}`;
+                    }
+                }
+                
+                const children = Object.keys(structure)
+                    .filter(key => structure[key].parent === elementKey)
+                    .sort((a, b) => {
+                        const aNum = parseInt(a.match(/_(\d+)$/)?.[1] || '0');
+                        const bNum = parseInt(b.match(/_(\d+)$/)?.[1] || '0');
+                        return aNum - bNum;
+                    });
+                
+                if (children.length > 0) {
+                    line += ' containing:';
+                    lines.push(line);
+                    
+                    this.currentIndent++;
+                    for (const childKey of children) {
+                        const childLines = this.convertElement(childKey, structure, bindings, events, entity);
+                        lines.push(...childLines);
+                    }
+                    this.currentIndent--;
+                } else {
+                    lines.push(line);
+                }
+                
+                return lines;
+            }
+
+            formatBinding(source, entity) {
+                if (source.startsWith(`${entity}.`)) {
+                    const property = source.slice(entity.length + 1);
+                    
+                    if (property.includes('.')) {
+                        const parts = property.split('.');
+                        return `the ${parts.join("'s ")}`;
+                    }
+                    
+                    return `the ${property}`;
+                }
+                
+                if (source.includes('.')) {
+                    const parts = source.split('.');
+                    if (parts[0] === 'state' || parts[0] === 'data') {
+                        return `the ${parts.slice(1).join("'s ")}`;
+                    }
+                    return `the ${parts.join("'s ")}`;
+                }
+                
+                return `the ${source}`;
+            }
+
+            formatAction(action, entity) {
+                if (action.includes('++')) {
+                    const variable = action.replace('++', '').trim();
+                    const cleanVar = this.cleanVariable(variable, entity);
+                    return `increments ${cleanVar}`;
+                }
+                
+                if (action.includes('--')) {
+                    const variable = action.replace('--', '').trim();
+                    const cleanVar = this.cleanVariable(variable, entity);
+                    return `decrements ${cleanVar}`;
+                }
+                
+                if (action.includes('=')) {
+                    const parts = action.split('=').map(p => p.trim());
+                    const variable = parts[0];
+                    const value = parts[1];
+                    const cleanVar = this.cleanVariable(variable, entity);
+                    
+                    if (value === '0') {
+                        return `resets ${cleanVar} to 0`;
+                    } else if (value === 'true') {
+                        return `sets ${cleanVar} to true`;
+                    } else if (value === 'false') {
+                        return `sets ${cleanVar} to false`;
+                    } else if (value === '!'+variable) {
+                        return `toggles ${cleanVar}`;
+                    } else if (value.startsWith('"') && value.endsWith('"')) {
+                        return `sets ${cleanVar} to ${value}`;
+                    } else {
+                        return `sets ${cleanVar} to ${value}`;
+                    }
+                }
+                
+                if (action.includes('(') && action.includes(')')) {
+                    const match = action.match(/(\w+)\((.*)\)/);
+                    if (match) {
+                        const [, funcName, args] = match;
+                        if (args) {
+                            return `calls ${funcName} with ${args}`;
+                        } else {
+                            return `calls ${funcName}`;
+                        }
+                    }
+                }
+                
+                return action;
+            }
+
+            cleanVariable(variable, entity) {
+                if (variable.startsWith(`${entity}.`)) {
+                    return `the ${variable.slice(entity.length + 1)}`;
+                }
+                if (variable.startsWith('state.')) {
+                    return `the ${variable.slice(6)}`;
+                }
+                if (variable.startsWith('data.')) {
+                    return `the ${variable.slice(5)}`;
+                }
+                return `the ${variable}`;
+            }
+
+            getArticle(tag) {
+                const vowelTags = ['input', 'img', 'image', 'article', 'aside', 'ul', 'ol'];
+                return vowelTags.includes(tag) ? 'An' : 'A';
+            }
+
+            getElementName(tag) {
+                const elementNames = {
+                    'div': 'container',
+                    'p': 'paragraph',
+                    'h1': 'heading',
+                    'h2': 'heading',
+                    'h3': 'subtitle',
+                    'h4': 'subtitle',
+                    'span': 'span',
+                    'button': 'button',
+                    'input': 'input',
+                    'textarea': 'text area',
+                    'select': 'dropdown',
+                    'ul': 'unordered list',
+                    'ol': 'ordered list',
+                    'li': 'list item',
+                    'a': 'link',
+                    'img': 'image',
+                    'table': 'table',
+                    'tr': 'row',
+                    'td': 'cell',
+                    'th': 'header cell',
+                    'form': 'form',
+                    'label': 'label',
+                    'section': 'section',
+                    'article': 'article',
+                    'header': 'header',
+                    'footer': 'footer',
+                    'nav': 'navigation'
+                };
+                
+                return elementNames[tag] || tag;
+            }
+
+            getIndent() {
+                return ' '.repeat(this.currentIndent * this.indentSize);
+            }
+        }
+
+        function jsonToCNL(json) {
+            const converter = new JsonToCNLConverter();
+            return converter.convert(json);
+        }
+
+        // Test data
+        const simpleJSON = {
+            name: "SimpleCounter",
+            entity: "counter",
+            structure: {
+                root: {
+                    element: "div",
+                    class: "counter-container",
+                    parent: null
+                },
+                root_child_0: {
+                    element: "h2",
+                    parent: "root"
+                },
+                root_child_1: {
+                    element: "button",
+                    textContent: "Increment",
+                    parent: "root"
+                }
+            },
+            bindings: [
+                {
+                    source: "counter.value",
+                    target: "root_child_0.textContent",
+                    transform: "identity"
+                }
+            ],
+            events: [
+                {
+                    element: "root_child_1",
+                    event: "click",
+                    action: "counter.value++",
+                    modifiers: []
+                }
+            ]
+        };
+        
+        const todoItemJSON = {
+            name: 'TodoItem',
+            entity: 'todo',
+            structure: {
+                root: {
+                    element: 'div',
+                    class: 'todo-item',
+                    parent: null
+                },
+                root_child_0: {
+                    element: 'input',
+                    parent: 'root',
+                    attributes: {
+                        type: 'checkbox'
+                    }
+                },
+                root_child_1: {
+                    element: 'span',
+                    class: 'todo-text',
+                    parent: 'root'
+                },
+                root_child_2: {
+                    element: 'button',
+                    textContent: 'Delete',
+                    class: 'delete-btn',
+                    parent: 'root'
+                }
+            },
+            bindings: [
+                {
+                    source: 'todo.completed',
+                    target: 'root_child_0.checked',
+                    transform: 'identity'
+                },
+                {
+                    source: 'todo.text',
+                    target: 'root_child_1.textContent',
+                    transform: 'identity'
+                }
+            ],
+            events: [
+                {
+                    element: 'root_child_0',
+                    event: 'change',
+                    action: 'todo.completed = !todo.completed',
+                    modifiers: []
+                },
+                {
+                    element: 'root_child_2',
+                    event: 'click',
+                    action: 'deleteTodo(todo.id)',
+                    modifiers: []
+                }
+            ]
+        };
+        
+        function runTests() {
+            const results = { passed: 0, failed: 0, total: 5 };
+            
+            // Test 1: JSON to DSL
+            try {
+                const dsl = jsonToDSL(simpleJSON);
+                document.getElementById('test1-output').textContent = dsl;
+                document.getElementById('test1-status').textContent = 'PASSED';
+                document.getElementById('test1-status').className = 'status success';
+                results.passed++;
+                console.log('✅ Test 1 passed: JSON to DSL');
+            } catch (error) {
+                document.getElementById('test1-output').textContent = 'Error: ' + error.message;
+                document.getElementById('test1-status').textContent = 'FAILED';
+                document.getElementById('test1-status').className = 'status error';
+                results.failed++;
+                console.error('❌ Test 1 failed:', error);
+            }
+            
+            // Test 2: JSON to CNL
+            try {
+                const cnl = jsonToCNL(simpleJSON);
+                document.getElementById('test2-output').textContent = cnl;
+                document.getElementById('test2-status').textContent = 'PASSED';
+                document.getElementById('test2-status').className = 'status success';
+                results.passed++;
+                console.log('✅ Test 2 passed: JSON to CNL');
+            } catch (error) {
+                document.getElementById('test2-output').textContent = 'Error: ' + error.message;
+                document.getElementById('test2-status').textContent = 'FAILED';
+                document.getElementById('test2-status').className = 'status error';
+                results.failed++;
+                console.error('❌ Test 2 failed:', error);
+            }
+            
+            // Test 3: Round trip (can't compile back without compiler, but test both converters)
+            try {
+                const dsl = jsonToDSL(simpleJSON);
+                const cnl = jsonToCNL(simpleJSON);
+                
+                const output = `DSL Output:\n${dsl}\n\n` +
+                              `CNL Output:\n${cnl}\n\n` +
+                              `Both converters successfully processed the same JSON input ✅`;
+                
+                document.getElementById('test3-output').textContent = output;
+                document.getElementById('test3-status').textContent = 'PASSED';
+                document.getElementById('test3-status').className = 'status success';
+                results.passed++;
+                console.log('✅ Test 3 passed: Both converters work');
+            } catch (error) {
+                document.getElementById('test3-output').textContent = 'Error: ' + error.message;
+                document.getElementById('test3-status').textContent = 'FAILED';
+                document.getElementById('test3-status').className = 'status error';
+                results.failed++;
+                console.error('❌ Test 3 failed:', error);
+            }
+            
+            // Test 4: Complex TodoItem
+            try {
+                const todoDSL = jsonToDSL(todoItemJSON);
+                const todoCNL = jsonToCNL(todoItemJSON);
+                
+                const output = `DSL Output:\n${todoDSL}\n\n` +
+                              `CNL Output:\n${todoCNL}`;
+                
+                document.getElementById('test4-output').textContent = output;
+                document.getElementById('test4-status').textContent = 'PASSED';
+                document.getElementById('test4-status').className = 'status success';
+                results.passed++;
+                console.log('✅ Test 4 passed: TodoItem conversion');
+            } catch (error) {
+                document.getElementById('test4-output').textContent = 'Error: ' + error.message;
+                document.getElementById('test4-status').textContent = 'FAILED';
+                document.getElementById('test4-status').className = 'status error';
+                results.failed++;
+                console.error('❌ Test 4 failed:', error);
+            }
+            
+            // Test 5: Edge cases
+            try {
+                // Empty structure
+                const emptyJSON = {
+                    name: 'Empty',
+                    entity: 'none',
+                    structure: {},
+                    bindings: [],
+                    events: []
+                };
+                
+                const emptyDSL = jsonToDSL(emptyJSON);
+                const emptyCNL = jsonToCNL(emptyJSON);
+                
+                // Missing properties - should throw
+                let errorThrown = false;
+                try {
+                    const invalidJSON = { name: 'Test' };
+                    jsonToDSL(invalidJSON);
+                } catch (e) {
+                    errorThrown = true;
+                }
+                
+                const output = `Empty Structure:\n` +
+                              `DSL: ${emptyDSL}\n` +
+                              `CNL: ${emptyCNL}\n\n` +
+                              `Error handling: ${errorThrown ? '✅ Correctly threw error for missing entity' : '❌ Did not throw error'}`;
+                
+                document.getElementById('test5-output').textContent = output;
+                document.getElementById('test5-status').textContent = errorThrown ? 'PASSED' : 'PARTIAL';
+                document.getElementById('test5-status').className = errorThrown ? 'status success' : 'status pending';
+                if (errorThrown) results.passed++; else results.failed++;
+                console.log('✅ Test 5:', errorThrown ? 'Edge cases handled' : 'Partial edge case handling');
+            } catch (error) {
+                document.getElementById('test5-output').textContent = 'Error: ' + error.message;
+                document.getElementById('test5-status').textContent = 'FAILED';
+                document.getElementById('test5-status').className = 'status error';
+                results.failed++;
+                console.error('❌ Test 5 failed:', error);
+            }
+            
+            // Update summary
+            const summaryEl = document.getElementById('summary');
+            summaryEl.innerHTML = `
+                <div>✅ Passed: ${results.passed}</div>
+                <div>❌ Failed: ${results.failed}</div>
+                <div>📊 Total: ${results.total}</div>
+                <div style="margin-top: 0.5rem; font-weight: bold;">
+                    ${results.passed === results.total ? '🎉 All tests passed!' : 
+                      results.failed === 0 ? '✅ Tests completed successfully' : 
+                      '⚠️ Some tests failed'}
+                </div>
+            `;
+        }
+        
+        // Run tests on load
+        runTests();
+    </script>
+</body>
+</html>

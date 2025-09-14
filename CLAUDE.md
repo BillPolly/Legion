@@ -177,3 +177,9 @@ If you do need to right js scripts for testing or debuging then always put them 
 NEVER pollute package root directories or monorepo root! they must be kept as clean as possible! any scripts must go in scripts directory. and test artifacts should go under /tmp in __tests__
 
 all tests go in __tests__ in the package root, not in src
+
+NEVER skip tests under any circumstances, either the tests is not needed in which case it must be deleted or it must pass.
+
+NEVER mock in integration tests unless it is for incidental things.
+
+NEVER EVER HAVE FALLBACKS IN TESTS OR IMPLEMENTATION code, FAIL FAST!

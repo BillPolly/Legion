@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNL vs DSL Comparison - Declarative Components</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 3rem;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.95;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .panel {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .panel h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #2d3748;
+        }
+        
+        .panel-subtitle {
+            color: #718096;
+            margin-bottom: 1.5rem;
+        }
+        
+        .code-block {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+        
+        .cnl-code {
+            color: #2b6cb0;
+        }
+        
+        .dsl-code {
+            color: #805ad5;
+        }
+        
+        .example-section {
+            margin-bottom: 3rem;
+        }
+        
+        .example-title {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .example-title h3 {
+            color: #4a5568;
+            font-size: 1.3rem;
+        }
+        
+        .features {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .features h2 {
+            color: #2d3748;
+            margin-bottom: 1.5rem;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .feature-card {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 1.2rem;
+            border-left: 4px solid #667eea;
+        }
+        
+        .feature-card h4 {
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+        }
+        
+        .feature-card p {
+            color: #718096;
+            font-size: 0.95rem;
+        }
+        
+        .keyword {
+            color: #9f7aea;
+            font-weight: 600;
+        }
+        
+        .string {
+            color: #48bb78;
+        }
+        
+        .operator {
+            color: #ed8936;
+        }
+        
+        @media (max-width: 968px) {
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>CNL vs DSL Comparison</h1>
+            <p class="subtitle">Controlled Natural Language makes declarative components more accessible</p>
+        </header>
+
+        <!-- Simple Counter Example -->
+        <div class="example-section">
+            <div class="example-title">
+                <h3>📊 Counter Component</h3>
+            </div>
+            <div class="comparison-grid">
+                <div class="panel">
+                    <h2>CNL (Natural Language)</h2>
+                    <p class="panel-subtitle">Readable, intuitive syntax</p>
+                    <pre class="code-block cnl-code"><span class="keyword">Define</span> Counter <span class="keyword">with</span> state:
+  <span class="keyword">Create a</span> container <span class="keyword">with class</span> <span class="string">"counter"</span> <span class="keyword">containing:</span>
+    <span class="keyword">A</span> heading <span class="keyword">showing the</span> count
+    <span class="keyword">A</span> button <span class="keyword">labeled</span> <span class="string">"+"</span> <span class="keyword">that increments the</span> count <span class="keyword">on click</span>
+    <span class="keyword">A</span> button <span class="keyword">labeled</span> <span class="string">"-"</span> <span class="keyword">that decrements the</span> count <span class="keyword">on click</span>
+    <span class="keyword">A</span> button <span class="keyword">labeled</span> <span class="string">"Reset"</span> <span class="keyword">that sets the</span> count <span class="keyword">to</span> 0 <span class="keyword">on click</span></pre>
+                </div>
+                <div class="panel">
+                    <h2>DSL (Domain Specific Language)</h2>
+                    <p class="panel-subtitle">Concise, symbolic syntax</p>
+                    <pre class="code-block dsl-code"><span class="keyword">Counter ::</span> state <span class="operator">=></span>
+  div.counter [
+    h2 { state.count }
+    button <span class="operator">@click=</span><span class="string">"state.count++"</span> { <span class="string">"+"</span> }
+    button <span class="operator">@click=</span><span class="string">"state.count--"</span> { <span class="string">"-"</span> }
+    button <span class="operator">@click=</span><span class="string">"state.count = 0"</span> { <span class="string">"Reset"</span> }
+  ]</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conditional Rendering Example -->
+        <div class="example-section">
+            <div class="example-title">
+                <h3>🎯 Conditional Rendering</h3>
+            </div>
+            <div class="comparison-grid">
+                <div class="panel">
+                    <h2>CNL (Natural Language)</h2>
+                    <p class="panel-subtitle">Natural conditional expressions</p>
+                    <pre class="code-block cnl-code"><span class="keyword">Define</span> Menu <span class="keyword">with</span> data:
+  <span class="keyword">A</span> button <span class="keyword">that toggles</span> menuOpen <span class="keyword">on click:</span>
+    <span class="string">"Menu"</span> + (<span class="keyword">if</span> menuOpen <span class="keyword">then</span> <span class="string">"▲"</span> <span class="keyword">else</span> <span class="string">"▼"</span>)
+  
+  <span class="keyword">When</span> menuOpen <span class="keyword">is true:</span>
+    <span class="keyword">A</span> container <span class="keyword">with class</span> <span class="string">"dropdown"</span> <span class="keyword">containing:</span>
+      <span class="keyword">A</span> menu item <span class="keyword">labeled</span> <span class="string">"Save"</span>
+      <span class="keyword">A</span> menu item <span class="keyword">labeled</span> <span class="string">"Open"</span>
+      <span class="keyword">A</span> menu item <span class="keyword">labeled</span> <span class="string">"Exit"</span></pre>
+                </div>
+                <div class="panel">
+                    <h2>DSL (Domain Specific Language)</h2>
+                    <p class="panel-subtitle">Compact conditional syntax</p>
+                    <pre class="code-block dsl-code"><span class="keyword">Menu ::</span> data <span class="operator">=></span>
+  div [
+    button <span class="operator">@click=</span><span class="string">"data.menuOpen = !data.menuOpen"</span> { 
+      <span class="string">"Menu "</span> + (data.menuOpen ? <span class="string">"▲"</span> : <span class="string">"▼"</span>)
+    }
+    
+    <span class="keyword">if</span> (data.menuOpen) [
+      div.dropdown [
+        div.menu-item { <span class="string">"Save"</span> }
+        div.menu-item { <span class="string">"Open"</span> }
+        div.menu-item { <span class="string">"Exit"</span> }
+      ]
+    ]
+  ]</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- List Iteration Example -->
+        <div class="example-section">
+            <div class="example-title">
+                <h3>📋 List Iteration</h3>
+            </div>
+            <div class="comparison-grid">
+                <div class="panel">
+                    <h2>CNL (Natural Language)</h2>
+                    <p class="panel-subtitle">English-like iteration</p>
+                    <pre class="code-block cnl-code"><span class="keyword">Define</span> TodoList <span class="keyword">with</span> data:
+  <span class="keyword">A</span> heading <span class="keyword">showing</span> <span class="string">"My Tasks"</span>
+  
+  <span class="keyword">For each</span> task <span class="keyword">in the</span> tasks:
+    <span class="keyword">A</span> container <span class="keyword">with class</span> <span class="string">"task"</span> <span class="keyword">containing:</span>
+      <span class="keyword">A</span> checkbox <span class="keyword">bound to the</span> task's completed
+      <span class="keyword">A</span> span <span class="keyword">showing the</span> task's title
+      <span class="keyword">A</span> button <span class="keyword">labeled</span> <span class="string">"×"</span> <span class="keyword">that removes the</span> task</pre>
+                </div>
+                <div class="panel">
+                    <h2>DSL (Domain Specific Language)</h2>
+                    <p class="panel-subtitle">Functional iteration syntax</p>
+                    <pre class="code-block dsl-code"><span class="keyword">TodoList ::</span> data <span class="operator">=></span>
+  div [
+    h2 { <span class="string">"My Tasks"</span> }
+    
+    <span class="keyword">for</span> task <span class="keyword">in</span> data.tasks [
+      div.task [
+        input[type=checkbox] <span class="operator">@bind=</span><span class="string">"task.completed"</span>
+        span { task.title }
+        button <span class="operator">@click=</span><span class="string">"removeTask(task)"</span> { <span class="string">"×"</span> }
+      ]
+    ]
+  ]</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="features">
+            <h2>CNL Language Features</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>🎯 Natural Component Definition</h4>
+                    <p>Define components using plain English: "Define ComponentName with data:"</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📝 Intuitive Element Creation</h4>
+                    <p>Create elements naturally: "A heading showing the title"</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🔗 Clear Data Binding</h4>
+                    <p>Express bindings clearly: "showing the user's name" or "bound to the value"</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🎮 Simple Event Handling</h4>
+                    <p>Handle events naturally: "that increments the count on click"</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🔄 Natural Conditionals</h4>
+                    <p>Use familiar words: "When condition is true:" or "If x then y else z"</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🔁 Clear Iteration</h4>
+                    <p>Loop naturally: "For each item in the collection:"</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conversion Features -->
+        <div class="features">
+            <h2>Bidirectional Conversion</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>↔️ Two-Way Translation</h4>
+                    <p>Convert between CNL and DSL formats seamlessly</p>
+                </div>
+                <div class="feature-card">
+                    <h4>✅ Semantic Equivalence</h4>
+                    <p>Both forms express exactly the same component logic</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📚 Progressive Learning</h4>
+                    <p>Start with CNL, gradually learn DSL syntax</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Example of live conversion (if needed)
+        console.log('CNL vs DSL Comparison Page Loaded');
+        
+        // Could add interactive conversion demo here
+        // import { cnlToDSL } from '/legion/declarative-components/cnl/index.js';
+    </script>
+</body>
+</html>

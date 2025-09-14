@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legion Imports Test</title>
+    
+    <!-- Import maps for Legion packages -->
+    <script type="importmap">
+    {
+        "imports": {
+            "@legion/declarative-components": "/legion/declarative-components/index.js",
+            "@legion/resource-manager": "/legion/resource-manager/index.js",
+            "@legion/actors": "/legion/actors/index.js",
+            "@legion/handle": "/legion/handle/index.js",
+            "@legion/utils": "/legion/utils/index.js"
+        }
+    }
+    </script>
+</head>
+<body>
+    <h1>Legion Imports Test</h1>
+    <div id="status">Testing...</div>
+    <div id="results"></div>
+
+    <script type="module">
+        const status = document.getElementById('status');
+        const results = document.getElementById('results');
+        
+        async function testImports() {
+            const tests = [
+                {
+                    name: '@legion/declarative-components',
+                    test: async () => {
+                        const { ComponentCompiler } = await import('@legion/declarative-components');
+                        return ComponentCompiler ? 'SUCCESS: ComponentCompiler loaded' : 'FAIL: ComponentCompiler not found';
+                    }
+                },
+                {
+                    name: '@legion/resource-manager',
+                    test: async () => {
+                        const module = await import('@legion/resource-manager');
+                        return module.ResourceManager ? 'SUCCESS: ResourceManager loaded' : 'FAIL: ResourceManager not found';
+                    }
+                },
+                {
+                    name: '@legion/actors',
+                    test: async () => {
+                        const { Actor } = await import('@legion/actors');
+                        return Actor ? 'SUCCESS: Actor loaded' : 'FAIL: Actor not found';
+                    }
+                },
+                {
+                    name: '@legion/handle',
+                    test: async () => {
+                        const { Handle } = await import('@legion/handle');
+                        return Handle ? 'SUCCESS: Handle loaded' : 'FAIL: Handle not found';
+                    }
+                },
+                {
+                    name: '@legion/utils',
+                    test: async () => {
+                        const module = await import('@legion/utils');
+                        return module.generateGuid ? 'SUCCESS: utils loaded' : 'FAIL: utils not found';
+                    }
+                }
+            ];
+            
+            for (const { name, test } of tests) {
+                try {
+                    const result = await test();
+                    const div = document.createElement('div');
+                    div.style.color = result.startsWith('SUCCESS') ? 'green' : 'red';
+                    div.textContent = `${name}: ${result}`;
+                    results.appendChild(div);
+                } catch (error) {
+                    const div = document.createElement('div');
+                    div.style.color = 'red';
+                    div.textContent = `${name}: ERROR - ${error.message}`;
+                    results.appendChild(div);
+                }
+            }
+            
+            status.textContent = 'Test completed!';
+        }
+        
+        testImports();
+    </script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+Define DataGrid with data:
+  Create a container with class "data-grid" containing:
+    A container with class "grid-header" containing:
+      A heading showing "Employee Directory"
+      A container with class "grid-controls" containing:
+        A button labeled "Sort by Name" that calls sortByName on click
+        A button labeled "Sort by Salary" that calls sortBySalary on click
+        A button labeled "+ Add Employee" that calls addEmployee on click
+    
+    A container with class "grid-container" containing:
+      A container with class "grid-header-row" containing:
+        A container with class "grid-cell header" showing "Name"
+        A container with class "grid-cell header" showing "Department"
+        A container with class "grid-cell header" showing "Salary"
+        A container with class "grid-cell header" showing "Actions"
+      
+      For each employee in the employees:
+        A container with class "grid-row" containing:
+          A container with class "grid-cell" showing the employee's name
+          A container with class "grid-cell" showing the employee's department
+          A container with class "grid-cell" showing "$" + the employee's salary
+          A container with class "grid-cell actions" containing:
+            A button labeled "Edit" that calls editEmployee on click
+            A button labeled "Delete" that calls deleteEmployee on click
+    
+    A container with class "grid-footer" containing:
+      A paragraph showing "Total employees: " + the employees length
+      A paragraph showing "Selected: " + the selectedCount

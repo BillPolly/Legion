@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bidirectional Conversion Test - JSON ↔ DSL ↔ CNL</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 2rem;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .conversion-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .format-box {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .format-box h2 {
+            color: #2d3748;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .format-indicator {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .json-indicator { background: #fef3c7; color: #92400e; }
+        .dsl-indicator { background: #ddd6fe; color: #5b21b6; }
+        .cnl-indicator { background: #cffafe; color: #075985; }
+        
+        .code-area {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Menlo', 'Monaco', monospace;
+            font-size: 0.85rem;
+            min-height: 400px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-y: auto;
+            max-height: 500px;
+        }
+        
+        textarea.code-area {
+            width: 100%;
+            resize: vertical;
+            outline: none;
+        }
+        
+        textarea.code-area:focus {
+            border-color: #667eea;
+        }
+        
+        .control-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+        
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #2d3748;
+        }
+        
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+        
+        .status {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+        }
+        
+        .status.show {
+            display: block;
+        }
+        
+        .status.success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .status.error {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        
+        .arrow {
+            text-align: center;
+            color: white;
+            font-size: 2rem;
+            margin: 1rem 0;
+        }
+        
+        .conversion-flow {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            color: white;
+            text-align: center;
+        }
+        
+        .flow-diagram {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .flow-arrow {
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔄 Bidirectional Conversion System</h1>
+            <p>Complete conversion between JSON ↔ DSL ↔ CNL formats</p>
+        </header>
+        
+        <div class="conversion-flow">
+            <div class="flow-diagram">
+                <span>JSON</span>
+                <span class="flow-arrow">↔</span>
+                <span>DSL</span>
+                <span class="flow-arrow">↔</span>
+                <span>CNL</span>
+            </div>
+        </div>
+        
+        <div class="control-panel">
+            <h3>Conversion Controls</h3>
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="loadExample()">Load Example</button>
+                <button class="btn btn-primary" onclick="jsonToDSLConversion()">JSON → DSL</button>
+                <button class="btn btn-primary" onclick="jsonToCNLConversion()">JSON → CNL</button>
+                <button class="btn btn-primary" onclick="dslToJSONConversion()">DSL → JSON</button>
+                <button class="btn btn-primary" onclick="dslToCNLConversion()">DSL → CNL</button>
+                <button class="btn btn-primary" onclick="cnlToJSONConversion()">CNL → JSON</button>
+                <button class="btn btn-primary" onclick="cnlToDSLConversion()">CNL → DSL</button>
+                <button class="btn btn-secondary" onclick="testRoundTrip()">Test Round Trip</button>
+                <button class="btn btn-secondary" onclick="clearAll()">Clear All</button>
+            </div>
+            <div id="status" class="status"></div>
+        </div>
+        
+        <div class="conversion-grid">
+            <div class="format-box">
+                <h2>
+                    JSON Format
+                    <span class="format-indicator json-indicator">Unified</span>
+                </h2>
+                <textarea id="json-content" class="code-area" placeholder="Enter JSON component definition here...">{
+  "name": "Counter",
+  "entity": "data",
+  "structure": {
+    "root": {
+      "element": "div",
+      "class": "counter",
+      "parent": null
+    },
+    "root_child_0": {
+      "element": "h2",
+      "parent": "root"
+    },
+    "root_child_1": {
+      "element": "button",
+      "textContent": "+",
+      "parent": "root"
+    },
+    "root_child_2": {
+      "element": "button",
+      "textContent": "-",
+      "parent": "root"
+    },
+    "root_child_3": {
+      "element": "button",
+      "textContent": "Reset",
+      "parent": "root"
+    }
+  },
+  "bindings": [
+    {
+      "source": "data.count",
+      "target": "root_child_0.textContent",
+      "transform": "identity"
+    }
+  ],
+  "events": [
+    {
+      "element": "root_child_1",
+      "event": "click",
+      "action": "data.count++",
+      "modifiers": []
+    },
+    {
+      "element": "root_child_2",
+      "event": "click",
+      "action": "data.count--",
+      "modifiers": []
+    },
+    {
+      "element": "root_child_3",
+      "event": "click",
+      "action": "data.count = 0",
+      "modifiers": []
+    }
+  ]
+}</textarea>
+            </div>
+            
+            <div class="format-box">
+                <h2>
+                    DSL Format
+                    <span class="format-indicator dsl-indicator">Technical</span>
+                </h2>
+                <textarea id="dsl-content" class="code-area" placeholder="DSL syntax will appear here..."></textarea>
+            </div>
+            
+            <div class="format-box">
+                <h2>
+                    CNL Format
+                    <span class="format-indicator cnl-indicator">Natural</span>
+                </h2>
+                <textarea id="cnl-content" class="code-area" placeholder="CNL text will appear here..."></textarea>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        // Import converters
+        import { 
+            jsonToDSL, 
+            jsonToCNL,
+            ComponentCompiler,
+            CNLParser
+        } from '/legion/declarative-components/index.js';
+        
+        // Make functions available globally
+        window.jsonToDSLConversion = function() {
+            try {
+                const jsonText = document.getElementById('json-content').value;
+                const json = JSON.parse(jsonText);
+                const dsl = jsonToDSL(json);
+                document.getElementById('dsl-content').value = dsl;
+                showStatus('✅ Successfully converted JSON to DSL', 'success');
+            } catch (error) {
+                showStatus('❌ Conversion failed: ' + error.message, 'error');
+            }
+        };
+        
+        window.jsonToCNLConversion = function() {
+            try {
+                const jsonText = document.getElementById('json-content').value;
+                const json = JSON.parse(jsonText);
+                const cnl = jsonToCNL(json);
+                document.getElementById('cnl-content').value = cnl;
+                showStatus('✅ Successfully converted JSON to CNL', 'success');
+            } catch (error) {
+                showStatus('❌ Conversion failed: ' + error.message, 'error');
+            }
+        };
+        
+        window.dslToJSONConversion = async function() {
+            try {
+                const dslText = document.getElementById('dsl-content').value;
+                const compiler = new ComponentCompiler();
+                const componentDef = compiler.compile(dslText);
+                document.getElementById('json-content').value = JSON.stringify(componentDef, null, 2);
+                showStatus('✅ Successfully converted DSL to JSON', 'success');
+            } catch (error) {
+                showStatus('❌ Conversion failed: ' + error.message, 'error');
+            }
+        };
+        
+        window.dslToCNLConversion = async function() {
+            try {
+                const dslText = document.getElementById('dsl-content').value;
+                
+                // First compile DSL to JSON
+                const compiler = new ComponentCompiler();
+                const json = compiler.compile(dslText);
+                
+                // Then convert JSON to CNL
+                const cnl = jsonToCNL(json);
+                document.getElementById('cnl-content').value = cnl;
+                showStatus('✅ Successfully converted DSL to CNL', 'success');
+            } catch (error) {
+                showStatus('❌ Conversion failed: ' + error.message, 'error');
+            }
+        };
+        
+        window.cnlToJSONConversion = async function() {
+            try {
+                const cnlText = document.getElementById('cnl-content').value;
+                const parser = new CNLParser();
+                const json = parser.parse(cnlText);
+                document.getElementById('json-content').value = JSON.stringify(json, null, 2);
+                showStatus('✅ Successfully converted CNL to JSON', 'success');
+            } catch (error) {
+                showStatus('❌ Conversion failed: ' + error.message, 'error');
+            }
+        };
+        
+        window.cnlToDSLConversion = async function() {
+            try {
+                const cnlText = document.getElementById('cnl-content').value;
+                
+                // First parse CNL to JSON
+                const parser = new CNLParser();
+                const json = parser.parse(cnlText);
+                
+                // Then convert JSON to DSL
+                const dsl = jsonToDSL(json);
+                document.getElementById('dsl-content').value = dsl;
+                showStatus('✅ Successfully converted CNL to DSL', 'success');
+            } catch (error) {
+                showStatus('❌ Conversion failed: ' + error.message, 'error');
+            }
+        };
+        
+        window.testRoundTrip = async function() {
+            try {
+                const originalJSON = JSON.parse(document.getElementById('json-content').value);
+                
+                // JSON → DSL
+                const dsl = jsonToDSL(originalJSON);
+                document.getElementById('dsl-content').value = dsl;
+                
+                // DSL → JSON
+                const compiler = new ComponentCompiler();
+                const jsonFromDSL = compiler.compile(dsl);
+                
+                // JSON → CNL
+                const cnl = jsonToCNL(originalJSON);
+                document.getElementById('cnl-content').value = cnl;
+                
+                // CNL → JSON
+                const parser = new CNLParser();
+                const jsonFromCNL = parser.parse(cnl);
+                
+                // Verify round trip
+                const dslMatch = JSON.stringify(jsonFromDSL, null, 2) === JSON.stringify(originalJSON, null, 2);
+                const cnlMatch = JSON.stringify(jsonFromCNL, null, 2) === JSON.stringify(originalJSON, null, 2);
+                
+                if (dslMatch && cnlMatch) {
+                    showStatus('✅ Round trip successful! All conversions preserve structure.', 'success');
+                } else {
+                    showStatus('⚠️ Round trip completed but some structure may have changed.', 'success');
+                }
+            } catch (error) {
+                showStatus('❌ Round trip failed: ' + error.message, 'error');
+            }
+        };
+        
+        window.loadExample = function() {
+            const exampleJSON = {
+                "name": "TodoItem",
+                "entity": "todo",
+                "structure": {
+                    "root": {
+                        "element": "div",
+                        "class": "todo-item",
+                        "parent": null
+                    },
+                    "root_child_0": {
+                        "element": "input",
+                        "parent": "root",
+                        "attributes": {
+                            "type": "checkbox"
+                        }
+                    },
+                    "root_child_1": {
+                        "element": "span",
+                        "class": "todo-text",
+                        "parent": "root"
+                    },
+                    "root_child_2": {
+                        "element": "button",
+                        "class": "delete-btn",
+                        "textContent": "Delete",
+                        "parent": "root"
+                    }
+                },
+                "bindings": [
+                    {
+                        "source": "todo.completed",
+                        "target": "root_child_0.checked",
+                        "transform": "identity"
+                    },
+                    {
+                        "source": "todo.text",
+                        "target": "root_child_1.textContent",
+                        "transform": "identity"
+                    }
+                ],
+                "events": [
+                    {
+                        "element": "root_child_0",
+                        "event": "change",
+                        "action": "todo.completed = !todo.completed",
+                        "modifiers": []
+                    },
+                    {
+                        "element": "root_child_2",
+                        "event": "click",
+                        "action": "deleteTodo(todo.id)",
+                        "modifiers": []
+                    }
+                ]
+            };
+            
+            document.getElementById('json-content').value = JSON.stringify(exampleJSON, null, 2);
+            showStatus('✅ Example loaded. Try converting to DSL or CNL!', 'success');
+        };
+        
+        window.clearAll = function() {
+            document.getElementById('json-content').value = '';
+            document.getElementById('dsl-content').value = '';
+            document.getElementById('cnl-content').value = '';
+            showStatus('✅ All fields cleared', 'success');
+        };
+        
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status show ' + type;
+            
+            setTimeout(() => {
+                status.classList.remove('show');
+            }, 5000);
+        }
+        
+        // Initial message
+        console.log('Bidirectional Conversion System loaded!');
+        console.log('Available conversions: JSON ↔ DSL ↔ CNL');
+    </script>
+</body>
+</html>

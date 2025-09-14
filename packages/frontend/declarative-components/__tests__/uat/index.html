@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Declarative Components UAT</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section h2 {
+            color: #007bff;
+            margin-top: 0;
+        }
+        .component-container {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background: #fafafa;
+        }
+        .controls {
+            margin: 10px 0;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 4px;
+        }
+        .controls button {
+            margin: 0 5px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        .controls button:hover {
+            background: #0056b3;
+        }
+        .log {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .counter {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .counter h2 {
+            font-size: 48px;
+            margin: 10px 0;
+        }
+        .counter button {
+            margin: 0 5px;
+            padding: 10px 20px;
+            font-size: 18px;
+            border: 2px solid white;
+            background: transparent;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .counter button:hover {
+            background: white;
+            color: #667eea;
+        }
+        .profile-card {
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .profile-card h1 {
+            color: #333;
+            margin: 0 0 10px 0;
+            border: none;
+            padding: 0;
+        }
+        .profile-card .bio {
+            color: #666;
+            font-style: italic;
+        }
+        .profile-card .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .profile-card .status.online {
+            background: #28a745;
+            color: white;
+        }
+        .profile-card .status.offline {
+            background: #dc3545;
+            color: white;
+        }
+        .error {
+            color: #dc3545;
+            padding: 10px;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #155724;
+            padding: 10px;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Declarative Components UAT Testing</h1>
+    
+    <!-- Test 1: DSL Component Compilation -->
+    <div class="test-section">
+        <h2>Test 1: DSL Component Compilation</h2>
+        <div class="controls">
+            <button onclick="testDSLCompilation()">Run DSL Test</button>
+            <button onclick="clearLog('dsl-log')">Clear Log</button>
+        </div>
+        <div id="dsl-component" class="component-container"></div>
+        <div id="dsl-log" class="log"></div>
+    </div>
+
+    <!-- Test 2: CNL to JSON Compilation -->
+    <div class="test-section">
+        <h2>Test 2: CNL to JSON Compilation</h2>
+        <div class="controls">
+            <textarea id="cnl-input" rows="6" cols="80" style="width: 100%;">Define UserCard with user:
+  A container with class "profile-card" containing:
+    A heading showing the name
+    A paragraph with class "bio" showing the bio
+    A span with class "status" showing "Active" if active otherwise "Inactive"</textarea>
+            <br><br>
+            <button onclick="testCNLCompilation()">Compile CNL</button>
+            <button onclick="clearLog('cnl-log')">Clear Log</button>
+        </div>
+        <div id="cnl-component" class="component-container"></div>
+        <div id="cnl-log" class="log"></div>
+    </div>
+
+    <!-- Test 3: Counter Component with Reactive Binding -->
+    <div class="test-section">
+        <h2>Test 3: Counter Component (Reactive Binding)</h2>
+        <div class="controls">
+            <button onclick="testCounterComponent()">Create Counter</button>
+            <button onclick="clearLog('counter-log')">Clear Log</button>
+        </div>
+        <div id="counter-component" class="component-container"></div>
+        <div id="counter-log" class="log"></div>
+    </div>
+
+    <!-- Test 4: Live Data Updates -->
+    <div class="test-section">
+        <h2>Test 4: Live Data Updates</h2>
+        <div class="controls">
+            <button onclick="testLiveUpdates()">Start Live Updates</button>
+            <button onclick="stopLiveUpdates()">Stop Updates</button>
+            <button onclick="clearLog('live-log')">Clear Log</button>
+        </div>
+        <div id="live-component" class="component-container"></div>
+        <div id="live-log" class="log"></div>
+    </div>
+
+    <!-- Test 5: Component Lifecycle -->
+    <div class="test-section">
+        <h2>Test 5: Component Lifecycle</h2>
+        <div class="controls">
+            <button onclick="testLifecycle()">Test Lifecycle</button>
+            <button onclick="clearLog('lifecycle-log')">Clear Log</button>
+        </div>
+        <div id="lifecycle-component" class="component-container"></div>
+        <div id="lifecycle-log" class="log"></div>
+    </div>
+
+    <script type="module">
+        // Import all the necessary modules
+        import { 
+            ComponentCompiler,
+            CNLParser,
+            CNLTranspiler,
+            ComponentLifecycle,
+            EquationSolver,
+            DataStoreAdapter
+        } from '/src/index.js';
+
+        // Make them available globally for the test functions
+        window.DeclarativeComponents = {
+            ComponentCompiler,
+            CNLParser,
+            CNLTranspiler,
+            ComponentLifecycle,
+            EquationSolver,
+            DataStoreAdapter
+        };
+
+        // Initialize
+        console.log('Declarative Components loaded:', window.DeclarativeComponents);
+        addLog('dsl-log', '✅ Modules loaded successfully');
+    </script>
+
+    <script>
+        // Logging helper
+        function addLog(logId, message, type = 'info') {
+            const log = document.getElementById(logId);
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.innerHTML = `[${timestamp}] ${message}`;
+            if (type === 'error') entry.style.color = '#dc3545';
+            if (type === 'success') entry.style.color = '#28a745';
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function clearLog(logId) {
+            document.getElementById(logId).innerHTML = '';
+        }
+
+        // Test 1: DSL Compilation
+        async function testDSLCompilation() {
+            try {
+                addLog('dsl-log', 'Starting DSL compilation test...');
+                
+                const dsl = `Counter :: state =>
+                    div.counter [
+                        h2 { state.count }
+                        button @click="count++" { "+1" }
+                        button @click="count--" { "-1" }
+                        button @click="count = 0" { "Reset" }
+                    ]`;
+                
+                addLog('dsl-log', 'DSL Input: ' + dsl.substring(0, 50) + '...');
+                
+                const compiler = new window.DeclarativeComponents.ComponentCompiler();
+                const componentDef = compiler.compile(dsl);
+                
+                addLog('dsl-log', 'Compiled to JSON: ' + JSON.stringify(componentDef).substring(0, 100) + '...', 'success');
+                addLog('dsl-log', `Component name: ${componentDef.name}`, 'success');
+                addLog('dsl-log', `Structure elements: ${Object.keys(componentDef.structure).length}`, 'success');
+                addLog('dsl-log', `Bindings: ${componentDef.bindings.length}`, 'success');
+                addLog('dsl-log', `Events: ${componentDef.events.length}`, 'success');
+                
+                // Mount the component
+                const lifecycle = new window.DeclarativeComponents.ComponentLifecycle();
+                const container = document.getElementById('dsl-component');
+                container.innerHTML = '';
+                
+                const instance = await lifecycle.mount(componentDef, { count: 0 }, container);
+                addLog('dsl-log', '✅ Component mounted successfully!', 'success');
+                
+            } catch (error) {
+                addLog('dsl-log', '❌ Error: ' + error.message, 'error');
+                console.error(error);
+            }
+        }
+
+        // Test 2: CNL Compilation
+        async function testCNLCompilation() {
+            try {
+                addLog('cnl-log', 'Starting CNL compilation test...');
+                
+                const cnlText = document.getElementById('cnl-input').value;
+                addLog('cnl-log', 'Parsing CNL...');
+                
+                const parser = new window.DeclarativeComponents.CNLParser();
+                const ast = parser.parse(cnlText);
+                addLog('cnl-log', 'AST generated: ' + JSON.stringify(ast).substring(0, 100) + '...', 'success');
+                
+                const transpiler = new window.DeclarativeComponents.CNLTranspiler();
+                const componentDef = transpiler.transpile(ast);
+                addLog('cnl-log', 'Transpiled to JSON: ' + JSON.stringify(componentDef).substring(0, 100) + '...', 'success');
+                
+                // Mount the component
+                const lifecycle = new window.DeclarativeComponents.ComponentLifecycle();
+                const container = document.getElementById('cnl-component');
+                container.innerHTML = '';
+                
+                const instance = await lifecycle.mount(componentDef, {
+                    name: 'Jane Smith',
+                    bio: 'Full-stack developer passionate about clean code',
+                    active: true
+                }, container);
+                
+                addLog('cnl-log', '✅ CNL component mounted successfully!', 'success');
+                
+            } catch (error) {
+                addLog('cnl-log', '❌ Error: ' + error.message, 'error');
+                console.error(error);
+            }
+        }
+
+        // Test 3: Counter Component
+        async function testCounterComponent() {
+            try {
+                addLog('counter-log', 'Creating interactive counter component...');
+                
+                const componentDef = {
+                    name: "Counter",
+                    entity: "state",
+                    structure: {
+                        "root": {
+                            "element": "div",
+                            "class": "counter"
+                        },
+                        "root_child_0": {
+                            "element": "h2",
+                            "parent": "root"
+                        },
+                        "root_child_1": {
+                            "element": "button",
+                            "parent": "root",
+                            "textContent": "+1"
+                        },
+                        "root_child_2": {
+                            "element": "button",
+                            "parent": "root",
+                            "textContent": "-1"
+                        },
+                        "root_child_3": {
+                            "element": "button",
+                            "parent": "root",
+                            "textContent": "Reset"
+                        }
+                    },
+                    bindings: [
+                        {
+                            "source": "state.count",
+                            "target": "root_child_0.textContent",
+                            "transform": "identity"
+                        }
+                    ],
+                    events: [
+                        {
+                            "element": "root_child_1",
+                            "event": "click",
+                            "action": "count++",
+                            "modifiers": []
+                        },
+                        {
+                            "element": "root_child_2",
+                            "event": "click",
+                            "action": "count--",
+                            "modifiers": []
+                        },
+                        {
+                            "element": "root_child_3",
+                            "event": "click",
+                            "action": "count = 0",
+                            "modifiers": []
+                        }
+                    ]
+                };
+                
+                const lifecycle = new window.DeclarativeComponents.ComponentLifecycle();
+                const container = document.getElementById('counter-component');
+                container.innerHTML = '';
+                
+                const instance = await lifecycle.mount(componentDef, { count: 42 }, container);
+                addLog('counter-log', '✅ Counter mounted with initial value: 42', 'success');
+                addLog('counter-log', 'Try clicking the buttons to test reactivity!', 'info');
+                
+            } catch (error) {
+                addLog('counter-log', '❌ Error: ' + error.message, 'error');
+                console.error(error);
+            }
+        }
+
+        // Test 4: Live Updates
+        let updateInterval = null;
+        async function testLiveUpdates() {
+            try {
+                addLog('live-log', 'Starting live data updates...');
+                
+                const componentDef = {
+                    name: "LiveData",
+                    entity: "data",
+                    structure: {
+                        "root": {
+                            "element": "div",
+                            "class": "profile-card"
+                        },
+                        "root_child_0": {
+                            "element": "h3",
+                            "parent": "root",
+                            "textContent": "Live Data Demo"
+                        },
+                        "root_child_1": {
+                            "element": "p",
+                            "parent": "root"
+                        },
+                        "root_child_2": {
+                            "element": "p",
+                            "parent": "root"
+                        },
+                        "root_child_3": {
+                            "element": "span",
+                            "parent": "root",
+                            "class": "status"
+                        }
+                    },
+                    bindings: [
+                        {
+                            "source": "data.timestamp",
+                            "target": "root_child_1.textContent",
+                            "transform": "identity"
+                        },
+                        {
+                            "source": "data.counter",
+                            "target": "root_child_2.textContent",
+                            "transform": "identity"
+                        },
+                        {
+                            "source": "data.status",
+                            "target": "root_child_3.textContent",
+                            "transform": "identity"
+                        }
+                    ]
+                };
+                
+                const lifecycle = new window.DeclarativeComponents.ComponentLifecycle();
+                const container = document.getElementById('live-component');
+                container.innerHTML = '';
+                
+                const dataStore = {
+                    timestamp: new Date().toLocaleTimeString(),
+                    counter: 0,
+                    status: 'Active'
+                };
+                
+                const instance = await lifecycle.mount(componentDef, dataStore, container);
+                
+                // Start live updates
+                let count = 0;
+                updateInterval = setInterval(() => {
+                    count++;
+                    dataStore.timestamp = new Date().toLocaleTimeString();
+                    dataStore.counter = count;
+                    dataStore.status = count % 2 === 0 ? 'Active' : 'Processing';
+                    
+                    // Trigger updates through the equation solver
+                    if (instance.solver) {
+                        instance.solver.evaluate();
+                    }
+                    
+                    addLog('live-log', `Update ${count}: ${dataStore.timestamp}`);
+                }, 1000);
+                
+                addLog('live-log', '✅ Live updates started (1 second interval)', 'success');
+                
+            } catch (error) {
+                addLog('live-log', '❌ Error: ' + error.message, 'error');
+                console.error(error);
+            }
+        }
+
+        function stopLiveUpdates() {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+                updateInterval = null;
+                addLog('live-log', '⏹ Live updates stopped', 'info');
+            }
+        }
+
+        // Test 5: Component Lifecycle
+        async function testLifecycle() {
+            try {
+                addLog('lifecycle-log', 'Testing component lifecycle hooks...');
+                
+                const componentDef = {
+                    name: "LifecycleTest",
+                    entity: "state",
+                    structure: {
+                        "root": {
+                            "element": "div",
+                            "class": "profile-card"
+                        },
+                        "root_child_0": {
+                            "element": "h3",
+                            "parent": "root",
+                            "textContent": "Lifecycle Test Component"
+                        },
+                        "root_child_1": {
+                            "element": "p",
+                            "parent": "root"
+                        }
+                    },
+                    bindings: [
+                        {
+                            "source": "state.message",
+                            "target": "root_child_1.textContent",
+                            "transform": "identity"
+                        }
+                    ]
+                };
+                
+                const lifecycle = new window.DeclarativeComponents.ComponentLifecycle();
+                const container = document.getElementById('lifecycle-component');
+                container.innerHTML = '';
+                
+                // Add lifecycle hooks
+                lifecycle.addHook('beforeMount', (context) => {
+                    addLog('lifecycle-log', '🔄 beforeMount hook called', 'info');
+                    context.state.message = 'Component initializing...';
+                });
+                
+                lifecycle.addHook('mounted', (context) => {
+                    addLog('lifecycle-log', '✅ mounted hook called', 'success');
+                    setTimeout(() => {
+                        context.state.message = 'Component is ready!';
+                        if (context.solver) {
+                            context.solver.evaluate();
+                        }
+                    }, 1000);
+                });
+                
+                lifecycle.addHook('beforeUpdate', (context) => {
+                    addLog('lifecycle-log', '🔄 beforeUpdate hook called', 'info');
+                });
+                
+                lifecycle.addHook('updated', (context) => {
+                    addLog('lifecycle-log', '✅ updated hook called', 'success');
+                });
+                
+                const instance = await lifecycle.mount(componentDef, { message: 'Initial state' }, container);
+                
+                // Test unmount after 5 seconds
+                setTimeout(async () => {
+                    addLog('lifecycle-log', '🔄 Unmounting component...', 'info');
+                    
+                    lifecycle.addHook('beforeUnmount', (context) => {
+                        addLog('lifecycle-log', '🔄 beforeUnmount hook called', 'info');
+                    });
+                    
+                    lifecycle.addHook('unmounted', (context) => {
+                        addLog('lifecycle-log', '✅ unmounted hook called', 'success');
+                        container.innerHTML = '<p style="color: #666;">Component unmounted</p>';
+                    });
+                    
+                    await lifecycle.unmount(instance);
+                }, 5000);
+                
+                addLog('lifecycle-log', 'Component will unmount in 5 seconds...', 'info');
+                
+            } catch (error) {
+                addLog('lifecycle-log', '❌ Error: ' + error.message, 'error');
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>

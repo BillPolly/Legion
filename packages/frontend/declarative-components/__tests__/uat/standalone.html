@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Declarative Components UAT - Standalone</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section h2 {
+            color: #007bff;
+            margin-top: 0;
+        }
+        .component-container {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background: #fafafa;
+            min-height: 50px;
+        }
+        .controls {
+            margin: 10px 0;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 4px;
+        }
+        .controls button {
+            margin: 0 5px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        .controls button:hover {
+            background: #0056b3;
+        }
+        .log {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .counter {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .counter h2 {
+            font-size: 48px;
+            margin: 10px 0;
+            color: white;
+        }
+        .counter button {
+            margin: 0 5px;
+            padding: 10px 20px;
+            font-size: 18px;
+            border: 2px solid white;
+            background: transparent;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .counter button:hover {
+            background: white;
+            color: #667eea;
+        }
+        .success {
+            color: #28a745;
+        }
+        .error {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Declarative Components UAT - Standalone Test</h1>
+    
+    <!-- Test 1: Simple Counter -->
+    <div class="test-section">
+        <h2>Test 1: Simple Counter (Manual DOM)</h2>
+        <div class="controls">
+            <button onclick="test1()">Create Counter</button>
+            <button onclick="clearTest('test1')">Clear</button>
+        </div>
+        <div id="test1-component" class="component-container"></div>
+        <div id="test1-log" class="log"></div>
+    </div>
+
+    <!-- Test 2: Data Binding -->
+    <div class="test-section">
+        <h2>Test 2: Reactive Data Binding</h2>
+        <div class="controls">
+            <button onclick="test2()">Create Component</button>
+            <button onclick="updateData2()">Update Data</button>
+            <button onclick="clearTest('test2')">Clear</button>
+        </div>
+        <div id="test2-component" class="component-container"></div>
+        <div id="test2-log" class="log"></div>
+    </div>
+
+    <!-- Test 3: JSON Component Definition -->
+    <div class="test-section">
+        <h2>Test 3: JSON Component Definition</h2>
+        <div class="controls">
+            <button onclick="test3()">Create from JSON</button>
+            <button onclick="clearTest('test3')">Clear</button>
+        </div>
+        <div id="test3-component" class="component-container"></div>
+        <div id="test3-log" class="log"></div>
+        <pre id="test3-json" style="background: #f4f4f4; padding: 10px; border-radius: 4px; overflow: auto;"></pre>
+    </div>
+
+    <script>
+        // Global state for tests
+        let testStates = {};
+
+        // Logging helper
+        function addLog(testId, message, type = 'info') {
+            const log = document.getElementById(testId + '-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = type;
+            entry.innerHTML = `[${timestamp}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function clearTest(testId) {
+            document.getElementById(testId + '-component').innerHTML = '';
+            document.getElementById(testId + '-log').innerHTML = '';
+            if (document.getElementById(testId + '-json')) {
+                document.getElementById(testId + '-json').innerHTML = '';
+            }
+            delete testStates[testId];
+        }
+
+        // Test 1: Simple Counter with manual DOM manipulation
+        function test1() {
+            try {
+                addLog('test1', 'Creating simple counter component...');
+                
+                const container = document.getElementById('test1-component');
+                container.innerHTML = '';
+                
+                // Create counter structure
+                const counterDiv = document.createElement('div');
+                counterDiv.className = 'counter';
+                
+                const display = document.createElement('h2');
+                display.textContent = '0';
+                
+                const btnIncrement = document.createElement('button');
+                btnIncrement.textContent = '+1';
+                
+                const btnDecrement = document.createElement('button');
+                btnDecrement.textContent = '-1';
+                
+                const btnReset = document.createElement('button');
+                btnReset.textContent = 'Reset';
+                
+                counterDiv.appendChild(display);
+                counterDiv.appendChild(btnIncrement);
+                counterDiv.appendChild(btnDecrement);
+                counterDiv.appendChild(btnReset);
+                
+                container.appendChild(counterDiv);
+                
+                // State management
+                let count = 0;
+                
+                function updateDisplay() {
+                    display.textContent = count;
+                    addLog('test1', `Count updated to: ${count}`);
+                }
+                
+                // Event handlers
+                btnIncrement.addEventListener('click', () => {
+                    count++;
+                    updateDisplay();
+                });
+                
+                btnDecrement.addEventListener('click', () => {
+                    count--;
+                    updateDisplay();
+                });
+                
+                btnReset.addEventListener('click', () => {
+                    count = 0;
+                    updateDisplay();
+                });
+                
+                addLog('test1', '✅ Counter created successfully!', 'success');
+                addLog('test1', 'Click the buttons to test interactivity');
+                
+            } catch (error) {
+                addLog('test1', '❌ Error: ' + error.message, 'error');
+                console.error(error);
+            }
+        }
+
+        // Test 2: Reactive Data Binding Simulation
+        function test2() {
+            try {
+                addLog('test2', 'Creating reactive component...');
+                
+                const container = document.getElementById('test2-component');
+                container.innerHTML = '';
+                
+                // Create structure
+                const card = document.createElement('div');
+                card.style.padding = '20px';
+                card.style.background = 'white';
+                card.style.borderRadius = '8px';
+                
+                const title = document.createElement('h3');
+                const message = document.createElement('p');
+                const timestamp = document.createElement('small');
+                
+                card.appendChild(title);
+                card.appendChild(message);
+                card.appendChild(timestamp);
+                container.appendChild(card);
+                
+                // Create reactive data store
+                const data = {
+                    title: 'Hello World',
+                    message: 'This is a reactive component',
+                    timestamp: new Date().toLocaleTimeString()
+                };
+                
+                // Simple reactive binding
+                function updateBindings() {
+                    title.textContent = data.title;
+                    message.textContent = data.message;
+                    timestamp.textContent = `Last updated: ${data.timestamp}`;
+                    addLog('test2', 'Bindings updated');
+                }
+                
+                // Store state for external updates
+                testStates.test2 = { data, updateBindings };
+                
+                // Initial render
+                updateBindings();
+                
+                addLog('test2', '✅ Reactive component created!', 'success');
+                addLog('test2', 'Click "Update Data" to test reactivity');
+                
+            } catch (error) {
+                addLog('test2', '❌ Error: ' + error.message, 'error');
+                console.error(error);
+            }
+        }
+
+        function updateData2() {
+            if (testStates.test2) {
+                const { data, updateBindings } = testStates.test2;
+                data.title = `Updated: ${Math.random().toString(36).substring(7)}`;
+                data.message = `Random number: ${Math.floor(Math.random() * 100)}`;
+                data.timestamp = new Date().toLocaleTimeString();
+                updateBindings();
+                addLog('test2', 'Data updated programmatically', 'success');
+            } else {
+                addLog('test2', 'Create component first!', 'error');
+            }
+        }
+
+        // Test 3: JSON Component Definition
+        function test3() {
+            try {
+                addLog('test3', 'Creating component from JSON definition...');
+                
+                // JSON Component Definition (matching our unified schema)
+                const componentDef = {
+                    "name": "UserProfile",
+                    "entity": "user",
+                    "structure": {
+                        "root": {
+                            "element": "div",
+                            "class": "profile-card",
+                            "attributes": {
+                                "style": "padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
+                            }
+                        },
+                        "root_child_0": {
+                            "element": "h2",
+                            "parent": "root",
+                            "attributes": {
+                                "style": "color: #333; margin: 0 0 10px 0;"
+                            }
+                        },
+                        "root_child_1": {
+                            "element": "p",
+                            "parent": "root",
+                            "class": "bio",
+                            "attributes": {
+                                "style": "color: #666; font-style: italic;"
+                            }
+                        },
+                        "root_child_2": {
+                            "element": "div",
+                            "parent": "root",
+                            "attributes": {
+                                "style": "margin-top: 15px;"
+                            }
+                        },
+                        "root_child_2_0": {
+                            "element": "span",
+                            "parent": "root_child_2",
+                            "textContent": "Status: ",
+                            "attributes": {
+                                "style": "font-weight: bold;"
+                            }
+                        },
+                        "root_child_2_1": {
+                            "element": "span",
+                            "parent": "root_child_2",
+                            "class": "status",
+                            "attributes": {
+                                "style": "color: #28a745;"
+                            }
+                        }
+                    },
+                    "bindings": [
+                        {
+                            "source": "user.name",
+                            "target": "root_child_0.textContent",
+                            "transform": "identity"
+                        },
+                        {
+                            "source": "user.bio",
+                            "target": "root_child_1.textContent",
+                            "transform": "identity"
+                        },
+                        {
+                            "source": "user.active",
+                            "target": "root_child_2_1.textContent",
+                            "transform": "value => value ? 'Active' : 'Inactive'"
+                        }
+                    ]
+                };
+                
+                // Display JSON
+                document.getElementById('test3-json').textContent = JSON.stringify(componentDef, null, 2);
+                
+                // Manual implementation of component mounting
+                const container = document.getElementById('test3-component');
+                container.innerHTML = '';
+                
+                // Create elements from structure
+                const elements = {};
+                
+                // Sort keys to ensure parents are created before children
+                const sortedKeys = Object.keys(componentDef.structure).sort((a, b) => {
+                    const aDepth = a.split('_').length;
+                    const bDepth = b.split('_').length;
+                    return aDepth - bDepth;
+                });
+                
+                sortedKeys.forEach(key => {
+                    const def = componentDef.structure[key];
+                    const elem = document.createElement(def.element);
+                    
+                    if (def.class) {
+                        elem.className = def.class;
+                    }
+                    
+                    if (def.id) {
+                        elem.id = def.id;
+                    }
+                    
+                    if (def.textContent) {
+                        elem.textContent = def.textContent;
+                    }
+                    
+                    if (def.attributes) {
+                        Object.entries(def.attributes).forEach(([attr, value]) => {
+                            if (attr === 'style') {
+                                elem.style.cssText = value;
+                            } else {
+                                elem.setAttribute(attr, value);
+                            }
+                        });
+                    }
+                    
+                    elements[key] = elem;
+                    
+                    // Append to parent or container
+                    if (def.parent && elements[def.parent]) {
+                        elements[def.parent].appendChild(elem);
+                    } else if (!def.parent) {
+                        container.appendChild(elem);
+                    }
+                });
+                
+                // Apply bindings
+                const userData = {
+                    name: 'John Doe',
+                    bio: 'Full-stack developer with a passion for clean, declarative code',
+                    active: true
+                };
+                
+                componentDef.bindings.forEach(binding => {
+                    const [targetElement, targetProp] = binding.target.split('.');
+                    const value = binding.source.split('.').reduce((obj, key) => {
+                        return obj[key.replace(componentDef.entity, 'userData')];
+                    }, { userData })[binding.source.split('.').pop()];
+                    
+                    if (elements[targetElement]) {
+                        if (targetProp === 'textContent') {
+                            if (binding.transform === 'identity') {
+                                elements[targetElement].textContent = value;
+                            } else {
+                                // Simple eval for demo (not production safe!)
+                                const transformFn = eval(`(${binding.transform})`);
+                                elements[targetElement].textContent = transformFn(value);
+                            }
+                        }
+                    }
+                });
+                
+                addLog('test3', '✅ Component created from JSON definition!', 'success');
+                addLog('test3', `Structure elements: ${Object.keys(componentDef.structure).length}`);
+                addLog('test3', `Bindings applied: ${componentDef.bindings.length}`);
+                
+            } catch (error) {
+                addLog('test3', '❌ Error: ' + error.message, 'error');
+                console.error(error);
+            }
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            addLog('test1', 'Ready for testing');
+            addLog('test2', 'Ready for testing');
+            addLog('test3', 'Ready for testing');
+        });
+    </script>
+</body>
+</html>

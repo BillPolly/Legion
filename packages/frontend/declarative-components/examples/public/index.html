@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legion Declarative Components - Interactive Examples</title>
+    
+    <!-- Import maps for Legion packages -->
+    <script type="importmap">
+    {
+        "imports": {
+            "@legion/declarative-components": "/legion/declarative-components/index.js",
+            "@legion/resource-manager": "/legion/resource-manager/index.js"
+        }
+    }
+    </script>
+    
+    <!-- Monaco Editor for syntax highlighting -->
+    <script src="https://unpkg.com/monaco-editor@0.44.0/min/vs/loader.js"></script>
+    
+    <!-- Styling -->
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --success-color: #059669;
+            --error-color: #dc2626;
+            --warning-color: #d97706;
+            --background-color: #f8fafc;
+            --surface-color: #ffffff;
+            --border-color: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            
+            --font-mono: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .app-header {
+            background: var(--surface-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary-color), #3b82f6);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+            min-height: calc(100vh - 80px);
+        }
+
+        .sidebar {
+            background: var(--surface-color);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            height: fit-content;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .examples-list {
+            padding: 1rem;
+        }
+
+        .category {
+            margin-bottom: 1.5rem;
+        }
+
+        .category-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+            padding: 0 0.5rem;
+        }
+
+        .example-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            margin-bottom: 0.25rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+
+        .example-item:hover {
+            background-color: var(--background-color);
+        }
+
+        .example-item.active {
+            background-color: #eff6ff;
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .example-item-icon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--text-secondary);
+            margin-right: 0.75rem;
+        }
+
+        .example-item.active .example-item-icon {
+            background-color: var(--primary-color);
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            gap: 1rem;
+            min-height: 600px;
+        }
+
+        .workspace-header {
+            background: var(--surface-color);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .workspace-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .workspace-description {
+            color: var(--text-secondary);
+        }
+
+        .editor-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            background: var(--surface-color);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        .editor-panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            background: #f8fafc;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .editor-wrapper {
+            flex: 1;
+            min-height: 400px;
+            position: relative;
+        }
+
+        #dsl-editor {
+            width: 100%;
+            height: 100%;
+            min-height: 400px;
+        }
+
+        .preview-panel {
+            flex: 1;
+            padding: 1.5rem;
+            background: #fefefe;
+            border-left: 1px solid var(--border-color);
+        }
+
+        .preview-container {
+            width: 100%;
+            height: 100%;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            min-height: 350px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+        }
+
+        .preview-container.has-content {
+            border-style: solid;
+            align-items: flex-start;
+            justify-content: flex-start;
+        }
+
+        .status-bar {
+            background: var(--surface-color);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.875rem;
+        }
+
+        .status-left {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--text-secondary);
+        }
+
+        .status-dot.success { background-color: var(--success-color); }
+        .status-dot.error { background-color: var(--error-color); }
+        .status-dot.warning { background-color: var(--warning-color); }
+
+        .status-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--surface-color);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: var(--background-color);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .error-display {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-top: 1rem;
+            color: var(--error-color);
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            line-height: 1.4;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* Component Styles for Examples */
+        .user-card {
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            background: white;
+            box-shadow: var(--shadow-sm);
+            max-width: 300px;
+        }
+
+        .card-header {
+            margin-bottom: 1rem;
+        }
+
+        .card-header h2 {
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .card-body {
+            margin-bottom: 1rem;
+        }
+
+        .card-body p {
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .counter {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .toggle {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .toggle:hover,
+        .counter:hover {
+            opacity: 0.9;
+        }
+
+        /* Data Grid Styles */
+        .data-grid {
+            max-width: 800px;
+            margin: 20px auto;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        /* Grid Container - Main grid layout */
+        .grid-container {
+            display: grid;
+            grid-template-columns: 2fr 1.5fr 1fr 1.5fr;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        /* Header row participates in the grid */
+        .grid-header-row {
+            display: contents;
+        }
+        
+        /* Body rows use display: contents to place cells in parent grid */
+        .grid-row {
+            display: contents;
+        }
+        
+        /* Grid cells are positioned by the parent grid */
+        .grid-cell {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+            border-right: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            background: white;
+            transition: background-color 0.2s;
+        }
+        
+        /* Header cells have special styling */
+        .grid-cell.header {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        /* Remove right border from last column */
+        .grid-cell:nth-child(4n) {
+            border-right: none;
+        }
+        
+        /* Hover effect for entire row (4 cells at a time) */
+        .grid-row:hover .grid-cell {
+            background: #f1f3f4;
+        }
+        
+        /* Action buttons in cells */
+        .grid-cell.actions {
+            gap: 8px;
+        }
+        
+        .edit-btn, .delete-btn {
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .edit-btn:hover {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        
+        .delete-btn:hover {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+        
+        /* Header section above the grid */
+        .grid-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e1e5e9;
+        }
+        
+        .grid-header h3 {
+            margin: 0;
+            color: #2c3e50;
+        }
+        
+        /* Controls section in header */
+        .grid-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .grid-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .sort-btn, .add-btn {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: #f8f9fa;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .sort-btn:hover, .add-btn:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+        }
+        
+        .add-btn {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        
+        .add-btn:hover {
+            background: #0056b3;
+        }
+        
+        .grid-footer {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        .grid-footer p {
+            margin: 0;
+        }
+
+        /* Popup Menu Styles */
+        .popup-demo {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .demo-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .demo-header h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .demo-header p {
+            color: #6c757d;
+            margin: 0;
+        }
+        
+        .menu-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .menu-group h4 {
+            margin-bottom: 15px;
+            color: #495057;
+        }
+        
+        .menu-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .menu-trigger, .user-menu-trigger {
+            padding: 12px 20px;
+            border: 1px solid #ddd;
+            background: #f8f9fa;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .menu-trigger:hover, .user-menu-trigger:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+        }
+        
+        .menu-arrow {
+            margin-left: auto;
+            font-size: 12px;
+        }
+        
+        .popup-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            min-width: 200px;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+        
+        .popup-menu.context {
+            min-width: 180px;
+        }
+        
+        .popup-menu.user-menu {
+            min-width: 240px;
+        }
+        
+        .menu-header {
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .user-name {
+            display: block;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .user-email {
+            display: block;
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 2px;
+        }
+        
+        .menu-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            color: #495057;
+        }
+        
+        .menu-item:hover {
+            background: #f1f3f4;
+        }
+        
+        .menu-item.danger {
+            color: #dc3545;
+        }
+        
+        .menu-item.danger:hover {
+            background: #f8d7da;
+        }
+        
+        .menu-separator {
+            height: 1px;
+            background: #dee2e6;
+            margin: 4px 0;
+        }
+        
+        .action-log {
+            border-top: 2px solid #e1e5e9;
+            padding-top: 20px;
+        }
+        
+        .action-log h4 {
+            margin-bottom: 15px;
+            color: #495057;
+        }
+        
+        .log-container {
+            background: #f8f9fa;
+            border-radius: 4px;
+            padding: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .log-entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        
+        .timestamp {
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        .action {
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        .no-actions {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            margin: 0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .editor-container {
+                grid-template-columns: 1fr;
+            }
+
+            .editor-panel {
+                min-height: 300px;
+            }
+
+            .preview-panel {
+                border-left: none;
+                border-top: 1px solid var(--border-color);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Application Header -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">L</div>
+                <span class="logo-text">Declarative Components</span>
+            </div>
+            <div class="header-actions">
+                <span class="status-indicator">
+                    <div class="status-dot success"></div>
+                    <span>Interactive Examples</span>
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Sidebar with Examples -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2 class="sidebar-title">Examples</h2>
+                <p class="sidebar-subtitle">Interactive DSL Components</p>
+            </div>
+            <div class="examples-list" id="examples-list">
+                <div class="category">
+                    <div class="category-title">Basic</div>
+                    <div class="example-item active" data-category="basic" data-name="UserCard">
+                        <div class="example-item-icon"></div>
+                        User Card
+                    </div>
+                    <div class="example-item" data-category="basic" data-name="Counter">
+                        <div class="example-item-icon"></div>
+                        Counter
+                    </div>
+                    <div class="example-item" data-category="basic" data-name="SimpleForm">
+                        <div class="example-item-icon"></div>
+                        Simple Form
+                    </div>
+                </div>
+                
+                <div class="category">
+                    <div class="category-title">Forms</div>
+                    <div class="example-item" data-category="forms" data-name="LoginForm">
+                        <div class="example-item-icon"></div>
+                        Login Form
+                    </div>
+                    <div class="example-item" data-category="forms" data-name="ContactForm">
+                        <div class="example-item-icon"></div>
+                        Contact Form
+                    </div>
+                </div>
+                
+                <div class="category">
+                    <div class="category-title">Lists</div>
+                    <div class="example-item" data-category="lists" data-name="DataGrid">
+                        <div class="example-item-icon"></div>
+                        Data Grid
+                    </div>
+                    <div class="example-item" data-category="lists" data-name="TodoApp">
+                        <div class="example-item-icon"></div>
+                        Todo App
+                    </div>
+                    <div class="example-item" data-category="lists" data-name="ShoppingCart">
+                        <div class="example-item-icon"></div>
+                        Shopping Cart
+                    </div>
+                </div>
+                
+                <div class="category">
+                    <div class="category-title">Advanced</div>
+                    <div class="example-item" data-category="advanced" data-name="PopupMenu">
+                        <div class="example-item-icon"></div>
+                        Popup Menu
+                    </div>
+                    <div class="example-item" data-category="advanced" data-name="Dashboard">
+                        <div class="example-item-icon"></div>
+                        Dashboard
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="workspace">
+            <!-- Workspace Header -->
+            <div class="workspace-header">
+                <h1 class="workspace-title" id="current-example-title">User Card Example</h1>
+                <p class="workspace-description" id="current-example-description">
+                    A basic user profile card demonstrating data binding, conditional rendering, and event handling
+                </p>
+            </div>
+
+            <!-- Editor and Preview -->
+            <div class="editor-container">
+                <!-- DSL Editor -->
+                <div class="editor-panel">
+                    <div class="panel-header">
+                        DSL Editor
+                    </div>
+                    <div class="editor-wrapper">
+                        <div id="dsl-editor">
+                            <!-- Fallback textarea when Monaco doesn't load -->
+                            <textarea id="dsl-editor-textarea" style="width: 100%; height: 100%; min-height: 400px; font-family: var(--font-mono); font-size: 14px; padding: 1rem; border: none; outline: none; resize: none;"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Preview -->
+                <div class="editor-panel">
+                    <div class="panel-header">
+                        Live Preview
+                    </div>
+                    <div class="preview-panel">
+                        <div class="preview-container" id="preview-container">
+                            Click on an example to see the live preview
+                        </div>
+                        <div id="error-display" class="error-display" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Bar -->
+            <div class="status-bar">
+                <div class="status-left">
+                    <div class="status-indicator">
+                        <div class="status-dot success" id="compile-status"></div>
+                        <span id="compile-message">Ready</span>
+                    </div>
+                    <div class="status-indicator">
+                        <span id="element-count">0 elements</span>
+                    </div>
+                </div>
+                <div class="status-actions">
+                    <button class="btn" id="reset-btn">Reset</button>
+                    <button class="btn btn-primary" id="refresh-btn">Refresh</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Load the main application script -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>

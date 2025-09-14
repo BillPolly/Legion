@@ -54,10 +54,9 @@ export class BaseServer {
     // Apply basic middleware
     this.setupMiddleware();
     
-    // Discover Legion packages (unless overridden by subclass)
-    if (this.monorepoRoot && !this.skipLegionPackageDiscovery) {
-      await this.discoverLegionPackages();
-    }
+    // Initialize package caches
+    this.packageCache = new Map();
+    this.fileCache = new Map();
   }
 
   /**
@@ -298,7 +297,6 @@ export class BaseServer {
     
     // Set up Legion package serving
     try {
-      console.log(`Setting up Legion package routes for ${this.legionPackages.size} packages...`);
       this.setupLegionPackageRoutes(app);
       console.log('✅ Legion package routes setup completed');
     } catch (error) {
@@ -577,60 +575,348 @@ export class BaseServer {
    * @private
    */
   setupLegionPackageRoutes(app) {
-    console.log('📦 Setting up Legion package routes...');
+    console.log('📦 Setting up Legion package routes with dynamic imports...');
     
-    // Serve each discovered Legion package
-    for (const [packageName, packageInfo] of this.legionPackages) {
-      const cleanName = packageInfo.cleanName;
-      const routePath = `/legion/${cleanName}`;
-      
-      console.log(`📦 Setting up route: ${routePath} -> ${packageInfo.path}`);
-      
-      // Serve package files with import rewriting for JS files
-      app.use(routePath, async (req, res, next) => {
-        // Handle different path patterns:
-        // - /legion/package/file.js -> packagePath/src/file.js  
-        // - /legion/package/src/file.js -> packagePath/src/file.js
-        let filePath;
-        if (req.path.startsWith('/src/')) {
-          // Direct src access: /legion/utils/src/index.js -> /packages/utils/src/index.js
-          filePath = path.join(packageInfo.path, req.path);
-        } else {
-          // Root file access: /legion/actors/ActorSpace.js -> /packages/actors/src/ActorSpace.js
-          filePath = path.join(packageInfo.srcPath, req.path);
+    // Cache for resolved packages and files
+    this.packageCache = new Map();
+    this.fileCache = new Map();
+    
+    // Single route handler for all /legion/* requests
+    app.use('/legion', async (req, res, next) => {
+      try {
+        // Parse request path: /package-name/file.js
+        const pathParts = req.path.substring(1).split('/'); // Remove leading /
+        const packageName = pathParts[0];
+        const filePath = pathParts.slice(1).join('/') || 'index.js';
+        
+        const cacheKey = `${packageName}:${filePath}`;
+        
+        // Check file cache first
+        if (this.fileCache.has(cacheKey)) {
+          const cached = this.fileCache.get(cacheKey);
+          res.setHeader('Content-Type', cached.contentType);
+          res.send(cached.content);
+          return;
         }
         
-        try {
-          // Check if file exists
-          await import('fs').then(fs => fs.promises.access(filePath));
-          
-          // For JavaScript files, rewrite imports
-          if (req.path.endsWith('.js') || req.path.endsWith('.mjs')) {
-            const content = await import('fs').then(fs => 
-              fs.promises.readFile(filePath, 'utf8')
-            );
+        // Get or resolve package using simple path mapping (like aiur-ui server)
+        let packageInfo = this.packageCache.get(packageName);
+        if (!packageInfo) {
+          try {
+            // Use simple path mapping - no complex module resolution needed
+            const fullPackageName = `@legion/${packageName}`;
             
-            // Rewrite @legion imports with full context
-            const rewritten = this.importRewriter.rewrite(content, { 
-              legionPackage: cleanName,
-              requestPath: req.path,
-              baseUrl: `/legion/${cleanName}`
-            });
+            // Map to monorepo packages directory
+            if (!this.monorepoRoot) {
+              throw new Error('Monorepo root not configured');
+            }
             
-            res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-            res.send(rewritten);
-          } else {
-            // For other files, serve as static
-            res.sendFile(filePath);
+            const fs = await import('fs');
+            let packagePath;
+            
+            // Try different possible locations for the package
+            const possiblePaths = [
+              path.join(this.monorepoRoot, 'packages', packageName), // packages/resource-manager
+              path.join(this.monorepoRoot, 'packages', 'frontend', packageName), // packages/frontend/declarative-components
+              path.join(this.monorepoRoot, 'packages', 'shared', packageName), // packages/shared/data
+              path.join(this.monorepoRoot, 'packages', 'shared', 'data', packageName), // packages/shared/data/handle
+              path.join(this.monorepoRoot, 'packages', 'storage', packageName), // packages/storage/...
+              path.join(this.monorepoRoot, 'packages', 'tools-registry', packageName), // packages/tools-registry/...
+            ];
+            
+            // Find the first path that exists
+            for (const tryPath of possiblePaths) {
+              try {
+                await fs.promises.access(tryPath);
+                packagePath = tryPath;
+                break;
+              } catch {
+                // Continue trying other paths
+              }
+            }
+            
+            if (!packagePath) {
+              throw new Error(`Package @legion/${packageName} not found in any expected location`);
+            }
+            
+            packageInfo = {
+              name: fullPackageName,
+              path: packagePath
+            };
+            
+            this.packageCache.set(packageName, packageInfo);
+            console.log(`📦 Resolved package: ${fullPackageName} at ${packagePath}`);
+          } catch (error) {
+            console.warn(`Package @legion/${packageName} not found:`, error.message);
+            return next();
           }
-        } catch (error) {
-          // File not found, continue to next handler
-          next();
         }
+        
+        // Resolve file path within package - map to src/ directory if not already there
+        let actualFilePath;
+        
+        // If filePath already includes src/, use it directly, otherwise add src/
+        if (filePath.startsWith('src/')) {
+          actualFilePath = path.join(packageInfo.path, filePath);
+        } else {
+          actualFilePath = path.join(packageInfo.path, 'src', filePath);
+        }
+        
+        if (!actualFilePath) {
+          console.warn(`File not found: ${cacheKey}`);
+          return next();
+        }
+        
+        // Read and serve file
+        const fs = await import('fs');
+        const content = await fs.promises.readFile(actualFilePath, 'utf8');
+        
+        let finalContent = content;
+        let contentType = 'text/plain';
+        
+        // For JavaScript files, rewrite imports
+        if (filePath.endsWith('.js') || filePath.endsWith('.mjs')) {
+          finalContent = this.importRewriter.rewrite(content, {
+            legionPackage: packageName,
+            requestPath: `/legion${req.path}`,
+            baseUrl: `/legion/${packageName}`
+          });
+          contentType = 'application/javascript; charset=utf-8';
+        } else if (filePath.endsWith('.json')) {
+          contentType = 'application/json';
+        }
+        
+        // Cache the result
+        this.fileCache.set(cacheKey, { content: finalContent, contentType });
+        
+        res.setHeader('Content-Type', contentType);
+        res.send(finalContent);
+        
+      } catch (error) {
+        console.error(`Error serving ${req.path}:`, error.message);
+        next();
+      }
+    });
+    
+    console.log('✅ Legion dynamic package serving setup completed');
+  }
+
+  /**
+   * Start a simple static server with Legion package support (no actors/WebSocket)
+   * This provides the easiest way to serve Legion packages without actor communication
+   * @param {number} port - Port to run on (defaults to 8080)
+   * @param {Object} options - Static server options
+   */
+  async startStaticServer(port = 8080, options = {}) {
+    if (!this.resourceManager) {
+      await this.initialize();
+    }
+
+    // Check if server already exists on this port
+    if (this.servers.has(port)) {
+      console.log(`Static server already running on port ${port}`);
+      return;
+    }
+
+    // Clean up any existing processes on this port
+    await this.cleanupPorts([port]);
+
+    // Create new Express instance for this port
+    const app = express();
+    
+    // Apply middleware
+    const corsOrigins = this.resourceManager.get('env.CORS_ORIGINS')?.split(',') || ['http://localhost:3000'];
+    app.use(cors({
+      origin: corsOrigins,
+      credentials: true
+    }));
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
+    
+    // Add health check
+    app.get('/health', (req, res) => {
+      res.json({
+        status: 'ok',
+        service: 'legion-static-server',
+        port: port,
+        timestamp: new Date().toISOString(),
+        legionPackages: 'dynamic'
       });
+    });
+    
+    // Set up Legion package serving
+    try {
+      this.setupLegionPackageRoutes(app);
+      console.log('✅ Legion package routes setup completed');
+    } catch (error) {
+      console.error(`❌ Failed to setup Legion package routes:`, error);
+      throw error; // NO FALLBACKS - fail fast
     }
     
-    console.log(`Set up /legion/* routes for ${this.legionPackages.size} packages`);
+    // Set up static directory serving if specified
+    if (options.staticDirectory) {
+      try {
+        app.use('/', express.static(options.staticDirectory));
+        console.log(`Serving static files from ${options.staticDirectory}`);
+      } catch (error) {
+        console.warn(`Failed to setup static directory ${options.staticDirectory}:`, error);
+        // Continue without static directory
+      }
+    }
+    
+    // Set up custom resource provider or default static provider
+    const resourceProvider = options.resourceProvider || await this.createStaticResourceProvider(options);
+    this.setupStaticResourceMiddleware(app, resourceProvider);
+    
+    // Start HTTP server (no WebSocket)
+    const server = await new Promise((resolve, reject) => {
+      const httpServer = app.listen(port, this.host, () => {
+        console.log(`Static server with Legion packages running on http://${this.host}:${port}`);
+        resolve(httpServer);
+      });
+      
+      httpServer.on('error', (error) => {
+        if (error.code === 'EADDRINUSE') {
+          reject(new Error(`Port ${port} is already in use`));
+        } else {
+          reject(error);
+        }
+      });
+    });
+    
+    // Store server instance and Express app for external access
+    this.servers.set(port, server);
+    // Store Express app reference for adding routes later
+    server._legionExpressApp = app;
+    
+    console.log('✅ Static server started successfully');
+    
+    return { server, app }; // Return both for external use
+  }
+
+  /**
+   * Create static resource provider for static mode
+   * @private
+   */
+  async createStaticResourceProvider(options) {
+    const { StaticResourceProvider } = await import('./resources/StaticResourceProvider.js');
+    return new StaticResourceProvider({
+      title: options.title || 'Legion Static App',
+      htmlFile: options.htmlFile || null,
+      htmlContent: options.htmlContent || '',
+      includeImportMaps: options.includeImportMaps !== false,
+      customImports: options.customImports || {},
+      ...options
+    });
+  }
+
+  /**
+   * Set up static resource serving middleware (no actors)
+   * @private
+   */
+  setupStaticResourceMiddleware(app, resourceProvider) {
+    // Handle root and favicon requests
+    app.get('/', async (req, res) => {
+      try {
+        const resource = await resourceProvider.getResource('/', req);
+        if (resource) {
+          this.sendResourceResponse(res, resource);
+        } else {
+          res.status(404).send('Not Found');
+        }
+      } catch (error) {
+        console.error(`Error serving root resource:`, error);
+        res.status(500).send('Server Error');
+      }
+    });
+
+    app.get('/favicon.ico', async (req, res) => {
+      try {
+        const resource = await resourceProvider.getResource('/favicon.ico', req);
+        if (resource) {
+          this.sendResourceResponse(res, resource);
+        } else {
+          res.status(404).send('Not Found');
+        }
+      } catch (error) {
+        console.error(`Error serving favicon:`, error);
+        res.status(404).send('Not Found');
+      }
+    });
+
+    console.log('Static resource middleware setup completed');
+  }
+
+  /**
+   * Send resource response with proper headers and content
+   * @private
+   */
+  sendResourceResponse(res, resource) {
+    // Set response headers
+    if (resource.status) {
+      res.status(resource.status);
+    }
+    
+    if (resource.headers) {
+      for (const [key, value] of Object.entries(resource.headers)) {
+        res.setHeader(key, value);
+      }
+    }
+    
+    // Set content type
+    res.setHeader('Content-Type', resource.type);
+    
+    // Handle cache headers
+    if (resource.cache) {
+      if (typeof resource.cache === 'string') {
+        res.setHeader('Cache-Control', `public, max-age=${this.parseMaxAge(resource.cache)}`);
+      } else if (resource.cache === true) {
+        res.setHeader('Cache-Control', 'public, max-age=300'); // 5 minutes default
+      }
+    } else {
+      res.setHeader('Cache-Control', 'no-cache');
+    }
+    
+    // Send response
+    if (resource.file) {
+      // Serve from file
+      const resolvedPath = path.resolve(resource.file);
+      console.log('[STATIC] Serving file:', resource.file, '-> resolved:', resolvedPath);
+      
+      // For JavaScript files, apply import rewriting
+      if (resolvedPath.endsWith('.js') || resolvedPath.endsWith('.mjs')) {
+        try {
+          import('fs').then(fs => {
+            fs.promises.readFile(resolvedPath, 'utf8').then(content => {
+              const rewrittenContent = this.importRewriter.rewrite(content);
+              
+              res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+              res.send(rewrittenContent);
+              console.log('[STATIC] Applied import rewriting to JS file');
+            }).catch(error => {
+              console.log('[STATIC] Import rewriting failed:', error.message);
+              res.status(404).send('File not found');
+            });
+          });
+        } catch (error) {
+          console.log('[STATIC] Import rewriting failed:', error.message);
+          res.status(404).send('File not found');
+        }
+      } else {
+        // Non-JS files, serve directly
+        res.sendFile(resolvedPath, (err) => {
+          if (err) {
+            console.log('[STATIC] sendFile error:', err.message);
+            res.status(404).send('File not found');
+          }
+        });
+      }
+    } else if (resource.content) {
+      // Send content directly
+      res.send(resource.content);
+    } else {
+      res.status(500).send('Invalid resource response');
+    }
   }
 
   /**

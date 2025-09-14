@@ -1,0 +1,53 @@
+Define PopupMenu with data:
+  Create a container with class "popup-demo" containing:
+    A container with class "demo-header" containing:
+      A heading showing "Popup Menu Demo"
+      A paragraph showing "Click buttons to open different types of menus"
+    
+    A container with class "menu-examples" containing:
+      A container with class "menu-group" containing:
+        A subtitle showing "Simple Menu"
+        A container with class "menu-container" containing:
+          A button that toggles simpleMenuOpen on click:
+            "Actions " + (if simpleMenuOpen then "▲" else "▼")
+          
+          When simpleMenuOpen is true:
+            A container with class "popup-menu" containing:
+              A container with class "menu-item" that calls selectAction on click:
+                "New File"
+              A container with class "menu-item" that calls selectAction on click:
+                "Open File"
+              A container with class "menu-item" that calls selectAction on click:
+                "Save File"
+              A container with class "menu-separator"
+              A container with class "menu-item" that calls selectAction on click:
+                "Exit"
+      
+      A container with class "menu-group" containing:
+        A subtitle showing "User Menu"
+        A container with class "menu-container" containing:
+          A button with class "user-menu-trigger" that toggles userMenuOpen on click:
+            The currentUser's name
+            A span with class "menu-arrow":
+              if userMenuOpen then "▲" else "▼"
+          
+          When userMenuOpen is true:
+            A container with class "popup-menu user-menu" containing:
+              A container with class "menu-header" containing:
+                A span with class "user-name" showing the currentUser's name
+                A span with class "user-email" showing the currentUser's email
+              A container with class "menu-separator"
+              A container with class "menu-item" that calls selectAction on click:
+                "Profile Settings"
+              A container with class "menu-item" that calls selectAction on click:
+                "Account Settings"
+              A container with class "menu-item danger" that calls selectAction on click:
+                "Sign Out"
+    
+    A container with class "action-log" containing:
+      A subtitle showing "Action Log"
+      A container with class "log-container" containing:
+        For each action in the actionHistory:
+          A container with class "log-entry" containing:
+            A span with class "timestamp" showing the action's time
+            A span with class "action" showing the action's name

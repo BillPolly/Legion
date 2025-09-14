@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Button Test - Direct</title>
+    <style>
+        body {
+            font-family: system-ui;
+            padding: 20px;
+        }
+        .counter {
+            padding: 20px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            background: #f5f5f5;
+            display: inline-block;
+        }
+        .counter h2 {
+            margin: 0 0 10px 0;
+            font-size: 48px;
+            text-align: center;
+        }
+        .counter button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Direct Button Click Test</h1>
+    <div id="root"></div>
+    
+    <hr>
+    <h2>Debug Output:</h2>
+    <pre id="debug"></pre>
+
+    <script type="module">
+        const log = (msg) => {
+            const debug = document.getElementById('debug');
+            debug.textContent += msg + '\n';
+            console.log(msg);
+        };
+
+        const cacheBust = Date.now();
+        log(`Loading modules with cache bust: ${cacheBust}`);
+        
+        // Import with cache busting
+        const compilerModule = await import(`/legion/declarative-components/compiler/ComponentCompiler.js?cb=${cacheBust}`);
+        const ComponentCompiler = compilerModule.ComponentCompiler;
+        
+        log('ComponentCompiler loaded');
+        
+        // Test DSL
+        const dsl = `Counter :: state =>
+        div.counter [
+            h2 { state.count }
+            button @click="count++" { "+1" }
+            button @click="count--" { "-1" }
+            button @click="count = 0" { "Reset" }
+        ]`;
+        
+        log('Compiling DSL...');
+        const compiler = new ComponentCompiler();
+        const component = compiler.compile(dsl);
+        log('Component compiled');
+        
+        // Create dataStore
+        const dataStore = {
+            _data: { count: 0 },
+            _subscribers: {},
+            
+            get(key) {
+                log(`dataStore.get('${key}') => ${this._data[key]}`);
+                return this._data[key];
+            },
+            
+            set(key, value) {
+                log(`dataStore.set('${key}', ${value})`);
+                this._data[key] = value;
+                
+                // Notify subscribers
+                if (this._subscribers[key]) {
+                    log(`Notifying ${this._subscribers[key].length} subscribers for '${key}'`);
+                    for (const callback of this._subscribers[key]) {
+                        callback(value);
+                    }
+                }
+            },
+            
+            subscribe(key, callback) {
+                if (!this._subscribers[key]) {
+                    this._subscribers[key] = [];
+                }
+                this._subscribers[key].push(callback);
+                log(`Subscribed to '${key}' (total: ${this._subscribers[key].length})`);
+            }
+        };
+        
+        // Add aliases
+        dataStore.data = dataStore._data;
+        dataStore.state = dataStore._data;
+        
+        // Mount component
+        log('Mounting component...');
+        const container = document.getElementById('root');
+        await component.mount(container, dataStore);
+        log('Component mounted');
+        
+        // Add click handlers to log
+        const buttons = container.querySelectorAll('button');
+        buttons.forEach((btn, i) => {
+            const originalClick = btn.onclick;
+            btn.addEventListener('click', () => {
+                log(`\n=== Button ${i} clicked (${btn.textContent}) ===`);
+            });
+        });
+        
+        log('\nReady! Click the buttons to test.');
+    </script>
+</body>
+</html>

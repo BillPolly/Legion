@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Legion Test</title>
+    <script type="importmap">
+    {
+        "imports": {
+            "@legion/declarative-components": "/legion/declarative-components/index.js"
+        }
+    }
+    </script>
+</head>
+<body>
+    <h1>Simple Legion Import Test</h1>
+    <div id="result">Testing...</div>
+    
+    <script type="module">
+        try {
+            console.log('Testing @legion/declarative-components import...');
+            const { ComponentCompiler } = await import('@legion/declarative-components');
+            
+            if (ComponentCompiler) {
+                document.getElementById('result').innerHTML = '<span style="color: green;">✅ SUCCESS: ComponentCompiler loaded successfully!</span>';
+                console.log('✅ SUCCESS: ComponentCompiler loaded:', ComponentCompiler);
+            } else {
+                document.getElementById('result').innerHTML = '<span style="color: red;">❌ FAIL: ComponentCompiler is undefined</span>';
+                console.log('❌ FAIL: ComponentCompiler is undefined');
+            }
+        } catch (error) {
+            document.getElementById('result').innerHTML = '<span style="color: red;">❌ ERROR: ' + error.message + '</span>';
+            console.error('❌ Import failed:', error);
+        }
+    </script>
+</body>
+</html>

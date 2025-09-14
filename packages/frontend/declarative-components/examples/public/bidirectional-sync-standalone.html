@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bidirectional Transformation Demo - CNL ↔ DSL ↔ Component</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #2d3748;
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+        }
+        
+        .description {
+            color: #4a5568;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .panel {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #cbd5e0;
+        }
+        
+        .panel-title {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 1.1rem;
+        }
+        
+        .sync-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #48bb78;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 1rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-family: 'Menlo', 'Monaco', monospace;
+            font-size: 0.85rem;
+            resize: vertical;
+            background: white;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .component-preview {
+            background: white;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            padding: 1.5rem;
+            min-height: 300px;
+        }
+        
+        .component-preview h3 {
+            color: #4a5568;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        #component-output {
+            padding: 1rem;
+            background: #f7fafc;
+            border-radius: 4px;
+            min-height: 200px;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        button {
+            padding: 0.5rem 1rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .error {
+            background: #fed7d7;
+            color: #742a2a;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+        }
+        
+        .success {
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+        }
+        
+        .json-view {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: 'Menlo', 'Monaco', monospace;
+            font-size: 0.75rem;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 1rem;
+        }
+        
+        .counter-container {
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .counter-container h2 {
+            color: #2d3748;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+        
+        .counter-container button {
+            margin: 0 0.5rem;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+        }
+        
+        .example-selector {
+            background: #f7fafc;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .example-selector label {
+            font-weight: 600;
+            color: #4a5568;
+        }
+        
+        .example-selector select {
+            padding: 0.5rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+            font-size: 0.9rem;
+            min-width: 150px;
+        }
+        
+        .example-selector select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .load-btn {
+            padding: 0.5rem 1rem;
+            background: #48bb78;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .load-btn:hover {
+            background: #38a169;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+        }
+        
+        /* Additional component styles for examples */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            padding: 1rem;
+        }
+        
+        .product-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .profile-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 300px;
+            margin: 0 auto;
+        }
+        
+        .contact-form {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .contact-form input,
+        .contact-form textarea {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+        }
+        
+        .nav-menu {
+            background: #2d3748;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+        
+        .nav-menu a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            margin-right: 1rem;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        
+        .nav-menu a:hover {
+            background: #4a5568;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Bidirectional Transformation Demo</h1>
+        <p class="description">
+            Edit any format below and see the changes automatically synchronized across all representations.
+            This demonstrates the bidirectional converters: CNL ↔ JSON ↔ DSL
+        </p>
+        
+        <!-- Example Template Selector -->
+        <div class="example-selector">
+            <label for="template-select">📋 Choose Template:</label>
+            <select id="template-select" onchange="loadTemplate()">
+                <option value="counter">Simple Counter</option>
+                <option value="todo">Todo Item</option>
+                <option value="form">Contact Form</option>
+                <option value="grid">Product Grid</option>
+                <option value="card">Profile Card</option>
+                <option value="navigation">Navigation Menu</option>
+            </select>
+            <button onclick="loadTemplate()" class="load-btn">Load Template</button>
+        </div>
+        
+        <div class="grid">
+            <!-- CNL Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">📝 CNL (Natural Language)</span>
+                    <span class="sync-indicator"></span>
+                </div>
+                <textarea id="cnl-input" placeholder="Enter CNL here...">Define Counter with state:
+  A container with class "counter-container" containing:
+    A heading showing the count
+    A button labeled "Increment" that increments the count on click
+    A button labeled "Decrement" that decrements the count on click</textarea>
+                <div class="buttons">
+                    <button onclick="transformFromCNL()">Transform CNL →</button>
+                    <button onclick="resetCNL()">Reset</button>
+                </div>
+                <div id="cnl-status"></div>
+            </div>
+            
+            <!-- DSL Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">🔧 DSL (Technical)</span>
+                    <span class="sync-indicator"></span>
+                </div>
+                <textarea id="dsl-input" placeholder="Enter DSL here...">Counter :: state =>
+  div.counter-container [
+    h2 { state.count }
+    button @click="state.count++" { "Increment" }
+    button @click="state.count--" { "Decrement" }
+  ]</textarea>
+                <div class="buttons">
+                    <button onclick="transformFromDSL()">Transform DSL →</button>
+                    <button onclick="resetDSL()">Reset</button>
+                </div>
+                <div id="dsl-status"></div>
+            </div>
+            
+            <!-- Component Preview Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">🎨 Component Preview</span>
+                    <span class="sync-indicator"></span>
+                </div>
+                <div class="component-preview">
+                    <h3>Rendered Component</h3>
+                    <div id="component-output"></div>
+                </div>
+                <div class="buttons">
+                    <button onclick="renderComponent()">Render Component</button>
+                </div>
+                <div id="component-status"></div>
+            </div>
+        </div>
+        
+        <!-- JSON View -->
+        <div class="panel">
+            <div class="panel-header">
+                <span class="panel-title">🔍 JSON Representation (Internal Format)</span>
+                <span class="sync-indicator"></span>
+            </div>
+            <pre class="json-view" id="json-output">{}</pre>
+        </div>
+    </div>
+    
+    <script>
+        // Inline minimal implementations needed for the demo
+        
+        // Simple DSL Compiler (minimal implementation)
+        class SimpleDSLCompiler {
+            compile(dsl) {
+                const lines = dsl.split('\n').filter(l => l.trim());
+                const firstLine = lines[0];
+                const match = firstLine.match(/^(\w+)\s*::\s*(\w+)\s*=>/);
+                
+                if (!match) throw new Error('Invalid DSL format');
+                
+                const [, name, entity] = match;
+                const json = {
+                    name,
+                    entity,
+                    structure: {},
+                    bindings: [],
+                    events: []
+                };
+                
+                // Parse the structure (simplified)
+                let elementCounter = 0;
+                const parseElement = (line, parent = null) => {
+                    const elementMatch = line.match(/^\s*(\w+)([\.\#\w\-]*)?(\s*@[\w\.\-="]+)?(\s*\[|\s*\{)?/);
+                    if (!elementMatch) return null;
+                    
+                    const [, tag, classesAndId, eventStr] = elementMatch;
+                    const key = parent ? `${parent}_child_${elementCounter++}` : 'root';
+                    
+                    const element = {
+                        element: tag,
+                        parent
+                    };
+                    
+                    // Parse classes
+                    if (classesAndId) {
+                        const classes = classesAndId.match(/\.([\w\-]+)/g);
+                        if (classes) {
+                            element.class = classes.map(c => c.substring(1)).join(' ');
+                        }
+                        const id = classesAndId.match(/#([\w\-]+)/);
+                        if (id) {
+                            element.id = id[1];
+                        }
+                    }
+                    
+                    // Parse events - look for @ in the entire line
+                    const eventMatch = line.match(/@(\w+)([\.\w]*)?="([^"]+)"/);
+                    if (eventMatch) {
+                        const [, event, modifiers, action] = eventMatch;
+                        json.events.push({
+                            element: key,
+                            event,
+                            action,
+                            modifiers: modifiers ? modifiers.substring(1).split('.') : []
+                        });
+                    }
+                    
+                    // Parse text content or binding
+                    if (line.includes('{')) {
+                        const contentMatch = line.match(/\{\s*"([^"]+)"\s*\}|\{\s*([^\}]+)\s*\}/);
+                        if (contentMatch) {
+                            if (contentMatch[1]) {
+                                element.textContent = contentMatch[1];
+                            } else if (contentMatch[2]) {
+                                json.bindings.push({
+                                    source: contentMatch[2].trim(),
+                                    target: `${key}.textContent`,
+                                    transform: 'identity'
+                                });
+                            }
+                        }
+                    }
+                    
+                    json.structure[key] = element;
+                    return key;
+                };
+                
+                // Parse root element
+                if (lines.length > 1) {
+                    parseElement(lines[1]);
+                    
+                    // Parse children (simplified)
+                    for (let i = 2; i < lines.length; i++) {
+                        const line = lines[i];
+                        if (line.trim() && !line.trim().startsWith(']')) {
+                            parseElement(line, 'root');
+                        }
+                    }
+                }
+                
+                return json;
+            }
+        }
+        
+        // JSON to DSL Converter
+        class JsonToDSLConverter {
+            convert(json) {
+                if (!json.name || !json.entity) {
+                    throw new Error('JSON must have name and entity properties');
+                }
+                
+                const lines = [];
+                lines.push(`${json.name} :: ${json.entity} =>`);
+                
+                if (json.structure && json.structure.root) {
+                    const rootDSL = this.convertElement('root', json.structure, json.bindings, json.events, 1);
+                    lines.push(...rootDSL);
+                }
+                
+                return lines.join('\n');
+            }
+            
+            convertElement(key, structure, bindings, events, indent) {
+                const element = structure[key];
+                if (!element) return [];
+                
+                const lines = [];
+                let line = '  '.repeat(indent) + element.element;
+                
+                // Add classes and ID
+                if (element.class) {
+                    line += '.' + element.class.split(' ').join('.');
+                }
+                if (element.id) {
+                    line += '#' + element.id;
+                }
+                
+                // Add events
+                const elementEvents = events.filter(e => e.element === key);
+                for (const event of elementEvents) {
+                    const modifiers = event.modifiers?.length > 0 ? `.${event.modifiers.join('.')}` : '';
+                    line += ` @${event.event}${modifiers}="${event.action}"`;
+                }
+                
+                // Find children
+                const children = Object.keys(structure)
+                    .filter(k => structure[k].parent === key)
+                    .sort();
+                
+                // Add text content or binding
+                const textBinding = bindings.find(b => b.target === `${key}.textContent`);
+                
+                if (children.length > 0) {
+                    line += ' [';
+                    lines.push(line);
+                    
+                    for (const childKey of children) {
+                        const childLines = this.convertElement(childKey, structure, bindings, events, indent + 1);
+                        lines.push(...childLines);
+                    }
+                    
+                    lines.push('  '.repeat(indent) + ']');
+                } else if (textBinding) {
+                    line += ` { ${textBinding.source} }`;
+                    lines.push(line);
+                } else if (element.textContent) {
+                    line += ` { "${element.textContent}" }`;
+                    lines.push(line);
+                } else {
+                    lines.push(line);
+                }
+                
+                return lines;
+            }
+        }
+        
+        // JSON to CNL Converter
+        class JsonToCNLConverter {
+            convert(json) {
+                if (!json.name || !json.entity) {
+                    throw new Error('JSON must have name and entity properties');
+                }
+                
+                const lines = [];
+                lines.push(`Define ${json.name} with ${json.entity}:`);
+                
+                if (json.structure && json.structure.root) {
+                    const rootCNL = this.convertElement('root', json.structure, json.bindings, json.events, json.entity, 1);
+                    lines.push(...rootCNL);
+                }
+                
+                return lines.join('\n');
+            }
+            
+            convertElement(key, structure, bindings, events, entity, indent) {
+                const element = structure[key];
+                if (!element) return [];
+                
+                const lines = [];
+                let line = '  '.repeat(indent);
+                
+                // Get article and element name
+                const article = ['input', 'image'].includes(element.element) ? 'An' : 'A';
+                const elementName = this.getElementName(element.element);
+                
+                line += `${article} ${elementName}`;
+                
+                // Add class
+                if (element.class) {
+                    line += ` with class "${element.class}"`;
+                }
+                
+                // Add text content or binding
+                const textBinding = bindings.find(b => b.target === `${key}.textContent`);
+                const elementEvents = events.filter(e => e.element === key);
+                
+                if (textBinding) {
+                    const prop = textBinding.source.replace(`${entity}.`, 'the ');
+                    line += ` showing ${prop}`;
+                } else if (element.textContent) {
+                    if (element.element === 'button' && elementEvents.length > 0) {
+                        line += ` labeled "${element.textContent}"`;
+                    } else {
+                        line += ` showing "${element.textContent}"`;
+                    }
+                }
+                
+                // Add events
+                for (const event of elementEvents) {
+                    const action = this.formatAction(event.action, entity);
+                    line += ` that ${action} on ${event.event}`;
+                }
+                
+                // Find children
+                const children = Object.keys(structure)
+                    .filter(k => structure[k].parent === key)
+                    .sort();
+                
+                if (children.length > 0) {
+                    line += ' containing:';
+                    lines.push(line);
+                    
+                    for (const childKey of children) {
+                        const childLines = this.convertElement(childKey, structure, bindings, events, entity, indent + 1);
+                        lines.push(...childLines);
+                    }
+                } else {
+                    lines.push(line);
+                }
+                
+                return lines;
+            }
+            
+            getElementName(tag) {
+                const names = {
+                    'div': 'container',
+                    'h1': 'heading',
+                    'h2': 'heading',
+                    'button': 'button',
+                    'input': 'input',
+                    'span': 'span',
+                    'p': 'paragraph'
+                };
+                return names[tag] || tag;
+            }
+            
+            formatAction(action, entity) {
+                if (action.includes('++')) {
+                    return `increments ${action.replace('++', '').replace(`${entity}.`, 'the ')}`;
+                }
+                if (action.includes('--')) {
+                    return `decrements ${action.replace('--', '').replace(`${entity}.`, 'the ')}`;
+                }
+                return action;
+            }
+        }
+        
+        // Simple CNL Parser (very basic)
+        class SimpleCNLParser {
+            parse(cnl) {
+                const lines = cnl.split('\n').filter(l => l.trim());
+                const firstLine = lines[0];
+                const match = firstLine.match(/Define\s+(\w+)\s+with\s+(\w+):/);
+                
+                if (!match) throw new Error('Invalid CNL format');
+                
+                const [, name, entity] = match;
+                const json = {
+                    name,
+                    entity,
+                    structure: {},
+                    bindings: [],
+                    events: []
+                };
+                
+                // Very simplified parsing
+                let elementCounter = 0;
+                const parseElement = (line, parent = null) => {
+                    const key = parent ? `${parent}_child_${elementCounter++}` : 'root';
+                    
+                    // Detect element type
+                    let element = { parent };
+                    
+                    if (line.includes('container')) {
+                        element.element = 'div';
+                    } else if (line.includes('heading')) {
+                        element.element = 'h2';
+                    } else if (line.includes('button')) {
+                        element.element = 'button';
+                    }
+                    
+                    // Extract class
+                    const classMatch = line.match(/with class "([^"]+)"/);
+                    if (classMatch) {
+                        element.class = classMatch[1];
+                    }
+                    
+                    // Extract text
+                    const labelMatch = line.match(/labeled "([^"]+)"/);
+                    if (labelMatch) {
+                        element.textContent = labelMatch[1];
+                    }
+                    
+                    // Extract binding
+                    if (line.includes('showing the')) {
+                        const bindingMatch = line.match(/showing the (\w+)/);
+                        if (bindingMatch) {
+                            json.bindings.push({
+                                source: `${entity}.${bindingMatch[1]}`,
+                                target: `${key}.textContent`,
+                                transform: 'identity'
+                            });
+                        }
+                    }
+                    
+                    // Extract events
+                    if (line.includes('increments')) {
+                        json.events.push({
+                            element: key,
+                            event: 'click',
+                            action: `${entity}.count++`,
+                            modifiers: []
+                        });
+                    } else if (line.includes('decrements')) {
+                        json.events.push({
+                            element: key,
+                            event: 'click',
+                            action: `${entity}.count--`,
+                            modifiers: []
+                        });
+                    }
+                    
+                    json.structure[key] = element;
+                    return key;
+                };
+                
+                // Parse elements
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i];
+                    if (line.includes('container')) {
+                        parseElement(line);
+                    } else if (line.includes('heading') || line.includes('button')) {
+                        parseElement(line, 'root');
+                    }
+                }
+                
+                return json;
+            }
+        }
+        
+        // Simple Component Renderer
+        function renderComponentFromJSON(json, container, state) {
+            container.innerHTML = '';
+            
+            // Create elements
+            const elements = {};
+            
+            for (const [key, spec] of Object.entries(json.structure)) {
+                const el = document.createElement(spec.element);
+                
+                if (spec.class) {
+                    el.className = spec.class;
+                }
+                
+                if (spec.id) {
+                    el.id = spec.id;
+                }
+                
+                if (spec.textContent) {
+                    el.textContent = spec.textContent;
+                }
+                
+                elements[key] = el;
+                
+                // Add to parent
+                if (spec.parent) {
+                    elements[spec.parent].appendChild(el);
+                } else {
+                    container.appendChild(el);
+                }
+            }
+            
+            // Set attributes if specified
+            for (const [key, spec] of Object.entries(json.structure)) {
+                if (spec.attributes) {
+                    for (const [attr, value] of Object.entries(spec.attributes)) {
+                        elements[key].setAttribute(attr, value);
+                    }
+                }
+            }
+            
+            // Apply bindings
+            const updateBindings = () => {
+                for (const binding of json.bindings) {
+                    const [elementKey, prop] = binding.target.split('.');
+                    const value = binding.source.split('.').reduce((obj, key) => obj[key], { [json.entity]: state });
+                    
+                    if (elements[elementKey]) {
+                        if (prop === 'textContent') {
+                            elements[elementKey].textContent = value || '';
+                        } else if (prop === 'value') {
+                            elements[elementKey].value = value || '';
+                        } else if (prop === 'checked') {
+                            elements[elementKey].checked = !!value;
+                        }
+                    }
+                }
+            };
+            
+            // Add event listeners
+            for (const event of json.events) {
+                if (elements[event.element]) {
+                    elements[event.element].addEventListener(event.event, (e) => {
+                        // Handle simple increment/decrement
+                        if (event.action.includes('++')) {
+                            state.count = (state.count || 0) + 1;
+                        } else if (event.action.includes('--')) {
+                            state.count = (state.count || 0) - 1;
+                        } 
+                        // Handle boolean toggles
+                        else if (event.action.includes('!')) {
+                            const match = event.action.match(/(\w+\.\w+)\s*=\s*!(\w+\.\w+)/);
+                            if (match) {
+                                const [, target, source] = match;
+                                const keys = target.split('.');
+                                const obj = keys[0] === json.entity ? state : state[keys[0]];
+                                if (obj) obj[keys[1]] = !obj[keys[1]];
+                            }
+                        }
+                        // Handle function calls (mock functions)
+                        else if (event.action.includes('(') && event.action.includes(')')) {
+                            const funcMatch = event.action.match(/(\w+)\(([^)]*)\)/);
+                            if (funcMatch) {
+                                const [, funcName, args] = funcMatch;
+                                console.log(`Mock function called: ${funcName}(${args})`);
+                                
+                                // Mock some common functions
+                                if (funcName === 'deleteTodo') {
+                                    showStatus('component-status', 'Mock: Delete todo called', 'success');
+                                } else if (funcName === 'submitForm') {
+                                    showStatus('component-status', 'Mock: Form submitted', 'success');
+                                } else if (funcName === 'addToCart') {
+                                    showStatus('component-status', 'Mock: Added to cart', 'success');
+                                } else if (funcName === 'contactUser') {
+                                    showStatus('component-status', 'Mock: Contact user called', 'success');
+                                } else if (funcName === 'navigateTo') {
+                                    showStatus('component-status', `Mock: Navigate to ${args}`, 'success');
+                                }
+                            }
+                        }
+                        updateBindings();
+                    });
+                }
+            }
+            
+            // Initial update
+            updateBindings();
+        }
+        
+        // Initialize converters
+        const dslCompiler = new SimpleDSLCompiler();
+        const cnlParser = new SimpleCNLParser();
+        const jsonToDSL = new JsonToDSLConverter();
+        const jsonToCNL = new JsonToCNLConverter();
+        
+        // Current state
+        let currentJSON = null;
+        const componentState = { count: 0 };
+        
+        // Transform from CNL
+        window.transformFromCNL = function() {
+            const cnlText = document.getElementById('cnl-input').value;
+            
+            try {
+                // Parse CNL to JSON
+                currentJSON = cnlParser.parse(cnlText);
+                
+                // Update DSL from JSON
+                const dslText = jsonToDSL.convert(currentJSON);
+                document.getElementById('dsl-input').value = dslText;
+                
+                // Update JSON view
+                updateJSONView();
+                
+                // Show success
+                showStatus('cnl-status', 'CNL successfully transformed!', 'success');
+                showStatus('dsl-status', 'DSL synchronized from CNL', 'success');
+                
+                // Auto-render component
+                renderComponent();
+            } catch (error) {
+                showStatus('cnl-status', 'Error: ' + error.message, 'error');
+                console.error('CNL transformation error:', error);
+            }
+        };
+        
+        // Transform from DSL
+        window.transformFromDSL = function() {
+            const dslText = document.getElementById('dsl-input').value;
+            
+            try {
+                // Compile DSL to JSON
+                currentJSON = dslCompiler.compile(dslText);
+                
+                // Update CNL from JSON
+                const cnlText = jsonToCNL.convert(currentJSON);
+                document.getElementById('cnl-input').value = cnlText;
+                
+                // Update JSON view
+                updateJSONView();
+                
+                // Show success
+                showStatus('dsl-status', 'DSL successfully transformed!', 'success');
+                showStatus('cnl-status', 'CNL synchronized from DSL', 'success');
+                
+                // Auto-render component
+                renderComponent();
+            } catch (error) {
+                showStatus('dsl-status', 'Error: ' + error.message, 'error');
+                console.error('DSL transformation error:', error);
+            }
+        };
+        
+        // Render component
+        window.renderComponent = function() {
+            if (!currentJSON) {
+                // Try to compile from DSL first
+                const dslText = document.getElementById('dsl-input').value;
+                try {
+                    currentJSON = dslCompiler.compile(dslText);
+                } catch (error) {
+                    showStatus('component-status', 'Please transform CNL or DSL first', 'error');
+                    return;
+                }
+            }
+            
+            try {
+                const outputEl = document.getElementById('component-output');
+                renderComponentFromJSON(currentJSON, outputEl, componentState);
+                
+                showStatus('component-status', 'Component rendered successfully!', 'success');
+            } catch (error) {
+                showStatus('component-status', 'Error: ' + error.message, 'error');
+                console.error('Render error:', error);
+            }
+        };
+        
+        // Update JSON view
+        function updateJSONView() {
+            if (currentJSON) {
+                document.getElementById('json-output').textContent = JSON.stringify(currentJSON, null, 2);
+            }
+        }
+        
+        // Show status message
+        function showStatus(elementId, message, type) {
+            const statusEl = document.getElementById(elementId);
+            statusEl.className = type;
+            statusEl.textContent = message;
+            
+            // Clear after 3 seconds
+            setTimeout(() => {
+                statusEl.textContent = '';
+                statusEl.className = '';
+            }, 3000);
+        }
+        
+        // Reset functions
+        window.resetCNL = function() {
+            document.getElementById('cnl-input').value = `Define Counter with state:
+  A container with class "counter-container" containing:
+    A heading showing the count
+    A button labeled "Increment" that increments the count on click
+    A button labeled "Decrement" that decrements the count on click`;
+            showStatus('cnl-status', 'CNL reset to default', 'success');
+        };
+        
+        window.resetDSL = function() {
+            document.getElementById('dsl-input').value = `Counter :: state =>
+  div.counter-container [
+    h2 { state.count }
+    button @click="state.count++" { "Increment" }
+    button @click="state.count--" { "Decrement" }
+  ]`;
+            showStatus('dsl-status', 'DSL reset to default', 'success');
+        };
+        
+        // Template definitions
+        const templates = {
+            counter: {
+                cnl: `Define Counter with state:
+  A container with class "counter-container" containing:
+    A heading showing the count
+    A button labeled "Increment" that increments the count on click
+    A button labeled "Decrement" that decrements the count on click`,
+                dsl: `Counter :: state =>
+  div.counter-container [
+    h2 { state.count }
+    button @click="state.count++" { "Increment" }
+    button @click="state.count--" { "Decrement" }
+  ]`
+            },
+            
+            todo: {
+                cnl: `Define TodoItem with todo:
+  A container with class "todo-item" containing:
+    An input with type "checkbox" bound to the completed
+    A span with class "todo-text" showing the text
+    A button labeled "Delete" that calls deleteTodo with the id on click`,
+                dsl: `TodoItem :: todo =>
+  div.todo-item [
+    input[type="checkbox"] @change="todo.completed = !todo.completed" { todo.completed }
+    span.todo-text { todo.text }
+    button.delete-btn @click="deleteTodo(todo.id)" { "Delete" }
+  ]`
+            },
+            
+            form: {
+                cnl: `Define ContactForm with form:
+  A container with class "contact-form" containing:
+    An input with class "name-field" bound to the name
+    An input with class "email-field" bound to the email
+    A text area with class "message-field" bound to the message
+    A button labeled "Send Message" that calls submitForm on click`,
+                dsl: `ContactForm :: form =>
+  div.contact-form [
+    input.name-field[placeholder="Your Name"] { form.name }
+    input.email-field[placeholder="Your Email"][type="email"] { form.email }
+    textarea.message-field[placeholder="Your Message"] { form.message }
+    button.submit-btn @click="submitForm()" { "Send Message" }
+  ]`
+            },
+            
+            grid: {
+                cnl: `Define ProductGrid with products:
+  A container with class "product-grid" containing:
+    A container with class "product-card" containing:
+      A heading showing the name
+      A paragraph showing the price
+      A button labeled "Add to Cart" that calls addToCart with the id on click`,
+                dsl: `ProductGrid :: products =>
+  div.product-grid [
+    div.product-card [
+      h3 { products.name }
+      p.price { products.price }
+      button.add-to-cart @click="addToCart(products.id)" { "Add to Cart" }
+    ]
+  ]`
+            },
+            
+            card: {
+                cnl: `Define ProfileCard with user:
+  A container with class "profile-card" containing:
+    A heading showing the name
+    A paragraph showing the title
+    A paragraph showing the email
+    A button labeled "Contact" that calls contactUser with the id on click`,
+                dsl: `ProfileCard :: user =>
+  div.profile-card [
+    h2 { user.name }
+    p.title { user.title }
+    p.email { user.email }
+    button.contact-btn @click="contactUser(user.id)" { "Contact" }
+  ]`
+            },
+            
+            navigation: {
+                cnl: `Define Navigation with nav:
+  A container with class "nav-menu" containing:
+    A link labeled "Home" that navigates to home on click
+    A link labeled "About" that navigates to about on click  
+    A link labeled "Services" that navigates to services on click
+    A link labeled "Contact" that navigates to contact on click`,
+                dsl: `Navigation :: nav =>
+  nav.nav-menu [
+    a @click="navigateTo('home')" { "Home" }
+    a @click="navigateTo('about')" { "About" }
+    a @click="navigateTo('services')" { "Services" }
+    a @click="navigateTo('contact')" { "Contact" }
+  ]`
+            }
+        };
+        
+        // Load template function
+        window.loadTemplate = function() {
+            const templateKey = document.getElementById('template-select').value;
+            const template = templates[templateKey];
+            
+            if (!template) {
+                showStatus('cnl-status', 'Template not found', 'error');
+                return;
+            }
+            
+            // Load CNL and DSL
+            document.getElementById('cnl-input').value = template.cnl;
+            document.getElementById('dsl-input').value = template.dsl;
+            
+            // Reset component state for new template
+            componentState.count = 0;
+            if (templateKey === 'todo') {
+                Object.assign(componentState, { 
+                    todo: { completed: false, text: 'Sample todo item', id: 1 }
+                });
+            } else if (templateKey === 'form') {
+                Object.assign(componentState, { 
+                    form: { name: '', email: '', message: '' }
+                });
+            } else if (templateKey === 'grid') {
+                Object.assign(componentState, { 
+                    products: { name: 'Sample Product', price: '$19.99', id: 1 }
+                });
+            } else if (templateKey === 'card') {
+                Object.assign(componentState, { 
+                    user: { name: 'John Doe', title: 'Software Developer', email: 'john@example.com', id: 1 }
+                });
+            } else if (templateKey === 'navigation') {
+                Object.assign(componentState, { 
+                    nav: {}
+                });
+            }
+            
+            // Transform from DSL to synchronize all formats
+            try {
+                transformFromDSL();
+                showStatus('cnl-status', `${templateKey.charAt(0).toUpperCase() + templateKey.slice(1)} template loaded`, 'success');
+                showStatus('dsl-status', 'Template synchronized', 'success');
+            } catch (error) {
+                showStatus('cnl-status', 'Error loading template: ' + error.message, 'error');
+            }
+        };
+        
+        // Auto-transform on load
+        setTimeout(() => {
+            transformFromDSL();
+        }, 500);
+    </script>
+</body>
+</html>

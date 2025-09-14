@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bidirectional Transformation Demo - CNL ↔ DSL ↔ Component</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #2d3748;
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+        }
+        
+        .description {
+            color: #4a5568;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .panel {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #cbd5e0;
+        }
+        
+        .panel-title {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 1.1rem;
+        }
+        
+        .sync-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #48bb78;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 1rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-family: 'Menlo', 'Monaco', monospace;
+            font-size: 0.85rem;
+            resize: vertical;
+            background: white;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .component-preview {
+            background: white;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            padding: 1.5rem;
+            min-height: 300px;
+        }
+        
+        .component-preview h3 {
+            color: #4a5568;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        #component-output {
+            padding: 1rem;
+            background: #f7fafc;
+            border-radius: 4px;
+            min-height: 200px;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        button {
+            padding: 0.5rem 1rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .error {
+            background: #fed7d7;
+            color: #742a2a;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+        }
+        
+        .success {
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+        }
+        
+        .json-view {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: 'Menlo', 'Monaco', monospace;
+            font-size: 0.75rem;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 1rem;
+        }
+        
+        .counter-container {
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .counter-container h2 {
+            color: #2d3748;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+        
+        .counter-container button {
+            margin: 0 0.5rem;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+        }
+        
+        .transform-arrow {
+            text-align: center;
+            color: #4a5568;
+            font-size: 1.5rem;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Bidirectional Transformation Demo</h1>
+        <p class="description">
+            Edit any format below and see the changes automatically synchronized across all representations.
+            This demonstrates the bidirectional converters: CNL ↔ JSON ↔ DSL
+        </p>
+        
+        <div class="grid">
+            <!-- CNL Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">📝 CNL (Natural Language)</span>
+                    <span class="sync-indicator"></span>
+                </div>
+                <textarea id="cnl-input" placeholder="Enter CNL here...">Define Counter with state:
+  A container with class "counter-container" containing:
+    A heading showing the count
+    A button labeled "Increment" that increments the count on click
+    A button labeled "Decrement" that decrements the count on click</textarea>
+                <div class="buttons">
+                    <button onclick="transformFromCNL()">Transform CNL →</button>
+                    <button onclick="resetCNL()">Reset</button>
+                </div>
+                <div id="cnl-status"></div>
+            </div>
+            
+            <!-- DSL Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">🔧 DSL (Technical)</span>
+                    <span class="sync-indicator"></span>
+                </div>
+                <textarea id="dsl-input" placeholder="Enter DSL here...">Counter :: state =>
+  div.counter-container [
+    h2 { state.count }
+    button @click="state.count++" { "Increment" }
+    button @click="state.count--" { "Decrement" }
+  ]</textarea>
+                <div class="buttons">
+                    <button onclick="transformFromDSL()">Transform DSL →</button>
+                    <button onclick="resetDSL()">Reset</button>
+                </div>
+                <div id="dsl-status"></div>
+            </div>
+            
+            <!-- Component Preview Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">🎨 Component Preview</span>
+                    <span class="sync-indicator"></span>
+                </div>
+                <div class="component-preview">
+                    <h3>Rendered Component</h3>
+                    <div id="component-output"></div>
+                </div>
+                <div class="buttons">
+                    <button onclick="renderComponent()">Render Component</button>
+                </div>
+                <div id="component-status"></div>
+            </div>
+        </div>
+        
+        <!-- JSON View -->
+        <div class="panel">
+            <div class="panel-header">
+                <span class="panel-title">🔍 JSON Representation (Internal Format)</span>
+                <span class="sync-indicator"></span>
+            </div>
+            <pre class="json-view" id="json-output">{}</pre>
+        </div>
+    </div>
+    
+    <script type="module">
+        import { ComponentCompiler } from '../../src/compiler/ComponentCompiler.js';
+        import { CNLParser } from '../../src/cnl/CNLParser.js';
+        import { CNLCompiler } from '../../src/cnl/CNLCompiler.js';
+        import { JsonToDSLConverter } from '../../src/cnl/JsonToDSLConverter.js';
+        import { JsonToCNLConverter } from '../../src/cnl/JsonToCNLConverter.js';
+        import { ComponentLifecycle } from '../../src/core/ComponentLifecycle.js';
+        import { EquationSolver } from '../../src/core/EquationSolver.js';
+        
+        // Initialize converters and compilers
+        const dslCompiler = new ComponentCompiler();
+        const cnlParser = new CNLParser();
+        const cnlCompiler = new CNLCompiler();
+        const jsonToDSL = new JsonToDSLConverter();
+        const jsonToCNL = new JsonToCNLConverter();
+        const lifecycle = new ComponentLifecycle();
+        const solver = new EquationSolver();
+        
+        // Current JSON representation
+        let currentJSON = null;
+        let componentInstance = null;
+        
+        // Initial state
+        const initialState = {
+            count: 0
+        };
+        
+        // Transform from CNL
+        window.transformFromCNL = function() {
+            const cnlText = document.getElementById('cnl-input').value;
+            
+            try {
+                // Parse CNL to AST
+                const ast = cnlParser.parse(cnlText);
+                
+                // Compile AST to JSON
+                currentJSON = cnlCompiler.compile(ast);
+                
+                // Update DSL from JSON
+                const dslText = jsonToDSL.convert(currentJSON);
+                document.getElementById('dsl-input').value = dslText;
+                
+                // Update JSON view
+                updateJSONView();
+                
+                // Show success
+                showStatus('cnl-status', 'CNL successfully transformed!', 'success');
+                showStatus('dsl-status', 'DSL synchronized from CNL', 'success');
+                
+                // Auto-render component
+                renderComponent();
+            } catch (error) {
+                showStatus('cnl-status', 'Error: ' + error.message, 'error');
+                console.error('CNL transformation error:', error);
+            }
+        };
+        
+        // Transform from DSL
+        window.transformFromDSL = function() {
+            const dslText = document.getElementById('dsl-input').value;
+            
+            try {
+                // Compile DSL to JSON
+                currentJSON = dslCompiler.compile(dslText);
+                
+                // Update CNL from JSON
+                const cnlText = jsonToCNL.convert(currentJSON);
+                document.getElementById('cnl-input').value = cnlText;
+                
+                // Update JSON view
+                updateJSONView();
+                
+                // Show success
+                showStatus('dsl-status', 'DSL successfully transformed!', 'success');
+                showStatus('cnl-status', 'CNL synchronized from DSL', 'success');
+                
+                // Auto-render component
+                renderComponent();
+            } catch (error) {
+                showStatus('dsl-status', 'Error: ' + error.message, 'error');
+                console.error('DSL transformation error:', error);
+            }
+        };
+        
+        // Render component from current JSON
+        window.renderComponent = function() {
+            if (!currentJSON) {
+                // Try to compile from DSL first
+                const dslText = document.getElementById('dsl-input').value;
+                try {
+                    currentJSON = dslCompiler.compile(dslText);
+                } catch (error) {
+                    showStatus('component-status', 'Please transform CNL or DSL first', 'error');
+                    return;
+                }
+            }
+            
+            try {
+                const outputEl = document.getElementById('component-output');
+                
+                // Clear previous component
+                if (componentInstance) {
+                    lifecycle.unmount(componentInstance);
+                }
+                outputEl.innerHTML = '';
+                
+                // Create state object
+                const state = { ...initialState };
+                
+                // Render component
+                componentInstance = lifecycle.mount(currentJSON, outputEl, state, solver);
+                
+                showStatus('component-status', 'Component rendered successfully!', 'success');
+            } catch (error) {
+                showStatus('component-status', 'Error: ' + error.message, 'error');
+                console.error('Render error:', error);
+            }
+        };
+        
+        // Update JSON view
+        function updateJSONView() {
+            if (currentJSON) {
+                document.getElementById('json-output').textContent = JSON.stringify(currentJSON, null, 2);
+            }
+        }
+        
+        // Show status message
+        function showStatus(elementId, message, type) {
+            const statusEl = document.getElementById(elementId);
+            statusEl.className = type;
+            statusEl.textContent = message;
+            
+            // Clear after 3 seconds
+            setTimeout(() => {
+                statusEl.textContent = '';
+                statusEl.className = '';
+            }, 3000);
+        }
+        
+        // Reset functions
+        window.resetCNL = function() {
+            document.getElementById('cnl-input').value = `Define Counter with state:
+  A container with class "counter-container" containing:
+    A heading showing the count
+    A button labeled "Increment" that increments the count on click
+    A button labeled "Decrement" that decrements the count on click`;
+            showStatus('cnl-status', 'CNL reset to default', 'success');
+        };
+        
+        window.resetDSL = function() {
+            document.getElementById('dsl-input').value = `Counter :: state =>
+  div.counter-container [
+    h2 { state.count }
+    button @click="state.count++" { "Increment" }
+    button @click="state.count--" { "Decrement" }
+  ]`;
+            showStatus('dsl-status', 'DSL reset to default', 'success');
+        };
+        
+        // Auto-transform on load
+        setTimeout(() => {
+            transformFromDSL();
+        }, 500);
+    </script>
+</body>
+</html>
