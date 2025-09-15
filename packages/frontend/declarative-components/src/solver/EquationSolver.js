@@ -166,6 +166,12 @@ export class EquationSolver {
    * Get nested property value from DataStore
    */
   getNestedProperty(propertyPath) {
+    // Use the DataStoreAdapter's getProperty method to access data
+    if (this.dataStore && typeof this.dataStore.getProperty === 'function') {
+      return this.dataStore.getProperty(propertyPath);
+    }
+    
+    // Fallback: direct object access (for backwards compatibility)
     const parts = propertyPath.split('.');
     let current = this.dataStore;
     
@@ -331,6 +337,13 @@ export class EquationSolver {
    * Set nested property value in DataStore
    */
   setNestedProperty(propertyPath, value) {
+    // Use the DataStoreAdapter's setProperty method to update data
+    if (this.dataStore && typeof this.dataStore.setProperty === 'function') {
+      this.dataStore.setProperty(propertyPath, value);
+      return;
+    }
+    
+    // Fallback: direct object access (for backwards compatibility)
     const parts = propertyPath.split('.');
     let current = this.dataStore;
     

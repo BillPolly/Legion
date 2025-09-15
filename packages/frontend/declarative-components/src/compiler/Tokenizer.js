@@ -248,7 +248,11 @@ export class Tokenizer {
     const controlKeywords = {
       'if': 'IF',
       'for': 'FOR',
-      'in': 'IN'
+      'in': 'IN',
+      'children': 'CHILDREN',
+      'stateProjection': 'STATE_PROJECTION',
+      'mountPoint': 'MOUNT_POINT',
+      'repeat': 'REPEAT'
     };
     
     // Attribute keywords that can also be used as regular identifiers

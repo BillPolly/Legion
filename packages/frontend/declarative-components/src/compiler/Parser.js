@@ -54,12 +54,25 @@ export class Parser {
       return this.parseFor();
     }
     
+    // Check for children blocks (hierarchical components)
+    if (this.check('CHILDREN')) {
+      return this.parseChildrenBlock();
+    }
+    
     // Regular element
     const element = this.parseElementTag();
     
-    // Parse content or children
+    // Parse content, children, or hierarchical children blocks
     if (this.check('LBRACE')) {
-      element.content = this.parseContent();
+      const content = this.parseContent();
+      
+      // Handle content with children blocks
+      if (content && content.type === 'ContentWithChildren') {
+        element.children = content.children;
+        element.content = content.expressions;
+      } else {
+        element.content = content;
+      }
     } else if (this.check('LBRACKET')) {
       element.children = this.parseChildren();
     }
@@ -171,14 +184,18 @@ export class Parser {
 
   /**
    * Parse element content (text or expressions)
-   * @returns {Object} Content node
+   * @returns {Object} Content node or children array
    */
   parseContent() {
     this.consume('LBRACE', 'Expected {');
     const expressions = [];
+    const children = [];
     
     while (!this.check('RBRACE') && !this.isAtEnd()) {
-      if (this.check('STRING')) {
+      if (this.check('CHILDREN')) {
+        // Parse children block within element content
+        children.push(this.parseChildrenBlock());
+      } else if (this.check('STRING')) {
         expressions.push({
           type: 'Literal',
           value: this.advance().value
@@ -201,6 +218,15 @@ export class Parser {
     }
     
     this.consume('RBRACE', 'Expected }');
+    
+    // If we found children blocks, return them as a special structure
+    if (children.length > 0) {
+      return {
+        type: 'ContentWithChildren',
+        expressions: expressions.length > 0 ? expressions : null,
+        children: children
+      };
+    }
     
     if (expressions.length === 0) {
       return null;
@@ -432,6 +458,136 @@ export class Parser {
       iterable,
       children
     };
+  }
+
+  /**
+   * Parse children block for hierarchical components
+   * @returns {Object} ChildrenBlock AST node
+   */
+  parseChildrenBlock() {
+    this.consume('CHILDREN', 'Expected children');
+    this.consume('LBRACE', 'Expected { after children');
+    
+    const childrenBlock = {
+      type: 'ChildrenBlock',
+      children: [],
+      stateProjection: null,
+      mountPoint: null,
+      repeat: null
+    };
+    
+    // Parse child components and directives
+    while (!this.check('RBRACE') && !this.isAtEnd()) {
+      if (this.check('STATE_PROJECTION')) {
+        childrenBlock.stateProjection = this.parseStateProjection();
+      } else if (this.check('MOUNT_POINT')) {
+        childrenBlock.mountPoint = this.parseMountPoint();
+      } else if (this.check('REPEAT')) {
+        childrenBlock.repeat = this.parseRepeat();
+      } else if (this.check('IDENTIFIER')) {
+        // Look ahead to check if this is a valid child component syntax
+        const nextToken = this.tokens[this.current + 1];
+        
+        if (nextToken && nextToken.type === 'ARROW') {
+          // Component without :: (missing entity parameter)
+          throw new Error('Child component must have entity parameter');
+        }
+        
+        // Parse child component
+        const childComponent = this.parseComponent();
+        
+        // Validate child component has entity parameter
+        if (!childComponent.entityParam) {
+          throw new Error('Child component must have entity parameter');
+        }
+        
+        // Check for nested children blocks (not allowed)
+        if (childComponent.body && childComponent.body.children) {
+          const hasNestedChildren = childComponent.body.children.some(child => 
+            child.type === 'ChildrenBlock'
+          );
+          if (hasNestedChildren) {
+            throw new Error('Nested children blocks are not supported');
+          }
+        }
+        
+        childrenBlock.children.push(childComponent);
+      } else {
+        // Skip unknown tokens or advance to avoid infinite loop
+        this.advance();
+      }
+    }
+    
+    this.consume('RBRACE', 'Expected } after children block');
+    
+    // Validate required stateProjection
+    if (!childrenBlock.stateProjection) {
+      throw new Error('Children block must include stateProjection');
+    }
+    
+    return childrenBlock;
+  }
+
+  /**
+   * Parse stateProjection directive
+   * @returns {Object} State projection object
+   */
+  parseStateProjection() {
+    this.consume('STATE_PROJECTION', 'Expected stateProjection');
+    this.consume('COLON', 'Expected : after stateProjection');
+    
+    if (!this.check('LBRACE')) {
+      throw new Error('StateProjection must be an object with string key-value pairs');
+    }
+    
+    this.consume('LBRACE', 'Expected { for stateProjection object');
+    const projection = {};
+    
+    while (!this.check('RBRACE') && !this.isAtEnd()) {
+      // Parse key
+      const key = this.consume('STRING', 'Expected string key in stateProjection');
+      this.consume('COLON', 'Expected : after key in stateProjection');
+      
+      // Parse value
+      const value = this.consume('STRING', 'Expected string value in stateProjection');
+      projection[key.value] = value.value;
+      
+      // Optional comma
+      if (this.check('COMMA')) {
+        this.advance();
+      }
+    }
+    
+    this.consume('RBRACE', 'Expected } after stateProjection object');
+    return projection;
+  }
+
+  /**
+   * Parse mountPoint directive
+   * @returns {string} Mount point selector
+   */
+  parseMountPoint() {
+    this.consume('MOUNT_POINT', 'Expected mountPoint');
+    this.consume('COLON', 'Expected : after mountPoint');
+    const mountPoint = this.consume('STRING', 'Expected string value for mountPoint');
+    return mountPoint.value;
+  }
+
+  /**
+   * Parse repeat directive
+   * @returns {string} Repeat array path
+   */
+  parseRepeat() {
+    this.consume('REPEAT', 'Expected repeat');
+    this.consume('COLON', 'Expected : after repeat');
+    const repeat = this.consume('STRING', 'Expected string value for repeat');
+    
+    // Validate repeat directive has valid array path
+    if (!repeat.value || repeat.value.trim() === '') {
+      throw new Error('Repeat directive must specify valid array path');
+    }
+    
+    return repeat.value;
   }
 
   // Helper methods for token management
