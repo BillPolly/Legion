@@ -273,20 +273,34 @@ async function handlePerspectives(toolManager, args) {
   
   // Clear ONLY the perspectives collection, not all data
   console.log('🧹 Clearing existing perspectives only...');
-  await toolManager.serviceOrchestrator.databaseService.clearCollection('tool_perspectives');
-  console.log('✅ Cleared existing perspectives (kept tools)');
+  
+  // Import ResourceManager and MongoClient to clear perspectives directly
+  const { ResourceManager } = await import('@legion/resource-manager');
+  const { MongoClient } = await import('mongodb');
+  
+  const resourceManager = await ResourceManager.getInstance();
+  const mongoUrl = resourceManager.get('env.MONGODB_URL') || 'mongodb://localhost:27017';
+  
+  const client = new MongoClient(mongoUrl);
+  await client.connect();
+  const db = client.db('legion_tools');
+  
+  const result = await db.collection('tool_perspectives').deleteMany({});
+  console.log(`✅ Cleared ${result.deletedCount} existing perspectives (kept tools)`);
+  
+  await client.close();
   
   console.log('🔄 Generating perspectives...');
   
-  const result = await toolManager.generatePerspectives({ 
+  const perspectiveResult = await toolManager.generatePerspectives({ 
     verbose,
     forceRegenerate: true  // Always regenerate perspectives by default
   });
   
-  console.log(`✅ Generated ${result.generated} perspectives`);
+  console.log(`✅ Generated ${perspectiveResult.generated} perspectives`);
   
-  if (result.failed > 0) {
-    console.log(`⚠️  ${result.failed} failed`);
+  if (perspectiveResult.failed > 0) {
+    console.log(`⚠️  ${perspectiveResult.failed} failed`);
   }
 }
 
