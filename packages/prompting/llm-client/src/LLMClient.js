@@ -182,18 +182,35 @@ export class LLMClient {
           attempt: attempt + 1
         });
         
-        if (error.status === 429) { // Rate limit
+        // Check for non-retryable errors - FAIL FAST
+        if (this.isNonRetryableError(error)) {
+          console.error(`[LLMClient ${this.clientId}] NON-RETRYABLE ERROR: ${error.message}`);
+          throw error; // Fail immediately - no retries for auth/quota errors
+        }
+        
+        // Handle retryable errors
+        if (error.status === 429) { // Rate limit - retry with backoff
           if (attempt < this.maxRetries - 1) {
+            console.log(`[LLMClient ${this.clientId}] Rate limited, retrying with backoff...`);
             await this.sleep(this.calculateBackoffDelay(attempt));
             continue;
           }
-        } else if (error.status >= 500) { // Server error
+        } else if (error.status >= 500) { // Server error - retry with delay
           if (attempt < this.maxRetries - 1) {
+            console.log(`[LLMClient ${this.clientId}] Server error ${error.status}, retrying...`);
             await this.sleep(this.serverErrorDelay);
             continue;
           }
+        } else if (this.isTransientNetworkError(error)) {
+          // Network timeouts, connection errors - retry
+          if (attempt < this.maxRetries - 1) {
+            console.log(`[LLMClient ${this.clientId}] Transient network error, retrying...`);
+            await this.sleep(this.baseDelay);
+            continue;
+          }
         } else {
-          // Client errors (4xx except 429) - don't retry
+          // Unknown error type - don't retry to be safe
+          console.error(`[LLMClient ${this.clientId}] Unknown error type, not retrying: ${error.message}`);
           throw error;
         }
       }
@@ -598,6 +615,107 @@ export class LLMClient {
    */
   sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Check if error is non-retryable (auth, quota, invalid request)
+   * These errors should fail immediately without retries
+   */
+  isNonRetryableError(error) {
+    // Check status codes
+    if (error.status === 401) { // Unauthorized - bad API key
+      return true;
+    }
+    if (error.status === 403) { // Forbidden - no access/permissions
+      return true;
+    }
+    if (error.status === 402) { // Payment required - out of credits
+      return true;
+    }
+    if (error.status === 400) { // Bad request - invalid parameters
+      return true;
+    }
+    
+    // Check error messages for specific non-retryable conditions
+    const errorMessage = (error.message || '').toLowerCase();
+    
+    // Authentication/API key errors
+    if (errorMessage.includes('invalid api key') ||
+        errorMessage.includes('invalid_api_key') ||
+        errorMessage.includes('authentication') ||
+        errorMessage.includes('unauthorized') ||
+        errorMessage.includes('invalid x-api-key') ||
+        errorMessage.includes('api key not found')) {
+      return true;
+    }
+    
+    // Quota/billing errors (but NOT rate limits)
+    if (errorMessage.includes('quota') ||
+        (errorMessage.includes('exceeded') && !errorMessage.includes('rate limit')) ||
+        errorMessage.includes('credit') ||
+        errorMessage.includes('insufficient funds') ||
+        errorMessage.includes('payment required') ||
+        errorMessage.includes('billing') ||
+        errorMessage.includes('out of tokens') ||
+        errorMessage.includes('usage limit')) {
+      return true;
+    }
+    
+    // Model/permission errors
+    if (errorMessage.includes('model not found') ||
+        errorMessage.includes('invalid model') ||
+        errorMessage.includes('permission denied') ||
+        errorMessage.includes('access denied') ||
+        errorMessage.includes('not available')) {
+      return true;
+    }
+    
+    // Check error type/code for Anthropic-specific errors
+    if (error.type === 'authentication_error' ||
+        error.type === 'invalid_request_error' ||
+        error.type === 'permission_error' ||
+        error.type === 'not_found_error') {
+      return true;
+    }
+    
+    return false;
+  }
+
+  /**
+   * Check if error is a transient network error that should be retried
+   */
+  isTransientNetworkError(error) {
+    const errorMessage = (error.message || '').toLowerCase();
+    
+    // Network connectivity issues
+    if (errorMessage.includes('econnrefused') ||
+        errorMessage.includes('econnreset') ||
+        errorMessage.includes('etimedout') ||
+        errorMessage.includes('enotfound') ||
+        errorMessage.includes('socket hang up') ||
+        errorMessage.includes('network error') ||
+        errorMessage.includes('fetch failed') ||
+        errorMessage.includes('timeout')) {
+      return true;
+    }
+    
+    // Temporary DNS issues
+    if (errorMessage.includes('getaddrinfo') ||
+        errorMessage.includes('dns')) {
+      return true;
+    }
+    
+    // Check error code
+    if (error.code === 'ECONNREFUSED' ||
+        error.code === 'ECONNRESET' ||
+        error.code === 'ETIMEDOUT' ||
+        error.code === 'ENOTFOUND' ||
+        error.code === 'EPIPE' ||
+        error.code === 'EHOSTUNREACH') {
+      return true;
+    }
+    
+    return false;
   }
 
   /**

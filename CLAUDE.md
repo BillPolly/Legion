@@ -183,3 +183,11 @@ NEVER skip tests under any circumstances, either the tests is not needed in whic
 NEVER mock in integration tests unless it is for incidental things.
 
 NEVER EVER HAVE FALLBACKS IN TESTS OR IMPLEMENTATION code, FAIL FAST!
+
+WE NEVER WANT BACKWARDS COMPATABILITY, WE ALWAYS WNNT JUST ONE WAY OF DOING THINGS!
+
+FIX TEST FAILURES ONE BY ONE.
+
+IF you are having difficulty debugging a test, then write in depth debug scripts and tests in a /tmp direcotry and really drill into the problem with a detailed breakdown and step by step testing and logging.
+
+

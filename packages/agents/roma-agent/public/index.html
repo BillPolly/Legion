@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROMA Agent - Recursive Task Decomposition</title>
+    <style>
+        :root {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --text-primary: #eaeaea;
+            --text-secondary: #a0a0a0;
+            --accent: #0f4c75;
+            --success: #52b788;
+            --warning: #f77f00;
+            --error: #d62828;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: var(--bg-secondary);
+            padding: 1rem 2rem;
+            border-bottom: 2px solid var(--accent);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--error);
+        }
+
+        .status-indicator.connected {
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .main-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+        }
+
+        .task-input-container {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .task-input-container h2 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        #taskInput {
+            flex: 1;
+            padding: 0.75rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--accent);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        #executeBtn {
+            padding: 0.75rem 2rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+
+        #executeBtn:hover:not(:disabled) {
+            background: #0d3d5c;
+        }
+
+        #executeBtn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .execution-container {
+            flex: 1;
+            display: flex;
+            gap: 2rem;
+            overflow: hidden;
+        }
+
+        .task-tree-panel {
+            flex: 1;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .progress-panel {
+            width: 400px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .panel-header {
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--accent);
+        }
+
+        .task-node {
+            margin: 0.5rem 0;
+            padding: 0.75rem;
+            background: var(--bg-primary);
+            border-radius: 4px;
+            border-left: 3px solid var(--accent);
+        }
+
+        .task-node.atomic {
+            border-left-color: var(--success);
+        }
+
+        .task-node.decomposed {
+            border-left-color: var(--warning);
+        }
+
+        .task-node.failed {
+            border-left-color: var(--error);
+        }
+
+        .task-description {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .task-metadata {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .progress-item {
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+            background: var(--bg-primary);
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .progress-item.started {
+            border-left: 3px solid var(--accent);
+        }
+
+        .progress-item.executing {
+            border-left: 3px solid var(--warning);
+        }
+
+        .progress-item.completed {
+            border-left: 3px solid var(--success);
+        }
+
+        .progress-item.failed {
+            border-left: 3px solid var(--error);
+        }
+
+        .timestamp {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--accent);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-spinner.active {
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🤖 ROMA Agent - Recursive Task Decomposition</h1>
+        <div class="connection-status">
+            <span id="connectionText">Disconnected</span>
+            <div id="statusIndicator" class="status-indicator"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="main-panel">
+            <div class="task-input-container">
+                <h2>Enter Task Description</h2>
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        id="taskInput" 
+                        placeholder="Describe your task (e.g., 'Create a web scraper for news articles')"
+                        onkeypress="handleKeyPress(event)"
+                    />
+                    <button id="executeBtn" onclick="executeTask()">
+                        Execute Task
+                    </button>
+                    <div class="loading-spinner" id="loadingSpinner"></div>
+                </div>
+            </div>
+
+            <div class="execution-container">
+                <div class="task-tree-panel">
+                    <div class="panel-header">
+                        <h3>Task Decomposition Tree</h3>
+                    </div>
+                    <div id="taskTree">
+                        <div style="color: var(--text-secondary); text-align: center; padding: 2rem;">
+                            Enter a task to see its decomposition
+                        </div>
+                    </div>
+                </div>
+
+                <div class="progress-panel">
+                    <div class="panel-header">
+                        <h3>Execution Progress</h3>
+                    </div>
+                    <div id="progressLog">
+                        <div style="color: var(--text-secondary); text-align: center; padding: 2rem;">
+                            Progress updates will appear here
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let isConnected = false;
+
+        // Initialize WebSocket connection
+        function initWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws`;
+            
+            console.log('Connecting to WebSocket:', wsUrl);
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('WebSocket connected');
+                isConnected = true;
+                updateConnectionStatus(true);
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket disconnected');
+                isConnected = false;
+                updateConnectionStatus(false);
+                // Attempt to reconnect after 3 seconds
+                setTimeout(initWebSocket, 3000);
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const message = JSON.parse(event.data);
+                    handleMessage(message);
+                } catch (error) {
+                    console.error('Failed to parse message:', error);
+                }
+            };
+        }
+
+        // Handle incoming WebSocket messages
+        function handleMessage(message) {
+            switch (message.type) {
+                case 'task_started':
+                    handleTaskStarted(message.data);
+                    break;
+                case 'task_progress':
+                    handleTaskProgress(message.data);
+                    break;
+                case 'task_completed':
+                    handleTaskCompleted(message.data);
+                    break;
+                case 'task_failed':
+                    handleTaskFailed(message.data);
+                    break;
+                case 'task_tree':
+                    updateTaskTree(message.data);
+                    break;
+                default:
+                    console.log('Unknown message type:', message.type);
+            }
+        }
+
+        // Execute task
+        function executeTask() {
+            const taskInput = document.getElementById('taskInput');
+            const taskDescription = taskInput.value.trim();
+            
+            if (!taskDescription) {
+                alert('Please enter a task description');
+                return;
+            }
+
+            if (!isConnected) {
+                alert('WebSocket not connected. Please wait...');
+                return;
+            }
+
+            // Clear previous results
+            document.getElementById('taskTree').innerHTML = '<div style="color: var(--text-secondary);">Processing...</div>';
+            document.getElementById('progressLog').innerHTML = '';
+
+            // Disable button and show spinner
+            document.getElementById('executeBtn').disabled = true;
+            document.getElementById('loadingSpinner').classList.add('active');
+
+            // Send task execution request
+            ws.send(JSON.stringify({
+                type: 'execute_task',
+                data: {
+                    description: taskDescription
+                }
+            }));
+        }
+
+        // Handle key press in input
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                executeTask();
+            }
+        }
+
+        // Update connection status
+        function updateConnectionStatus(connected) {
+            const indicator = document.getElementById('statusIndicator');
+            const text = document.getElementById('connectionText');
+            
+            if (connected) {
+                indicator.classList.add('connected');
+                text.textContent = 'Connected';
+            } else {
+                indicator.classList.remove('connected');
+                text.textContent = 'Disconnected';
+            }
+        }
+
+        // Handle task started
+        function handleTaskStarted(data) {
+            addProgressItem('started', `Task started: ${data.description}`, data.timestamp);
+        }
+
+        // Handle task progress
+        function handleTaskProgress(data) {
+            const status = data.status || 'executing';
+            const description = data.description || 'Processing...';
+            addProgressItem(status, description, data.timestamp);
+        }
+
+        // Handle task completed
+        function handleTaskCompleted(data) {
+            addProgressItem('completed', 'Task completed successfully', data.timestamp);
+            document.getElementById('executeBtn').disabled = false;
+            document.getElementById('loadingSpinner').classList.remove('active');
+        }
+
+        // Handle task failed
+        function handleTaskFailed(data) {
+            addProgressItem('failed', `Task failed: ${data.error}`, data.timestamp);
+            document.getElementById('executeBtn').disabled = false;
+            document.getElementById('loadingSpinner').classList.remove('active');
+        }
+
+        // Add progress item
+        function addProgressItem(status, description, timestamp) {
+            const progressLog = document.getElementById('progressLog');
+            const item = document.createElement('div');
+            item.className = `progress-item ${status}`;
+            
+            const time = timestamp ? new Date(timestamp).toLocaleTimeString() : new Date().toLocaleTimeString();
+            
+            item.innerHTML = `
+                <div>${description}</div>
+                <div class="timestamp">${time}</div>
+            `;
+            
+            progressLog.appendChild(item);
+            progressLog.scrollTop = progressLog.scrollHeight;
+        }
+
+        // Update task tree visualization
+        function updateTaskTree(treeData) {
+            const treeContainer = document.getElementById('taskTree');
+            treeContainer.innerHTML = renderTaskNode(treeData.rootTask, 0);
+        }
+
+        // Render task node
+        function renderTaskNode(task, depth) {
+            if (!task) return '';
+            
+            const indent = depth * 20;
+            const nodeClass = task.executionType === 'atomic' ? 'atomic' : 
+                             task.executionType === 'decomposed' ? 'decomposed' : '';
+            
+            let html = `
+                <div class="task-node ${nodeClass}" style="margin-left: ${indent}px;">
+                    <div class="task-description">${task.description}</div>
+                    <div class="task-metadata">
+                        Type: ${task.operation || 'Unknown'} | 
+                        Depth: ${task.depth || 0}
+                    </div>
+                </div>
+            `;
+            
+            if (task.subtasks && task.subtasks.length > 0) {
+                for (const subtask of task.subtasks) {
+                    html += renderTaskNode(subtask, depth + 1);
+                }
+            }
+            
+            return html;
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initWebSocket();
+        });
+    </script>
+</body>
+</html>
