@@ -43,6 +43,7 @@ describe('RecursiveExecutionStrategy', () => {
     };
 
     strategy = new RecursiveExecutionStrategy({
+      testMode: true,  // Enable test mode for unit tests
       toolRegistry: mockToolRegistry,
       llmClient: mockLLMClient,
       progressStream: mockProgressStream,

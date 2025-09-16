@@ -3,6 +3,8 @@
  * Follows Clean Code principles with small, focused methods
  */
 
+import { ResourceManager } from '@legion/resource-manager';
+import { ToolRegistry } from '@legion/tools-registry';
 import { ExecutionContext } from './core/ExecutionContext.js';
 import { DependencyResolver } from './core/DependencyResolver.js';
 import { ExecutionStrategyResolver } from './core/strategies/ExecutionStrategyResolver.js';
@@ -32,12 +34,24 @@ import {
 
 export class ROMAAgent {
   constructor(injectedDependencies = {}) {
-    // Dependency injection with proper defaults
-    this.dependencyResolver = this.injectDependencyResolver(injectedDependencies);
-    this.strategyResolver = this.injectStrategyResolver(injectedDependencies);
-    this.logger = this.injectLogger(injectedDependencies);
-    this.errorHandler = this.injectErrorHandler(injectedDependencies);
-    this.errorRecovery = this.injectErrorRecovery(injectedDependencies);
+    // For unit tests ONLY - allow manual dependency injection
+    this.testMode = !!injectedDependencies.testMode;
+    
+    if (this.testMode) {
+      // Unit test mode - use injected dependencies
+      this.dependencyResolver = this.injectDependencyResolver(injectedDependencies);
+      this.strategyResolver = this.injectStrategyResolver(injectedDependencies);
+      this.logger = this.injectLogger(injectedDependencies);
+      this.errorHandler = this.injectErrorHandler(injectedDependencies);
+      this.errorRecovery = this.injectErrorRecovery(injectedDependencies);
+    } else {
+      // Production mode - dependencies will be set from ResourceManager in initialize()
+      this.dependencyResolver = null;
+      this.strategyResolver = null;
+      this.logger = new Logger('ROMAAgent');
+      this.errorHandler = null;
+      this.errorRecovery = null;
+    }
     
     // Store options for further use
     this.configurationOptions = injectedDependencies;
@@ -142,9 +156,51 @@ export class ROMAAgent {
       return; // Already initialized
     }
     
+    // In production mode, get dependencies from ResourceManager
+    if (!this.testMode) {
+      await this.initializeDependenciesFromResourceManager();
+    }
+    
     await this.strategyResolver.initialize();
     this.isInitialized = true;
     this.logger.info('ROMAAgent initialized');
+  }
+  
+  /**
+   * Initialize dependencies from ResourceManager singleton
+   */
+  async initializeDependenciesFromResourceManager() {
+    const resourceManager = await ResourceManager.getInstance();
+    
+    // Get ToolRegistry singleton directly - it's a singleton!
+    const toolRegistry = await ToolRegistry.getInstance();
+    
+    // Get LLM client from ResourceManager
+    const llmClient = await resourceManager.get('llmClient');
+    
+    // Create dependencies with real Legion components
+    const dependencies = {
+      toolRegistry,
+      resourceManager,
+      llmClient,
+      logger: this.logger
+    };
+    
+    // Initialize resolvers with real dependencies
+    this.dependencyResolver = new DependencyResolver(dependencies);
+    this.strategyResolver = new ExecutionStrategyResolver(dependencies);
+    this.errorHandler = new ErrorHandler({
+      logger: this.logger,
+      context: { component: 'ROMAAgent' },
+      maxRetryAttempts: this.configurationOptions.maxRetryAttempts,
+      retryDelay: this.configurationOptions.retryDelay
+    });
+    this.errorRecovery = new ErrorRecovery({
+      logger: this.logger,
+      enableStateRollback: this.configurationOptions.enableStateRollback
+    });
+    
+    this.logger.info('ROMAAgent dependencies initialized from singletons');
   }
 
   /**
@@ -206,6 +262,11 @@ export class ROMAAgent {
    * Execute a single task or task plan
    */
   async execute(task, userContext = {}) {
+    // Ensure agent is initialized
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+    
     const executionId = this.generateExecutionId();
     
     try {

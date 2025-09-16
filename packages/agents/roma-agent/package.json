@@ -11,7 +11,10 @@
   },
   "dependencies": {
     "@legion/llm-client": "file:../../prompting/llm-client",
-    "@legion/resource-manager": "file:../../resource-manager"
+    "@legion/resource-manager": "file:../../resource-manager",
+    "@legion/tools": "file:../../tools",
+    "@legion/gemini-tools": "file:../../tools/gemini-tools",
+    "@legion/schema": "file:../../schema"
   },
   "devDependencies": {
     "jest": "^29.0.0"

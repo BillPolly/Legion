@@ -15,17 +15,17 @@ describe('AtomicExecutionStrategy', () => {
   let mockProgressStream;
 
   beforeEach(() => {
-    // Mock tool registry
+    // Mock tool registry for unit tests
     mockToolRegistry = {
       getTool: jest.fn()
     };
 
-    // Mock LLM client
+    // Mock LLM client for unit tests
     mockLLMClient = {
       complete: jest.fn()
     };
 
-    // Mock progress stream
+    // Mock progress stream for unit tests
     mockProgressStream = {
       createTaskEmitter: jest.fn(() => ({
         emit: jest.fn(),
@@ -42,7 +42,9 @@ describe('AtomicExecutionStrategy', () => {
       }))
     };
 
+    // Create strategy with testMode flag for unit tests
     strategy = new AtomicExecutionStrategy({
+      testMode: true,  // Enable test mode to allow mocks
       toolRegistry: mockToolRegistry,
       llmClient: mockLLMClient,
       progressStream: mockProgressStream,

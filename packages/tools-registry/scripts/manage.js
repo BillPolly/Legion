@@ -271,9 +271,17 @@ async function handleLoad(toolManager, args) {
 async function handlePerspectives(toolManager, args) {
   const verbose = args.includes('--verbose') || args.includes('-v');
   
+  // Clear ONLY the perspectives collection, not all data
+  console.log('🧹 Clearing existing perspectives only...');
+  await toolManager.serviceOrchestrator.databaseService.clearCollection('tool_perspectives');
+  console.log('✅ Cleared existing perspectives (kept tools)');
+  
   console.log('🔄 Generating perspectives...');
   
-  const result = await toolManager.generatePerspectives({ verbose });
+  const result = await toolManager.generatePerspectives({ 
+    verbose,
+    forceRegenerate: true  // Always regenerate perspectives by default
+  });
   
   console.log(`✅ Generated ${result.generated} perspectives`);
   

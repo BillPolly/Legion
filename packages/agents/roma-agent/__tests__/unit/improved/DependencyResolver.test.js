@@ -26,6 +26,7 @@ describe('DependencyResolver', () => {
     };
 
     resolver = new DependencyResolver({
+      testMode: true,  // Enable test mode for unit tests
       toolRegistry: mockToolRegistry,
       resourceManager: mockResourceManager,
       llmClient: mockLlmClient,

@@ -12,11 +12,24 @@ describe('ROMAAgent Simple Integration', () => {
       const agent = new ROMAAgent();
       
       expect(agent).toBeDefined();
-      expect(agent.strategyResolver).toBeDefined();
-      expect(agent.dependencyResolver).toBeDefined();
+      // Before initialization, these are null in production mode
+      expect(agent.strategyResolver).toBeNull();
+      expect(agent.dependencyResolver).toBeNull();
       expect(agent.options.maxConcurrency).toBe(5);
       expect(agent.options.defaultTimeout).toBe(30000);
       expect(agent.isInitialized).toBe(false);
+    });
+    
+    it('should have resolvers after initialization', async () => {
+      const agent = new ROMAAgent();
+      
+      await agent.initialize();
+      
+      expect(agent.strategyResolver).toBeDefined();
+      expect(agent.dependencyResolver).toBeDefined();
+      expect(agent.isInitialized).toBe(true);
+      
+      await agent.shutdown();
     });
 
     it('should create ROMAAgent with custom options', () => {

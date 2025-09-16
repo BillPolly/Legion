@@ -1,42 +1,41 @@
 /**
  * Integration test for ROMAAgent - New improved implementation
- * Tests the complete agent execution workflow
+ * Tests the complete agent execution workflow with REAL Legion tools
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeAll, beforeEach, afterAll } from '@jest/globals';
 import { ROMAAgent } from '../../src/ROMAAgent.js';
+import { ResourceManager } from '@legion/resource-manager';
+import { ToolRegistry } from '@legion/tools-registry';
 
 describe('ROMAAgent Integration', () => {
   let agent;
-  let mockToolRegistry;
-  let mockResourceManager;
-  let mockLlmClient;
+  let resourceManager;
+  let toolRegistry;
+  let llmClient;
+
+  beforeAll(async () => {
+    // Get singletons - real instances, no mocks!
+    resourceManager = await ResourceManager.getInstance();
+    toolRegistry = await ToolRegistry.getInstance();
+    
+    // Get LLM client from ResourceManager
+    llmClient = await resourceManager.get('llmClient');
+  });
 
   beforeEach(() => {
-    mockToolRegistry = {
-      getTool: jest.fn().mockResolvedValue({
-        name: 'calculator',
-        execute: jest.fn().mockResolvedValue({ result: 42 })
-      })
-    };
-
-    mockResourceManager = {
-      get: jest.fn().mockReturnValue('test-value')
-    };
-
-    mockLlmClient = {
-      complete: jest.fn().mockResolvedValue({
-        content: 'LLM response'
-      })
-    };
-
+    // Create agent with real dependencies - no testMode!
     agent = new ROMAAgent({
-      toolRegistry: mockToolRegistry,
-      resourceManager: mockResourceManager,
-      llmClient: mockLlmClient,
       maxConcurrency: 2,
       defaultTimeout: 5000
     });
+  });
+  
+  afterAll(async () => {
+    // Clean up
+    if (agent && agent.isInitialized) {
+      await agent.shutdown();
+    }
   });
 
   describe('Basic Agent Operations', () => {
@@ -48,12 +47,14 @@ describe('ROMAAgent Integration', () => {
       expect(agent.dependencyResolver).toBeDefined();
     });
 
-    it('should execute single task successfully', async () => {
+    it('should execute single task successfully with real Legion calculator tool', async () => {
+      await agent.initialize();
+      
       const task = {
         id: 'test-task',
-        description: 'Test task',
+        description: 'Calculate 5 + 7',
         tool: 'calculator',
-        params: { a: 5, b: 7 }
+        params: { expression: '5 + 7' } // Real calculator tool expects 'expression'
       };
 
       const result = await agent.execute(task);
@@ -65,18 +66,22 @@ describe('ROMAAgent Integration', () => {
       expect(result.metadata.duration).toBeGreaterThan(0);
     });
 
-    it('should execute multiple tasks with dependencies', async () => {
+    it('should execute multiple tasks with dependencies using real tools', async () => {
+      await agent.initialize();
+      
       const tasks = [
         {
           id: 'task1',
-          description: 'First task',
-          tool: 'calculator'
+          description: 'Calculate 10 * 5',
+          tool: 'calculator',
+          params: { expression: '10 * 5' }
         },
         {
           id: 'task2',
-          description: 'Second task',
+          description: 'Calculate 100 / 2',
           dependencies: ['task1'],
-          tool: 'calculator'
+          tool: 'calculator',
+          params: { expression: '100 / 2' }
         }
       ];
 
@@ -88,15 +93,13 @@ describe('ROMAAgent Integration', () => {
     });
 
     it('should handle task execution errors gracefully', async () => {
-      mockToolRegistry.getTool.mockResolvedValue({
-        name: 'failing-tool',
-        execute: jest.fn().mockRejectedValue(new Error('Tool execution failed'))
-      });
-
+      await agent.initialize();
+      
+      // Use a non-existent tool to trigger an error
       const task = {
         id: 'failing-task',
         description: 'Task that fails',
-        tool: 'failing-tool'
+        tool: 'non-existent-tool-xyz123'
       };
 
       const result = await agent.execute(task);
@@ -108,21 +111,27 @@ describe('ROMAAgent Integration', () => {
   });
 
   describe('Agent Configuration', () => {
-    it('should accept custom configuration options', () => {
+    it('should accept custom configuration options', async () => {
       const customAgent = new ROMAAgent({
         maxConcurrency: 10,
         defaultTimeout: 60000,
         enableSemanticAnalysis: false,
         maxExecutionDepth: 5
       });
+      
+      await customAgent.initialize();
 
       expect(customAgent.options.maxConcurrency).toBe(10);
       expect(customAgent.options.defaultTimeout).toBe(60000);
       expect(customAgent.options.enableSemanticAnalysis).toBe(false);
       expect(customAgent.options.maxExecutionDepth).toBe(5);
+      
+      await customAgent.shutdown();
     });
 
-    it('should update configuration dynamically', () => {
+    it('should update configuration dynamically', async () => {
+      await agent.initialize();
+      
       agent.updateConfiguration({
         maxConcurrency: 8,
         defaultTimeout: 45000
@@ -135,12 +144,15 @@ describe('ROMAAgent Integration', () => {
 
   describe('Progress Tracking', () => {
     it('should emit progress events when enabled', async () => {
+      await agent.initialize();
+      
       const progressEvents = [];
       
       const task = {
         id: 'progress-task',
-        description: 'Task with progress tracking',
-        tool: 'calculator'
+        description: 'Calculate 25 * 4',
+        tool: 'calculator',
+        params: { expression: '25 * 4' }
       };
 
       const result = await agent.execute(task, {
@@ -156,10 +168,13 @@ describe('ROMAAgent Integration', () => {
 
   describe('Execution Statistics', () => {
     it('should track execution statistics', async () => {
+      await agent.initialize();
+      
       const task = {
         id: 'stats-task',
-        description: 'Task for statistics',
-        tool: 'calculator'
+        description: 'Calculate 100 / 10',
+        tool: 'calculator',
+        params: { expression: '100 / 10' }
       };
 
       await agent.execute(task);
@@ -174,10 +189,13 @@ describe('ROMAAgent Integration', () => {
     });
 
     it('should track execution history', async () => {
+      await agent.initialize();
+      
       const task = {
         id: 'history-task',
-        description: 'Task for history',
-        tool: 'calculator'
+        description: 'Calculate 50 + 50',
+        tool: 'calculator',
+        params: { expression: '50 + 50' }
       };
 
       await agent.execute(task);
@@ -225,23 +243,5 @@ describe('ROMAAgent Integration', () => {
       expect(result.error).toContain('Circular dependencies detected');
     });
 
-    it('should handle missing tool registry', async () => {
-      const noToolAgent = new ROMAAgent({
-        toolRegistry: null,
-        resourceManager: mockResourceManager,
-        llmClient: mockLlmClient
-      });
-
-      const task = {
-        id: 'no-tool-task',
-        description: 'Task without tool registry',
-        tool: 'calculator'
-      };
-
-      const result = await noToolAgent.execute(task);
-      
-      // Should handle gracefully - may succeed with limitations or fail gracefully
-      expect(result.metadata.executionId).toBeDefined();
-    });
   });
 });

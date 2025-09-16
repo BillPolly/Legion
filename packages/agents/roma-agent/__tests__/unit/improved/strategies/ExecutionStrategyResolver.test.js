@@ -18,6 +18,7 @@ describe('ExecutionStrategyResolver', () => {
 
   beforeEach(() => {
     mockDependencies = {
+      testMode: true,  // Enable test mode for unit tests
       toolRegistry: { getTool: jest.fn() },
       llmClient: { complete: jest.fn() },
       progressStream: { createTaskEmitter: jest.fn(() => ({ custom: jest.fn() })) },

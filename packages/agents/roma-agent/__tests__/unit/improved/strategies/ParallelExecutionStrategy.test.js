@@ -43,6 +43,7 @@ describe('ParallelExecutionStrategy', () => {
     };
 
     strategy = new ParallelExecutionStrategy({
+      testMode: true,  // Enable test mode for unit tests
       toolRegistry: mockToolRegistry,
       llmClient: mockLLMClient,
       progressStream: mockProgressStream,
