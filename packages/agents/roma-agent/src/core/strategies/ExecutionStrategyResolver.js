@@ -15,15 +15,21 @@ import { ParallelExecutionStrategy } from './ParallelExecutionStrategy.js';
 import { SequentialExecutionStrategy } from './SequentialExecutionStrategy.js';
 import { RecursiveExecutionStrategy } from './RecursiveExecutionStrategy.js';
 import { Logger } from '../../utils/Logger.js';
-import { ErrorHandler } from '../../errors/ErrorHandler.js';
 import { 
   StrategyError, 
   StrategySelectionError 
 } from '../../errors/ROMAErrors.js';
 
+const DEFAULT_STRATEGY_NAMES = new Set([
+  'AtomicExecutionStrategy',
+  'ParallelExecutionStrategy',
+  'SequentialExecutionStrategy',
+  'RecursiveExecutionStrategy'
+]);
+
 export class ExecutionStrategyResolver {
   constructor(injectedDependencies = {}) {
-    this.globalDependencies = injectedDependencies;
+    this.dependencies = { ...injectedDependencies };
     this.priorityOrderedStrategies = [];
     this.strategyInstanceRegistry = new Map();
     this.strategyPriorityMap = new Map();
@@ -65,7 +71,7 @@ export class ExecutionStrategyResolver {
 
     // Create strategy instance with dependencies
     const newStrategyInstance = new StrategyClass({
-      ...this.globalDependencies,
+      ...this.dependencies,
       ...strategyOptions
     });
 
@@ -184,7 +190,7 @@ export class ExecutionStrategyResolver {
     return {
       totalStrategies: this.strategyInstanceRegistry.size,
       strategies: strategyMetadataList.sort((strategyA, strategyB) => strategyB.priority - strategyA.priority),
-      dependenciesProvided: Object.keys(this.globalDependencies)
+      dependenciesProvided: Object.keys(this.dependencies)
     };
   }
 
@@ -197,10 +203,10 @@ export class ExecutionStrategyResolver {
   evaluateStrategies(task, context) {
     const evaluations = [];
 
-    for (const strategy of this.strategies) {
+    for (const strategy of this.priorityOrderedStrategies) {
       try {
         const canHandle = strategy.canHandle(task, context);
-        const priority = this.strategyPriorities.get(strategy.constructor.name);
+        const priority = this.strategyPriorityMap.get(strategy.constructor.name);
         
         evaluations.push({
           strategyName: strategy.constructor.name,
@@ -212,7 +218,7 @@ export class ExecutionStrategyResolver {
         evaluations.push({
           strategyName: strategy.constructor.name,
           canHandle: false,
-          priority: this.strategyPriorities.get(strategy.constructor.name),
+          priority: this.strategyPriorityMap.get(strategy.constructor.name),
           reason: `Evaluation error: ${error.message}`
         });
       }
@@ -226,27 +232,30 @@ export class ExecutionStrategyResolver {
    * @param {Object} newDependencies - New dependencies to merge
    */
   updateDependencies(newDependencies) {
-    this.globalDependencies = { ...this.globalDependencies, ...newDependencies };
+    this.dependencies = { ...this.dependencies, ...newDependencies };
     
     // Update all strategy instances with new dependencies
-    for (const [strategyName, strategyInstance] of this.strategyInstanceRegistry) {
-      // Update strategy dependencies if it supports it
+    const strategyEntries = Array.from(this.strategyInstanceRegistry.entries());
+    for (const [strategyName, strategyInstance] of strategyEntries) {
       if (typeof strategyInstance.updateDependencies === 'function') {
-        strategyInstance.updateDependencies(this.globalDependencies);
+        strategyInstance.updateDependencies(this.dependencies);
       } else {
-        // Recreate strategy with new dependencies
         const StrategyClass = strategyInstance.constructor;
-        const strategyPriority = this.strategyPriorityMap.get(strategyName);
-        
-        this.unregisterStrategy(strategyName);
-        this.registerStrategy(StrategyClass, strategyPriority);
+        const priority = this.strategyPriorityMap.get(strategyName);
+        const replacement = new StrategyClass(this.dependencies);
+        this.validateStrategy(replacement);
+        this.strategyInstanceRegistry.set(strategyName, replacement);
       }
     }
 
-    this.logger.debug('ExecutionStrategyResolver dependencies updated', {
-      updatedKeys: Object.keys(newDependencies),
-      strategiesUpdated: this.strategyInstanceRegistry.size
-    });
+    this.rebuildStrategiesArray();
+
+    if (this.logger?.debug) {
+      this.logger.debug('ExecutionStrategyResolver dependencies updated', {
+        updatedKeys: Object.keys(newDependencies),
+        strategiesUpdated: this.strategyInstanceRegistry.size
+      });
+    }
   }
 
   /**
@@ -255,7 +264,7 @@ export class ExecutionStrategyResolver {
    */
   getCurrentDependencies() {
     return {
-      ...this.globalDependencies,
+      ...this.dependencies,
       registeredStrategies: Array.from(this.strategyInstanceRegistry.keys()),
       totalStrategies: this.strategyInstanceRegistry.size
     };
@@ -284,25 +293,25 @@ export class ExecutionStrategyResolver {
    * @param {Object} strategy - Strategy instance to validate
    */
   validateStrategy(strategy) {
+    const strategyName = strategy?.constructor?.name;
+    if (!strategyName || strategyName === 'Object') {
+      throw new Error('Strategy must have a proper constructor name');
+    }
+
     const requiredMethods = ['canHandle', 'execute'];
     const optionalMethods = ['estimateComplexity', 'initialize'];
 
     for (const method of requiredMethods) {
       if (typeof strategy[method] !== 'function') {
-        throw new Error(`Strategy ${strategy.constructor.name} must implement ${method} method`);
+        throw new Error(`Strategy ${strategyName} must implement ${method} method`);
       }
     }
 
     // Validate optional methods if present
     for (const method of optionalMethods) {
       if (strategy[method] && typeof strategy[method] !== 'function') {
-        throw new Error(`Strategy ${strategy.constructor.name} ${method} must be a function if provided`);
+        throw new Error(`Strategy ${strategyName} ${method} must be a function if provided`);
       }
-    }
-
-    // Validate strategy has a name
-    if (!strategy.constructor.name || strategy.constructor.name === 'Object') {
-      throw new Error('Strategy must have a proper constructor name');
     }
   }
 
@@ -349,22 +358,20 @@ export class ExecutionStrategyResolver {
    * @returns {ExecutionStrategyResolver} - New resolver instance
    */
   clone(overrides = {}) {
-    const newResolver = new ExecutionStrategyResolver({
-      ...this.dependencies,
-      ...overrides
-    });
+    const { skipDefaults, ...dependencyOverrides } = overrides;
+    const mergedDependencies = { ...this.dependencies, ...dependencyOverrides };
 
-    // Clear default strategies if we want custom only
-    if (overrides.skipDefaults) {
-      newResolver.clear();
-    }
+    const newResolver = new ExecutionStrategyResolver(mergedDependencies);
+    newResolver.clear();
 
-    // Copy custom strategies if any were added beyond defaults
-    for (const [name, strategy] of this.strategyInstances) {
-      if (!['AtomicExecutionStrategy', 'ParallelExecutionStrategy', 'SequentialExecutionStrategy', 'RecursiveExecutionStrategy'].includes(name)) {
-        const priority = this.strategyPriorities.get(name);
-        newResolver.registerStrategy(strategy.constructor, priority);
-      }
+    const entries = Array.from(this.strategyInstanceRegistry.entries());
+    const strategiesToCopy = skipDefaults
+      ? entries.filter(([name]) => !DEFAULT_STRATEGY_NAMES.has(name))
+      : entries;
+
+    for (const [name, strategyInstance] of strategiesToCopy) {
+      const priority = this.strategyPriorityMap.get(name);
+      newResolver.registerStrategy(strategyInstance.constructor, priority);
     }
 
     return newResolver;

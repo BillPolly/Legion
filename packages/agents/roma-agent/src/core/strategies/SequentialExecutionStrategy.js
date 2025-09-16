@@ -179,58 +179,23 @@ export class SequentialExecutionStrategy extends ExecutionStrategy {
           totalSteps: steps.length
         });
 
-        try {
-          // Create child context for this step
-          const stepContext = currentContext.createChild(stepId);
+        // Create child context for this step
+        const stepContext = currentContext.createChild(stepId);
 
-          // Pass previous step result (not accumulated result) to step if configured
-          const stepWithContext = this.passResults && previousStepResult !== null
-            ? this.injectPreviousResult(step, previousStepResult)
-            : step;
+        // Pass previous step result (not accumulated result) to step if configured
+        const stepWithContext = this.passResults && previousStepResult !== null
+          ? this.injectPreviousResult(step, previousStepResult)
+          : step;
 
-          // Execute step
-          const stepResult = await this.executeStep(stepWithContext, stepContext, i, emitter);
+        // Execute step
+        const stepResult = await this.executeStep(stepWithContext, stepContext, i, emitter);
 
-          // Update context with result
-          currentContext = stepContext.withResult(stepResult);
-
-          // Track successful execution
-          results.push({
-            stepId,
-            stepIndex: i,
-            success: true,
-            result: this.extractResultValue(stepResult),
-            context: currentContext
-          });
-
-          // Update accumulated result
-          if (this.accumulateResults) {
-            accumulatedResult = this.accumulateResult(accumulatedResult, stepResult, task);
-          } else {
-            accumulatedResult = this.extractResultValue(stepResult);
-          }
-
-          // Update previous step result for next iteration
-          previousStepResult = this.extractResultValue(stepResult);
-
-          emitter.custom('step_complete', {
-            stepId,
-            stepIndex: i,
-            success: true,
-            result: this.extractResultValue(stepResult)
-          });
-
-          emitter.progress(((i + 1) / steps.length) * 100, {
-            completed: i + 1,
-            total: steps.length,
-            currentStep: stepId
-          });
-
-        } catch (error) {
+        // Check if step failed
+        if (!stepResult.success) {
           emitter.custom('step_failed', {
             stepId,
             stepIndex: i,
-            error: error.message
+            error: stepResult.error
           });
 
           // Record failure
@@ -238,7 +203,7 @@ export class SequentialExecutionStrategy extends ExecutionStrategy {
             stepId,
             stepIndex: i,
             success: false,
-            error: error.message,
+            error: stepResult.error,
             context: currentContext
           });
 
@@ -249,19 +214,58 @@ export class SequentialExecutionStrategy extends ExecutionStrategy {
               completed: i,
               failed: 1,
               failedAt: i,
-              error: error.message
+              error: stepResult.error
             });
-            throw new Error(`Sequential execution failed at step ${i}: ${error.message}`);
+            // Re-throw the error to stop execution immediately
+            throw new Error(`Sequential execution failed at step ${i}: ${stepResult.error}`);
           }
 
           // Continue with null result for accumulation, error object for result passing
           if (this.accumulateResults) {
-            accumulatedResult = this.accumulateResult(accumulatedResult, { error: error.message }, task);
+            accumulatedResult = this.accumulateResult(accumulatedResult, { error: stepResult.error }, task);
           }
           
           // Update previous step result to null so next step doesn't get error data
           previousStepResult = null;
+          
+          // Continue to next step
+          continue;
         }
+
+        // Update context with result
+        currentContext = stepContext.withResult(stepResult);
+
+        // Track successful execution
+        results.push({
+          stepId,
+          stepIndex: i,
+          success: true,
+          result: this.extractResultValue(stepResult),
+          context: currentContext
+        });
+
+        // Update accumulated result
+        if (this.accumulateResults) {
+          accumulatedResult = this.accumulateResult(accumulatedResult, stepResult, task);
+        } else {
+          accumulatedResult = this.extractResultValue(stepResult);
+        }
+
+        // Update previous step result for next iteration
+        previousStepResult = this.extractResultValue(stepResult);
+
+        emitter.custom('step_complete', {
+          stepId,
+          stepIndex: i,
+          success: true,
+          result: this.extractResultValue(stepResult)
+        });
+
+        emitter.progress(((i + 1) / steps.length) * 100, {
+          completed: i + 1,
+          total: steps.length,
+          currentStep: stepId
+        });
       }
 
       // Count successful and failed steps

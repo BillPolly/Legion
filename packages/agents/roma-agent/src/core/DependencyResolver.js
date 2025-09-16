@@ -503,7 +503,7 @@ export class DependencyResolver {
     }
     
     if (sorted.length !== graph.size) {
-      throw new CircularDependencyError([]);
+      throw new DependencyResolutionError('Circular dependency detected during topological sort');
     }
     
     return sorted;

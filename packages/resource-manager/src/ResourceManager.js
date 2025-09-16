@@ -19,6 +19,9 @@
  * rm.load({ apiKey: 'sk-456', model: 'gpt-4' });
  * console.log(rm.has('model')); // true
  */
+
+const isTestEnvironment = () =>
+  process.env.JEST_WORKER_ID !== undefined || process.env.NODE_ENV === 'test';
 export class ResourceManager {
   static _instance = null;
   static _initPromise = null;
@@ -196,11 +199,13 @@ export class ResourceManager {
       }
       
       // Ensure required services are running (in background, don't block)
-      setImmediate(() => {
-        this._ensureServicesRunning().catch(error => {
-          console.warn('Background service initialization failed:', error.message);
+      if (!isTestEnvironment()) {
+        setImmediate(() => {
+          this._ensureServicesRunning().catch(error => {
+            console.warn('Background service initialization failed:', error.message);
+          });
         });
-      });
+      }
       
       // Mark as initialized
       this.initialized = true;
@@ -476,6 +481,10 @@ export class ResourceManager {
    * @private
    */
   async _ensureServicesRunning() {
+    if (isTestEnvironment()) {
+      return;
+    }
+
     const { execSync } = await import('child_process');
     
     try {

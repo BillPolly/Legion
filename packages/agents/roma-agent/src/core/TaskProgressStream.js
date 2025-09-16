@@ -95,8 +95,10 @@ export class TaskProgressStream {
       id: this.generateEventId()
     };
 
-    // Store in history
-    this.addToHistory(taskId, enrichedEvent);
+    // Store in history unless this is a system-level event
+    if (taskId !== '_system') {
+      this.addToHistory(taskId, enrichedEvent);
+    }
 
     // Notify matching observers
     this.notifyObservers(taskId, enrichedEvent);

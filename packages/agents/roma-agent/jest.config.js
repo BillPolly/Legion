@@ -1,7 +1,8 @@
 export default {
   testEnvironment: 'node',
   moduleNameMapper: {
-    '^(\\.{1,2}/.*)\\.js$': '$1'
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^ws$': '<rootDir>/test-utils/wsStub.cjs'
   },
   transform: {},
   testMatch: [

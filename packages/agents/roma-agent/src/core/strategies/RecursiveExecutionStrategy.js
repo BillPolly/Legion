@@ -11,7 +11,6 @@
  */
 
 import { ExecutionStrategy } from './ExecutionStrategy.js';
-import { Result } from '../../utils/Result.js';
 import { Logger } from '../../utils/Logger.js';
 
 export class RecursiveExecutionStrategy extends ExecutionStrategy {
@@ -198,25 +197,20 @@ export class RecursiveExecutionStrategy extends ExecutionStrategy {
 
       // Decompose task into subtasks
       emitter.custom('decomposition_start', { taskId, depth: ctx.depth });
-      const decompositionResult = await this.decomposeTask(task, ctx, emitter);
-      
-      // Handle decomposition failure
-      if (decompositionResult.isError()) {
+      const decomposition = await this.decomposeTask(task, ctx, emitter);
+
+      if (!decomposition) {
         this.logger.warn('Decomposition failed, falling back to direct execution', {
-          taskId,
-          error: decompositionResult.error
+          taskId
         });
-        emitter.custom('decomposition_failed', { 
-          taskId, 
-          error: decompositionResult.error,
-          fallback: 'direct_execution' 
+        emitter.custom('decomposition_failed', {
+          taskId,
+          fallback: 'direct_execution'
         });
         return await this.executeDirectly(task, ctx, emitter);
       }
-      
-      const decomposition = decompositionResult.value;
-      
-      if (!decomposition || !decomposition.subtasks || decomposition.subtasks.length === 0) {
+
+      if (!decomposition.subtasks || decomposition.subtasks.length === 0) {
         // Fallback to direct execution if decomposition is empty
         emitter.custom('decomposition_empty', { taskId, fallback: 'direct_execution' });
         return await this.executeDirectly(task, ctx, emitter);
@@ -301,62 +295,48 @@ export class RecursiveExecutionStrategy extends ExecutionStrategy {
    */
   async decomposeTask(task, context, emitter) {
     const taskId = this.getTaskId(task);
-    
-    // Check cache first
+
     if (this.useCache) {
       const cacheKey = this.createCacheKey(task, context);
       if (this.decompositionCache.has(cacheKey)) {
         emitter.custom('cache_hit', { taskId, cacheKey });
-        return Result.ok(this.decompositionCache.get(cacheKey), { source: 'cache' });
+        return this.decompositionCache.get(cacheKey);
       }
     }
 
-    let decompositionResult = null;
+    let decomposition = null;
 
-    // Try predefined decomposition first
     if (task.subtasks && Array.isArray(task.subtasks)) {
-      decompositionResult = Result.ok({
+      decomposition = {
         subtasks: task.subtasks,
         strategy: task.decompositionStrategy || 'predefined',
         metadata: { source: 'predefined' }
-      });
-    }
-    // Try LLM-based decomposition
-    else if (this.llmClient && (task.description || task.prompt || task.operation)) {
-      decompositionResult = await this.llmDecompose(task, context, emitter);
-      
-      // If LLM failed but fallback is available, try fallback
-      if (decompositionResult.isError() && decompositionResult.metadata.fallbackAvailable) {
-        this.logger.warn('LLM decomposition failed, trying fallback', { taskId });
-        decompositionResult = Result.ok(this.createFallbackDecomposition(task));
+      };
+    } else if (this.llmClient && (task.description || task.prompt || task.operation)) {
+      decomposition = await this.llmDecompose(task, context, emitter);
+
+      if (!decomposition) {
+        decomposition = this.createFallbackDecomposition(task);
       }
-    }
-    // Try template-based decomposition
-    else if (task.template || task.pattern) {
-      decompositionResult = await this.templateDecompose(task, context);
-    }
-    // Try heuristic decomposition
-    else {
-      decompositionResult = await this.heuristicDecompose(task, context);
+    } else if (task.template || task.pattern) {
+      decomposition = await this.templateDecompose(task, context);
+    } else {
+      decomposition = await this.heuristicDecompose(task, context);
     }
 
-    // If decomposition failed, return error
-    if (decompositionResult.isError()) {
-      this.logger.error('Task decomposition failed', { 
-        taskId, 
-        error: decompositionResult.error 
+    if (!decomposition) {
+      this.logger.error('Task decomposition failed', {
+        taskId
       });
-      return decompositionResult;
+      return null;
     }
 
-    // Cache the successful result
-    const decomposition = decompositionResult.value;
-    if (decomposition && this.useCache) {
+    if (this.useCache) {
       const cacheKey = this.createCacheKey(task, context);
       this.decompositionCache.set(cacheKey, decomposition);
     }
 
-    return decompositionResult;
+    return decomposition;
   }
 
   /**
@@ -383,17 +363,20 @@ export class RecursiveExecutionStrategy extends ExecutionStrategy {
         subtaskCount: decomposition.subtasks?.length || 0
       });
 
-      return Result.ok(decomposition, { taskId, method: 'llm' });
+      return decomposition;
     } catch (error) {
-      this.logger.error('LLM decomposition failed', { taskId, error: error.message });
-      emitter.custom('llm_decomposition_failed', { taskId, error: error.message });
+      const message = error.message || String(error);
+
+      if (message.startsWith('Failed to parse decomposition response')) {
+        this.logger.warn('LLM decomposition response parsing failed, using fallback', { taskId, error: message });
+        emitter.custom('llm_decomposition_failed', { taskId, error: message, fallback: true });
+        return this.createFallbackDecomposition(task);
+      }
+
+      this.logger.error('LLM decomposition failed', { taskId, error: message });
+      emitter.custom('llm_decomposition_failed', { taskId, error: message });
       
-      // Return error result instead of null - PROPERLY HANDLED NOW
-      return Result.fail(error, { 
-        taskId, 
-        method: 'llm',
-        fallbackAvailable: true 
-      });
+      return null;
     }
   }
 
@@ -490,20 +473,20 @@ Make sure subtasks are:
     
     // Simple template substitution
     if (typeof template === 'object' && template.steps) {
-      return Result.ok({
+      return {
         subtasks: template.steps.map((step, index) => ({
           id: `${task.id || 'task'}-template-${index}`,
           ...step
         })),
         strategy: template.strategy || 'sequential',
         metadata: { source: 'template' }
-      });
+      };
     }
 
-    return Result.fail(new Error('Invalid template format'), { 
-      taskId: this.getTaskId(task),
-      method: 'template'
+    this.logger?.warn('Invalid task template provided', {
+      taskId: this.getTaskId(task)
     });
+    return null;
   }
 
   /**
@@ -572,17 +555,17 @@ Make sure subtasks are:
     }
 
     if (subtasks.length > 0) {
-      return Result.ok({
+      return {
         subtasks,
         strategy: 'sequential',
         metadata: { source: 'heuristic', confidence: 0.6 }
-      });
+      };
     }
     
-    return Result.fail(new Error('Unable to decompose task heuristically'), {
-      taskId: this.getTaskId(task),
-      method: 'heuristic'
+    this.logger?.warn('Unable to decompose task heuristically', {
+      taskId: this.getTaskId(task)
     });
+    return null;
   }
 
   /**

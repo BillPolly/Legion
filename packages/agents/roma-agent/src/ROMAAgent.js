@@ -49,15 +49,18 @@ export class ROMAAgent {
     
     // Agent state
     this.isInitialized = false;
+    this.activeExecutions = new Map();
     
     // Execution statistics and history
     this.statistics = {
       totalExecutions: 0,
       successful: 0,
       failed: 0,
+      errors: 0,
       successRate: 0,
       averageDuration: 0,
-      totalDuration: 0
+      totalDuration: 0,
+      activeExecutions: 0
     };
     this.executionHistory = [];
     
@@ -212,13 +215,25 @@ export class ROMAAgent {
         throw new TaskError('Task is required for execution', null);
       }
       
+      this.startExecutionTracking(executionId, task);
+
       const context = this.createExecutionContext(userContext, executionId);
       const execution = await this.performExecution(task, context);
       
-      return this.formatExecutionResult(execution, executionId);
+      const formatted = this.formatExecutionResult(execution, executionId);
+      this.finishExecutionTracking(executionId, 'completed', {
+        result: formatted.result,
+        metadata: formatted.metadata
+      });
+      return formatted;
     } catch (error) {
       // Handle execution error gracefully - return failed result instead of throwing
-      return this.handleExecutionError(error, executionId);
+      const handled = await this.handleExecutionError(error, executionId);
+      this.finishExecutionTracking(executionId, 'failed', {
+        error: handled.error,
+        metadata: handled.metadata
+      });
+      return handled;
     }
   }
 
@@ -865,6 +880,70 @@ export class ROMAAgent {
     this.logger.debug('Progress event', event);
   }
 
+  /**
+   * Start tracking an active execution
+   */
+  startExecutionTracking(executionId, task) {
+    const record = {
+      executionId,
+      taskId: task?.id || task?.taskId || null,
+      startedAt: Date.now(),
+      status: 'running'
+    };
+
+    this.activeExecutions.set(executionId, record);
+    this.statistics.activeExecutions = this.activeExecutions.size;
+    return record;
+  }
+
+  /**
+   * Finish tracking an active execution
+   */
+  finishExecutionTracking(executionId, status, details = {}) {
+    const record = this.activeExecutions.get(executionId);
+    if (!record) {
+      this.statistics.activeExecutions = this.activeExecutions.size;
+      return;
+    }
+
+    record.status = status;
+    record.completedAt = Date.now();
+    record.duration = record.completedAt - record.startedAt;
+    Object.assign(record, details);
+
+    this.activeExecutions.delete(executionId);
+    this.statistics.activeExecutions = this.activeExecutions.size;
+  }
+
+  /**
+   * Get currently active executions
+   */
+  getActiveExecutions() {
+    return Array.from(this.activeExecutions.values()).map(record => ({ ...record }));
+  }
+
+  /**
+   * Cancel an active execution if possible
+   */
+  cancelExecution(executionId) {
+    const record = this.activeExecutions.get(executionId);
+    if (!record) {
+      return false;
+    }
+
+    this.activeExecutions.delete(executionId);
+    this.statistics.activeExecutions = this.activeExecutions.size;
+    this.logger.warn('Execution cancelled', { executionId, taskId: record.taskId });
+    return true;
+  }
+
+  /**
+   * Clear execution history
+   */
+  clearHistory() {
+    this.executionHistory = [];
+  }
+
   // Logging helper methods
   logTaskStart(taskId, context, executionLog, strategy = null) {
     const payload = {
@@ -921,7 +1000,7 @@ export class ROMAAgent {
 
   // ID generation methods
   generateExecutionId() {
-    return `exec-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `roma-exec-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
 
   generateTaskId() {
@@ -982,16 +1061,23 @@ export class ROMAAgent {
    */
   updateStatistics(success, duration, metadata = {}) {
     this.statistics.totalExecutions++;
-    this.statistics.totalDuration += duration;
+    const normalizedDuration = duration > 0 ? duration : 0;
+    this.statistics.totalDuration += normalizedDuration;
     
     if (success) {
       this.statistics.successful++;
     } else {
       this.statistics.failed++;
+      this.statistics.errors++;
     }
     
-    this.statistics.successRate = this.statistics.successful / this.statistics.totalExecutions;
-    this.statistics.averageDuration = Math.max(1, this.statistics.totalDuration / this.statistics.totalExecutions);
+    if (this.statistics.totalExecutions > 0) {
+      this.statistics.successRate = this.statistics.successful / this.statistics.totalExecutions;
+      this.statistics.averageDuration = Math.max(1, this.statistics.totalDuration / this.statistics.totalExecutions);
+    } else {
+      this.statistics.successRate = 0;
+      this.statistics.averageDuration = 0;
+    }
     
     // Ensure minimum duration for test scenarios
     const recordedDuration = duration > 0 ? duration : 1; // At least 1ms for tests

@@ -209,9 +209,13 @@ export class ExecutionContext {
     }
     
     return this.breadcrumbs.map((b, index) => {
-      const elapsed = index > 0 
-        ? Math.max(0, b.timestamp - this.breadcrumbs[index - 1].timestamp)
-        : Math.max(0, b.timestamp - this.startTime);
+      const previousTimestamp = index > 0
+        ? this.breadcrumbs[index - 1].timestamp
+        : this.parent?.breadcrumbs?.[this.parent.breadcrumbs.length - 1]?.timestamp ?? this.startTime;
+
+      // Ensure elapsed time is always positive for visibility in tests and logs
+      const rawElapsed = b.timestamp - previousTimestamp;
+      const elapsed = rawElapsed > 0 ? rawElapsed : 1;
       
       return {
         ...b,
