@@ -13,6 +13,9 @@ class StubWebSocket extends EventEmitter {
     const port = Number(target.port || 80);
     const server = serverRegistry.get(port);
     if (!server) {
+      if (process.env.DEBUG_WS_STUB === 'true') {
+        console.log('[wsStub] No server found for port', port);
+      }
       throw new Error(`No WebSocketServer listening on port ${port}`);
     }
 
@@ -54,6 +57,9 @@ class StubWebSocket extends EventEmitter {
     };
 
     setImmediate(() => {
+      if (process.env.DEBUG_WS_STUB === 'true') {
+        console.log('[wsStub] emitting connection for port', port);
+      }
       server.addClient(this, serverSocket);
       this.emit('open');
       server.emit('connection', serverSocket);
@@ -75,6 +81,9 @@ class StubWebSocketServer extends EventEmitter {
     }
 
     serverRegistry.set(this.port, this);
+    if (process.env.DEBUG_WS_STUB === 'true') {
+      console.log('[wsStub] Server registered on port', this.port);
+    }
   }
 
   addClient(clientSocket, serverSocket) {

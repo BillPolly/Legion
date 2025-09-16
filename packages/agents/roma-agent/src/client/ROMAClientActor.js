@@ -30,6 +30,9 @@ export class ROMAClientActor {
       this.socket = new WebSocket(url);
 
       this.socket.on('open', () => {
+        if (process.env.DEBUG_ROMA_CLIENT === 'true') {
+          console.log('[ROMAClientActor] socket open');
+        }
         this.connectionId = `client-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
         this.socket.send(JSON.stringify({
           type: 'connection_opened',
@@ -38,10 +41,16 @@ export class ROMAClientActor {
       });
 
       this.socket.on('message', (event) => {
+        if (process.env.DEBUG_ROMA_CLIENT === 'true') {
+          console.log('[ROMAClientActor] received raw message', event);
+        }
         this.handleSocketMessage(event.toString(), resolve);
       });
 
       this.socket.on('error', (error) => {
+        if (process.env.DEBUG_ROMA_CLIENT === 'true') {
+          console.log('[ROMAClientActor] socket error', error.message);
+        }
         reject(error);
       });
 
@@ -125,6 +134,9 @@ export class ROMAClientActor {
       case 'connected':
         this.connected = true;
         this.connectionId = message.connectionId;
+        if (process.env.DEBUG_ROMA_CLIENT === 'true') {
+          console.log('[ROMAClientActor] connection message', message);
+        }
         if (!this.connectionResolved && resolveConnection) {
           this.connectionResolved = true;
           resolveConnection();
