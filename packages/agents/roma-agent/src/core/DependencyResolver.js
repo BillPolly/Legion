@@ -42,6 +42,7 @@ export class DependencyResolver {
     this.toolRegistry = injectedDependencies.toolRegistry;
     this.resourceManager = injectedDependencies.resourceManager;
     this.llmClient = injectedDependencies.llmClient;
+    this.simplePromptClient = injectedDependencies.simplePromptClient;
     this.logger = injectedDependencies.logger || new Logger('DependencyResolver');
     
     // Configuration
@@ -60,6 +61,18 @@ export class DependencyResolver {
   }
 
   /**
+   * Initialize SimplePromptClient if not provided
+   */
+  async initialize() {
+    if (!this.simplePromptClient && this.llmClient) {
+      const { SimplePromptClient } = await import('@legion/llm-client');
+      this.simplePromptClient = new SimplePromptClient({
+        llmClient: this.llmClient
+      });
+    }
+  }
+
+  /**
    * Update dependencies for testing/reconfiguration
    * @param {Object} newDependencies - Updated dependencies
    */
@@ -72,6 +85,9 @@ export class DependencyResolver {
     }
     if (newDependencies.llmClient !== undefined) {
       this.llmClient = newDependencies.llmClient;
+    }
+    if (newDependencies.simplePromptClient !== undefined) {
+      this.simplePromptClient = newDependencies.simplePromptClient;
     }
     if (newDependencies.logger !== undefined) {
       this.logger = newDependencies.logger;
@@ -102,6 +118,7 @@ export class DependencyResolver {
       toolRegistry: this.toolRegistry,
       resourceManager: this.resourceManager,
       llmClient: this.llmClient,
+      simplePromptClient: this.simplePromptClient,
       logger: this.logger,
       maxDepth: this.maxDepth,
       timeout: this.timeout,
@@ -265,7 +282,7 @@ export class DependencyResolver {
     discoveredDependencies.push(...toolBasedDeps);
     
     // Semantic dependencies (using LLM if available)
-    if (this.llmClient && analysisContext.analyzeSemanticDependencies) {
+    if ((this.simplePromptClient || this.llmClient) && analysisContext.analyzeSemanticDependencies) {
       const semanticBasedDeps = await this.analyzeSemanticDependencies(targetTask, taskLookupMap, analysisContext);
       discoveredDependencies.push(...semanticBasedDeps);
     }
@@ -393,6 +410,14 @@ export class DependencyResolver {
    */
   async analyzeSemanticDependencies(task, taskMap, context) {
     try {
+      // Ensure we have SimplePromptClient
+      if (!this.simplePromptClient) {
+        await this.initialize();
+        if (!this.simplePromptClient) {
+          throw new Error('SimplePromptClient not configured for semantic analysis');
+        }
+      }
+      
       const taskDescriptions = Array.from(taskMap.entries()).map(([id, t]) => ({
         id,
         description: t.description || t.operation || t.prompt || `Task ${id}`
@@ -400,11 +425,11 @@ export class DependencyResolver {
       
       const prompt = this.buildSemanticAnalysisPrompt(task, taskDescriptions);
       
-      const response = await this.llmClient.complete({
-        messages: [
-          { role: 'system', content: 'You are a task dependency analyzer. Identify logical dependencies between tasks.' },
-          { role: 'user', content: prompt }
-        ]
+      const response = await this.simplePromptClient.request({
+        prompt: prompt,
+        systemPrompt: 'You are an expert at analyzing task dependencies. Identify logical dependencies between tasks based on their descriptions.',
+        temperature: 0.3,
+        maxTokens: 1500
       });
       
       return this.parseSemanticDependencies(response.content || response, taskMap);

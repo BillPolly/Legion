@@ -258,8 +258,12 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
    * Execute with LLM
    */
   async executeLLM(task, context, emitter) {
-    if (!this.llmClient) {
-      throw new Error('LLM client not configured');
+    // Ensure we have SimplePromptClient
+    if (!this.simplePromptClient) {
+      await this.initialize();
+      if (!this.simplePromptClient) {
+        throw new Error('SimplePromptClient not configured');
+      }
     }
 
     const prompt = task.prompt || task.description || task.operation;
@@ -270,20 +274,13 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
       maxTokens: task.maxTokens
     });
 
-    // Build messages
-    const messages = this.buildLLMMessages(task, context);
+    // Build request parameters for SimplePromptClient
+    const requestParams = this.buildSimplePromptRequest(task, context, prompt);
 
     // Execute with retries
     return this.executeWithRetries(
       async () => {
-        const response = await this.llmClient.complete({
-          messages,
-          model: task.model,
-          temperature: task.temperature,
-          maxTokens: task.maxTokens,
-          ...task.llmOptions
-        });
-
+        const response = await this.simplePromptClient.request(requestParams);
         return this.extractLLMResult(response, task);
       },
       {
@@ -422,47 +419,54 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
   }
 
   /**
-   * Build LLM messages
+   * Build SimplePromptClient request parameters
    */
-  buildLLMMessages(task, context) {
-    const messages = [];
+  buildSimplePromptRequest(task, context, prompt) {
+    const params = {
+      prompt: prompt || task.prompt || task.description || task.operation,
+      maxTokens: task.maxTokens || 1000,
+      temperature: task.temperature
+    };
 
-    // Add system message
-    if (task.systemPrompt || task.systemMessage) {
-      messages.push({
-        role: 'system',
-        content: task.systemPrompt || task.systemMessage
-      });
-    } else if (context.userContext?.systemPrompt) {
-      messages.push({
-        role: 'system',
-        content: context.userContext.systemPrompt
-      });
+    // Add system prompt if provided
+    const systemPrompt = task.systemPrompt || task.systemMessage || context.userContext?.systemPrompt;
+    if (systemPrompt) {
+      params.systemPrompt = systemPrompt;
     }
 
-    // Add conversation history if provided
+    // Add chat history if provided
     if (task.messages && Array.isArray(task.messages)) {
-      messages.push(...task.messages);
+      params.chatHistory = task.messages;
     }
 
     // Add context from previous results if needed
     if (task.includeHistory && context.previousResults.length > 0) {
       const historyMessage = this.buildHistoryMessage(context.previousResults);
-      messages.push({
+      params.chatHistory = params.chatHistory || [];
+      params.chatHistory.push({
         role: 'assistant',
         content: historyMessage
       });
     }
 
-    // Add the main prompt
-    const prompt = task.prompt || task.description || task.operation;
-    messages.push({
-      role: 'user',
-      content: this.enrichPrompt(prompt, context)
-    });
+    // Add tools if specified
+    if (task.tools && Array.isArray(task.tools)) {
+      params.tools = task.tools;
+    }
 
-    return messages;
+    // Add any additional LLM options
+    if (task.llmOptions) {
+      Object.assign(params, task.llmOptions);
+    }
+
+    // Enrich prompt with context
+    if (params.prompt) {
+      params.prompt = this.enrichPrompt(params.prompt, context);
+    }
+
+    return params;
   }
+
 
   /**
    * Build history message from previous results

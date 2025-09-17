@@ -11,6 +11,7 @@ describe('DependencyResolver', () => {
   let mockToolRegistry;
   let mockResourceManager;
   let mockLlmClient;
+  let mockSimplePromptClient;
 
   beforeEach(() => {
     mockToolRegistry = {
@@ -25,11 +26,16 @@ describe('DependencyResolver', () => {
       complete: jest.fn()
     };
 
+    mockSimplePromptClient = {
+      request: jest.fn()
+    };
+
     resolver = new DependencyResolver({
       testMode: true,  // Enable test mode for unit tests
       toolRegistry: mockToolRegistry,
       resourceManager: mockResourceManager,
       llmClient: mockLlmClient,
+      simplePromptClient: mockSimplePromptClient,
       maxDepth: 5,
       timeout: 10000
     });
@@ -321,10 +327,8 @@ describe('DependencyResolver', () => {
 
   describe('Semantic Dependency Analysis', () => {
     it('should analyze semantic dependencies with LLM', async () => {
-      // Mock LLM to respond differently based on task being analyzed
-      mockLlmClient.complete.mockImplementation(({ messages }) => {
-        const prompt = messages[1].content;
-        
+      // Mock SimplePromptClient to respond differently based on task being analyzed
+      mockSimplePromptClient.request.mockImplementation(({ prompt }) => {
         // Look for Target Task specifically to differentiate between tasks
         if (prompt.includes('Target Task: "Setup database"')) {
           // Task1 (setup) has no dependencies
@@ -354,23 +358,23 @@ describe('DependencyResolver', () => {
       }
       console.log('Execution order:', result.executionOrder);
       console.log('Dependency graph for task2:', result.dependencyGraph?.get('task2'));
-      console.log('LLM calls:', mockLlmClient.complete.mock.calls.length);
-      console.log('All LLM call arguments:', mockLlmClient.complete.mock.calls.map(call => ({
-        prompt: call[0].messages[1].content.substring(0, 100)
+      console.log('SimplePromptClient calls:', mockSimplePromptClient.request.mock.calls.length);
+      console.log('All SimplePromptClient call arguments:', mockSimplePromptClient.request.mock.calls.map(call => ({
+        prompt: call[0].prompt.substring(0, 100)
       })));
 
       expect(result.success).toBe(true);
-      expect(mockLlmClient.complete).toHaveBeenCalled();
+      expect(mockSimplePromptClient.request).toHaveBeenCalled();
       expect(result.executionOrder).toEqual(['task1', 'task2']);
       expect(result.dependencyGraph.get('task2').dependencies.has('task1')).toBe(true);
       
-      const calls = mockLlmClient.complete.mock.calls;
+      const calls = mockSimplePromptClient.request.mock.calls;
       expect(calls.length).toBeGreaterThan(0);
-      expect(calls.some(call => call[0].messages[1].content.includes('Query database for user data'))).toBe(true);
+      expect(calls.some(call => call[0].prompt.includes('Query database for user data'))).toBe(true);
     });
 
     it('should handle LLM errors gracefully', async () => {
-      mockLlmClient.complete.mockRejectedValue(new Error('LLM service unavailable'));
+      mockSimplePromptClient.request.mockRejectedValue(new Error('LLM service unavailable'));
 
       const tasks = [
         { id: 'task1', description: 'Setup database' },

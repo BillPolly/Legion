@@ -12,6 +12,7 @@ describe('RecursiveExecutionStrategy', () => {
   let context;
   let mockToolRegistry;
   let mockLLMClient;
+  let mockSimplePromptClient;
   let mockProgressStream;
 
   beforeEach(() => {
@@ -23,6 +24,11 @@ describe('RecursiveExecutionStrategy', () => {
     // Mock LLM client
     mockLLMClient = {
       complete: jest.fn()
+    };
+
+    // Mock SimplePromptClient
+    mockSimplePromptClient = {
+      request: jest.fn()
     };
 
     // Mock progress stream
@@ -46,6 +52,7 @@ describe('RecursiveExecutionStrategy', () => {
       testMode: true,  // Enable test mode for unit tests
       toolRegistry: mockToolRegistry,
       llmClient: mockLLMClient,
+      simplePromptClient: mockSimplePromptClient,
       progressStream: mockProgressStream,
       maxDepth: 3,
       decomposeThreshold: 0.7,
@@ -301,7 +308,7 @@ describe('RecursiveExecutionStrategy', () => {
         })
       };
       
-      mockLLMClient.complete.mockResolvedValue(mockResponse);
+      mockSimplePromptClient.request.mockResolvedValue(mockResponse);
       
       const emitter = { custom: jest.fn() };
       const decomposition = await strategy.llmDecompose(task, context, emitter);
@@ -319,7 +326,7 @@ describe('RecursiveExecutionStrategy', () => {
         description: 'Task with malformed response'
       };
       
-      mockLLMClient.complete.mockResolvedValue({
+      mockSimplePromptClient.request.mockResolvedValue({
         content: 'Invalid JSON response'
       });
       
@@ -337,7 +344,7 @@ describe('RecursiveExecutionStrategy', () => {
         description: 'Task that causes LLM error'
       };
       
-      mockLLMClient.complete.mockRejectedValue(new Error('LLM error'));
+      mockSimplePromptClient.request.mockRejectedValue(new Error('LLM error'));
       
       const emitter = { custom: jest.fn() };
       const decomposition = await strategy.llmDecompose(task, context, emitter);
@@ -782,7 +789,7 @@ describe('RecursiveExecutionStrategy', () => {
       jest.spyOn(strategy, 'shouldDecompose').mockReturnValue(false);
       
       await expect(strategy.executeDirectly(task, context, { custom: jest.fn() }))
-        .rejects.toThrow('LLM client not configured');
+        .rejects.toThrow('SimplePromptClient not configured');
     });
   });
 

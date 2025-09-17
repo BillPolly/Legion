@@ -12,6 +12,7 @@ describe('ParallelExecutionStrategy', () => {
   let context;
   let mockToolRegistry;
   let mockLLMClient;
+  let mockSimplePromptClient;
   let mockProgressStream;
 
   beforeEach(() => {
@@ -23,6 +24,11 @@ describe('ParallelExecutionStrategy', () => {
     // Mock LLM client
     mockLLMClient = {
       complete: jest.fn()
+    };
+
+    // Mock SimplePromptClient
+    mockSimplePromptClient = {
+      request: jest.fn()
     };
 
     // Mock progress stream
@@ -46,6 +52,7 @@ describe('ParallelExecutionStrategy', () => {
       testMode: true,  // Enable test mode for unit tests
       toolRegistry: mockToolRegistry,
       llmClient: mockLLMClient,
+      simplePromptClient: mockSimplePromptClient,
       progressStream: mockProgressStream,
       maxConcurrency: 3,
       failFast: false,
@@ -280,7 +287,7 @@ describe('ParallelExecutionStrategy', () => {
     });
 
     it('should handle LLM prompts in parallel', async () => {
-      mockLLMClient.complete
+      mockSimplePromptClient.request
         .mockResolvedValueOnce({ content: 'response1' })
         .mockResolvedValueOnce({ content: 'response2' });
       
@@ -295,7 +302,7 @@ describe('ParallelExecutionStrategy', () => {
       const result = await strategy.execute(task, context);
       
       expect(result.success).toBe(true);
-      expect(mockLLMClient.complete).toHaveBeenCalledTimes(2);
+      expect(mockSimplePromptClient.request).toHaveBeenCalledTimes(2);
       expect(result.result).toEqual(['response1', 'response2']);
     });
 

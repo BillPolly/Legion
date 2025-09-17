@@ -443,6 +443,7 @@ export class ParallelExecutionStrategy extends ExecutionStrategy {
       return new AtomicExecutionStrategy({
         toolRegistry: this.toolRegistry,
         llmClient: this.llmClient,
+        simplePromptClient: this.simplePromptClient,
         progressStream: this.progressStream
       });
     }
@@ -461,14 +462,18 @@ export class ParallelExecutionStrategy extends ExecutionStrategy {
   async executeDirectly(task, context) {
     // Simple prompt execution
     if (task.prompt || task.description || task.operation) {
-      if (!this.llmClient) {
-        throw new Error('LLM client not configured for direct execution');
+      // Ensure we have SimplePromptClient
+      if (!this.simplePromptClient) {
+        await this.initialize();
+        if (!this.simplePromptClient) {
+          throw new Error('SimplePromptClient not configured for direct execution');
+        }
       }
 
-      const response = await this.llmClient.complete({
-        messages: [
-          { role: 'user', content: task.prompt || task.description || task.operation }
-        ]
+      const response = await this.simplePromptClient.request({
+        prompt: task.prompt || task.description || task.operation,
+        maxTokens: task.maxTokens || 1000,
+        temperature: task.temperature
       });
 
       return {

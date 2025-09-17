@@ -12,6 +12,7 @@ describe('AtomicExecutionStrategy', () => {
   let context;
   let mockToolRegistry;
   let mockLLMClient;
+  let mockSimplePromptClient;
   let mockProgressStream;
 
   beforeEach(() => {
@@ -23,6 +24,11 @@ describe('AtomicExecutionStrategy', () => {
     // Mock LLM client for unit tests
     mockLLMClient = {
       complete: jest.fn()
+    };
+
+    // Mock SimplePromptClient for unit tests
+    mockSimplePromptClient = {
+      request: jest.fn()
     };
 
     // Mock progress stream for unit tests
@@ -47,6 +53,7 @@ describe('AtomicExecutionStrategy', () => {
       testMode: true,  // Enable test mode to allow mocks
       toolRegistry: mockToolRegistry,
       llmClient: mockLLMClient,
+      simplePromptClient: mockSimplePromptClient,
       progressStream: mockProgressStream,
       maxRetries: 2,
       retryDelay: 10
@@ -325,7 +332,7 @@ describe('AtomicExecutionStrategy', () => {
 
   describe('LLM Execution', () => {
     it('should execute LLM prompt successfully', async () => {
-      mockLLMClient.complete.mockResolvedValue({
+      mockSimplePromptClient.request.mockResolvedValue({
         content: 'LLM response'
       });
       
@@ -336,21 +343,17 @@ describe('AtomicExecutionStrategy', () => {
       
       const result = await strategy.execute(task, context);
       
-      expect(mockLLMClient.complete).toHaveBeenCalledWith(
+      expect(mockSimplePromptClient.request).toHaveBeenCalledWith(
         expect.objectContaining({
-          messages: expect.arrayContaining([
-            expect.objectContaining({
-              role: 'user',
-              content: 'What is 2 + 2?'
-            })
-          ])
+          prompt: 'What is 2 + 2?',
+          maxTokens: 1000
         })
       );
       expect(result.result).toBe('LLM response');
     });
 
     it('should include system prompt', async () => {
-      mockLLMClient.complete.mockResolvedValue({ content: 'response' });
+      mockSimplePromptClient.request.mockResolvedValue({ content: 'response' });
       
       const task = {
         id: 'task-1',
@@ -360,18 +363,17 @@ describe('AtomicExecutionStrategy', () => {
       
       await strategy.execute(task, context);
       
-      expect(mockLLMClient.complete).toHaveBeenCalledWith(
+      expect(mockSimplePromptClient.request).toHaveBeenCalledWith(
         expect.objectContaining({
-          messages: expect.arrayContaining([
-            { role: 'system', content: 'You are a helpful assistant' },
-            { role: 'user', content: 'test' }
-          ])
+          prompt: 'test',
+          systemPrompt: 'You are a helpful assistant',
+          maxTokens: 1000
         })
       );
     });
 
     it('should include conversation history', async () => {
-      mockLLMClient.complete.mockResolvedValue({ content: 'response' });
+      mockSimplePromptClient.request.mockResolvedValue({ content: 'response' });
       
       const task = {
         id: 'task-1',
@@ -384,14 +386,20 @@ describe('AtomicExecutionStrategy', () => {
       
       await strategy.execute(task, context);
       
-      const call = mockLLMClient.complete.mock.calls[0][0];
-      expect(call.messages).toContainEqual({ role: 'user', content: 'hello' });
-      expect(call.messages).toContainEqual({ role: 'assistant', content: 'hi there' });
-      expect(call.messages[call.messages.length - 1]).toEqual({ role: 'user', content: 'continue' });
+      expect(mockSimplePromptClient.request).toHaveBeenCalledWith(
+        expect.objectContaining({
+          prompt: 'continue',
+          chatHistory: [
+            { role: 'user', content: 'hello' },
+            { role: 'assistant', content: 'hi there' }
+          ],
+          maxTokens: 1000
+        })
+      );
     });
 
     it('should parse JSON response when expected', async () => {
-      mockLLMClient.complete.mockResolvedValue({
+      mockSimplePromptClient.request.mockResolvedValue({
         content: '{"answer": 42}'
       });
       
@@ -407,7 +415,7 @@ describe('AtomicExecutionStrategy', () => {
     });
 
     it('should handle JSON parse errors', async () => {
-      mockLLMClient.complete.mockResolvedValue({
+      mockSimplePromptClient.request.mockResolvedValue({
         content: 'not valid json'
       });
       
@@ -421,7 +429,7 @@ describe('AtomicExecutionStrategy', () => {
     });
 
     it('should enrich prompt with context variables', async () => {
-      mockLLMClient.complete.mockResolvedValue({ content: 'response' });
+      mockSimplePromptClient.request.mockResolvedValue({ content: 'response' });
       
       const enrichedContext = context.withSharedState('userName', 'Alice');
       
@@ -432,21 +440,17 @@ describe('AtomicExecutionStrategy', () => {
       
       await strategy.execute(task, enrichedContext);
       
-      expect(mockLLMClient.complete).toHaveBeenCalledWith(
+      expect(mockSimplePromptClient.request).toHaveBeenCalledWith(
         expect.objectContaining({
-          messages: expect.arrayContaining([
-            expect.objectContaining({
-              role: 'user',
-              content: 'Hello Alice, your session is test-session'
-            })
-          ])
+          prompt: 'Hello Alice, your session is test-session',
+          maxTokens: 1000
         })
       );
     });
 
     it('should handle different response formats', async () => {
       // OpenAI format
-      mockLLMClient.complete.mockResolvedValue({
+      mockSimplePromptClient.request.mockResolvedValue({
         choices: [{
           message: { content: 'openai response' }
         }]
@@ -456,13 +460,13 @@ describe('AtomicExecutionStrategy', () => {
       expect(result.result).toBe('openai response');
       
       // Direct string
-      mockLLMClient.complete.mockResolvedValue('direct response');
+      mockSimplePromptClient.request.mockResolvedValue('direct response');
       
       result = await strategy.execute({ id: '2', prompt: 'test' }, context);
       expect(result.result).toBe('direct response');
       
       // Text property
-      mockLLMClient.complete.mockResolvedValue({
+      mockSimplePromptClient.request.mockResolvedValue({
         text: 'text response'
       });
       
@@ -806,11 +810,14 @@ describe('AtomicExecutionStrategy', () => {
     });
 
     it('should handle missing LLM client', async () => {
-      strategy = new AtomicExecutionStrategy({ progressStream: mockProgressStream });
+      strategy = new AtomicExecutionStrategy({ 
+        testMode: true,
+        progressStream: mockProgressStream 
+      });
       
       const task = { id: 'task-1', prompt: 'test' };
       
-      await expect(strategy.execute(task, context)).rejects.toThrow('LLM client not configured');
+      await expect(strategy.execute(task, context)).rejects.toThrow('SimplePromptClient not configured');
     });
 
     it('should handle non-callable function', async () => {
@@ -823,7 +830,7 @@ describe('AtomicExecutionStrategy', () => {
     });
 
     it('should handle unknown LLM response format', async () => {
-      mockLLMClient.complete.mockResolvedValue({
+      mockSimplePromptClient.request.mockResolvedValue({
         unknownFormat: 'test'
       });
       

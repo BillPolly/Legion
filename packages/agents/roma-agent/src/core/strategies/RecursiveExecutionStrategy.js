@@ -349,11 +349,17 @@ export class RecursiveExecutionStrategy extends ExecutionStrategy {
       emitter.custom('llm_decomposition_start', { taskId });
 
       const decompositionPrompt = this.buildDecompositionPrompt(task, context);
-      const response = await this.llmClient.complete({
-        messages: [
-          { role: 'system', content: 'You are a task decomposition expert. Break down complex tasks into smaller, manageable subtasks.' },
-          { role: 'user', content: decompositionPrompt }
-        ]
+      
+      // Ensure we have SimplePromptClient
+      if (!this.simplePromptClient) {
+        await this.initialize();
+      }
+      
+      const response = await this.simplePromptClient.request({
+        prompt: decompositionPrompt,
+        systemPrompt: 'You are a task decomposition expert. Break down complex tasks into smaller, manageable subtasks.',
+        temperature: 0.3,
+        maxTokens: 2000
       });
 
       const decomposition = this.parseDecompositionResponse(response.content || response, task);
@@ -1021,14 +1027,18 @@ Make sure subtasks are:
 
     // Simple prompt execution
     if (task.prompt || task.description || task.operation) {
-      if (!this.llmClient) {
-        throw new Error('LLM client not configured for direct execution');
+      // Ensure we have SimplePromptClient
+      if (!this.simplePromptClient) {
+        await this.initialize();
+        if (!this.simplePromptClient) {
+          throw new Error('SimplePromptClient not configured for direct execution');
+        }
       }
 
-      const response = await this.llmClient.complete({
-        messages: [
-          { role: 'user', content: task.prompt || task.description || task.operation }
-        ]
+      const response = await this.simplePromptClient.request({
+        prompt: task.prompt || task.description || task.operation,
+        maxTokens: task.maxTokens || 1000,
+        temperature: task.temperature
       });
 
       return response && response.content ? response.content : response;

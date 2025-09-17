@@ -16,6 +16,7 @@ export class ExecutionStrategy {
     this.executionLog = options.executionLog;
     this.progressStream = options.progressStream;
     this.llmClient = options.llmClient;
+    this.simplePromptClient = options.simplePromptClient;
     this.toolRegistry = options.toolRegistry;
     this.options = options;
   }
@@ -24,6 +25,13 @@ export class ExecutionStrategy {
    * Initialize the strategy
    */
   async initialize() {
+    // Create SimplePromptClient if not provided but llmClient exists
+    if (!this.simplePromptClient && this.llmClient) {
+      const { SimplePromptClient } = await import('@legion/llm-client');
+      this.simplePromptClient = new SimplePromptClient({
+        llmClient: this.llmClient
+      });
+    }
     // Override in subclasses if needed
   }
 

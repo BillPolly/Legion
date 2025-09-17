@@ -12,6 +12,7 @@ describe('SequentialExecutionStrategy', () => {
   let context;
   let mockToolRegistry;
   let mockLLMClient;
+  let mockSimplePromptClient;
   let mockProgressStream;
 
   beforeEach(() => {
@@ -23,6 +24,11 @@ describe('SequentialExecutionStrategy', () => {
     // Mock LLM client
     mockLLMClient = {
       complete: jest.fn()
+    };
+
+    // Mock SimplePromptClient
+    mockSimplePromptClient = {
+      request: jest.fn()
     };
 
     // Mock progress stream
@@ -46,6 +52,7 @@ describe('SequentialExecutionStrategy', () => {
       testMode: true,  // Enable test mode for unit tests
       toolRegistry: mockToolRegistry,
       llmClient: mockLLMClient,
+      simplePromptClient: mockSimplePromptClient,
       progressStream: mockProgressStream,
       stopOnFailure: true,
       passResults: true,
@@ -310,7 +317,7 @@ describe('SequentialExecutionStrategy', () => {
     });
 
     it('should handle LLM prompts in sequence', async () => {
-      mockLLMClient.complete
+      mockSimplePromptClient.request
         .mockResolvedValueOnce({ content: 'response1' })
         .mockResolvedValueOnce({ content: 'response2' });
       
@@ -325,7 +332,7 @@ describe('SequentialExecutionStrategy', () => {
       const result = await strategy.execute(task, context);
       
       expect(result.success).toBe(true);
-      expect(mockLLMClient.complete).toHaveBeenCalledTimes(2);
+      expect(mockSimplePromptClient.request).toHaveBeenCalledTimes(2);
       expect(result.result).toEqual(['response1', 'response2']);
     });
 
@@ -448,7 +455,7 @@ describe('SequentialExecutionStrategy', () => {
     });
 
     it('should inject results into prompts', async () => {
-      mockLLMClient.complete.mockResolvedValue({ content: 'processed' });
+      mockSimplePromptClient.request.mockResolvedValue({ content: 'processed' });
       
       const task = {
         id: 'prompt-injection',
@@ -463,11 +470,12 @@ describe('SequentialExecutionStrategy', () => {
 
       await strategy.execute(task, context);
       
-      expect(mockLLMClient.complete).toHaveBeenCalledWith({
-        messages: [
-          { role: 'user', content: 'Process this data: {"value":42}' }
-        ]
-      });
+      expect(mockSimplePromptClient.request).toHaveBeenCalledWith(
+        expect.objectContaining({
+          prompt: 'Process this data: {"value":42}',
+          maxTokens: 1000
+        })
+      );
     });
 
     it('should inject results into parameters', async () => {
