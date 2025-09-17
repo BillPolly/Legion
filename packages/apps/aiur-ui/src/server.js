@@ -28,7 +28,7 @@ const server = createServer((req, res) => {
   } else if (url.startsWith('/Legion/shared/')) {
     // Serve shared modules (actors, utils, etc.)
     const sharedPath = url.replace('/Legion/shared/', '');
-    filePath = join(__dirname, '../../../shared/', sharedPath);
+    filePath = join(__dirname, '../../../packages/shared/', sharedPath);
   } else if (url.startsWith('/src/')) {
     filePath = join(__dirname, '../', url);
   } else {

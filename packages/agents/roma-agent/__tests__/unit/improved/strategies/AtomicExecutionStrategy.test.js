@@ -366,7 +366,7 @@ describe('AtomicExecutionStrategy', () => {
       expect(mockSimplePromptClient.request).toHaveBeenCalledWith(
         expect.objectContaining({
           prompt: 'test',
-          systemPrompt: 'You are a helpful assistant',
+          systemPrompt: expect.stringContaining('You are a helpful assistant'),
           maxTokens: 1000
         })
       );

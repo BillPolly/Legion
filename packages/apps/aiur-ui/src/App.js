@@ -4,6 +4,7 @@ import { Window } from '/Legion/components/window/index.js';
 import { FrontendActorSpace } from './actors/FrontendActorSpace.js';
 import { ChatActor } from './actors/ChatActor.js';
 import { ArtifactDebugView } from './components/debug/ArtifactDebugView.js';
+import { Observability } from './components/sd-observability/Observability.js';
 
 export class App {
   constructor(container) {
@@ -12,11 +13,14 @@ export class App {
     this.chat = null;
     this.terminalWindow = null;
     this.chatWindow = null;
+    this.observabilityWindow = null;
     this.actorSpace = null;
     this.chatActor = null;
     this.terminalActor = null;
     this.artifactDebugActor = null;
     this.artifactDebugView = null;
+    this.observability = null;
+    this.romaServerActor = null;
   }
   
   async render() {
@@ -70,6 +74,25 @@ export class App {
       }
     });
     
+    // Create observability window
+    this.observabilityWindow = Window.create({
+      dom: this.container,
+      title: 'ROMA Execution Observability',
+      width: 1000,
+      height: 700,
+      position: { x: 100, y: 100 },
+      theme: 'dark',
+      resizable: true,
+      draggable: true,
+      hideOnClose: true,
+      onClose: () => {
+        console.log('Observability window closed');
+      },
+      onResize: (width, height) => {
+        console.log(`Observability window resized to ${width}x${height}`);
+      }
+    });
+    
     // Create terminal inside its window
     this.terminal = new Terminal(this.terminalWindow.contentElement);
     this.terminal.initialize();
@@ -94,6 +117,16 @@ export class App {
       }
     });
     
+    // Initialize observability component
+    this.observability = new Observability(this.observabilityWindow.contentElement);
+    await this.observability.initialize();
+    
+    // Connect observability to ROMA server actor if available
+    if (this.romaServerActor && this.observability) {
+      console.log('Connecting observability to ROMA server actor...');
+      this.observability.connectToROMAServerActor(this.romaServerActor);
+    }
+    
     // Focus the terminal initially
     this.terminal.focus();
     
@@ -108,7 +141,7 @@ export class App {
       
       // Try to connect to server - pass terminal for TerminalActor
       console.log('Connecting to server...');
-      await this.actorSpace.connect('ws://localhost:8080/ws', this.terminal);
+      await this.actorSpace.connect('ws://localhost:4020/ws', this.terminal);
       
       // Get the actors that were created during handshake
       this.chatActor = this.actorSpace.chatActor;
@@ -121,6 +154,9 @@ export class App {
       if (this.artifactDebugActor) {
         this.initializeArtifactDebug();
       }
+      
+      // Store ROMA server actor reference for later connection
+      this.romaServerActor = this.actorSpace.getActor('romaServer');
       
     } catch (error) {
       console.error('Failed to initialize actor system:', error);
@@ -212,6 +248,7 @@ export class App {
         const menuItems = [
           { label: 'Show Terminal', action: () => this.terminalWindow?.show() },
           { label: 'Show Chat', action: () => this.chatWindow?.show() },
+          { label: 'Show Observability', action: () => this.observabilityWindow?.show() },
           { label: 'Show Artifact Debug', action: () => this.artifactDebugView?.show() }
         ];
         
@@ -266,6 +303,12 @@ export class App {
     }
     if (this.terminalWindow) {
       this.terminalWindow.destroy();
+    }
+    if (this.observabilityWindow) {
+      this.observabilityWindow.destroy();
+    }
+    if (this.observability) {
+      this.observability.destroy();
     }
     if (this.chatWindow) {
       this.chatWindow.destroy();

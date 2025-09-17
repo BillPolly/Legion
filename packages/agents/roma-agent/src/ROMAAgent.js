@@ -259,9 +259,25 @@ export class ROMAAgent {
   }
 
   /**
-   * Execute a single task or task plan
+   * Execute a single task or task plan with optional progress callback
    */
-  async execute(task, userContext = {}) {
+  async execute(task, userContextOrOptions = {}) {
+    // Handle different parameter formats for backward compatibility
+    let userContext = {};
+    let onProgress = null;
+    
+    if (typeof userContextOrOptions === 'function') {
+      // Legacy: second parameter is onProgress callback
+      onProgress = userContextOrOptions;
+    } else if (userContextOrOptions) {
+      // New format: options object with userContext and onProgress
+      userContext = userContextOrOptions.userContext || userContextOrOptions;
+      onProgress = userContextOrOptions.onProgress;
+    }
+    
+    // Store onProgress callback for handleProgressEvent
+    this.currentOnProgressCallback = onProgress;
+    
     // Ensure agent is initialized
     if (!this.isInitialized) {
       await this.initialize();
@@ -295,6 +311,9 @@ export class ROMAAgent {
         metadata: handled.metadata
       });
       return handled;
+    } finally {
+      // Clear the progress callback
+      this.currentOnProgressCallback = null;
     }
   }
 
@@ -322,6 +341,15 @@ export class ROMAAgent {
     // Start tracking
     const startTime = Date.now();
     progressStream.subscribe('*', event => this.handleProgressEvent(event));
+    
+    // Emit task analysis progress event
+    this.handleProgressEvent({
+      type: 'task_analysis',
+      taskId: this.getTaskId(task),
+      description: task.description || task.prompt || 'No description provided',
+      isComposite: this.isCompositeTask(task),
+      timestamp: new Date().toISOString()
+    });
     
     try {
       // Process based on task type
@@ -385,7 +413,7 @@ export class ROMAAgent {
    * Execute a single atomic task
    */
   async executeSingleTask(task, context, progressStream, executionLog) {
-    const taskId = task.id || task.taskId || this.generateTaskId();
+    const taskId = this.getTaskId(task);
     
     try {
       this.logTaskStart(taskId, context, executionLog);
@@ -399,6 +427,23 @@ export class ROMAAgent {
           { taskId, taskType: task.type }
         );
       }
+      
+      // Configure strategy with progressStream for detailed event forwarding
+      if (strategy.updateDependencies) {
+        strategy.updateDependencies({ progressStream });
+      } else {
+        // Fallback: set progressStream directly
+        strategy.progressStream = progressStream;
+      }
+      
+      // Emit strategy selection progress event
+      this.handleProgressEvent({
+        type: 'strategy_selection',
+        taskId: taskId,
+        strategy: strategy.constructor.name,
+        taskType: task.type || 'unknown',
+        timestamp: new Date().toISOString()
+      });
       
       const result = await this.executeTaskWithErrorRecovery(task, context, strategy);
       
@@ -935,10 +980,19 @@ export class ROMAAgent {
   }
 
   /**
-   * Handle progress events
+   * Handle progress events and forward to UI callback
    */
   handleProgressEvent(event) {
     this.logger.debug('Progress event', event);
+    
+    // Forward to UI callback if available
+    if (this.currentOnProgressCallback && typeof this.currentOnProgressCallback === 'function') {
+      try {
+        this.currentOnProgressCallback(event);
+      } catch (error) {
+        this.logger.warn('Progress callback error', { error: error.message });
+      }
+    }
   }
 
   /**
@@ -1066,6 +1120,13 @@ export class ROMAAgent {
 
   generateTaskId() {
     return `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  /**
+   * Get task ID from task object
+   */
+  getTaskId(task) {
+    return task.id || task.taskId || this.generateTaskId();
   }
 
   /**

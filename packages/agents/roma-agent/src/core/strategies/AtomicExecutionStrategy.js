@@ -11,6 +11,7 @@
  */
 
 import { ExecutionStrategy } from './ExecutionStrategy.js';
+import { ResponseValidator } from '@legion/output-schema';
 
 export class AtomicExecutionStrategy extends ExecutionStrategy {
   constructor(injectedDependencies = {}) {
@@ -18,6 +19,36 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
     this.name = 'AtomicExecutionStrategy';
     this.maxRetries = injectedDependencies.maxRetries ?? 3;
     this.retryDelay = injectedDependencies.retryDelay ?? 1000;
+    
+    // Initialize ResponseValidator for tool calling (same as Gemini agent)
+    this.toolCallSchema = {
+      type: 'object',
+      properties: {
+        response: { type: 'string', description: 'Your response to the user' },
+        use_tool: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: 'Tool name to execute' },
+            args: { type: 'object', description: 'Tool arguments' }
+          },
+          required: ['name', 'args']
+        },
+        use_tools: {
+          type: 'array',
+          description: 'Array of tools to execute in sequence',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string', description: 'Tool name' },
+              args: { type: 'object', description: 'Tool arguments' }
+            },
+            required: ['name', 'args']
+          }
+        }
+      },
+      required: ['response']
+    };
+    this.responseValidator = new ResponseValidator(this.toolCallSchema);
     
     // Initialize dependencies with injection
     this.initializeDependencies(injectedDependencies);
@@ -51,6 +82,9 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
     }
     if (updatedDependencies.llmClient) {
       this.llmClient = updatedDependencies.llmClient;
+    }
+    if (updatedDependencies.progressStream) {
+      this.progressStream = updatedDependencies.progressStream;
     }
     if (updatedDependencies.resourceManager) {
       this.resourceManager = updatedDependencies.resourceManager;
@@ -195,7 +229,11 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
       throw new Error('Tool registry not configured');
     }
 
-    emitter.custom('tool_execution', { tool: toolName });
+    emitter.custom('tool_execution_start', { 
+      tool: toolName,
+      taskId: this.getTaskId(task),
+      timestamp: new Date().toISOString()
+    });
 
     // Get the tool
     const tool = await this.toolRegistry.getTool(toolName);
@@ -210,7 +248,18 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
     return this.executeWithRetries(
       async () => {
         const result = await tool.execute(params);
-        return this.extractToolResult(result);
+        const extractedResult = this.extractToolResult(result);
+        
+        // Emit tool completion event with result details
+        emitter.custom('tool_execution_complete', {
+          tool: toolName,
+          taskId: this.getTaskId(task),
+          params: params,
+          result: extractedResult,
+          timestamp: new Date().toISOString()
+        });
+        
+        return extractedResult;
       },
       { 
         taskId: this.getTaskId(task),
@@ -268,20 +317,36 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
 
     const prompt = task.prompt || task.description || task.operation;
     
-    emitter.custom('llm_execution', {
-      model: task.model || 'default',
-      temperature: task.temperature,
-      maxTokens: task.maxTokens
-    });
-
     // Build request parameters for SimplePromptClient
     const requestParams = this.buildSimplePromptRequest(task, context, prompt);
+
+    // Emit LLM request event
+    emitter.custom('llm_request', {
+      taskId: this.getTaskId(task),
+      model: task.model || 'default',
+      temperature: task.temperature,
+      maxTokens: task.maxTokens,
+      prompt: prompt,
+      toolsAvailable: requestParams.tools?.length || 0,
+      timestamp: new Date().toISOString()
+    });
 
     // Execute with retries
     return this.executeWithRetries(
       async () => {
         const response = await this.simplePromptClient.request(requestParams);
-        return this.extractLLMResult(response, task);
+        const result = await this.extractLLMResult(response, task);
+        
+        // Emit LLM response event
+        emitter.custom('llm_response', {
+          taskId: this.getTaskId(task),
+          model: task.model || 'default',
+          result: result,
+          toolsExecuted: result.toolsExecuted || 0,
+          timestamp: new Date().toISOString()
+        });
+        
+        return result;
       },
       {
         taskId: this.getTaskId(task),
@@ -419,7 +484,7 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
   }
 
   /**
-   * Build SimplePromptClient request parameters
+   * Build SimplePromptClient request parameters with proper tool integration
    */
   buildSimplePromptRequest(task, context, prompt) {
     const params = {
@@ -428,11 +493,22 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
       temperature: task.temperature
     };
 
-    // Add system prompt if provided
-    const systemPrompt = task.systemPrompt || task.systemMessage || context.userContext?.systemPrompt;
-    if (systemPrompt) {
-      params.systemPrompt = systemPrompt;
+    // Add system prompt with tool usage instructions
+    let systemPrompt = task.systemPrompt || task.systemMessage || context.userContext?.systemPrompt || 'You are a helpful assistant.';
+    
+    // Add ResponseValidator format instructions for proper tool usage
+    if (this.responseValidator) {
+      const formatInstructions = this.responseValidator.generateInstructions({
+        response: "I understand and will help you.",
+        use_tool: {
+          name: "file_write",
+          args: { filePath: "/path/to/file.txt", content: "example content" }
+        }
+      });
+      systemPrompt += '\n\n' + formatInstructions;
     }
+    
+    params.systemPrompt = systemPrompt;
 
     // Add chat history if provided
     if (task.messages && Array.isArray(task.messages)) {
@@ -449,9 +525,12 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
       });
     }
 
-    // Add tools if specified
+    // Add tools - CRITICAL: Automatically include all available tools
     if (task.tools && Array.isArray(task.tools)) {
       params.tools = task.tools;
+    } else {
+      // Get all available tools from registry (like Gemini agent does)
+      params.tools = this.getAvailableToolsForLLM();
     }
 
     // Add any additional LLM options
@@ -598,9 +677,39 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
   }
 
   /**
-   * Extract result from LLM response
+   * Get available tools for LLM in SimplePromptClient format
    */
-  extractLLMResult(response, task) {
+  getAvailableToolsForLLM() {
+    if (!this.toolRegistry) {
+      return [];
+    }
+
+    try {
+      // Get tools from tool registry (synchronous method)
+      const tools = this.toolRegistry.getAllTools();
+      
+      // Convert to SimplePromptClient format (same as Gemini agent)
+      return tools.map(tool => ({
+        name: tool.name || tool.toolName,
+        description: tool.description || `Execute ${tool.name}`,
+        parameters: tool.inputSchema || {
+          type: 'object',
+          properties: {},
+          additionalProperties: true
+        }
+      }));
+    } catch (error) {
+      if (this.logger) {
+        this.logger.warn('Failed to get available tools for LLM', { error: error.message });
+      }
+      return [];
+    }
+  }
+
+  /**
+   * Extract result from LLM response with proper tool call handling
+   */
+  async extractLLMResult(response, task) {
     if (!response) {
       throw new Error('No response from LLM');
     }
@@ -619,7 +728,74 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
       throw new Error('Cannot extract content from LLM response');
     }
 
-    // Parse if JSON is expected
+    // Process response through ResponseValidator for tool call detection
+    if (this.responseValidator && this.toolRegistry) {
+      const validationResult = this.responseValidator.process(content);
+      
+      if (validationResult.success && (validationResult.data.use_tool || validationResult.data.use_tools)) {
+        // Execute tool calls (same pattern as Gemini agent)
+        const toolCalls = validationResult.data.use_tools || [validationResult.data.use_tool];
+        
+        let finalContent = validationResult.data.response || content;
+        const toolResults = [];
+        
+        for (const toolCall of toolCalls) {
+          try {
+            // Get tool from registry
+            const tool = await this.toolRegistry.getTool(toolCall.name);
+            if (!tool) {
+              throw new Error(`Tool '${toolCall.name}' not found`);
+            }
+            
+            // Execute tool
+            const result = await tool.execute(toolCall.args);
+            toolResults.push({
+              name: toolCall.name,
+              args: toolCall.args,
+              result: result
+            });
+            
+            // Check for file creation and emit specific event
+            if (toolCall.name === 'file_write' && result.success && toolCall.args.filepath) {
+              // File creation event for UI visibility
+              if (this.progressEmitter) {
+                this.progressEmitter.custom('file_created', {
+                  filepath: toolCall.args.filepath,
+                  content: toolCall.args.content,
+                  size: toolCall.args.content?.length || 0,
+                  timestamp: new Date().toISOString()
+                });
+              }
+            }
+            
+            // Append tool result to content
+            const resultSummary = this.extractToolResult(result);
+            finalContent += `\n\n🔧 ${toolCall.name} executed: ${JSON.stringify(resultSummary)}`;
+            
+          } catch (error) {
+            toolResults.push({
+              name: toolCall.name,
+              args: toolCall.args,
+              error: error.message
+            });
+            finalContent += `\n\n❌ ${toolCall.name} failed: ${error.message}`;
+          }
+        }
+        
+        return {
+          content: finalContent,
+          toolResults: toolResults,
+          toolsExecuted: toolResults.length
+        };
+      }
+      
+      // Return validated response even if no tools were used
+      if (validationResult.success) {
+        return validationResult.data.response || content;
+      }
+    }
+
+    // Parse if JSON is expected (fallback)
     if (task.expectJSON || task.parseJSON) {
       try {
         return JSON.parse(content);
@@ -628,7 +804,7 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
       }
     }
 
-    // Parse if specific format is expected
+    // Parse if specific format is expected (fallback)
     if (task.parseFormat) {
       return this.parseFormat(content, task.parseFormat);
     }
@@ -682,6 +858,13 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
         }
       }
     }
+  }
+
+  /**
+   * Get task ID from task object
+   */
+  getTaskId(task) {
+    return task.id || task.taskId || `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
 
   /**

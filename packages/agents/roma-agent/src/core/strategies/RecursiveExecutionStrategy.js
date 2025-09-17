@@ -12,6 +12,7 @@
 
 import { ExecutionStrategy } from './ExecutionStrategy.js';
 import { Logger } from '../../utils/Logger.js';
+import { ResponseValidator } from '@legion/output-schema';
 
 export class RecursiveExecutionStrategy extends ExecutionStrategy {
   constructor(injectedDependencies = {}) {
@@ -23,6 +24,36 @@ export class RecursiveExecutionStrategy extends ExecutionStrategy {
     this.useCache = injectedDependencies.useCache ?? true;
     this.decompositionCache = new Map();
     this.cycleDetection = injectedDependencies.cycleDetection ?? true;
+    
+    // Initialize ResponseValidator for tool calling (same as AtomicExecutionStrategy)
+    this.toolCallSchema = {
+      type: 'object',
+      properties: {
+        response: { type: 'string', description: 'Your response to the user' },
+        use_tool: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: 'Tool name to execute' },
+            args: { type: 'object', description: 'Tool arguments' }
+          },
+          required: ['name', 'args']
+        },
+        use_tools: {
+          type: 'array',
+          description: 'Array of tools to execute in sequence',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string', description: 'Tool name' },
+              args: { type: 'object', description: 'Tool arguments' }
+            },
+            required: ['name', 'args']
+          }
+        }
+      },
+      required: ['response']
+    };
+    this.responseValidator = new ResponseValidator(this.toolCallSchema);
     
     // Initialize dependencies with injection
     this.initializeDependencies(injectedDependencies);
@@ -355,14 +386,44 @@ export class RecursiveExecutionStrategy extends ExecutionStrategy {
         await this.initialize();
       }
       
-      const response = await this.simplePromptClient.request({
-        prompt: decompositionPrompt,
-        systemPrompt: 'You are a task decomposition expert. Break down complex tasks into smaller, manageable subtasks.',
+      // Build proper request parameters with tools (same pattern as AtomicExecutionStrategy)
+      const requestParams = this.buildSimplePromptRequest(
+        {
+          ...task,
+          prompt: decompositionPrompt,
+          systemPrompt: 'You are a task decomposition expert. Break down complex tasks into smaller, manageable subtasks.',
+          temperature: 0.3,
+          maxTokens: 2000
+        },
+        context,
+        decompositionPrompt
+      );
+      
+      // Emit LLM request event for observability
+      emitter.custom('llm_request', {
+        taskId: taskId,
+        model: 'default',
         temperature: 0.3,
-        maxTokens: 2000
+        maxTokens: 2000,
+        prompt: decompositionPrompt,
+        toolsAvailable: requestParams.tools?.length || 0,
+        purpose: 'task_decomposition',
+        timestamp: new Date().toISOString()
       });
+      
+      const response = await this.simplePromptClient.request(requestParams);
 
       const decomposition = this.parseDecompositionResponse(response.content || response, task);
+      
+      // Emit LLM response event for observability
+      emitter.custom('llm_response', {
+        taskId: taskId,
+        model: 'default',
+        result: decomposition,
+        purpose: 'task_decomposition',
+        subtasksGenerated: decomposition.subtasks?.length || 0,
+        timestamp: new Date().toISOString()
+      });
       
       emitter.custom('llm_decomposition_complete', {
         taskId,
@@ -431,7 +492,10 @@ Make sure subtasks are:
     try {
       // Extract JSON from response if it contains other text
       const jsonMatch = response.match(/\{[\s\S]*\}/);
-      const jsonStr = jsonMatch ? jsonMatch[0] : response;
+      let jsonStr = jsonMatch ? jsonMatch[0] : response;
+      
+      // Sanitize JSON string to handle control characters
+      jsonStr = this.sanitizeJsonString(jsonStr);
       
       const parsed = JSON.parse(jsonStr);
       
@@ -469,6 +533,32 @@ Make sure subtasks are:
       // Throw error to be handled by caller
       throw new Error(`Failed to parse decomposition response: ${error.message}`);
     }
+  }
+
+  /**
+   * Sanitize JSON string to handle control characters that cause parsing errors
+   * @param {string} jsonStr - Raw JSON string from LLM
+   * @returns {string} - Sanitized JSON string
+   */
+  sanitizeJsonString(jsonStr) {
+    if (!jsonStr || typeof jsonStr !== 'string') {
+      return jsonStr;
+    }
+
+    // Replace common problematic control characters
+    return jsonStr
+      // Replace unescaped newlines within string values
+      .replace(/(?<!\\)[\r\n]/g, '\\n')
+      // Replace unescaped tabs within string values  
+      .replace(/(?<!\\)\t/g, '\\t')
+      // Replace unescaped backslashes (but be careful not to double-escape)
+      .replace(/(?<!\\)\\(?!["\\/bfnrt])/g, '\\\\')
+      // Remove any remaining control characters that aren't properly escaped
+      .replace(/[\x00-\x1F\x7F]/g, (match) => {
+        // Convert control chars to unicode escapes
+        const code = match.charCodeAt(0);
+        return '\\u' + code.toString(16).padStart(4, '0');
+      });
   }
 
   /**
@@ -1027,6 +1117,8 @@ Make sure subtasks are:
 
     // Simple prompt execution
     if (task.prompt || task.description || task.operation) {
+      const taskId = this.getTaskId(task);
+      
       // Ensure we have SimplePromptClient
       if (!this.simplePromptClient) {
         await this.initialize();
@@ -1035,16 +1127,498 @@ Make sure subtasks are:
         }
       }
 
-      const response = await this.simplePromptClient.request({
+      // Build request parameters with proper tool integration
+      const requestParams = this.buildSimplePromptRequest(task, context, 
+        task.prompt || task.description || task.operation);
+      
+      // Emit LLM request event for observability
+      emitter.custom('llm_request', {
+        taskId: taskId,
+        model: task.model || 'default',
+        temperature: task.temperature,
+        maxTokens: task.maxTokens,
         prompt: task.prompt || task.description || task.operation,
-        maxTokens: task.maxTokens || 1000,
-        temperature: task.temperature
+        toolsAvailable: requestParams.tools?.length || 0,
+        purpose: 'direct_execution',
+        timestamp: new Date().toISOString()
       });
+      
+      const response = await this.simplePromptClient.request(requestParams);
+      
+      // Handle null response gracefully (e.g., when LLM client fails)
+      if (!response) {
+        emitter.custom('llm_response_null', { taskId: this.getTaskId(task) });
+        return {
+          success: true,
+          result: null,
+          message: 'LLM request returned null response'
+        };
+      }
+      
+      // Process response through ResponseValidator for tool call detection (same as AtomicExecutionStrategy)
+      if (this.responseValidator && this.toolRegistry && response) {
+        const content = response.content || response;
+        if (content) {
+          const validationResult = this.responseValidator.process(content);
+          
+          if (validationResult.success && (validationResult.data.use_tool || validationResult.data.use_tools)) {
+            // Execute tool calls (same pattern as AtomicExecutionStrategy)
+            const toolCalls = validationResult.data.use_tools || [validationResult.data.use_tool];
+            
+            let finalContent = validationResult.data.response || (response.content || response);
+            const toolResults = [];
+            
+            for (const toolCall of toolCalls) {
+              try {
+                // Emit tool execution start event
+                emitter.custom('tool_execution_start', { 
+                  tool: toolCall.name,
+                  taskId: taskId,
+                  timestamp: new Date().toISOString()
+                });
+                
+                // Get tool from registry
+                const tool = await this.toolRegistry.getTool(toolCall.name);
+                if (!tool) {
+                  throw new Error(`Tool '${toolCall.name}' not found`);
+                }
+                
+                // Execute tool
+                const result = await tool.execute(toolCall.args);
+                const extractedResult = this.extractToolResult(result);
+                
+                toolResults.push({
+                  name: toolCall.name,
+                  args: toolCall.args,
+                  result: result
+                });
+                
+                // Emit tool execution complete event
+                emitter.custom('tool_execution_complete', {
+                  tool: toolCall.name,
+                  taskId: taskId,
+                  params: toolCall.args,
+                  result: extractedResult,
+                  timestamp: new Date().toISOString()
+                });
+                
+                // Check for file creation and emit specific event
+                if (toolCall.name === 'file_write' && result.success && toolCall.args.filepath) {
+                  emitter.custom('file_created', {
+                    filepath: toolCall.args.filepath,
+                    content: toolCall.args.content,
+                    size: toolCall.args.content?.length || 0,
+                    timestamp: new Date().toISOString()
+                  });
+                }
+                
+                // Append tool result to content
+                finalContent += `\n\n🔧 ${toolCall.name} executed: ${JSON.stringify(extractedResult)}`;
+                
+              } catch (error) {
+                toolResults.push({
+                  name: toolCall.name,
+                  args: toolCall.args,
+                  error: error.message
+                });
+                finalContent += `\n\n❌ ${toolCall.name} failed: ${error.message}`;
+              }
+            }
+            
+            // Emit LLM response event for observability
+            emitter.custom('llm_response', {
+              taskId: taskId,
+              model: task.model || 'default',
+              result: {
+                content: finalContent,
+                toolResults: toolResults,
+                toolsExecuted: toolResults.length
+              },
+              purpose: 'direct_execution',
+              toolsExecuted: toolResults.length,
+              timestamp: new Date().toISOString()
+            });
+            
+            return {
+              content: finalContent,
+              toolResults: toolResults,
+              toolsExecuted: toolResults.length
+            };
+          }
+          
+          // Return validated response even if no tools were used
+          if (validationResult.success) {
+            const result = validationResult.data.response || (response.content || response);
+            
+            // Emit LLM response event for observability
+            emitter.custom('llm_response', {
+              taskId: taskId,
+              model: task.model || 'default',
+              result: result,
+              purpose: 'direct_execution',
+              toolsExecuted: 0,
+              timestamp: new Date().toISOString()
+            });
+            
+            return result;
+          }
+        }
+      }
 
-      return response && response.content ? response.content : response;
+      // Fallback: Parse tool calls from response content (for XML format)
+      if (response) {
+        const parsedToolCalls = this.parseToolCallsFromContent(response.content || response);
+        if (parsedToolCalls.length > 0) {
+          emitter.custom('tool_calls_parsed', { count: parsedToolCalls.length });
+          
+          const toolResults = await this.executeToolCalls(parsedToolCalls, context, emitter);
+          
+          return {
+            content: response.content || response,
+            toolResults: toolResults,
+            combinedResult: this.combineContentAndToolResults(response.content || response, toolResults)
+          };
+        }
+
+        return response && response.content ? response.content : response;
+      }
     }
 
-    throw new Error(`Cannot execute task directly: ${this.getTaskId(task)}`);
+    // Graceful fallback when no execution path is available
+    emitter.custom('direct_execution_fallback', { taskId: this.getTaskId(task) });
+    return {
+      success: true,
+      result: null,
+      message: `No direct execution path available for task: ${this.getTaskId(task)}`
+    };
+  }
+
+  /**
+   * Build SimplePromptClient request parameters with proper tool integration (same as AtomicExecutionStrategy)
+   */
+  buildSimplePromptRequest(task, context, prompt) {
+    const params = {
+      prompt: prompt || task.prompt || task.description || task.operation,
+      maxTokens: task.maxTokens || 1000,
+      temperature: task.temperature
+    };
+
+    // Add system prompt with tool usage instructions
+    let systemPrompt = task.systemPrompt || task.systemMessage || context.userContext?.systemPrompt || 'You are a helpful assistant.';
+    
+    // Add ResponseValidator format instructions for proper tool usage
+    if (this.responseValidator) {
+      const formatInstructions = this.responseValidator.generateInstructions({
+        response: "I understand and will help you.",
+        use_tool: {
+          name: "file_write",
+          args: { filePath: "/path/to/file.txt", content: "example content" }
+        }
+      });
+      systemPrompt += '\n\n' + formatInstructions;
+    }
+    
+    params.systemPrompt = systemPrompt;
+
+    // Add chat history if provided
+    if (task.messages && Array.isArray(task.messages)) {
+      params.chatHistory = task.messages;
+    }
+
+    // Add context from previous results if needed
+    if (task.includeHistory && context.previousResults.length > 0) {
+      const historyMessage = this.buildHistoryMessage(context.previousResults);
+      params.chatHistory = params.chatHistory || [];
+      params.chatHistory.push({
+        role: 'assistant',
+        content: historyMessage
+      });
+    }
+
+    // Add tools - CRITICAL: Automatically include all available tools
+    if (task.tools && Array.isArray(task.tools)) {
+      params.tools = task.tools;
+    } else {
+      // Get all available tools from registry (like AtomicExecutionStrategy does)
+      params.tools = this.getAvailableToolsForLLM();
+    }
+
+    // Add any additional LLM options
+    if (task.llmOptions) {
+      Object.assign(params, task.llmOptions);
+    }
+
+    // Enrich prompt with context
+    if (params.prompt) {
+      params.prompt = this.enrichPrompt(params.prompt, context);
+    }
+
+    return params;
+  }
+
+  /**
+   * Build history message from previous results (same as AtomicExecutionStrategy)
+   */
+  buildHistoryMessage(previousResults) {
+    const relevant = previousResults.slice(-3); // Last 3 results
+    return relevant.map((result, index) => 
+      `Previous Result ${index + 1}: ${JSON.stringify(result)}`
+    ).join('\n');
+  }
+
+  /**
+   * Enrich prompt with context (same as AtomicExecutionStrategy)
+   */
+  enrichPrompt(prompt, context) {
+    let enriched = prompt;
+
+    // Replace context variables
+    const variables = {
+      taskId: context.taskId,
+      sessionId: context.sessionId,
+      depth: context.depth,
+      ...context.getAllSharedState()
+    };
+
+    Object.entries(variables).forEach(([key, value]) => {
+      const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+      enriched = enriched.replace(regex, value);
+    });
+
+    return enriched;
+  }
+
+  /**
+   * Get available tools for LLM in SimplePromptClient format (same as AtomicExecutionStrategy)
+   */
+  getAvailableToolsForLLM() {
+    if (!this.toolRegistry) {
+      return [];
+    }
+
+    try {
+      // Get tools from tool registry (check if method exists)
+      if (this.toolRegistry.getAllTools && typeof this.toolRegistry.getAllTools === 'function') {
+        const tools = this.toolRegistry.getAllTools();
+        
+        // Convert to SimplePromptClient format (same as AtomicExecutionStrategy)
+        return tools.map(tool => ({
+          name: tool.name || tool.toolName,
+          description: tool.description || `Execute ${tool.name}`,
+          parameters: tool.inputSchema || {
+            type: 'object',
+            properties: {},
+            additionalProperties: true
+          }
+        }));
+      } else {
+        // Fallback for mock registries without getAllTools method
+        return [];
+      }
+    } catch (error) {
+      if (this.logger) {
+        this.logger.warn('Failed to get available tools for LLM', { error: error.message });
+      }
+      return [];
+    }
+  }
+
+  /**
+   * Extract result from tool execution (same as AtomicExecutionStrategy)
+   */
+  extractToolResult(toolResult) {
+    if (!toolResult) {
+      return null;
+    }
+
+    // Standard tool result format
+    if (toolResult.success !== undefined) {
+      if (!toolResult.success) {
+        throw new Error(toolResult.error || 'Tool execution failed');
+      }
+      // Return the actual result value, even if it's null/undefined
+      if ('result' in toolResult) {
+        return toolResult.result;
+      }
+      if ('data' in toolResult) {
+        return toolResult.data;
+      }
+      return toolResult;
+    }
+
+    // Direct result
+    return toolResult;
+  }
+
+  /**
+   * Get available tools for SimplePromptClient
+   */
+  async getAvailableTools() {
+    if (!this.toolRegistry) {
+      return [];
+    }
+
+    try {
+      // Get tools from tool registry
+      const tools = await this.toolRegistry.listTools();
+      
+      // Convert to SimplePromptClient format
+      return tools.map(tool => ({
+        name: tool.name,
+        description: tool.description || `Execute ${tool.name} tool`,
+        inputSchema: tool.inputSchema || {
+          type: 'object',
+          properties: {},
+          required: []
+        }
+      }));
+    } catch (error) {
+      if (this.logger) {
+        this.logger.warn('Failed to get available tools', { error: error.message });
+      }
+      return [];
+    }
+  }
+
+  /**
+   * Parse tool calls from content using XML format (Anthropic style)
+   */
+  parseToolCallsFromContent(content) {
+    if (!content || typeof content !== 'string') {
+      return [];
+    }
+
+    const toolCalls = [];
+    
+    // Match <tool_use name="tool_name" parameters='{"param": "value"}'>
+    const toolRegex = /<tool_use name="([^"]+)" parameters='([^']+)'>\s*<\/tool_use>/g;
+    let match;
+    
+    while ((match = toolRegex.exec(content)) !== null) {
+      try {
+        const parameters = JSON.parse(match[2]);
+        toolCalls.push({
+          name: match[1],
+          args: parameters,
+          id: `tool_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        });
+      } catch (e) {
+        if (this.logger) {
+          this.logger.warn('Failed to parse tool parameters', { 
+            toolName: match[1], 
+            parameters: match[2],
+            error: e.message 
+          });
+        }
+      }
+    }
+    
+    return toolCalls;
+  }
+
+  /**
+   * Execute tool calls and return results
+   */
+  async executeToolCalls(toolCalls, context, emitter) {
+    const results = [];
+    
+    for (const toolCall of toolCalls) {
+      try {
+        emitter.custom('tool_execution_start', { tool: toolCall.name });
+        
+        // Get the tool from registry
+        const tool = await this.toolRegistry.getTool(toolCall.name);
+        if (!tool) {
+          throw new Error(`Tool not found: ${toolCall.name}`);
+        }
+
+        // Execute the tool
+        const result = await tool.execute(toolCall.args);
+        
+        emitter.custom('tool_execution_success', { 
+          tool: toolCall.name,
+          success: result.success !== false 
+        });
+        
+        results.push({
+          name: toolCall.name,
+          args: toolCall.args,
+          result: result,
+          success: result.success !== false
+        });
+        
+      } catch (error) {
+        emitter.custom('tool_execution_error', { 
+          tool: toolCall.name,
+          error: error.message 
+        });
+        
+        results.push({
+          name: toolCall.name,
+          args: toolCall.args,
+          error: error.message,
+          success: false
+        });
+      }
+    }
+    
+    return results;
+  }
+
+  /**
+   * Combine text content with tool execution results
+   */
+  combineContentAndToolResults(content, toolResults) {
+    if (!toolResults || toolResults.length === 0) {
+      return content;
+    }
+
+    let combined = content;
+    
+    // Replace tool_use XML with actual results
+    for (const toolResult of toolResults) {
+      if (toolResult.success && toolResult.result) {
+        // Extract meaningful result
+        const actualResult = this.extractToolResult(toolResult.result);
+        
+        // Format the result nicely
+        const formattedResult = `\n\n🔧 ${toolResult.name} Result:\n${JSON.stringify(actualResult, null, 2)}`;
+        combined += formattedResult;
+      } else if (!toolResult.success) {
+        const formattedError = `\n\n❌ ${toolResult.name} Error:\n${toolResult.error}`;
+        combined += formattedError;
+      }
+    }
+    
+    return combined;
+  }
+
+  /**
+   * Extract meaningful result from tool execution
+   */
+  extractToolResult(toolResult) {
+    if (!toolResult) {
+      return null;
+    }
+
+    // Standard tool result format
+    if (toolResult.success !== undefined) {
+      if (!toolResult.success) {
+        return { error: toolResult.error || 'Tool execution failed' };
+      }
+      
+      // Return the actual result value
+      if ('result' in toolResult) {
+        return toolResult.result;
+      }
+      if ('data' in toolResult) {
+        return toolResult.data;
+      }
+      return toolResult;
+    }
+
+    // Direct result
+    return toolResult;
   }
 
   /**
