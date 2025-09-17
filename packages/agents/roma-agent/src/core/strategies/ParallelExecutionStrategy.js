@@ -215,6 +215,13 @@ export class ParallelExecutionStrategy extends ExecutionStrategy {
         }
       }
 
+      // Throw error if any tasks failed and failFast is enabled
+      if (failed > 0 && this.failFast) {
+        const failedTasks = results.filter(r => !r.success);
+        const errorMessages = failedTasks.map(r => `${r.taskId}: ${r.error}`).join(', ');
+        throw new Error(`Parallel execution failed: ${failed} task(s) failed - ${errorMessages}`);
+      }
+
       return aggregatedResult;
     });
   }
@@ -365,6 +372,23 @@ export class ParallelExecutionStrategy extends ExecutionStrategy {
         error: null
       };
     } catch (error) {
+      // For "Tool not found" errors, don't attempt recovery - just fail
+      if (error.message && error.message.includes('Tool not found')) {
+        emitter.custom('subtask_failed', {
+          taskId,
+          index,
+          error: error.message
+        });
+
+        return {
+          taskId,
+          success: false,
+          result: null,
+          context,
+          error: error.message
+        };
+      }
+      
       // Attempt error recovery if available
       if (this.errorRecovery) {
         try {

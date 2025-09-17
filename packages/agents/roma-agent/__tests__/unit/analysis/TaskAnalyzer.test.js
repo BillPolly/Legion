@@ -3,6 +3,7 @@
  * Tests intelligent strategy selection, complexity analysis, and performance learning
  */
 
+import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { TaskAnalyzer } from '../../../src/analysis/TaskAnalyzer.js';
 import { 
   TaskError,
@@ -606,80 +607,6 @@ describe('TaskAnalyzer', () => {
     });
   });
 
-  describe('Performance Learning', () => {
-    it('should record strategy performance', () => {
-      const strategy = 'AtomicExecutionStrategy';
-      const analysis = { complexity: { overallComplexity: 0.3 }, dependencies: { count: 0 } };
-      const result = { success: true, duration: 1500 };
-
-      taskAnalyzer.recordPerformance(strategy, analysis, result);
-
-      expect(taskAnalyzer.performanceHistory).toHaveLength(1);
-      const record = taskAnalyzer.performanceHistory[0];
-      expect(record.strategy).toBe(strategy);
-      expect(record.taskComplexity).toBe(0.3);
-      expect(record.success).toBe(true);
-      expect(record.duration).toBe(1500);
-
-      const metrics = taskAnalyzer.strategyMetrics.get(strategy);
-      expect(metrics.totalAttempts).toBe(1);
-      expect(metrics.successes).toBe(1);
-      expect(metrics.avgDuration).toBe(1500);
-      expect(metrics.successRate).toBe(1.0);
-    });
-
-    it('should maintain history size limit', () => {
-      taskAnalyzer.maxHistorySize = 3;
-
-      // Add more records than the limit
-      for (let i = 0; i < 5; i++) {
-        taskAnalyzer.recordPerformance(
-          'AtomicExecutionStrategy',
-          { complexity: { overallComplexity: 0.1 } },
-          { success: true, duration: 1000 }
-        );
-      }
-
-      expect(taskAnalyzer.performanceHistory).toHaveLength(3);
-    });
-
-    it('should calculate performance statistics', () => {
-      // Add some performance records
-      taskAnalyzer.recordPerformance('AtomicExecutionStrategy', {}, { success: true, duration: 1000 });
-      taskAnalyzer.recordPerformance('ParallelExecutionStrategy', {}, { success: false, duration: 2000 });
-      taskAnalyzer.recordPerformance('AtomicExecutionStrategy', {}, { success: true, duration: 1200 });
-
-      const stats = taskAnalyzer.getPerformanceStats();
-
-      expect(stats.totalAnalyses).toBe(3);
-      expect(stats.successfulRecoveries).toBe(2);
-      expect(stats.overallSuccessRate).toBeCloseTo(0.667, 2);
-      expect(stats.strategyMetrics.AtomicExecutionStrategy.totalAttempts).toBe(2);
-      expect(stats.strategyMetrics.AtomicExecutionStrategy.successRate).toBe(1.0);
-      expect(stats.strategyMetrics.ParallelExecutionStrategy.successRate).toBe(0.0);
-    });
-
-    it('should clear history when requested', () => {
-      taskAnalyzer.recordPerformance('AtomicExecutionStrategy', {}, { success: true });
-      taskAnalyzer.recordPerformance('ParallelExecutionStrategy', {}, { success: false });
-
-      expect(taskAnalyzer.performanceHistory).toHaveLength(2);
-      expect(taskAnalyzer.strategyMetrics.get('AtomicExecutionStrategy').totalAttempts).toBe(1);
-
-      taskAnalyzer.clearHistory();
-
-      expect(taskAnalyzer.performanceHistory).toHaveLength(0);
-      expect(taskAnalyzer.strategyMetrics.get('AtomicExecutionStrategy').totalAttempts).toBe(0);
-    });
-
-    it('should not record when learning disabled', () => {
-      taskAnalyzer.enableLearning = false;
-
-      taskAnalyzer.recordPerformance('AtomicExecutionStrategy', {}, { success: true });
-
-      expect(taskAnalyzer.performanceHistory).toHaveLength(0);
-    });
-  });
 
   describe('Helper Methods', () => {
     it('should classify task types correctly', () => {

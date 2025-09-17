@@ -59,6 +59,29 @@ describe('AtomicExecutionStrategy', () => {
       retryDelay: 10
     });
 
+    strategy.retryHandler = {
+      config: { maxAttempts: 2 },
+      updateConfiguration: jest.fn(),
+      reset: jest.fn(),
+      executeWithRetry: jest.fn(async (handlerFn) => handlerFn(1, null)),
+      generateErrorFeedback: jest.fn((errors, prompt) => prompt)
+    };
+
+    strategy.retryManager = {
+      maxAttempts: 2,
+      baseDelay: 10,
+      backoffFactor: 2,
+      retryPolicies: new Map([
+        ['unknown', { baseDelay: 10 }]
+      ]),
+      classifyError: jest.fn(() => 'unknown'),
+      calculateDelay: jest.fn(() => 10),
+      shouldRetry: jest.fn(() => true),
+      recordSuccess: jest.fn(),
+      recordFailure: jest.fn(),
+      isCircuitOpen: jest.fn(async () => false)
+    };
+
     context = new ExecutionContext(null, {
       taskId: 'test-task',
       sessionId: 'test-session',
@@ -396,6 +419,24 @@ describe('AtomicExecutionStrategy', () => {
           maxTokens: 1000
         })
       );
+    });
+
+    it('should delegate retry logic to configured RetryHandler', async () => {
+      strategy.retryHandler.executeWithRetry.mockImplementation(async (handlerFn, options) => {
+        const attemptResult = await handlerFn(1, null);
+        return { success: true, data: attemptResult, metadata: { attempts: 1 } };
+      });
+      mockSimplePromptClient.request.mockResolvedValue({ content: 'handled by retry handler' });
+
+      const task = {
+        id: 'retry-handler-task',
+        prompt: 'Explain retry logic'
+      };
+
+      await strategy.execute(task, context);
+
+      expect(strategy.retryHandler.updateConfiguration).toHaveBeenCalledWith({ maxAttempts: expect.any(Number) });
+      expect(strategy.retryHandler.executeWithRetry).toHaveBeenCalledTimes(1);
     });
 
     it('should parse JSON response when expected', async () => {

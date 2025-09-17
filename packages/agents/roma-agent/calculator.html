@@ -10,7 +10,7 @@
             margin: 0;
             padding: 0;
         }
-
+        
         body {
             display: flex;
             justify-content: center;
@@ -19,14 +19,14 @@
             background-color: #f0f0f0;
             font-family: Arial, sans-serif;
         }
-
+        
         .calculator {
             background-color: #333;
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
-
+        
         .display {
             background-color: #fff;
             padding: 20px;
@@ -36,13 +36,13 @@
             font-size: 24px;
             min-height: 60px;
         }
-
+        
         .buttons {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 10px;
         }
-
+        
         button {
             padding: 20px;
             font-size: 20px;
@@ -53,31 +53,31 @@
             color: white;
             transition: background-color 0.2s;
         }
-
+        
         button:hover {
             background-color: #777;
         }
-
+        
         .operator {
             background-color: #ff9500;
         }
-
+        
         .operator:hover {
             background-color: #ffaa33;
         }
-
+        
         .equals {
             background-color: #2ecc71;
         }
-
+        
         .equals:hover {
             background-color: #27ae60;
         }
-
+        
         .clear {
             background-color: #e74c3c;
         }
-
+        
         .clear:hover {
             background-color: #c0392b;
         }
@@ -91,18 +91,22 @@
             <button class="operator">±</button>
             <button class="operator">%</button>
             <button class="operator">÷</button>
+            
             <button>7</button>
             <button>8</button>
             <button>9</button>
             <button class="operator">×</button>
+            
             <button>4</button>
             <button>5</button>
             <button>6</button>
             <button class="operator">-</button>
+            
             <button>1</button>
             <button>2</button>
             <button>3</button>
             <button class="operator">+</button>
+            
             <button>0</button>
             <button>.</button>
             <button class="equals" style="grid-column: span 2;">=</button>

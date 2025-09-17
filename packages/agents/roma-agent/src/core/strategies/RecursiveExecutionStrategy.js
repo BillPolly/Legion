@@ -172,7 +172,33 @@ export class RecursiveExecutionStrategy extends ExecutionStrategy {
     }
 
     // Can handle tasks with description (even if not explicitly marked recursive)
+    // BUT exclude tasks with sequential pattern keywords - those should use SequentialStrategy
     if (task.description && !task.tool && !task.toolName) {
+      // Check for sequential patterns that should be handled by SequentialExecutionStrategy
+      const sequentialPatterns = [
+        'then',
+        'finally',
+        'after that',
+        'followed by',
+        'next',
+        'subsequently',
+        'afterwards',
+        'step by step',
+        'one by one',
+        'in order',
+        'sequentially'
+      ];
+      
+      const descLower = task.description.toLowerCase();
+      const hasSequentialPattern = sequentialPatterns.some(pattern => 
+        descLower.includes(pattern)
+      );
+      
+      // Don't handle if it has sequential patterns
+      if (hasSequentialPattern) {
+        return false;
+      }
+      
       return true;
     }
 

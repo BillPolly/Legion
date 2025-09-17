@@ -15,6 +15,7 @@
     "@legion/llm-client": "file:../../prompting/llm-client",
     "@legion/resource-manager": "file:../../resource-manager",
     "@legion/tools": "file:../../tools",
+    "@legion/prompting-manager": "file:../../prompting/prompt-manager",
     "@legion/gemini-tools": "file:../../tools/gemini-tools",
     "@legion/schema": "file:../../schema",
     "express": "^4.18.2",

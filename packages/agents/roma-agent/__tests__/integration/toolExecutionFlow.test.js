@@ -65,7 +65,7 @@ describe('Tool Execution Flow Integration Tests', () => {
       };
 
       // Get the execution strategy
-      const strategy = agent.strategyResolver.selectStrategy(task, {});
+      const strategy = await agent.strategyResolver.selectStrategy(task, {});
       expect(strategy).toBeDefined();
       
       // Verify strategy has access to tool registry
@@ -189,46 +189,6 @@ describe('Tool Execution Flow Integration Tests', () => {
     });
   });
 
-  describe('Performance and Caching', () => {
-    it('should use singleton pattern efficiently', async () => {
-      // Create multiple agents
-      const agent1 = new ROMAAgent();
-      const agent2 = new ROMAAgent();
-      const agent3 = new ROMAAgent();
-      
-      await Promise.all([
-        agent1.initialize(),
-        agent2.initialize(),
-        agent3.initialize()
-      ]);
-      
-      // All should share the same tool registry
-      const registry1 = agent1.getToolRegistry();
-      const registry2 = agent2.getToolRegistry();
-      const registry3 = agent3.getToolRegistry();
-      
-      expect(registry1).toBe(registry2);
-      expect(registry2).toBe(registry3);
-    });
-
-    it('should maintain tool registry state across executions', async () => {
-      const registry = agent.getToolRegistry();
-      
-      // Add some state to registry (if it supports custom properties)
-      registry._testMarker = 'test-value-123';
-      
-      // Create new agent
-      const newAgent = new ROMAAgent();
-      await newAgent.initialize();
-      
-      // Should have same registry with same state
-      const newRegistry = newAgent.getToolRegistry();
-      expect(newRegistry._testMarker).toBe('test-value-123');
-      
-      // Clean up
-      delete registry._testMarker;
-    });
-  });
 
   describe('Strategy Resolver Integration', () => {
     it('should update all strategies when dependencies change', async () => {

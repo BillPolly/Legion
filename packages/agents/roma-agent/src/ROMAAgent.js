@@ -3,6 +3,7 @@
  * Follows Clean Code principles with small, focused methods
  */
 
+import { EventEmitter } from 'events';
 import { ResourceManager } from '@legion/resource-manager';
 import { ToolRegistry } from '@legion/tools-registry';
 import { ExecutionContext } from './core/ExecutionContext.js';
@@ -32,8 +33,9 @@ import {
   ID_SUBSTRING_START
 } from './constants/SystemConstants.js';
 
-export class ROMAAgent {
+export class ROMAAgent extends EventEmitter {
   constructor(injectedDependencies = {}) {
+    super();
     // For unit tests ONLY - allow manual dependency injection
     this.testMode = !!injectedDependencies.testMode;
     
@@ -314,6 +316,11 @@ export class ROMAAgent {
     const executionId = this.generateExecutionId();
     
     try {
+      // Ensure task has an ID
+      if (!task.id && !task.taskId) {
+        task.id = this.generateTaskId();
+      }
+      
       this.logger.info('Starting execution', { executionId, taskId: task.id });
       
       if (!task) {
@@ -373,13 +380,22 @@ export class ROMAAgent {
     const startTime = Date.now();
     progressStream.subscribe('*', event => this.handleProgressEvent(event));
     
+    // Emit task started event
+    this.handleProgressEvent({
+      status: 'started',
+      taskId: this.getTaskId(task),
+      description: task.description || task.prompt || 'No description provided',
+      isComposite: this.isCompositeTask(task),
+      timestamp: Date.now()
+    });
+    
     // Emit task analysis progress event
     this.handleProgressEvent({
       type: 'task_analysis',
       taskId: this.getTaskId(task),
       description: task.description || task.prompt || 'No description provided',
       isComposite: this.isCompositeTask(task),
-      timestamp: new Date().toISOString()
+      timestamp: Date.now()
     });
     
     try {
@@ -449,7 +465,7 @@ export class ROMAAgent {
     try {
       this.logTaskStart(taskId, context, executionLog);
       
-      const strategy = this.strategyResolver.selectStrategy(task, context);
+      const strategy = await this.strategyResolver.selectStrategy(task, context);
       if (!strategy) {
         throw new StrategyError(
           `No strategy available for task type: ${task.type || 'unknown'}`,
@@ -473,7 +489,7 @@ export class ROMAAgent {
         taskId: taskId,
         strategy: strategy.constructor.name,
         taskType: task.type || 'unknown',
-        timestamp: new Date().toISOString()
+        timestamp: Date.now()
       });
       
       const result = await this.executeTaskWithErrorRecovery(task, context, strategy);
@@ -664,19 +680,31 @@ export class ROMAAgent {
    * Filter valid task IDs from group
    */
   filterValidTaskIds(taskGroup, dependencyGraph) {
-    // Ensure taskGroup is an array
-    if (!Array.isArray(taskGroup)) {
-      this.logger.warn('taskGroup is not an array, converting to array', { 
+    // Handle different taskGroup formats
+    let taskIds;
+    
+    if (Array.isArray(taskGroup)) {
+      // Already an array of task IDs
+      taskIds = taskGroup;
+    } else if (taskGroup && typeof taskGroup === 'object' && taskGroup.tasks) {
+      // Object with tasks property (e.g., from execution plan)
+      taskIds = Array.isArray(taskGroup.tasks) ? taskGroup.tasks : [taskGroup.tasks];
+    } else if (taskGroup && typeof taskGroup === 'string') {
+      // Single task ID as string
+      taskIds = [taskGroup];
+    } else {
+      // Invalid or empty taskGroup
+      this.logger.warn('Invalid taskGroup format', { 
         taskGroup, 
         taskGroupType: typeof taskGroup 
       });
-      // Convert to array if it's a single value, or return empty array if null/undefined
-      taskGroup = taskGroup ? [taskGroup] : [];
+      taskIds = [];
     }
     
-    const validIds = taskGroup.filter(taskId => dependencyGraph.has(taskId));
+    const validIds = taskIds.filter(taskId => dependencyGraph.has(taskId));
     this.logger.debug('Filtering valid task IDs', { 
-      taskGroup, 
+      originalTaskGroup: taskGroup,
+      extractedTaskIds: taskIds,
       dependencyGraphKeys: Array.from(dependencyGraph.keys()),
       validIds 
     });
@@ -745,7 +773,7 @@ export class ROMAAgent {
     
     try {
       // Select and execute strategy
-      const executionStrategy = this.strategyResolver.selectStrategy(taskDefinition, childExecutionContext);
+      const executionStrategy = await this.strategyResolver.selectStrategy(taskDefinition, childExecutionContext);
       this.logTaskStart(taskId, childExecutionContext, executionLog, executionStrategy);
       
       const taskExecutionResult = await executionStrategy.execute(taskDefinition, childExecutionContext);
@@ -795,8 +823,10 @@ export class ROMAAgent {
           action: recoveryResult.action
         });
         
-        // Don't create error record if recovery succeeded
-        return recoveryResult;
+        // Create success record for recovered task
+        const successRecord = this.createSuccessRecord(taskId, recoveryResult.result, context);
+        executionState.results.set(taskId, successRecord);
+        return successRecord;
       }
     } catch (recoveryError) {
       this.logger.warn('Error recovery failed', {
@@ -814,12 +844,8 @@ export class ROMAAgent {
     
     this.logTaskError(taskId, error, context, executionLog);
     
-    // Re-throw with proper error type
-    const taskError = error instanceof TaskError 
-      ? error 
-      : new TaskExecutionError(`Task ${taskId} failed: ${error.message}`, taskId, error);
-      
-    throw taskError;
+    // Return the error record instead of throwing
+    return errorRecord;
   }
 
   /**
@@ -830,9 +856,15 @@ export class ROMAAgent {
     
     settledTaskResults.forEach(taskResult => {
       if (taskResult.status === 'rejected') {
-        // Error already recorded in handleTaskError
-        this.logger.warn('Task in group failed', { 
+        // This should not happen now since handleTaskError doesn't throw
+        this.logger.error('Unexpected task rejection in group', { 
           reason: taskResult.reason?.message 
+        });
+      } else if (taskResult.value && !taskResult.value.success) {
+        // Task failed but was handled gracefully
+        this.logger.warn('Task in group failed', { 
+          taskId: taskResult.value.taskId,
+          error: taskResult.value.error
         });
       }
     });
@@ -941,15 +973,24 @@ export class ROMAAgent {
     // Handle nested result structure from composite tasks
     let finalResult;
     let executionPlan = execution.executionPlan;
+    let success = true;
+    let error = null;
     
     if (execution.result && typeof execution.result === 'object' && execution.result.result !== undefined) {
       // This is a composite task result - unwrap it
       finalResult = execution.result.result; // Array of task results
+      success = execution.result.success !== false; // Check the success status
+      error = execution.result.error;
+      
       if (execution.result.metadata) {
         // Merge execution plan metadata
         executionPlan = {
           executionOrder: execution.result.metadata.executionOrder,
-          ...executionPlan
+          ...executionPlan,
+          failed: execution.result.metadata.failed,
+          successful: execution.result.metadata.successful,
+          totalTasks: execution.result.metadata.totalTasks,
+          errors: execution.result.metadata.errors
         };
       }
     } else {
@@ -958,19 +999,23 @@ export class ROMAAgent {
     }
     
     // Update statistics
-    this.updateStatistics(true, execution.duration, {
+    this.updateStatistics(success, execution.duration, {
       executionId,
       taskCount: Array.isArray(finalResult) ? finalResult.length : 1
     });
     
     return {
-      success: true,
+      success: success,
       result: finalResult,
+      error: error,
       metadata: {
         executionId,
         duration: execution.duration,
         logEntries: execution.log?.entries?.length || 0,
-        executionPlan: executionPlan || null
+        executionPlan: executionPlan || null,
+        failed: executionPlan?.failed || 0,
+        successful: executionPlan?.successful || 0,
+        errors: executionPlan?.errors || []
       }
     };
   }
@@ -1034,6 +1079,9 @@ export class ROMAAgent {
    */
   handleProgressEvent(event) {
     this.logger.debug('Progress event', event);
+    
+    // Emit event for EventEmitter interface
+    this.emit('progress', event);
     
     // Forward to UI callback if available
     if (this.currentOnProgressCallback && typeof this.currentOnProgressCallback === 'function') {

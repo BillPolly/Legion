@@ -12,6 +12,8 @@
 
 import { ExecutionStrategy } from './ExecutionStrategy.js';
 import { ResponseValidator } from '@legion/output-schema';
+import { RetryHandler } from '@legion/prompting-manager';
+import { RetryManager } from '../retry/RetryManager.js';
 
 export class AtomicExecutionStrategy extends ExecutionStrategy {
   constructor(injectedDependencies = {}) {
@@ -19,6 +21,8 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
     this.name = 'AtomicExecutionStrategy';
     this.maxRetries = injectedDependencies.maxRetries ?? 3;
     this.retryDelay = injectedDependencies.retryDelay ?? 1000;
+    this.retryHandler = injectedDependencies.retryHandler || null;
+    this.retryManager = injectedDependencies.retryManager || null;
     
     // Initialize ResponseValidator for tool calling (same as Gemini agent)
     this.toolCallSchema = {
@@ -52,6 +56,7 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
     
     // Initialize dependencies with injection
     this.initializeDependencies(injectedDependencies);
+    this.configureRetrySystems(injectedDependencies);
   }
 
   /**
@@ -64,6 +69,62 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
     this.resourceManager = dependencies.resourceManager || null;
     this.logger = dependencies.logger || null;
     this.errorRecovery = dependencies.errorRecovery || null;
+    this.retryHandler = dependencies.retryHandler || this.retryHandler;
+    this.retryManager = dependencies.retryManager || this.retryManager;
+  }
+
+  /**
+   * Configure retry systems (RetryHandler for LLM, RetryManager for tools)
+   * @param {Object} dependencies - Optional configuration overrides
+   */
+  configureRetrySystems(dependencies = {}) {
+    const retryMaxAttempts = dependencies.maxRetries ?? this.maxRetries;
+
+    if (!this.retryHandler) {
+      this.retryHandler = new RetryHandler({
+        maxAttempts: retryMaxAttempts,
+        ...(dependencies.llmRetryConfig || dependencies.retryHandlerConfig || {})
+      });
+    } else if (dependencies.llmRetryConfig || dependencies.retryHandlerConfig) {
+      this.retryHandler.updateConfiguration({
+        maxAttempts: retryMaxAttempts,
+        ...dependencies.llmRetryConfig,
+        ...dependencies.retryHandlerConfig
+      });
+    } else if (this.retryHandler?.updateConfiguration) {
+      this.retryHandler.updateConfiguration({ maxAttempts: retryMaxAttempts });
+    }
+
+    if (!this.retryManager) {
+      this.retryManager = new RetryManager({
+        maxAttempts: retryMaxAttempts,
+        baseDelay: dependencies.retryDelay ?? this.retryDelay,
+        logger: this.logger,
+        ...(dependencies.retryManagerOptions || {})
+      });
+    } else {
+      if (dependencies.retryManagerOptions) {
+        Object.assign(this.retryManager, dependencies.retryManagerOptions);
+      }
+      this.retryManager.maxAttempts = retryMaxAttempts;
+      if (dependencies.retryDelay !== undefined) {
+        this.retryManager.baseDelay = dependencies.retryDelay;
+      }
+      if (this.logger) {
+        this.retryManager.logger = this.logger;
+      }
+    }
+
+    // Ensure RetryHandler configuration is valid where possible
+    if (this.retryHandler?.validateConfiguration) {
+      try {
+        this.retryHandler.validateConfiguration();
+      } catch (error) {
+        if (this.logger) {
+          this.logger.warn('RetryHandler configuration invalid', { error: error.message });
+        }
+      }
+    }
   }
 
   /**
@@ -101,6 +162,28 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
     if (updatedDependencies.retryDelay !== undefined) {
       this.retryDelay = updatedDependencies.retryDelay;
     }
+    if (updatedDependencies.retryHandler) {
+      this.retryHandler = updatedDependencies.retryHandler;
+    }
+    if (updatedDependencies.retryManager) {
+      this.retryManager = updatedDependencies.retryManager;
+    }
+
+    if (updatedDependencies.retryHandlerConfig ||
+        updatedDependencies.retryManagerOptions ||
+        updatedDependencies.llmRetryConfig ||
+        updatedDependencies.maxRetries !== undefined ||
+        updatedDependencies.retryDelay !== undefined ||
+        updatedDependencies.retryHandler ||
+        updatedDependencies.retryManager) {
+      this.configureRetrySystems({
+        maxRetries: this.maxRetries,
+        retryDelay: this.retryDelay,
+        retryHandlerConfig: updatedDependencies.retryHandlerConfig,
+        llmRetryConfig: updatedDependencies.llmRetryConfig,
+        retryManagerOptions: updatedDependencies.retryManagerOptions
+      });
+    }
 
     if (this.logger) {
       this.logger.debug('AtomicExecutionStrategy dependencies updated', {
@@ -124,7 +207,9 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
       logger: this.logger,
       errorRecovery: this.errorRecovery,
       maxRetries: this.maxRetries,
-      retryDelay: this.retryDelay
+      retryDelay: this.retryDelay,
+      retryHandler: this.retryHandler,
+      retryManager: this.retryManager
     };
   }
 
@@ -232,7 +317,7 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
     emitter.custom('tool_execution_start', { 
       tool: toolName,
       taskId: this.getTaskId(task),
-      timestamp: new Date().toISOString()
+      timestamp: Date.now()
     });
 
     // Emit progress for tool initialization
@@ -278,7 +363,7 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
           taskId: this.getTaskId(task),
           params: params,
           result: extractedResult,
-          timestamp: new Date().toISOString()
+          timestamp: Date.now()
         });
         
         return extractedResult;
@@ -286,7 +371,9 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
       { 
         taskId: this.getTaskId(task),
         toolName,
-        emitter 
+        emitter,
+        operationType: 'tool',
+        operationId: `tool:${toolName}`
       }
     );
   }
@@ -345,7 +432,9 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
       {
         taskId: this.getTaskId(task),
         functionName: fn.name || 'anonymous',
-        emitter
+        emitter,
+        operationType: 'function',
+        operationId: `function:${fn.name || 'anonymous'}`
       }
     );
   }
@@ -375,7 +464,7 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
       maxTokens: task.maxTokens,
       prompt: prompt,
       toolsAvailable: requestParams.tools?.length || 0,
-      timestamp: new Date().toISOString()
+      timestamp: Date.now()
     });
 
     // Emit LLM progress for sending request
@@ -386,17 +475,38 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
       model: task.model || 'default'
     });
 
-    // Execute with retries
+    const basePrompt = requestParams.prompt;
+
+    // Execute with retries (RetryHandler for LLM requests)
     return this.executeWithRetries(
-      async () => {
+      async ({ attempt = 1, lastAttemptResult }) => {
+        const attemptParams = {
+          ...requestParams,
+          prompt: requestParams.prompt,
+          chatHistory: requestParams.chatHistory ? [...requestParams.chatHistory] : undefined,
+          tools: requestParams.tools ? [...requestParams.tools] : undefined
+        };
+
+        if (attempt > 1 && lastAttemptResult?.errors?.length && this.retryHandler?.generateErrorFeedback) {
+          attemptParams.prompt = this.retryHandler.generateErrorFeedback(lastAttemptResult.errors, basePrompt);
+          emitter.custom('llm_progress', {
+            phase: 'retry_feedback_applied',
+            percentage: 60,
+            model: task.model || 'default',
+            attempt,
+            errors: lastAttemptResult.errors.map(error => error.message)
+          });
+        }
+
         // Emit progress for processing response
         emitter.custom('llm_progress', {
           phase: 'processing_response',
           percentage: 80,
-          model: task.model || 'default'
+          model: task.model || 'default',
+          attempt
         });
 
-        const response = await this.simplePromptClient.request(requestParams);
+        const response = await this.simplePromptClient.request(attemptParams);
         const result = await this.extractLLMResult(response, task);
         
         // Emit completion progress
@@ -404,7 +514,8 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
           phase: 'completed',
           percentage: 100,
           model: task.model || 'default',
-          toolsExecuted: result.toolsExecuted || 0
+          toolsExecuted: result.toolsExecuted || 0,
+          attempt
         });
         
         // Emit LLM response event
@@ -413,7 +524,8 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
           model: task.model || 'default',
           result: result,
           toolsExecuted: result.toolsExecuted || 0,
-          timestamp: new Date().toISOString()
+          timestamp: Date.now(),
+          attempt
         });
         
         return result;
@@ -421,71 +533,102 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
       {
         taskId: this.getTaskId(task),
         model: task.model || 'default',
-        emitter
+        emitter,
+        operationType: 'llm',
+        operationId: `llm:${task.model || 'default'}`
+      },
+      {
+        strategy: 'handler',
+        maxAttempts: task.maxRetries || this.maxRetries
       }
     );
   }
 
   /**
-   * Execute with retry logic and error recovery
+   * Execute with retry logic using appropriate retry mechanism
    */
-  async executeWithRetries(executeFn, metadata) {
-    const { taskId, emitter } = metadata;
-    let lastError;
-    
-    for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
+  async executeWithRetries(executeFn, metadata = {}, options = {}) {
+    const strategy = options.strategy || (metadata.operationType === 'llm' ? 'handler' : 'manager');
+
+    if (strategy === 'handler') {
+      return this.executeWithRetryHandler(executeFn, metadata, options);
+    }
+
+    return this.executeWithRetryManager(executeFn, metadata, options);
+  }
+
+  /**
+   * Retry workflow for tool/function execution using RetryManager
+   */
+  async executeWithRetryManager(executeFn, metadata = {}, options = {}) {
+    const emitter = metadata.emitter;
+    const retryManager = this.retryManager;
+    const maxAttempts = options.maxAttempts || retryManager?.maxAttempts || this.maxRetries;
+    const operationId = metadata.operationId || metadata.toolName || metadata.functionName || metadata.taskId || 'atomic-operation';
+
+    let lastError = null;
+    let lastAttemptResult = null;
+
+    if (retryManager && await retryManager.isCircuitOpen(operationId)) {
+      const circuitError = new Error(`Circuit breaker is open for operation: ${operationId}`);
+      circuitError.code = 'CIRCUIT_OPEN';
+      throw circuitError;
+    }
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        const result = await executeFn();
-        
+        const result = await executeFn({ attempt, lastAttemptResult });
         if (attempt > 1) {
-          emitter.custom('retry_success', { 
+          emitter?.custom?.('retry_success', {
             attempt,
-            maxAttempts: this.maxRetries 
+            maxAttempts
           });
         }
-        
+        retryManager?.recordSuccess(operationId);
         return result;
       } catch (error) {
         lastError = error;
-        
-        // Attempt error recovery if available
-        if (this.errorRecovery && attempt < this.maxRetries) {
+        const errorType = retryManager?.classifyError ? retryManager.classifyError(error) : 'unknown';
+        lastAttemptResult = { error, errorType };
+        retryManager?.recordFailure(operationId);
+
+        const canRetry = retryManager
+          ? retryManager.shouldRetry(error, attempt, errorType)
+          : attempt < maxAttempts;
+
+        if (this.errorRecovery && attempt < maxAttempts) {
           try {
             const recoveryResult = await this.errorRecovery.recover(error, {
-              taskId,
+              ...metadata,
               attemptNumber: attempt,
-              maxAttempts: this.maxRetries,
-              strategy: 'AtomicExecutionStrategy',
-              ...metadata
+              maxAttempts,
+              errorType,
+              strategy: this.name
             });
-            
+
             if (recoveryResult.success) {
               if (this.logger) {
                 this.logger.info('Error recovery successful for atomic task', {
-                  taskId,
+                  taskId: metadata.taskId,
                   attempt,
                   recoveryAction: recoveryResult.action
                 });
               }
-              
-              emitter.custom('error_recovery_success', {
+
+              emitter?.custom?.('error_recovery_success', {
                 attempt,
                 recoveryAction: recoveryResult.action,
                 delay: recoveryResult.delay
               });
-              
-              // Apply recovery delay if specified
+
               if (recoveryResult.delay) {
-                await new Promise(resolve => setTimeout(resolve, recoveryResult.delay));
+                await this.delay(recoveryResult.delay);
               }
-              
-              // Continue to next retry attempt
-              continue;
             }
           } catch (recoveryError) {
             if (this.logger) {
               this.logger.warn('Error recovery failed for atomic task', {
-                taskId,
+                taskId: metadata.taskId,
                 attempt,
                 originalError: error.message,
                 recoveryError: recoveryError.message
@@ -493,18 +636,135 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
             }
           }
         }
-        
-        if (attempt < this.maxRetries) {
-          emitter.retrying(attempt, this.maxRetries, error.message);
-          
-          // Calculate delay with exponential backoff
-          const delay = this.retryDelay * Math.pow(2, attempt - 1);
-          await new Promise(resolve => setTimeout(resolve, delay));
+
+        if (!canRetry || attempt >= maxAttempts) {
+          break;
         }
+
+        emitter?.retrying(attempt, maxAttempts, error.message);
+
+        let delayMs = this.retryDelay * Math.pow(2, attempt - 1);
+        if (retryManager) {
+          const policyMap = retryManager.retryPolicies || new Map();
+          const policy = policyMap.get(errorType) || policyMap.get('unknown');
+          delayMs = retryManager.calculateDelay(
+            attempt,
+            policy?.baseDelay ?? retryManager.baseDelay,
+            policy?.backoffFactor ?? retryManager.backoffFactor ?? 2
+          );
+        }
+
+        await this.delay(delayMs);
       }
     }
 
     throw lastError;
+  }
+
+  /**
+   * Retry workflow for LLM execution using RetryHandler
+   */
+  async executeWithRetryHandler(executeFn, metadata = {}, options = {}) {
+    if (!this.retryHandler || typeof this.retryHandler.executeWithRetry !== 'function') {
+      const result = await executeFn({ attempt: 1, lastAttemptResult: null });
+      return result;
+    }
+
+    const emitter = metadata.emitter;
+    const maxAttempts = options.maxAttempts || this.retryHandler.config?.maxAttempts || this.maxRetries;
+
+    if (typeof this.retryHandler.updateConfiguration === 'function') {
+      this.retryHandler.updateConfiguration({ maxAttempts });
+    }
+
+    if (typeof this.retryHandler.reset === 'function') {
+      this.retryHandler.reset();
+    }
+
+    let lastCaughtError = null;
+
+    const retryResult = await this.retryHandler.executeWithRetry(async (attempt, lastAttemptResult) => {
+      try {
+        const value = await executeFn({ attempt, lastAttemptResult });
+        if (attempt > 1) {
+           emitter?.custom?.('retry_success', { attempt, maxAttempts });
+        }
+        return {
+          success: true,
+          data: value,
+          metadata: {
+            attempt
+          }
+        };
+      } catch (error) {
+        lastCaughtError = error;
+        const errorType = this.retryManager?.classifyError ? this.retryManager.classifyError(error) : 'unknown';
+
+        if (this.errorRecovery && attempt < maxAttempts) {
+          try {
+            const recoveryResult = await this.errorRecovery.recover(error, {
+              ...metadata,
+              attemptNumber: attempt,
+              maxAttempts,
+              errorType,
+              strategy: this.name
+            });
+
+            if (recoveryResult.success) {
+              emitter?.custom?.('error_recovery_success', {
+                attempt,
+                recoveryAction: recoveryResult.action,
+                delay: recoveryResult.delay
+              });
+
+              if (recoveryResult.delay) {
+                await this.delay(recoveryResult.delay);
+              }
+            }
+          } catch (recoveryError) {
+            if (this.logger) {
+              this.logger.warn('Error recovery failed for LLM execution', {
+                taskId: metadata.taskId,
+                attempt,
+                originalError: error.message,
+                recoveryError: recoveryError.message
+              });
+            }
+          }
+        }
+
+        emitter?.retrying(attempt, maxAttempts, error.message);
+
+        return {
+          success: false,
+          errors: [{
+            message: error.message,
+            type: errorType
+          }],
+          metadata: {
+            attempt,
+            errorType
+          }
+        };
+      }
+    }, { maxAttempts });
+
+    if (retryResult.success) {
+      return retryResult.data;
+    }
+
+    if (lastCaughtError) {
+      throw lastCaughtError;
+    }
+
+    throw new Error('LLM execution failed after retries');
+  }
+
+  /**
+   * Helper to await for a specified duration
+   */
+  async delay(durationMs) {
+    return new Promise(resolve => setTimeout(resolve, durationMs));
   }
 
   /**
@@ -833,7 +1093,7 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
                   filepath: toolCall.args.filepath,
                   content: toolCall.args.content,
                   size: toolCall.args.content?.length || 0,
-                  timestamp: new Date().toISOString()
+                  timestamp: Date.now()
                 });
               }
             }

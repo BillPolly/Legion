@@ -3,6 +3,7 @@
  * Tests new fallback strategy mechanism, partial result recovery, and error classification
  */
 
+import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ErrorRecovery } from '../../../src/errors/ErrorRecovery.js';
 import { 
   TaskError,
@@ -354,7 +355,9 @@ describe('ErrorRecovery', () => {
     let taskError;
 
     beforeEach(() => {
-      taskError = new TaskError('Test task failed', { isRetryable: () => true });
+      taskError = new TaskError('Test task failed', 'test-task-id');
+      // Mock isRetryable to return true for testing
+      taskError.isRetryable = jest.fn().mockReturnValue(true);
     });
 
     it('should successfully recover with appropriate strategy', async () => {

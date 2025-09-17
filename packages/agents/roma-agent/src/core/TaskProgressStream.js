@@ -352,6 +352,7 @@ export class TaskProgressStream {
       this.subtaskProgress.set(taskId, 100);
     } else if (status === 'progress' && details.percentage !== undefined) {
       calculator.updateSubtaskProgress(taskId, details.percentage);
+      this.subtaskProgress.set(taskId, details.percentage);
     }
     
     // Get progress details
@@ -401,14 +402,14 @@ export class TaskProgressStream {
    * @returns {number} Overall progress percentage
    */
   calculateOverallProgress() {
-    if (this.taskCalculators.size === 0) return 0;
+    if (this.subtaskProgress.size === 0) return 0;
     
     let totalProgress = 0;
-    for (const calculator of this.taskCalculators.values()) {
-      totalProgress += calculator.calculatePercentage();
+    for (const percentage of this.subtaskProgress.values()) {
+      totalProgress += percentage;
     }
     
-    return Math.round(totalProgress / this.taskCalculators.size);
+    return Math.round(totalProgress / this.subtaskProgress.size);
   }
 
   /**
@@ -431,14 +432,15 @@ export class TaskProgressStream {
       emit: (event) => self.emit(taskId, event),
       
       progress: (percent, message) => {
-        self.updateProgress(taskId, 'progress', { 
+        self.emit(taskId, { 
+          status: 'progress',
+          progress: percent,
           percentage: percent, 
           message 
         });
       },
       
       started: (details = {}) => {
-        self.updateProgress(taskId, 'started', details);
         self.emit(taskId, {
           status: 'started',
           ...details

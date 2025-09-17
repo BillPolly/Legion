@@ -126,29 +126,29 @@ describe('ExecutionStrategyResolver', () => {
   });
 
   describe('Strategy Selection', () => {
-    it('should select appropriate strategy for atomic tasks', () => {
+    it('should select appropriate strategy for atomic tasks', async () => {
       const atomicTask = {
         id: 'atomic-task',
         tool: 'calculator',
         params: { expression: '2+2' }
       };
       
-      const strategy = resolver.selectStrategy(atomicTask, context);
+      const strategy = await resolver.selectStrategy(atomicTask, context);
       expect(strategy).toBeInstanceOf(AtomicExecutionStrategy);
     });
 
-    it('should select recursive strategy for complex tasks', () => {
+    it('should select recursive strategy for complex tasks', async () => {
       const recursiveTask = {
         id: 'recursive-task',
         recursive: true,
         description: 'Complex task requiring decomposition'
       };
       
-      const strategy = resolver.selectStrategy(recursiveTask, context);
+      const strategy = await resolver.selectStrategy(recursiveTask, context);
       expect(strategy).toBeInstanceOf(RecursiveExecutionStrategy);
     });
 
-    it('should select parallel strategy for parallel tasks', () => {
+    it('should select parallel strategy for parallel tasks', async () => {
       const parallelTask = {
         id: 'parallel-task',
         parallel: true,
@@ -158,11 +158,11 @@ describe('ExecutionStrategyResolver', () => {
         ]
       };
       
-      const strategy = resolver.selectStrategy(parallelTask, context);
+      const strategy = await resolver.selectStrategy(parallelTask, context);
       expect(strategy).toBeInstanceOf(ParallelExecutionStrategy);
     });
 
-    it('should select sequential strategy for sequential tasks', () => {
+    it('should select sequential strategy for sequential tasks', async () => {
       const sequentialTask = {
         id: 'sequential-task',
         sequential: true,
@@ -172,35 +172,31 @@ describe('ExecutionStrategyResolver', () => {
         ]
       };
       
-      const strategy = resolver.selectStrategy(sequentialTask, context);
+      const strategy = await resolver.selectStrategy(sequentialTask, context);
       expect(strategy).toBeInstanceOf(SequentialExecutionStrategy);
     });
 
-    it('should fallback to atomic strategy when no strategy matches', () => {
+    it('should fallback to atomic strategy when no strategy matches', async () => {
       const unknownTask = {
         id: 'unknown-task',
         unknownProperty: 'some value'
       };
       
-      const strategy = resolver.selectStrategy(unknownTask, context);
+      const strategy = await resolver.selectStrategy(unknownTask, context);
       expect(strategy).toBeInstanceOf(AtomicExecutionStrategy);
     });
 
-    it('should require task parameter', () => {
-      expect(() => {
-        resolver.selectStrategy(null, context);
-      }).toThrow('Task is required for strategy selection');
+    it('should require task parameter', async () => {
+      await expect(resolver.selectStrategy(null, context)).rejects.toThrow('Task is required for strategy selection');
     });
 
-    it('should require context parameter', () => {
+    it('should require context parameter', async () => {
       const task = { id: 'test', tool: 'test-tool' };
       
-      expect(() => {
-        resolver.selectStrategy(task, null);
-      }).toThrow('ExecutionContext is required for strategy selection');
+      await expect(resolver.selectStrategy(task, null)).rejects.toThrow('ExecutionContext is required for strategy selection');
     });
 
-    it('should handle strategy evaluation errors gracefully', () => {
+    it('should handle strategy evaluation errors gracefully', async () => {
       // Create a strategy that throws during canHandle
       class ErrorStrategy {
         canHandle(task, context) {
@@ -215,7 +211,7 @@ describe('ExecutionStrategyResolver', () => {
       resolver.registerStrategy(ErrorStrategy, 20); // Highest priority
       
       const task = { id: 'test', tool: 'test-tool' };
-      const strategy = resolver.selectStrategy(task, context);
+      const strategy = await resolver.selectStrategy(task, context);
       
       // Should fallback to atomic strategy
       expect(strategy).toBeInstanceOf(AtomicExecutionStrategy);
@@ -419,14 +415,12 @@ describe('ExecutionStrategyResolver', () => {
   });
 
   describe('Error Handling', () => {
-    it('should throw error when no strategies can handle task and no fallback', () => {
+    it('should throw error when no strategies can handle task and no fallback', async () => {
       resolver.clear(); // Remove all strategies
       
       const task = { id: 'test', unknownType: true };
-      
-      expect(() => {
-        resolver.selectStrategy(task, context);
-      }).toThrow('No suitable execution strategy found for task');
+
+      await expect(resolver.selectStrategy(task, context)).rejects.toThrow('No suitable execution strategy found for task');
     });
 
     it('should validate strategy interface during registration', () => {

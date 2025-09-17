@@ -21,15 +21,18 @@ body {
 }
 
 .display {
+    margin-bottom: 20px;
+}
+
+#result {
     width: 100%;
     height: 60px;
-    border: none;
-    background-color: #fff;
-    margin-bottom: 20px;
-    border-radius: 5px;
-    font-size: 24px;
+    font-size: 2em;
     text-align: right;
     padding: 10px;
+    background-color: #fff;
+    border: none;
+    border-radius: 5px;
 }
 
 .buttons {
@@ -38,9 +41,9 @@ body {
     gap: 10px;
 }
 
-button {
+.btn {
     padding: 20px;
-    font-size: 20px;
+    font-size: 1.2em;
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -49,7 +52,7 @@ button {
     transition: background-color 0.2s;
 }
 
-button:hover {
+.btn:hover {
     background-color: #777;
 }
 
@@ -61,18 +64,11 @@ button:hover {
     background-color: #ffaa33;
 }
 
-.equals {
-    background-color: #2ecc71;
-}
-
-.equals:hover {
-    background-color: #27ae60;
-}
-
 .clear {
-    background-color: #e74c3c;
+    background-color: #ff3b30;
+    grid-column: span 4;
 }
 
 .clear:hover {
-    background-color: #c0392b;
+    background-color: #ff524b;
 }

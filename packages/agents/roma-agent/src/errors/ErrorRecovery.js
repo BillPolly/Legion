@@ -278,7 +278,15 @@ export class ErrorRecovery {
    * @private
    */
   getRecoveryKey(error, context) {
-    const errorId = error.code || error.constructor.name;
+    // For generic Error objects with explicit code, use the code
+    // For custom error classes, use the constructor name
+    let errorId;
+    if (error.constructor.name === 'Error' && error.code) {
+      errorId = error.code;
+    } else {
+      errorId = error.constructor.name;
+    }
+    
     const contextId = context.taskId || context.sessionId || 'global';
     return `${errorId}:${contextId}`;
   }
@@ -289,7 +297,7 @@ export class ErrorRecovery {
    */
   cleanupRecoveryHistory() {
     const cutoff = Date.now() - (24 * 60 * 60 * 1000); // 24 hours
-    this.recoveryHistory = this.recoveryHistory.filter(h => h.timestamp > cutoff);
+    this.recoveryHistory = this.recoveryHistory.filter(h => h.timestamp >= cutoff);
   }
 
   /**
@@ -350,7 +358,8 @@ export class ErrorRecovery {
       executionContext.getFailedSubtasks() : [];
     
     const recoverable = this.isRecoverable(error);
-    const completionPercentage = completed.length / (completed.length + pending.length + failed.length) * 100;
+    const totalTasks = completed.length + pending.length + failed.length;
+    const completionPercentage = totalTasks > 0 ? (completed.length / totalTasks * 100) : 0;
     
     this.logger.info('Recovering partial results', {
       completed: completed.length,
@@ -735,7 +744,7 @@ export class ErrorRecovery {
     return {
       totalAttempts,
       successfulRecoveries,
-      successRate: totalAttempts > 0 ? (successfulRecoveries / totalAttempts) * 100 : 0,
+      successRate: totalAttempts > 0 ? Math.round((successfulRecoveries / totalAttempts) * 100 * 100) / 100 : 0,
       errorTypeStats,
       recoveryStrategies,
       registeredStrategies: this.recoveryStrategies.size,

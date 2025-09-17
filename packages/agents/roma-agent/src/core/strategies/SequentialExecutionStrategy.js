@@ -132,6 +132,32 @@ export class SequentialExecutionStrategy extends ExecutionStrategy {
       return true;
     }
 
+    // Can handle tasks with sequential pattern keywords in description
+    if (task.description && typeof task.description === 'string') {
+      const sequentialPatterns = [
+        'then',
+        'finally',
+        'after that',
+        'followed by',
+        'next',
+        'subsequently',
+        'afterwards',
+        'step by step',
+        'one by one',
+        'in order',
+        'sequentially'
+      ];
+      
+      const descLower = task.description.toLowerCase();
+      const hasSequentialPattern = sequentialPatterns.some(pattern => 
+        descLower.includes(pattern)
+      );
+      
+      if (hasSequentialPattern) {
+        return true;
+      }
+    }
+
     return false;
   }
 

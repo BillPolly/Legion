@@ -19,6 +19,7 @@ import {
   StrategyError, 
   StrategySelectionError 
 } from '../../errors/ROMAErrors.js';
+import { TaskAnalyzer } from '../../analysis/TaskAnalyzer.js';
 
 const DEFAULT_STRATEGY_NAMES = new Set([
   'AtomicExecutionStrategy',
@@ -34,7 +35,9 @@ export class ExecutionStrategyResolver {
     this.strategyInstanceRegistry = new Map();
     this.strategyPriorityMap = new Map();
     this.logger = injectedDependencies.logger || new Logger('ExecutionStrategyResolver');
-    
+    this.enableTaskAnalyzer = injectedDependencies.enableTaskAnalyzer !== false;
+    this.taskAnalyzer = injectedDependencies.taskAnalyzer || (this.enableTaskAnalyzer ? new TaskAnalyzer({ logger: this.logger }) : null);
+
     // Initialize default strategies
     this.initializeDefaultStrategies();
   }
@@ -114,7 +117,7 @@ export class ExecutionStrategyResolver {
    * @param {ExecutionContext} context - Execution context
    * @returns {ExecutionStrategy} - Selected strategy instance
    */
-  selectStrategy(taskDefinition, executionContext) {
+  async selectStrategy(taskDefinition, executionContext) {
     // Validate inputs
     if (!taskDefinition) {
       throw new Error('Task is required for strategy selection');
@@ -123,28 +126,115 @@ export class ExecutionStrategyResolver {
       throw new Error('ExecutionContext is required for strategy selection');
     }
 
-    // Find first strategy that can handle the task
+    const taskId = taskDefinition.id || taskDefinition.taskId || 'unknown';
+
+    // Manual override
+    if (taskDefinition.strategy) {
+      const override = this.getStrategy(taskDefinition.strategy);
+      if (override) {
+        if (this.logger) {
+          this.logger.info('Using manual strategy override', {
+            taskId,
+            strategy: taskDefinition.strategy
+          });
+        }
+        return override;
+      }
+
+      if (this.logger) {
+        this.logger.warn('Manual strategy override not found, falling back to automatic selection', {
+          taskId,
+          strategy: taskDefinition.strategy
+        });
+      }
+    }
+
+    // Respect atomic flag
+    if (taskDefinition.atomic === true) {
+      const atomicStrategy = this.getStrategy('AtomicExecutionStrategy');
+      if (atomicStrategy) {
+        if (this.logger) {
+          this.logger.info('Atomic flag enforced - using AtomicExecutionStrategy', { taskId });
+        }
+        return atomicStrategy;
+      }
+    }
+
+    // Task analyzer recommendation
+    if (this.taskAnalyzer) {
+      try {
+        const analysis = await this.taskAnalyzer.analyzeTask(taskDefinition, executionContext);
+        const recommendedStrategyName = analysis?.recommendation?.strategy;
+
+        if (recommendedStrategyName) {
+          const recommendedStrategy = this.getStrategy(recommendedStrategyName);
+          if (recommendedStrategy && recommendedStrategy.canHandle(taskDefinition, executionContext)) {
+            if (this.logger) {
+              this.logger.debug('TaskAnalyzer recommendation selected', {
+                taskId,
+                strategy: recommendedStrategyName,
+                confidence: analysis.recommendation.confidence,
+                pattern: analysis.recommendation.pattern
+              });
+            }
+            return recommendedStrategy;
+          }
+
+          if (this.logger) {
+            this.logger.warn('TaskAnalyzer recommended strategy unavailable or incompatible', {
+              taskId,
+              recommendedStrategy: recommendedStrategyName
+            });
+          }
+        }
+
+        for (const alternative of analysis?.recommendation?.alternatives || []) {
+          const alternativeStrategy = this.getStrategy(alternative.strategy);
+          if (alternativeStrategy && alternativeStrategy.canHandle(taskDefinition, executionContext)) {
+            if (this.logger) {
+              this.logger.info('Using TaskAnalyzer alternative strategy', {
+                taskId,
+                strategy: alternative.strategy,
+                reason: alternative.reason
+              });
+            }
+            return alternativeStrategy;
+          }
+        }
+      } catch (analysisError) {
+        if (this.logger) {
+          this.logger.warn('TaskAnalyzer recommendation failed, falling back to default selection', {
+            taskId,
+            error: analysisError.message
+          });
+        }
+      }
+    }
+
+    // Priority-ordered strategy selection fallback
     for (const candidateStrategy of this.priorityOrderedStrategies) {
       try {
         if (candidateStrategy.canHandle(taskDefinition, executionContext)) {
           return candidateStrategy;
         }
       } catch (evaluationError) {
-        // Log strategy evaluation error but continue
         if (this.logger) {
           this.logger.warn('Strategy evaluation failed', {
             strategy: candidateStrategy.constructor.name,
             error: evaluationError.message,
-            taskId: taskDefinition.id || taskDefinition.taskId
+            taskId
           });
         }
         continue;
       }
     }
 
-    // If no strategy can handle the task, return atomic as fallback
+    // Fallback to atomic strategy if available
     const fallbackAtomicStrategy = this.getStrategy('AtomicExecutionStrategy');
     if (fallbackAtomicStrategy) {
+      if (this.logger) {
+        this.logger.warn('Falling back to AtomicExecutionStrategy - no preferred strategy available', { taskId });
+      }
       return fallbackAtomicStrategy;
     }
 

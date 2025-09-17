@@ -9,7 +9,7 @@
  * - Context requirement checking
  */
 
-import { Logger } from '../utils/Logger.js';
+import { Logger } from '../../utils/Logger.js';
 import { readFile } from 'fs/promises';
 import { access, constants } from 'fs/promises';
 

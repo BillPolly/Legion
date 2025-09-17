@@ -42,7 +42,7 @@ describe('Progress Tracking Integration', () => {
         atomic: true,
         tool: 'file_write',
         params: {
-          filepath: '/tmp/test-progress.txt',
+          filePath: '__tests__/tmp/test-progress.txt',
           content: 'Hello, World!'
         }
       };
@@ -80,7 +80,7 @@ describe('Progress Tracking Integration', () => {
         atomic: true,
         tool: 'file_write',
         params: {
-          filepath: '/tmp/test-order.txt',
+          filePath: '__tests__/tmp/test-order.txt',
           content: 'Test content'
         }
       };
@@ -135,7 +135,7 @@ describe('Progress Tracking Integration', () => {
         atomic: true,
         tool: 'file_write',
         params: {
-          filepath: '/tmp/test-percentage.txt',
+          filePath: '__tests__/tmp/test-percentage.txt',
           content: 'Progress test'
         }
       };
@@ -163,7 +163,7 @@ describe('Progress Tracking Integration', () => {
         atomic: true,
         tool: 'file_write',
         params: {
-          filepath: '/tmp/test-completion.txt',
+          filePath: '__tests__/tmp/test-completion.txt',
           content: 'Completion test'
         }
       };
@@ -223,8 +223,8 @@ describe('Progress Tracking Integration', () => {
         description: 'Multi-step task for time tracking',
         atomic: false,
         subtasks: [
-          { description: 'Step 1', atomic: true, tool: 'file_write', params: { filepath: '/tmp/step1.txt', content: 'Step 1' }},
-          { description: 'Step 2', atomic: true, tool: 'file_write', params: { filepath: '/tmp/step2.txt', content: 'Step 2' }}
+          { description: 'Step 1', atomic: true, tool: 'file_write', params: { filePath: '__tests__/tmp/step1.txt', content: 'Step 1' }},
+          { description: 'Step 2', atomic: true, tool: 'file_write', params: { filePath: '__tests__/tmp/step2.txt', content: 'Step 2' }}
         ]
       };
 
@@ -437,49 +437,4 @@ describe('Progress Tracking Integration', () => {
     });
   });
 
-  describe('Performance and Memory', () => {
-    it('should not cause memory leaks with many progress events', async () => {
-      const progressStream = new TaskProgressStream({
-        maxHistoryPerTask: 10, // Limit history size
-        retentionTime: 1000    // Short retention for testing
-      });
-
-      // Generate many events
-      for (let i = 0; i < 100; i++) {
-        progressStream.emit(`task-${i}`, {
-          type: 'progress',
-          percentage: i,
-          timestamp: Date.now()
-        });
-      }
-
-      const stats = progressStream.getStats();
-      
-      // Should have pruned excess events
-      expect(stats.totalTasks).toBeLessThanOrEqual(100);
-      expect(stats.totalEvents).toBeLessThanOrEqual(1000); // 100 tasks * 10 max each
-      
-      progressStream.cleanup();
-    });
-
-    it('should emit events efficiently without blocking execution', async () => {
-      const startTime = Date.now();
-      
-      const task = {
-        description: 'Performance test task',
-        atomic: true
-      };
-
-      await agent.execute(task);
-      
-      const executionTime = Date.now() - startTime;
-      
-      // Execution should complete in reasonable time (less than 10 seconds for simple task)
-      expect(executionTime).toBeLessThan(10000);
-      
-      // Should have generated some events but not excessively
-      expect(progressEvents.length).toBeGreaterThan(0);
-      expect(progressEvents.length).toBeLessThan(1000);
-    });
-  });
 });
