@@ -69,11 +69,20 @@ export class ExecutionStrategyResolver {
       throw new Error(`Strategy ${uniqueStrategyName} is already registered`);
     }
 
-    // Create strategy instance with dependencies
-    const newStrategyInstance = new StrategyClass({
+    // Validate toolRegistry before strategy creation
+    if (!this.dependencies.toolRegistry) {
+      this.logger.warn('Creating strategy without toolRegistry - attempting to get from singleton');
+    }
+
+    // Ensure toolRegistry is passed to all strategies
+    const strategyDeps = {
       ...this.dependencies,
+      toolRegistry: this.dependencies.toolRegistry || null,  // Will be recovered in getToolRegistry if needed
       ...strategyOptions
-    });
+    };
+
+    // Create strategy instance with dependencies
+    const newStrategyInstance = new StrategyClass(strategyDeps);
 
     // Validate strategy interface
     this.validateStrategy(newStrategyInstance);
@@ -234,6 +243,11 @@ export class ExecutionStrategyResolver {
   updateDependencies(newDependencies) {
     this.dependencies = { ...this.dependencies, ...newDependencies };
     
+    // Warn if toolRegistry is being removed
+    if (newDependencies.hasOwnProperty('toolRegistry') && !newDependencies.toolRegistry) {
+      this.logger.warn('Warning: toolRegistry is being set to null/undefined in dependency update');
+    }
+    
     // Update all strategy instances with new dependencies
     const strategyEntries = Array.from(this.strategyInstanceRegistry.entries());
     for (const [strategyName, strategyInstance] of strategyEntries) {
@@ -271,9 +285,35 @@ export class ExecutionStrategyResolver {
   }
 
   /**
+   * Get tool registry from singleton if not available
+   * @returns {Promise<ToolRegistry|null>} Tool registry instance or null
+   */
+  async getToolRegistry() {
+    if (this.dependencies.toolRegistry) {
+      return this.dependencies.toolRegistry;
+    }
+    
+    try {
+      const { ToolRegistry } = await import('@legion/tools-registry');
+      const toolRegistry = await ToolRegistry.getInstance();
+      this.logger.warn('Retrieved toolRegistry from singleton fallback');
+      this.dependencies.toolRegistry = toolRegistry;
+      return toolRegistry;
+    } catch (error) {
+      this.logger.error('Failed to get toolRegistry from singleton:', error.message);
+      return null;
+    }
+  }
+
+  /**
    * Initialize the strategy resolver
    */
   async initialize() {
+    // Ensure toolRegistry is available before initializing strategies
+    if (!this.dependencies.toolRegistry) {
+      await this.getToolRegistry();
+    }
+    
     await this.initializeAllStrategies();
     this.logger.debug('ExecutionStrategyResolver initialized');
   }

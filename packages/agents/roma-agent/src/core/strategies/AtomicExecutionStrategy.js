@@ -235,6 +235,13 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
       timestamp: new Date().toISOString()
     });
 
+    // Emit progress for tool initialization
+    emitter.custom('tool_progress', {
+      tool: toolName,
+      phase: 'initializing',
+      percentage: 30
+    });
+
     // Get the tool
     const tool = await this.toolRegistry.getTool(toolName);
     if (!tool) {
@@ -247,8 +254,23 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
     // Execute with retries
     return this.executeWithRetries(
       async () => {
+        // Emit progress for tool execution
+        emitter.custom('tool_progress', {
+          tool: toolName,
+          phase: 'executing',
+          percentage: 70
+        });
+
         const result = await tool.execute(params);
         const extractedResult = this.extractToolResult(result);
+        
+        // Emit completion progress
+        emitter.custom('tool_progress', {
+          tool: toolName,
+          phase: 'completed',
+          percentage: 100,
+          success: !!result.success
+        });
         
         // Emit tool completion event with result details
         emitter.custom('tool_execution_complete', {
@@ -284,16 +306,41 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
       isAsync: fn.constructor.name === 'AsyncFunction'
     });
 
+    // Emit function progress for initialization
+    emitter.custom('function_progress', {
+      function: fn.name || 'anonymous',
+      phase: 'initializing',
+      percentage: 30
+    });
+
     // Prepare function arguments
     const args = this.prepareFunctionArgs(task, context);
 
     // Execute with retries
     return this.executeWithRetries(
       async () => {
+        // Emit progress for function execution
+        emitter.custom('function_progress', {
+          function: fn.name || 'anonymous',
+          phase: 'executing',
+          percentage: 70
+        });
+
+        let result;
         if (task.requiresContext) {
-          return await fn(args, context);
+          result = await fn(args, context);
+        } else {
+          result = await fn(args);
         }
-        return await fn(args);
+        
+        // Emit completion progress
+        emitter.custom('function_progress', {
+          function: fn.name || 'anonymous',
+          phase: 'completed',
+          percentage: 100
+        });
+        
+        return result;
       },
       {
         taskId: this.getTaskId(task),
@@ -331,11 +378,34 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
       timestamp: new Date().toISOString()
     });
 
+    // Emit LLM progress for sending request
+    emitter.custom('llm_progress', {
+      phase: 'sending_request',
+      percentage: 40,
+      tokensExpected: requestParams.maxTokens || task.maxTokens,
+      model: task.model || 'default'
+    });
+
     // Execute with retries
     return this.executeWithRetries(
       async () => {
+        // Emit progress for processing response
+        emitter.custom('llm_progress', {
+          phase: 'processing_response',
+          percentage: 80,
+          model: task.model || 'default'
+        });
+
         const response = await this.simplePromptClient.request(requestParams);
         const result = await this.extractLLMResult(response, task);
+        
+        // Emit completion progress
+        emitter.custom('llm_progress', {
+          phase: 'completed',
+          percentage: 100,
+          model: task.model || 'default',
+          toolsExecuted: result.toolsExecuted || 0
+        });
         
         // Emit LLM response event
         emitter.custom('llm_response', {

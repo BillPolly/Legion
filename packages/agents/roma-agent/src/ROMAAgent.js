@@ -162,6 +162,12 @@ export class ROMAAgent {
     }
     
     await this.strategyResolver.initialize();
+    
+    // Validate tool registry is available
+    if (!this.strategyResolver.dependencies.toolRegistry) {
+      throw new Error('Tool registry not initialized - critical dependency missing');
+    }
+    
     this.isInitialized = true;
     this.logger.info('ROMAAgent initialized');
   }
@@ -173,7 +179,17 @@ export class ROMAAgent {
     const resourceManager = await ResourceManager.getInstance();
     
     // Get ToolRegistry singleton directly - it's a singleton!
-    const toolRegistry = await ToolRegistry.getInstance();
+    let toolRegistry = await ToolRegistry.getInstance();
+    
+    // Fallback if ToolRegistry singleton not available
+    if (!toolRegistry) {
+      this.logger.warn('ToolRegistry singleton not available, retrying getInstance()');
+      // Try getInstance again - it may have been initialized elsewhere
+      toolRegistry = await ToolRegistry.getInstance();
+      if (!toolRegistry) {
+        throw new Error('Failed to get ToolRegistry instance - critical dependency missing');
+      }
+    }
     
     // Get LLM client from ResourceManager
     const llmClient = await resourceManager.get('llmClient');
@@ -201,6 +217,18 @@ export class ROMAAgent {
     });
     
     this.logger.info('ROMAAgent dependencies initialized from singletons');
+  }
+
+  /**
+   * Get tool registry with validation
+   * @returns {ToolRegistry} The tool registry instance
+   * @throws {Error} If tool registry is not available
+   */
+  getToolRegistry() {
+    if (!this.strategyResolver || !this.strategyResolver.dependencies || !this.strategyResolver.dependencies.toolRegistry) {
+      throw new Error('Tool registry not available - ensure initialize() was called');
+    }
+    return this.strategyResolver.dependencies.toolRegistry;
   }
 
   /**
@@ -335,7 +363,10 @@ export class ROMAAgent {
   async performExecution(task, context) {
     // Initialize execution infrastructure
     const taskQueue = new TaskQueue({ concurrency: this.maxConcurrentTasks });
-    const progressStream = new TaskProgressStream();
+    const progressStream = new TaskProgressStream({
+      toolRegistry: this.getToolRegistry(),
+      logger: this.logger
+    });
     const executionLog = new TaskExecutionLog();
     
     // Start tracking
@@ -580,10 +611,19 @@ export class ROMAAgent {
    * Execute task groups in order
    */
   async executeTaskGroups(taskGroups, dependencyGraph, executionContext, taskQueue, executionState, progressStream, executionLog) {
+    // Ensure taskGroups is an array
+    if (!Array.isArray(taskGroups)) {
+      this.logger.warn('taskGroups is not an array, converting to array', { 
+        taskGroups, 
+        taskGroupsType: typeof taskGroups 
+      });
+      taskGroups = taskGroups ? [taskGroups] : [];
+    }
+    
     this.logger.debug('Executing task groups', { taskGroupsCount: taskGroups.length });
     
     for (const taskGroup of taskGroups) {
-      this.logger.debug('Executing task group', { taskGroup, dependencyGraphSize: dependencyGraph.size });
+      this.logger.debug('Executing task group', { taskGroup, dependencyGraphSize: dependencyGraph?.size || 0 });
       
       await this.executeTaskGroup(
         taskGroup,
@@ -624,6 +664,16 @@ export class ROMAAgent {
    * Filter valid task IDs from group
    */
   filterValidTaskIds(taskGroup, dependencyGraph) {
+    // Ensure taskGroup is an array
+    if (!Array.isArray(taskGroup)) {
+      this.logger.warn('taskGroup is not an array, converting to array', { 
+        taskGroup, 
+        taskGroupType: typeof taskGroup 
+      });
+      // Convert to array if it's a single value, or return empty array if null/undefined
+      taskGroup = taskGroup ? [taskGroup] : [];
+    }
+    
     const validIds = taskGroup.filter(taskId => dependencyGraph.has(taskId));
     this.logger.debug('Filtering valid task IDs', { 
       taskGroup, 

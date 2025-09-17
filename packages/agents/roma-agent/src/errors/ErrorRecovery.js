@@ -293,6 +293,276 @@ export class ErrorRecovery {
   }
 
   /**
+   * Strategy fallback mechanism
+   * @param {Object} task - Task that failed
+   * @param {string} originalStrategy - Strategy that failed
+   * @param {Error} error - Error that occurred
+   * @returns {Promise<Object|null>} Fallback strategy or null
+   */
+  async fallbackStrategy(task, originalStrategy, error) {
+    this.logger.warn(`Strategy ${originalStrategy} failed, trying fallback`, { 
+      error: error.message,
+      taskId: task.id || 'unknown'
+    });
+    
+    const fallbackMap = {
+      'RecursiveExecutionStrategy': 'AtomicExecutionStrategy',
+      'ParallelExecutionStrategy': 'SequentialExecutionStrategy',
+      'SequentialExecutionStrategy': 'AtomicExecutionStrategy',
+      'OptimizedExecutionStrategy': 'RecursiveExecutionStrategy'
+    };
+    
+    const fallback = fallbackMap[originalStrategy];
+    if (fallback) {
+      this.logger.info(`Using fallback strategy: ${fallback}`, {
+        originalStrategy,
+        taskId: task.id || 'unknown'
+      });
+      
+      return {
+        success: true,
+        action: 'strategy_fallback',
+        fallbackStrategy: fallback,
+        message: `Falling back from ${originalStrategy} to ${fallback}`,
+        delay: 1000 // Brief delay before retry
+      };
+    }
+    
+    return {
+      success: false,
+      action: 'no_fallback_available',
+      message: `No fallback strategy available for ${originalStrategy}`
+    };
+  }
+
+  /**
+   * Recover partial results from failed execution
+   * @param {Object} executionContext - Context with partial results
+   * @param {Error} error - Error that occurred
+   * @returns {Object} Partial recovery result
+   */
+  recoverPartialResults(executionContext, error) {
+    const completed = executionContext.getCompletedSubtasks ? 
+      executionContext.getCompletedSubtasks() : [];
+    const pending = executionContext.getPendingSubtasks ? 
+      executionContext.getPendingSubtasks() : [];
+    const failed = executionContext.getFailedSubtasks ? 
+      executionContext.getFailedSubtasks() : [];
+    
+    const recoverable = this.isRecoverable(error);
+    const completionPercentage = completed.length / (completed.length + pending.length + failed.length) * 100;
+    
+    this.logger.info('Recovering partial results', {
+      completed: completed.length,
+      pending: pending.length,
+      failed: failed.length,
+      completionPercentage: Math.round(completionPercentage),
+      recoverable
+    });
+    
+    return {
+      partial: true,
+      completed: completed,
+      pending: pending,
+      failed: failed,
+      error: error.message,
+      errorType: this.classifyError(error),
+      recoverable: recoverable,
+      completionPercentage: Math.round(completionPercentage),
+      canResume: recoverable && pending.length > 0,
+      resumeStrategy: recoverable ? this.suggestResumeStrategy(completed, pending, failed) : null
+    };
+  }
+
+  /**
+   * Check if error is recoverable
+   * @param {Error} error - Error to check
+   * @returns {boolean} Whether error is recoverable
+   */
+  isRecoverable(error) {
+    const nonRecoverablePatterns = [
+      'Authentication failed',
+      'Invalid API key',
+      'Permission denied',
+      'Tool not found',
+      'Invalid task format',
+      'Circular dependency detected',
+      'Out of memory',
+      'Disk full',
+      'Network unreachable'
+    ];
+    
+    const errorMessage = error.message || '';
+    for (const pattern of nonRecoverablePatterns) {
+      if (errorMessage.includes(pattern)) {
+        return false;
+      }
+    }
+    
+    // Check error codes
+    const nonRecoverableCodes = [
+      'AUTH_ERROR',
+      'PERMISSION_DENIED',
+      'INVALID_FORMAT',
+      'CIRCULAR_DEPENDENCY',
+      'RESOURCE_EXHAUSTED'
+    ];
+    
+    if (error.code && nonRecoverableCodes.includes(error.code)) {
+      return false;
+    }
+    
+    return true;
+  }
+
+  /**
+   * Suggest strategy for resuming partial execution
+   * @param {Array} completed - Completed subtasks
+   * @param {Array} pending - Pending subtasks
+   * @param {Array} failed - Failed subtasks
+   * @returns {Object} Resume strategy
+   */
+  suggestResumeStrategy(completed, pending, failed) {
+    const totalTasks = completed.length + pending.length + failed.length;
+    const completionRate = completed.length / totalTasks;
+    
+    if (completionRate > 0.8) {
+      return {
+        strategy: 'AtomicExecutionStrategy',
+        reason: 'High completion rate, use atomic for remaining tasks',
+        skipCompleted: true
+      };
+    } else if (failed.length > pending.length) {
+      return {
+        strategy: 'SequentialExecutionStrategy',
+        reason: 'Many failures, use sequential for better error handling',
+        retryFailed: true
+      };
+    } else {
+      return {
+        strategy: 'RecursiveExecutionStrategy',
+        reason: 'Moderate completion, continue with recursive approach',
+        continueFromCheckpoint: true
+      };
+    }
+  }
+
+  /**
+   * Enhanced error classification
+   * @param {Error} error - Error to classify
+   * @returns {string} Error classification
+   */
+  classifyError(error) {
+    const message = error.message || '';
+    const code = error.code || '';
+    const stack = error.stack || '';
+    
+    const classifications = {
+      // Network errors
+      'ECONNREFUSED': 'network',
+      'ENOTFOUND': 'network',
+      'ECONNRESET': 'network',
+      'ETIMEDOUT': 'timeout',
+      'ESOCKETTIMEDOUT': 'timeout',
+      'socket hang up': 'network',
+      'getaddrinfo ENOTFOUND': 'network',
+      
+      // Rate limiting
+      'Rate limit': 'rate_limit',
+      'rate limit': 'rate_limit',
+      'Too many requests': 'rate_limit',
+      '429': 'rate_limit',
+      'quota exceeded': 'rate_limit',
+      
+      // Parsing errors
+      'Invalid JSON': 'parsing',
+      'JSON.parse': 'parsing',
+      'SyntaxError': 'parsing',
+      'Unexpected token': 'parsing',
+      'Cannot parse': 'parsing',
+      
+      // Tool errors
+      'Tool not found': 'tool_missing',
+      'tool not found': 'tool_missing',
+      'Unknown tool': 'tool_missing',
+      'Tool execution failed': 'tool_failure',
+      'Tool timeout': 'tool_timeout',
+      
+      // LLM errors
+      'LLM error': 'llm_failure',
+      'OpenAI error': 'llm_failure',
+      'Anthropic error': 'llm_failure',
+      'Claude error': 'llm_failure',
+      'Model not found': 'llm_failure',
+      'Token limit exceeded': 'llm_token_limit',
+      'Context length exceeded': 'llm_token_limit',
+      
+      // Authentication errors
+      'Authentication failed': 'auth_error',
+      'Invalid API key': 'auth_error',
+      'Unauthorized': 'auth_error',
+      'Forbidden': 'auth_error',
+      'Permission denied': 'permission_error',
+      
+      // Resource errors
+      'Out of memory': 'resource_exhausted',
+      'Disk full': 'resource_exhausted',
+      'CPU throttled': 'resource_exhausted',
+      'Memory limit exceeded': 'resource_exhausted',
+      
+      // Strategy errors
+      'Strategy failed': 'strategy_error',
+      'Execution strategy error': 'strategy_error',
+      'Cannot handle task': 'strategy_error',
+      
+      // Dependency errors
+      'Circular dependency': 'circular_dependency',
+      'Dependency not found': 'dependency_missing',
+      'Dependency cycle': 'circular_dependency',
+      
+      // Validation errors
+      'Validation failed': 'validation_error',
+      'Invalid schema': 'validation_error',
+      'Schema mismatch': 'validation_error',
+      'Required field missing': 'validation_error'
+    };
+    
+    // Check error code first (most specific)
+    if (code) {
+      for (const [pattern, type] of Object.entries(classifications)) {
+        if (code.includes(pattern)) {
+          return type;
+        }
+      }
+    }
+    
+    // Check error message
+    const lowerMessage = message.toLowerCase();
+    for (const [pattern, type] of Object.entries(classifications)) {
+      if (lowerMessage.includes(pattern.toLowerCase())) {
+        return type;
+      }
+    }
+    
+    // Check stack trace for additional context
+    if (stack) {
+      if (stack.includes('TimeoutError')) return 'timeout';
+      if (stack.includes('NetworkError')) return 'network';
+      if (stack.includes('ValidationError')) return 'validation_error';
+      if (stack.includes('ParseError')) return 'parsing';
+    }
+    
+    // Check error type/constructor name
+    const errorType = error.constructor.name;
+    if (errorType === 'TimeoutError') return 'timeout';
+    if (errorType === 'NetworkError') return 'network';
+    if (errorType === 'ValidationError') return 'validation_error';
+    if (errorType === 'SyntaxError') return 'parsing';
+    
+    return 'unknown';
+  }
+
+  /**
    * Register default recovery strategies
    * @private
    */

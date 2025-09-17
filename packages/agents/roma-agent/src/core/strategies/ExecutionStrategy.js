@@ -19,12 +19,22 @@ export class ExecutionStrategy {
     this.simplePromptClient = options.simplePromptClient;
     this.toolRegistry = options.toolRegistry;
     this.options = options;
+    
+    // Log warning if toolRegistry not provided
+    if (!this.toolRegistry) {
+      console.warn(`ExecutionStrategy (${this.name}): toolRegistry not provided in constructor`);
+    }
   }
 
   /**
    * Initialize the strategy
    */
   async initialize() {
+    // Ensure toolRegistry is available
+    if (!this.toolRegistry) {
+      await this.getToolRegistry();
+    }
+    
     // Create SimplePromptClient if not provided but llmClient exists
     if (!this.simplePromptClient && this.llmClient) {
       const { SimplePromptClient } = await import('@legion/llm-client');
@@ -68,6 +78,24 @@ export class ExecutionStrategy {
       confidence: 0,
       reasoning: 'Not implemented'
     };
+  }
+
+  /**
+   * Get tool registry with fallback initialization
+   * @returns {Promise<ToolRegistry>} The tool registry instance
+   */
+  async getToolRegistry() {
+    if (!this.toolRegistry) {
+      // Try to get from singleton as fallback
+      try {
+        const { ToolRegistry } = await import('@legion/tools-registry');
+        this.toolRegistry = await ToolRegistry.getInstance();
+        console.warn(`ExecutionStrategy (${this.name}): Retrieved toolRegistry from singleton fallback`);
+      } catch (error) {
+        console.error(`ExecutionStrategy (${this.name}): Failed to get toolRegistry from singleton:`, error.message);
+      }
+    }
+    return this.toolRegistry;
   }
 
   /**

@@ -13,6 +13,7 @@
 import { ExecutionStrategy } from './ExecutionStrategy.js';
 import { Logger } from '../../utils/Logger.js';
 import { ResponseValidator } from '@legion/output-schema';
+import { ProgressCalculator } from '../progress/ProgressCalculator.js';
 
 export class RecursiveExecutionStrategy extends ExecutionStrategy {
   constructor(injectedDependencies = {}) {
@@ -228,6 +229,12 @@ export class RecursiveExecutionStrategy extends ExecutionStrategy {
 
       // Decompose task into subtasks
       emitter.custom('decomposition_start', { taskId, depth: ctx.depth });
+      emitter.custom('decomposition_progress', {
+        taskId,
+        phase: 'analyzing',
+        percentage: 10,
+        message: 'Analyzing task complexity'
+      });
       const decomposition = await this.decomposeTask(task, ctx, emitter);
 
       if (!decomposition) {
@@ -253,12 +260,21 @@ export class RecursiveExecutionStrategy extends ExecutionStrategy {
         decompositionStrategy: decomposition.strategy || 'default'
       });
 
+      // Initialize progress calculator for subtask execution
+      const progressCalculator = new ProgressCalculator(decomposition.subtasks.length);
+      emitter.custom('execution_plan', {
+        taskId,
+        totalSubtasks: decomposition.subtasks.length,
+        estimatedTime: progressCalculator.estimateInitialTime(this.calculateTaskComplexity(task))
+      });
+
       // Execute subtasks recursively
       const subtaskResults = await this.executeSubtasks(
         decomposition.subtasks,
         ctx,
         emitter,
-        decomposition.strategy
+        decomposition.strategy,
+        progressCalculator
       );
 
       // Compose final result from subtask results
@@ -667,7 +683,7 @@ Make sure subtasks are:
   /**
    * Execute subtasks using appropriate strategy
    */
-  async executeSubtasks(subtasks, context, emitter, strategy = 'sequential') {
+  async executeSubtasks(subtasks, context, emitter, strategy = 'sequential', progressCalculator = null) {
     const results = [];
     
     // Create child context for subtask execution
@@ -675,31 +691,37 @@ Make sure subtasks are:
 
     switch (strategy) {
       case 'parallel':
-        return await this.executeSubtasksParallel(subtasks, childContext, emitter);
+        return await this.executeSubtasksParallel(subtasks, childContext, emitter, progressCalculator);
       
       case 'sequential':
-        return await this.executeSubtasksSequential(subtasks, childContext, emitter);
+        return await this.executeSubtasksSequential(subtasks, childContext, emitter, progressCalculator);
       
       case 'mixed':
-        return await this.executeSubtasksMixed(subtasks, childContext, emitter);
+        return await this.executeSubtasksMixed(subtasks, childContext, emitter, progressCalculator);
       
       default:
-        return await this.executeSubtasksSequential(subtasks, childContext, emitter);
+        return await this.executeSubtasksSequential(subtasks, childContext, emitter, progressCalculator);
     }
   }
 
   /**
    * Execute subtasks sequentially
    */
-  async executeSubtasksSequential(subtasks, context, emitter) {
+  async executeSubtasksSequential(subtasks, context, emitter, progressCalculator = null) {
     const results = [];
     
     for (let i = 0; i < subtasks.length; i++) {
       const subtask = subtasks[i];
-      const subtaskContext = context.createChild(this.getTaskId(subtask));
+      const subtaskId = this.getTaskId(subtask);
+      const subtaskContext = context.createChild(subtaskId);
+      
+      // Start progress tracking for this subtask
+      if (progressCalculator) {
+        progressCalculator.startStep(subtaskId);
+      }
       
       emitter.custom('subtask_start', {
-        subtaskId: this.getTaskId(subtask),
+        subtaskId,
         index: i,
         total: subtasks.length,
         strategy: 'sequential'
@@ -709,8 +731,21 @@ Make sure subtasks are:
         const result = await this.executeSubtask(subtask, subtaskContext, emitter);
         results.push(result);
         
+        // Complete progress tracking for this subtask
+        if (progressCalculator) {
+          progressCalculator.completeStep(subtaskId);
+          
+          // Emit progress update with calculated metrics
+          emitter.custom('progress_update', {
+            subtaskId,
+            index: i,
+            percentage: progressCalculator.calculatePercentage(),
+            remainingTime: progressCalculator.estimateRemainingTime()
+          });
+        }
+        
         emitter.custom('subtask_complete', {
-          subtaskId: this.getTaskId(subtask),
+          subtaskId,
           index: i,
           success: result.success
         });
@@ -814,12 +849,18 @@ Make sure subtasks are:
   /**
    * Execute subtasks in parallel
    */
-  async executeSubtasksParallel(subtasks, context, emitter) {
+  async executeSubtasksParallel(subtasks, context, emitter, progressCalculator = null) {
     const promises = subtasks.map(async (subtask, index) => {
-      const subtaskContext = context.createChild(this.getTaskId(subtask));
+      const subtaskId = this.getTaskId(subtask);
+      const subtaskContext = context.createChild(subtaskId);
+      
+      // Start progress tracking for this subtask
+      if (progressCalculator) {
+        progressCalculator.startStep(subtaskId);
+      }
       
       emitter.custom('subtask_start', {
-        subtaskId: this.getTaskId(subtask),
+        subtaskId,
         index,
         total: subtasks.length,
         strategy: 'parallel'
@@ -828,8 +869,21 @@ Make sure subtasks are:
       try {
         const result = await this.executeSubtask(subtask, subtaskContext, emitter);
         
+        // Complete progress tracking for this subtask
+        if (progressCalculator) {
+          progressCalculator.completeStep(subtaskId);
+          
+          // Emit progress update with calculated metrics
+          emitter.custom('progress_update', {
+            subtaskId,
+            index,
+            percentage: progressCalculator.calculatePercentage(),
+            remainingTime: progressCalculator.estimateRemainingTime()
+          });
+        }
+        
         emitter.custom('subtask_complete', {
-          subtaskId: this.getTaskId(subtask),
+          subtaskId,
           index,
           success: result.success
         });
@@ -932,7 +986,7 @@ Make sure subtasks are:
   /**
    * Execute subtasks with mixed strategy (respecting dependencies)
    */
-  async executeSubtasksMixed(subtasks, context, emitter) {
+  async executeSubtasksMixed(subtasks, context, emitter, progressCalculator = null) {
     const results = [];
     const completed = new Set();
     const pending = [...subtasks];
@@ -1861,6 +1915,32 @@ Make sure subtasks are:
    */
   clearCache() {
     this.decompositionCache.clear();
+  }
+
+  /**
+   * Calculate task complexity for progress estimation
+   */
+  calculateTaskComplexity(task) {
+    let complexity = 0.5; // Default complexity
+    
+    if (task.description) {
+      // Length-based complexity
+      complexity += Math.min(task.description.length / 1000, 0.3);
+      
+      // Keyword-based complexity
+      const complexKeywords = ['multiple', 'several', 'analyze', 'comprehensive', 'detailed', 'complex'];
+      const matches = complexKeywords.filter(keyword => 
+        task.description.toLowerCase().includes(keyword)
+      );
+      complexity += matches.length * 0.1;
+    }
+    
+    // Structure-based complexity
+    if (task.subtasks) complexity += 0.2;
+    if (task.dependencies) complexity += 0.15;
+    if (task.tool || task.toolName) complexity += 0.1;
+    
+    return Math.min(complexity, 1.0);
   }
 
   /**

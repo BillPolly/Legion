@@ -12,6 +12,7 @@
  */
 
 import { Logger } from '../utils/Logger.js';
+import { ProgressCalculator } from './progress/ProgressCalculator.js';
 import {
   TASK_HISTORY_RETENTION_TIME,
   MAX_HISTORY_PER_TASK,
@@ -29,6 +30,11 @@ export class TaskProgressStream {
     this.maxHistoryPerTask = options.maxHistoryPerTask || MAX_HISTORY_PER_TASK;
     this.pruneInterval = options.pruneInterval || HISTORY_PRUNE_INTERVAL;
     this.logger = new Logger('TaskProgressStream');
+    
+    // Progress tracking
+    this.progressCalculator = null;
+    this.subtaskProgress = new Map();
+    this.taskCalculators = new Map(); // Multiple progress calculators for different tasks
     
     // Start automatic pruning
     this.pruneTimer = setInterval(() => {
@@ -319,6 +325,103 @@ export class TaskProgressStream {
   }
 
   /**
+   * Update progress for a task
+   * @param {string} taskId - Task identifier
+   * @param {string} status - Task status (started, completed, failed, etc.)
+   * @param {Object} details - Additional progress details
+   */
+  updateProgress(taskId, status, details = {}) {
+    // Initialize progress calculator if needed
+    if (!this.taskCalculators.has(taskId)) {
+      const totalSteps = details.totalSteps || 1;
+      const calculator = new ProgressCalculator(totalSteps, {
+        weights: details.weights,
+        baseTimePerStep: details.estimatedTimePerStep
+      });
+      this.taskCalculators.set(taskId, calculator);
+    }
+    
+    const calculator = this.taskCalculators.get(taskId);
+    
+    // Update calculator based on status
+    if (status === 'started') {
+      calculator.startStep(taskId);
+      this.subtaskProgress.set(taskId, 0);
+    } else if (status === 'completed') {
+      calculator.completeStep(taskId);
+      this.subtaskProgress.set(taskId, 100);
+    } else if (status === 'progress' && details.percentage !== undefined) {
+      calculator.updateSubtaskProgress(taskId, details.percentage);
+    }
+    
+    // Get progress details
+    const progressDetails = calculator.getProgressDetails();
+    
+    // Emit progress event with calculated metrics
+    this.emit(taskId, {
+      type: 'progress_update',
+      status,
+      percentage: progressDetails.percentage,
+      weightedPercentage: progressDetails.weightedPercentage,
+      estimatedTimeRemaining: progressDetails.remainingTime,
+      elapsedTime: progressDetails.elapsedTime,
+      completedSteps: progressDetails.completedSteps,
+      totalSteps: progressDetails.totalSteps,
+      ...details
+    });
+  }
+
+  /**
+   * Track a subtask registration
+   * @param {Object} subtask - Subtask details
+   */
+  trackSubtask(subtask) {
+    const parentId = subtask.parentId || 'root';
+    
+    // Create calculator for parent if not exists
+    if (!this.taskCalculators.has(parentId)) {
+      this.taskCalculators.set(parentId, new ProgressCalculator(1));
+    }
+    
+    const calculator = this.taskCalculators.get(parentId);
+    calculator.addStep(subtask.id, subtask.weight || 1);
+    
+    this.emit(subtask.parentId || '_system', {
+      type: 'subtask_registered',
+      id: subtask.id,
+      description: subtask.description,
+      weight: subtask.weight || 1,
+      status: 'pending',
+      parentId: subtask.parentId
+    });
+  }
+
+  /**
+   * Calculate overall progress across all tasks
+   * @returns {number} Overall progress percentage
+   */
+  calculateOverallProgress() {
+    if (this.taskCalculators.size === 0) return 0;
+    
+    let totalProgress = 0;
+    for (const calculator of this.taskCalculators.values()) {
+      totalProgress += calculator.calculatePercentage();
+    }
+    
+    return Math.round(totalProgress / this.taskCalculators.size);
+  }
+
+  /**
+   * Get detailed progress for a specific task
+   * @param {string} taskId - Task identifier
+   * @returns {Object|null} Progress details or null if not found
+   */
+  getTaskProgress(taskId) {
+    const calculator = this.taskCalculators.get(taskId);
+    return calculator ? calculator.getProgressDetails() : null;
+  }
+
+  /**
    * Create a scoped emitter for a specific task
    */
   createTaskEmitter(taskId) {
@@ -327,16 +430,20 @@ export class TaskProgressStream {
     return {
       emit: (event) => self.emit(taskId, event),
       
-      progress: (percent, message) => self.emit(taskId, {
-        status: 'progress',
-        progress: percent,
-        message
-      }),
+      progress: (percent, message) => {
+        self.updateProgress(taskId, 'progress', { 
+          percentage: percent, 
+          message 
+        });
+      },
       
-      started: (details = {}) => self.emit(taskId, {
-        status: 'started',
-        ...details
-      }),
+      started: (details = {}) => {
+        self.updateProgress(taskId, 'started', details);
+        self.emit(taskId, {
+          status: 'started',
+          ...details
+        });
+      },
       
       evaluating: (type, details = {}) => self.emit(taskId, {
         status: 'evaluating',
