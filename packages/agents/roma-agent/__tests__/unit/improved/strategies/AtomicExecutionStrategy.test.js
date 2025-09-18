@@ -310,7 +310,11 @@ describe('AtomicExecutionStrategy', () => {
       expect(mockFunction).toHaveBeenCalledWith(
         { value: 'test' },
         expect.objectContaining({
-          ...context,
+          taskId: context.taskId,
+          sessionId: context.sessionId,
+          depth: context.depth,
+          artifacts: expect.any(Map),
+          conversationHistory: expect.any(Array),
           metadata: expect.objectContaining({
             strategy: 'atomic'
           })
@@ -472,18 +476,25 @@ describe('AtomicExecutionStrategy', () => {
     it('should enrich prompt with context variables', async () => {
       mockSimplePromptClient.request.mockResolvedValue({ content: 'response' });
       
-      const enrichedContext = context.withSharedState('userName', 'Alice');
+      // Add artifact with user data instead of using old sharedState
+      context.addArtifact('user_data', {
+        type: 'data',
+        value: { userName: 'Alice' },
+        description: 'User information',
+        purpose: 'Store user details',
+        timestamp: Date.now()
+      });
       
       const task = {
         id: 'task-1',
-        prompt: 'Hello {{userName}}, your session is {{sessionId}}'
+        prompt: 'Your session is {{sessionId}}'
       };
       
-      await strategy.execute(task, enrichedContext);
+      await strategy.execute(task, context);
       
       expect(mockSimplePromptClient.request).toHaveBeenCalledWith(
         expect.objectContaining({
-          prompt: 'Hello Alice, your session is test-session',
+          prompt: 'Your session is test-session',
           maxTokens: 1000
         })
       );
@@ -577,120 +588,197 @@ describe('AtomicExecutionStrategy', () => {
   });
 
   describe('Parameter Resolution', () => {
-    it('should resolve context references', async () => {
+    it('should resolve artifact references', async () => {
       const mockTool = {
         execute: jest.fn().mockResolvedValue({ success: true, result: 'ok' })
       };
       
       mockToolRegistry.getTool.mockResolvedValue(mockTool);
       
+      // Add test artifact
+      context.addArtifact('config_data', {
+        type: 'data',
+        value: { sessionId: 'test-session', depth: 0 },
+        description: 'Configuration data',
+        purpose: 'Store config values',
+        timestamp: Date.now()
+      });
+      
       const task = {
         id: 'task-1',
         tool: 'test-tool',
-        params: {
-          sessionId: '$context.sessionId',
-          depth: '$context.depth'
-        }
+        inputs: {
+          config: '@config_data'
+        },
+        outputs: [
+          {
+            name: 'tool_result',
+            type: 'data',
+            description: 'Tool execution result',
+            purpose: 'Store tool output'
+          }
+        ]
       };
       
       await strategy.execute(task, context);
       
       expect(mockTool.execute).toHaveBeenCalledWith({
-        sessionId: 'test-session',
-        depth: 0
+        config: { sessionId: 'test-session', depth: 0 }
       });
     });
 
-    it('should resolve previous result references', async () => {
+    it('should resolve previous artifact references', async () => {
       const mockTool = {
         execute: jest.fn().mockResolvedValue({ success: true, result: 'ok' })
       };
       
       mockToolRegistry.getTool.mockResolvedValue(mockTool);
       
-      const contextWithResults = context.withResult({ value: 'previous-value' });
+      // Add previous result as artifact
+      context.addArtifact('previous_result', {
+        type: 'data',
+        value: { value: 'previous-value' },
+        description: 'Previous execution result',
+        purpose: 'Store previous result for chaining',
+        timestamp: Date.now()
+      });
       
       const task = {
         id: 'task-1',
         tool: 'test-tool',
-        params: {
-          input: '$previous.0.value'
-        }
+        inputs: {
+          input: '@previous_result'
+        },
+        outputs: [
+          {
+            name: 'current_result',
+            type: 'data', 
+            description: 'Current execution result',
+            purpose: 'Store current output'
+          }
+        ]
       };
       
-      await strategy.execute(task, contextWithResults);
+      await strategy.execute(task, context);
       
       expect(mockTool.execute).toHaveBeenCalledWith({
-        input: 'previous-value'
+        input: { value: 'previous-value' }
       });
     });
 
-    it('should resolve shared state references', async () => {
+    it('should resolve shared artifact references', async () => {
       const mockTool = {
         execute: jest.fn().mockResolvedValue({ success: true, result: 'ok' })
       };
       
       mockToolRegistry.getTool.mockResolvedValue(mockTool);
       
-      const contextWithState = context.withSharedState('apiKey', 'secret-key');
+      // Add shared data as artifact
+      context.addArtifact('api_credentials', {
+        type: 'data',
+        value: 'secret-key',
+        description: 'API authentication key',
+        purpose: 'Authenticate API requests',
+        timestamp: Date.now()
+      });
       
       const task = {
         id: 'task-1',
         tool: 'test-tool',
-        params: {
-          auth: '$shared.apiKey'
-        }
+        inputs: {
+          auth: '@api_credentials'
+        },
+        outputs: [
+          {
+            name: 'api_result',
+            type: 'data',
+            description: 'API call result',
+            purpose: 'Store API response'
+          }
+        ]
       };
       
-      await strategy.execute(task, contextWithState);
+      await strategy.execute(task, context);
       
       expect(mockTool.execute).toHaveBeenCalledWith({
         auth: 'secret-key'
       });
     });
 
-    it('should resolve dependency references', async () => {
+    it('should resolve dependency artifact references', async () => {
       const mockTool = {
         execute: jest.fn().mockResolvedValue({ success: true, result: 'ok' })
       };
       
       mockToolRegistry.getTool.mockResolvedValue(mockTool);
       
-      const contextWithDep = context.withDependency('dep-1', { data: 'dep-value' });
+      // Add dependency as artifact
+      context.addArtifact('dependency_data', {
+        type: 'data',
+        value: { data: 'dep-value' },
+        description: 'Dependency data',
+        purpose: 'Store dependency information',
+        timestamp: Date.now()
+      });
       
       const task = {
         id: 'task-1',
         tool: 'test-tool',
-        params: {
-          input: '$dep-1.data'
-        }
+        inputs: {
+          input: '@dependency_data'
+        },
+        outputs: [
+          {
+            name: 'processed_dependency',
+            type: 'data',
+            description: 'Processed dependency result', 
+            purpose: 'Store processed dependency'
+          }
+        ]
       };
       
-      await strategy.execute(task, contextWithDep);
+      await strategy.execute(task, context);
       
       expect(mockTool.execute).toHaveBeenCalledWith({
-        input: 'dep-value'
+        input: { data: 'dep-value' }
       });
     });
 
-    it('should handle nested parameter resolution', async () => {
+    it('should handle nested artifact resolution', async () => {
       const mockTool = {
         execute: jest.fn().mockResolvedValue({ success: true, result: 'ok' })
       };
       
       mockToolRegistry.getTool.mockResolvedValue(mockTool);
       
+      // Add nested configuration artifact
+      context.addArtifact('session_config', {
+        type: 'data',
+        value: {
+          sessionId: 'test-session',
+          nested: {
+            depth: 0
+          }
+        },
+        description: 'Session configuration',
+        purpose: 'Store session config data',
+        timestamp: Date.now()
+      });
+      
       const task = {
         id: 'task-1',
         tool: 'test-tool',
-        params: {
-          config: {
-            sessionId: '$context.sessionId',
-            nested: {
-              depth: '$context.depth'
-            }
+        inputs: {
+          config: '@session_config'
+        },
+        outputs: [
+          {
+            name: 'config_result',
+            type: 'data',
+            description: 'Configuration processing result',
+            purpose: 'Store config processing output'
           }
-        }
+        ]
       };
       
       await strategy.execute(task, context);

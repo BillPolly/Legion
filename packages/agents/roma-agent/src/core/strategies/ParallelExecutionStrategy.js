@@ -368,7 +368,7 @@ export class ParallelExecutionStrategy extends ExecutionStrategy {
         taskId,
         success: true,
         result: this.extractResultValue(result),
-        context: result.context || context.withResult(result),
+        context: result.context || context,
         error: null
       };
     } catch (error) {
@@ -420,7 +420,7 @@ export class ParallelExecutionStrategy extends ExecutionStrategy {
               taskId,
               success: true,
               result: recoveryResult.result || null,
-              context: context.withResult(recoveryResult.result),
+              context: context,
               error: null,
               recovered: true
             };

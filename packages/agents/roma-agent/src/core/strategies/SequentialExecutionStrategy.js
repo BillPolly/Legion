@@ -258,8 +258,24 @@ export class SequentialExecutionStrategy extends ExecutionStrategy {
           continue;
         }
 
-        // Update context with result
-        currentContext = stepContext.withResult(stepResult);
+        // Update context with result - create an artifact for this step's result
+        currentContext = stepContext;
+        if (stepResult && stepResult.result !== undefined) {
+          const artifactName = `step_${i}_result`;
+          currentContext.addArtifact(artifactName, {
+            type: 'data',
+            value: this.extractResultValue(stepResult),
+            description: `Result from step ${i}`,
+            purpose: `Output from sequential step execution`,
+            timestamp: Date.now(),
+            metadata: {
+              stepIndex: i,
+              stepId: stepId,
+              toolName: step.tool || step.toolName,
+              success: stepResult.success !== undefined ? stepResult.success : true
+            }
+          });
+        }
 
         // Track successful execution
         results.push({
@@ -366,7 +382,7 @@ export class SequentialExecutionStrategy extends ExecutionStrategy {
       return {
         success: true,
         result: this.extractResultValue(result),
-        context: result.context || context.withResult(result),
+        context: result.context || context,
         stepId,
         stepIndex: index
       };

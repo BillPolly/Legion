@@ -589,15 +589,19 @@ Respond ONLY with valid JSON, no additional text.`;
   }
 
   /**
-   * Build decomposition prompt for LLM
+   * Build decomposition prompt for LLM with artifact context
    */
   buildDecompositionPrompt(task, context) {
     const taskDescription = task.description || task.prompt || task.operation || 'Unnamed task';
     
-    return `
-Please decompose the following task into smaller, manageable subtasks:
+    // Build artifact-aware prompt using base class method
+    const basePrompt = this.buildPrompt(task, context);
+    
+    // Add decomposition-specific instructions
+    const decompositionInstructions = `
 
-Task: ${taskDescription}
+Your task is to decompose the above task into smaller, manageable subtasks.
+
 Context: Depth ${context.depth}/${this.maxDepth}
 ${task.constraints ? `Constraints: ${JSON.stringify(task.constraints)}` : ''}
 ${task.resources ? `Available Resources: ${JSON.stringify(task.resources)}` : ''}
@@ -608,7 +612,19 @@ Please respond with a JSON object containing:
     {
       "id": "subtask-id",
       "description": "Subtask description",
-      "operation": "What to do",
+      "tool": "tool_name",
+      "inputs": {
+        "parameter1": "direct value or @artifact_name",
+        "parameter2": "@another_artifact"
+      },
+      "outputs": [
+        {
+          "name": "output_artifact_name",
+          "type": "file|data|process|config|etc",
+          "description": "Clear description of what this output is",
+          "purpose": "Why this output is needed for the task"
+        }
+      ],
       "priority": 1-10,
       "dependencies": ["other-subtask-ids"],
       "estimatedTime": "time estimate"
@@ -618,12 +634,16 @@ Please respond with a JSON object containing:
   "reasoning": "Why this decomposition approach"
 }
 
-Make sure subtasks are:
-- Atomic and executable
-- Properly ordered if sequential
-- Independent if parallel
+Make sure subtasks:
+- Reference existing artifacts using @artifact_name in inputs
+- Specify meaningful names for outputs
+- Are atomic and executable
+- Are properly ordered if sequential
+- Are independent if parallel
 - Have clear success criteria
-`.trim();
+- Include artifact flow between subtasks`;
+
+    return basePrompt + decompositionInstructions;
   }
 
   /**
@@ -830,7 +850,7 @@ Make sure subtasks are:
   }
 
   /**
-   * Execute subtasks sequentially
+   * Execute subtasks sequentially with artifact chaining
    */
   async executeSubtasksSequential(subtasks, context, emitter, progressCalculator = null) {
     const results = [];
@@ -838,7 +858,8 @@ Make sure subtasks are:
     for (let i = 0; i < subtasks.length; i++) {
       const subtask = subtasks[i];
       const subtaskId = this.getTaskId(subtask);
-      const subtaskContext = context.createChild(subtaskId);
+      // Use the main context for artifact chaining in sequential execution
+      const subtaskContext = context;
       
       // Start progress tracking for this subtask
       if (progressCalculator) {
@@ -849,7 +870,8 @@ Make sure subtasks are:
         subtaskId,
         index: i,
         total: subtasks.length,
-        strategy: 'sequential'
+        strategy: 'sequential',
+        artifactsAvailable: context.listArtifacts().length
       });
 
       try {
@@ -872,7 +894,8 @@ Make sure subtasks are:
         emitter.custom('subtask_complete', {
           subtaskId,
           index: i,
-          success: result.success
+          success: result.success,
+          artifactsGenerated: subtaskContext.listArtifacts().length - context.listArtifacts().length
         });
       } catch (error) {
         const subtaskId = this.getTaskId(subtask);
@@ -914,10 +937,28 @@ Make sure subtasks are:
                 success: true,
                 result: recoveryResult.result || null,
                 subtaskId,
-                context: subtaskContext.withResult(recoveryResult.result),
+                context: subtaskContext,
                 error: null,
                 recovered: true
               };
+              
+              // Store recovery result as artifact if it has meaningful value
+              if (recoveryResult.result !== undefined && recoveryResult.result !== null) {
+                const artifactName = `${subtaskId}_recovery_result`;
+                subtaskContext.addArtifact(artifactName, {
+                  type: 'data',
+                  value: recoveryResult.result,
+                  description: `Recovery result from failed subtask execution`,
+                  purpose: 'Store recovery result for sequential execution continuation',
+                  timestamp: Date.now(),
+                  metadata: {
+                    subtaskId: subtaskId,
+                    index: i,
+                    recoveryAction: recoveryResult.action,
+                    success: true
+                  }
+                });
+              }
               results.push(recoverySuccess);
               
               emitter.custom('subtask_complete', {
@@ -972,7 +1013,7 @@ Make sure subtasks are:
   }
 
   /**
-   * Execute subtasks in parallel
+   * Execute subtasks in parallel with artifact isolation
    */
   async executeSubtasksParallel(subtasks, context, emitter, progressCalculator = null) {
     const promises = subtasks.map(async (subtask, index) => {
@@ -988,11 +1029,17 @@ Make sure subtasks are:
         subtaskId,
         index,
         total: subtasks.length,
-        strategy: 'parallel'
+        strategy: 'parallel',
+        artifactsInherited: context.listArtifacts().length
       });
 
       try {
         const result = await this.executeSubtask(subtask, subtaskContext, emitter);
+        
+        // If subtask has tool execution with artifacts, use executeToolWithArtifacts
+        if (subtask.tool && subtask.inputs && subtask.outputs) {
+          await this.executeToolWithArtifacts(subtask, subtaskContext);
+        }
         
         // Complete progress tracking for this subtask
         if (progressCalculator) {
@@ -1010,7 +1057,8 @@ Make sure subtasks are:
         emitter.custom('subtask_complete', {
           subtaskId,
           index,
-          success: result.success
+          success: result.success,
+          artifactsGenerated: subtaskContext.listArtifacts().length - context.listArtifacts().length
         });
         
         return result;
@@ -1057,11 +1105,29 @@ Make sure subtasks are:
                 recovered: true
               });
               
+              // Store recovery result as artifact if it has meaningful value
+              if (recoveryResult.result !== undefined && recoveryResult.result !== null) {
+                const artifactName = `${subtaskId}_recovery_result`;
+                subtaskContext.addArtifact(artifactName, {
+                  type: 'data',
+                  value: recoveryResult.result,
+                  description: `Recovery result from failed parallel subtask execution`,
+                  purpose: 'Store recovery result for parallel execution aggregation',
+                  timestamp: Date.now(),
+                  metadata: {
+                    subtaskId: subtaskId,
+                    index: index,
+                    recoveryAction: recoveryResult.action,
+                    success: true
+                  }
+                });
+              }
+              
               return {
                 success: true,
                 result: recoveryResult.result || null,
                 subtaskId,
-                context: subtaskContext.withResult(recoveryResult.result),
+                context: subtaskContext,
                 error: null,
                 recovered: true
               };
@@ -1168,13 +1234,31 @@ Make sure subtasks are:
                   await new Promise(resolve => setTimeout(resolve, recoveryResult.delay));
                 }
                 
+                // Store recovery result as artifact if it has meaningful value
+                if (recoveryResult.result !== undefined && recoveryResult.result !== null) {
+                  const artifactName = `${subtaskId}_recovery_result`;
+                  subtaskContext.addArtifact(artifactName, {
+                    type: 'data',
+                    value: recoveryResult.result,
+                    description: `Recovery result from failed mixed execution subtask`,
+                    purpose: 'Store recovery result for dependency chain continuation',
+                    timestamp: Date.now(),
+                    metadata: {
+                      subtaskId: subtaskId,
+                      recoveryAction: recoveryResult.action,
+                      dependencyChain: true,
+                      success: true
+                    }
+                  });
+                }
+                
                 // Mark as completed and return success result from recovery
                 completed.add(subtaskId);
                 return {
                   success: true,
                   result: recoveryResult.result || null,
                   subtaskId,
-                  context: subtaskContext.withResult(recoveryResult.result),
+                  context: subtaskContext,
                   recovered: true
                 };
               }
@@ -1228,6 +1312,39 @@ Make sure subtasks are:
    * Execute a single subtask
    */
   async executeSubtask(subtask, context, emitter) {
+    // Check if this is a tool call - handle it directly for proper artifact management
+    if (subtask.tool || subtask.toolName) {
+      // Resolve artifact references in inputs first to catch missing artifacts
+      const resolvedInputs = this.resolveToolInputs(subtask.inputs || {}, context);
+      
+      // If the subtask has output specifications, use full artifact management
+      if (subtask.outputs && Array.isArray(subtask.outputs)) {
+        const toolCall = {
+          tool: subtask.tool || subtask.toolName,
+          inputs: subtask.inputs || {},
+          outputs: subtask.outputs
+        };
+        
+        const result = await this.executeToolWithArtifacts(toolCall, context);
+        return {
+          success: true,
+          result: result
+        };
+      } else {
+        // No outputs specified - just execute the tool with resolved inputs
+        const tool = await this.toolRegistry.getTool(subtask.tool || subtask.toolName);
+        if (!tool) {
+          throw new Error(`Tool not found: ${subtask.tool || subtask.toolName}`);
+        }
+        
+        const result = await tool.execute(resolvedInputs);
+        return {
+          success: true,
+          result: result
+        };
+      }
+    }
+    
     // Select appropriate strategy for subtask
     const strategy = await this.selectSubtaskStrategy(subtask, context);
     
@@ -1504,9 +1621,9 @@ Make sure subtasks are:
       params.chatHistory = task.messages;
     }
 
-    // Add context from previous results if needed
-    if (task.includeHistory && context.previousResults.length > 0) {
-      const historyMessage = this.buildHistoryMessage(context.previousResults);
+    // Add context from conversation history if needed
+    if (task.includeHistory && context.conversationHistory.length > 0) {
+      const historyMessage = this.formatConversationHistory(context, 3);
       params.chatHistory = params.chatHistory || [];
       params.chatHistory.push({
         role: 'assistant',
@@ -1536,27 +1653,28 @@ Make sure subtasks are:
   }
 
   /**
-   * Build history message from previous results (same as AtomicExecutionStrategy)
+   * Build history message from conversation history (updated for artifacts)
    */
-  buildHistoryMessage(previousResults) {
-    const relevant = previousResults.slice(-3); // Last 3 results
-    return relevant.map((result, index) => 
-      `Previous Result ${index + 1}: ${JSON.stringify(result)}`
+  buildHistoryMessage(conversationHistory) {
+    const relevant = conversationHistory.slice(-3); // Last 3 messages
+    return relevant.map((msg, index) => 
+      `${msg.role}: ${msg.content}`
     ).join('\n');
   }
 
   /**
-   * Enrich prompt with context (same as AtomicExecutionStrategy)
+   * Enrich prompt with context (artifact-aware version)
    */
   enrichPrompt(prompt, context) {
     let enriched = prompt;
 
-    // Replace context variables
+    // Replace context variables (no shared state in new artifact system)
     const variables = {
       taskId: context.taskId,
       sessionId: context.sessionId,
       depth: context.depth,
-      ...context.getAllSharedState()
+      maxDepth: context.maxDepth,
+      correlationId: context.correlationId
     };
 
     Object.entries(variables).forEach(([key, value]) => {

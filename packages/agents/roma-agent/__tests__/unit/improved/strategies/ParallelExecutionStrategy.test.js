@@ -637,7 +637,14 @@ describe('ParallelExecutionStrategy', () => {
     });
 
     it('should preserve shared state across parallel tasks', async () => {
-      const enrichedContext = context.withSharedState('globalKey', 'globalValue');
+      // Add a shared artifact to simulate shared state
+      context.addArtifact('global_data', {
+        type: 'data',
+        value: 'globalValue',
+        description: 'Global data shared across tasks',
+        purpose: 'Provide shared configuration for parallel execution',
+        timestamp: Date.now()
+      });
       
       const task = {
         id: 'shared-state-task',
@@ -647,10 +654,11 @@ describe('ParallelExecutionStrategy', () => {
         ]
       };
 
-      const result = await strategy.execute(task, enrichedContext);
+      const result = await strategy.execute(task, context);
       
       expect(result.success).toBe(true);
-      // Shared state should be preserved through parallel execution
+      // Shared artifact should be preserved through parallel execution
+      expect(context.getArtifactValue('global_data')).toBe('globalValue');
     });
   });
 

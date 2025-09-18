@@ -1,13 +1,15 @@
 /**
- * ExecutionContext - Immutable context for task execution
- * Manages execution state, depth tracking, and context propagation
+ * ExecutionContext - Context for task execution with artifact management
  * 
- * Features:
- * - Immutable design for predictable state management
- * - Automatic depth tracking for recursion control
+ * This implementation replaces the flawed previousResults system with
+ * proper artifact management as specified in artifact-management-design.md
+ * 
+ * Key Features:
+ * - Named artifact storage in a Map
+ * - Immutable artifact records with value field
+ * - Separate conversation history tracking
  * - Context inheritance for subtasks
- * - Shared state management
- * - Breadcrumb tracking for debugging
+ * - NO previousResults or sharedState
  */
 
 export class ExecutionContext {
@@ -15,8 +17,14 @@ export class ExecutionContext {
     // Inheritance from parent context
     this.parent = parent;
     this.depth = overrides.depth ?? (parent ? parent.depth + 1 : 0);
-    this.breadcrumbs = parent ? [...parent.breadcrumbs] : [];
-    this.sharedState = new Map(parent?.sharedState || []);
+    
+    // Artifact registry - inherits from parent if exists
+    // Creates a new Map with parent's artifacts to allow child overrides
+    this.artifacts = new Map(parent?.artifacts || []);
+    
+    // Conversation history - separate from artifacts
+    // Creates a copy of parent's history to allow independent additions
+    this.conversationHistory = [...(parent?.conversationHistory || [])];
     
     // Task identification
     this.taskId = overrides.taskId || this.generateTaskId();
@@ -28,9 +36,8 @@ export class ExecutionContext {
     this.startTime = Date.now();
     this.deadline = overrides.deadline || parent?.deadline || null;
     
-    // Results and dependencies
-    this.previousResults = parent?.previousResults ? [...parent.previousResults] : [];
-    this.dependencies = new Map();
+    // Breadcrumbs for execution path tracking
+    this.breadcrumbs = parent ? [...parent.breadcrumbs] : [];
     
     // Metadata
     this.metadata = {
@@ -53,6 +60,65 @@ export class ExecutionContext {
     
     // Freeze breadcrumbs to prevent mutation
     Object.freeze(this.breadcrumbs);
+    
+    // REMOVED: previousResults, sharedState, dependencies
+    // These are replaced by the artifact system
+  }
+
+  /**
+   * Add an artifact to the registry
+   * Artifacts are immutable records that describe data/files/processes
+   * 
+   * @param {string} name - Unique name for the artifact
+   * @param {Object} artifactRecord - The artifact record with type, value, description
+   */
+  addArtifact(name, artifactRecord) {
+    if (!name || typeof name !== 'string') {
+      throw new Error('Artifact name must be a non-empty string');
+    }
+    if (!artifactRecord || !artifactRecord.type || !artifactRecord.description) {
+      throw new Error('Artifact must have type and description');
+    }
+    if (artifactRecord.value === undefined) {
+      throw new Error('Artifact must have a value field (the actual data)');
+    }
+    
+    // Store the ENTIRE artifact record AS-IS - NO DESTRUCTURING
+    // The artifact record is IMMUTABLE once created
+    this.artifacts.set(name, artifactRecord);
+  }
+  
+  /**
+   * Get an artifact record by name
+   * Returns the ENTIRE artifact record (NOT just the value)
+   * 
+   * @param {string} name - Name of the artifact
+   * @returns {Object|undefined} The artifact record or undefined if not found
+   */
+  getArtifact(name) {
+    return this.artifacts.get(name);
+  }
+  
+  /**
+   * Get only the value field from an artifact
+   * This is what gets passed to tools when they reference artifacts
+   * 
+   * @param {string} name - Name of the artifact
+   * @returns {any|undefined} The value field or undefined if not found
+   */
+  getArtifactValue(name) {
+    const artifactRecord = this.artifacts.get(name);
+    return artifactRecord?.value;  // Extract ONLY the value for tool use
+  }
+  
+  /**
+   * List all artifacts as [name, record] pairs
+   * Returns the artifact records themselves, not destructured
+   * 
+   * @returns {Array} Array of [name, artifactRecord] tuples
+   */
+  listArtifacts() {
+    return Array.from(this.artifacts.entries());
   }
 
   /**
@@ -80,7 +146,11 @@ export class ExecutionContext {
 
   /**
    * Create child context for subtask
-   * Returns new immutable context
+   * Child inherits artifacts and conversation history from parent
+   * 
+   * @param {string} taskId - ID for the child task
+   * @param {Object} overrides - Override configuration
+   * @returns {ExecutionContext} New child context
    */
   createChild(taskId, overrides = {}) {
     const child = new ExecutionContext(this, {
@@ -103,6 +173,10 @@ export class ExecutionContext {
   /**
    * Create sibling context (same depth)
    * Useful for parallel execution
+   * 
+   * @param {string} taskId - ID for the sibling task
+   * @param {Object} overrides - Override configuration
+   * @returns {ExecutionContext} New sibling context
    */
   createSibling(taskId, overrides = {}) {
     const sibling = new ExecutionContext(this.parent, {
@@ -114,57 +188,20 @@ export class ExecutionContext {
       metadata: this.metadata
     });
     
-    // Copy state from current context
-    sibling.previousResults = [...this.previousResults];
-    sibling.sharedState = new Map(this.sharedState);
+    // Copy artifacts and conversation history from current context
+    sibling.artifacts = new Map(this.artifacts);
+    sibling.conversationHistory = [...this.conversationHistory];
     
     return sibling;
   }
 
   /**
-   * Add result to context
+   * Set deadline
    * Returns new immutable context
    */
-  withResult(result) {
+  withDeadline(deadline) {
     const newContext = this._clone();
-    newContext.previousResults = Object.freeze([...this.previousResults, result]);
-    return newContext;
-  }
-
-  /**
-   * Update shared state
-   * Returns new immutable context
-   */
-  withSharedState(key, value) {
-    const newContext = this._clone();
-    newContext.sharedState = new Map(this.sharedState);
-    newContext.sharedState.set(key, value);
-    return newContext;
-  }
-
-  /**
-   * Batch update shared state
-   * Returns new immutable context
-   */
-  withSharedStates(updates) {
-    const newContext = this._clone();
-    newContext.sharedState = new Map(this.sharedState);
-    
-    Object.entries(updates).forEach(([key, value]) => {
-      newContext.sharedState.set(key, value);
-    });
-    
-    return newContext;
-  }
-
-  /**
-   * Add dependency
-   * Returns new immutable context
-   */
-  withDependency(taskId, result) {
-    const newContext = this._clone();
-    newContext.dependencies = new Map(this.dependencies);
-    newContext.dependencies.set(taskId, result);
+    newContext.deadline = deadline;
     return newContext;
   }
 
@@ -178,16 +215,6 @@ export class ExecutionContext {
       ...this.metadata,
       [key]: value
     };
-    return newContext;
-  }
-
-  /**
-   * Set deadline
-   * Returns new immutable context
-   */
-  withDeadline(deadline) {
-    const newContext = this._clone();
-    newContext.deadline = deadline;
     return newContext;
   }
 
@@ -237,7 +264,9 @@ export class ExecutionContext {
       breadcrumbs: this.breadcrumbs,
       config: this.config,
       metadata: this.metadata,
-      userContext: this.userContext
+      userContext: this.userContext,
+      artifactCount: this.artifacts.size,
+      conversationLength: this.conversationHistory.length
     };
   }
 
@@ -305,43 +334,6 @@ export class ExecutionContext {
   }
 
   /**
-   * Get shared state value
-   */
-  getSharedState(key, defaultValue = undefined) {
-    return this.sharedState.has(key) 
-      ? this.sharedState.get(key) 
-      : defaultValue;
-  }
-
-  /**
-   * Get all shared state as object
-   */
-  getAllSharedState() {
-    return Object.fromEntries(this.sharedState);
-  }
-
-  /**
-   * Check if has dependency result
-   */
-  hasDependency(taskId) {
-    return this.dependencies.has(taskId);
-  }
-
-  /**
-   * Get dependency result
-   */
-  getDependency(taskId) {
-    return this.dependencies.get(taskId);
-  }
-
-  /**
-   * Get all dependencies
-   */
-  getAllDependencies() {
-    return Object.fromEntries(this.dependencies);
-  }
-
-  /**
    * Create context for parallel subtasks
    */
   createParallelContexts(taskIds) {
@@ -349,27 +341,28 @@ export class ExecutionContext {
   }
 
   /**
-   * Merge results from parallel contexts
-   * Returns new immutable context
+   * Merge artifacts from parallel contexts
+   * Returns new immutable context with merged artifacts
+   * 
+   * @param {Array<ExecutionContext>} contexts - Parallel contexts to merge
+   * @returns {ExecutionContext} New context with merged artifacts
    */
   mergeParallelResults(contexts) {
     const newContext = this._clone();
     
-    // Collect all results
-    const results = contexts.map(ctx => 
-      ctx.previousResults[ctx.previousResults.length - 1]
-    ).filter(Boolean);
-    
-    newContext.previousResults = Object.freeze([...this.previousResults, ...results]);
-    
-    // Merge shared states (last write wins)
-    const mergedState = new Map(this.sharedState);
+    // Merge artifacts from all contexts (last write wins)
     contexts.forEach(ctx => {
-      ctx.sharedState.forEach((value, key) => {
-        mergedState.set(key, value);
+      ctx.artifacts.forEach((artifactRecord, name) => {
+        newContext.artifacts.set(name, artifactRecord);
       });
     });
-    newContext.sharedState = mergedState;
+    
+    // Merge conversation histories
+    contexts.forEach(ctx => {
+      // Add only new messages (not inherited from parent)
+      const newMessages = ctx.conversationHistory.slice(this.conversationHistory.length);
+      newContext.conversationHistory.push(...newMessages);
+    });
     
     return newContext;
   }
@@ -384,9 +377,8 @@ export class ExecutionContext {
       correlationId: this.correlationId,
       depth: this.depth,
       breadcrumbs: this.breadcrumbs,
-      sharedState: this.getAllSharedState(),
-      previousResults: this.previousResults,
-      dependencies: this.getAllDependencies(),
+      artifacts: Object.fromEntries(this.artifacts),
+      conversationHistory: this.conversationHistory,
       metadata: this.metadata,
       userContext: this.userContext,
       config: this.config,
@@ -415,20 +407,13 @@ export class ExecutionContext {
     // Restore state
     context.depth = obj.depth;
     context.breadcrumbs = Object.freeze(obj.breadcrumbs || []);
-    context.previousResults = obj.previousResults || [];
     context.startTime = obj.startTime;
+    context.conversationHistory = obj.conversationHistory || [];
     
-    // Restore shared state
-    if (obj.sharedState) {
-      Object.entries(obj.sharedState).forEach(([key, value]) => {
-        context.sharedState.set(key, value);
-      });
-    }
-    
-    // Restore dependencies
-    if (obj.dependencies) {
-      Object.entries(obj.dependencies).forEach(([key, value]) => {
-        context.dependencies.set(key, value);
+    // Restore artifacts
+    if (obj.artifacts) {
+      Object.entries(obj.artifacts).forEach(([name, artifactRecord]) => {
+        context.artifacts.set(name, artifactRecord);
       });
     }
     
@@ -446,8 +431,8 @@ export class ExecutionContext {
       path: this.getExecutionPath(),
       elapsed: this.getElapsedTime(),
       remaining: this.getRemainingTime(),
-      resultsCount: this.previousResults.length,
-      sharedStateKeys: Array.from(this.sharedState.keys()),
+      artifactCount: this.artifacts.size,
+      conversationLength: this.conversationHistory.length,
       isExpired: this.isExpired(),
       canDecompose: this.canDecompose()
     };
@@ -470,10 +455,9 @@ export class ExecutionContext {
     
     cloned.depth = this.depth;
     cloned.breadcrumbs = this.breadcrumbs;
-    cloned.previousResults = [...this.previousResults];
     cloned.startTime = this.startTime;
-    cloned.sharedState = new Map(this.sharedState);
-    cloned.dependencies = new Map(this.dependencies);
+    cloned.artifacts = new Map(this.artifacts);
+    cloned.conversationHistory = [...this.conversationHistory];
     
     return cloned;
   }

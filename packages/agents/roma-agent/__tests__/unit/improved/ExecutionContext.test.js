@@ -103,11 +103,17 @@ describe('ExecutionContext', () => {
       expect(child.breadcrumbs[0].timestamp).toBeDefined();
     });
 
-    it('should preserve shared state reference', () => {
-      context = context.withSharedState('key', 'value');
+    it('should preserve artifacts in child context', () => {
+      context.addArtifact('shared_key', {
+        type: 'data',
+        value: 'value',
+        description: 'Shared data for testing',
+        purpose: 'Test artifact inheritance',
+        timestamp: Date.now()
+      });
       const child = context.createChild('child-task');
       
-      expect(child.getSharedState('key')).toBe('value');
+      expect(child.getArtifactValue('shared_key')).toBe('value');
     });
   });
 
@@ -121,20 +127,32 @@ describe('ExecutionContext', () => {
       expect(sibling.taskId).toBe('sibling-task');
     });
 
-    it('should copy shared state', () => {
+    it('should copy artifacts to sibling context', () => {
       const child = context.createChild('child-task');
-      const modifiedChild = child.withSharedState('key', 'value');
-      const sibling = modifiedChild.createSibling('sibling-task');
+      child.addArtifact('test_artifact', {
+        type: 'data',
+        value: 'value',
+        description: 'Test data for sibling context',
+        purpose: 'Verify artifact copying',
+        timestamp: Date.now()
+      });
+      const sibling = child.createSibling('sibling-task');
       
-      expect(sibling.getSharedState('key')).toBe('value');
+      expect(sibling.getArtifactValue('test_artifact')).toBe('value');
     });
 
-    it('should preserve previous results', () => {
+    it('should preserve artifacts in sibling context', () => {
       const child = context.createChild('child-task');
-      const withResult = child.withResult({ data: 'result' });
-      const sibling = withResult.createSibling('sibling-task');
+      child.addArtifact('result_artifact', {
+        type: 'data',
+        value: { data: 'result' },
+        description: 'Result data from child task',
+        purpose: 'Store task execution result',
+        timestamp: Date.now()
+      });
+      const sibling = child.createSibling('sibling-task');
       
-      expect(sibling.previousResults).toEqual(withResult.previousResults);
+      expect(sibling.getArtifactValue('result_artifact')).toEqual({ data: 'result' });
     });
   });
 
@@ -219,45 +237,82 @@ describe('ExecutionContext', () => {
   });
 
   describe('Immutable Updates', () => {
-    it('should create new context with result', () => {
+    it('should add artifacts to context', () => {
       const result = { data: 'test' };
-      const withResult = context.withResult(result);
+      const contextCopy = context._clone();
+      contextCopy.addArtifact('test_result', {
+        type: 'data',
+        value: result,
+        description: 'Test result data',
+        purpose: 'Store test execution result',
+        timestamp: Date.now()
+      });
       
-      expect(withResult).not.toBe(context);
-      expect(withResult.previousResults).toContain(result);
-      expect(context.previousResults.length).toBe(0);
+      expect(contextCopy).not.toBe(context);
+      expect(contextCopy.getArtifactValue('test_result')).toEqual(result);
+      expect(context.listArtifacts().length).toBe(0);
     });
 
-    it('should create new context with shared state', () => {
-      const withState = context.withSharedState('key', 'value');
+    it('should add artifacts to cloned context', () => {
+      const contextCopy = context._clone();
+      contextCopy.addArtifact('shared_key', {
+        type: 'data',
+        value: 'value',
+        description: 'Shared state data',
+        purpose: 'Store shared configuration',
+        timestamp: Date.now()
+      });
       
-      expect(withState).not.toBe(context);
-      expect(withState.getSharedState('key')).toBe('value');
-      expect(context.getSharedState('key')).toBeUndefined();
+      expect(contextCopy).not.toBe(context);
+      expect(contextCopy.getArtifactValue('shared_key')).toBe('value');
+      expect(context.getArtifactValue('shared_key')).toBeUndefined();
     });
 
-    it('should batch update shared states', () => {
-      const updates = {
-        key1: 'value1',
-        key2: 'value2',
-        key3: 'value3'
-      };
+    it('should add multiple artifacts to context', () => {
+      const contextCopy = context._clone();
       
-      const withStates = context.withSharedStates(updates);
+      contextCopy.addArtifact('artifact1', {
+        type: 'data',
+        value: 'value1',
+        description: 'First test artifact',
+        purpose: 'Test multiple artifact storage',
+        timestamp: Date.now()
+      });
+      contextCopy.addArtifact('artifact2', {
+        type: 'data',
+        value: 'value2',
+        description: 'Second test artifact',
+        purpose: 'Test multiple artifact storage',
+        timestamp: Date.now()
+      });
+      contextCopy.addArtifact('artifact3', {
+        type: 'data',
+        value: 'value3',
+        description: 'Third test artifact',
+        purpose: 'Test multiple artifact storage',
+        timestamp: Date.now()
+      });
       
-      expect(withStates).not.toBe(context);
-      expect(withStates.getSharedState('key1')).toBe('value1');
-      expect(withStates.getSharedState('key2')).toBe('value2');
-      expect(withStates.getSharedState('key3')).toBe('value3');
+      expect(contextCopy).not.toBe(context);
+      expect(contextCopy.getArtifactValue('artifact1')).toBe('value1');
+      expect(contextCopy.getArtifactValue('artifact2')).toBe('value2');
+      expect(contextCopy.getArtifactValue('artifact3')).toBe('value3');
     });
 
-    it('should create new context with dependency', () => {
+    it('should add dependency artifacts to context', () => {
       const dependency = { result: 'dep-result' };
-      const withDep = context.withDependency('dep-task', dependency);
+      const contextCopy = context._clone();
+      contextCopy.addArtifact('dep-task', {
+        type: 'dependency',
+        value: dependency,
+        description: 'Dependency result from dep-task',
+        purpose: 'Store task dependency result',
+        timestamp: Date.now()
+      });
       
-      expect(withDep).not.toBe(context);
-      expect(withDep.getDependency('dep-task')).toBe(dependency);
-      expect(context.hasDependency('dep-task')).toBe(false);
+      expect(contextCopy).not.toBe(context);
+      expect(contextCopy.getArtifactValue('dep-task')).toBe(dependency);
+      expect(context.getArtifact('dep-task')).toBeUndefined();
     });
 
     it('should create new context with metadata', () => {
@@ -268,56 +323,105 @@ describe('ExecutionContext', () => {
       expect(context.metadata.author).toBeUndefined();
     });
 
-    it('should preserve other properties during updates', () => {
-      const withState = context.withSharedState('key', 'value');
+    it('should preserve other properties during artifact updates', () => {
+      const contextCopy = context._clone();
+      contextCopy.addArtifact('test_key', {
+        type: 'data',
+        value: 'value',
+        description: 'Test data',
+        purpose: 'Test property preservation',
+        timestamp: Date.now()
+      });
       
-      expect(withState.taskId).toBe(context.taskId);
-      expect(withState.sessionId).toBe(context.sessionId);
-      expect(withState.depth).toBe(context.depth);
-      expect(withState.maxDepth).toBe(context.maxDepth);
+      expect(contextCopy.taskId).toBe(context.taskId);
+      expect(contextCopy.sessionId).toBe(context.sessionId);
+      expect(contextCopy.depth).toBe(context.depth);
+      expect(contextCopy.maxDepth).toBe(context.maxDepth);
     });
   });
 
-  describe('State Retrieval', () => {
-    it('should get shared state with default', () => {
-      const withState = context.withSharedState('key', 'value');
-      
-      expect(withState.getSharedState('key')).toBe('value');
-      expect(withState.getSharedState('missing', 'default')).toBe('default');
-    });
-
-    it('should get all shared state as object', () => {
-      let ctx = context;
-      ctx = ctx.withSharedState('key1', 'value1');
-      ctx = ctx.withSharedState('key2', 'value2');
-      
-      const allState = ctx.getAllSharedState();
-      expect(allState).toEqual({
-        key1: 'value1',
-        key2: 'value2'
+  describe('Artifact Retrieval', () => {
+    it('should get artifact values with fallback', () => {
+      context.addArtifact('test_key', {
+        type: 'data',
+        value: 'value',
+        description: 'Test artifact',
+        purpose: 'Test artifact retrieval',
+        timestamp: Date.now()
       });
+      
+      expect(context.getArtifactValue('test_key')).toBe('value');
+      expect(context.getArtifactValue('missing')).toBeUndefined();
     });
 
-    it('should check and get dependencies', () => {
-      const dep = { result: 'test' };
-      const withDep = context.withDependency('task-1', dep);
-      
-      expect(withDep.hasDependency('task-1')).toBe(true);
-      expect(withDep.hasDependency('task-2')).toBe(false);
-      expect(withDep.getDependency('task-1')).toBe(dep);
-      expect(withDep.getDependency('task-2')).toBeUndefined();
-    });
-
-    it('should get all dependencies', () => {
-      let ctx = context;
-      ctx = ctx.withDependency('task-1', { result: 'dep1' });
-      ctx = ctx.withDependency('task-2', { result: 'dep2' });
-      
-      const allDeps = ctx.getAllDependencies();
-      expect(allDeps).toEqual({
-        'task-1': { result: 'dep1' },
-        'task-2': { result: 'dep2' }
+    it('should list all artifacts', () => {
+      context.addArtifact('artifact1', {
+        type: 'data',
+        value: 'value1',
+        description: 'First artifact',
+        purpose: 'Test artifact listing',
+        timestamp: Date.now()
       });
+      context.addArtifact('artifact2', {
+        type: 'data',
+        value: 'value2',
+        description: 'Second artifact',
+        purpose: 'Test artifact listing',
+        timestamp: Date.now()
+      });
+      
+      const allArtifacts = context.listArtifacts();
+      expect(allArtifacts.length).toBe(2);
+      expect(allArtifacts[0][0]).toBe('artifact1');
+      expect(allArtifacts[0][1].value).toBe('value1');
+      expect(allArtifacts[1][0]).toBe('artifact2');
+      expect(allArtifacts[1][1].value).toBe('value2');
+    });
+
+    it('should check and get artifact records', () => {
+      const artifactData = { result: 'test' };
+      context.addArtifact('task-1-result', {
+        type: 'data',
+        value: artifactData,
+        description: 'Task 1 result data',
+        purpose: 'Store execution result',
+        timestamp: Date.now()
+      });
+      
+      expect(context.getArtifact('task-1-result')).toBeDefined();
+      expect(context.getArtifact('task-2-result')).toBeUndefined();
+      expect(context.getArtifactValue('task-1-result')).toBe(artifactData);
+      expect(context.getArtifactValue('task-2-result')).toBeUndefined();
+    });
+
+    it('should get artifact metadata', () => {
+      const timestamp = Date.now();
+      context.addArtifact('metadata-test', {
+        type: 'data',
+        value: { result: 'dep1' },
+        description: 'First dependency result',
+        purpose: 'Store task dependency',
+        timestamp: timestamp,
+        metadata: { source: 'task-1' }
+      });
+      context.addArtifact('metadata-test-2', {
+        type: 'data',
+        value: { result: 'dep2' },
+        description: 'Second dependency result',
+        purpose: 'Store task dependency',
+        timestamp: timestamp,
+        metadata: { source: 'task-2' }
+      });
+      
+      const artifact1 = context.getArtifact('metadata-test');
+      const artifact2 = context.getArtifact('metadata-test-2');
+      
+      expect(artifact1.type).toBe('data');
+      expect(artifact1.description).toBe('First dependency result');
+      expect(artifact1.metadata.source).toBe('task-1');
+      expect(artifact2.type).toBe('data');
+      expect(artifact2.description).toBe('Second dependency result');
+      expect(artifact2.metadata.source).toBe('task-2');
     });
   });
 
@@ -417,44 +521,98 @@ describe('ExecutionContext', () => {
       const taskIds = ['task-1', 'task-2'];
       const parallelContexts = context.createParallelContexts(taskIds);
       
-      // Add results to parallel contexts
-      const ctx1WithResult = parallelContexts[0].withResult({ data: 'result1' });
-      const ctx2WithResult = parallelContexts[1].withResult({ data: 'result2' });
+      // Add artifacts to parallel contexts
+      parallelContexts[0].addArtifact('result1', {
+        type: 'data',
+        value: { data: 'result1' },
+        description: 'Result from task 1',
+        purpose: 'Store parallel execution result',
+        timestamp: Date.now()
+      });
+      parallelContexts[1].addArtifact('result2', {
+        type: 'data',
+        value: { data: 'result2' },
+        description: 'Result from task 2',
+        purpose: 'Store parallel execution result',
+        timestamp: Date.now()
+      });
       
-      // Add some shared state
-      const ctx1WithState = ctx1WithResult.withSharedState('key1', 'value1');
-      const ctx2WithState = ctx2WithResult.withSharedState('key2', 'value2');
+      // Add some shared artifacts
+      parallelContexts[0].addArtifact('shared_key1', {
+        type: 'data',
+        value: 'value1',
+        description: 'Shared data from task 1',
+        purpose: 'Share data across parallel tasks',
+        timestamp: Date.now()
+      });
+      parallelContexts[1].addArtifact('shared_key2', {
+        type: 'data',
+        value: 'value2',
+        description: 'Shared data from task 2',
+        purpose: 'Share data across parallel tasks',
+        timestamp: Date.now()
+      });
       
       // Merge results
-      const merged = context.mergeParallelResults([ctx1WithState, ctx2WithState]);
+      const merged = context.mergeParallelResults(parallelContexts);
       
       expect(merged).not.toBe(context);
-      expect(merged.previousResults.length).toBe(2);
-      expect(merged.previousResults[0]).toEqual({ data: 'result1' });
-      expect(merged.previousResults[1]).toEqual({ data: 'result2' });
-      expect(merged.getSharedState('key1')).toBe('value1');
-      expect(merged.getSharedState('key2')).toBe('value2');
+      expect(merged.getArtifactValue('result1')).toEqual({ data: 'result1' });
+      expect(merged.getArtifactValue('result2')).toEqual({ data: 'result2' });
+      expect(merged.getArtifactValue('shared_key1')).toBe('value1');
+      expect(merged.getArtifactValue('shared_key2')).toBe('value2');
     });
 
-    it('should handle conflicting shared state (last write wins)', () => {
+    it('should handle conflicting artifacts (last write wins)', () => {
       const taskIds = ['task-1', 'task-2'];
       const parallelContexts = context.createParallelContexts(taskIds);
       
-      const ctx1 = parallelContexts[0].withSharedState('conflict', 'value1');
-      const ctx2 = parallelContexts[1].withSharedState('conflict', 'value2');
+      parallelContexts[0].addArtifact('conflict_artifact', {
+        type: 'data',
+        value: 'value1',
+        description: 'Conflicting artifact from task 1',
+        purpose: 'Test conflict resolution',
+        timestamp: Date.now()
+      });
+      parallelContexts[1].addArtifact('conflict_artifact', {
+        type: 'data',
+        value: 'value2',
+        description: 'Conflicting artifact from task 2',
+        purpose: 'Test conflict resolution',
+        timestamp: Date.now()
+      });
       
-      const merged = context.mergeParallelResults([ctx1, ctx2]);
+      const merged = context.mergeParallelResults(parallelContexts);
       
-      expect(merged.getSharedState('conflict')).toBe('value2');
+      expect(merged.getArtifactValue('conflict_artifact')).toBe('value2');
     });
   });
 
   describe('Serialization', () => {
     it('should convert to plain object', () => {
-      let ctx = context;
-      ctx = ctx.withSharedState('key', 'value');
-      ctx = ctx.withResult({ data: 'result' });
-      ctx = ctx.withDependency('dep-1', { dep: 'data' });
+      let ctx = context._clone();
+      
+      ctx.addArtifact('shared_key', {
+        type: 'data',
+        value: 'value',
+        description: 'Shared data artifact',
+        purpose: 'Store shared configuration',
+        timestamp: Date.now()
+      });
+      ctx.addArtifact('result_data', {
+        type: 'data',
+        value: { data: 'result' },
+        description: 'Result data artifact',
+        purpose: 'Store execution result',
+        timestamp: Date.now()
+      });
+      ctx.addArtifact('dep-1', {
+        type: 'dependency',
+        value: { dep: 'data' },
+        description: 'Dependency artifact',
+        purpose: 'Store task dependency',
+        timestamp: Date.now()
+      });
       ctx = ctx.withMetadata('meta', 'value');
       
       const obj = ctx.toObject();
@@ -462,9 +620,10 @@ describe('ExecutionContext', () => {
       expect(obj.taskId).toBe('root-task');
       expect(obj.sessionId).toBe('session-123');
       expect(obj.depth).toBe(0);
-      expect(obj.sharedState).toEqual({ key: 'value' });
-      expect(obj.previousResults).toEqual([{ data: 'result' }]);
-      expect(obj.dependencies).toEqual({ 'dep-1': { dep: 'data' } });
+      expect(obj.artifacts).toBeDefined();
+      expect(obj.artifacts['shared_key'].value).toBe('value');
+      expect(obj.artifacts['result_data'].value).toEqual({ data: 'result' });
+      expect(obj.artifacts['dep-1'].value).toEqual({ dep: 'data' });
       expect(obj.metadata).toEqual({ meta: 'value' });
       expect(obj.config).toBeDefined();
       expect(obj.executionPath).toBe('');
@@ -480,9 +639,30 @@ describe('ExecutionContext', () => {
         breadcrumbs: [
           { taskId: 'parent', depth: 1, timestamp: Date.now() }
         ],
-        sharedState: { key: 'value' },
-        previousResults: [{ data: 'result' }],
-        dependencies: { 'dep-1': { dep: 'data' } },
+        artifacts: {
+          'shared_key': {
+            type: 'data',
+            value: 'value',
+            description: 'Shared artifact',
+            purpose: 'Store shared data',
+            timestamp: Date.now()
+          },
+          'result_data': {
+            type: 'data',
+            value: { data: 'result' },
+            description: 'Result artifact',
+            purpose: 'Store execution result',
+            timestamp: Date.now()
+          },
+          'dep-1': {
+            type: 'dependency',
+            value: { dep: 'data' },
+            description: 'Dependency artifact',
+            purpose: 'Store task dependency',
+            timestamp: Date.now()
+          }
+        },
+        conversationHistory: [],
         metadata: { author: 'test' },
         userContext: { user: 'test-user' },
         config: {
@@ -500,9 +680,9 @@ describe('ExecutionContext', () => {
       expect(restored.correlationId).toBe('restored-correlation');
       expect(restored.depth).toBe(2);
       expect(restored.breadcrumbs).toEqual(obj.breadcrumbs);
-      expect(restored.getSharedState('key')).toBe('value');
-      expect(restored.previousResults).toEqual(obj.previousResults);
-      expect(restored.getDependency('dep-1')).toEqual({ dep: 'data' });
+      expect(restored.getArtifactValue('shared_key')).toBe('value');
+      expect(restored.getArtifactValue('result_data')).toEqual({ data: 'result' });
+      expect(restored.getArtifactValue('dep-1')).toEqual({ dep: 'data' });
       expect(restored.metadata).toEqual(obj.metadata);
       expect(restored.userContext).toEqual(obj.userContext);
       expect(restored.config.maxDepth).toBe(5);
@@ -511,11 +691,29 @@ describe('ExecutionContext', () => {
 
     it('should create lightweight summary', () => {
       const deadline = Date.now() + 1000;
-      let ctx = context;
-      ctx = ctx.withDeadline(deadline);
-      ctx = ctx.withSharedState('key1', 'value1');
-      ctx = ctx.withSharedState('key2', 'value2');
-      ctx = ctx.withResult({ data: 'result' });
+      let ctx = context.withDeadline(deadline);
+      
+      ctx.addArtifact('artifact1', {
+        type: 'data',
+        value: 'value1',
+        description: 'First artifact',
+        purpose: 'Test summary creation',
+        timestamp: Date.now()
+      });
+      ctx.addArtifact('artifact2', {
+        type: 'data',
+        value: 'value2',
+        description: 'Second artifact',
+        purpose: 'Test summary creation',
+        timestamp: Date.now()
+      });
+      ctx.addArtifact('result_artifact', {
+        type: 'data',
+        value: { data: 'result' },
+        description: 'Result artifact',
+        purpose: 'Store execution result',
+        timestamp: Date.now()
+      });
       
       const summary = ctx.toSummary();
       
@@ -526,8 +724,8 @@ describe('ExecutionContext', () => {
       expect(summary.elapsed).toBeDefined();
       expect(summary.remaining).toBeGreaterThan(0);
       expect(summary.remaining).toBeLessThanOrEqual(1000);
-      expect(summary.resultsCount).toBe(1);
-      expect(summary.sharedStateKeys).toEqual(['key1', 'key2']);
+      expect(summary.artifactCount).toBe(3);
+      expect(summary.conversationLength).toBe(0);
       expect(summary.isExpired).toBe(false);
       expect(summary.canDecompose).toBe(true);
     });

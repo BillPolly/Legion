@@ -271,8 +271,8 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
         throw new Error(`AtomicExecutionStrategy cannot handle task: ${taskId}`);
       }
 
-      // Track execution in context
-      const executionContext = ctx.withMetadata('strategy', 'atomic');
+      // Use the execution context directly (new ExecutionContext doesn't need withMetadata)
+      const executionContext = ctx;
 
       // Determine execution type
       const executionType = this.determineExecutionType(task);
@@ -299,8 +299,8 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
         this.validateResult(result, task.outputSchema);
       }
 
-      // Store result in context
-      const updatedContext = executionContext.withResult(result);
+      // Result handling is done within individual execution methods
+      // The new ExecutionContext doesn't use withResult - artifacts are managed directly
 
       return result;
     });
@@ -323,7 +323,7 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
   }
 
   /**
-   * Execute a tool
+   * Execute a tool with artifact management support
    */
   async executeTool(task, context, emitter) {
     const toolName = task.tool || task.toolName;
@@ -345,13 +345,63 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
       percentage: 30
     });
 
-    // Get the tool
+    // Check if this is an artifact-aware tool call (has outputs specified)
+    if (task.outputs && Array.isArray(task.outputs)) {
+      const toolCall = {
+        tool: toolName,
+        inputs: task.inputs || task.params || task.parameters || {},
+        outputs: task.outputs
+      };
+      
+      // Use artifact-aware execution from base ExecutionStrategy
+      return this.executeWithRetries(
+        async () => {
+          // Emit progress for tool execution
+          emitter.custom('tool_progress', {
+            tool: toolName,
+            phase: 'executing',
+            percentage: 70
+          });
+
+          const result = await this.executeToolWithArtifacts(toolCall, context);
+          
+          // Emit completion progress
+          emitter.custom('tool_progress', {
+            tool: toolName,
+            phase: 'completed',
+            percentage: 100,
+            success: !!result.success
+          });
+          
+          // Emit tool completion event with result details
+          emitter.custom('tool_execution_complete', {
+            tool: toolName,
+            taskId: this.getTaskId(task),
+            params: toolCall.inputs,
+            result: result,
+            artifactsCreated: task.outputs.map(o => o.name),
+            timestamp: Date.now()
+          });
+          
+          return result;
+        },
+        { 
+          taskId: this.getTaskId(task),
+          toolName,
+          emitter,
+          operationType: 'tool',
+          operationId: `tool:${toolName}`
+        }
+      );
+    }
+
+    // Standard tool execution without artifact management
     const tool = await this.toolRegistry.getTool(toolName);
     if (!tool) {
       throw new Error(`Tool not found: ${toolName}`);
     }
 
-    // Prepare parameters
+    // Prepare parameters with artifact resolution
     const params = this.prepareToolParams(task, context);
 
     // Execute with retries
@@ -433,7 +483,9 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
 
         let result;
         if (task.requiresContext) {
-          result = await fn(args, context);
+          // Add strategy metadata to context when passing to function
+          const contextWithStrategy = context.withMetadata('strategy', 'atomic');
+          result = await fn(args, contextWithStrategy);
         } else {
           result = await fn(args);
         }
@@ -786,7 +838,7 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
   }
 
   /**
-   * Prepare tool parameters
+   * Prepare tool parameters with artifact resolution
    */
   prepareToolParams(task, context) {
     const params = {
@@ -801,13 +853,13 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
         taskId: context.taskId,
         sessionId: context.sessionId,
         depth: context.depth,
-        previousResults: context.previousResults,
-        sharedState: context.getAllSharedState()
+        artifactCount: context.artifacts.size,
+        conversationLength: context.conversationHistory.length
       };
     }
 
-    // Resolve parameter references
-    return this.resolveParameterReferences(params, context);
+    // Resolve artifact references using inherited method from ExecutionStrategy
+    return this.resolveToolInputs(params, context);
   }
 
   /**
@@ -863,9 +915,9 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
       params.chatHistory = task.messages;
     }
 
-    // Add context from previous results if needed
-    if (task.includeHistory && context.previousResults.length > 0) {
-      const historyMessage = this.buildHistoryMessage(context.previousResults);
+    // Add context from conversation history if needed
+    if (task.includeHistory && context.conversationHistory.length > 0) {
+      const historyMessage = this.buildHistoryMessage(context);
       params.chatHistory = params.chatHistory || [];
       params.chatHistory.push({
         role: 'assistant',
@@ -896,27 +948,27 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
 
 
   /**
-   * Build history message from previous results
+   * Build history message from conversation history (not previousResults)
    */
-  buildHistoryMessage(previousResults) {
-    const relevant = previousResults.slice(-3); // Last 3 results
-    return relevant.map((result, index) => 
-      `Previous Result ${index + 1}: ${JSON.stringify(result)}`
-    ).join('\n');
+  buildHistoryMessage(context) {
+    return this.formatConversationHistory(context, 3); // Last 3 messages
   }
 
   /**
-   * Enrich prompt with context
+   * Enrich prompt with context and artifacts
    */
   enrichPrompt(prompt, context) {
     let enriched = prompt;
 
-    // Replace context variables
+    // Replace context variables - use available context properties only
     const variables = {
       taskId: context.taskId,
       sessionId: context.sessionId,
       depth: context.depth,
-      ...context.getAllSharedState()
+      maxDepth: context.maxDepth,
+      correlationId: context.correlationId,
+      artifactCount: context.artifacts.size,
+      conversationLength: context.conversationHistory.length
     };
 
     Object.entries(variables).forEach(([key, value]) => {
@@ -928,7 +980,8 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
   }
 
   /**
-   * Resolve parameter references
+   * Resolve parameter references (legacy $ syntax - replaced by @artifact_name)
+   * Keep for backward compatibility but prefer resolveToolInputs for artifacts
    */
   resolveParameterReferences(params, context) {
     if (!params || typeof params !== 'object') {
@@ -938,8 +991,11 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
     const resolved = {};
     
     for (const [key, value] of Object.entries(params)) {
-      if (typeof value === 'string' && value.startsWith('$')) {
-        // Reference to context or previous result
+      if (typeof value === 'string' && value.startsWith('@')) {
+        // Artifact reference - use the new system
+        resolved[key] = this.resolveToolInputs({[key]: value}, context)[key];
+      } else if (typeof value === 'string' && value.startsWith('$')) {
+        // Legacy reference to context (keep for compatibility)
         const path = value.slice(1);
         resolved[key] = this.resolveReference(path, context);
       } else if (typeof value === 'object' && value !== null) {
@@ -964,12 +1020,14 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
     }
     
     if (parts[0] === 'previous') {
+      // Legacy support - try to get from conversation history instead
+      const messages = context.conversationHistory.filter(msg => msg.role === 'assistant');
       const index = parseInt(parts[1]) || 0;
-      const result = context.previousResults[context.previousResults.length - 1 - index];
+      const message = messages[messages.length - 1 - index];
       if (parts.length > 2) {
-        return this.getNestedValue(result, parts.slice(2));
+        return this.getNestedValue(message, parts.slice(2));
       }
-      return result;
+      return message?.content;
     }
     
     if (parts[0] === 'shared') {
