@@ -217,6 +217,11 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
    * Check if this strategy can handle the task
    */
   canHandle(task, context) {
+    // Cannot handle tasks explicitly marked for recursive execution
+    if (task.recursive === true || task.strategy === 'recursive') {
+      return false;
+    }
+
     // Can handle if task is marked as atomic
     if (task.atomic || task.strategy === 'atomic') {
       return true;
@@ -232,8 +237,21 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
       return true;
     }
 
-    // Can handle simple prompts that don't need decomposition
-    if ((task.prompt || task.description) && !this.requiresDecomposition(task, context)) {
+    // Can handle simple prompts/descriptions, but reject complex decomposition tasks
+    if (task.prompt || task.description) {
+      // Check if this is a complex task requiring decomposition
+      const text = (task.prompt || task.description || '').toLowerCase();
+      const complexityIndicators = [
+        'step by step', 'then do', 'first do', 'multiple steps', 'break this down',
+        'break down', 'decompose', 'analyze and', 'plan and execute',
+        'step 1', 'step 2', 'then', 'after that', 'finally'
+      ];
+      
+      // If task contains complexity indicators, don't handle it atomically
+      if (complexityIndicators.some(indicator => text.includes(indicator))) {
+        return false;
+      }
+      
       return true;
     }
 

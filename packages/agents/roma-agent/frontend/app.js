@@ -1,8 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
-    fetch('http://localhost:3000/api/hello')
+    // Check backend health
+    fetch('http://localhost:3000/api/health')
         .then(response => response.json())
-        .then(data => {
-            document.getElementById('message').textContent = data.message;
-        })
+        .then(data => console.log('Backend status:', data))
         .catch(error => console.error('Error:', error));
 });

@@ -141,9 +141,7 @@ describe('RecursiveExecutionStrategy', () => {
         description: 'This is a complex task with multiple steps that requires breaking down into smaller components'
       };
       
-      // Mock requiresDecomposition to return true
-      jest.spyOn(strategy, 'requiresDecomposition').mockReturnValue(true);
-      
+      // Tasks with descriptions can be handled
       expect(strategy.canHandle(complexTask, context)).toBe(true);
     });
 
@@ -168,7 +166,6 @@ describe('RecursiveExecutionStrategy', () => {
       };
       
       // Mock requiresDecomposition to return false
-      jest.spyOn(strategy, 'requiresDecomposition').mockReturnValue(false);
       
       expect(strategy.canHandle(atomicTask, context)).toBe(false);
     });
@@ -233,29 +230,17 @@ describe('RecursiveExecutionStrategy', () => {
   });
 
   describe('Decomposition Decision', () => {
-    it('should decompose when explicitly requested', () => {
+    it('should decompose when explicitly requested', async () => {
       const task = {
         id: 'explicit',
         decompose: true,
         description: 'Simple task but explicitly marked for decomposition'
       };
       
-      expect(strategy.shouldDecompose(task, context)).toBe(true);
+      expect(await strategy.shouldDecompose(task, context)).toBe(true);
     });
 
-    it('should decompose based on complexity threshold', () => {
-      const complexTask = {
-        id: 'complex',
-        description: 'Complex task with multiple steps requiring detailed analysis'
-      };
-      
-      // Mock complexity estimation to return high score
-      jest.spyOn(strategy, 'estimateTaskComplexity').mockReturnValue({ score: 0.8 });
-      
-      expect(strategy.shouldDecompose(complexTask, context)).toBe(true);
-    });
-
-    it('should not decompose at max depth', () => {
+    it('should not decompose at max depth', async () => {
       const maxDepthContext = new ExecutionContext(null, { depth: 3, maxDepth: 3 });
       
       const task = {
@@ -264,20 +249,128 @@ describe('RecursiveExecutionStrategy', () => {
         description: 'Task at max depth'
       };
       
-      expect(strategy.shouldDecompose(task, maxDepthContext)).toBe(false);
+      expect(await strategy.shouldDecompose(task, maxDepthContext)).toBe(false);
     });
 
-    it('should not decompose simple tasks', () => {
-      const simpleTask = {
-        id: 'simple',
-        description: 'Simple task'
+    it('should use LLM for decomposition decision when available', async () => {
+      const task = {
+        id: 'llm-decision',
+        description: 'Create a web application with user authentication and data storage'
       };
       
-      // Mock complexity estimation to return low score
-      jest.spyOn(strategy, 'estimateTaskComplexity').mockReturnValue({ score: 0.3 });
-      jest.spyOn(strategy, 'requiresDecomposition').mockReturnValue(false);
+      // Mock LLM response for decomposition decision
+      mockSimplePromptClient.request.mockResolvedValue({
+        content: JSON.stringify({
+          decompose: true,
+          reasoning: 'Complex multi-step task requiring authentication and storage',
+          suggestedStrategy: 'recursive',
+          estimatedSubtasks: 3,
+          confidence: 0.9
+        })
+      });
       
-      expect(strategy.shouldDecompose(simpleTask, context)).toBe(false);
+      const result = await strategy.shouldDecompose(task, context);
+      
+      expect(result).toBe(true);
+      expect(mockSimplePromptClient.request).toHaveBeenCalledWith(
+        expect.objectContaining({
+          prompt: expect.stringContaining('TASK INFORMATION'),
+          temperature: 0.3,
+          maxTokens: 500
+        })
+      );
+      expect(task._decompositionPlan).toBeDefined();
+      expect(task._decompositionPlan.confidence).toBe(0.9);
+    });
+
+    it('should not decompose simple atomic tasks with LLM', async () => {
+      const simpleTask = {
+        id: 'simple',
+        description: 'Add 2 + 2'
+      };
+      
+      // Mock LLM response for simple task
+      mockSimplePromptClient.request.mockResolvedValue({
+        content: JSON.stringify({
+          decompose: false,
+          reasoning: 'Simple arithmetic calculation - atomic operation',
+          suggestedStrategy: 'atomic',
+          confidence: 0.95
+        })
+      });
+      
+      expect(await strategy.shouldDecompose(simpleTask, context)).toBe(false);
+    });
+
+    it('should fallback to heuristic when LLM fails', async () => {
+      const task = {
+        id: 'llm-failure',
+        description: 'Task to process',
+        subtasks: [
+          { id: 'sub-1', description: 'Step 1' },
+          { id: 'sub-2', description: 'Step 2' }
+        ]
+      };
+      
+      // Mock LLM failure
+      mockSimplePromptClient.request.mockRejectedValue(new Error('LLM unavailable'));
+      
+      // Should fallback to checking for predefined subtasks
+      expect(await strategy.shouldDecompose(task, context)).toBe(true);
+    });
+
+    it('should handle invalid JSON from LLM', async () => {
+      const task = {
+        id: 'invalid-json',
+        description: 'Task with invalid LLM response'
+      };
+      
+      // Mock invalid JSON response
+      mockSimplePromptClient.request.mockResolvedValue({
+        content: 'This is not valid JSON'
+      });
+      
+      // Should fallback to heuristic (no subtasks = false)
+      expect(await strategy.shouldDecompose(task, context)).toBe(false);
+    });
+
+    it('should respect explicit decompose=false even with LLM', async () => {
+      const task = {
+        id: 'no-decompose',
+        decompose: false,
+        description: 'Complex task but explicitly marked not to decompose'
+      };
+      
+      // LLM should not be called when decompose is explicitly false
+      expect(await strategy.shouldDecompose(task, context)).toBe(false);
+      expect(mockSimplePromptClient.request).not.toHaveBeenCalled();
+    });
+
+    it('should use predefined subtasks when no LLM available', async () => {
+      // Create strategy without LLM
+      const noLLMStrategy = new RecursiveExecutionStrategy({
+        toolRegistry: mockToolRegistry,
+        progressStream: mockProgressStream
+        // No llmClient or simplePromptClient
+      });
+      
+      const task = {
+        id: 'no-llm',
+        description: 'Complex task',
+        subtasks: [
+          { id: 'sub-1', description: 'Step 1' },
+          { id: 'sub-2', description: 'Step 2' }
+        ]
+      };
+      
+      expect(await noLLMStrategy.shouldDecompose(task, context)).toBe(true);
+      
+      const taskWithoutSubtasks = {
+        id: 'no-llm-no-subtasks',
+        description: 'Another complex task'
+      };
+      
+      expect(await noLLMStrategy.shouldDecompose(taskWithoutSubtasks, context)).toBe(false);
     });
   });
 
@@ -625,7 +718,7 @@ describe('RecursiveExecutionStrategy', () => {
       };
       
       // Mock shouldDecompose to return false for direct execution
-      jest.spyOn(strategy, 'shouldDecompose').mockReturnValue(false);
+      jest.spyOn(strategy, 'shouldDecompose').mockResolvedValue(false);
       
       const result = await strategy.execute(task, context);
       
@@ -688,7 +781,7 @@ describe('RecursiveExecutionStrategy', () => {
       
       // Mock decomposeTask to return null
       jest.spyOn(strategy, 'decomposeTask').mockResolvedValue(null);
-      jest.spyOn(strategy, 'shouldDecompose').mockReturnValue(true);
+      jest.spyOn(strategy, 'shouldDecompose').mockResolvedValue(true);
       
       const result = await strategy.execute(task, context);
       
@@ -786,7 +879,7 @@ describe('RecursiveExecutionStrategy', () => {
       };
       
       strategy = new RecursiveExecutionStrategy(); // No LLM client
-      jest.spyOn(strategy, 'shouldDecompose').mockReturnValue(false);
+      jest.spyOn(strategy, 'shouldDecompose').mockResolvedValue(false);
       
       await expect(strategy.executeDirectly(task, context, { custom: jest.fn() }))
         .rejects.toThrow('SimplePromptClient not configured');

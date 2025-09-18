@@ -384,7 +384,9 @@ export class ROMAAgent extends EventEmitter {
     this.handleProgressEvent({
       status: 'started',
       taskId: this.getTaskId(task),
-      description: task.description || task.prompt || 'No description provided',
+      message: task.description || task.prompt || 'No description provided',
+      description: task.description || task.prompt || 'No description provided', // Keep for backward compatibility
+      percentage: 0,
       isComposite: this.isCompositeTask(task),
       timestamp: Date.now()
     });
@@ -393,7 +395,9 @@ export class ROMAAgent extends EventEmitter {
     this.handleProgressEvent({
       type: 'task_analysis',
       taskId: this.getTaskId(task),
-      description: task.description || task.prompt || 'No description provided',
+      message: 'Analyzing task and selecting strategy',
+      description: task.description || task.prompt || 'No description provided', // Keep for backward compatibility  
+      percentage: 10,
       isComposite: this.isCompositeTask(task),
       timestamp: Date.now()
     });
@@ -489,6 +493,8 @@ export class ROMAAgent extends EventEmitter {
         taskId: taskId,
         strategy: strategy.constructor.name,
         taskType: task.type || 'unknown',
+        message: `Selected ${strategy.constructor.name} for task execution`,
+        percentage: 5,
         timestamp: Date.now()
       });
       
@@ -1011,6 +1017,7 @@ export class ROMAAgent extends EventEmitter {
       metadata: {
         executionId,
         duration: execution.duration,
+        strategy: execution.strategy || execution.result?.metadata?.strategy || 'unknown',
         logEntries: execution.log?.entries?.length || 0,
         executionPlan: executionPlan || null,
         failed: executionPlan?.failed || 0,
@@ -1080,13 +1087,29 @@ export class ROMAAgent extends EventEmitter {
   handleProgressEvent(event) {
     this.logger.debug('Progress event', event);
     
-    // Emit event for EventEmitter interface
-    this.emit('progress', event);
+    // Ensure all progress events have required properties
+    const enrichedEvent = {
+      message: event.message || event.description || event.status || 'Progress update',
+      percentage: event.percentage || event.progress || 0,
+      ...event
+    };
+    
+    // Emit specific event types based on status or type
+    if (event.status === 'started') {
+      this.emit('task_started', enrichedEvent);
+    } else if (event.status === 'completed') {
+      this.emit('task_completed', enrichedEvent);
+    } else if (event.type === 'strategy_selection') {
+      this.emit('strategy_selected', enrichedEvent);
+    }
+    
+    // Always emit progress event for backward compatibility
+    this.emit('progress', enrichedEvent);
     
     // Forward to UI callback if available
     if (this.currentOnProgressCallback && typeof this.currentOnProgressCallback === 'function') {
       try {
-        this.currentOnProgressCallback(event);
+        this.currentOnProgressCallback(enrichedEvent);
       } catch (error) {
         this.logger.warn('Progress callback error', { error: error.message });
       }
@@ -1123,6 +1146,17 @@ export class ROMAAgent extends EventEmitter {
     record.completedAt = Date.now();
     record.duration = record.completedAt - record.startedAt;
     Object.assign(record, details);
+
+    // Emit task completion event
+    this.handleProgressEvent({
+      status: 'completed',
+      taskId: record.taskId,
+      success: status === 'completed',
+      message: status === 'completed' ? 'Task completed successfully' : 'Task failed',
+      percentage: 100,
+      duration: record.duration,
+      timestamp: record.completedAt
+    });
 
     this.activeExecutions.delete(executionId);
     this.statistics.activeExecutions = this.activeExecutions.size;

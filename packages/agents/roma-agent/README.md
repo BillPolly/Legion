@@ -3,18 +3,14 @@
 ## Setup
 
 ### Backend
-1. Navigate to the backend directory
-2. Run `npm install`
-3. Start the server with `node server.js`
+1. Navigate to backend directory: `cd backend`
+2. Install dependencies: `npm install`
+3. Start server: `node server.js`
 
 ### Frontend
-1. Open the frontend/index.html file in a web browser
+1. Navigate to frontend directory: `cd frontend`
+2. Open index.html in your browser
 
 ## Project Structure
-- /backend
-  - server.js (Express server)
-  - package.json
-- /frontend
-  - index.html
-  - styles.css
-  - app.js
+- /backend - Express.js server
+- /frontend - Static HTML, CSS, and JavaScript files

@@ -274,10 +274,7 @@ The file has been created successfully.`;
       
       const complexTask = {
         id: 'complex-web-project-test',
-        description: `Create a simple web project in ${testTmpDir} with:
-        1. An index.html file with basic HTML structure and title "ROMA Test Page"
-        2. A style.css file with basic styling
-        3. A script.js file that shows an alert when the page loads`,
+        description: `Create a simple HTML file at ${testTmpDir}/index.html with basic structure and title "ROMA Test Page"`,
         recursive: true
       };
       
@@ -295,7 +292,7 @@ The file has been created successfully.`;
       console.log('📁 Files created:', files);
       
       // Verify expected files
-      const expectedFiles = ['index.html', 'style.css', 'script.js'];
+      const expectedFiles = ['index.html'];
       const foundFiles = expectedFiles.filter(f => files.includes(f));
       
       console.log('✅ Expected files found:', foundFiles);

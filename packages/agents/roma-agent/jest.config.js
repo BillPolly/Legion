@@ -13,7 +13,7 @@ export default {
     '!src/**/*.test.js'
   ],
   setupFilesAfterEnv: ['<rootDir>/__tests__/setup.js'],
-  testTimeout: 30000, // Allow time for real LLM calls
+  testTimeout: 60000, // Allow time for real LLM calls and integration tests
   maxWorkers: 1, // Sequential execution for resource management
   forceExit: true // Force Jest to exit after tests complete
 };

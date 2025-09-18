@@ -202,8 +202,8 @@ export class RecursiveExecutionStrategy extends ExecutionStrategy {
       return true;
     }
 
-    // Can handle complex tasks that need decomposition
-    if (this.requiresDecomposition(task, context)) {
+    // Can handle complex tasks that have description/prompt
+    if (task.description || task.prompt || task.operation) {
       return true;
     }
 
@@ -241,12 +241,11 @@ export class RecursiveExecutionStrategy extends ExecutionStrategy {
       emitter.custom('recursive_start', {
         taskId,
         depth: ctx.depth,
-        maxDepth: this.maxDepth,
-        requiresDecomposition: this.requiresDecomposition(task, ctx)
+        maxDepth: this.maxDepth
       });
 
       // Try direct execution first if task is simple enough
-      if (!this.shouldDecompose(task, ctx)) {
+      if (!(await this.shouldDecompose(task, ctx))) {
         emitter.custom('direct_execution', { taskId, reason: 'Below decomposition threshold' });
         const directResult = await this.executeDirectly(task, ctx, emitter);
         // Return the result directly since executeDirectly already wraps it properly
@@ -335,32 +334,132 @@ export class RecursiveExecutionStrategy extends ExecutionStrategy {
   }
 
   /**
-   * Determine if task should be decomposed
+   * Build comprehensive prompt for LLM decomposition decision
    */
-  shouldDecompose(task, context) {
-    // Check depth limits first - ABSOLUTELY no decomposition beyond max depth
+  buildDecompositionDecisionPrompt(task, context) {
+    const taskDescription = task.description || task.prompt || task.operation || 'Task with no description';
+    const taskId = this.getTaskId(task);
+    
+    // Gather available execution strategies
+    const availableStrategies = [
+      'atomic (direct execution with tool or LLM)',
+      'parallel (concurrent execution of independent subtasks)',
+      'recursive (break down into smaller subtasks)',
+      'conditional (branch based on conditions)'
+    ];
+    
+    // Gather available tools if tool registry is available
+    let toolContext = '';
+    if (this.toolRegistry) {
+      toolContext = '\nAvailable tools that might be relevant: calculator, file operations, data processing, etc.';
+    }
+    
+    // Build context about current execution state
+    const executionContext = {
+      currentDepth: context.depth,
+      maxDepth: this.maxDepth,
+      remainingDepth: this.maxDepth - context.depth,
+      hasSubtasks: Array.isArray(task.subtasks) && task.subtasks.length > 0,
+      taskComplexity: this.estimateTaskComplexity ? this.estimateTaskComplexity(task, context) : null
+    };
+    
+    const prompt = `You are a task decomposition expert. Analyze the following task and decide if it should be decomposed into subtasks.
+
+TASK INFORMATION:
+Task ID: ${taskId}
+Description: ${taskDescription}
+${task.tool ? `Tool specified: ${task.tool}` : ''}
+${task.subtasks ? `Has ${task.subtasks.length} predefined subtasks` : 'No predefined subtasks'}
+
+EXECUTION CONTEXT:
+Current recursion depth: ${executionContext.currentDepth}
+Maximum allowed depth: ${executionContext.maxDepth}
+Remaining depth available: ${executionContext.remainingDepth}
+${toolContext}
+
+Available execution strategies: ${availableStrategies.join(', ')}
+
+DECOMPOSITION RULES:
+1. Simple atomic tasks (single tool call, direct calculation) should NOT be decomposed
+2. Complex multi-step tasks SHOULD be decomposed if depth allows
+3. Tasks with clear sequential steps benefit from decomposition
+4. Tasks requiring different tools/capabilities should be decomposed
+5. If remaining depth is 0, MUST NOT decompose
+6. If task has predefined subtasks, prefer using them
+
+Analyze the task and respond with a JSON object:
+{
+  "decompose": boolean,
+  "reasoning": "Brief explanation of decision",
+  "suggestedStrategy": "atomic|parallel|recursive|conditional",
+  "estimatedSubtasks": number (if decomposing),
+  "confidence": number (0-1)
+}
+
+Respond ONLY with valid JSON, no additional text.`;
+
+    return prompt;
+  }
+
+  /**
+   * Determine if task should be decomposed using LLM intelligence
+   */
+  async shouldDecompose(task, context) {
+    // Hard constraints first - ABSOLUTELY no decomposition beyond max depth
     if (context.depth >= this.maxDepth) {
       return false;
     }
 
-    // Always decompose if explicitly requested (depth limits already checked above)
-    if (task.decompose || task.breakdown) {
-      return true;
+    // Respect explicit decomposition directives
+    if (task.decompose !== undefined) {
+      return task.decompose;
     }
 
-    // For recursive tasks, only decompose if they have complexity indicators
-    if (task.recursive && (task.subtasks || task.description)) {
-      return true;
+    // If no LLM available, use simple heuristic
+    if (!this.llmClient) {
+      // Only decompose if task has predefined subtasks
+      return Array.isArray(task.subtasks) && task.subtasks.length > 0;
     }
 
-    // Check decomposition threshold
-    const complexity = this.estimateTaskComplexity(task, context);
-    if (complexity.score >= this.decomposeThreshold) {
-      return true;
-    }
+    try {
+      // Build comprehensive context for LLM decision
+      const prompt = this.buildDecompositionDecisionPrompt(task, context);
+      
+      // Ensure we have SimplePromptClient
+      if (!this.simplePromptClient) {
+        await this.initialize();
+      }
 
-    // Check if task has complexity indicators
-    return this.requiresDecomposition(task, context);
+      const response = await this.simplePromptClient.request({
+        prompt,
+        maxTokens: 500,
+        temperature: 0.3, // Lower temperature for consistent decisions
+        systemPrompt: 'You are a task decomposition expert. Answer with valid JSON only.'
+      });
+
+      const decision = JSON.parse(response.content || response);
+      
+      // Store the reasoning and suggested decomposition
+      if (decision.decompose) {
+        task._decompositionPlan = decision;
+        if (context.log) {
+          context.log(`Decomposition decision: ${decision.reasoning}`);
+        }
+      }
+      
+      return decision.decompose;
+    } catch (error) {
+      // Log error and default to no decomposition
+      if (this.logger) {
+        this.logger.warn('LLM decomposition decision failed', {
+          taskId: this.getTaskId(task),
+          error: error.message
+        });
+      }
+      
+      // Fallback: only decompose if task has predefined subtasks
+      return Array.isArray(task.subtasks) && task.subtasks.length > 0;
+    }
   }
 
   /**
@@ -1875,7 +1974,10 @@ Make sure subtasks are:
         {
           id: `${task.id || 'task'}-fallback`,
           description: task.description || task.operation || task.prompt,
-          operation: 'execute_directly'
+          operation: 'execute_directly',
+          // CRITICAL: Mark as atomic to prevent recursive decomposition
+          atomic: true,
+          decompose: false
         }
       ],
       strategy: 'sequential',
@@ -1890,7 +1992,7 @@ Make sure subtasks are:
     const complexity = this.estimateTaskComplexity(task, context);
     
     // Check if task is recursive or will be decomposed
-    if (task.recursive || this.shouldDecompose(task, context)) {
+    if (task.recursive || (await this.shouldDecompose(task, context))) {
       // Recursive execution estimate
       const estimatedSubtasks = Math.max(2, Math.ceil(complexity.score * 5));
       const estimatedDepth = Math.min(context.depth + 1, this.maxDepth);

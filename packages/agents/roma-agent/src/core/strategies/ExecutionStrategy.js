@@ -122,6 +122,8 @@ export class ExecutionStrategy {
       this.progressStream.emit(taskId, {
         status,
         strategy: this.name,
+        message: details.message || details.description || `${status} - ${this.name}`,
+        percentage: details.percentage || details.progress || 0,
         ...details
       });
     }
@@ -201,28 +203,6 @@ export class ExecutionStrategy {
    */
   generateTaskId() {
     return `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  }
-
-  /**
-   * Check if task requires decomposition
-   */
-  requiresDecomposition(task, context) {
-    // Check if we can decompose based on depth
-    if (!context.canDecompose()) {
-      return false;
-    }
-
-    // Check task complexity indicators
-    const complexityIndicators = [
-      /multiple|several|various/i,
-      /step by step|steps/i,
-      /first.*then|and then/i,
-      /complex|complicated/i,
-      /break down|decompose/i
-    ];
-
-    const description = task.description || task.operation || task.prompt || '';
-    return complexityIndicators.some(pattern => pattern.test(description));
   }
 
   /**

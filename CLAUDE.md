@@ -190,4 +190,6 @@ FIX TEST FAILURES ONE BY ONE.
 
 IF you are having difficulty debugging a test, then write in depth debug scripts and tests in a /tmp direcotry and really drill into the problem with a detailed breakdown and step by step testing and logging.
 
+when tests are timing out, check with console logs that they are rerally not just hanging or looping
 
+if tests are taking a long time, try to simplify them, but make sure they have enough time to run in the configuration! we need to fix it so that nmp test always works!
