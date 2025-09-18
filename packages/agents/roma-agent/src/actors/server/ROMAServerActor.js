@@ -3,7 +3,7 @@
  * Provides real-time task execution with progress tracking and visualization
  */
 
-import { ROMAAgent } from '../../ROMAAgent.js';
+import SimpleROMAAgent from '../../SimpleROMAAgent.js';
 import { ResourceManager } from '@legion/resource-manager';
 
 /**
@@ -45,15 +45,10 @@ export default class ROMAServerActor {
         this.resourceManager = await this._createResourceManager();
       }
       
-      console.log('🎭 Creating ROMAAgent with ResourceManager...');
+      console.log('🎭 Creating SimpleROMAAgent...');
       
-      // Initialize ROMA agent with enhanced configuration for frontend
-      this.romaAgent = new ROMAAgent({
-        maxConcurrency: 3,
-        defaultTimeout: 30000,
-        enableSemanticAnalysis: true,
-        maxExecutionDepth: 5
-      });
+      // Initialize ROMA agent
+      this.romaAgent = new SimpleROMAAgent();
       
       // Initialize the agent
       await this.romaAgent.initialize();
@@ -66,10 +61,10 @@ export default class ROMAServerActor {
         this.remoteActor.receive('ready', {
           timestamp: new Date().toISOString(),
           agentStatus: {
-            isInitialized: this.romaAgent.isInitialized,
-            activeExecutions: this.romaAgent.getActiveExecutions().length
+            isInitialized: true,
+            activeExecutions: this.activeExecutions.size
           },
-          statistics: this.romaAgent.getStatistics()
+          statistics: this.getStatistics()
         });
         console.log('✅ [ROMA SERVER] Ready signal sent!');
       }, 1000);
@@ -156,19 +151,8 @@ export default class ROMAServerActor {
         timestamp: new Date().toISOString()
       });
       
-      // Execute task with progress callback
-      const result = await this.romaAgent.execute(task, {
-        onProgress: (progressEvent) => {
-          console.log('📊 [ROMA ACTOR] Progress update:', progressEvent);
-          
-          // Forward progress to client
-          this.remoteActor.receive('task_progress', {
-            executionId,
-            ...progressEvent,
-            timestamp: new Date().toISOString()
-          });
-        }
-      });
+      // Execute task
+      const result = await this.romaAgent.execute(task);
       
       // Update execution status
       const execution = this.activeExecutions.get(executionId);
@@ -185,7 +169,7 @@ export default class ROMAServerActor {
         this.remoteActor.receive('execution_complete', {
           executionId,
           result,
-          statistics: this.romaAgent.getStatistics(),
+          statistics: this.getStatistics(),
           timestamp: new Date().toISOString()
         });
       } else {
@@ -232,9 +216,9 @@ export default class ROMAServerActor {
     
     const status = {
       agent: {
-        isInitialized: this.romaAgent.isInitialized,
-        activeExecutions: this.romaAgent.getActiveExecutions().length,
-        statistics: this.romaAgent.getStatistics()
+        isInitialized: true,
+        activeExecutions: this.activeExecutions.size,
+        statistics: this.getStatistics()
       },
       activeExecutions: Array.from(this.activeExecutions.entries()).map(([id, execution]) => ({
         executionId: id,
@@ -256,7 +240,7 @@ export default class ROMAServerActor {
   async _handleGetStatistics(data) {
     console.log('📈 [ROMA ACTOR] Getting agent statistics');
     
-    const statistics = this.romaAgent.getStatistics();
+    const statistics = this.getStatistics();
     
     this.remoteActor.receive('statistics_response', {
       requestId: data.requestId,
@@ -272,7 +256,11 @@ export default class ROMAServerActor {
   async _handleGetExecutionHistory(data) {
     console.log('📚 [ROMA ACTOR] Getting execution history');
     
-    const history = this.romaAgent.getExecutionHistory();
+    // Convert active executions to history format
+    const history = Array.from(this.activeExecutions.entries()).map(([id, execution]) => ({
+      executionId: id,
+      ...execution
+    }));
     
     this.remoteActor.receive('history_response', {
       requestId: data.requestId,
@@ -305,15 +293,38 @@ export default class ROMAServerActor {
   }
 
   /**
+   * Get statistics about executions
+   * @returns {Object} Execution statistics
+   */
+  getStatistics() {
+    let successful = 0;
+    let failed = 0;
+    
+    for (const execution of this.activeExecutions.values()) {
+      if (execution.status === 'completed') successful++;
+      else if (execution.status === 'failed' || execution.status === 'error') failed++;
+    }
+    
+    const total = successful + failed;
+    return {
+      totalExecutions: total,
+      successful,
+      failed,
+      successRate: total > 0 ? successful / total : 0,
+      activeExecutions: this.activeExecutions.size
+    };
+  }
+
+  /**
    * Get actor status for debugging
    * @returns {Object} Actor status
    */
   getStatus() {
     return {
       isReady: this.isReady,
-      romaAgentReady: !!this.romaAgent && this.romaAgent.isInitialized,
-      activeExecutionsCount: this.romaAgent?.getActiveExecutions().length || 0,
-      agentStatistics: this.romaAgent?.getStatistics() || null
+      romaAgentReady: !!this.romaAgent,
+      activeExecutionsCount: this.activeExecutions.size,
+      agentStatistics: this.getStatistics()
     };
   }
 
@@ -322,10 +333,6 @@ export default class ROMAServerActor {
    */
   async shutdown() {
     console.log('🛑 [ROMA ACTOR] Shutting down...');
-    
-    if (this.romaAgent && this.romaAgent.isInitialized) {
-      await this.romaAgent.shutdown();
-    }
     
     this.activeExecutions.clear();
     this.isReady = false;

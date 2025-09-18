@@ -1,11 +1,7 @@
-const express = require('express');
-const app = express();
-const port = process.env.PORT || 3000;
+/**
+ * ROMA Agent - Simple Recursive Task Decomposition Agent
+ */
 
-app.get('/', (req, res) => {
-  res.send('Hello World!');
-});
-
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-});
+export { default as SimpleROMAAgent } from './SimpleROMAAgent.js';
+export { default as ROMAServerActor } from './actors/server/ROMAServerActor.js';
+export { default as ROMAClientActor } from './actors/client/ROMAClientActor.js';
