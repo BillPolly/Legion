@@ -201,3 +201,7 @@ ALWAYS do proper Object orientated programming. We do not just pass around anony
 NO CONCURRENT JEST TESTS EVER. 
 
 ALWAYS USE ES6 MODULES EVERYWHERE.
+
+
+NO mocks in integration tests!
+

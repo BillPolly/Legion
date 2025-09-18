@@ -238,26 +238,34 @@ export class ServiceOrchestrator {
   }
 
   /**
-   * Clear all data
-   * Orchestrates SystemService
+   * Clear all data - DISABLED for MVP to prevent accidental data loss
    */
   async clearAll() {
-    return await this.cacheService.clear();
+    console.warn('⚠️  WARNING: ServiceOrchestrator.clearAll() is DISABLED to prevent data loss!');
+    return { success: false, message: 'clearAll() is disabled' };
   }
 
   /**
-   * Clear all system data
-   * Orchestrates SystemService
+   * Clear all system data - DISABLED for MVP to prevent accidental data loss
    */
   async clearAllData(options = {}) {
-    // Clear database AND keep connections alive for continued operations
-    return await this.systemService.shutdown({ 
-      ...options, 
-      clearDataOnly: true,  // Keep database connections alive
-      clearDatabase: true,  // Actually clear the database collections
-      clearCache: true,     // Clear cache as well
-      clearVectors: options.clearVectors !== false,  // Clear vectors unless explicitly disabled
-      clearRegistry: options.includeRegistry === true  // Only clear registry if explicitly requested
+    console.warn('⚠️  WARNING: ServiceOrchestrator.clearAllData() is DISABLED to prevent data loss!');
+    return { success: false, message: 'clearAllData() is disabled' };
+  }
+
+  /**
+   * Reload all modules safely without clearing database
+   */
+  async reloadAllModules(options = {}) {
+    console.log('[ServiceOrchestrator] Reloading all modules safely...');
+    
+    // Clear only in-memory caches
+    await this.cacheService.clear();
+    
+    // Reload all modules from database and filesystem
+    return await this.moduleService.loadAllModules({ 
+      force: true,
+      ...options 
     });
   }
 

@@ -4,6 +4,7 @@
  * NO MOCKS - using real resources as per CLAUDE.md
  */
 
+import { jest } from '@jest/globals';
 import { ResourceManager } from '@legion/resource-manager';
 import { ToolRegistry } from '@legion/tools-registry';
 

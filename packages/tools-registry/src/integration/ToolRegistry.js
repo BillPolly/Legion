@@ -51,10 +51,13 @@ export class ToolRegistry {
    * Reset the singleton (mainly for testing)
    */
   static reset() {
-    if (ToolRegistry._instance) {
-      ToolRegistry._instance = null;
-      ToolRegistry._isInitialized = false;
-    }
+    console.warn('⚠️  WARNING: ToolRegistry.reset() called! This should NEVER happen in production!');
+    console.warn('⚠️  Stack trace:', new Error().stack);
+    // DISABLED: NEVER reset the ToolRegistry singleton!
+    // if (ToolRegistry._instance) {
+    //   ToolRegistry._instance = null;
+    //   ToolRegistry._isInitialized = false;
+    // }
   }
 
   constructor({ resourceManager, ...options }) {
@@ -194,19 +197,40 @@ export class ToolRegistry {
   }
 
   /**
-   * Clear all data
+   * Clear all data - DISABLED for MVP to prevent accidental data loss
    */
   async clearAll() {
-    await this._ensureInitialized();
-    return await this.serviceOrchestrator.clearAll();
+    console.warn('⚠️  WARNING: clearAll() is DISABLED to prevent data loss!');
+    console.warn('⚠️  Use reloadAll() instead to refresh data without clearing');
+    return { success: false, message: 'clearAll() is disabled - use reloadAll() instead' };
   }
 
   /**
-   * Clear all system data
+   * Clear all system data - DISABLED for MVP to prevent accidental data loss
    */
   async clearAllData(options = {}) {
+    console.warn('⚠️  WARNING: clearAllData() is DISABLED to prevent data loss!');
+    console.warn('⚠️  Use reloadAll() instead to refresh data without clearing');
+    return { success: false, message: 'clearAllData() is disabled - use reloadAll() instead' };
+  }
+
+  /**
+   * Reload all data without clearing - safe alternative to clearAll
+   */
+  async reloadAll(options = {}) {
     await this._ensureInitialized();
-    return await this.serviceOrchestrator.clearAllData(options);
+    console.log('🔄 Reloading all tools and modules without clearing database...');
+    
+    // Use the safe reload method
+    const moduleResult = await this.serviceOrchestrator.reloadAllModules(options);
+    
+    console.log(`✅ Reloaded ${moduleResult.successCount || 0} modules`);
+    return {
+      success: true,
+      message: 'All data reloaded successfully',
+      modules: moduleResult.successCount || 0,
+      tools: moduleResult.toolCount || 0
+    };
   }
 
   /**

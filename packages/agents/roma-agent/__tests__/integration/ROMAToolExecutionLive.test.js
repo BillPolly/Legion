@@ -14,6 +14,7 @@
 import { jest } from '@jest/globals';
 import { ROMAAgent } from '../../src/ROMAAgent.js';
 import { ResourceManager } from '@legion/resource-manager';
+import { ToolRegistry } from '@legion/tools-registry';
 import { SimplePromptClient } from '@legion/llm-client';
 import fs from 'fs/promises';
 import path from 'path';
@@ -22,15 +23,19 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Initialize singletons once at file level as global values
+const resourceManager = await ResourceManager.getInstance();
+const toolRegistry = await ToolRegistry.getInstance();
+
 describe('ROMA Agent Live Tool Execution', () => {
   let romaAgent;
-  let resourceManager;
   let simplePromptClient;
   let testTmpDir;
 
   beforeAll(async () => {
-    // Get real ResourceManager with .env
-    resourceManager = await ResourceManager.getInstance();
+    // Verify singletons are available
+    expect(resourceManager).toBeDefined();
+    expect(toolRegistry).toBeDefined();
     
     // Check for required API key
     const apiKey = resourceManager.get('env.ANTHROPIC_API_KEY');
@@ -75,9 +80,7 @@ describe('ROMA Agent Live Tool Execution', () => {
     it('should detect and return tool calls when tools are available', async () => {
       console.log('🔧 Testing SimplePromptClient tool call detection...');
       
-      // Get available tools from ToolRegistry singleton directly
-      const { ToolRegistry } = await import('@legion/tools-registry');
-      const toolRegistry = await ToolRegistry.getInstance();
+      // Use ToolRegistry singleton that was initialized at file level
       const tools = await toolRegistry.listTools();
       
       // Find file_write tool
