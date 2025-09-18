@@ -524,7 +524,7 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
     const prompt = task.prompt || task.description || task.operation;
     
     // Build request parameters for SimplePromptClient
-    const requestParams = this.buildSimplePromptRequest(task, context, prompt);
+    const requestParams = await this.buildSimplePromptRequest(task, context, prompt);
 
     // Emit LLM request event
     emitter.custom('llm_request', {
@@ -886,7 +886,7 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
   /**
    * Build SimplePromptClient request parameters with proper tool integration
    */
-  buildSimplePromptRequest(task, context, prompt) {
+  async buildSimplePromptRequest(task, context, prompt) {
     const params = {
       prompt: prompt || task.prompt || task.description || task.operation,
       maxTokens: task.maxTokens || 1000,
@@ -930,7 +930,7 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
       params.tools = task.tools;
     } else {
       // Get all available tools from registry (like Gemini agent does)
-      params.tools = this.getAvailableToolsForLLM();
+      params.tools = await this.getAvailableToolsForLLM();
     }
 
     // Add any additional LLM options
@@ -1085,19 +1085,41 @@ export class AtomicExecutionStrategy extends ExecutionStrategy {
   /**
    * Get available tools for LLM in SimplePromptClient format
    */
-  getAvailableToolsForLLM() {
+  async getAvailableToolsForLLM() {
     if (!this.toolRegistry) {
       return [];
     }
 
     try {
-      // Get tools from tool registry (synchronous method)
-      const tools = this.toolRegistry.getAllTools();
+      // Get tools from tool registry (check if method exists)
+      if (this.toolRegistry.getAllTools && typeof this.toolRegistry.getAllTools === 'function') {
+        const tools = this.toolRegistry.getAllTools();
+        
+        // Convert to SimplePromptClient format (same as Gemini agent)
+        return tools.map(tool => ({
+          name: tool.name || tool.toolName,
+          description: tool.description || `Execute ${tool.name}`,
+          parameters: tool.inputSchema || {
+            type: 'object',
+            properties: {},
+            additionalProperties: true
+          }
+        }));
+      }
+    } catch (error) {
+      if (this.logger) {
+        this.logger.warn('Failed to get tools via getAllTools, trying listTools', { error: error.message });
+      }
+    }
+
+    try {
+      // Fallback to async listTools method
+      const tools = await this.toolRegistry.listTools();
       
-      // Convert to SimplePromptClient format (same as Gemini agent)
+      // Convert to SimplePromptClient format
       return tools.map(tool => ({
-        name: tool.name || tool.toolName,
-        description: tool.description || `Execute ${tool.name}`,
+        name: tool.name,
+        description: tool.description || `Execute ${tool.name} tool`,
         parameters: tool.inputSchema || {
           type: 'object',
           properties: {},

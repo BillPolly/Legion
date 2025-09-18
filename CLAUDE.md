@@ -197,3 +197,7 @@ if tests are taking a long time, try to simplify them, but make sure they have e
 NO backwards compatability! we always have one way of doing things and move everything to that
 
 ALWAYS do proper Object orientated programming. We do not just pass around anonymous javascript objects with spreading. 
+
+NO CONCURRENT JEST TESTS EVER. 
+
+ALWAYS USE ES6 MODULES EVERYWHERE.

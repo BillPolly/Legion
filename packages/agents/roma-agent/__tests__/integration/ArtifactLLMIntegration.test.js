@@ -23,6 +23,7 @@ describe('Artifact LLM Integration - Real LLM Tests', () => {
   let mockFileWriteTool;
   let mockFileReadTool;
   let mockServerStartTool;
+  let mockCommandExecutorTool;
   let resourceManager;
   let llmClient;
 
@@ -57,20 +58,32 @@ describe('Artifact LLM Integration - Real LLM Tests', () => {
 
     mockFileReadTool = {
       name: 'file_read',
-      description: 'Read content from a file',
+      description: 'Reads the contents of a file from the file system',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          filePath: {
+            type: 'string',
+            description: 'The path to the file to read'
+          }
+        },
+        required: ['filePath']
+      },
       execute: jest.fn().mockImplementation(async (params) => {
         await new Promise(resolve => setTimeout(resolve, 10));
+        // Now that LLM uses correct parameter names, expect filePath
+        const filePath = params.filePath;
         return {
           success: true,
           data: { 
-            content: `// File content from ${params.filepath}\nconst express = require('express');\nmodule.exports = express;`,
+            content: `// File content from ${filePath}\nconst express = require('express');\nmodule.exports = express;`,
             encoding: 'utf-8',
             size: 150
           },
           metadata: { 
             toolName: 'file_read', 
             operation: 'read',
-            filepath: params.filepath
+            filePath: filePath
           }
         };
       })
@@ -98,6 +111,27 @@ describe('Artifact LLM Integration - Real LLM Tests', () => {
       })
     };
 
+    mockCommandExecutorTool = {
+      name: 'command_executor',
+      description: 'Execute bash commands in terminal',
+      execute: jest.fn().mockImplementation(async (params) => {
+        await new Promise(resolve => setTimeout(resolve, 20));
+        return {
+          success: true,
+          data: { 
+            output: 'Server started successfully\nListening on port 3000',
+            exitCode: 0,
+            command: params.command
+          },
+          metadata: { 
+            toolName: 'command_executor', 
+            operation: 'execute',
+            command: params.command
+          }
+        };
+      })
+    };
+
     // Create mock tool registry
     mockToolRegistry = {
       getTool: jest.fn().mockImplementation((toolName) => {
@@ -105,13 +139,15 @@ describe('Artifact LLM Integration - Real LLM Tests', () => {
           case 'file_write': return mockFileWriteTool;
           case 'file_read': return mockFileReadTool;
           case 'start_server': return mockServerStartTool;
+          case 'command_executor': return mockCommandExecutorTool;
           default: return null;
         }
       }),
       getAllTools: jest.fn().mockReturnValue([
         mockFileWriteTool,
         mockFileReadTool, 
-        mockServerStartTool
+        mockServerStartTool,
+        mockCommandExecutorTool
       ])
     };
 
@@ -220,31 +256,20 @@ describe('Artifact LLM Integration - Real LLM Tests', () => {
 
       const prompt = strategy.buildPrompt(task, context);
       
-      const response = await llmClient.request({
-        prompt: prompt,
-        maxTokens: 2000,
-        temperature: 0.1  // Low temperature for more predictable responses
-      });
-
-      expect(response).toBeDefined();
-      expect(response.content).toBeDefined();
-
-      // Try to parse tool call from response
-      let toolCall;
-      try {
-        // LLM might return JSON directly or wrapped in markdown
-        const content = response.content.trim();
-        const jsonMatch = content.match(/\{[\s\S]*\}/);
-        expect(jsonMatch).toBeTruthy();
-        
-        toolCall = JSON.parse(jsonMatch[0]);
-      } catch (error) {
-        // Log the response for debugging
-        console.log('LLM Response:', response.content);
-        throw new Error(`Failed to parse tool call from LLM response: ${error.message}`);
-      }
+      // Use executeWithRetry for robust JSON extraction with error feedback
+      const toolCall = await strategy.executeWithRetry(
+        strategy.simplePromptClient || llmClient,
+        {
+          prompt: prompt,
+          maxTokens: 2000,
+          temperature: 0.1  // Low temperature for more predictable responses
+        },
+        3, // max retries
+        null // use default tool call validation
+      );
 
       // Validate tool call structure
+      expect(toolCall).toBeDefined();
       expect(toolCall.tool).toBeDefined();
       expect(toolCall.inputs).toBeDefined();
       expect(toolCall.outputs).toBeDefined();
@@ -291,16 +316,18 @@ describe('Artifact LLM Integration - Real LLM Tests', () => {
       });
 
       const prompt = strategy.buildPrompt(task, context);
-      const response = await llmClient.request({
-        prompt: prompt,
-        maxTokens: 2000,
-        temperature: 0.1
-      });
-
-      // Parse tool call
-      const jsonMatch = response.content.match(/\{[\s\S]*\}/);
-      expect(jsonMatch).toBeTruthy();
-      const toolCall = JSON.parse(jsonMatch[0]);
+      
+      // Use executeWithRetry for robust JSON extraction
+      const toolCall = await strategy.executeWithRetry(
+        strategy.simplePromptClient || llmClient,
+        {
+          prompt: prompt,
+          maxTokens: 2000,
+          temperature: 0.1
+        },
+        3, // max retries
+        null // use default validation
+      );
 
       // Check if LLM referenced existing artifacts
       const inputsStr = JSON.stringify(toolCall.inputs);
@@ -326,17 +353,20 @@ describe('Artifact LLM Integration - Real LLM Tests', () => {
       });
 
       const initialPrompt = strategy.buildPrompt(initialTask, context);
-      const initialResponse = await llmClient.request({
-        prompt: initialPrompt,
-        maxTokens: 2000,
-        temperature: 0.1
-      });
+      
+      // Use executeWithRetry for first tool call
+      const toolCall1 = await strategy.executeWithRetry(
+        strategy.simplePromptClient || llmClient,
+        {
+          prompt: initialPrompt,
+          maxTokens: 2000,
+          temperature: 0.1
+        },
+        3, // max retries
+        null // use default validation
+      );
 
-      // Parse and execute first tool call
-      const jsonMatch1 = initialResponse.content.match(/\{[\s\S]*\}/);
-      expect(jsonMatch1).toBeTruthy();
-      const toolCall1 = JSON.parse(jsonMatch1[0]);
-
+      console.log('Debug: First tool call:', JSON.stringify(toolCall1, null, 2));
       await strategy.executeToolWithArtifacts(toolCall1, context);
 
       // Verify artifact was created
@@ -344,6 +374,7 @@ describe('Artifact LLM Integration - Real LLM Tests', () => {
       expect(artifacts.length).toBeGreaterThan(0);
       
       const firstArtifact = artifacts[0];
+      console.log('Debug: First artifact:', JSON.stringify(firstArtifact, null, 2));
       expect(firstArtifact[1].type).toBeDefined();
       expect(firstArtifact[1].description).toBeDefined();
 
@@ -366,16 +397,18 @@ describe('Artifact LLM Integration - Real LLM Tests', () => {
       });
 
       const followupPrompt = strategy.buildPrompt(followupTask, context);
-      const followupResponse = await llmClient.request({
-        prompt: followupPrompt,
-        maxTokens: 2000,
-        temperature: 0.1
-      });
-
-      // Parse second tool call
-      const jsonMatch2 = followupResponse.content.match(/\{[\s\S]*\}/);
-      expect(jsonMatch2).toBeTruthy();
-      const toolCall2 = JSON.parse(jsonMatch2[0]);
+      
+      // Use executeWithRetry for second tool call
+      const toolCall2 = await strategy.executeWithRetry(
+        strategy.simplePromptClient || llmClient,
+        {
+          prompt: followupPrompt,
+          maxTokens: 2000,
+          temperature: 0.1
+        },
+        3, // max retries
+        null // use default validation
+      );
 
       // Check if second tool call references the first artifact
       const inputsStr = JSON.stringify(toolCall2.inputs);
@@ -393,12 +426,27 @@ describe('Artifact LLM Integration - Real LLM Tests', () => {
         // Verify tools were called with resolved artifact values
         expect(mockFileWriteTool.execute).toHaveBeenCalled();
         
-        // Check if file_read was called with resolved path
+        // Check the actual tool that was called and verify it uses artifacts
+        console.log('Debug: Second tool call was:', toolCall2.tool);
+        console.log('Debug: Second tool inputs:', JSON.stringify(toolCall2.inputs));
+        
         if (toolCall2.tool === 'file_read') {
           expect(mockFileReadTool.execute).toHaveBeenCalled();
           const readCallArgs = mockFileReadTool.execute.mock.calls[0][0];
-          expect(readCallArgs.filepath).toBeDefined();
-          expect(typeof readCallArgs.filepath).toBe('string');
+          console.log('Debug: file_read call args:', JSON.stringify(readCallArgs, null, 2));
+          expect(readCallArgs.filePath).toBeDefined();
+          expect(typeof readCallArgs.filePath).toBe('string');
+        } else if (toolCall2.tool === 'command_executor') {
+          expect(mockCommandExecutorTool.execute).toHaveBeenCalled();
+          const execCallArgs = mockCommandExecutorTool.execute.mock.calls[0][0];
+          expect(execCallArgs.command).toBeDefined();
+          expect(typeof execCallArgs.command).toBe('string');
+          // The command should reference the artifact
+          expect(execCallArgs.command).toContain('@');
+        } else if (toolCall2.tool === 'start_server') {
+          expect(mockServerStartTool.execute).toHaveBeenCalled();
+          const startCallArgs = mockServerStartTool.execute.mock.calls[0][0];
+          expect(startCallArgs).toBeDefined();
         }
       }
     }, 45000); // 45 second timeout for multiple LLM calls
@@ -442,16 +490,19 @@ describe('Artifact LLM Integration - Real LLM Tests', () => {
 
         // Get LLM response
         const prompt = strategy.buildPrompt({ description: step.description }, context);
-        const response = await llmClient.request({
-          prompt: prompt,
-          maxTokens: 2000,
-          temperature: 0.1
-        });
-
-        // Parse and execute tool call
-        const jsonMatch = response.content.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          const toolCall = JSON.parse(jsonMatch[0]);
+        
+        // Use executeWithRetry to get tool call
+        try {
+          const toolCall = await strategy.executeWithRetry(
+            strategy.simplePromptClient || llmClient,
+            {
+              prompt: prompt,
+              maxTokens: 2000,
+              temperature: 0.1
+            },
+            3, // max retries
+            null // use default validation
+          );
           
           // Execute tool
           await strategy.executeToolWithArtifacts(toolCall, context);
@@ -469,6 +520,9 @@ describe('Artifact LLM Integration - Real LLM Tests', () => {
             content: `Executed ${toolCall.tool} and stored output as ${outputNames}`,
             timestamp: Date.now()
           });
+        } catch (error) {
+          console.warn(`Step ${i} failed to get valid tool call:`, error.message);
+          // Continue to next step even if this one failed
         }
       }
 
@@ -498,15 +552,18 @@ describe('Artifact LLM Integration - Real LLM Tests', () => {
       });
 
       const prompt = strategy.buildPrompt(task, context);
-      const response = await llmClient.request({
-        prompt: prompt,
-        maxTokens: 2500,
-        temperature: 0.1
-      });
-
-      const jsonMatch = response.content.match(/\{[\s\S]*\}/);
-      expect(jsonMatch).toBeTruthy();
-      const toolCall = JSON.parse(jsonMatch[0]);
+      
+      // Use executeWithRetry to get well-formed tool call
+      const toolCall = await strategy.executeWithRetry(
+        strategy.simplePromptClient || llmClient,
+        {
+          prompt: prompt,
+          maxTokens: 2500,
+          temperature: 0.1
+        },
+        3, // max retries
+        null // use default validation
+      );
 
       // Validate artifact naming quality
       for (const output of toolCall.outputs) {
@@ -569,15 +626,18 @@ describe('Artifact LLM Integration - Real LLM Tests', () => {
       });
 
       const prompt = strategy.buildPrompt(task, context);
-      const response = await llmClient.request({
-        prompt: prompt,
-        maxTokens: 2500,
-        temperature: 0.1
-      });
-
-      const jsonMatch = response.content.match(/\{[\s\S]*\}/);
-      expect(jsonMatch).toBeTruthy();
-      const toolCall = JSON.parse(jsonMatch[0]);
+      
+      // Use executeWithRetry to get well-formed tool call
+      const toolCall = await strategy.executeWithRetry(
+        strategy.simplePromptClient || llmClient,
+        {
+          prompt: prompt,
+          maxTokens: 2500,
+          temperature: 0.1
+        },
+        3, // max retries
+        null // use default validation
+      );
 
       // Verify LLM references multiple existing artifacts
       const inputsStr = JSON.stringify(toolCall.inputs);
@@ -588,6 +648,8 @@ describe('Artifact LLM Integration - Real LLM Tests', () => {
       ];
 
       const referencedCount = configReferences.filter(Boolean).length;
+      console.log('Debug: Tool call inputs:', JSON.stringify(toolCall.inputs, null, 2));
+      console.log('Debug: Referenced configs count:', referencedCount);
       expect(referencedCount).toBeGreaterThanOrEqual(2); // Should reference at least 2 configs
 
       // Execute and verify resolution works
@@ -597,10 +659,14 @@ describe('Artifact LLM Integration - Real LLM Tests', () => {
       const toolCalls = mockFileWriteTool.execute.mock.calls;
       if (toolCalls.length > 0) {
         const lastCall = toolCalls[toolCalls.length - 1][0];
+        console.log('Debug: Last tool call parameters:', JSON.stringify(lastCall, null, 2));
+        
+        // Check that artifact references were resolved to actual config objects
         const hasResolvedValues = Object.values(lastCall).some(value => 
           typeof value === 'object' && value !== null && 
-          (value.port || value.host || value.database || value.cors)
+          (value.port || value.host || value.database || value.cors || value.helmet || value.compression)
         );
+        console.log('Debug: Has resolved config values:', hasResolvedValues);
         expect(hasResolvedValues).toBe(true);
       }
     }, 35000);

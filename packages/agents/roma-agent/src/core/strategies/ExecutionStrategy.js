@@ -329,7 +329,7 @@ export class ExecutionStrategy {
 
     for (const [key, value] of Object.entries(inputs)) {
       if (typeof value === 'string' && value.startsWith('@')) {
-        // Artifact reference - get the artifact record
+        // Entire value is an artifact reference - get the artifact record
         const artifactName = value.substring(1);
         const artifactRecord = context.getArtifact(artifactName);
         
@@ -340,6 +340,9 @@ export class ExecutionStrategy {
         // Extract ONLY the value field (the actual data) from the record
         // Defensive clone prevents callers from mutating stored artifacts
         resolved[key] = this.cloneArtifactValue(artifactRecord.value);
+      } else if (typeof value === 'string' && value.includes('@')) {
+        // String contains artifact references embedded within - resolve them
+        resolved[key] = this.resolveArtifactReferencesInString(value, context);
       } else if (Array.isArray(value)) {
         // Recursively resolve arrays
         resolved[key] = value.map(item => 
@@ -357,6 +360,32 @@ export class ExecutionStrategy {
     }
 
     return resolved;
+  }
+
+  /**
+   * Resolve artifact references that appear within string content
+   * Replaces @artifact_name with JSON representation of artifact values
+   * 
+   * @param {string} text - String that may contain @artifact_name references
+   * @param {ExecutionContext} context - Execution context with artifact registry
+   * @returns {string} - String with artifact references resolved
+   */
+  resolveArtifactReferencesInString(text, context) {
+    if (!text || typeof text !== 'string') {
+      return text;
+    }
+
+    // Find all @artifact_name patterns
+    return text.replace(/@([a-zA-Z_][a-zA-Z0-9_]*)/g, (_, artifactName) => {
+      const artifactRecord = context.getArtifact(artifactName);
+      
+      if (!artifactRecord) {
+        throw new Error(`Artifact not found: @${artifactName}`);
+      }
+      
+      // Convert the artifact value to JSON string for embedding in code
+      return JSON.stringify(artifactRecord.value);
+    });
   }
 
   /**
@@ -539,12 +568,17 @@ ${this.formatConversationHistory(context)}
 ## Available Artifacts
 ${this.formatArtifactsCatalog(context)}
 
+## Available Tools
+${this.formatAvailableTools()}
+
 ## Current Task
 ${task.description}
 
 ## Instructions
 
-When you need to use a tool, specify it in this format:
+**CRITICAL: You MUST respond with ONLY a single valid JSON object. Do not include any explanatory text, markdown, or commentary.**
+
+When you need to use a tool, respond with EXACTLY this format (JSON only):
 {
   "tool": "tool_name",
   "inputs": {
@@ -561,14 +595,105 @@ When you need to use a tool, specify it in this format:
   ]
 }
 
-Important:
+Rules:
+- Your response MUST start with { and end with }
+- Return ONLY the JSON object, no other text before or after
 - Reference existing artifacts using @artifact_name in tool inputs
+- **CRITICAL: Use ONLY exact parameter names from the tool specifications above**
+- **CRITICAL: Use ONLY tools listed in the Available Tools section**
 - Always specify meaningful names for outputs
 - Each output MUST have a specific type (file, data, process, config, etc.)
 - Include clear descriptions and purposes for outputs
 - Artifact names should be descriptive (e.g., "server_config", "user_data", "api_response")
 
-Your response:`;
+**REMEMBER: Return ONLY JSON. No explanations. Start with { and end with }**`;
+  }
+
+  /**
+   * Extract the first valid JSON object from a string
+   * Handles cases where LLM returns JSON mixed with text or wrapped in markdown
+   * 
+   * @param {string} text - Text potentially containing JSON
+   * @returns {Object|null} - Parsed JSON object or null if not found
+   */
+  extractFirstJsonObject(text) {
+    if (!text || typeof text !== 'string') {
+      return null;
+    }
+
+    // First try: if the entire string is valid JSON
+    try {
+      const trimmed = text.trim();
+      if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+        return JSON.parse(trimmed);
+      }
+    } catch (e) {
+      // Not pure JSON, continue with extraction
+    }
+
+    // Second try: extract from markdown code block
+    const codeBlockMatch = text.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+    if (codeBlockMatch) {
+      try {
+        return JSON.parse(codeBlockMatch[1]);
+      } catch (e) {
+        // Invalid JSON in code block, continue
+      }
+    }
+
+    // Third try: find first { and match balanced braces
+    const startIndex = text.indexOf('{');
+    if (startIndex === -1) {
+      return null;
+    }
+
+    let braceCount = 0;
+    let inString = false;
+    let escapeNext = false;
+    let endIndex = -1;
+
+    for (let i = startIndex; i < text.length; i++) {
+      const char = text[i];
+
+      if (escapeNext) {
+        escapeNext = false;
+        continue;
+      }
+
+      if (char === '\\') {
+        escapeNext = true;
+        continue;
+      }
+
+      if (char === '"' && !escapeNext) {
+        inString = !inString;
+        continue;
+      }
+
+      if (!inString) {
+        if (char === '{') {
+          braceCount++;
+        } else if (char === '}') {
+          braceCount--;
+          if (braceCount === 0) {
+            endIndex = i;
+            break;
+          }
+        }
+      }
+    }
+
+    if (endIndex !== -1) {
+      try {
+        const jsonStr = text.substring(startIndex, endIndex + 1);
+        return JSON.parse(jsonStr);
+      } catch (e) {
+        // Invalid JSON even with balanced braces
+        return null;
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -609,5 +734,276 @@ Your response:`;
       return `object{${keys.length} keys}`;
     }
     return typeof value;
+  }
+
+  /**
+   * Execute LLM request with retry and error feedback
+   * Provides parsing errors back to LLM for correction
+   * 
+   * @param {Object} llmClient - LLM client to use
+   * @param {Object} requestParams - Request parameters for LLM
+   * @param {number} maxRetries - Maximum retry attempts (default 3)
+   * @param {Function} validator - Optional validator function for the parsed JSON
+   * @returns {Promise<Object>} - Parsed JSON response from LLM
+   */
+  async executeWithRetry(llmClient, requestParams, maxRetries = 3, validator = null) {
+    let lastError = null;
+    let lastResponse = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        // Add error feedback to prompt if this is a retry
+        if (attempt > 1 && lastError && lastResponse) {
+          const errorFeedback = `
+**ERROR: Your previous response was invalid.**
+Error: ${lastError}
+Your previous response: ${lastResponse.substring(0, 500)}${lastResponse.length > 500 ? '...' : ''}
+
+**IMPORTANT: You MUST respond with ONLY a valid JSON object. No explanatory text.**
+Start your response with { and end with }
+
+Original request:
+${requestParams.prompt}`;
+          
+          requestParams = {
+            ...requestParams,
+            prompt: errorFeedback
+          };
+        }
+
+        // Make LLM request
+        const response = await llmClient.request(requestParams);
+        
+        if (!response || !response.content) {
+          throw new Error('LLM returned empty response');
+        }
+
+        lastResponse = response.content;
+
+        // Try to extract JSON from response
+        const jsonObject = this.extractFirstJsonObject(response.content);
+        
+        if (!jsonObject) {
+          throw new Error('No valid JSON object found in response');
+        }
+
+        // Use custom validator if provided, otherwise validate as tool call
+        if (validator) {
+          const validationError = validator(jsonObject);
+          if (validationError) {
+            throw new Error(validationError);
+          }
+        } else {
+          // Default validation for tool calls
+          if (!jsonObject.tool || !jsonObject.inputs || !jsonObject.outputs) {
+            throw new Error('JSON missing required fields: tool, inputs, outputs');
+          }
+        }
+
+        return jsonObject;
+
+      } catch (error) {
+        lastError = error.message;
+        
+        if (attempt === maxRetries) {
+          // Log final failure
+          console.error(`Failed to get valid JSON from LLM after ${maxRetries} attempts:`, lastError);
+          console.error('Last response:', lastResponse ? lastResponse.substring(0, 1000) : 'none');
+          throw new Error(`Failed to get valid JSON response after ${maxRetries} attempts: ${lastError}`);
+        }
+
+        // Log retry attempt
+        console.warn(`Attempt ${attempt} failed: ${lastError}. Retrying with error feedback...`);
+      }
+    }
+  }
+
+  /**
+   * Format available tools for LLM prompts with detailed schemas
+   * Provides tool names, descriptions, and parameter specifications
+   * @returns {string} - Formatted tool list with schemas
+   */
+  formatAvailableTools() {
+    if (!this.toolRegistry) {
+      return 'No tool registry available';
+    }
+    
+    try {
+      // Try to get actual tools from registry
+      const tools = this.toolRegistry.getAllTools ? this.toolRegistry.getAllTools() : [];
+      
+      if (tools && tools.length > 0) {
+        return this._formatToolsWithSchemas(tools);
+      }
+      
+      // Fallback to common tools with known schemas
+      return this._formatCommonToolsWithSchemas();
+      
+    } catch (error) {
+      // Final fallback to basic tool descriptions
+      return this._formatCommonToolsWithSchemas();
+    }
+  }
+
+  /**
+   * Format tools array with detailed schemas (similar to decent-planner approach)
+   * @private
+   */
+  _formatToolsWithSchemas(tools) {
+    return tools.map(tool => {
+      const name = tool.name || tool.type;
+      const description = tool.description || '';
+      
+      // Extract inputs from tool schema
+      const inputs = this._extractToolInputs(tool);
+      const outputs = this._extractToolOutputs(tool);
+      
+      // Build formatted text
+      let text = `### ${name}\n`;
+      text += `Description: ${description}\n`;
+      
+      if (inputs.length > 0) {
+        text += `Inputs:\n`;
+        inputs.forEach(input => {
+          const required = input.required ? ' (required)' : ' (optional)';
+          text += `  - ${input.name} (${input.type || 'any'})${required}: ${input.description || ''}\n`;
+        });
+      } else {
+        text += `Inputs: None\n`;
+      }
+      
+      if (outputs.length > 0) {
+        text += `Outputs: ${outputs.map(o => o.name).join(', ')}\n`;
+      }
+      
+      return text;
+    }).join('\n');
+  }
+
+  /**
+   * Extract inputs from tool definition
+   * @private
+   */
+  _extractToolInputs(tool) {
+    // Direct inputs array
+    if (tool.inputs) {
+      return tool.inputs;
+    }
+    
+    // From inputSchema
+    if (tool.inputSchema?.properties) {
+      return Object.entries(tool.inputSchema.properties).map(([name, spec]) => ({
+        name,
+        type: spec.type || 'any',
+        description: spec.description || '',
+        required: tool.inputSchema.required?.includes(name) || false
+      }));
+    }
+    
+    // From schema (legacy)
+    if (tool.schema?.properties) {
+      return Object.entries(tool.schema.properties).map(([name, spec]) => ({
+        name,
+        type: spec.type || 'any',
+        description: spec.description || '',
+        required: tool.schema.required?.includes(name) || false
+      }));
+    }
+    
+    return [];
+  }
+
+  /**
+   * Extract outputs from tool definition
+   * @private
+   */
+  _extractToolOutputs(tool) {
+    // For specific tools, define their actual data output field names
+    const toolOutputMappings = {
+      'directory_create': ['dirpath', 'created'],
+      'file_write': ['filepath', 'bytesWritten', 'created'],
+      'file_read': ['content', 'filepath', 'size'],
+      'command_executor': ['output', 'exitCode', 'error'],
+      'calculator': ['result'],
+      'json_parse': ['result'],
+      'json_stringify': ['result']
+    };
+
+    // Use specific mappings if available
+    if (toolOutputMappings[tool.name]) {
+      return toolOutputMappings[tool.name].map(name => ({ name }));
+    }
+    
+    // Direct outputs array
+    if (tool.outputs) {
+      return tool.outputs;
+    }
+    
+    // From outputSchema
+    if (tool.outputSchema?.properties) {
+      return Object.keys(tool.outputSchema.properties).map(name => ({ name }));
+    }
+    
+    return [];
+  }
+
+  /**
+   * Fallback formatting with common tools and known schemas
+   * @private
+   */
+  _formatCommonToolsWithSchemas() {
+    const commonTools = [
+      {
+        name: 'file_write',
+        description: 'Write content to a file in the file system',
+        inputs: [
+          { name: 'filepath', type: 'string', required: true, description: 'Path to the file to write' },
+          { name: 'content', type: 'string', required: true, description: 'Content to write to the file' }
+        ],
+        outputs: ['filepath', 'bytesWritten']
+      },
+      {
+        name: 'file_read',
+        description: 'Read content from a file in the file system',
+        inputs: [
+          { name: 'filePath', type: 'string', required: true, description: 'Path to the file to read' }
+        ],
+        outputs: ['content', 'filepath', 'size']
+      },
+      {
+        name: 'directory_create',
+        description: 'Create directories in the file system',
+        inputs: [
+          { name: 'dirpath', type: 'string', required: true, description: 'Path of the directory to create' }
+        ],
+        outputs: ['dirpath', 'created']
+      },
+      {
+        name: 'command_executor',
+        description: 'Execute bash commands in terminal',
+        inputs: [
+          { name: 'command', type: 'string', required: true, description: 'Bash command to execute' }
+        ],
+        outputs: ['output', 'exitCode', 'error']
+      },
+      {
+        name: 'calculator',
+        description: 'Evaluate mathematical expressions',
+        inputs: [
+          { name: 'expression', type: 'string', required: true, description: 'Mathematical expression to evaluate' }
+        ],
+        outputs: ['result']
+      },
+      {
+        name: 'json_parse',
+        description: 'Parse JSON string into JavaScript object',
+        inputs: [
+          { name: 'json_string', type: 'string', required: true, description: 'JSON string to parse' }
+        ],
+        outputs: ['result']
+      }
+    ];
+    
+    return this._formatToolsWithSchemas(commonTools);
   }
 }

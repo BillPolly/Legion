@@ -196,6 +196,9 @@ export class ROMAAgent extends EventEmitter {
     // Get LLM client from ResourceManager
     const llmClient = await resourceManager.get('llmClient');
     
+    // Assign toolRegistry to this instance for test access
+    this.toolRegistry = toolRegistry;
+    
     // Create dependencies with real Legion components
     const dependencies = {
       toolRegistry,

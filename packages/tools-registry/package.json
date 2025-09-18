@@ -41,7 +41,11 @@
     "report:all": "NODE_OPTIONS=--experimental-vm-modules node scripts/generate-report.js --format all",
     "report:history": "NODE_OPTIONS=--experimental-vm-modules node scripts/generate-report.js --history",
     "verify:complete": "NODE_OPTIONS=--experimental-vm-modules node scripts/generate-report.js --integration",
-    "verify:fix": "NODE_OPTIONS=--experimental-vm-modules node scripts/verify-modules.js --fix && npm run verify:complete"
+    "verify:fix": "NODE_OPTIONS=--experimental-vm-modules node scripts/verify-modules.js --fix && npm run verify:complete",
+    "_comment_tool_listing": "Tool Discovery Scripts - Standard way for anyone to see what tools are available",
+    "list": "NODE_OPTIONS=--experimental-vm-modules node scripts/list-tools.js",
+    "list:verbose": "NODE_OPTIONS=--experimental-vm-modules node scripts/list-tools.js --verbose",
+    "list:json": "NODE_OPTIONS=--experimental-vm-modules node scripts/list-tools.js --json"
   },
   "keywords": [
     "legion",

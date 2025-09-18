@@ -18,7 +18,7 @@ import { SequentialExecutionStrategy } from '../../src/core/strategies/Sequentia
 import { AtomicExecutionStrategy } from '../../src/core/strategies/AtomicExecutionStrategy.js';
 import { ExecutionContext } from '../../src/core/ExecutionContext.js';
 import { ResourceManager } from '@legion/resource-manager';
-import { ToolRegistry } from '@legion/tools';
+import { ToolRegistry } from '@legion/tools-registry';
 import fs from 'fs/promises';
 import path from 'path';
 

@@ -336,7 +336,7 @@ export class RecursiveExecutionStrategy extends ExecutionStrategy {
   /**
    * Build comprehensive prompt for LLM decomposition decision
    */
-  buildDecompositionDecisionPrompt(task, context) {
+  buildDecompositionDecisionPrompt(task, context, discoveredTools = []) {
     const taskDescription = task.description || task.prompt || task.operation || 'Task with no description';
     const taskId = this.getTaskId(task);
     
@@ -348,10 +348,16 @@ export class RecursiveExecutionStrategy extends ExecutionStrategy {
       'conditional (branch based on conditions)'
     ];
     
-    // Gather available tools if tool registry is available
+    // Gather tool context - prioritize discovered tools, fallback to all tools
     let toolContext = '';
-    if (this.toolRegistry) {
-      toolContext = '\nAvailable tools that might be relevant: calculator, file operations, data processing, etc.';
+    if (discoveredTools.length > 0) {
+      toolContext = '\nTools discovered for this specific task:\n' + 
+        discoveredTools.map(tool => 
+          `- ${tool.name}: ${tool.description || 'No description'} (confidence: ${(tool.confidence || tool.score || 0).toFixed(2)})`
+        ).join('\n');
+      toolContext += '\n\nIMPORTANT: These tools were specifically found for this task. If any of these tools can complete the task directly, consider NOT decomposing.';
+    } else if (this.toolRegistry) {
+      toolContext = '\nAvailable tools that might be relevant:\n' + this.formatAvailableTools();
     }
     
     // Build context about current execution state
@@ -381,11 +387,13 @@ Available execution strategies: ${availableStrategies.join(', ')}
 
 DECOMPOSITION RULES:
 1. Simple atomic tasks (single tool call, direct calculation) should NOT be decomposed
-2. Complex multi-step tasks SHOULD be decomposed if depth allows
-3. Tasks with clear sequential steps benefit from decomposition
-4. Tasks requiring different tools/capabilities should be decomposed
-5. If remaining depth is 0, MUST NOT decompose
-6. If task has predefined subtasks, prefer using them
+2. If specific tools were discovered for this task, strongly consider NOT decomposing (use atomic execution)
+3. Complex multi-step tasks SHOULD be decomposed if depth allows
+4. Tasks with clear sequential steps benefit from decomposition
+5. Tasks requiring different tools/capabilities should be decomposed
+6. If remaining depth is 0, MUST NOT decompose
+7. If task has predefined subtasks, prefer using them
+8. Tool availability is a strong signal: available tools = don't decompose, no tools = consider decomposing
 
 Analyze the task and respond with a JSON object:
 {
@@ -399,6 +407,56 @@ Analyze the task and respond with a JSON object:
 Respond ONLY with valid JSON, no additional text.`;
 
     return prompt;
+  }
+
+  /**
+   * Discover relevant tools for a task using semantic search
+   * Based on decent-planner's tool discovery pattern
+   */
+  async discoverRelevantTools(task, options = {}) {
+    if (!this.toolRegistry || !this.toolRegistry.searchTools) {
+      return [];
+    }
+
+    try {
+      const taskDescription = task.description || task.prompt || task.operation || '';
+      if (!taskDescription.trim()) {
+        return [];
+      }
+
+      const limit = options.limit || 10;
+      const threshold = options.threshold || 0.3;
+
+      // Use semantic search to find relevant tools
+      const searchResults = await this.toolRegistry.searchTools(taskDescription, {
+        limit: limit
+      });
+
+      // Filter by confidence threshold and ensure tools have execute methods
+      const relevantTools = searchResults.filter(tool => {
+        const confidence = tool.confidence || tool.score || 0;
+        return confidence >= threshold && typeof tool.execute === 'function';
+      });
+
+      if (this.logger && relevantTools.length > 0) {
+        this.logger.debug('Discovered relevant tools', {
+          taskId: this.getTaskId(task),
+          taskDescription: taskDescription.substring(0, 100),
+          toolCount: relevantTools.length,
+          tools: relevantTools.map(t => ({ name: t.name, confidence: t.confidence || t.score || 0 }))
+        });
+      }
+
+      return relevantTools;
+    } catch (error) {
+      if (this.logger) {
+        this.logger.warn('Tool discovery failed', {
+          taskId: this.getTaskId(task),
+          error: error.message
+        });
+      }
+      return [];
+    }
   }
 
   /**
@@ -422,8 +480,14 @@ Respond ONLY with valid JSON, no additional text.`;
     }
 
     try {
-      // Build comprehensive context for LLM decision
-      const prompt = this.buildDecompositionDecisionPrompt(task, context);
+      // Discover relevant tools to inform decomposition decision
+      const relevantTools = await this.discoverRelevantTools(task, {
+        limit: 5,
+        threshold: 0.3
+      });
+
+      // Build comprehensive context for LLM decision (including discovered tools)
+      const prompt = this.buildDecompositionDecisionPrompt(task, context, relevantTools);
       
       // Ensure we have SimplePromptClient
       if (!this.simplePromptClient) {
@@ -438,6 +502,11 @@ Respond ONLY with valid JSON, no additional text.`;
       });
 
       const decision = JSON.parse(response.content || response);
+      
+      // Store discovered tools for later use
+      if (relevantTools.length > 0) {
+        task._relevantTools = relevantTools;
+      }
       
       // Store the reasoning and suggested decomposition
       if (decision.decompose) {
@@ -528,7 +597,7 @@ Respond ONLY with valid JSON, no additional text.`;
       }
       
       // Build proper request parameters with tools (same pattern as AtomicExecutionStrategy)
-      const requestParams = this.buildSimplePromptRequest(
+      const requestParams = await this.buildSimplePromptRequest(
         {
           ...task,
           prompt: decompositionPrompt,
@@ -552,9 +621,34 @@ Respond ONLY with valid JSON, no additional text.`;
         timestamp: new Date().toISOString()
       });
       
-      const response = await this.simplePromptClient.request(requestParams);
+      // Use retry mechanism with error feedback and custom validator for decomposition
+      const decompositionValidator = (json) => {
+        if (!json.subtasks || !Array.isArray(json.subtasks)) {
+          return 'JSON must contain a "subtasks" array';
+        }
+        if (json.subtasks.length === 0) {
+          return 'The "subtasks" array cannot be empty';
+        }
+        // Validate each subtask has basic required fields
+        for (let i = 0; i < json.subtasks.length; i++) {
+          const subtask = json.subtasks[i];
+          if (!subtask.description && !subtask.tool) {
+            return `Subtask ${i} must have either a "description" or "tool" field`;
+          }
+        }
+        return null; // No validation errors
+      };
 
-      const decomposition = this.parseDecompositionResponse(response.content || response, task);
+      const jsonResponse = await this.executeWithRetry(
+        this.simplePromptClient,
+        requestParams,
+        3, // max retries
+        decompositionValidator
+      );
+
+      // Now process the validated JSON through parseDecompositionResponse
+      // which enriches it with defaults and metadata
+      const decomposition = this.parseDecompositionResponse(JSON.stringify(jsonResponse), task);
       
       // Emit LLM response event for observability
       emitter.custom('llm_response', {
@@ -575,7 +669,13 @@ Respond ONLY with valid JSON, no additional text.`;
     } catch (error) {
       const message = error.message || String(error);
 
-      if (message.startsWith('Failed to parse decomposition response')) {
+      // Check for JSON parsing/validation failures (not LLM failures)
+      // Only use fallback if the LLM responded but gave invalid JSON
+      if ((message.includes('No valid JSON object found') ||
+          message.includes('JSON missing required fields') ||
+          message.includes('JSON must contain')) && 
+          !message.includes('LLM error') && 
+          !message.includes('LLM returned empty response')) {
         this.logger.warn('LLM decomposition response parsing failed, using fallback', { taskId, error: message });
         emitter.custom('llm_decomposition_failed', { taskId, error: message, fallback: true });
         return this.createFallbackDecomposition(task);
@@ -600,13 +700,19 @@ Respond ONLY with valid JSON, no additional text.`;
     // Add decomposition-specific instructions
     const decompositionInstructions = `
 
-Your task is to decompose the above task into smaller, manageable subtasks.
+## Task Decomposition
+
+Decompose the above task into smaller, manageable subtasks.
 
 Context: Depth ${context.depth}/${this.maxDepth}
 ${task.constraints ? `Constraints: ${JSON.stringify(task.constraints)}` : ''}
 ${task.resources ? `Available Resources: ${JSON.stringify(task.resources)}` : ''}
 
-Please respond with a JSON object containing:
+## Instructions
+
+**CRITICAL: You MUST respond with ONLY a single valid JSON object. Do not include any explanatory text, markdown, or commentary.**
+
+Respond with EXACTLY this format (JSON only):
 {
   "subtasks": [
     {
@@ -634,14 +740,20 @@ Please respond with a JSON object containing:
   "reasoning": "Why this decomposition approach"
 }
 
-Make sure subtasks:
+Rules:
+- Your response MUST start with { and end with }
+- Return ONLY the JSON object, no other text before or after
+- **USE ONLY THE TOOL NAMES PROVIDED ABOVE** - Do not invent tool names like "npm" or "npm_init"
+- For npm/package management, use "command_executor" with commands like "npm init", "npm install"
 - Reference existing artifacts using @artifact_name in inputs
 - Specify meaningful names for outputs
-- Are atomic and executable
-- Are properly ordered if sequential
-- Are independent if parallel
-- Have clear success criteria
-- Include artifact flow between subtasks`;
+- Make subtasks atomic and executable
+- Properly order if sequential
+- Make independent if parallel
+- Include clear success criteria
+- Include artifact flow between subtasks
+
+**REMEMBER: Return ONLY JSON. No explanations. Start with { and end with }**`;
 
     return basePrompt + decompositionInstructions;
   }
@@ -651,14 +763,12 @@ Make sure subtasks:
    */
   parseDecompositionResponse(response, originalTask) {
     try {
-      // Extract JSON from response if it contains other text
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      let jsonStr = jsonMatch ? jsonMatch[0] : response;
+      // Use base class method for robust JSON extraction
+      const parsed = this.extractFirstJsonObject(response);
       
-      // Sanitize JSON string to handle control characters
-      jsonStr = this.sanitizeJsonString(jsonStr);
-      
-      const parsed = JSON.parse(jsonStr);
+      if (!parsed) {
+        throw new Error('No valid JSON object found in LLM response');
+      }
       
       // Validate and enrich subtasks
       if (parsed.subtasks && Array.isArray(parsed.subtasks)) {
@@ -1424,7 +1534,7 @@ Make sure subtasks:
       }
 
       // Build request parameters with proper tool integration
-      const requestParams = this.buildSimplePromptRequest(task, context, 
+      const requestParams = await this.buildSimplePromptRequest(task, context, 
         task.prompt || task.description || task.operation);
       
       // Emit LLM request event for observability
@@ -1592,7 +1702,7 @@ Make sure subtasks:
   /**
    * Build SimplePromptClient request parameters with proper tool integration (same as AtomicExecutionStrategy)
    */
-  buildSimplePromptRequest(task, context, prompt) {
+  async buildSimplePromptRequest(task, context, prompt) {
     const params = {
       prompt: prompt || task.prompt || task.description || task.operation,
       maxTokens: task.maxTokens || 1000,
@@ -1636,7 +1746,7 @@ Make sure subtasks:
       params.tools = task.tools;
     } else {
       // Get all available tools from registry (like AtomicExecutionStrategy does)
-      params.tools = this.getAvailableToolsForLLM();
+      params.tools = await this.getAvailableToolsForLLM();
     }
 
     // Add any additional LLM options
