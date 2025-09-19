@@ -1,18 +1,54 @@
 {
   "name": "@legion/roma-agent",
   "version": "1.0.0",
-  "description": "Recursive Orchestration and Memory Architecture (ROMA) Agent",
+  "description": "ROMA (Recursive Objective Management Agent) for the Legion framework",
+  "type": "module",
   "main": "src/index.js",
   "scripts": {
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
-    "start": "node src/index.js"
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
+    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/unit",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/integration"
   },
-  "keywords": ["ai", "agent", "roma", "orchestration"],
-  "author": "",
-  "license": "ISC",
-  "directories": {
-    "doc": "docs",
-    "test": "__tests__"
+  "keywords": [
+    "agent",
+    "roma",
+    "recursive",
+    "decomposition",
+    "artifacts",
+    "legion",
+    "llm"
+  ],
+  "author": "Legion Framework",
+  "license": "MIT",
+  "dependencies": {
+    "@legion/resource-manager": "file:../../resource-manager",
+    "@legion/llm-client": "file:../../prompting/llm-client",
+    "@legion/schema": "file:../../schema",
+    "@legion/tools": "file:../../tools"
   },
-  "type": "module"
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/**/*.test.js"
+    ],
+    "coverageDirectory": "__tests__/coverage",
+    "coverageThreshold": {
+      "global": {
+        "branches": 80,
+        "functions": 80,
+        "lines": 80,
+        "statements": 80
+      }
+    }
+  }
 }

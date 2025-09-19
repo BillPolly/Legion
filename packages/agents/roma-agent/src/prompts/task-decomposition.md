@@ -83,4 +83,51 @@ Before finalizing your decomposition, verify:
 4. **Clarity**: Would another person understand exactly what each subtask should do?
 5. **Testability**: How will you know when each subtask is complete?
 
-{{outputPrompt}}
+# Response Format
+
+Return your response as valid JSON matching this exact structure:
+
+```json
+{
+  "decompose": <boolean>,
+  "subtasks": [
+    {
+      "description": "<string: Clear description of what this subtask should accomplish>",
+      "inputs": "<string: Comma-separated list of artifacts this subtask needs (optional)>",
+      "outputs": "<string: Comma-separated list of artifacts this subtask will create (optional)>"
+    }
+  ]
+}
+```
+
+**Required Fields:**
+- `decompose`: Boolean indicating whether to break down the task (should always be true for complex tasks)
+- `subtasks`: Array of subtask objects, each with a required `description` field
+
+**Example Response:**
+```json
+{
+  "decompose": true,
+  "subtasks": [
+    {
+      "description": "Create project directory and package.json with required dependencies",
+      "outputs": "@package_json, @project_structure"
+    },
+    {
+      "description": "Generate Express server with basic middleware setup",
+      "inputs": "@project_structure",
+      "outputs": "@base_server_code"
+    },
+    {
+      "description": "Add API endpoints with error handling",
+      "inputs": "@base_server_code",
+      "outputs": "@complete_server"
+    }
+  ]
+}
+```
+
+**Important:**
+- Return ONLY valid JSON, no additional text or markdown
+- Use double quotes for all string keys and values
+- No trailing commas in JSON

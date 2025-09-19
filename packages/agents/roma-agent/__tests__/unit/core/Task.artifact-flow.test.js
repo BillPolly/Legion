@@ -132,21 +132,15 @@ describe('Task Artifact Flow', () => {
     
     it('should receive all artifacts when no specific names provided', async () => {
       // Setup parent with artifacts
-      parentTask.artifactRegistry.set('artifact1', {
-        type: 'string',
-        value: 'value1'
-      });
-      parentTask.artifactRegistry.set('artifact2', {
-        type: 'number',
-        value: 42
-      });
+      parentTask.artifactRegistry.store('artifact1', 'value1', 'Test artifact 1', 'string');
+      parentTask.artifactRegistry.store('artifact2', 42, 'Test artifact 2', 'number');
       
       const childTask = new Task('Child task', parentTask, {
         ArtifactRegistryClass: ArtifactRegistry
       });
       
-      // Receive all artifacts
-      await childTask.receiveArtifacts(parentTask.artifactRegistry);
+      // Receive all artifacts by specifying their names
+      await childTask.receiveArtifacts(parentTask.artifactRegistry, ['artifact1', 'artifact2']);
       
       expect(childTask.artifactRegistry.has('artifact1')).toBe(true);
       expect(childTask.artifactRegistry.has('artifact2')).toBe(true);
@@ -162,18 +156,9 @@ describe('Task Artifact Flow', () => {
       });
       
       // Child creates artifacts
-      childTask.artifactRegistry.set('result', {
-        type: 'object',
-        value: { success: true, data: 'test' }
-      });
-      childTask.artifactRegistry.set('report', {
-        type: 'string',
-        value: 'Task completed successfully'
-      });
-      childTask.artifactRegistry.set('internal_temp', {
-        type: 'string',
-        value: 'Should not be transferred'
-      });
+      childTask.artifactRegistry.store('result', { success: true, data: 'test' }, 'Task result', 'object');
+      childTask.artifactRegistry.store('report', 'Task completed successfully', 'Task report', 'string');
+      childTask.artifactRegistry.store('internal_temp', 'Should not be transferred', 'Internal temp data', 'string');
       
       // Deliver only goal outputs to parent
       await childTask.deliverGoalOutputs(parentTask.artifactRegistry);
@@ -213,25 +198,19 @@ describe('Task Artifact Flow', () => {
       const subtask = await parentTask.createNextSubtask(mockTaskManager);
       
       expect(subtask.goalInputs).toEqual([
-        { name: 'config', type: undefined },
-        { name: 'template', type: undefined }
+        { name: 'config', type: null, description: 'config artifact' },
+        { name: 'template', type: null, description: 'template artifact' }
       ]);
       expect(subtask.goalOutputs).toEqual([
-        { name: 'processed_data', type: undefined },
-        { name: 'report', type: undefined }
+        { name: 'processed_data', type: 'data', description: 'processed_data artifact' },
+        { name: 'report', type: null, description: 'report artifact' }
       ]);
     });
     
     it('should transfer specified input artifacts to subtask', async () => {
       // Setup parent artifacts
-      parentTask.artifactRegistry.set('config', {
-        type: 'json',
-        value: { setting: 'value' }
-      });
-      parentTask.artifactRegistry.set('other', {
-        type: 'string',
-        value: 'not transferred'
-      });
+      parentTask.artifactRegistry.store('config', { setting: 'value' }, 'Configuration settings', 'json');
+      parentTask.artifactRegistry.store('other', 'not transferred', 'Other data', 'string');
       
       parentTask.plannedSubtasks = [
         {
@@ -263,10 +242,10 @@ describe('Task Artifact Flow', () => {
       
       expect(task.hasRequiredInputs()).toBe(false);
       
-      task.artifactRegistry.set('input1', { value: 'test' });
+      task.artifactRegistry.store('input1', 'test', 'Test input 1', 'string');
       expect(task.hasRequiredInputs()).toBe(false);
       
-      task.artifactRegistry.set('input2', { value: 42 });
+      task.artifactRegistry.store('input2', 42, 'Test input 2', 'number');
       expect(task.hasRequiredInputs()).toBe(true);
     });
     
@@ -281,10 +260,10 @@ describe('Task Artifact Flow', () => {
       
       expect(task.hasAchievedGoals()).toBe(false);
       
-      task.artifactRegistry.set('output1', { value: 'done' });
+      task.artifactRegistry.store('output1', 'done', 'Test output 1', 'string');
       expect(task.hasAchievedGoals()).toBe(false);
       
-      task.artifactRegistry.set('output2', { value: { complete: true } });
+      task.artifactRegistry.store('output2', { complete: true }, 'Test output 2', 'object');
       expect(task.hasAchievedGoals()).toBe(true);
     });
     
