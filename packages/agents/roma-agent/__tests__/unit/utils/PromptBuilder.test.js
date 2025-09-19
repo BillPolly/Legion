@@ -74,11 +74,9 @@ describe('PromptBuilder Unit Tests', () => {
       const prompt = promptBuilder.buildDecompositionPrompt(task, context);
 
       expect(prompt).toContain('Build a web application');
-      expect(prompt).toContain('Break down this complex task');
+      expect(prompt).toContain('task decomposition expert');
       expect(prompt).toContain('Multiple components required');
       expect(prompt).toContain('Break into frontend and backend');
-      expect(prompt).toContain('"decompose": true');
-      expect(prompt).toContain('"subtasks"');
     });
 
     it('should include artifacts in decomposition prompt', () => {
@@ -109,7 +107,7 @@ describe('PromptBuilder Unit Tests', () => {
 
       expect(prompt).toContain('Create new project');
       expect(prompt).not.toContain('AVAILABLE ARTIFACTS');
-      expect(prompt).toContain('Break down this complex task');
+      expect(prompt).toContain('task decomposition expert');
     });
 
     it('should handle string task input', () => {
@@ -132,7 +130,7 @@ describe('PromptBuilder Unit Tests', () => {
       const prompt = promptBuilder.buildDecompositionPrompt(task, context);
 
       expect(prompt).toContain('Complex task');
-      expect(prompt).toContain('Break down this complex task');
+      expect(prompt).toContain('task decomposition expert');
       expect(prompt).not.toContain('Classification reasoning');
     });
   });
@@ -168,12 +166,10 @@ describe('PromptBuilder Unit Tests', () => {
       const prompt = await promptBuilder.buildExecutionPrompt(task, context);
 
       expect(prompt).toContain('Write hello world to a file');
-      expect(prompt).toContain('SIMPLE task');
+      expect(prompt).toContain('task execution specialist');
       expect(prompt).toContain('file_write');
       expect(prompt).toContain('confidence: 95%');
       expect(prompt).toContain('filepath, content');
-      expect(prompt).toContain('"useTools": true');
-      expect(prompt).toContain('"toolCalls"');
     });
 
     it('should build execution prompt with tool registry fallback', async () => {

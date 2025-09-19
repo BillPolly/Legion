@@ -51,26 +51,39 @@ export default class TaskClassifier {
    * @param {string|Object} task - The task to classify
    * @returns {Promise<Object>} Classification result with complexity and reasoning
    */
-  async classify(task, sessionLogger = null) {
+  async classify(task, sessionLogger = null, context = {}) {
     // Ensure prompt builder is initialized
     await this.initialize();
     
     const taskDescription = typeof task === 'string' ? task : (task.description || JSON.stringify(task));
     
-    const prompt = this.promptBuilder.buildPrompt('task-classification', {
-      taskDescription
-    });
+    // Format artifacts section if available
+    const artifactsSection = this._formatArtifactsSection(context.artifactRegistry);
+    
+    // Create example data for better output instructions
+    const exampleData = {
+      complexity: 'SIMPLE',
+      reasoning: 'This task can be completed with a direct sequence of tool calls - file reading and JSON parsing are straightforward operations that don\'t require coordination.',
+      suggestedApproach: 'Use file_read tool followed by json_parse tool',
+      estimatedSteps: 2
+    };
+    
+    // Build prompt with schema-generated output instructions
+    const fullPrompt = this.promptBuilder.buildPromptWithSchema(
+      'task-classification',
+      {
+        taskDescription,
+        artifactsSection
+      },
+      this.responseValidator,
+      exampleData,
+      {
+        verbosity: 'detailed',
+        errorPrevention: true
+      }
+    );
 
     try {
-      // Get format instructions from ResponseValidator
-      const formatInstructions = this.responseValidator.generateInstructions(null, {
-        format: 'json',
-        verbosity: 'concise'
-      });
-      
-      // Combine prompt with format instructions
-      const fullPrompt = prompt + '\n\n' + formatInstructions;
-      
       // Call LLM with the complete prompt
       const response = await this.llmClient.complete(fullPrompt);
       
@@ -171,5 +184,26 @@ Consider:
 3. Would breaking it down make it significantly easier to accomplish?`;
     
     return prompt;
+  }
+
+  /**
+   * Format artifacts section for the classification prompt
+   * @param {ArtifactRegistry} artifactRegistry - The artifact registry
+   * @returns {string} Formatted artifacts section
+   */
+  _formatArtifactsSection(artifactRegistry) {
+    if (!artifactRegistry || !artifactRegistry.size || artifactRegistry.size() === 0) {
+      return '';
+    }
+
+    const lines = ['## Available Context'];
+    lines.push('The following artifacts are available from previous steps:');
+    lines.push('');
+    
+    for (const artifact of artifactRegistry.getAll()) {
+      lines.push(`- **@${artifact.name}** (${artifact.type}): ${artifact.description}`);
+    }
+    
+    return lines.join('\n');
   }
 }

@@ -406,8 +406,8 @@ describe('TaskClassifier Unit Tests', () => {
 
       const capturedPrompt = mockLLMClient.complete.mock.calls[0][0];
       expect(capturedPrompt).toContain('test task description');
-      expect(capturedPrompt).toContain('SIMPLE or COMPLEX');
-      expect(capturedPrompt).toContain('Classification criteria');
+      expect(capturedPrompt).toContain('task complexity analyzer');
+      expect(capturedPrompt).toContain('Classification Framework');
     });
 
     it('should include classification examples in prompt', async () => {
@@ -422,8 +422,8 @@ describe('TaskClassifier Unit Tests', () => {
 
       const capturedPrompt = mockLLMClient.complete.mock.calls[0][0];
       expect(capturedPrompt).toContain('Examples:');
-      expect(capturedPrompt).toContain('read a file');
-      expect(capturedPrompt).toContain('build a web application');
+      expect(capturedPrompt).toContain('Read configuration from config.json');
+      expect(capturedPrompt).toContain('Build a complete web application');
     });
 
     it('should include consideration points in prompt', async () => {
@@ -437,9 +437,9 @@ describe('TaskClassifier Unit Tests', () => {
       await classifier.classify('test task');
 
       const capturedPrompt = mockLLMClient.complete.mock.calls[0][0];
-      expect(capturedPrompt).toContain('Consider:');
-      expect(capturedPrompt).toContain('clear, direct solution');
-      expect(capturedPrompt).toContain('multiple related operations');
+      expect(capturedPrompt).toContain('Decision Process');
+      expect(capturedPrompt).toContain('Scope Analysis');
+      expect(capturedPrompt).toContain('Tool Sufficiency');
     });
   });
 
