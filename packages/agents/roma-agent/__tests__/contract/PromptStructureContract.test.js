@@ -9,11 +9,14 @@ import TaskClassifier from '../../src/utils/TaskClassifier.js';
 import ArtifactRegistry from '../../src/core/ArtifactRegistry.js';
 
 describe('Prompt Structure Contract Tests', () => {
+  let promptBuilder;
   let mockArtifactRegistry;
   let mockToolRegistry;
   let mockTaskClassifier;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    promptBuilder = new PromptBuilder();
+    await promptBuilder.initialize();
     // Create mock artifact registry with sample data
     mockArtifactRegistry = new ArtifactRegistry();
     mockArtifactRegistry.store('test_file', '/tmp/test.txt', 'Test file path');
@@ -58,13 +61,13 @@ describe('Prompt Structure Contract Tests', () => {
         }
       };
 
-      const prompt = PromptBuilder.buildDecompositionPrompt(task, context);
+      const prompt = promptBuilder.buildDecompositionPrompt(task, context);
 
       // Required sections
-      expect(prompt).toMatch(/COMPLEX.*needs to be broken down/i);
-      expect(prompt).toMatch(/Task:\s*["'].*Build a web application.*["']/);
-      expect(prompt).toMatch(/Classification reasoning:\s*Multiple components required/);
-      expect(prompt).toMatch(/Suggested approach:\s*Break into subtasks/);
+      expect(prompt).toMatch(/Break down this complex task/i);
+      expect(prompt).toContain('Build a web application');
+      expect(prompt).toContain('Multiple components required');
+      expect(prompt).toContain('Break into subtasks');
       
       // Schema requirements
       expect(prompt).toMatch(/"decompose":\s*true/);
@@ -84,7 +87,7 @@ describe('Prompt Structure Contract Tests', () => {
         classification: { reasoning: 'Data processing task' }
       };
 
-      const prompt = PromptBuilder.buildDecompositionPrompt(task, context);
+      const prompt = promptBuilder.buildDecompositionPrompt(task, context);
 
       expect(prompt).toMatch(/@test_file/);
       expect(prompt).toMatch(/@user_data/);
@@ -99,17 +102,17 @@ describe('Prompt Structure Contract Tests', () => {
         classification: { reasoning: 'New task setup' }
       };
 
-      const prompt = PromptBuilder.buildDecompositionPrompt(task, context);
+      const prompt = promptBuilder.buildDecompositionPrompt(task, context);
 
       expect(prompt).not.toMatch(/AVAILABLE ARTIFACTS/);
-      expect(prompt).toMatch(/decompose this task/);
+      expect(prompt).toMatch(/Break down this complex task/);
     });
 
     it('should have consistent JSON schema format', () => {
       const task = 'Test task';
       const context = { artifactRegistry: new ArtifactRegistry() };
 
-      const prompt = PromptBuilder.buildDecompositionPrompt(task, context);
+      const prompt = promptBuilder.buildDecompositionPrompt(task, context);
 
       // Verify JSON structure is properly formatted
       expect(prompt).toMatch(/{\s*"decompose":\s*true,\s*"subtasks":\s*\[/);
@@ -138,11 +141,11 @@ describe('Prompt Structure Contract Tests', () => {
         isSimpleTask: true
       };
 
-      const prompt = await PromptBuilder.buildExecutionPrompt(task, context);
+      const prompt = await promptBuilder.buildExecutionPrompt(task, context);
 
       // Required sections
-      expect(prompt).toMatch(/SIMPLE.*executed with.*sequence of tool calls/i);
-      expect(prompt).toMatch(/Task:\s*Write a file/);
+      expect(prompt).toContain('This task has been classified as SIMPLE');
+      expect(prompt).toContain('Write a file');
       expect(prompt).toMatch(/AVAILABLE TOOLS.*discovered for this task/i);
       expect(prompt).toMatch(/file_write.*confidence: 90%/);
       
@@ -167,7 +170,7 @@ describe('Prompt Structure Contract Tests', () => {
         isSimpleTask: false
       };
 
-      const prompt = await PromptBuilder.buildExecutionPrompt(task, context);
+      const prompt = await promptBuilder.buildExecutionPrompt(task, context);
 
       expect(prompt).toMatch(/AVAILABLE TOOLS:/);
       expect(prompt).toMatch(/file_write/);
@@ -183,7 +186,7 @@ describe('Prompt Structure Contract Tests', () => {
         isSimpleTask: false
       };
 
-      const prompt = await PromptBuilder.buildExecutionPrompt(task, context);
+      const prompt = await promptBuilder.buildExecutionPrompt(task, context);
 
       expect(prompt).toMatch(/three options/i);
       expect(prompt).toMatch(/USE TOOLS/);
@@ -200,7 +203,7 @@ describe('Prompt Structure Contract Tests', () => {
         isSimpleTask: true
       };
 
-      const prompt = await PromptBuilder.buildExecutionPrompt(task, context);
+      const prompt = await promptBuilder.buildExecutionPrompt(task, context);
 
       // Tool call format validation
       expect(prompt).toMatch(/"tool":\s*"exact_tool_name"/);
@@ -305,7 +308,7 @@ describe('Prompt Structure Contract Tests', () => {
         }
       ];
 
-      const section = PromptBuilder.formatDiscoveredToolsSection(discoveredTools);
+      const section = promptBuilder.formatDiscoveredToolsSection(discoveredTools);
 
       // Header format
       expect(section).toMatch(/AVAILABLE TOOLS \(discovered for this task\):/);
@@ -319,7 +322,7 @@ describe('Prompt Structure Contract Tests', () => {
     });
 
     it('should format tool registry consistently', async () => {
-      const section = await PromptBuilder.formatToolsSection(mockToolRegistry);
+      const section = await promptBuilder.formatToolsSection(mockToolRegistry);
 
       expect(section).toMatch(/AVAILABLE TOOLS:/);
       expect(section).toMatch(/These are the ONLY tools you can use/);
@@ -329,17 +332,17 @@ describe('Prompt Structure Contract Tests', () => {
     });
 
     it('should handle empty tool lists correctly', () => {
-      const emptySection = PromptBuilder.formatDiscoveredToolsSection([]);
+      const emptySection = promptBuilder.formatDiscoveredToolsSection([]);
       expect(emptySection).toMatch(/No suitable tools discovered/);
 
-      const nullSection = PromptBuilder.formatDiscoveredToolsSection(null);
+      const nullSection = promptBuilder.formatDiscoveredToolsSection(null);
       expect(nullSection).toMatch(/No suitable tools discovered/);
     });
   });
 
   describe('Artifact Section Format Contract', () => {
     it('should format artifacts consistently', () => {
-      const section = PromptBuilder.formatArtifactsSection(mockArtifactRegistry);
+      const section = promptBuilder.formatArtifactsSection(mockArtifactRegistry);
 
       // Header format
       expect(section).toMatch(/AVAILABLE ARTIFACTS:/);
@@ -360,7 +363,7 @@ describe('Prompt Structure Contract Tests', () => {
     });
 
     it('should include proper example format', () => {
-      const section = PromptBuilder.formatArtifactsSection(mockArtifactRegistry);
+      const section = promptBuilder.formatArtifactsSection(mockArtifactRegistry);
 
       expect(section).toMatch(/"content": "@test_file"/);
       expect(section).toMatch(/"outputs": {\s*"path": "@saved_file_path"/);
@@ -368,7 +371,7 @@ describe('Prompt Structure Contract Tests', () => {
 
     it('should handle empty artifact registry', () => {
       const emptyRegistry = new ArtifactRegistry();
-      const section = PromptBuilder.formatArtifactsSection(emptyRegistry);
+      const section = promptBuilder.formatArtifactsSection(emptyRegistry);
 
       expect(section).toMatch(/ARTIFACTS: None available yet/);
     });
@@ -376,7 +379,7 @@ describe('Prompt Structure Contract Tests', () => {
 
   describe('Response Format Contract', () => {
     it('should specify JSON structure correctly', () => {
-      const instructions = PromptBuilder.getSimpleTaskInstructions();
+      const instructions = promptBuilder.getSimpleTaskInstructions();
 
       // JSON structure requirements
       expect(instructions).toMatch(/Return JSON with this structure:/);
@@ -391,7 +394,7 @@ describe('Prompt Structure Contract Tests', () => {
     });
 
     it('should provide clear decision options', () => {
-      const instructions = PromptBuilder.getDecisionInstructions();
+      const instructions = promptBuilder.getDecisionInstructions();
 
       expect(instructions).toMatch(/MUST choose ONE of these three options/);
       expect(instructions).toMatch(/OPTION 1 - USING TOOLS/);
@@ -413,7 +416,7 @@ describe('Prompt Structure Contract Tests', () => {
         toolRegistry: null
       };
 
-      const prompt = await PromptBuilder.buildExecutionPrompt(task, context);
+      const prompt = await promptBuilder.buildExecutionPrompt(task, context);
 
       expect(prompt).toMatch(/None configured/);
       expect(prompt).toContain('Test task'); // Should still include task
@@ -424,13 +427,13 @@ describe('Prompt Structure Contract Tests', () => {
         listTools: jest.fn().mockRejectedValue(new Error('Database error'))
       };
 
-      const section = await PromptBuilder.formatToolsSection(errorToolRegistry);
+      const section = await promptBuilder.formatToolsSection(errorToolRegistry);
 
       expect(section).toMatch(/Error loading tools.*Database error/);
     });
 
     it('should format error messages consistently', () => {
-      const error = PromptBuilder.formatError('Tool not found', {
+      const error = promptBuilder.formatError('Tool not found', {
         tool: 'missing_tool',
         suggestion: 'Check spelling'
       });
@@ -441,7 +444,7 @@ describe('Prompt Structure Contract Tests', () => {
     });
 
     it('should format progress messages consistently', () => {
-      const progress = PromptBuilder.formatProgress('Processing task', {
+      const progress = promptBuilder.formatProgress('Processing task', {
         depth: 2,
         subtask: 'Create files',
         artifact: 'output'
@@ -459,7 +462,7 @@ describe('Prompt Structure Contract Tests', () => {
         toolRegistry: mockToolRegistry
       };
 
-      const prompt = await PromptBuilder.buildExecutionPrompt(task, context);
+      const prompt = await promptBuilder.buildExecutionPrompt(task, context);
 
       // Should be comprehensive but not excessively long
       expect(prompt.length).toBeGreaterThan(500); // Comprehensive
@@ -477,7 +480,7 @@ describe('Prompt Structure Contract Tests', () => {
         isSimpleTask: true
       };
 
-      const prompt = await PromptBuilder.buildExecutionPrompt(task, context);
+      const prompt = await promptBuilder.buildExecutionPrompt(task, context);
 
       // Order: Task -> Tools -> Artifacts -> Instructions
       const taskIndex = prompt.indexOf('Task:');

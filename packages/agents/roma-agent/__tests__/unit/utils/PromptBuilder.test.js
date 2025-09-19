@@ -8,10 +8,13 @@ import PromptBuilder from '../../../src/utils/PromptBuilder.js';
 import ArtifactRegistry from '../../../src/core/ArtifactRegistry.js';
 
 describe('PromptBuilder Unit Tests', () => {
+  let promptBuilder;
   let mockArtifactRegistry;
   let mockToolRegistry;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    promptBuilder = new PromptBuilder();
+    await promptBuilder.initialize();
     // Create mock artifact registry
     mockArtifactRegistry = new ArtifactRegistry();
     mockArtifactRegistry.store('test_file', '/tmp/test.txt', 'Test file path');
@@ -68,11 +71,10 @@ describe('PromptBuilder Unit Tests', () => {
         }
       };
 
-      const prompt = PromptBuilder.buildDecompositionPrompt(task, context);
+      const prompt = promptBuilder.buildDecompositionPrompt(task, context);
 
       expect(prompt).toContain('Build a web application');
-      expect(prompt).toContain('COMPLEX');
-      expect(prompt).toContain('decompose this task');
+      expect(prompt).toContain('Break down this complex task');
       expect(prompt).toContain('Multiple components required');
       expect(prompt).toContain('Break into frontend and backend');
       expect(prompt).toContain('"decompose": true');
@@ -86,7 +88,7 @@ describe('PromptBuilder Unit Tests', () => {
         classification: { reasoning: 'Complex data processing' }
       };
 
-      const prompt = PromptBuilder.buildDecompositionPrompt(task, context);
+      const prompt = promptBuilder.buildDecompositionPrompt(task, context);
 
       expect(prompt).toContain('@test_file');
       expect(prompt).toContain('@user_data');
@@ -103,11 +105,11 @@ describe('PromptBuilder Unit Tests', () => {
         classification: { reasoning: 'Multiple files needed' }
       };
 
-      const prompt = PromptBuilder.buildDecompositionPrompt(task, context);
+      const prompt = promptBuilder.buildDecompositionPrompt(task, context);
 
       expect(prompt).toContain('Create new project');
       expect(prompt).not.toContain('AVAILABLE ARTIFACTS');
-      expect(prompt).toContain('decompose this task');
+      expect(prompt).toContain('Break down this complex task');
     });
 
     it('should handle string task input', () => {
@@ -117,7 +119,7 @@ describe('PromptBuilder Unit Tests', () => {
         classification: { reasoning: 'API requires multiple endpoints' }
       };
 
-      const prompt = PromptBuilder.buildDecompositionPrompt(task, context);
+      const prompt = promptBuilder.buildDecompositionPrompt(task, context);
 
       expect(prompt).toContain('Build a complete API');
       expect(prompt).toContain('API requires multiple endpoints');
@@ -127,10 +129,10 @@ describe('PromptBuilder Unit Tests', () => {
       const task = { description: 'Complex task' };
       const context = { artifactRegistry: new ArtifactRegistry() };
 
-      const prompt = PromptBuilder.buildDecompositionPrompt(task, context);
+      const prompt = promptBuilder.buildDecompositionPrompt(task, context);
 
       expect(prompt).toContain('Complex task');
-      expect(prompt).toContain('decompose this task');
+      expect(prompt).toContain('Break down this complex task');
       expect(prompt).not.toContain('Classification reasoning');
     });
   });
@@ -163,7 +165,7 @@ describe('PromptBuilder Unit Tests', () => {
         isSimpleTask: true
       };
 
-      const prompt = await PromptBuilder.buildExecutionPrompt(task, context);
+      const prompt = await promptBuilder.buildExecutionPrompt(task, context);
 
       expect(prompt).toContain('Write hello world to a file');
       expect(prompt).toContain('SIMPLE task');
@@ -182,7 +184,7 @@ describe('PromptBuilder Unit Tests', () => {
         isSimpleTask: false
       };
 
-      const prompt = await PromptBuilder.buildExecutionPrompt(task, context);
+      const prompt = await promptBuilder.buildExecutionPrompt(task, context);
 
       expect(prompt).toContain('Calculate something');
       expect(prompt).toContain('file_write');
@@ -199,7 +201,7 @@ describe('PromptBuilder Unit Tests', () => {
         toolRegistry: mockToolRegistry
       };
 
-      const prompt = await PromptBuilder.buildExecutionPrompt(task, context);
+      const prompt = await promptBuilder.buildExecutionPrompt(task, context);
 
       expect(prompt).toContain('@test_file');
       expect(prompt).toContain('@user_data');
@@ -217,7 +219,7 @@ describe('PromptBuilder Unit Tests', () => {
         isSimpleTask: true
       };
 
-      const prompt = await PromptBuilder.buildExecutionPrompt(task, context);
+      const prompt = await promptBuilder.buildExecutionPrompt(task, context);
 
       expect(prompt).toContain('Generic task');
       // Should fall back to tool registry
@@ -233,7 +235,7 @@ describe('PromptBuilder Unit Tests', () => {
         toolRegistry: null
       };
 
-      const prompt = await PromptBuilder.buildExecutionPrompt(task, context);
+      const prompt = await promptBuilder.buildExecutionPrompt(task, context);
 
       expect(prompt).toContain('Task without tools');
       expect(prompt).toContain('None configured');
@@ -274,7 +276,7 @@ describe('PromptBuilder Unit Tests', () => {
         }
       ];
 
-      const section = PromptBuilder.formatDiscoveredToolsSection(discoveredTools);
+      const section = promptBuilder.formatDiscoveredToolsSection(discoveredTools);
 
       expect(section).toContain('AVAILABLE TOOLS (discovered for this task)');
       expect(section).toContain('file_read');
@@ -287,19 +289,19 @@ describe('PromptBuilder Unit Tests', () => {
     });
 
     it('should handle empty discovered tools', () => {
-      const section = PromptBuilder.formatDiscoveredToolsSection([]);
+      const section = promptBuilder.formatDiscoveredToolsSection([]);
 
       expect(section).toContain('No suitable tools discovered');
     });
 
     it('should handle null discovered tools', () => {
-      const section = PromptBuilder.formatDiscoveredToolsSection(null);
+      const section = promptBuilder.formatDiscoveredToolsSection(null);
 
       expect(section).toContain('No suitable tools discovered');
     });
 
     it('should format tool registry section', async () => {
-      const section = await PromptBuilder.formatToolsSection(mockToolRegistry);
+      const section = await promptBuilder.formatToolsSection(mockToolRegistry);
 
       expect(section).toContain('AVAILABLE TOOLS:');
       expect(section).toContain('file_write');
@@ -314,7 +316,7 @@ describe('PromptBuilder Unit Tests', () => {
         listTools: jest.fn().mockRejectedValue(new Error('Registry failed'))
       };
 
-      const section = await PromptBuilder.formatToolsSection(errorToolRegistry);
+      const section = await promptBuilder.formatToolsSection(errorToolRegistry);
 
       expect(section).toContain('Error loading tools');
       expect(section).toContain('Registry failed');
@@ -325,7 +327,7 @@ describe('PromptBuilder Unit Tests', () => {
         listTools: jest.fn().mockResolvedValue([])
       };
 
-      const section = await PromptBuilder.formatToolsSection(emptyToolRegistry);
+      const section = await promptBuilder.formatToolsSection(emptyToolRegistry);
 
       expect(section).toContain('None found');
     });
@@ -333,7 +335,7 @@ describe('PromptBuilder Unit Tests', () => {
 
   describe('Artifacts Section Formatting', () => {
     it('should format artifacts section with multiple artifacts', () => {
-      const section = PromptBuilder.formatArtifactsSection(mockArtifactRegistry);
+      const section = promptBuilder.formatArtifactsSection(mockArtifactRegistry);
 
       expect(section).toContain('AVAILABLE ARTIFACTS:');
       expect(section).toContain('@test_file');
@@ -349,19 +351,19 @@ describe('PromptBuilder Unit Tests', () => {
 
     it('should handle empty artifact registry', () => {
       const emptyRegistry = new ArtifactRegistry();
-      const section = PromptBuilder.formatArtifactsSection(emptyRegistry);
+      const section = promptBuilder.formatArtifactsSection(emptyRegistry);
 
       expect(section).toContain('None available yet');
     });
 
     it('should handle null artifact registry', () => {
-      const section = PromptBuilder.formatArtifactsSection(null);
+      const section = promptBuilder.formatArtifactsSection(null);
 
       expect(section).toContain('None available yet');
     });
 
     it('should include usage instructions', () => {
-      const section = PromptBuilder.formatArtifactsSection(mockArtifactRegistry);
+      const section = promptBuilder.formatArtifactsSection(mockArtifactRegistry);
 
       expect(section).toContain('@ symbol');
       expect(section).toContain('automatically replaced');
@@ -369,7 +371,7 @@ describe('PromptBuilder Unit Tests', () => {
     });
 
     it('should include tool call example with first artifact', () => {
-      const section = PromptBuilder.formatArtifactsSection(mockArtifactRegistry);
+      const section = promptBuilder.formatArtifactsSection(mockArtifactRegistry);
 
       expect(section).toContain('@test_file'); // Should use first artifact
       expect(section).toContain('file_write');
@@ -379,7 +381,7 @@ describe('PromptBuilder Unit Tests', () => {
 
   describe('Instruction Generation', () => {
     it('should generate simple task instructions', () => {
-      const instructions = PromptBuilder.getSimpleTaskInstructions();
+      const instructions = promptBuilder.getSimpleTaskInstructions();
 
       expect(instructions).toContain('SIMPLE task');
       expect(instructions).toContain('sequence of tool calls');
@@ -392,7 +394,7 @@ describe('PromptBuilder Unit Tests', () => {
     });
 
     it('should generate decision instructions', () => {
-      const instructions = PromptBuilder.getDecisionInstructions();
+      const instructions = promptBuilder.getDecisionInstructions();
 
       expect(instructions).toContain('three options');
       expect(instructions).toContain('USE TOOLS');
@@ -407,7 +409,7 @@ describe('PromptBuilder Unit Tests', () => {
     });
 
     it('should generate artifact usage instructions', () => {
-      const instructions = PromptBuilder.getArtifactUsageInstructions();
+      const instructions = promptBuilder.getArtifactUsageInstructions();
 
       expect(instructions).toContain('@ symbol');
       expect(instructions).toContain('artifact name');
@@ -416,7 +418,7 @@ describe('PromptBuilder Unit Tests', () => {
     });
 
     it('should generate tool call example', () => {
-      const example = PromptBuilder.getToolCallExample(mockArtifactRegistry);
+      const example = promptBuilder.getToolCallExample(mockArtifactRegistry);
 
       expect(example).toContain('COMPLETE EXAMPLE');
       expect(example).toContain('file_write');
@@ -428,7 +430,7 @@ describe('PromptBuilder Unit Tests', () => {
 
   describe('Utility Methods', () => {
     it('should format error messages', () => {
-      const error = PromptBuilder.formatError('Tool not found', {
+      const error = promptBuilder.formatError('Tool not found', {
         tool: 'missing_tool',
         suggestion: 'Check tool name'
       });
@@ -439,13 +441,13 @@ describe('PromptBuilder Unit Tests', () => {
     });
 
     it('should format error messages without context', () => {
-      const error = PromptBuilder.formatError('Simple error');
+      const error = promptBuilder.formatError('Simple error');
 
       expect(error).toBe('Error: Simple error');
     });
 
     it('should format progress messages', () => {
-      const progress = PromptBuilder.formatProgress('Executing subtask', {
+      const progress = promptBuilder.formatProgress('Executing subtask', {
         depth: 2,
         subtask: 'Create HTML file',
         artifact: 'html_content'
@@ -458,13 +460,13 @@ describe('PromptBuilder Unit Tests', () => {
     });
 
     it('should format progress messages with minimal context', () => {
-      const progress = PromptBuilder.formatProgress('Simple action');
+      const progress = promptBuilder.formatProgress('Simple action');
 
       expect(progress).toBe('Simple action');
     });
 
     it('should get system message', () => {
-      const message = PromptBuilder.getSystemMessage();
+      const message = promptBuilder.getSystemMessage();
 
       expect(message).toContain('task decomposition agent');
       expect(message).toContain('valid JSON');
@@ -476,7 +478,7 @@ describe('PromptBuilder Unit Tests', () => {
       const task = { action: 'create', target: 'file' };
       const context = { artifactRegistry: new ArtifactRegistry() };
 
-      const prompt = PromptBuilder.buildDecompositionPrompt(task, context);
+      const prompt = promptBuilder.buildDecompositionPrompt(task, context);
 
       expect(prompt).toContain(JSON.stringify(task));
     });
@@ -488,7 +490,7 @@ describe('PromptBuilder Unit Tests', () => {
       };
       const context = { artifactRegistry: mockRegistry };
 
-      const prompt = PromptBuilder.buildDecompositionPrompt('test', context);
+      const prompt = promptBuilder.buildDecompositionPrompt('test', context);
 
       expect(prompt).toContain('test');
       // Should not crash, just not include artifacts section
@@ -499,7 +501,7 @@ describe('PromptBuilder Unit Tests', () => {
         listTools: jest.fn().mockResolvedValue(null)
       };
 
-      const section = await PromptBuilder.formatToolsSection(toolRegistry);
+      const section = await promptBuilder.formatToolsSection(toolRegistry);
 
       expect(section).toContain('None found');
     });
@@ -513,7 +515,7 @@ describe('PromptBuilder Unit Tests', () => {
         }
       ];
 
-      const section = PromptBuilder.formatDiscoveredToolsSection(tools);
+      const section = promptBuilder.formatDiscoveredToolsSection(tools);
 
       expect(section).toContain('minimal_tool');
       expect(section).toContain('Tool without schema');

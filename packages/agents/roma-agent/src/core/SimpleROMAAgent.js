@@ -159,7 +159,11 @@ export default class SimpleROMAAgent {
       taskClassifier: this.taskClassifier,
       toolDiscovery: this.toolDiscovery,
       artifactRegistry: new ArtifactRegistry(),
-      sessionLogger: this.sessionLogger
+      sessionLogger: this.sessionLogger,
+      simpleTaskValidator: this.simpleTaskValidator,
+      decompositionValidator: this.decompositionValidator,
+      fastToolDiscovery: this.fastToolDiscovery,
+      agent: this  // Pass reference to agent for helper methods
     });
     
     // Execute the root task (it will manage its own flow)
@@ -181,7 +185,7 @@ export default class SimpleROMAAgent {
   }
 
   /**
-   * Run a task - it manages its own decomposition and execution
+   * Run a task - delegates to the task's own execute method
    */
   async _runTask(task) {
     // Check depth limit
@@ -221,7 +225,7 @@ export default class SimpleROMAAgent {
         });
         
         if (task.parent) {
-          return await this._parentEvaluatesChild(task.parent, task);
+          return await task.evaluateChild(task);
         }
         
         return {
@@ -232,39 +236,18 @@ export default class SimpleROMAAgent {
       }
     }
 
-    // Start the task
-    task.start();
-    this.taskManager.switchToTask(task);
-
-    // Resolve any artifact references in the task description
-    const resolvedDescription = task.artifactRegistry 
-      ? task.artifactRegistry.resolveReferences(task.description)
-      : task.description;
-
-    // Step 1: Classify the task (unless already classified)
-    if (!task.metadata.classification) {
-      const classification = await task.taskClassifier.classify(
-        { description: resolvedDescription }, 
-        task.sessionLogger
-      );
-      
-      console.log(`📋 Task "${task.description}" classified as ${classification.complexity}: ${classification.reasoning}`);
-      
-      task.metadata.classification = classification.complexity;
-      task.addConversationEntry('system', `Task classified as ${classification.complexity}: ${classification.reasoning}`);
-    }
+    // Set the test mode on the task
+    task.testMode = this.testMode;
     
-    // Step 2: Execute based on classification
-    if (task.metadata.classification === 'SIMPLE') {
-      // SIMPLE task: discover tools and execute
-      return await this._executeSimpleTask(task);
-    } else {
-      // COMPLEX task: decompose and execute subtasks
-      return await this._executeComplexTask(task);
-    }
+    // Switch to this task in the TaskManager
+    this.taskManager.switchToTask(task);
+    
+    // Delegate execution to the Task object itself
+    return await task.execute();
   }
 
   /**
+   * @deprecated - Moved to Task class
    * Execute a SIMPLE task - discover tools and execute them
    */
   async _executeSimpleTask(task) {
@@ -339,6 +322,7 @@ export default class SimpleROMAAgent {
   }
 
   /**
+   * @deprecated - Moved to Task class
    * Execute a COMPLEX task - decompose into subtasks
    */
   async _executeComplexTask(task) {
@@ -379,6 +363,7 @@ export default class SimpleROMAAgent {
   }
 
   /**
+   * @deprecated - Moved to Task class as evaluateChild()
    * Parent task evaluates after child completes and decides what to do
    */
   async _parentEvaluatesChild(parentTask, childTask) {
@@ -508,6 +493,7 @@ export default class SimpleROMAAgent {
   }
   
   /**
+   * @deprecated - Moved to Task class as evaluateCompletion()
    * Parent evaluates if it should complete after all subtasks
    */
   async _parentEvaluatesCompletion(parentTask) {
@@ -581,6 +567,9 @@ export default class SimpleROMAAgent {
   /**
    * Build prompt for parent to evaluate child completion
    */
+  /**
+   * @deprecated - Moved to Task class
+   */
   _buildParentEvaluationPrompt(parentTask, childTask) {
     const parentConversation = parentTask.formatConversation({ lastN: 10 });
     const childSummary = childTask.createSummary();
@@ -627,6 +616,9 @@ Respond with JSON:
   /**
    * Build prompt for parent to evaluate if it should complete
    */
+  /**
+   * @deprecated - Moved to Task class
+   */
   _buildCompletionEvaluationPrompt(parentTask) {
     const conversation = parentTask.formatConversation({ lastN: 15 });
     const children = parentTask.children.map(c => ({
@@ -663,6 +655,9 @@ Respond with JSON:
 
   /**
    * Get execution plan for a SIMPLE task (sequence of tool calls)
+   */
+  /**
+   * @deprecated - Moved to Task class
    */
   async _getSimpleTaskExecution(task, discoveredTools) {
     // Build prompt using task's conversation history
@@ -774,6 +769,9 @@ PLEASE PROVIDE CORRECTED RESPONSE:`;
   /**
    * Get decomposition for a COMPLEX task
    */
+  /**
+   * @deprecated - Moved to Task class
+   */
   async _getTaskDecomposition(task) {
     const promptContext = {
       taskConversation: task.formatConversation(),
@@ -864,6 +862,9 @@ PLEASE PROVIDE CORRECTED RESPONSE:`;
 
   /**
    * Execute task with tools
+   */
+  /**
+   * @deprecated - Moved to Task class
    */
   async _executeWithTools(toolCalls, task) {
     const results = [];

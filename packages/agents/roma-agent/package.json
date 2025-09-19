@@ -1,31 +1,18 @@
 {
   "name": "@legion/roma-agent",
   "version": "1.0.0",
-  "description": "Recursive Orchestration and Memory Architecture (ROMA) Agent for task decomposition and execution",
-  "type": "module",
+  "description": "Recursive Orchestration and Memory Architecture (ROMA) Agent",
   "main": "src/index.js",
   "scripts": {
-    "test": "jest",
-    "test:unit": "jest __tests__/unit",
-    "test:integration": "jest __tests__/integration",
-    "test:e2e": "jest __tests__/e2e",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "start": "node src/index.js"
   },
-  "dependencies": {
-    "@legion/resource-manager": "workspace:*",
-    "@legion/tool-registry": "workspace:*",
-    "@legion/prompting": "workspace:*"
-  },
-  "devDependencies": {
-    "jest": "^29.0.0"
-  },
-  "keywords": ["ai", "agent", "task-decomposition", "roma", "legion"],
+  "keywords": ["ai", "agent", "roma", "orchestration"],
   "author": "",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/legion/legion.git",
-    "directory": "packages/agents/roma-agent"
-  }
+  "license": "ISC",
+  "directories": {
+    "doc": "docs",
+    "test": "__tests__"
+  },
+  "type": "module"
 }

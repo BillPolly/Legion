@@ -36,9 +36,10 @@ describe('SimpleROMAAgent Unit Tests', () => {
       })
     };
     
-    // Create mock task classifier
+    // Create mock task classifier with initialize method
     mockTaskClassifier = {
-      classify: jest.fn()
+      classify: jest.fn(),
+      initialize: jest.fn().mockResolvedValue()
     };
     
     // Create mock tool discovery
@@ -47,20 +48,30 @@ describe('SimpleROMAAgent Unit Tests', () => {
       getCachedTool: jest.fn()
     };
     
-    // Create agent and initialize it
+    // Create agent but DO NOT initialize it to avoid creating real services
     agent = new SimpleROMAAgent();
-    await agent.initialize();  // This creates the TaskManager
     
-    // Then inject mocks
+    // Manually set up the agent with mocks (simulating what initialize() would do)
+    agent.resourceManager = await ResourceManager.getInstance();
     agent.llmClient = mockLLMClient;
     agent.toolRegistry = mockToolRegistry;
-    agent.taskClassifier = mockTaskClassifier;
     agent.toolDiscovery = mockToolDiscovery;
-    agent.resourceManager = await ResourceManager.getInstance();
+    agent.taskClassifier = mockTaskClassifier;
     
     // Create real validators for schema testing
     agent.simpleTaskValidator = agent._createSimpleTaskValidator();
     agent.decompositionValidator = agent._createDecompositionValidator();
+    
+    // Create mock session logger
+    agent.sessionLogger = {
+      initialize: jest.fn().mockResolvedValue(),
+      logInteraction: jest.fn().mockResolvedValue(),
+      logSummary: jest.fn().mockResolvedValue()
+    };
+    
+    // Create task manager manually
+    const TaskManager = (await import('../../src/core/TaskManager.js')).default;
+    agent.taskManager = new TaskManager(mockLLMClient);
   });
   
   describe('Task Classification Flow', () => {
@@ -95,7 +106,7 @@ describe('SimpleROMAAgent Unit Tests', () => {
       
       expect(mockTaskClassifier.classify).toHaveBeenCalledWith(
         task,
-        expect.objectContaining({ sessionId: expect.any(String) })
+        agent.sessionLogger
       );
       expect(mockToolDiscovery.discoverTools).toHaveBeenCalled();
       expect(result.success).toBe(true);

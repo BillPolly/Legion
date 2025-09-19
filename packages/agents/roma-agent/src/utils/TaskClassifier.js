@@ -7,10 +7,13 @@
  */
 
 import { ResponseValidator } from '@legion/output-schema';
+import PromptBuilder from './PromptBuilder.js';
 
 export default class TaskClassifier {
   constructor(llmClient) {
     this.llmClient = llmClient;
+    this.promptBuilder = new PromptBuilder();
+    this.isInitialized = false;
     
     // Create response validator for classification responses
     const classificationSchema = {
@@ -34,28 +37,29 @@ export default class TaskClassifier {
   }
 
   /**
+   * Initialize the prompt builder
+   */
+  async initialize() {
+    if (!this.isInitialized) {
+      await this.promptBuilder.initialize();
+      this.isInitialized = true;
+    }
+  }
+
+  /**
    * Classify a task as SIMPLE or COMPLEX
    * @param {string|Object} task - The task to classify
    * @returns {Promise<Object>} Classification result with complexity and reasoning
    */
   async classify(task, sessionLogger = null) {
+    // Ensure prompt builder is initialized
+    await this.initialize();
+    
     const taskDescription = typeof task === 'string' ? task : (task.description || JSON.stringify(task));
     
-    const prompt = `Analyze this task and classify it as either SIMPLE or COMPLEX:
-
-Task: "${taskDescription}"
-
-Classification criteria:
-- SIMPLE: Can be accomplished with a sequence of 1 or more direct tool calls
-  Examples: "read a file", "parse JSON", "create a directory", "write code to a file"
-  
-- COMPLEX: Requires breaking down into subtasks or involves multiple coordinated operations
-  Examples: "build a web application", "create a full API with authentication", "refactor a codebase"
-
-Consider:
-1. Does this task have a clear, direct solution using available tools?
-2. Would this task benefit from being broken into smaller, more manageable pieces?
-3. Is this a single operation or multiple related operations?`;
+    const prompt = this.promptBuilder.buildPrompt('task-classification', {
+      taskDescription
+    });
 
     try {
       // Get format instructions from ResponseValidator
