@@ -6,16 +6,13 @@
  * - COMPLEX: Needs decomposition into subtasks
  */
 
-import { ResponseValidator } from '@legion/output-schema';
-import PromptBuilder from './PromptBuilder.js';
+import Prompt from './Prompt.js';
 
 export default class TaskClassifier {
   constructor(llmClient) {
     this.llmClient = llmClient;
-    this.promptBuilder = new PromptBuilder();
-    this.isInitialized = false;
     
-    // Create response validator for classification responses
+    // Define classification schema
     const classificationSchema = {
       type: 'object',
       properties: {
@@ -30,35 +27,6 @@ export default class TaskClassifier {
       required: ['complexity', 'reasoning'],
       format: 'json'
     };
-    this.responseValidator = new ResponseValidator(classificationSchema, {
-      preferredFormat: 'json',
-      autoRepair: true
-    });
-  }
-
-  /**
-   * Initialize the prompt builder
-   */
-  async initialize() {
-    if (!this.isInitialized) {
-      await this.promptBuilder.initialize();
-      this.isInitialized = true;
-    }
-  }
-
-  /**
-   * Classify a task as SIMPLE or COMPLEX
-   * @param {string|Object} task - The task to classify
-   * @returns {Promise<Object>} Classification result with complexity and reasoning
-   */
-  async classify(task, sessionLogger = null, context = {}) {
-    // Ensure prompt builder is initialized
-    await this.initialize();
-    
-    const taskDescription = typeof task === 'string' ? task : (task.description || JSON.stringify(task));
-    
-    // Format artifacts section if available
-    const artifactsSection = this._formatArtifactsSection(context.artifactRegistry);
     
     // Create example data for better output instructions
     const exampleData = {
@@ -68,64 +36,63 @@ export default class TaskClassifier {
       estimatedSteps: 2
     };
     
-    // Generate output instructions using ResponseValidator
-    const outputPrompt = this.responseValidator.generateInstructions(exampleData, {
-      verbosity: 'detailed',
-      errorPrevention: true
+    // Create prompt instance for task classification
+    this.prompt = new Prompt('task-classification', classificationSchema, {
+      llmClient,
+      exampleData,
+      maxRetries: 3,
+      validatorOptions: {
+        preferredFormat: 'json',
+        autoRepair: true
+      }
     });
+  }
+
+  /**
+   * Classify a task as SIMPLE or COMPLEX
+   * @param {string|Object} task - The task to classify
+   * @returns {Promise<Object>} Classification result with complexity and reasoning
+   */
+  async classify(task, sessionLogger = null, context = {}) {
+    const taskDescription = typeof task === 'string' ? task : (task.description || JSON.stringify(task));
     
-    // Build prompt with schema-generated output instructions
-    const fullPrompt = this.promptBuilder.buildPromptWithSchema(
-      'task-classification',
+    // Format artifacts section if available
+    const artifactsSection = this._formatArtifactsSection(context.artifactRegistry);
+    
+    // Configure session logger for this prompt
+    if (sessionLogger) {
+      this.prompt.sessionLogger = sessionLogger;
+    }
+    
+    // Execute the prompt with task variables
+    const result = await this.prompt.execute(
       {
         taskDescription,
-        artifactsSection,
-        outputPrompt
+        artifactsSection
+      },
+      {
+        task,
+        interactionType: 'task-classification',
+        metadata: { 
+          taskDescription: taskDescription.substring(0, 100) 
+        }
       }
     );
-
-    try {
-      // Call LLM with the complete prompt
-      const response = await this.llmClient.complete(fullPrompt);
-      
-      // Log the interaction if logger is provided
-      if (sessionLogger) {
-        await sessionLogger.logInteraction(
-          task,
-          'task-classification',
-          fullPrompt,
-          response,
-          { taskDescription: taskDescription.substring(0, 100) }
-        );
+    
+    if (result.success) {
+      // Validate result complexity
+      const data = result.data;
+      if (!data.complexity || !['SIMPLE', 'COMPLEX'].includes(data.complexity)) {
+        data.complexity = 'COMPLEX'; // Default to COMPLEX if unclear
       }
       
-      // Use ResponseValidator to process the response
-      const parseResult = this.responseValidator.process(response);
-      if (!parseResult.success) {
-        console.warn('Failed to parse classification response:', parseResult.errors);
-        return {
-          complexity: 'COMPLEX',
-          reasoning: 'Could not parse LLM response',
-          suggestedApproach: 'Break down into subtasks',
-          estimatedSteps: 5
-        };
-      }
-      
-      const result = parseResult.data;
-      
-      // Validate result
-      if (!result.complexity || !['SIMPLE', 'COMPLEX'].includes(result.complexity)) {
-        result.complexity = 'COMPLEX'; // Default to COMPLEX if unclear
-      }
-      
-      return result;
-      
-    } catch (error) {
-      console.error('Task classification failed:', error.message);
-      // Default to COMPLEX on error (safer to decompose)
+      return data;
+    } else {
+      // Handle error case - default to COMPLEX (safer to decompose)
+      console.warn('Task classification failed:', result.error);
       return {
         complexity: 'COMPLEX',
-        reasoning: `Classification error: ${error.message}`,
+        reasoning: `Classification error: ${result.error}`,
         suggestedApproach: 'Break down into subtasks due to classification error',
         estimatedSteps: 5
       };

@@ -12,6 +12,7 @@ import { ToolRegistry } from '@legion/tools-registry';
 import { ResponseValidator } from '@legion/output-schema';
 import ArtifactRegistry from './ArtifactRegistry.js';
 import PromptBuilder from '../utils/PromptBuilder.js';
+import Prompt from '../utils/Prompt.js';
 import ToolDiscovery from '../utils/ToolDiscovery.js';
 import TaskClassifier from '../utils/TaskClassifier.js';
 import SessionLogger from '../utils/SessionLogger.js';
@@ -41,13 +42,32 @@ export default class SimpleROMAAgent {
     this.toolDiscovery = new ToolDiscovery(this.llmClient, this.toolRegistry);
     this.taskClassifier = new TaskClassifier(this.llmClient);
     
-    // Create response validators for different response types
+    // Create response validators for different response types (keeping for legacy compatibility)
     this.simpleTaskValidator = this._createSimpleTaskValidator();
     this.decompositionValidator = this._createDecompositionValidator();
     this.parentEvaluationValidator = this._createParentEvaluationValidator();
     this.completionEvaluationValidator = this._createCompletionEvaluationValidator();
     
-    // Output prompts are now handled by Task.getOutputPrompts() static method
+    // Create Prompt instances for different LLM interactions
+    this.parentEvaluationPrompt = new Prompt(null, this._getParentEvaluationSchema(), {
+      llmClient: this.llmClient,
+      maxRetries: 3
+    });
+    
+    this.completionEvaluationPrompt = new Prompt(null, this._getCompletionEvaluationSchema(), {
+      llmClient: this.llmClient,
+      maxRetries: 3
+    });
+    
+    this.simpleTaskPrompt = new Prompt(null, this._getSimpleTaskSchema(), {
+      llmClient: this.llmClient,
+      maxRetries: 3
+    });
+    
+    this.decompositionPrompt = new Prompt(null, this._getDecompositionSchema(), {
+      llmClient: this.llmClient,
+      maxRetries: 3
+    });
     
     // Initialize session logger
     this.sessionLogger = new SessionLogger();
@@ -218,6 +238,149 @@ export default class SimpleROMAAgent {
       preferredFormat: 'json',
       autoRepair: true
     });
+  }
+  
+  /**
+   * Get schema for parent evaluation responses (for Prompt class)
+   */
+  _getParentEvaluationSchema() {
+    return {
+      type: 'object',
+      properties: {
+        action: {
+          type: 'string',
+          enum: ['continue', 'complete', 'fail', 'create-subtask'],
+          description: 'The decision for what the parent task should do next'
+        },
+        relevantArtifacts: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'List of artifact names that are relevant for the next action'
+        },
+        reason: {
+          type: 'string',
+          description: 'Brief explanation of why this decision was made'
+        },
+        result: {
+          type: 'string',
+          description: 'Summary of the task result (only required if action is complete)'
+        },
+        newSubtask: {
+          type: 'object',
+          properties: {
+            description: { type: 'string' },
+            artifacts: {
+              type: 'array',
+              items: { type: 'string' }
+            }
+          },
+          required: ['description'],
+          description: 'Description of new subtask to create (only required if action is create-subtask)'
+        }
+      },
+      required: ['action', 'relevantArtifacts', 'reason'],
+      format: 'json'
+    };
+  }
+  
+  /**
+   * Get schema for completion evaluation responses (for Prompt class)
+   */
+  _getCompletionEvaluationSchema() {
+    return {
+      type: 'object',
+      properties: {
+        complete: {
+          type: 'boolean',
+          description: 'Whether the task has been fully completed'
+        },
+        reason: {
+          type: 'string',
+          description: 'Brief explanation of the evaluation decision'
+        },
+        result: {
+          type: 'string',
+          description: 'Summary of what was accomplished (required if complete is true)'
+        },
+        additionalSubtask: {
+          type: 'object',
+          properties: {
+            description: { type: 'string' },
+            artifacts: {
+              type: 'array',
+              items: { type: 'string' }
+            }
+          },
+          required: ['description'],
+          description: 'Description of additional work needed (required if complete is false)'
+        }
+      },
+      required: ['complete', 'reason'],
+      format: 'json'
+    };
+  }
+  
+  /**
+   * Get schema for simple task execution responses (for Prompt class)
+   */
+  _getSimpleTaskSchema() {
+    return {
+      type: 'object',
+      anyOf: [
+        {
+          type: 'object',
+          properties: {
+            useTools: { type: 'boolean', const: true },
+            toolCalls: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  tool: { type: 'string' },
+                  inputs: { type: 'object' },
+                  outputs: { type: 'object' }
+                },
+                required: ['tool', 'inputs']
+              }
+            }
+          },
+          required: ['useTools', 'toolCalls']
+        },
+        {
+          type: 'object',
+          properties: {
+            response: { type: 'string' }
+          },
+          required: ['response']
+        }
+      ],
+      format: 'json'
+    };
+  }
+  
+  /**
+   * Get schema for task decomposition responses (for Prompt class)
+   */
+  _getDecompositionSchema() {
+    return {
+      type: 'object',
+      properties: {
+        decompose: { type: 'boolean' },
+        subtasks: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              description: { type: 'string' },
+              outputs: { type: 'string' }
+            },
+            required: ['description']
+          }
+        }
+      },
+      required: ['decompose', 'subtasks'],
+      format: 'json'
+    };
   }
 
 
@@ -468,21 +631,29 @@ export default class SimpleROMAAgent {
     // Build evaluation prompt using parent's conversation history
     const prompt = this._buildParentEvaluationPrompt(parentTask, childTask);
     
-    const response = await parentTask.llmClient.complete(prompt);
+    // Use the new Prompt class with custom prompt text
+    const result = await this.parentEvaluationPrompt.executeCustom(prompt, {
+      task: { description: `Parent evaluates: ${parentTask.description}` },
+      interactionType: 'parent-evaluation',
+      metadata: { childTask: childTask.description }
+    });
     
-    if (parentTask.sessionLogger) {
-      await parentTask.sessionLogger.logInteraction(
-        { description: `Parent evaluates: ${parentTask.description}` },
-        'parent-evaluation',
-        prompt,
-        response,
-        { childTask: childTask.description }
-      );
+    if (!result.success) {
+      console.error('Parent evaluation failed:', result.error);
+      // Fallback to continuing with next subtask if available
+      if (parentTask.hasMoreSubtasks()) {
+        const nextSubtask = parentTask.createNextSubtask(this.taskManager);
+        const subtaskResult = await this._runTask(nextSubtask);
+        return await this._parentEvaluatesChild(parentTask, nextSubtask);
+      } else {
+        return await this._parentEvaluatesCompletion(parentTask);
+      }
     }
     
-    // Parse response to get parent's decision
+    const decision = result.data;
+    
+    // Handle parent's decision (already parsed by Prompt class)
     try {
-      const decision = JSON.parse(response);
       
       // Add decision to parent's conversation
       parentTask.addConversationEntry('assistant', 
@@ -597,19 +768,24 @@ export default class SimpleROMAAgent {
   async _parentEvaluatesCompletion(parentTask) {
     const prompt = this._buildCompletionEvaluationPrompt(parentTask);
     
-    const response = await parentTask.llmClient.complete(prompt);
+    // Use the new Prompt class with custom prompt text
+    const result = await this.completionEvaluationPrompt.executeCustom(prompt, {
+      task: { description: `Completion check: ${parentTask.description}` },
+      interactionType: 'completion-evaluation'
+    });
     
-    if (parentTask.sessionLogger) {
-      await parentTask.sessionLogger.logInteraction(
-        { description: `Completion check: ${parentTask.description}` },
-        'completion-evaluation',
-        prompt,
-        response
-      );
+    if (!result.success) {
+      console.error('Completion evaluation failed:', result.error);
+      parentTask.fail(new Error(result.error));
+      return {
+        success: false,
+        result: result.error,
+        artifacts: parentTask.artifactRegistry?.toJSON() || []
+      };
     }
     
     try {
-      const decision = JSON.parse(response);
+      const decision = result.data;
       
       if (decision.complete) {
         parentTask.complete(decision.result || { success: true });
@@ -782,84 +958,32 @@ Respond with JSON:
 
     const basePrompt = prompt + '\n\n' + formatInstructions;
     
-    // Use retry logic with error feedback from prompting package
-    const maxAttempts = 3;
-    let currentPrompt = basePrompt;
-    let lastErrors = null;
+    // Use the new Prompt class with custom prompt text
+    const result = await this.simpleTaskPrompt.executeCustom(basePrompt, {
+      task,
+      interactionType: 'simple-task-execution',
+      metadata: { toolCount: discoveredTools.length }
+    });
     
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        // Log the interaction
-        const response = await task.llmClient.complete(currentPrompt);
-        
-        if (task.sessionLogger) {
-          await task.sessionLogger.logInteraction(
-            task,
-            'simple-task-execution',
-            currentPrompt,
-            response,
-            { toolCount: discoveredTools.length, attempt }
-          );
-        }
-
-        // Use ResponseValidator to process the response
-        const result = this.simpleTaskValidator.process(response);
-        
-        if (result.success) {
-          // Success - return the parsed data
-          return result.data;
-        } else {
-          // Validation failed - prepare for retry with error feedback
-          lastErrors = result.errors;
-          
-          if (attempt < maxAttempts) {
-            // Build error feedback for next attempt
-            const errorList = result.errors.map((error, index) => {
-              let errorText = `${index + 1}. ${error.message}`;
-              if (error.suggestion) {
-                errorText += `\n   Suggestion: ${error.suggestion}`;
-              }
-              return errorText;
-            }).join('\n\n');
-
-            currentPrompt = `PREVIOUS RESPONSE HAD VALIDATION ERRORS:
-
-${errorList}
-
-ORIGINAL REQUEST:
-${basePrompt}
-
-PLEASE PROVIDE CORRECTED RESPONSE:`;
-            
-            console.log(`⚠️ Attempt ${attempt} failed validation, retrying...`);
-          }
-        }
-        
-      } catch (error) {
-        console.error(`Attempt ${attempt} failed with error:`, error.message);
-        if (attempt >= maxAttempts) {
-          throw error;
-        }
-        // For non-validation errors, just retry with the same prompt
-      }
+    if (result.success) {
+      return result.data;
     }
     
-    // All attempts failed - return the last validation errors
-    console.error('Failed to get valid response after', maxAttempts, 'attempts. Last errors:', lastErrors);
+    // Handle failure from Prompt class
+    console.error('Simple task execution failed:', result.error);
     
-    // Instead of returning a generic "Failed to parse response", try to provide a meaningful fallback
-    // based on the task type
+    // Provide meaningful fallback based on the task type
     if (task.description.toLowerCase().includes('what') || 
         task.description.toLowerCase().includes('explain') ||
         task.description.toLowerCase().includes('?')) {
       // Question-type task - provide direct response
       return { 
-        response: `I apologize, but I had difficulty formatting my response correctly after ${maxAttempts} attempts. The validation errors were: ${lastErrors?.map(e => e.message).join(', ')}.` 
+        response: `I apologize, but I had difficulty processing this request. Error: ${result.error}` 
       };
     } else {
       // Task-type - suggest tool execution failed
       return { 
-        response: `Unable to execute task due to response formatting issues after ${maxAttempts} attempts. Errors: ${lastErrors?.map(e => e.message).join(', ')}.` 
+        response: `Unable to execute task due to processing issues. Error: ${result.error}` 
       };
     }
   }
@@ -893,69 +1017,20 @@ PLEASE PROVIDE CORRECTED RESPONSE:`;
 
     const basePrompt = prompt + '\n\n' + formatInstructions;
     
-    // Use retry logic with error feedback
-    const maxAttempts = 3;
-    let currentPrompt = basePrompt;
-    let lastErrors = null;
+    // Use the new Prompt class with custom prompt text
+    const result = await this.decompositionPrompt.executeCustom(basePrompt, {
+      task,
+      interactionType: 'task-decomposition',
+      metadata: { classification: task.metadata.classification }
+    });
     
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        const response = await task.llmClient.complete(currentPrompt);
-        
-        if (task.sessionLogger) {
-          await task.sessionLogger.logInteraction(
-            task,
-            'task-decomposition',
-            currentPrompt,
-            response,
-            { classification: task.metadata.classification, attempt }
-          );
-        }
-
-        // Use ResponseValidator to process the response
-        const result = this.decompositionValidator.process(response);
-        
-        if (result.success) {
-          return result.data;
-        } else {
-          // Validation failed - prepare for retry
-          lastErrors = result.errors;
-          
-          if (attempt < maxAttempts) {
-            // Build error feedback for next attempt
-            const errorList = result.errors.map((error, index) => {
-              let errorText = `${index + 1}. ${error.message}`;
-              if (error.suggestion) {
-                errorText += `\n   Suggestion: ${error.suggestion}`;
-              }
-              return errorText;
-            }).join('\n\n');
-
-            currentPrompt = `PREVIOUS RESPONSE HAD VALIDATION ERRORS:
-
-${errorList}
-
-ORIGINAL REQUEST:
-${basePrompt}
-
-PLEASE PROVIDE CORRECTED RESPONSE:`;
-            
-            console.log(`⚠️ Decomposition attempt ${attempt} failed validation, retrying...`);
-          }
-        }
-        
-      } catch (error) {
-        console.error(`Decomposition attempt ${attempt} failed with error:`, error.message);
-        if (attempt >= maxAttempts) {
-          // Return empty decomposition if all attempts fail with errors
-          return { decompose: false, subtasks: [] };
-        }
-      }
+    if (result.success) {
+      return result.data;
+    } else {
+      // Handle failure from Prompt class
+      console.error('Task decomposition failed:', result.error);
+      return { decompose: false, subtasks: [] };
     }
-    
-    // All validation attempts failed
-    console.error('Failed to get valid decomposition after', maxAttempts, 'attempts. Last errors:', lastErrors);
-    return { decompose: false, subtasks: [] };
   }
 
   /**

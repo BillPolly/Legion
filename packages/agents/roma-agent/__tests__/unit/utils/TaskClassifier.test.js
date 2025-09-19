@@ -22,37 +22,39 @@ describe('TaskClassifier Unit Tests', () => {
   });
 
   describe('Constructor and Initialization', () => {
-    it('should initialize with LLM client and create ResponseValidator', () => {
+    it('should initialize with LLM client and create Prompt instance', () => {
       expect(classifier.llmClient).toBe(mockLLMClient);
-      expect(classifier.responseValidator).toBeInstanceOf(ResponseValidator);
+      expect(classifier.prompt).toBeDefined();
+      expect(classifier.prompt.templateName).toBe('task-classification');
     });
 
-    it('should create ResponseValidator with correct schema', () => {
-      const validator = classifier.responseValidator;
-      
-      // Test that validator accepts valid classification responses
-      const validResponse = {
+    it('should create Prompt with correct schema validation', async () => {
+      // Test that the prompt accepts valid classification responses
+      const validResponse = JSON.stringify({
         complexity: 'SIMPLE',
         reasoning: 'Can be done with file operations',
         suggestedApproach: 'Use file_write tool',
         estimatedSteps: 2
-      };
-      
-      const result = validator.validateExample(validResponse);
-      expect(result.success).toBe(true);
+      });
+
+      mockLLMClient.complete.mockResolvedValue(validResponse);
+
+      const result = await classifier.classify('test task');
+      expect(result.complexity).toBe('SIMPLE');
+      expect(result.reasoning).toContain('file operations');
     });
 
-    it('should create ResponseValidator that rejects invalid responses', () => {
-      const validator = classifier.responseValidator;
-      
+    it('should reject invalid responses through Prompt validation', async () => {
       // Test invalid complexity value
-      const invalidResponse = {
+      const invalidResponse = JSON.stringify({
         complexity: 'MEDIUM', // Invalid - should be SIMPLE or COMPLEX
         reasoning: 'Test reasoning'
-      };
-      
-      const result = validator.validateExample(invalidResponse);
-      expect(result.success).toBe(false);
+      });
+
+      mockLLMClient.complete.mockResolvedValue(invalidResponse);
+
+      const result = await classifier.classify('test task');
+      expect(result.complexity).toBe('COMPLEX'); // Should default to COMPLEX on validation failure
     });
   });
 
@@ -243,7 +245,7 @@ describe('TaskClassifier Unit Tests', () => {
       const result = await classifier.classify(task);
 
       expect(result.complexity).toBe('COMPLEX'); // Default to COMPLEX on parse error
-      expect(result.reasoning).toContain('Could not parse LLM response');
+      expect(result.reasoning).toContain('Classification error');
     });
 
     it('should handle partial JSON responses', async () => {
@@ -259,7 +261,7 @@ describe('TaskClassifier Unit Tests', () => {
       const result = await classifier.classify(task);
 
       expect(result.complexity).toBe('COMPLEX'); // Default on validation failure
-      expect(result.reasoning).toContain('Could not parse LLM response');
+      expect(result.reasoning).toContain('Classification error');
     });
 
     it('should handle invalid complexity values', async () => {
@@ -274,12 +276,12 @@ describe('TaskClassifier Unit Tests', () => {
       const result = await classifier.classify(task);
 
       expect(result.complexity).toBe('COMPLEX'); // Should default to COMPLEX
-      expect(result.reasoning).toBe('Could not parse LLM response'); // ResponseValidator rejects invalid schema
+      expect(result.reasoning).toContain('Classification error'); // Prompt class handles validation errors
     });
   });
 
-  describe('ResponseValidator Integration', () => {
-    it('should use ResponseValidator to generate format instructions', async () => {
+  describe('Prompt Integration', () => {
+    it('should use Prompt to generate format instructions', async () => {
       const validResponse = JSON.stringify({
         complexity: 'SIMPLE',
         reasoning: 'Test reasoning'
@@ -289,14 +291,14 @@ describe('TaskClassifier Unit Tests', () => {
 
       await classifier.classify('test task');
 
-      // Verify that the prompt includes format instructions from ResponseValidator
+      // Verify that the prompt includes format instructions from the Prompt class
       const capturedPrompt = mockLLMClient.complete.mock.calls[0][0];
       expect(capturedPrompt).toContain('JSON');
       expect(capturedPrompt).toContain('complexity');
       expect(capturedPrompt).toContain('reasoning');
     });
 
-    it('should use ResponseValidator to process LLM responses', async () => {
+    it('should use Prompt to process LLM responses', async () => {
       const validResponse = JSON.stringify({
         complexity: 'SIMPLE',
         reasoning: 'Valid response format',
@@ -314,24 +316,16 @@ describe('TaskClassifier Unit Tests', () => {
       expect(result.estimatedSteps).toBe(3);
     });
 
-    it('should handle ResponseValidator parsing failures', async () => {
-      // Mock ResponseValidator to return parse failure
-      const originalProcess = classifier.responseValidator.process;
-      classifier.responseValidator.process = jest.fn().mockReturnValue({
-        success: false,
-        errors: ['Invalid format'],
-        data: null
-      });
+    it('should handle Prompt validation failures', async () => {
+      // Provide an invalid response that will fail validation
+      const invalidResponse = '{"invalid": "response format"}';
 
-      mockLLMClient.complete.mockResolvedValue('{"complexity": "SIMPLE"}');
+      mockLLMClient.complete.mockResolvedValue(invalidResponse);
 
       const result = await classifier.classify('test task');
 
       expect(result.complexity).toBe('COMPLEX');
-      expect(result.reasoning).toContain('Could not parse LLM response');
-
-      // Restore original method
-      classifier.responseValidator.process = originalProcess;
+      expect(result.reasoning).toContain('Classification error');
     });
   });
 
@@ -370,13 +364,17 @@ describe('TaskClassifier Unit Tests', () => {
     });
 
     it('should handle batch classification with some failures', async () => {
-      // First call succeeds, second fails, third succeeds
+      // First call succeeds, second fails (all retries), third succeeds
       mockLLMClient.complete
         .mockResolvedValueOnce(JSON.stringify({
           complexity: 'SIMPLE',
           reasoning: 'Success'
         }))
+        // Task 2: All retry attempts fail (Prompt retries up to 3 times)
         .mockRejectedValueOnce(new Error('LLM failure'))
+        .mockRejectedValueOnce(new Error('LLM failure'))
+        .mockRejectedValueOnce(new Error('LLM failure'))
+        // Task 3: Succeeds
         .mockResolvedValueOnce(JSON.stringify({
           complexity: 'COMPLEX',
           reasoning: 'Success again'

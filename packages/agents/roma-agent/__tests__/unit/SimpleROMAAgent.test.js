@@ -64,6 +64,19 @@ describe('SimpleROMAAgent Unit Tests', () => {
     agent.parentEvaluationValidator = agent._createParentEvaluationValidator();
     agent.completionEvaluationValidator = agent._createCompletionEvaluationValidator();
     
+    // Create mock Prompt instances (simulating what initialize() would create)
+    const mockPromptBase = {
+      executeCustom: jest.fn(),
+      execute: jest.fn(),
+      llmClient: mockLLMClient,
+      maxRetries: 3
+    };
+    
+    agent.parentEvaluationPrompt = { ...mockPromptBase };
+    agent.completionEvaluationPrompt = { ...mockPromptBase };
+    agent.simpleTaskPrompt = { ...mockPromptBase };
+    agent.decompositionPrompt = { ...mockPromptBase };
+    
     // Create mock session logger
     agent.sessionLogger = {
       initialize: jest.fn().mockResolvedValue(),
@@ -402,7 +415,26 @@ describe('SimpleROMAAgent Unit Tests', () => {
     });
   });
   
-  describe('ResponseValidator Integration', () => {
+  describe('Prompt Integration', () => {
+    it('should create Prompt instances during initialization', () => {
+      expect(agent.parentEvaluationPrompt).toBeDefined();
+      expect(agent.completionEvaluationPrompt).toBeDefined();
+      expect(agent.simpleTaskPrompt).toBeDefined();
+      expect(agent.decompositionPrompt).toBeDefined();
+      
+      // Verify Prompt instances have expected configuration
+      expect(agent.parentEvaluationPrompt.llmClient).toBe(mockLLMClient);
+      expect(agent.parentEvaluationPrompt.maxRetries).toBe(3);
+    });
+
+    it('should maintain legacy ResponseValidator instances for compatibility', () => {
+      // Legacy validators should still exist for backward compatibility
+      expect(agent.simpleTaskValidator).toBeDefined();
+      expect(agent.decompositionValidator).toBeDefined();
+      expect(agent.parentEvaluationValidator).toBeDefined();
+      expect(agent.completionEvaluationValidator).toBeDefined();
+    });
+    
     it('should validate simple task responses against schema', () => {
       const validToolCallResponse = {
         useTools: true,

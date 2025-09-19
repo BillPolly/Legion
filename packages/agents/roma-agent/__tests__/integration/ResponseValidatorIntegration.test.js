@@ -35,7 +35,7 @@ describe('ResponseValidator Integration Tests', () => {
         estimatedSteps: 2
       };
 
-      const result = classifier.responseValidator.validateExample(validSimpleResponse);
+      const result = classifier.prompt.responseValidator.validateExample(validSimpleResponse);
       
       expect(result.success).toBe(true);
       expect(result.errors).toBeUndefined();
@@ -49,7 +49,7 @@ describe('ResponseValidator Integration Tests', () => {
         suggestedApproach: 'Break down into HTML, CSS, JavaScript, and deployment subtasks'
       };
 
-      const result = classifier.responseValidator.validateExample(validComplexResponse);
+      const result = classifier.prompt.responseValidator.validateExample(validComplexResponse);
       
       expect(result.success).toBe(true);
       expect(result.errors).toBeUndefined();
@@ -63,7 +63,7 @@ describe('ResponseValidator Integration Tests', () => {
         reasoning: 'This complexity level is not allowed'
       };
 
-      const result = classifier.responseValidator.validateExample(invalidResponse);
+      const result = classifier.prompt.responseValidator.validateExample(invalidResponse);
       
       expect(result.success).toBe(false);
       expect(result.errors).toBeDefined();
@@ -76,7 +76,7 @@ describe('ResponseValidator Integration Tests', () => {
         // Missing required 'reasoning' field
       };
 
-      const result = classifier.responseValidator.validateExample(incompleteResponse);
+      const result = classifier.prompt.responseValidator.validateExample(incompleteResponse);
       
       expect(result.success).toBe(false);
       expect(result.errors).toBeDefined();
@@ -93,7 +93,7 @@ describe('ResponseValidator Integration Tests', () => {
         anotherExtra: 42
       };
 
-      const result = classifier.responseValidator.validateExample(responseWithExtras);
+      const result = classifier.prompt.responseValidator.validateExample(responseWithExtras);
       
       expect(result.success).toBe(true);
       expect(result.data.complexity).toBe('SIMPLE');
@@ -101,7 +101,7 @@ describe('ResponseValidator Integration Tests', () => {
     });
 
     it('should generate proper format instructions', () => {
-      const instructions = classifier.responseValidator.generateInstructions(null, {
+      const instructions = classifier.prompt.responseValidator.generateInstructions(null, {
         format: 'json',
         verbosity: 'concise'
       });
