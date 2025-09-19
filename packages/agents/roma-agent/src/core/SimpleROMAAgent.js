@@ -134,6 +134,7 @@ export default class SimpleROMAAgent {
             type: 'object',
             properties: {
               description: { type: 'string' },
+              inputs: { type: 'string' },
               outputs: { type: 'string' }
             },
             required: ['description']
@@ -372,6 +373,7 @@ export default class SimpleROMAAgent {
             type: 'object',
             properties: {
               description: { type: 'string' },
+              inputs: { type: 'string' },
               outputs: { type: 'string' }
             },
             required: ['description']
@@ -607,7 +609,7 @@ export default class SimpleROMAAgent {
     }
     
     // Step 2: Create and execute the first subtask
-    const subtask = task.createNextSubtask(this.taskManager);
+    const subtask = await task.createNextSubtask(this.taskManager);
     
     if (!subtask) {
       // No subtasks to execute - evaluate completion
@@ -642,7 +644,7 @@ export default class SimpleROMAAgent {
       console.error('Parent evaluation failed:', result.error);
       // Fallback to continuing with next subtask if available
       if (parentTask.hasMoreSubtasks()) {
-        const nextSubtask = parentTask.createNextSubtask(this.taskManager);
+        const nextSubtask = await parentTask.createNextSubtask(this.taskManager);
         const subtaskResult = await this._runTask(nextSubtask);
         return await this._parentEvaluatesChild(parentTask, nextSubtask);
       } else {
@@ -676,7 +678,7 @@ export default class SimpleROMAAgent {
           // Check if there are more planned subtasks
           if (parentTask.hasMoreSubtasks()) {
             // Create and execute the next planned subtask
-            const nextSubtask = parentTask.createNextSubtask(this.taskManager);
+            const nextSubtask = await parentTask.createNextSubtask(this.taskManager);
             console.log(`📍 Executing next subtask ${parentTask.currentSubtaskIndex + 1}/${parentTask.plannedSubtasks.length}: ${nextSubtask.description}`);
             
             const subtaskResult = await this._runTask(nextSubtask);
@@ -728,7 +730,7 @@ export default class SimpleROMAAgent {
             });
             
             // Create and execute it
-            const newSubtask = parentTask.createNextSubtask(this.taskManager);
+            const newSubtask = await parentTask.createNextSubtask(this.taskManager);
             console.log(`📍 Executing new subtask: ${newSubtask.description}`);
             
             const subtaskResult = await this._runTask(newSubtask);
@@ -741,7 +743,7 @@ export default class SimpleROMAAgent {
       
       // Default: continue with next planned subtask if any
       if (parentTask.hasMoreSubtasks()) {
-        const nextSubtask = parentTask.createNextSubtask(this.taskManager);
+        const nextSubtask = await parentTask.createNextSubtask(this.taskManager);
         const subtaskResult = await this._runTask(nextSubtask);
         return await this._parentEvaluatesChild(parentTask, nextSubtask);
       } else {
@@ -752,7 +754,7 @@ export default class SimpleROMAAgent {
       console.error('Failed to parse parent evaluation:', error);
       // Default to continuing with next subtask if available
       if (parentTask.hasMoreSubtasks()) {
-        const nextSubtask = parentTask.createNextSubtask(this.taskManager);
+        const nextSubtask = await parentTask.createNextSubtask(this.taskManager);
         const subtaskResult = await this._runTask(nextSubtask);
         return await this._parentEvaluatesChild(parentTask, nextSubtask);
       } else {
@@ -810,7 +812,7 @@ export default class SimpleROMAAgent {
           });
           
           // Create and execute it
-          const newSubtask = parentTask.createNextSubtask(this.taskManager);
+          const newSubtask = await parentTask.createNextSubtask(this.taskManager);
           console.log(`📍 Executing additional subtask: ${newSubtask.description}`);
           
           const subtaskResult = await this._runTask(newSubtask);

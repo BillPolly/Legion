@@ -54,12 +54,20 @@ For tasks that build in layers of complexity:
 
 ## Artifact Management Strategy
 
+### Input/Output Planning:
+Each subtask should specify:
+- **Inputs**: What artifacts this subtask needs from previous steps (comma-separated list)
+- **Outputs**: What artifacts this subtask will produce for later steps (comma-separated list)
+
 ### Naming Convention:
 - Use descriptive names: `@user_schema`, `@api_endpoints`, `@test_results`
 - Avoid generic names: `@data`, `@output`, `@result`
-- Include type hints: `@config_json`, `@server_code`, `@error_log`
+- Include type hints when helpful: `@config_json`, `@server_code`, `@error_log`
+- Type hints are guidance only - they can be descriptive: `@working_server`, `@tested_api`
 
 ### Dependency Planning:
+- First subtask usually has no inputs (or gets them from parent context)
+- Each subtask's outputs become available as inputs for later subtasks
 - Plan which subtasks will create which artifacts
 - Identify which later subtasks need which artifacts
 - Ensure no circular dependencies

@@ -34,11 +34,32 @@ export default class Task {
       ...context.metadata
     };
     
+    // Each task owns its own ArtifactRegistry
+    const ArtifactRegistry = context.ArtifactRegistryClass;
+    if (ArtifactRegistry) {
+      this.artifactRegistry = new ArtifactRegistry();
+    } else {
+      // Lazy load if not provided
+      this.artifactRegistry = null;
+      this._artifactRegistryClass = null;
+    }
+    
+    // Track goal inputs/outputs from decomposition
+    this.goalInputs = [];   // What artifacts this task expects to receive
+    this.goalOutputs = [];  // What artifacts this task promises to deliver
+    
+    // Set initial goals if provided in context
+    if (context.goalInputs) {
+      this.setGoalInputs(context.goalInputs);
+    }
+    if (context.goalOutputs) {
+      this.setGoalOutputs(context.goalOutputs);
+    }
+    
     // Store references to services this task needs
     this.llmClient = context.llmClient || null;
     this.taskClassifier = context.taskClassifier || null;
     this.toolDiscovery = context.toolDiscovery || null;
-    this.artifactRegistry = context.artifactRegistry || null;
     this.sessionLogger = context.sessionLogger || null;
     this.simpleTaskValidator = context.simpleTaskValidator || null;
     this.decompositionValidator = context.decompositionValidator || null;
@@ -63,6 +84,148 @@ export default class Task {
     if (parent) {
       parent.addChild(this);
     }
+  }
+  
+  /**
+   * Ensure artifact registry is initialized (lazy loading)
+   */
+  async ensureArtifactRegistry() {
+    if (!this.artifactRegistry) {
+      if (!this._artifactRegistryClass) {
+        const { default: ArtifactRegistry } = await import('./ArtifactRegistry.js');
+        this._artifactRegistryClass = ArtifactRegistry;
+      }
+      this.artifactRegistry = new this._artifactRegistryClass();
+    }
+    return this.artifactRegistry;
+  }
+  
+  /**
+   * Set the artifacts this task expects to receive (goal inputs)
+   * @param {Array} inputs - Array of {name: string, type?: string, description?: string}
+   */
+  setGoalInputs(inputs) {
+    this.goalInputs = inputs || [];
+    if (inputs && inputs.length > 0) {
+      this.addConversationEntry('system', 
+        `Task expects inputs: ${inputs.map(i => `@${i.name}${i.type ? ` (${i.type})` : ''}`).join(', ')}`
+      );
+    }
+  }
+  
+  /**
+   * Set the artifacts this task promises to deliver (goal outputs)
+   * @param {Array} outputs - Array of {name: string, type?: string, description?: string}
+   */
+  setGoalOutputs(outputs) {
+    this.goalOutputs = outputs || [];
+    if (outputs && outputs.length > 0) {
+      this.addConversationEntry('system',
+        `Task will produce outputs: ${outputs.map(o => `@${o.name}${o.type ? ` (${o.type})` : ''}`).join(', ')}`
+      );
+    }
+  }
+  
+  /**
+   * Receive artifacts from parent task at task start
+   * @param {Object} parentRegistry - Parent's artifact registry
+   * @param {Array} artifactNames - Specific artifact names to receive (optional)
+   */
+  async receiveArtifacts(parentRegistry, artifactNames = null) {
+    if (!parentRegistry) return;
+    
+    await this.ensureArtifactRegistry();
+    
+    // Determine which artifacts to receive
+    const toReceive = artifactNames || this.goalInputs.map(g => g.name);
+    
+    for (const name of toReceive) {
+      const artifact = parentRegistry.get(name);
+      if (artifact) {
+        // Copy artifact to this task's registry
+        this.artifactRegistry.store(name, artifact.value, {
+          type: artifact.type,
+          description: artifact.description
+        });
+        this.addArtifact(name);
+        console.log(`📥 Task received artifact @${name} from parent`);
+      }
+    }
+    
+    if (toReceive.length > 0) {
+      this.addConversationEntry('system',
+        `Received artifacts from parent: ${toReceive.map(n => '@' + n).join(', ')}`
+      );
+    }
+  }
+  
+  /**
+   * Transfer achieved goal outputs back to parent upon completion
+   * @param {Object} parentRegistry - Parent's artifact registry to transfer to
+   * @returns {Array} Names of artifacts transferred
+   */
+  async deliverGoalOutputs(parentRegistry) {
+    if (!parentRegistry || !this.artifactRegistry) return [];
+    
+    const delivered = [];
+    
+    // Transfer each goal output that was achieved
+    for (const goal of this.goalOutputs) {
+      const artifact = this.artifactRegistry.get(goal.name);
+      if (artifact) {
+        // Transfer to parent's registry
+        parentRegistry.store(goal.name, artifact.value, {
+          type: artifact.type || goal.type,
+          description: artifact.description || goal.description
+        });
+        delivered.push(goal.name);
+        console.log(`📤 Delivered artifact @${goal.name} to parent`);
+      } else {
+        console.log(`⚠️ Goal output @${goal.name} was not produced`);
+      }
+    }
+    
+    if (delivered.length > 0) {
+      this.addConversationEntry('system',
+        `Delivered outputs to parent: ${delivered.map(n => '@' + n).join(', ')}`
+      );
+    }
+    
+    return delivered;
+  }
+  
+  /**
+   * Check if task has received all required inputs
+   * @returns {boolean} True if all goal inputs are available
+   */
+  hasRequiredInputs() {
+    if (!this.artifactRegistry || this.goalInputs.length === 0) {
+      return true; // No inputs required
+    }
+    
+    for (const input of this.goalInputs) {
+      if (!this.artifactRegistry.get(input.name)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  
+  /**
+   * Check if task has achieved its goal outputs
+   * @returns {boolean} True if all goal outputs are available
+   */
+  hasAchievedGoals() {
+    if (!this.artifactRegistry || this.goalOutputs.length === 0) {
+      return true; // No outputs required
+    }
+    
+    for (const output of this.goalOutputs) {
+      if (!this.artifactRegistry.get(output.name)) {
+        return false;
+      }
+    }
+    return true;
   }
   
   /**
@@ -446,7 +609,7 @@ export default class Task {
   /**
    * Create and return the next subtask to execute
    */
-  createNextSubtask(taskManager) {
+  async createNextSubtask(taskManager) {
     this.currentSubtaskIndex++;
     
     if (this.currentSubtaskIndex >= this.plannedSubtasks.length) {
@@ -456,7 +619,11 @@ export default class Task {
     
     const subtaskDef = this.plannedSubtasks[this.currentSubtaskIndex];
     
-    // Create the actual Task object for this subtask
+    // Parse inputs/outputs from subtask definition
+    const goalInputs = subtaskDef.inputs ? this._parseArtifactSpecs(subtaskDef.inputs) : [];
+    const goalOutputs = subtaskDef.outputs ? this._parseArtifactSpecs(subtaskDef.outputs) : [];
+    
+    // Create the actual Task object for this subtask with its own ArtifactRegistry
     const subtask = new Task(subtaskDef.description, this, {
       metadata: { 
         outputs: subtaskDef.outputs,
@@ -466,18 +633,24 @@ export default class Task {
       llmClient: this.llmClient,
       taskClassifier: this.taskClassifier,
       toolDiscovery: this.toolDiscovery,
-      artifactRegistry: this.artifactRegistry,
+      ArtifactRegistryClass: this._artifactRegistryClass || (await import('./ArtifactRegistry.js')).default,
       sessionLogger: this.sessionLogger,
       simpleTaskValidator: this.simpleTaskValidator,
       decompositionValidator: this.decompositionValidator,
+      parentEvaluationValidator: this.parentEvaluationValidator,
+      completionEvaluationValidator: this.completionEvaluationValidator,
       fastToolDiscovery: this.fastToolDiscovery,
-      agent: this.agent
+      workspaceDir: this.workspaceDir,
+      agent: this.agent,
+      taskManager: taskManager,
+      // Set goal inputs/outputs
+      goalInputs: goalInputs,
+      goalOutputs: goalOutputs
     });
     
-    // Decide which artifacts to give to this subtask
-    const relevantArtifacts = this._selectArtifactsForSubtask(subtaskDef);
-    if (relevantArtifacts.length > 0) {
-      subtask.inheritArtifacts(relevantArtifacts);
+    // Transfer specified artifacts from parent to child
+    if (goalInputs.length > 0 && this.artifactRegistry) {
+      await subtask.receiveArtifacts(this.artifactRegistry, goalInputs.map(g => g.name));
     }
     
     // Register with task manager if provided
@@ -490,6 +663,74 @@ export default class Task {
     );
     
     return subtask;
+  }
+  
+  /**
+   * Parse artifact specifications from decomposition output
+   * Handles formats like "@artifact_name", "@artifact_name:type", or "artifact_name (type)"
+   * @param {string|Array} specs - Artifact specifications from decomposition
+   * @returns {Array} Parsed artifact specifications
+   */
+  _parseArtifactSpecs(specs) {
+    if (!specs) return [];
+    
+    // Handle array format
+    if (Array.isArray(specs)) {
+      return specs.map(spec => {
+        if (typeof spec === 'object') return spec;
+        return this._parseSingleArtifactSpec(spec);
+      });
+    }
+    
+    // Handle comma-separated string format
+    if (typeof specs === 'string') {
+      const parts = specs.split(',').map(s => s.trim()).filter(s => s);
+      return parts.map(part => this._parseSingleArtifactSpec(part));
+    }
+    
+    return [];
+  }
+  
+  /**
+   * Parse a single artifact specification
+   * @param {string} spec - Single artifact specification
+   * @returns {Object} Parsed artifact {name, type, description}
+   */
+  _parseSingleArtifactSpec(spec) {
+    // Remove @ prefix if present
+    let cleaned = spec.startsWith('@') ? spec.substring(1) : spec;
+    
+    // Check for type annotation formats
+    // Format 1: "name:type"
+    if (cleaned.includes(':')) {
+      const [name, type] = cleaned.split(':').map(s => s.trim());
+      return { name, type, description: `${name} artifact` };
+    }
+    
+    // Format 2: "name (type)"
+    const parenMatch = cleaned.match(/^(.+?)\s*\((.+?)\)$/);
+    if (parenMatch) {
+      return { 
+        name: parenMatch[1].trim(), 
+        type: parenMatch[2].trim(),
+        description: `${parenMatch[1].trim()} artifact`
+      };
+    }
+    
+    // Format 3: "name_type" - try to infer type from suffix
+    const typeHints = ['json', 'code', 'text', 'config', 'schema', 'data', 'file', 'url', 'result'];
+    for (const hint of typeHints) {
+      if (cleaned.toLowerCase().endsWith('_' + hint)) {
+        return {
+          name: cleaned,
+          type: hint,
+          description: `${cleaned} artifact`
+        };
+      }
+    }
+    
+    // Default: just name, no type
+    return { name: cleaned, type: null, description: `${cleaned} artifact` };
   }
   
   /**
@@ -714,7 +955,7 @@ export default class Task {
     // Step 2: Create and execute the first subtask
     // Note: We need taskManager from somewhere - this is a design issue
     // For now, we'll pass it through context or use a singleton pattern
-    const subtask = this.createNextSubtask(this.metadata.taskManager);
+    const subtask = await this.createNextSubtask(this.metadata.taskManager);
     
     if (!subtask) {
       // No subtasks to execute - evaluate completion
@@ -743,6 +984,18 @@ export default class Task {
    * Parent task evaluates after child completes and decides what to do
    */
   async evaluateChild(childTask) {
+    // First, receive goal outputs from the child
+    if (childTask.artifactRegistry && this.artifactRegistry) {
+      const delivered = await childTask.deliverGoalOutputs(this.artifactRegistry);
+      if (delivered.length > 0) {
+        console.log(`📦 Parent received ${delivered.length} artifacts from child: ${delivered.join(', ')}`);
+        // Add delivered artifacts to parent's artifact set
+        for (const name of delivered) {
+          this.addArtifact(name);
+        }
+      }
+    }
+    
     // Check if child task failed
     if (childTask.status === 'failed') {
       // Propagate child failure up to parent
@@ -800,7 +1053,7 @@ export default class Task {
           // Check if there are more planned subtasks
           if (this.hasMoreSubtasks()) {
             // Create and execute the next planned subtask
-            const nextSubtask = this.createNextSubtask(this.metadata.taskManager);
+            const nextSubtask = await this.createNextSubtask(this.metadata.taskManager);
             console.log(`📍 Executing next subtask ${this.currentSubtaskIndex + 1}/${this.plannedSubtasks.length}: ${nextSubtask.description}`);
             
             const subtaskResult = await nextSubtask.execute();
@@ -849,7 +1102,7 @@ export default class Task {
             this.plannedSubtasks.push(decision.newSubtask);
             
             // Create and execute it
-            const newSubtask = this.createNextSubtask(this.metadata.taskManager);
+            const newSubtask = await this.createNextSubtask(this.metadata.taskManager);
             console.log(`📍 Executing new subtask: ${newSubtask.description}`);
             
             const subtaskResult = await newSubtask.execute();
@@ -860,7 +1113,7 @@ export default class Task {
       
       // Default: continue with next planned subtask if any
       if (this.hasMoreSubtasks()) {
-        const nextSubtask = this.createNextSubtask(this.metadata.taskManager);
+        const nextSubtask = await this.createNextSubtask(this.metadata.taskManager);
         const subtaskResult = await nextSubtask.execute();
         return await this.evaluateChild(nextSubtask);
       } else {
@@ -871,7 +1124,7 @@ export default class Task {
       console.error('Failed to parse parent evaluation:', error);
       // Default to continuing with next subtask if available
       if (this.hasMoreSubtasks()) {
-        const nextSubtask = this.createNextSubtask(this.metadata.taskManager);
+        const nextSubtask = await this.createNextSubtask(this.metadata.taskManager);
         const subtaskResult = await nextSubtask.execute();
         return await this.evaluateChild(nextSubtask);
       } else {
@@ -922,7 +1175,7 @@ export default class Task {
         this.plannedSubtasks.push(evaluation.additionalSubtask);
         
         // Create and execute it
-        const newSubtask = this.createNextSubtask(this.metadata.taskManager);
+        const newSubtask = await this.createNextSubtask(this.metadata.taskManager);
         console.log(`📍 Executing additional subtask: ${newSubtask.description}`);
         
         const subtaskResult = await newSubtask.execute();
