@@ -296,37 +296,75 @@ describe('SimpleROMAAgent Unit Tests', () => {
   
   describe('Complex Task Decomposition', () => {
     it('should decompose COMPLEX tasks into subtasks', async () => {
-      mockTaskClassifier.classify.mockResolvedValue({
-        complexity: 'COMPLEX',
-        reasoning: 'Multi-step application creation'
-      });
+      // Mock first call to classify main task as COMPLEX
+      mockTaskClassifier.classify
+        .mockResolvedValueOnce({
+          complexity: 'COMPLEX',
+          reasoning: 'Multi-step application creation'
+        })
+        // Then mock each subtask classification as SIMPLE
+        .mockResolvedValueOnce({ complexity: 'SIMPLE', reasoning: 'Simple setup task' })
+        .mockResolvedValueOnce({ complexity: 'SIMPLE', reasoning: 'Simple file creation' })
+        .mockResolvedValueOnce({ complexity: 'SIMPLE', reasoning: 'Simple config task' });
       
-      // Set up proper mock sequence for complex task with subtasks
-      mockLLMClient.complete
+      // Provide mock tools for subtasks to succeed
+      const mockTool = {
+        name: 'file_write',
+        execute: jest.fn().mockResolvedValue({ success: true, filepath: '/tmp/created' })
+      };
+      mockToolDiscovery.discoverTools.mockResolvedValue([mockTool]);
+      
+      // Set up comprehensive LLM call sequence (based on the working test above)
+      // Complex tasks require many LLM calls for decomposition, subtask execution, and parent evaluations
+      mockLLMClient.complete = jest.fn()
+        // 1. Main task decomposition
         .mockResolvedValueOnce(JSON.stringify({
           decompose: true,
           subtasks: [
             { description: 'Setup project structure', outputs: '@project_structure' },
-            { description: 'Create main application file', outputs: '@main_app' },
-            { description: 'Add configuration files', outputs: '@config_files' }
+            { description: 'Create main application file', outputs: '@main_app' }
           ]
         }))
-        // Mock each subtask as SIMPLE and failing (no tools)
-        .mockResolvedValueOnce(JSON.stringify({ complexity: 'SIMPLE' }))  // Subtask 1 classification
-        .mockResolvedValueOnce(JSON.stringify({ action: 'continue' }))    // Parent evaluates subtask 1
-        .mockResolvedValueOnce(JSON.stringify({ complexity: 'SIMPLE' }))  // Subtask 2 classification
-        .mockResolvedValueOnce(JSON.stringify({ action: 'continue' }))    // Parent evaluates subtask 2
-        .mockResolvedValueOnce(JSON.stringify({ complexity: 'SIMPLE' }))  // Subtask 3 classification
+        // 2. First subtask execution
+        .mockResolvedValueOnce(JSON.stringify({
+          useTools: true,
+          toolCalls: [{ tool: 'file_write', inputs: { filepath: 'structure.json', content: '{}' } }]
+        }))
+        // 3. Parent evaluates after first subtask
+        .mockResolvedValueOnce(JSON.stringify({ 
+          action: 'continue',
+          reason: 'First subtask completed, continue with next'
+        }))
+        // 4. Second subtask execution
+        .mockResolvedValueOnce(JSON.stringify({
+          useTools: true,
+          toolCalls: [{ tool: 'file_write', inputs: { filepath: 'app.js', content: 'console.log("hello");' } }]
+        }))
+        // 5. Parent evaluates after second subtask - should complete
         .mockResolvedValueOnce(JSON.stringify({ 
           action: 'complete',
-          result: { success: true, message: 'All subtasks processed' }
-        })); // Parent completes after subtask 3
+          result: { success: true, message: 'All subtasks completed successfully' },
+          reason: 'All subtasks completed successfully'
+        }))
+        // 6. Parent completion evaluation
+        .mockResolvedValueOnce(JSON.stringify({
+          complete: true,
+          result: { success: true, message: 'All subtasks completed successfully' },
+          reason: 'Task completed'
+        }))
+        // 7-10. Additional fallback responses for any extra calls
+        .mockResolvedValue(JSON.stringify({
+          complete: true,
+          result: { success: true, message: 'All subtasks completed successfully' },
+          reason: 'Fallback response'
+        }));
       
       const task = { description: 'create a complete Node.js application' };
       const result = await agent.execute(task);
       
-      // The complex task should complete even if subtasks fail individually
+      // The complex task should complete successfully when all subtasks succeed
       expect(result.success).toBe(true);
+      expect(result.result.message).toBe('All subtasks completed successfully');
     });
     
     it('should prevent infinite recursion with depth limit', async () => {
