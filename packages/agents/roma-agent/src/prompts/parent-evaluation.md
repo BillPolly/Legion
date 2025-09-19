@@ -117,3 +117,5 @@ Before finalizing your decision:
 ## Critical Failure
 - Subtask hit blocking issue → assessment → **FAIL** or **CREATE-SUBTASK** for recovery
 - Depends on whether the issue is recoverable
+
+{{outputPrompt}}

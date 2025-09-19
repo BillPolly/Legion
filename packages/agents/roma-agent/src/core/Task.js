@@ -9,6 +9,7 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
+import path from 'path';
 import PromptBuilder from '../utils/PromptBuilder.js';
 
 export default class Task {
@@ -41,7 +42,13 @@ export default class Task {
     this.sessionLogger = context.sessionLogger || null;
     this.simpleTaskValidator = context.simpleTaskValidator || null;
     this.decompositionValidator = context.decompositionValidator || null;
+    this.parentEvaluationValidator = context.parentEvaluationValidator || null;
+    this.completionEvaluationValidator = context.completionEvaluationValidator || null;
+    // Output prompts are now accessed via static method Task.getOutputPrompts()
     this.fastToolDiscovery = context.fastToolDiscovery || false;
+    
+    // Store workspace directory for file operations
+    this.workspaceDir = context.workspaceDir || null;
     this.agent = context.agent || null;  // Reference to agent for helper methods
     this.testMode = false;  // Will be set by agent when needed
     
@@ -56,6 +63,131 @@ export default class Task {
     if (parent) {
       parent.addChild(this);
     }
+  }
+  
+  /**
+   * Get cached output prompts for all response types
+   * @returns {Object} Map of output prompts by type
+   */
+  static async getOutputPrompts() {
+    if (!Task._outputPrompts) {
+      // Import ResponseValidator to create output prompts
+      const { ResponseValidator } = await import('@legion/output-schema');
+      
+      // Create validators
+      const simpleTaskValidator = new ResponseValidator({
+        type: 'object',
+        properties: {
+          useTools: { type: 'boolean' },
+          toolCalls: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                tool: { type: 'string' },
+                inputs: { type: 'object' },
+                outputs: { type: 'object' }
+              },
+              required: ['tool', 'inputs']
+            }
+          },
+          response: { type: 'string' }
+        }
+      });
+      
+      const decompositionValidator = new ResponseValidator({
+        type: 'object',
+        properties: {
+          subtasks: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                description: { type: 'string' },
+                outputs: { type: 'string' }
+              },
+              required: ['description']
+            }
+          }
+        },
+        required: ['subtasks']
+      });
+      
+      const parentEvaluationValidator = new ResponseValidator({
+        type: 'object',
+        properties: {
+          decision: {
+            type: 'string',
+            enum: ['CONTINUE', 'COMPLETE', 'FAIL', 'CREATE-SUBTASK']
+          },
+          reasoning: { type: 'string' },
+          nextSubtask: {
+            type: 'object',
+            properties: {
+              description: { type: 'string' },
+              outputs: { type: 'string' }
+            }
+          }
+        },
+        required: ['decision', 'reasoning']
+      });
+      
+      const completionEvaluationValidator = new ResponseValidator({
+        type: 'object',
+        properties: {
+          complete: { type: 'boolean' },
+          reasoning: { type: 'string' },
+          nextSteps: {
+            type: 'array',
+            items: { type: 'string' }
+          }
+        },
+        required: ['complete', 'reasoning']
+      });
+      
+      // Create examples for each type
+      const simpleTaskExample = {
+        useTools: true,
+        toolCalls: [
+          { tool: "file_read", inputs: { filepath: "config.json" } }
+        ]
+      };
+      
+      const decompositionExample = {
+        subtasks: [
+          { description: "Create the main HTML structure", outputs: "@html_structure" },
+          { description: "Add CSS styling", outputs: "@styled_page" }
+        ]
+      };
+      
+      const parentEvaluationExample = {
+        decision: "CONTINUE",
+        reasoning: "Subtask completed successfully, proceeding to next planned step"
+      };
+      
+      const completionEvaluationExample = {
+        complete: true,
+        reasoning: "All requirements have been met and deliverables are functional"
+      };
+      
+      // Generate output prompts with examples
+      Task._outputPrompts = {
+        simpleTask: simpleTaskValidator.generateInstructions(simpleTaskExample, {
+          format: 'json', verbosity: 'concise'
+        }),
+        decomposition: decompositionValidator.generateInstructions(decompositionExample, {
+          format: 'json', verbosity: 'concise'
+        }),
+        parentEvaluation: parentEvaluationValidator.generateInstructions(parentEvaluationExample, {
+          format: 'json', verbosity: 'concise'
+        }),
+        completionEvaluation: completionEvaluationValidator.generateInstructions(completionEvaluationExample, {
+          format: 'json', verbosity: 'concise'
+        })
+      };
+    }
+    
+    return Task._outputPrompts;
   }
   
   /**
@@ -645,7 +777,7 @@ export default class Task {
     
     // Parse response to get parent's decision
     try {
-      const decision = JSON.parse(response);
+      const decision = this.parentEvaluationValidator.process(response);
       
       // Add decision to parent's conversation
       this.addConversationEntry('assistant', 
@@ -769,7 +901,7 @@ export default class Task {
     }
     
     try {
-      const evaluation = JSON.parse(response);
+      const evaluation = this.completionEvaluationValidator.process(response);
       
       if (evaluation.complete) {
         // Task is complete
@@ -841,15 +973,26 @@ export default class Task {
     // Ensure prompt builder is initialized
     await this._ensurePromptBuilder();
     
-    const prompt = await this.promptBuilder.buildExecutionPrompt(taskInfo, promptContext);
+    // Use discovered tools if available, otherwise fall back to listing all tools
+    const toolsSection = promptContext.discoveredTools && promptContext.discoveredTools.length > 0
+      ? this.promptBuilder.formatDiscoveredToolsSection(promptContext.discoveredTools)
+      : await this.promptBuilder.formatToolsSection(promptContext.toolRegistry);
     
-    // Add format instructions from ResponseValidator
-    const formatInstructions = this.simpleTaskValidator.generateInstructions(null, {
-      format: 'json',
-      verbosity: 'concise'
-    });
+    // Format artifacts section
+    const artifactsSection = this.promptBuilder.formatArtifactsSection(promptContext.artifactRegistry);
+    
+    // Use cached output prompt from static method
+    const outputPrompts = await Task.getOutputPrompts();
+    const outputPrompt = outputPrompts.simpleTask;
 
-    const basePrompt = prompt + '\n\n' + formatInstructions;
+    const templateValues = {
+      taskDescription: taskInfo.description || JSON.stringify(taskInfo),
+      toolsSection,
+      artifactsSection,
+      outputPrompt
+    };
+
+    const basePrompt = this.promptBuilder.buildPromptWithSchema('task-execution', templateValues);
     
     // Use retry logic with error feedback
     const maxAttempts = 3;
@@ -949,15 +1092,29 @@ PLEASE PROVIDE CORRECTED RESPONSE:`;
     // Ensure prompt builder is initialized
     await this._ensurePromptBuilder();
     
-    const prompt = this.promptBuilder.buildDecompositionPrompt(taskInfo, promptContext);
+    // Format classification info
+    const classificationReasoning = promptContext.classification?.reasoning 
+      ? `Classification reasoning: ${promptContext.classification.reasoning}`
+      : '';
     
-    // Add format instructions from ResponseValidator
-    const formatInstructions = this.decompositionValidator.generateInstructions(null, {
-      format: 'json',
-      verbosity: 'concise'
-    });
+    const suggestedApproach = promptContext.classification?.suggestedApproach
+      ? `Suggested approach: ${promptContext.classification.suggestedApproach}`
+      : '';
+    
+    // Format artifacts section
+    const artifactsSection = (promptContext.artifactRegistry && promptContext.artifactRegistry.size && promptContext.artifactRegistry.size() > 0)
+      ? this.promptBuilder.formatArtifactsSection(promptContext.artifactRegistry)
+      : '';
 
-    const basePrompt = prompt + '\n\n' + formatInstructions;
+    const templateValues = {
+      taskDescription: taskInfo.description || JSON.stringify(taskInfo),
+      classificationReasoning,
+      suggestedApproach,
+      artifactsSection,
+      outputPrompt: (await Task.getOutputPrompts()).decomposition
+    };
+
+    const basePrompt = this.promptBuilder.buildPromptWithSchema('task-decomposition', templateValues);
     
     // Use retry logic with error feedback
     const maxAttempts = 3;
@@ -1082,8 +1239,11 @@ PLEASE PROVIDE CORRECTED RESPONSE:`;
           this.artifactRegistry.resolveReferences(toolInputs) : 
           toolInputs;
 
+        // Resolve file paths relative to workspace directory if specified
+        const workspaceResolvedInputs = this._resolveWorkspacePaths(resolvedInputs);
+
         // Execute the tool 
-        const result = await tool.execute(resolvedInputs);
+        const result = await tool.execute(workspaceResolvedInputs);
         // Ensure result has consistent structure
         const normalizedResult = {
           success: result.success !== false, // Default to true unless explicitly false
@@ -1189,5 +1349,30 @@ PLEASE PROVIDE CORRECTED RESPONSE:`;
       conversationHistory: conversation,
       availableArtifacts
     });
+  }
+
+  /**
+   * Resolve file paths relative to workspace directory
+   * @param {Object} inputs - Tool inputs that may contain file paths
+   * @returns {Object} - Inputs with resolved file paths
+   */
+  _resolveWorkspacePaths(inputs) {
+    if (!this.workspaceDir || !inputs) {
+      return inputs;
+    }
+
+    const resolved = { ...inputs };
+    const filePathFields = ['filepath', 'path', 'filename', 'outputFile', 'inputFile'];
+    
+    for (const field of filePathFields) {
+      if (resolved[field] && typeof resolved[field] === 'string') {
+        // Only resolve if it's a relative path (doesn't start with /)
+        if (!resolved[field].startsWith('/')) {
+          resolved[field] = path.join(this.workspaceDir, resolved[field]);
+        }
+      }
+    }
+
+    return resolved;
   }
 }

@@ -108,3 +108,5 @@ Before executing, verify:
 - **Wrong Tool Names**: Using incorrect or non-existent tool names
 - **Artifact Confusion**: Poor artifact naming leading to wrong references
 - **Incomplete Sequences**: Stopping before the task is fully complete
+
+{{outputPrompt}}

@@ -55,3 +55,5 @@ Analyze the task using this decision tree:
 - **Choose COMPLEX** only when decomposition would genuinely improve success likelihood
 - **Consider available tools** - some seemingly complex tasks may have direct tool solutions
 - **Think about failure modes** - complex tasks need coordination to avoid partial completion
+
+{{outputPrompt}}

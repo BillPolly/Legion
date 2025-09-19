@@ -44,6 +44,10 @@ export default class SimpleROMAAgent {
     // Create response validators for different response types
     this.simpleTaskValidator = this._createSimpleTaskValidator();
     this.decompositionValidator = this._createDecompositionValidator();
+    this.parentEvaluationValidator = this._createParentEvaluationValidator();
+    this.completionEvaluationValidator = this._createCompletionEvaluationValidator();
+    
+    // Output prompts are now handled by Task.getOutputPrompts() static method
     
     // Initialize session logger
     this.sessionLogger = new SessionLogger();
@@ -127,6 +131,97 @@ export default class SimpleROMAAgent {
   }
 
   /**
+   * Create ResponseValidator for parent evaluation responses
+   */
+  _createParentEvaluationValidator() {
+    const parentEvaluationSchema = {
+      type: 'object',
+      properties: {
+        action: {
+          type: 'string',
+          enum: ['continue', 'complete', 'fail', 'create-subtask'],
+          description: 'The decision for what the parent task should do next'
+        },
+        relevantArtifacts: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'List of artifact names that are relevant for the next action'
+        },
+        reason: {
+          type: 'string',
+          description: 'Brief explanation of why this decision was made'
+        },
+        result: {
+          type: 'string',
+          description: 'Summary of the task result (only required if action is complete)'
+        },
+        newSubtask: {
+          type: 'object',
+          properties: {
+            description: { type: 'string' },
+            artifacts: {
+              type: 'array',
+              items: { type: 'string' }
+            }
+          },
+          required: ['description'],
+          description: 'Description of new subtask to create (only required if action is create-subtask)'
+        }
+      },
+      required: ['action', 'relevantArtifacts', 'reason'],
+      format: 'json'
+    };
+    
+    return new ResponseValidator(parentEvaluationSchema, {
+      preferredFormat: 'json',
+      autoRepair: true
+    });
+  }
+
+  /**
+   * Create ResponseValidator for completion evaluation responses
+   */
+  _createCompletionEvaluationValidator() {
+    const completionEvaluationSchema = {
+      type: 'object',
+      properties: {
+        complete: {
+          type: 'boolean',
+          description: 'Whether the task has been fully completed'
+        },
+        reason: {
+          type: 'string',
+          description: 'Brief explanation of the evaluation decision'
+        },
+        result: {
+          type: 'string',
+          description: 'Summary of what was accomplished (required if complete is true)'
+        },
+        additionalSubtask: {
+          type: 'object',
+          properties: {
+            description: { type: 'string' },
+            artifacts: {
+              type: 'array',
+              items: { type: 'string' }
+            }
+          },
+          required: ['description'],
+          description: 'Description of additional work needed (required if complete is false)'
+        }
+      },
+      required: ['complete', 'reason'],
+      format: 'json'
+    };
+    
+    return new ResponseValidator(completionEvaluationSchema, {
+      preferredFormat: 'json',
+      autoRepair: true
+    });
+  }
+
+
+  /**
    * Execute a task with recursive decomposition and artifact management
    */
   async execute(task) {
@@ -162,6 +257,9 @@ export default class SimpleROMAAgent {
       sessionLogger: this.sessionLogger,
       simpleTaskValidator: this.simpleTaskValidator,
       decompositionValidator: this.decompositionValidator,
+      parentEvaluationValidator: this.parentEvaluationValidator,
+      completionEvaluationValidator: this.completionEvaluationValidator,
+      // Output prompts accessed via Task.getOutputPrompts() static method
       fastToolDiscovery: this.fastToolDiscovery,
       agent: this  // Pass reference to agent for helper methods
     });

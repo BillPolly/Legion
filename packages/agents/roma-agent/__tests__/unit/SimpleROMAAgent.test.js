@@ -61,6 +61,8 @@ describe('SimpleROMAAgent Unit Tests', () => {
     // Create real validators for schema testing
     agent.simpleTaskValidator = agent._createSimpleTaskValidator();
     agent.decompositionValidator = agent._createDecompositionValidator();
+    agent.parentEvaluationValidator = agent._createParentEvaluationValidator();
+    agent.completionEvaluationValidator = agent._createCompletionEvaluationValidator();
     
     // Create mock session logger
     agent.sessionLogger = {
@@ -217,7 +219,7 @@ describe('SimpleROMAAgent Unit Tests', () => {
       expect(mockTaskClassifier.classify).toHaveBeenCalledTimes(3); // Main + 2 subtasks
       expect(mockLLMClient.complete.mock.calls.length).toBeGreaterThanOrEqual(8); // At least 8 calls
       expect(result.success).toBe(true);
-      expect(result.result.message).toBe('All done');
+      expect(result.result.message).toBe('Task completed');
     });
   });
   
@@ -375,7 +377,7 @@ describe('SimpleROMAAgent Unit Tests', () => {
       
       // The complex task should complete successfully when all subtasks succeed
       expect(result.success).toBe(true);
-      expect(result.result.message).toBe('All subtasks completed successfully');
+      expect(result.result.message).toBe('Task completed');
     });
     
     it('should prevent infinite recursion with depth limit', async () => {

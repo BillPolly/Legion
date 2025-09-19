@@ -61,7 +61,7 @@ describe('Session Logging Integration', () => {
       expect(content).toContain('Type: task-classification');
       expect(content).toContain('Task: Read the contents of package.json file');
       expect(content).toContain('PROMPT:');
-      expect(content).toContain('Analyze this task and classify it as either SIMPLE or COMPLEX');
+      expect(content).toContain('You are a task complexity analyzer');
       expect(content).toContain('RESPONSE:');
     });
 
@@ -111,7 +111,7 @@ describe('Session Logging Integration', () => {
       
       // Should have complex task decomposition interaction
       expect(content).toContain('Type: task-decomposition');
-      expect(content).toContain('classification.*:.*COMPLEX');
+      expect(content).toMatch(/complexity.*COMPLEX/i);
       
       // Should have multiple interactions for subtasks
       const interactionMatches = content.match(/INTERACTION #\d+/g);

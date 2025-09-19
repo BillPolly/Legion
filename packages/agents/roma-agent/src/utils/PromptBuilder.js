@@ -72,33 +72,10 @@ export default class PromptBuilder {
    * @param {Object} instructionOptions - Options for instruction generation
    * @returns {string} The formatted prompt with schema-based output instructions
    */
-  buildPromptWithSchema(templateName, values = {}, responseValidator = null, exampleData = null, instructionOptions = {}) {
-    // Build the base prompt from template
-    const basePrompt = this.buildPrompt(templateName, values);
-    
-    // If no ResponseValidator provided, return base prompt
-    if (!responseValidator) {
-      return basePrompt;
-    }
-    
-    // Generate schema-based output instructions
-    const defaultInstructionOptions = {
-      format: 'json',
-      verbosity: 'detailed',
-      includeExample: !!exampleData,
-      includeConstraints: true,
-      includeDescriptions: true,
-      errorPrevention: true,
-      ...instructionOptions
-    };
-    
-    const formatInstructions = responseValidator.generateInstructions(
-      exampleData,
-      defaultInstructionOptions
-    );
-    
-    // Combine template content with schema-generated instructions
-    return `${basePrompt}\n\n${formatInstructions}`;
+  buildPromptWithSchema(templateName, values = {}) {
+    // Just build the prompt with the provided values
+    // The outputPrompt should already be included in values
+    return this.buildPrompt(templateName, values);
   }
   /**
    * Format tool inputs as comma-separated list (for test compatibility)

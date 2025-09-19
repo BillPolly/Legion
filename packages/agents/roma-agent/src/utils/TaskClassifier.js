@@ -68,18 +68,19 @@ export default class TaskClassifier {
       estimatedSteps: 2
     };
     
+    // Generate output instructions using ResponseValidator
+    const outputPrompt = this.responseValidator.generateInstructions(exampleData, {
+      verbosity: 'detailed',
+      errorPrevention: true
+    });
+    
     // Build prompt with schema-generated output instructions
     const fullPrompt = this.promptBuilder.buildPromptWithSchema(
       'task-classification',
       {
         taskDescription,
-        artifactsSection
-      },
-      this.responseValidator,
-      exampleData,
-      {
-        verbosity: 'detailed',
-        errorPrevention: true
+        artifactsSection,
+        outputPrompt
       }
     );
 

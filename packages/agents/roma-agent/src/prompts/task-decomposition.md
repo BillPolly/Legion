@@ -74,3 +74,5 @@ Before finalizing your decomposition, verify:
 3. **Order**: Are subtasks in the right sequence with proper dependencies?
 4. **Clarity**: Would another person understand exactly what each subtask should do?
 5. **Testability**: How will you know when each subtask is complete?
+
+{{outputPrompt}}

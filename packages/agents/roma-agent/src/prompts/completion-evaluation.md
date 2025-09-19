@@ -126,3 +126,5 @@ You are a task completion evaluator. Your job is to determine whether a complex 
 - **Reference Available Work**: What artifacts from completed work are relevant?
 - **Plan Next Steps**: What specific work needs to be done?
 - **Estimate Scope**: Is this a minor fix or substantial additional work?
+
+{{outputPrompt}}
