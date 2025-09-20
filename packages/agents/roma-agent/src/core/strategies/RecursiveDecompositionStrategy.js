@@ -213,15 +213,8 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
     // Discover tools
     console.log(`🔧 Discovering tools for SIMPLE task...`);
     
-    let discoveredTools;
-    if (context.fastToolDiscovery && context.agent && context.agent._getFastMockTools) {
-      // Fast mock tool discovery for integration tests
-      discoveredTools = context.agent._getFastMockTools(task.description);
-      console.log(`🔧 Using fast mock tools for testing (${discoveredTools.length} tools)`);
-    } else {
-      // Normal semantic tool discovery
-      discoveredTools = await toolDiscovery.discoverTools(task.description);
-    }
+    // Normal semantic tool discovery
+    const discoveredTools = await toolDiscovery.discoverTools(task.description);
     
     task.addConversationEntry('system', `Discovered ${discoveredTools.length} tools`);
     

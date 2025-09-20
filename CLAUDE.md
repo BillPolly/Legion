@@ -202,6 +202,6 @@ NO CONCURRENT JEST TESTS EVER.
 
 ALWAYS USE ES6 MODULES EVERYWHERE.
 
-
 NO mocks in integration tests!
 
+when you are fixing tests READ THE ACTAUL code being tested! do not guess

@@ -191,7 +191,7 @@ export default class PromptBuilder {
         taskDescription,
         toolsSection,
         artifactsSection,
-        instructions: this.getSimpleTaskInstructions()
+        instructions: 'Return JSON with "useTools": true and "toolCalls" array containing tool name and inputs.'
       });
     } else {
       // Legacy signature with (task, context)
@@ -213,8 +213,8 @@ export default class PromptBuilder {
       
       // Prepare instructions based on task type
       const instructions = context.isSimpleTask 
-        ? this.getSimpleTaskInstructions()
-        : this.getDecisionInstructions();
+        ? 'Return JSON with "useTools": true and "toolCalls" array containing tool name and inputs.'
+        : 'Return JSON with either "useTools" and "toolCalls", "decompose" and "subtasks", or "response" string.';
       
       return this.buildPrompt('task-execution', {
         taskIntro,
@@ -295,43 +295,6 @@ export default class PromptBuilder {
     });
   }
 
-  /**
-   * Get instructions for SIMPLE tasks (only tool calls)
-   * @deprecated Use template file instead
-   */
-  getSimpleTaskInstructions() {
-    return `Since this is a SIMPLE task, you should execute it using a sequence of tool calls.
-
-Return JSON with this structure:
-{
-  "useTools": true,
-  "toolCalls": [
-    {
-      "tool": "exact_tool_name",
-      "inputs": {
-        "arg1": "value1",
-        "arg2": "@artifact_name"  // <- Use @ to reference existing artifacts
-      },
-      "outputs": {
-        "toolOutputField": "@my_artifact_name"  // <- Optional: save tool's output field as artifact
-      }
-    }
-  ]
-}
-
-IMPORTANT about tool calls:
-- Tool names must be exact (e.g., "file_write" not "write_file")
-- Inputs must match the tool's expected input schema
-- Use @artifact_name to reference ANY existing artifact in inputs
-- The "outputs" field maps tool output field names to artifact names for storage
-- Example: "outputs": {"filepath": "@saved_path"} means take the tool's filepath output and save it as @saved_path
-- You can overwrite existing artifacts by using the same name
-
-If no tools are suitable, you can return:
-{
-  "response": "Explanation of why this task cannot be completed with available tools"
-}`;
-  }
 
   /**
    * Format the discovered tools section of the prompt
@@ -503,70 +466,6 @@ If no tools are suitable, you can return:
     return lines.join('\n');
   }
 
-  /**
-   * Get the decision instructions portion of the prompt
-   * @returns {string} Decision instructions
-   * @deprecated Use template file instead
-   */
-  getDecisionInstructions() {
-    return `You MUST choose ONE of these three options:
-1. USE TOOLS - If this task can be completed with available tools
-2. DECOMPOSE - If this task is complex and needs to be broken into simpler subtasks  
-3. RESPOND - If this is a question or analysis that just needs a direct response
-
-CRITICAL: Your response MUST be a valid JSON object in EXACTLY one of these formats:
-
-OPTION 1 - USING TOOLS (when you can directly use a tool):
-{
-  "useTools": true,
-  "toolCalls": [
-    {
-      "tool": "exact_tool_name",
-      "inputs": {
-        "arg1": "value1",
-        "arg2": "@artifact_name"  // <- Use @ to reference existing artifacts
-      },
-      "outputs": {
-        "toolOutputField": "@my_artifact_name"  // <- Optional: save tool's output field as artifact
-      }
-    }
-  ]
-}
-
-IMPORTANT about outputs:
-- The tool defines what output fields it produces (e.g., filepath, content, result)
-- In "outputs", you map those tool output fields to artifact names (with @)
-- Example: "outputs": {"filepath": "@saved_path"} means take the tool's filepath output and save it as @saved_path
-- You can overwrite existing artifacts by using the same name (e.g., "@current_data" will replace the old @current_data)
-- Only include outputs if you need to use that value later with @artifact_name
-
-OPTION 2 - DECOMPOSING (when task is too complex for a single tool):
-{
-  "decompose": true,
-  "subtasks": [
-    {
-      "description": "First subtask description",
-      "outputs": "@subtask1_result"  // <- Optional: save this subtask's result as artifact
-    },
-    {
-      "description": "Second subtask using @subtask1_result from first step",
-      "outputs": "@final_result"
-    }
-  ]
-}
-
-OPTION 3 - DIRECT RESPONSE (for questions/analysis/explanations):
-{
-  "response": "Your direct answer or explanation here"
-}
-
-REMEMBER:
-- Tool names must be exact (e.g., "file_write" not "write_file")  
-- Inputs must match the tool's expected input schema
-- Use @artifact_name to reference ANY existing artifact in inputs
-- The "outputs" field maps tool output field names to artifact names for storage
-- Only include outputs when you need to reference that value later`;
-  }
 
   /**
    * Get artifact usage instructions

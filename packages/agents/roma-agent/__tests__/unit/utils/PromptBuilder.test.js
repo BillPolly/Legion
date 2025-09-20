@@ -376,32 +376,41 @@ describe('PromptBuilder Unit Tests', () => {
   });
 
   describe('Instruction Generation', () => {
-    it('should generate simple task instructions', () => {
-      const instructions = promptBuilder.getSimpleTaskInstructions();
+    it('should use template-based instructions in execution prompts', async () => {
+      // Test that buildExecutionPrompt works with the new template-based approach
+      const mockTools = [
+        {
+          name: 'test_tool',
+          description: 'A test tool',
+          inputSchema: { properties: { input: { type: 'string' } } }
+        }
+      ];
 
-      expect(instructions).toContain('SIMPLE task');
-      expect(instructions).toContain('sequence of tool calls');
-      expect(instructions).toContain('"useTools": true');
-      expect(instructions).toContain('"toolCalls"');
-      expect(instructions).toContain('exact_tool_name');
-      expect(instructions).toContain('@artifact_name');
-      expect(instructions).toContain('outputs');
-      expect(instructions).toContain('IMPORTANT about tool calls');
+      const prompt = await promptBuilder.buildExecutionPrompt(
+        'test task',
+        mockTools,
+        [],
+        { artifactRegistry: null }
+      );
+
+      expect(prompt).toContain('test task');
+      expect(prompt).toContain('test_tool');
+      expect(prompt).toContain('Return JSON');
     });
 
-    it('should generate decision instructions', () => {
-      const instructions = promptBuilder.getDecisionInstructions();
+    it('should handle legacy signature for execution prompts', async () => {
+      // Test that the legacy signature still works
+      const task = { description: 'test task' };
+      const context = { 
+        isSimpleTask: true,
+        discoveredTools: [],
+        artifactRegistry: null
+      };
 
-      expect(instructions).toContain('three options');
-      expect(instructions).toContain('USE TOOLS');
-      expect(instructions).toContain('DECOMPOSE');
-      expect(instructions).toContain('RESPOND');
-      expect(instructions).toContain('OPTION 1');
-      expect(instructions).toContain('OPTION 2');
-      expect(instructions).toContain('OPTION 3');
-      expect(instructions).toContain('"useTools": true');
-      expect(instructions).toContain('"decompose": true');
-      expect(instructions).toContain('"response"');
+      const prompt = await promptBuilder.buildExecutionPrompt(task, context);
+
+      expect(prompt).toContain('test task');
+      expect(prompt).toContain('Return JSON');
     });
 
     it('should generate artifact usage instructions', () => {

@@ -35,7 +35,18 @@ describe('SimpleROMAAgent Quick Integration', () => {
           })
         }
       ]),
-      searchTools: jest.fn().mockResolvedValue([]),
+      searchTools: jest.fn().mockResolvedValue([
+        {
+          name: 'calculator',
+          description: 'Perform calculations',
+          confidence: 0.9
+        },
+        {
+          name: 'file_write',
+          description: 'Write content to file',
+          confidence: 0.85
+        }
+      ]),
       getTool: jest.fn().mockImplementation(async (name) => {
         if (name === 'calculator') {
           return {
@@ -155,6 +166,13 @@ describe('SimpleROMAAgent Quick Integration', () => {
           complexity: 'SIMPLE',
           reasoning: 'Simple arithmetic calculation'
         }))
+        .mockResolvedValueOnce(JSON.stringify([ // Tool discovery descriptions
+          'Perform arithmetic calculations',
+          'Calculate mathematical expressions',
+          'Add numbers together',
+          'Basic calculator operations',
+          'Simple math computations'
+        ]))
         .mockResolvedValueOnce(JSON.stringify({ // Execution
           useTools: true,
           toolCalls: [{
@@ -192,7 +210,14 @@ describe('SimpleROMAAgent Quick Integration', () => {
           complexity: 'SIMPLE',
           reasoning: 'Simple arithmetic question'
         }))
-        .mockResolvedValueOnce(JSON.stringify({ // Direct response
+        .mockResolvedValueOnce(JSON.stringify([ // Tool discovery descriptions
+          'Answer arithmetic questions',
+          'Calculate simple math',
+          'Provide mathematical answers',
+          'Basic arithmetic solver',
+          'Simple calculation tool'
+        ]))
+        .mockResolvedValueOnce(JSON.stringify({ // Direct response (no tools found, so it responds directly)
           response: '2 plus 2 equals 4'
         }));
         
@@ -214,6 +239,13 @@ describe('SimpleROMAAgent Quick Integration', () => {
           complexity: 'SIMPLE',
           reasoning: 'Single file write operation'
         }))
+        .mockResolvedValueOnce(JSON.stringify([ // Tool discovery descriptions
+          'Write content to a file',
+          'Create new text file on disk',
+          'Save text to file system',
+          'Generate file with content',
+          'File creation and writing tool'
+        ]))
         .mockResolvedValueOnce(JSON.stringify({ // Execution
           useTools: true,
           toolCalls: [{
@@ -280,21 +312,5 @@ describe('SimpleROMAAgent Quick Integration', () => {
     }, 10000);
   });
 
-  describe('Artifact Management', () => {
-    it('should resolve artifact references correctly', async () => {
-      const context = {
-        artifacts: new Map([['test_value', 42]]),
-        conversation: [],
-        depth: 0
-      };
-
-      const resolvedObj = agent.resolveArtifacts(
-        { value: '@test_value', other: 'static' },
-        context
-      );
-
-      expect(resolvedObj.value).toBe(42);
-      expect(resolvedObj.other).toBe('static');
-    });
-  });
+  // Artifact Management tests removed - resolveArtifacts method doesn't exist in production code
 });

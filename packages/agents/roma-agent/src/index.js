@@ -1,3 +1,6 @@
-// Main application entry point
+/**
+ * @legion/roma-agent
+ * ROMA (Recursive Objective Management Agent) for the Legion framework
+ */
 
-console.log('Application starting...');
+export { default as SimpleROMAAgent } from './core/SimpleROMAAgent.js';
