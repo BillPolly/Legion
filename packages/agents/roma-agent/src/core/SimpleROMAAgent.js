@@ -11,8 +11,6 @@ import { ResourceManager } from '@legion/resource-manager';
 import { ToolRegistry } from '@legion/tools-registry';
 import { ResponseValidator } from '@legion/output-schema';
 import { Task, TaskManager, ArtifactRegistry, ExecutionContext } from '@legion/tasks';
-import PromptBuilder from '../utils/PromptBuilder.js';
-import Prompt from '../utils/Prompt.js';
 import ToolDiscovery from '../utils/ToolDiscovery.js';
 import TaskClassifier from '../utils/TaskClassifier.js';
 import SessionLogger from '../utils/SessionLogger.js';
@@ -48,37 +46,13 @@ export default class SimpleROMAAgent {
     this.toolRegistry = await ToolRegistry.getInstance();
     this.toolDiscovery = new ToolDiscovery(this.llmClient, this.toolRegistry);
     this.taskClassifier = new TaskClassifier(this.llmClient);
+    await this.taskClassifier.initialize();
     
     // Create response validators for different response types (keeping for legacy compatibility)
     this.simpleTaskValidator = this._createSimpleTaskValidator();
     this.decompositionValidator = this._createDecompositionValidator();
     this.parentEvaluationValidator = this._createParentEvaluationValidator();
     this.completionEvaluationValidator = this._createCompletionEvaluationValidator();
-    
-    // Create Prompt instances for different LLM interactions
-    this.parentEvaluationPrompt = new Prompt(null, this._getParentEvaluationSchema(), {
-      llmClient: this.llmClient,
-      maxRetries: 3
-    });
-    
-    this.completionEvaluationPrompt = new Prompt(null, this._getCompletionEvaluationSchema(), {
-      llmClient: this.llmClient,
-      maxRetries: 3
-    });
-    
-    this.simpleTaskPrompt = new Prompt(null, this._getSimpleTaskSchema(), {
-      llmClient: this.llmClient,
-      maxRetries: 3
-    });
-    
-    this.decompositionPrompt = new Prompt(null, this._getDecompositionSchema(), {
-      llmClient: this.llmClient,
-      maxRetries: 3
-    });
-    
-    // Initialize prompt builder
-    this.promptBuilder = new PromptBuilder();
-    await this.promptBuilder.initialize();
     
     // Initialize session logger
     this.sessionLogger = new SessionLogger({ outputDir: this.outputDir });
@@ -430,7 +404,6 @@ export default class SimpleROMAAgent {
       taskClassifier: this.taskClassifier,
       toolDiscovery: this.toolDiscovery,
       sessionLogger: this.sessionLogger,
-      promptBuilder: this.promptBuilder, // Add promptBuilder to context
       
       // Validators
       simpleTaskValidator: this.simpleTaskValidator,

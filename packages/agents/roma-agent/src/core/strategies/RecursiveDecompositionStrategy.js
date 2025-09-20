@@ -10,6 +10,13 @@
  */
 
 import { TaskStrategy } from '@legion/tasks';
+import { TemplatedPrompt } from '@legion/prompting-manager';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 let instance = null;
 
@@ -20,6 +27,170 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
       return instance;
     }
     instance = this;
+    
+    // Prompt templates will be initialized on first use
+    this.decompositionPrompt = null;
+    this.executionPrompt = null;
+    this.parentEvaluationPrompt = null;
+    this.completionEvaluationPrompt = null;
+  }
+  
+  /**
+   * Initialize prompt templates
+   */
+  async _initializePrompts(context) {
+    if (!this.decompositionPrompt && context.llmClient) {
+      const promptsDir = path.join(__dirname, '..', '..', 'prompts');
+      
+      // Load decomposition prompt
+      const decompositionTemplate = await fs.readFile(
+        path.join(promptsDir, 'task-decomposition.md'), 
+        'utf-8'
+      );
+      this.decompositionPrompt = new TemplatedPrompt({
+        prompt: decompositionTemplate,
+        responseSchema: this._getDecompositionSchema(),
+        llmClient: context.llmClient,
+        maxRetries: 3
+      });
+      
+      // Load execution prompt
+      const executionTemplate = await fs.readFile(
+        path.join(promptsDir, 'task-execution.md'),
+        'utf-8'
+      );
+      this.executionPrompt = new TemplatedPrompt({
+        prompt: executionTemplate,
+        responseSchema: this._getSimpleTaskSchema(),
+        llmClient: context.llmClient,
+        maxRetries: 3
+      });
+      
+      // Load parent evaluation prompt
+      const parentEvalTemplate = await fs.readFile(
+        path.join(promptsDir, 'parent-evaluation.md'),
+        'utf-8'
+      );
+      this.parentEvaluationPrompt = new TemplatedPrompt({
+        prompt: parentEvalTemplate,
+        responseSchema: this._getParentEvaluationSchema(),
+        llmClient: context.llmClient,
+        maxRetries: 3
+      });
+      
+      // Load completion evaluation prompt
+      const completionEvalTemplate = await fs.readFile(
+        path.join(promptsDir, 'completion-evaluation.md'),
+        'utf-8'
+      );
+      this.completionEvaluationPrompt = new TemplatedPrompt({
+        prompt: completionEvalTemplate,
+        responseSchema: this._getCompletionEvaluationSchema(),
+        llmClient: context.llmClient,
+        maxRetries: 3
+      });
+    }
+  }
+  
+  /**
+   * Get schema for decomposition responses
+   */
+  _getDecompositionSchema() {
+    return {
+      type: 'object',
+      properties: {
+        decompose: { type: 'boolean' },
+        subtasks: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              description: { type: 'string' },
+              inputs: { type: 'string' },
+              outputs: { type: 'string' }
+            },
+            required: ['description']
+          }
+        }
+      },
+      required: ['decompose', 'subtasks'],
+      format: 'json'
+    };
+  }
+  
+  /**
+   * Get schema for simple task execution responses
+   */
+  _getSimpleTaskSchema() {
+    return {
+      type: 'object',
+      anyOf: [
+        {
+          type: 'object',
+          properties: {
+            useTools: { type: 'boolean', const: true },
+            toolCalls: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  tool: { type: 'string' },
+                  inputs: { type: 'object' },
+                  outputs: { type: 'object' }
+                },
+                required: ['tool', 'inputs']
+              }
+            }
+          },
+          required: ['useTools', 'toolCalls']
+        },
+        {
+          type: 'object',
+          properties: {
+            response: { type: 'string' }
+          },
+          required: ['response']
+        }
+      ],
+      format: 'json'
+    };
+  }
+  
+  /**
+   * Get schema for parent evaluation responses
+   */
+  _getParentEvaluationSchema() {
+    return {
+      type: 'object',
+      properties: {
+        decision: {
+          type: 'string',
+          enum: ['CONTINUE', 'COMPLETE', 'RETRY', 'REPLAN']
+        },
+        reasoning: { type: 'string' }
+      },
+      required: ['decision', 'reasoning'],
+      format: 'json'
+    };
+  }
+  
+  /**
+   * Get schema for completion evaluation responses
+   */
+  _getCompletionEvaluationSchema() {
+    return {
+      type: 'object',
+      properties: {
+        complete: { type: 'boolean' },
+        isComplete: { type: 'boolean' },
+        reason: { type: 'string' },
+        reasoning: { type: 'string' },
+        result: { type: 'string' },
+        summary: { type: 'string' }
+      },
+      required: [],
+      format: 'json'
+    };
   }
 
   /**
@@ -174,33 +345,33 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
       throw new Error('LLM client is required for decomposition');
     }
 
-    // Build decomposition prompt
-    const prompt = task.promptBuilder.buildDecompositionPrompt(
-      task.description,
-      task.getConversationContext(),
-      task.getArtifactsContext()
-    );
+    // Initialize prompts if needed
+    await this._initializePrompts(context);
+
+    // Execute decomposition prompt with placeholders
+    const result = await this.decompositionPrompt.execute({
+      taskDescription: task.description,
+      conversation: JSON.stringify(task.getConversationContext() || []),
+      artifacts: JSON.stringify(task.getArtifactsContext() || {})
+    });
     
-    // Get decomposition from LLM
-    const response = await llmClient.complete(prompt);
+    if (!result.success) {
+      // Ensure errors are properly converted to strings
+      const errorMessages = result.errors?.map(e => 
+        typeof e === 'string' ? e : (e.message || String(e))
+      ) || ['Unknown error'];
+      throw new Error(`Invalid decomposition response: ${errorMessages.join(', ')}`);
+    }
     
     if (sessionLogger) {
-      await sessionLogger.logInteraction(task, 'decomposition', prompt, response);
+      // Log the interaction (prompt template and response)
+      await sessionLogger.logInteraction(task, 'decomposition', 
+        `Task: ${task.description}`, 
+        JSON.stringify(result.data)
+      );
     }
 
-    // Validate and parse response
-    if (decompositionValidator) {
-      const validation = decompositionValidator.process(response);
-      if (!validation.success) {
-        const errorMessages = validation.errors ? validation.errors.map(e => e.message).join(', ') : 'Invalid response';
-        throw new Error(`Invalid decomposition response: ${errorMessages}`);
-      }
-      return validation.data;
-    }
-
-    // Fallback parsing if no validator
-    const parsed = this._parseDecompositionResponse(response);
-    return parsed;
+    return result.data;
   }
 
   /**
@@ -421,41 +592,38 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
     
     console.log(`🎯 Evaluating if task "${task.description}" is complete...`);
     
-    // Build completion evaluation prompt
-    const prompt = task.promptBuilder.buildCompletionEvaluationPrompt(
-      task.description,
-      task.getConversationContext(),
-      task.getArtifactsContext(),
-      task.getCompletedSubtasks()
-    );
+    // Initialize prompts if needed
+    await this._initializePrompts(context);
     
-    // Get LLM evaluation
-    const response = await llmClient.complete(prompt);
+    // Execute completion evaluation prompt with placeholders
+    const result = await this.completionEvaluationPrompt.execute({
+      taskDescription: task.description,
+      conversation: JSON.stringify(task.getConversationContext() || []),
+      artifacts: JSON.stringify(task.getArtifactsContext() || {}),
+      completedSubtasks: JSON.stringify(task.getCompletedSubtasks() || [])
+    });
     
     if (sessionLogger) {
-      await sessionLogger.logInteraction(task, 'completion_evaluation', prompt, response);
+      await sessionLogger.logInteraction(task, 'completion_evaluation', 
+        `Task: ${task.description}`, 
+        JSON.stringify(result.data || result)
+      );
     }
 
-    // Validate and parse response
+    // Handle the response
     let evaluation;
-    if (completionEvaluationValidator) {
-      const validation = completionEvaluationValidator.process(response);
-      if (!validation.success) {
-        const errorMessages = validation.errors ? validation.errors.map(e => e.message).join(', ') : 'Invalid response';
-        console.log(`⚠️ Invalid completion evaluation response: ${errorMessages}`);
-        // Default to incomplete if validation fails
-        evaluation = { isComplete: false, reasoning: 'Invalid evaluation response' };
-      } else {
-        // Map 'complete' field to 'isComplete' field for compatibility
-        const data = validation.data;
-        evaluation = {
-          isComplete: data.complete !== undefined ? data.complete : data.isComplete,
-          reasoning: data.reason || data.reasoning || 'No reason provided',
-          summary: data.result || data.summary
-        };
-      }
+    if (!result.success) {
+      console.log(`⚠️ Invalid completion evaluation response: ${result.errors?.join(', ') || 'Unknown error'}`);
+      // Default to incomplete if validation fails
+      evaluation = { isComplete: false, reasoning: 'Invalid evaluation response' };
     } else {
-      evaluation = this._parseCompletionEvaluation(response);
+      // Map 'complete' field to 'isComplete' field for compatibility
+      const data = result.data;
+      evaluation = {
+        isComplete: data.complete !== undefined ? data.complete : data.isComplete,
+        reasoning: data.reason || data.reasoning || 'No reason provided',
+        summary: data.result || data.summary
+      };
     }
     
     console.log(`🎯 Task completion evaluation: ${evaluation.isComplete ? 'COMPLETE' : 'INCOMPLETE'} - ${evaluation.reasoning}`);
@@ -516,33 +684,36 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
   async _getSimpleTaskExecution(task, discoveredTools, context) {
     const { llmClient, simpleTaskValidator, sessionLogger } = context;
     
-    // Build execution prompt
-    const prompt = task.promptBuilder.buildExecutionPrompt(
-      task.description,
-      discoveredTools,
-      task.getConversationContext(),
-      task.getArtifactsContext()
-    );
+    // Initialize prompts if needed
+    await this._initializePrompts(context);
     
-    // Get execution plan from LLM
-    const response = await llmClient.complete(prompt);
+    // Format tools for prompt
+    const toolDescriptions = discoveredTools.map(tool => ({
+      name: tool.name,
+      description: tool.description || '',
+      parameters: tool.inputSchema || {}
+    }));
+    
+    // Execute execution prompt with placeholders
+    const result = await this.executionPrompt.execute({
+      taskDescription: task.description,
+      tools: JSON.stringify(toolDescriptions),
+      conversation: JSON.stringify(task.getConversationContext() || []),
+      artifacts: JSON.stringify(task.getArtifactsContext() || {})
+    });
     
     if (sessionLogger) {
-      await sessionLogger.logInteraction(task, 'simple_execution', prompt, response);
+      await sessionLogger.logInteraction(task, 'simple_execution',
+        `Task: ${task.description}, Tools: ${discoveredTools.map(t => t.name).join(', ')}`,
+        JSON.stringify(result.data || result)
+      );
     }
 
-    // Validate and parse response
-    if (simpleTaskValidator) {
-      const validation = simpleTaskValidator.process(response);
-      if (!validation.success) {
-        const errorMessages = validation.errors ? validation.errors.map(e => e.message).join(', ') : 'Invalid response';
-        throw new Error(`Invalid execution response: ${errorMessages}`);
-      }
-      return validation.data;
+    if (!result.success) {
+      throw new Error(`Invalid execution response: ${result.errors?.join(', ') || 'Unknown error'}`);
     }
 
-    // Fallback parsing
-    return this._parseExecutionResponse(response);
+    return result.data;
   }
 
   /**
@@ -616,36 +787,33 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
   async _getParentEvaluation(task, childTask, context) {
     const { llmClient, parentEvaluationValidator, sessionLogger } = context;
     
-    // Build parent evaluation prompt
-    const prompt = task.promptBuilder.buildParentEvaluationPrompt(
-      task.description,
-      childTask.description,
-      task.getConversationContext(),
-      task.getArtifactsContext(),
-      task.getCompletedSubtasks()
-    );
+    // Initialize prompts if needed
+    await this._initializePrompts(context);
     
-    // Get evaluation from LLM
-    const response = await llmClient.complete(prompt);
+    // Execute parent evaluation prompt with placeholders
+    const result = await this.parentEvaluationPrompt.execute({
+      parentTaskDescription: task.description,
+      childTaskDescription: childTask.description,
+      conversation: JSON.stringify(task.getConversationContext() || []),
+      artifacts: JSON.stringify(task.getArtifactsContext() || {}),
+      completedSubtasks: JSON.stringify(task.getCompletedSubtasks() || [])
+    });
     
     if (sessionLogger) {
-      await sessionLogger.logInteraction(task, 'parent_evaluation', prompt, response);
+      await sessionLogger.logInteraction(task, 'parent_evaluation',
+        `Parent: ${task.description}, Child: ${childTask.description}`,
+        JSON.stringify(result.data || result)
+      );
     }
 
-    // Validate and parse response
-    if (parentEvaluationValidator) {
-      const validation = parentEvaluationValidator.process(response);
-      if (!validation.success) {
-        const errorMessages = validation.errors ? validation.errors.map(e => e.message).join(', ') : 'Invalid response';
-        console.log(`⚠️ Invalid parent evaluation response: ${errorMessages}`);
-        // Default to continuing if validation fails
-        return { decision: 'CONTINUE', reasoning: 'Invalid evaluation response' };
-      }
-      return validation.data;
+    // Handle the response
+    if (!result.success) {
+      console.log(`⚠️ Invalid parent evaluation response: ${result.errors?.join(', ') || 'Unknown error'}`);
+      // Default to continuing if validation fails
+      return { decision: 'CONTINUE', reasoning: 'Invalid evaluation response' };
     }
 
-    // Fallback parsing
-    return this._parseParentEvaluation(response);
+    return result.data;
   }
 
   /**

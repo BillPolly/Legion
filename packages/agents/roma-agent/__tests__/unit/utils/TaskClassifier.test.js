@@ -11,21 +11,22 @@ describe('TaskClassifier Unit Tests', () => {
   let classifier;
   let mockLLMClient;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Create mock LLM client
     mockLLMClient = {
       complete: jest.fn()
     };
 
-    // Create classifier instance
+    // Create classifier instance and initialize
     classifier = new TaskClassifier(mockLLMClient);
+    await classifier.initialize();
   });
 
   describe('Constructor and Initialization', () => {
     it('should initialize with LLM client and create Prompt instance', () => {
       expect(classifier.llmClient).toBe(mockLLMClient);
       expect(classifier.prompt).toBeDefined();
-      expect(classifier.prompt.templateName).toBe('task-classification');
+      expect(classifier.initialized).toBe(true);
     });
 
     it('should create Prompt with correct schema validation', async () => {

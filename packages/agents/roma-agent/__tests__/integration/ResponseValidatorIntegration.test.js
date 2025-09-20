@@ -17,14 +17,26 @@ describe('ResponseValidator Integration Tests', () => {
   });
 
   describe('TaskClassifier Schema Validation', () => {
-    let classifier;
+    let validator;
 
     beforeEach(() => {
-      // Create classifier with mock LLM for validation testing
-      const mockLLMClient = {
-        complete: jest.fn()
+      // Create a ResponseValidator directly with TaskClassifier's schema
+      const classificationSchema = {
+        type: 'object',
+        properties: {
+          complexity: { 
+            type: 'string', 
+            enum: ['SIMPLE', 'COMPLEX'] 
+          },
+          reasoning: { type: 'string' },
+          suggestedApproach: { type: 'string' },
+          estimatedSteps: { type: 'number' }
+        },
+        required: ['complexity', 'reasoning'],
+        format: 'json'
       };
-      classifier = new TaskClassifier(mockLLMClient);
+      
+      validator = new ResponseValidator(classificationSchema);
     });
 
     it('should validate correct SIMPLE classification responses', () => {
@@ -35,11 +47,15 @@ describe('ResponseValidator Integration Tests', () => {
         estimatedSteps: 2
       };
 
-      const result = classifier.prompt.responseValidator.validateExample(validSimpleResponse);
+      const result = validator.validateExample(validSimpleResponse);
       
       expect(result.success).toBe(true);
       expect(result.errors).toBeUndefined();
-      expect(result.data).toEqual(validSimpleResponse);
+      // Check individual properties instead of using toEqual to avoid issues with added methods
+      expect(result.data.complexity).toBe('SIMPLE');
+      expect(result.data.reasoning).toBe('This task can be accomplished with direct file operations');
+      expect(result.data.suggestedApproach).toBe('Use file_write tool');
+      expect(result.data.estimatedSteps).toBe(2);
     });
 
     it('should validate correct COMPLEX classification responses', () => {
@@ -49,7 +65,7 @@ describe('ResponseValidator Integration Tests', () => {
         suggestedApproach: 'Break down into HTML, CSS, JavaScript, and deployment subtasks'
       };
 
-      const result = classifier.prompt.responseValidator.validateExample(validComplexResponse);
+      const result = validator.validateExample(validComplexResponse);
       
       expect(result.success).toBe(true);
       expect(result.errors).toBeUndefined();
@@ -63,7 +79,7 @@ describe('ResponseValidator Integration Tests', () => {
         reasoning: 'This complexity level is not allowed'
       };
 
-      const result = classifier.prompt.responseValidator.validateExample(invalidResponse);
+      const result = validator.validateExample(invalidResponse);
       
       expect(result.success).toBe(false);
       expect(result.errors).toBeDefined();
@@ -76,7 +92,7 @@ describe('ResponseValidator Integration Tests', () => {
         // Missing required 'reasoning' field
       };
 
-      const result = classifier.prompt.responseValidator.validateExample(incompleteResponse);
+      const result = validator.validateExample(incompleteResponse);
       
       expect(result.success).toBe(false);
       expect(result.errors).toBeDefined();
@@ -93,7 +109,7 @@ describe('ResponseValidator Integration Tests', () => {
         anotherExtra: 42
       };
 
-      const result = classifier.prompt.responseValidator.validateExample(responseWithExtras);
+      const result = validator.validateExample(responseWithExtras);
       
       expect(result.success).toBe(true);
       expect(result.data.complexity).toBe('SIMPLE');
@@ -101,7 +117,7 @@ describe('ResponseValidator Integration Tests', () => {
     });
 
     it('should generate proper format instructions', () => {
-      const instructions = classifier.prompt.responseValidator.generateInstructions(null, {
+      const instructions = validator.generateInstructions(null, {
         format: 'json',
         verbosity: 'concise'
       });

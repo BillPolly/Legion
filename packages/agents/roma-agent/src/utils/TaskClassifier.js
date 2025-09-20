@@ -6,11 +6,22 @@
  * - COMPLEX: Needs decomposition into subtasks
  */
 
-import Prompt from './Prompt.js';
+import { TemplatedPrompt, PromptRegistry } from '@legion/prompting-manager';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default class TaskClassifier {
   constructor(llmClient) {
     this.llmClient = llmClient;
+    this.initialized = false;
+  }
+
+  async initialize() {
+    if (this.initialized) return;
     
     // Define classification schema
     const classificationSchema = {
@@ -29,23 +40,27 @@ export default class TaskClassifier {
     };
     
     // Create example data for better output instructions
-    const exampleData = {
+    const examples = [{
       complexity: 'SIMPLE',
       reasoning: 'This task can be completed with a direct sequence of tool calls - file reading and JSON parsing are straightforward operations that don\'t require coordination.',
       suggestedApproach: 'Use file_read tool followed by json_parse tool',
       estimatedSteps: 2
-    };
+    }];
+    
+    // Load prompt template from file
+    const promptPath = path.join(__dirname, '..', 'prompts', 'task-classification.md');
+    const promptTemplate = await fs.readFile(promptPath, 'utf-8');
     
     // Create prompt instance for task classification
-    this.prompt = new Prompt('task-classification', classificationSchema, {
-      llmClient,
-      exampleData,
-      maxRetries: 3,
-      validatorOptions: {
-        preferredFormat: 'json',
-        autoRepair: true
-      }
+    this.prompt = new TemplatedPrompt({
+      prompt: promptTemplate,
+      responseSchema: classificationSchema,
+      examples,
+      llmClient: this.llmClient,
+      maxRetries: 3
     });
+    
+    this.initialized = true;
   }
 
   /**
@@ -54,6 +69,8 @@ export default class TaskClassifier {
    * @returns {Promise<Object>} Classification result with complexity and reasoning
    */
   async classify(task, sessionLogger = null, context = {}) {
+    await this.initialize();
+    
     const taskDescription = typeof task === 'string' ? task : (task.description || JSON.stringify(task));
     
     // Format artifacts section if available
@@ -65,19 +82,10 @@ export default class TaskClassifier {
     }
     
     // Execute the prompt with task variables
-    const result = await this.prompt.execute(
-      {
-        taskDescription,
-        artifactsSection
-      },
-      {
-        task,
-        interactionType: 'task-classification',
-        metadata: { 
-          taskDescription: taskDescription.substring(0, 100) 
-        }
-      }
-    );
+    const result = await this.prompt.execute({
+      taskDescription,
+      artifactsSection
+    });
     
     if (result.success) {
       // Validate result complexity
@@ -86,13 +94,26 @@ export default class TaskClassifier {
         data.complexity = 'COMPLEX'; // Default to COMPLEX if unclear
       }
       
+      // Log if session logger is available
+      if (sessionLogger) {
+        await sessionLogger.logInteraction(
+          task,
+          'task-classification',
+          '', // Prompt is internal to TemplatedPrompt
+          JSON.stringify(data),
+          {
+            taskDescription: taskDescription.substring(0, 100)
+          }
+        );
+      }
+      
       return data;
     } else {
       // Handle error case - default to COMPLEX (safer to decompose)
-      console.warn('Task classification failed:', result.error);
+      console.warn('Task classification failed:', result.errors?.join(', '));
       return {
         complexity: 'COMPLEX',
-        reasoning: `Classification error: ${result.error}`,
+        reasoning: `Classification error: ${result.errors?.[0] || 'Unknown error'}`,
         suggestedApproach: 'Break down into subtasks due to classification error',
         estimatedSteps: 5
       };

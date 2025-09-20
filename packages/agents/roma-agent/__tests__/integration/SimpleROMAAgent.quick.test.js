@@ -95,20 +95,12 @@ describe('SimpleROMAAgent Quick Integration', () => {
       // Import required classes
       const { default: ToolDiscovery } = await import('../../src/utils/ToolDiscovery.js');
       const { default: TaskClassifier } = await import('../../src/utils/TaskClassifier.js');
-      const { default: Prompt } = await import('../../src/utils/Prompt.js');
       
       this.toolDiscovery = new ToolDiscovery(this.llmClient, this.toolRegistry);
       this.taskClassifier = new TaskClassifier(this.llmClient);
+      await this.taskClassifier.initialize();
       
-      // Create mock prompt builder with all required methods
-      this.promptBuilder = {
-        buildExecutionPrompt: jest.fn().mockResolvedValue('mock execution prompt'),
-        buildDecompositionPrompt: jest.fn().mockReturnValue('mock decomposition prompt'),
-        buildCompletionEvaluationPrompt: jest.fn().mockReturnValue('mock completion prompt'),
-        buildParentEvaluationPrompt: jest.fn().mockReturnValue('mock parent evaluation prompt'),
-        formatDiscoveredToolsSection: jest.fn().mockReturnValue('mock tools section'),
-        formatArtifactsSection: jest.fn().mockReturnValue('mock artifacts section')
-      };
+      // No longer need promptBuilder - it has been removed
 
       // Create validators (simplified)
       this.simpleTaskValidator = {

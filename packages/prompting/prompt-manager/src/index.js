@@ -9,6 +9,8 @@
 // Main exports
 export { PromptManager } from './PromptManager.js';
 export { RetryHandler } from './RetryHandler.js';
+export { TemplatedPrompt } from './TemplatedPrompt.js';
+export { PromptRegistry } from './PromptRegistry.js';
 
 // Default export - the most common use case
 export { PromptManager as default } from './PromptManager.js';
