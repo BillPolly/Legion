@@ -22,15 +22,6 @@ export default class TaskStrategy {
     // Subclasses can override to perform initialization
   }
 
-  /**
-   * Execute a task
-   * The strategy decides internally how to handle the task (classify, decompose, execute, etc.)
-   * @param {Task} task - The task to execute
-   * @returns {Promise<Object>} Execution result
-   */
-  async execute(task) {
-    throw new Error('TaskStrategy.execute() must be implemented by subclass');
-  }
 
   /**
    * Handle message from a child task

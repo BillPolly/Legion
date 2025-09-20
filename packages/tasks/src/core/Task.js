@@ -716,27 +716,26 @@ export default class Task {
   }
   
   /**
-   * Execute this task based on its classification
-   * This is the main entry point for task execution - DELEGATES TO STRATEGY
+   * Send a message to this task
+   * Messages drive all task behavior in the actor model
    */
-  async execute() {
-    // Start the task
-    this.start();
-    
-    // Check depth limit to prevent infinite recursion
-    const maxDepth = this.context.getService('maxDepth') || this.agent?.maxDepth || 5;
-    if (this.metadata.depth >= maxDepth) {
-      console.log(`⚠️ Maximum recursion depth (${maxDepth}) reached for task: ${this.description}`);
-      this.fail(new Error(`Maximum recursion depth exceeded (${maxDepth})`));
-      return {
-        success: false,
-        result: `Maximum recursion depth exceeded (${maxDepth})`
-      };
+  async receiveMessage(message, fromTask = null) {
+    // Check depth limit for any work-type messages
+    if (message.type === 'start' || message.type === 'work') {
+      const maxDepth = this.context.getService('maxDepth') || this.agent?.maxDepth || 5;
+      if (this.metadata.depth >= maxDepth) {
+        console.log(`⚠️ Maximum recursion depth (${maxDepth}) reached for task: ${this.description}`);
+        this.fail(new Error(`Maximum recursion depth exceeded (${maxDepth})`));
+        return {
+          success: false,
+          result: `Maximum recursion depth exceeded (${maxDepth})`
+        };
+      }
     }
     
-    // Ensure we have a strategy
-    if (!this.strategy) {
-      const error = new Error('No strategy set for task execution');
+    // Ensure we have a strategy for work messages
+    if ((message.type === 'start' || message.type === 'work') && !this.strategy) {
+      const error = new Error('No strategy set for task work');
       this.fail(error);
       return {
         success: false,
@@ -744,27 +743,54 @@ export default class Task {
       };
     }
     
-    // DELEGATE TO STRATEGY - Let the strategy handle everything
-    let result;
+    // Route message based on sender
     try {
-      result = await this.strategy.execute(this);
+      if (fromTask === this.parent) {
+        // Message from parent
+        return await this.strategy.onParentMessage(fromTask, message);
+      } else if (this.children.includes(fromTask)) {
+        // Message from child
+        return await this.strategy.onChildMessage(fromTask, message);
+      } else if (!fromTask) {
+        // Initial message or external message
+        if (message.type === 'start' || message.type === 'work') {
+          // Start the task if not already started
+          if (this.status === 'pending') {
+            this.start();
+          }
+        }
+        // All external messages go to strategy as parent messages
+        // Pass this task as the parentTask so strategy knows which task to work on
+        if (!this.strategy) {
+          throw new Error('Task has no strategy');
+        }
+        if (typeof this.strategy.onParentMessage !== 'function') {
+          throw new Error('Strategy has no onParentMessage method');
+        }
+        
+        return await this.strategy.onParentMessage(this, message);
+      } else {
+        // Unknown sender
+        return {
+          success: false,
+          result: 'Unknown message sender'
+        };
+      }
     } catch (error) {
-      console.log(`❌ Strategy execution failed: ${error.message}`);
+      console.log(`❌ Message handling failed: ${error.message}`);
       this.fail(error);
       return {
         success: false,
-        result: error.message || 'Task execution failed'
+        result: error.message || 'Message handling failed'
       };
     }
-    
-    // Handle result
-    if (result.success) {
-      this.complete(result);
-    } else if (this.status !== 'failed') {
-      this.fail(new Error(result.result || 'Task execution failed'));
-    }
-    
-    return result;
+  }
+
+  /**
+   * Send a message to another task
+   */
+  async sendMessage(targetTask, message) {
+    return await targetTask.receiveMessage(message, this);
   }
 
   /**

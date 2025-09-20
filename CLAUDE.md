@@ -205,3 +205,7 @@ ALWAYS USE ES6 MODULES EVERYWHERE.
 NO mocks in integration tests!
 
 when you are fixing tests READ THE ACTAUL code being tested! do not guess
+
+NO BACWARDS COMPATIBILITY EVER! we only ever have one way of doing things.
+
+NEVER skip tests, FAIL FAST!

@@ -154,7 +154,7 @@ export default class SimpleROMAAgent {
     // Switch to this task in the TaskManager
     this.taskManager.switchToTask(task);
     
-    // Delegate execution to the Task object itself
-    return await task.execute();
+    // Send start message to task (pure message-passing)
+    return await task.receiveMessage({type: 'start'});
   }
 }

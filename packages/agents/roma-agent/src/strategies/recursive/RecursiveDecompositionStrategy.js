@@ -238,36 +238,18 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
     }
     return instance;
   }
+  
+  /**
+   * Reset singleton instance (for testing)
+   */
+  static resetInstance() {
+    instance = null;
+  }
 
   getName() {
     return 'RecursiveDecomposition';
   }
 
-  /**
-   * Main execution entry point
-   * Internally classifies the task and routes to appropriate execution path
-   */
-  async execute(task) {
-    // Get context from the task (it has everything we need)
-    const context = this._getContextFromTask(task);
-    
-    // Initialize strategy components if needed
-    await this._initializeComponents(context);
-    
-    // Classify the task (unless already classified)
-    if (!task.metadata.classification) {
-      const classification = await this._classify(task);
-      task.metadata.classification = classification.complexity;
-      task.addConversationEntry('system', `Task classified as ${classification.complexity}: ${classification.reasoning}`);
-    }
-    
-    // Execute based on classification - same behavior as before
-    if (task.metadata.classification === 'SIMPLE') {
-      return await this._executeSimple(task, context);
-    } else {
-      return await this._executeComplex(task, context);
-    }
-  }
 
   /**
    * Handle messages from child tasks
@@ -307,21 +289,48 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
    * Handle messages from parent task
    */
   async onParentMessage(parentTask, message) {
-    // For now, just acknowledge parent messages
-    // Could handle directives like 'abort', 'update_priority', etc.
     switch (message.type) {
+      case 'start':
+      case 'work':
+        // This is the main entry point - equivalent to old execute()
+        return await this._handleWorkMessage(message.task || parentTask);
+        
       case 'abort':
         console.log(`🛑 Received abort from parent`);
-        // Could implement abort logic here
         return { acknowledged: true, aborted: true };
       
       case 'update_context':
         console.log(`🔄 Received context update from parent`);
-        // Could update task context here
         return { acknowledged: true };
       
       default:
         return { acknowledged: true };
+    }
+  }
+
+  /**
+   * Handle work/start messages - main task execution logic (was execute())
+   * @private
+   */
+  async _handleWorkMessage(task) {
+    // Get context from the task (it has everything we need)
+    const context = this._getContextFromTask(task);
+    
+    // Initialize strategy components if needed
+    await this._initializeComponents(context);
+    
+    // Classify the task (unless already classified)
+    if (!task.metadata.classification) {
+      const classification = await this._classify(task);
+      task.metadata.classification = classification.complexity;
+      task.addConversationEntry('system', `Task classified as ${classification.complexity}: ${classification.reasoning}`);
+    }
+    
+    // Execute based on classification - same behavior as before
+    if (task.metadata.classification === 'SIMPLE') {
+      return await this._executeSimple(task, context);
+    } else {
+      return await this._executeComplex(task, context);
     }
   }
 
@@ -495,8 +504,8 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
     
     console.log(`📍 Executing subtask ${task.currentSubtaskIndex + 1}/${task.plannedSubtasks.length}: ${subtask.description}`);
     
-    // Execute the subtask recursively
-    const subtaskResult = await subtask.execute();
+    // Send start message to subtask (pure message-passing)
+    const subtaskResult = await subtask.receiveMessage({type: 'start'});
     
     // Check if subtask failed due to depth limit
     if (!subtaskResult.success && subtaskResult.result && 
@@ -549,7 +558,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
         }
         
         console.log(`📍 Executing next subtask ${task.currentSubtaskIndex + 1}/${task.plannedSubtasks.length}: ${nextSubtask.description}`);
-        const nextResult = await nextSubtask.execute();
+        const nextResult = await nextSubtask.receiveMessage({type: 'start'});
         
         // Recursively handle the next subtask result through messages
         if (nextResult.success) {
@@ -565,7 +574,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
       case 'RETRY':
         // Retry the same subtask
         console.log(`🔄 Retrying subtask: ${childTask.description}`);
-        const retryResult = await childTask.execute();
+        const retryResult = await childTask.receiveMessage({type: 'start'});
         
         // Recursively handle retry result through messages
         if (retryResult.success) {
@@ -679,7 +688,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
         const nextSubtask = await task.createNextSubtask(context.taskManager);
         if (nextSubtask) {
           console.log(`📍 Continuing with next subtask: ${nextSubtask.description}`);
-          const nextResult = await nextSubtask.execute();
+          const nextResult = await nextSubtask.receiveMessage({type: 'start'});
           
           if (nextResult.success) {
             return await this.onChildMessage(nextSubtask, { type: 'completed', result: nextResult });
