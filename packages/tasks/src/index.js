@@ -8,7 +8,8 @@
  * - TaskStrategy: Minimal base class for pluggable execution strategies
  * - TaskManager: Manages task hierarchy and execution flow
  * - ArtifactRegistry: Manages artifacts with proper structure and formatting
- * - ExecutionContext: Dependency injection container for agent services
+ * - ExecutionContext: Dependency injection container for task-specific services
+ * - GlobalContext: Root context containing global resources (ResourceManager, ToolRegistry, etc.)
  */
 
 // Core framework classes
@@ -17,6 +18,7 @@ export { default as TaskStrategy } from './core/TaskStrategy.js';
 export { default as TaskManager } from './core/TaskManager.js';
 export { default as ArtifactRegistry } from './core/ArtifactRegistry.js';
 export { default as ExecutionContext } from './core/ExecutionContext.js';
+export { default as GlobalContext } from './core/GlobalContext.js';
 
 // Version and metadata
 export const version = '1.0.0';

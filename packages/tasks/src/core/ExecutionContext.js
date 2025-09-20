@@ -1,36 +1,33 @@
 /**
  * ExecutionContext - Provides clean dependency injection for task execution
  * 
- * This class acts as a service locator that strategies can use to access
- * agent-specific services without creating tight coupling between the
- * framework and specific agent implementations.
+ * This class acts as a service locator for shared resources and task-specific
+ * configuration. Strategy-specific tools should be owned by strategies themselves.
+ * Supports hierarchical lookup through parent context chain.
  */
 
 export default class ExecutionContext {
   constructor(services = {}) {
-    // Core services that strategies typically need
+    // Shared resources (may be available in parent context)
     this.llmClient = services.llmClient || null;
-    this.taskClassifier = services.taskClassifier || null;
-    this.toolDiscovery = services.toolDiscovery || null;
     this.sessionLogger = services.sessionLogger || null;
-    this.promptBuilder = services.promptBuilder || null;
     
-    // Validators for response processing
-    this.simpleTaskValidator = services.simpleTaskValidator || null;
-    this.decompositionValidator = services.decompositionValidator || null;
-    this.parentEvaluationValidator = services.parentEvaluationValidator || null;
-    this.completionEvaluationValidator = services.completionEvaluationValidator || null;
-    
-    // Environment and configuration
+    // Task-specific configuration and state
     this.workspaceDir = services.workspaceDir || process.cwd();
     this.testMode = services.testMode || false;
     this.fastToolDiscovery = services.fastToolDiscovery || false;
+    this.maxDepth = services.maxDepth || 5;
+    this.maxSubtasks = services.maxSubtasks || 10;
+    this.executionTimeout = services.executionTimeout || 60000;
     
     // Agent reference for compatibility
     this.agent = services.agent || null;
     
     // Task manager reference (for subtask creation)
     this.taskManager = services.taskManager || null;
+    
+    // Parent context for hierarchical lookup
+    this.parent = services.parent || null;
     
     // Store any additional services provided
     this.additionalServices = {};
@@ -42,21 +39,41 @@ export default class ExecutionContext {
   }
 
   /**
-   * Get a service by name
-   * Allows strategies to access services dynamically
+   * Hierarchical lookup - searches current context, then parent contexts
+   * This is the primary method for accessing resources
    */
-  getService(name) {
-    if (this.hasOwnProperty(name)) {
+  lookup(name) {
+    // First check direct properties
+    if (this.hasOwnProperty(name) && this[name] !== null) {
       return this[name];
     }
-    return this.additionalServices[name] || null;
+    
+    // Then check additional services
+    if (this.additionalServices[name] !== undefined) {
+      return this.additionalServices[name];
+    }
+    
+    // Finally check parent context
+    if (this.parent && this.parent.lookup) {
+      return this.parent.lookup(name);
+    }
+    
+    return null;
   }
 
   /**
-   * Check if a service is available
+   * Get a service by name (legacy method, uses hierarchical lookup)
+   * Allows strategies to access services dynamically
+   */
+  getService(name) {
+    return this.lookup(name);
+  }
+
+  /**
+   * Check if a service is available (uses hierarchical lookup)
    */
   hasService(name) {
-    return this.hasOwnProperty(name) || this.additionalServices.hasOwnProperty(name);
+    return this.lookup(name) !== null;
   }
 
   /**
@@ -73,31 +90,29 @@ export default class ExecutionContext {
 
   /**
    * Create a child context with additional or overridden services
-   * Useful for subtasks that need modified contexts
+   * Child context will have this context as parent for hierarchical lookup
    */
   createChildContext(overrides = {}) {
-    const allServices = {
-      // Current services
+    const childServices = {
+      // Current services (only the ones that should be inherited)
       llmClient: this.llmClient,
-      taskClassifier: this.taskClassifier,
-      toolDiscovery: this.toolDiscovery,
       sessionLogger: this.sessionLogger,
-      promptBuilder: this.promptBuilder,
-      simpleTaskValidator: this.simpleTaskValidator,
-      decompositionValidator: this.decompositionValidator,
-      parentEvaluationValidator: this.parentEvaluationValidator,
-      completionEvaluationValidator: this.completionEvaluationValidator,
       workspaceDir: this.workspaceDir,
       testMode: this.testMode,
       fastToolDiscovery: this.fastToolDiscovery,
+      maxDepth: this.maxDepth,
+      maxSubtasks: this.maxSubtasks,
+      executionTimeout: this.executionTimeout,
       agent: this.agent,
       taskManager: this.taskManager,
       ...this.additionalServices,
       // Override with new services
-      ...overrides
+      ...overrides,
+      // Set this context as parent
+      parent: this
     };
 
-    return new ExecutionContext(allServices);
+    return new ExecutionContext(childServices);
   }
 
   /**
@@ -122,28 +137,32 @@ export default class ExecutionContext {
 
   /**
    * Get a summary of available services (for debugging)
+   * Shows both local and hierarchically available services
    */
   getServiceSummary() {
     const services = {
+      // Direct properties
       llmClient: !!this.llmClient,
-      taskClassifier: !!this.taskClassifier,
-      toolDiscovery: !!this.toolDiscovery,
       sessionLogger: !!this.sessionLogger,
-      promptBuilder: !!this.promptBuilder,
-      simpleTaskValidator: !!this.simpleTaskValidator,
-      decompositionValidator: !!this.decompositionValidator,
-      parentEvaluationValidator: !!this.parentEvaluationValidator,
-      completionEvaluationValidator: !!this.completionEvaluationValidator,
       agent: !!this.agent,
       taskManager: !!this.taskManager,
       workspaceDir: this.workspaceDir,
       testMode: this.testMode,
-      fastToolDiscovery: this.fastToolDiscovery
+      fastToolDiscovery: this.fastToolDiscovery,
+      maxDepth: this.maxDepth,
+      maxSubtasks: this.maxSubtasks,
+      executionTimeout: this.executionTimeout,
+      hasParent: !!this.parent
     };
 
     // Add additional services
     for (const [key, value] of Object.entries(this.additionalServices)) {
       services[key] = !!value;
+    }
+
+    // If there's a parent, indicate hierarchical services available
+    if (this.parent && this.parent.getServiceSummary) {
+      services.inheritedServices = this.parent.getServiceSummary();
     }
 
     return services;
