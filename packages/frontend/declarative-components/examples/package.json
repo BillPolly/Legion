@@ -12,10 +12,10 @@
     "debug": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/debug-legion-package-serving.test.js --verbose"
   },
   "dependencies": {
-    "@legion/server-framework": "workspace:*",
-    "@legion/resource-manager": "workspace:*",
-    "@legion/declarative-components": "workspace:*",
-    "@legion/data-store": "workspace:*"
+    "@legion/server-framework": "file:../../../server-framework",
+    "@legion/resource-manager": "file:../../../resource-manager",
+    "@legion/declarative-components": "file:../",
+    "@legion/data-store": "file:../../../shared/data/data-store"
   },
   "devDependencies": {
     "jest": "^29.5.0",
