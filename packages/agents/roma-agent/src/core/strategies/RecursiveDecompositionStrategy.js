@@ -9,7 +9,7 @@
  * All the existing behavior (classification, decomposition, execution) is preserved as internal methods.
  */
 
-import { TaskStrategy } from '../../../../../tasks/src/index.js';
+import { TaskStrategy } from '@legion/tasks';
 
 let instance = null;
 

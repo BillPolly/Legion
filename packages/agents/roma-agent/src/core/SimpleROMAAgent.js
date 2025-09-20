@@ -10,7 +10,7 @@
 import { ResourceManager } from '@legion/resource-manager';
 import { ToolRegistry } from '@legion/tools-registry';
 import { ResponseValidator } from '@legion/output-schema';
-import { Task, TaskManager, ArtifactRegistry, ExecutionContext } from '../../../../tasks/src/index.js';
+import { Task, TaskManager, ArtifactRegistry, ExecutionContext } from '@legion/tasks';
 import PromptBuilder from '../utils/PromptBuilder.js';
 import Prompt from '../utils/Prompt.js';
 import ToolDiscovery from '../utils/ToolDiscovery.js';

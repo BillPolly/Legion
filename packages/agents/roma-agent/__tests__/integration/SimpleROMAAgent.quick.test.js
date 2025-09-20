@@ -137,10 +137,10 @@ describe('SimpleROMAAgent Quick Integration', () => {
       };
       
       // Strategy is already created in constructor
-      this.artifactRegistry = new (await import('../../src/core/ArtifactRegistry.js')).default();
+      const { ArtifactRegistry, TaskManager } = await import('@legion/tasks');
+      this.artifactRegistry = new ArtifactRegistry();
       
       // Create task manager
-      const { default: TaskManager } = await import('../../src/core/TaskManager.js');
       this.taskManager = new TaskManager();
     };
     

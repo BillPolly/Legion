@@ -6,7 +6,7 @@ import { describe, it, expect, beforeAll, beforeEach, jest } from '@jest/globals
 import SimpleROMAAgent from '../../src/core/SimpleROMAAgent.js';
 import TaskClassifier from '../../src/utils/TaskClassifier.js';
 import ToolDiscovery from '../../src/utils/ToolDiscovery.js';
-import ArtifactRegistry from '../../src/core/ArtifactRegistry.js';
+import { ArtifactRegistry } from '@legion/tasks';
 import { ResourceManager } from '@legion/resource-manager';
 import { ToolRegistry } from '@legion/tools-registry';
 
@@ -95,7 +95,7 @@ describe('SimpleROMAAgent Unit Tests', () => {
     };
     
     // Create task manager manually
-    const TaskManager = (await import('../../src/core/TaskManager.js')).default;
+    const { TaskManager } = await import('@legion/tasks');
     agent.taskManager = new TaskManager(mockLLMClient);
   });
   

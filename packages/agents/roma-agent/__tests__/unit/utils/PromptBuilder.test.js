@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import PromptBuilder from '../../../src/utils/PromptBuilder.js';
-import ArtifactRegistry from '../../../src/core/ArtifactRegistry.js';
+import { ArtifactRegistry } from '@legion/tasks';
 
 describe('PromptBuilder Unit Tests', () => {
   let promptBuilder;
