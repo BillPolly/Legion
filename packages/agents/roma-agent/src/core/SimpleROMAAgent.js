@@ -29,13 +29,14 @@ export default class SimpleROMAAgent {
     // Task execution strategy (pluggable)
     this.taskStrategy = options.taskStrategy || RecursiveDecompositionStrategy.getInstance();
     
-    // Test mode configuration for fast integration tests
-    this.testMode = options.testMode || false;
-    this.fastToolDiscovery = options.fastToolDiscovery || false;
-    
     // Configuration
     this.maxDepth = options.maxDepth || 5;
+    this.maxSubtasks = options.maxSubtasks || 10;
+    this.executionTimeout = options.executionTimeout || 60000; // 60 seconds default
     this.outputDir = options.outputDir || null;
+    
+    // Development/testing configuration
+    this.fastToolDiscovery = options.fastToolDiscovery || false;
   }
 
   async initialize() {
@@ -94,7 +95,9 @@ export default class SimpleROMAAgent {
       // Configuration
       fastToolDiscovery: this.fastToolDiscovery,
       workspaceDir: process.cwd(),
-      testMode: this.testMode,
+      maxDepth: this.maxDepth,
+      maxSubtasks: this.maxSubtasks,
+      executionTimeout: this.executionTimeout,
       agent: this,  // Pass reference to agent for helper methods
       taskManager: this.taskManager
     });
@@ -143,56 +146,16 @@ export default class SimpleROMAAgent {
    * Run a task - delegates to the task's own execute method
    */
   async _runTask(task) {
-    // Check depth limit
-    if (task.metadata.depth > 5) {
+    // Check depth limit using configurable maxDepth
+    if (task.metadata.depth > this.maxDepth) {
       console.log(`⚠️ Maximum depth exceeded (${task.metadata.depth}), stopping execution`);
-      task.fail(new Error(`Maximum recursion depth exceeded`));
+      task.fail(new Error(`Maximum recursion depth exceeded (${this.maxDepth})`));
       return {
         success: false,
-        result: `Maximum recursion depth exceeded`,
+        result: `Maximum recursion depth exceeded (${this.maxDepth})`,
         artifacts: task.artifactRegistry?.toJSON() || []
       };
     }
-
-    // In test mode, prevent over-decomposition of extremely complex tasks
-    if (this.testMode) {
-      const description = task.description.toLowerCase();
-      // Check for complex enterprise patterns - if multiple enterprise terms are present, limit recursion
-      const enterpriseTerms = ['enterprise', 'microservices', 'databases', 'authentication', 
-                               'monitoring', 'ci/cd', 'deployment', 'stakeholder', 'requirements'];
-      const termCount = enterpriseTerms.filter(term => description.includes(term)).length;
-      
-      console.log(`🔍 Debug: Task "${task.description.substring(0, 60)}..." depth=${task.metadata.depth}, terms=${termCount}`);
-      
-      // For the root task (depth 0) with many enterprise terms, force SIMPLE classification
-      if (termCount >= 5 && task.metadata.depth === 0) {
-        console.log(`🧪 Test mode: Forcing SIMPLE classification for complex enterprise root task (${termCount} enterprise terms)`);
-        // Override classification to SIMPLE to prevent decomposition
-        task.metadata.classification = 'SIMPLE';
-      }
-      // For subtasks at depth >= 1 with enterprise terms, early terminate
-      else if (termCount >= 3 && task.metadata.depth >= 1) {
-        console.log(`🧪 Test mode: Limiting recursion for complex enterprise task (${termCount} enterprise terms) at depth ${task.metadata.depth}`);
-        task.complete({ 
-          success: true, 
-          result: 'Complex enterprise task simulation completed for testing',
-          artifacts: task.artifactRegistry?.toJSON() || []
-        });
-        
-        if (task.parent) {
-          return await task.evaluateChild(task);
-        }
-        
-        return {
-          success: true,
-          result: 'Complex enterprise task simulation completed for testing',
-          artifacts: task.artifactRegistry?.toJSON() || []
-        };
-      }
-    }
-
-    // Set the test mode on the task
-    task.testMode = this.testMode;
     
     // Switch to this task in the TaskManager
     this.taskManager.switchToTask(task);

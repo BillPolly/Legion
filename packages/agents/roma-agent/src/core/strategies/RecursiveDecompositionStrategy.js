@@ -296,7 +296,9 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
       fastToolDiscovery: task.fastToolDiscovery,
       workspaceDir: task.workspaceDir,
       agent: task.agent,
-      testMode: task.testMode,
+      maxDepth: task.maxDepth,
+      maxSubtasks: task.maxSubtasks,
+      executionTimeout: task.executionTimeout,
       taskManager: task.taskManager
     };
   }

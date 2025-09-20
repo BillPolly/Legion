@@ -75,7 +75,8 @@ describe('SimpleROMAAgent Quick Integration', () => {
   beforeEach(async () => {
     // Create agent and override dependencies
     agent = new SimpleROMAAgent({ 
-      testMode: true, 
+      maxDepth: 3,           // Limit depth for faster tests
+      maxSubtasks: 5,        // Limit subtasks for faster tests
       fastToolDiscovery: true 
     });
     

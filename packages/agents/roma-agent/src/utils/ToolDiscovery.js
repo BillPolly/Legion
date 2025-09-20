@@ -194,11 +194,8 @@ IMPORTANT: Include descriptions for BOTH code/file generation AND specific opera
               // ALWAYS get the full tool from ToolRegistry to ensure execute function
               // Search results only contain metadata, not the actual executable tool
               const fullTool = await this.toolRegistry.getTool(toolName);
-              console.log(`[DEBUG] Tool '${toolName}': fullTool has execute = ${typeof fullTool?.execute === 'function'}`);
 
               if (fullTool) {
-                console.log(`[DEBUG] Before assignment - fullTool.execute = ${typeof fullTool.execute}`);
-                
                 // CRITICAL FIX: Don't use spread operator as it doesn't copy prototype methods!
                 // Instead, create a new object and explicitly copy the execute function
                 const result = Object.assign({}, fullTool);
@@ -212,7 +209,6 @@ IMPORTANT: Include descriptions for BOTH code/file generation AND specific opera
                   result.execute = fullTool.execute.bind(fullTool);
                 }
                 
-                console.log(`[DEBUG] After assignment - result.execute = ${typeof result.execute}`);
                 return result;
               }
             } catch (error) {
