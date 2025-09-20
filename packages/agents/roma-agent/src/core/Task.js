@@ -901,22 +901,20 @@ export default class Task {
     // Initialize prompt builder if needed
     await this.initializePromptBuilder();
     
-    // Build execution context for strategy
-    const context = this._buildExecutionContext();
+    // Store taskManager reference for creating subtasks
+    this.metadata.taskManager = this.agent?.taskManager;
     
-    // Classify the task (unless already classified)
-    if (!this.metadata.classification) {
-      const classification = await this.strategy.classify(this, context);
-      this.metadata.classification = classification.complexity;
-      this.addConversationEntry('system', `Task classified as ${classification.complexity}: ${classification.reasoning}`);
-    }
-    
-    // Execute based on classification - DELEGATE TO STRATEGY
+    // DELEGATE TO STRATEGY - Let the strategy handle everything internally
     let result;
-    if (this.metadata.classification === 'SIMPLE') {
-      result = await this.strategy.executeSimple(this, context);
-    } else {
-      result = await this.strategy.executeComplex(this, context);
+    try {
+      result = await this.strategy.execute(this);
+    } catch (error) {
+      console.log(`❌ Strategy execution failed: ${error.message}`);
+      this.fail(error);
+      return {
+        success: false,
+        result: error.message || 'Task execution failed'
+      };
     }
     
     // Handle result
@@ -929,28 +927,6 @@ export default class Task {
     return result;
   }
 
-  /**
-   * Build execution context for strategy
-   * @private
-   */
-  _buildExecutionContext() {
-    return {
-      llmClient: this.llmClient,
-      taskClassifier: this.taskClassifier,
-      toolDiscovery: this.toolDiscovery,
-      sessionLogger: this.sessionLogger,
-      simpleTaskValidator: this.simpleTaskValidator,
-      decompositionValidator: this.decompositionValidator,
-      parentEvaluationValidator: this.parentEvaluationValidator,
-      completionEvaluationValidator: this.completionEvaluationValidator,
-      fastToolDiscovery: this.fastToolDiscovery,
-      workspaceDir: this.workspaceDir,
-      agent: this.agent,
-      testMode: this.testMode,
-      taskManager: this.metadata.taskManager,
-      maxDepth: this.agent?.maxDepth || 5
-    };
-  }
 
   /**
    * Initialize prompt builder

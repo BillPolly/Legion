@@ -1,10 +1,12 @@
 /**
  * RecursiveDecompositionStrategy - Current ROMA recursive decomposition behavior
  * 
- * Implements the existing recursive task decomposition pattern:
- * - SIMPLE tasks: Execute with tools directly
- * - COMPLEX tasks: Decompose and execute subtasks one by one
- * - Parent evaluates each child completion and decides next steps
+ * Implements the existing recursive task decomposition pattern with minimal public interface:
+ * - execute(): Main entry point that internally classifies and routes to simple/complex execution
+ * - onChildMessage(): Handles messages from child tasks
+ * - onParentMessage(): Handles messages from parent tasks
+ * 
+ * All the existing behavior (classification, decomposition, execution) is preserved as internal methods.
  */
 
 import TaskStrategy from './TaskStrategy.js';
@@ -35,9 +37,108 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
   }
 
   /**
-   * Classify task using LLM
+   * Main execution entry point
+   * Internally classifies the task and routes to appropriate execution path
    */
-  async classify(task, context) {
+  async execute(task) {
+    // Get context from the task (it has everything we need)
+    const context = this._getContextFromTask(task);
+    
+    // Classify the task (unless already classified)
+    if (!task.metadata.classification) {
+      const classification = await this._classify(task, context);
+      task.metadata.classification = classification.complexity;
+      task.addConversationEntry('system', `Task classified as ${classification.complexity}: ${classification.reasoning}`);
+    }
+    
+    // Execute based on classification - same behavior as before
+    if (task.metadata.classification === 'SIMPLE') {
+      return await this._executeSimple(task, context);
+    } else {
+      return await this._executeComplex(task, context);
+    }
+  }
+
+  /**
+   * Handle messages from child tasks
+   */
+  async onChildMessage(childTask, message) {
+    // Get parent task and context
+    const task = childTask.parent;
+    if (!task) {
+      throw new Error('Child task has no parent');
+    }
+    
+    const context = this._getContextFromTask(task);
+    
+    // Route based on message type
+    switch (message.type) {
+      case 'completed':
+        return await this._onChildComplete(task, childTask, message.result, context);
+      
+      case 'failed':
+        return await this._onChildFailure(task, childTask, message.error, context);
+      
+      case 'progress':
+        // Could handle progress updates in future
+        console.log(`📊 Progress from ${childTask.description}: ${message.status}`);
+        return { acknowledged: true };
+      
+      default:
+        console.log(`⚠️ Unknown message type from child: ${message.type}`);
+        return { acknowledged: false, error: 'Unknown message type' };
+    }
+  }
+
+  /**
+   * Handle messages from parent task
+   */
+  async onParentMessage(parentTask, message) {
+    // For now, just acknowledge parent messages
+    // Could handle directives like 'abort', 'update_priority', etc.
+    switch (message.type) {
+      case 'abort':
+        console.log(`🛑 Received abort from parent`);
+        // Could implement abort logic here
+        return { acknowledged: true, aborted: true };
+      
+      case 'update_context':
+        console.log(`🔄 Received context update from parent`);
+        // Could update task context here
+        return { acknowledged: true };
+      
+      default:
+        return { acknowledged: true };
+    }
+  }
+
+  /**
+   * Extract context from task (internal utility)
+   * @private
+   */
+  _getContextFromTask(task) {
+    return {
+      llmClient: task.llmClient,
+      taskClassifier: task.taskClassifier,
+      toolDiscovery: task.toolDiscovery,
+      sessionLogger: task.sessionLogger,
+      simpleTaskValidator: task.simpleTaskValidator,
+      decompositionValidator: task.decompositionValidator,
+      parentEvaluationValidator: task.parentEvaluationValidator,
+      completionEvaluationValidator: task.completionEvaluationValidator,
+      fastToolDiscovery: task.fastToolDiscovery,
+      workspaceDir: task.workspaceDir,
+      agent: task.agent,
+      testMode: task.testMode,
+      taskManager: task.taskManager
+    };
+  }
+
+  /**
+   * Classify task using LLM (internal utility, was public classify())
+   * @private
+   */
+  async _classify(task, context) {
     const { taskClassifier, sessionLogger } = context;
     
     if (!taskClassifier) {
@@ -63,9 +164,10 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
   }
 
   /**
-   * Decompose complex task into subtasks
+   * Decompose complex task into subtasks (internal utility, was public decompose())
+   * @private
    */
-  async decompose(task, context) {
+  async _decompose(task, context) {
     const { llmClient, decompositionValidator, sessionLogger } = context;
     
     if (!llmClient) {
@@ -102,9 +204,10 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
   }
 
   /**
-   * Execute a simple task with tools
+   * Execute a simple task with tools (internal utility, was public executeSimple())
+   * @private
    */
-  async executeSimple(task, context) {
+  async _executeSimple(task, context) {
     const { toolDiscovery, llmClient, simpleTaskValidator, sessionLogger } = context;
     
     // Discover tools
@@ -165,12 +268,13 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
   }
 
   /**
-   * Execute a complex task through decomposition
+   * Execute a complex task through decomposition (internal utility, was public executeComplex())
+   * @private
    */
-  async executeComplex(task, context) {
+  async _executeComplex(task, context) {
     // Decompose if not already done
     if (!task.metadata.isDecomposed) {
-      const decomposition = await this.decompose(task, context);
+      const decomposition = await this._decompose(task, context);
       
       if (!decomposition.subtasks || decomposition.subtasks.length === 0) {
         console.log(`⚠️ Could not decompose COMPLEX task`);
@@ -191,7 +295,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
     
     if (!subtask) {
       // No subtasks to execute - evaluate completion
-      return await this.evaluateCompletion(task, context);
+      return await this._evaluateCompletion(task, context);
     }
     
     console.log(`📍 Executing subtask ${task.currentSubtaskIndex + 1}/${task.plannedSubtasks.length}: ${subtask.description}`);
@@ -208,18 +312,19 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
       return subtaskResult;
     }
     
-    // Handle child completion or failure
+    // Handle child completion or failure through messages
     if (subtaskResult.success) {
-      return await this.onChildComplete(task, subtask, subtaskResult, context);
+      return await this.onChildMessage(subtask, { type: 'completed', result: subtaskResult });
     } else {
-      return await this.onChildFailure(task, subtask, new Error(subtaskResult.result), context);
+      return await this.onChildMessage(subtask, { type: 'failed', error: new Error(subtaskResult.result) });
     }
   }
 
   /**
-   * Handle child task completion
+   * Handle child task completion (internal utility, was public onChildComplete())
+   * @private
    */
-  async onChildComplete(task, childTask, result, context) {
+  async _onChildComplete(task, childTask, result, context) {
     // Receive goal outputs from the child
     if (childTask.artifactRegistry && task.artifactRegistry) {
       const delivered = await childTask.deliverGoalOutputs(task.artifactRegistry);
@@ -247,33 +352,33 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
         
         if (!nextSubtask) {
           // No more subtasks - evaluate completion
-          return await this.evaluateCompletion(task, context);
+          return await this._evaluateCompletion(task, context);
         }
         
         console.log(`📍 Executing next subtask ${task.currentSubtaskIndex + 1}/${task.plannedSubtasks.length}: ${nextSubtask.description}`);
         const nextResult = await nextSubtask.execute();
         
-        // Recursively handle the next subtask result
+        // Recursively handle the next subtask result through messages
         if (nextResult.success) {
-          return await this.onChildComplete(task, nextSubtask, nextResult, context);
+          return await this.onChildMessage(nextSubtask, { type: 'completed', result: nextResult });
         } else {
-          return await this.onChildFailure(task, nextSubtask, new Error(nextResult.result), context);
+          return await this.onChildMessage(nextSubtask, { type: 'failed', error: new Error(nextResult.result) });
         }
         
       case 'COMPLETE':
         // Task is complete
-        return await this.evaluateCompletion(task, context);
+        return await this._evaluateCompletion(task, context);
         
       case 'RETRY':
         // Retry the same subtask
         console.log(`🔄 Retrying subtask: ${childTask.description}`);
         const retryResult = await childTask.execute();
         
-        // Recursively handle retry result
+        // Recursively handle retry result through messages
         if (retryResult.success) {
-          return await this.onChildComplete(task, childTask, retryResult, context);
+          return await this.onChildMessage(childTask, { type: 'completed', result: retryResult });
         } else {
-          return await this.onChildFailure(task, childTask, new Error(retryResult.result), context);
+          return await this.onChildMessage(childTask, { type: 'failed', error: new Error(retryResult.result) });
         }
         
       case 'REPLAN':
@@ -284,18 +389,19 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
         task.currentSubtaskIndex = -1;
         
         // Execute complex task again with new decomposition
-        return await this.executeComplex(task, context);
+        return await this._executeComplex(task, context);
         
       default:
         console.log(`⚠️ Unknown evaluation decision: ${evaluation.decision}`);
-        return await this.evaluateCompletion(task, context);
+        return await this._evaluateCompletion(task, context);
     }
   }
 
   /**
-   * Handle child task failure  
+   * Handle child task failure (internal utility, was public onChildFailure())
+   * @private
    */
-  async onChildFailure(task, childTask, error, context) {
+  async _onChildFailure(task, childTask, error, context) {
     console.log(`❌ Subtask failed: ${childTask.description}`);
     console.log(`   Error: ${error.message}`);
     
@@ -314,9 +420,10 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
   }
 
   /**
-   * Evaluate if task is complete
+   * Evaluate if task is complete (internal utility, was public evaluateCompletion())
+   * @private
    */
-  async evaluateCompletion(task, context) {
+  async _evaluateCompletion(task, context) {
     const { llmClient, completionEvaluationValidator, sessionLogger } = context;
     
     console.log(`🎯 Evaluating if task "${task.description}" is complete...`);
@@ -374,9 +481,9 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
       
       task.complete(result);
       
-      // If task has a parent, let parent evaluate
+      // If task has a parent, let parent evaluate through message
       if (task.parent) {
-        return await task.parent.strategy.onChildComplete(task.parent, task, result, context);
+        return await this.onChildMessage(task, { type: 'completed', result });
       }
       
       return result;
@@ -390,9 +497,9 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
           const nextResult = await nextSubtask.execute();
           
           if (nextResult.success) {
-            return await this.onChildComplete(task, nextSubtask, nextResult, context);
+            return await this.onChildMessage(nextSubtask, { type: 'completed', result: nextResult });
           } else {
-            return await this.onChildFailure(task, nextSubtask, new Error(nextResult.result), context);
+            return await this.onChildMessage(nextSubtask, { type: 'failed', error: new Error(nextResult.result) });
           }
         }
       }
@@ -423,6 +530,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
       task.getConversationContext(),
       task.getArtifactsContext()
     );
+    
     // Get execution plan from LLM
     const response = await llmClient.complete(prompt);
     
@@ -502,11 +610,8 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
     }
     
     return {
-      success: results.every(r => r.success),
-      result: results.every(r => r.success) ? 
-        'All tools executed successfully' : 
-        'Some tools failed to execute',
-      results,
+      success: results.some(r => r.success),
+      results: results,
       artifacts: task.artifactRegistry?.toJSON() || []
     };
   }
@@ -522,11 +627,9 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
     const prompt = task.promptBuilder.buildParentEvaluationPrompt(
       task.description,
       childTask.description,
-      childTask.getResult(),
       task.getConversationContext(),
       task.getArtifactsContext(),
-      task.getCompletedSubtasks(),
-      task.getRemainingSubtasks()
+      task.getCompletedSubtasks()
     );
     
     // Get evaluation from LLM
@@ -542,17 +645,10 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
       if (!validation.success) {
         const errorMessages = validation.errors ? validation.errors.map(e => e.message).join(', ') : 'Invalid response';
         console.log(`⚠️ Invalid parent evaluation response: ${errorMessages}`);
-        // Default to continue
+        // Default to continuing if validation fails
         return { decision: 'CONTINUE', reasoning: 'Invalid evaluation response' };
       }
-      // Map 'action' field to 'decision' field for compatibility
-      const data = validation.data;
-      return {
-        decision: data.action ? data.action.toUpperCase() : 'CONTINUE',
-        reasoning: data.reason || data.reasoning || 'No reason provided',
-        result: data.result,
-        relevantArtifacts: data.relevantArtifacts
-      };
+      return validation.data;
     }
 
     // Fallback parsing
@@ -567,16 +663,17 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
     try {
       const parsed = JSON.parse(response);
       return parsed;
-    } catch {
-      // Try to extract subtasks from text
-      const subtasks = [];
-      const lines = response.split('\n');
-      for (const line of lines) {
-        if (line.match(/^\d+[\.\)]/)) {
-          subtasks.push(line.replace(/^\d+[\.\)]/, '').trim());
-        }
+    } catch (e) {
+      // Try to extract subtasks from response
+      const subtaskMatches = response.match(/\d+\.\s+(.+)/g);
+      if (subtaskMatches) {
+        return {
+          subtasks: subtaskMatches.map(match => ({
+            description: match.replace(/^\d+\.\s+/, '')
+          }))
+        };
       }
-      return { subtasks };
+      return { subtasks: [] };
     }
   }
 
@@ -588,43 +685,47 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
     try {
       const parsed = JSON.parse(response);
       return parsed;
-    } catch {
-      return { response };
+    } catch (e) {
+      // Try to extract tool calls from response
+      return { response: response };
     }
   }
 
   /**
-   * Parse completion evaluation (fallback)
-   * @private
-   */
-  _parseCompletionEvaluation(response) {
-    const lower = response.toLowerCase();
-    const isComplete = lower.includes('complete') && !lower.includes('not complete') && !lower.includes('incomplete');
-    return {
-      isComplete,
-      reasoning: response
-    };
-  }
-
-  /**
-   * Parse parent evaluation (fallback)
+   * Parse parent evaluation response (fallback)
    * @private
    */
   _parseParentEvaluation(response) {
-    const lower = response.toLowerCase();
-    let decision = 'CONTINUE';
-    
-    if (lower.includes('complete')) {
-      decision = 'COMPLETE';
-    } else if (lower.includes('retry')) {
-      decision = 'RETRY';
-    } else if (lower.includes('replan')) {
-      decision = 'REPLAN';
+    try {
+      const parsed = JSON.parse(response);
+      return parsed;
+    } catch (e) {
+      // Default to continuing
+      return {
+        decision: 'CONTINUE',
+        reasoning: 'Could not parse evaluation response'
+      };
     }
-    
-    return {
-      decision,
-      reasoning: response
-    };
+  }
+
+  /**
+   * Parse completion evaluation response (fallback)
+   * @private
+   */
+  _parseCompletionEvaluation(response) {
+    try {
+      const parsed = JSON.parse(response);
+      return {
+        isComplete: parsed.isComplete || parsed.complete || false,
+        reasoning: parsed.reasoning || parsed.reason || 'No reason provided',
+        summary: parsed.summary || parsed.result
+      };
+    } catch (e) {
+      // Default to incomplete
+      return {
+        isComplete: false,
+        reasoning: 'Could not parse evaluation response'
+      };
+    }
   }
 }

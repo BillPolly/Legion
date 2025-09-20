@@ -186,10 +186,8 @@ describe('SimpleROMAAgent Unit Tests', () => {
         }))
         // 3. Parent evaluates after HTML subtask
         .mockResolvedValueOnce(JSON.stringify({ 
-          action: 'continue',
-          relevantArtifacts: [],
-          result: 'HTML subtask completed successfully',
-          reason: 'HTML task completed, continue with CSS'
+          decision: 'CONTINUE',
+          reasoning: 'HTML task completed, continue with CSS'
         }))
         // 4. CSS subtask execution
         .mockResolvedValueOnce(JSON.stringify({
@@ -201,10 +199,8 @@ describe('SimpleROMAAgent Unit Tests', () => {
         }))
         // 5. Parent evaluates after CSS subtask - should continue to completion evaluation
         .mockResolvedValueOnce(JSON.stringify({ 
-          action: 'complete',
-          result: 'All subtasks completed successfully',
-          relevantArtifacts: [],
-          reason: 'All subtasks completed successfully'
+          decision: 'COMPLETE',
+          reasoning: 'All subtasks completed successfully'
         }))
         // 6. Parent completion evaluation (after step 5 action: complete)
         .mockResolvedValueOnce(JSON.stringify({
@@ -351,9 +347,8 @@ describe('SimpleROMAAgent Unit Tests', () => {
         }))
         // 3. Parent evaluates after first subtask
         .mockResolvedValueOnce(JSON.stringify({ 
-          action: 'continue',
-          relevantArtifacts: [],
-          reason: 'First subtask completed, continue with next'
+          decision: 'CONTINUE',
+          reasoning: 'First subtask completed, continue with next'
         }))
         // 4. Second subtask execution
         .mockResolvedValueOnce(JSON.stringify({
@@ -362,10 +357,8 @@ describe('SimpleROMAAgent Unit Tests', () => {
         }))
         // 5. Parent evaluates after second subtask - should complete
         .mockResolvedValueOnce(JSON.stringify({ 
-          action: 'complete',
-          relevantArtifacts: [],
-          result: 'All subtasks completed successfully',
-          reason: 'All subtasks completed successfully'
+          decision: 'COMPLETE',
+          reasoning: 'All subtasks completed successfully'
         }))
         // 6. Parent completion evaluation
         .mockResolvedValueOnce(JSON.stringify({
@@ -525,7 +518,10 @@ describe('SimpleROMAAgent Unit Tests', () => {
       
       const task = { description: 'test task' };
       
-      await expect(agent.execute(task)).rejects.toThrow('Classification failed');
+      // With the new interface, classification errors are caught and returned as failure results
+      const result = await agent.execute(task);
+      expect(result.success).toBe(false);
+      expect(result.result).toBe('Classification failed');
     });
     
     it('should handle tool execution failures', async () => {
