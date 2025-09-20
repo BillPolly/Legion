@@ -48,7 +48,7 @@ export default class TaskClassifier {
     }];
     
     // Load prompt template from file
-    const promptPath = path.join(__dirname, '..', 'prompts', 'task-classification.md');
+    const promptPath = path.join(__dirname, '..', 'recursive', 'prompts', 'task-classification.md');
     const promptTemplate = await fs.readFile(promptPath, 'utf-8');
     
     // Create prompt instance for task classification
@@ -66,20 +66,16 @@ export default class TaskClassifier {
   /**
    * Classify a task as SIMPLE or COMPLEX
    * @param {string|Object} task - The task to classify
+   * @param {Object} context - Additional context (optional, for backward compatibility)
    * @returns {Promise<Object>} Classification result with complexity and reasoning
    */
-  async classify(task, sessionLogger = null, context = {}) {
+  async classify(task, context = {}) {
     await this.initialize();
     
     const taskDescription = typeof task === 'string' ? task : (task.description || JSON.stringify(task));
     
     // Format artifacts section if available
     const artifactsSection = this._formatArtifactsSection(context.artifactRegistry);
-    
-    // Configure session logger for this prompt
-    if (sessionLogger) {
-      this.prompt.sessionLogger = sessionLogger;
-    }
     
     // Execute the prompt with task variables
     const result = await this.prompt.execute({
@@ -94,18 +90,7 @@ export default class TaskClassifier {
         data.complexity = 'COMPLEX'; // Default to COMPLEX if unclear
       }
       
-      // Log if session logger is available
-      if (sessionLogger) {
-        await sessionLogger.logInteraction(
-          task,
-          'task-classification',
-          '', // Prompt is internal to TemplatedPrompt
-          JSON.stringify(data),
-          {
-            taskDescription: taskDescription.substring(0, 100)
-          }
-        );
-      }
+      // Session logging is handled by the agent, not the strategy
       
       return data;
     } else {

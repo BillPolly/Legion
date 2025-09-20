@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import TaskClassifier from '../../../src/utils/TaskClassifier.js';
+import TaskClassifier from '../../../src/strategies/utils/TaskClassifier.js';
 
 describe('TaskClassifier Unit Tests', () => {
   let classifier;

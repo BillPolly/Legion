@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach, jest } from '@jest/globals';
-import SimpleROMAAgent from '../../src/core/SimpleROMAAgent.js';
+import SimpleROMAAgent from '../../src/SimpleROMAAgent.js';
 
 describe('SimpleROMAAgent Quick Integration', () => {
   let agent;
@@ -82,70 +82,55 @@ describe('SimpleROMAAgent Quick Integration', () => {
     
     // Override the initialization to use mocks
     agent.initialize = async function() {
-      // Create mock resource manager
-      this.resourceManager = { 
-        get: jest.fn().mockImplementation(key => {
-          if (key === 'llmClient') return mockLLMClient;
-          return null;
-        })
-      };
-      
-      this.llmClient = mockLLMClient;
-      this.toolRegistry = mockToolRegistry;
-      
-      // Import required classes
-      const { default: ToolDiscovery } = await import('../../src/utils/ToolDiscovery.js');
-      const { default: TaskClassifier } = await import('../../src/utils/TaskClassifier.js');
-      
-      this.toolDiscovery = new ToolDiscovery(this.llmClient, this.toolRegistry);
-      this.taskClassifier = new TaskClassifier(this.llmClient);
-      await this.taskClassifier.initialize();
-      
-      // No longer need promptBuilder - it has been removed
-
-      // Create validators (simplified)
-      this.simpleTaskValidator = {
-        parseAndValidate: jest.fn().mockImplementation(response => {
-          try {
-            return { valid: true, data: JSON.parse(response) };
-          } catch {
-            return { valid: false, error: 'Parse error' };
+      // Create mock GlobalContext that provides the necessary services
+      this.globalContext = {
+        initialize: jest.fn().mockResolvedValue(),
+        getService: jest.fn().mockImplementation(name => {
+          switch (name) {
+            case 'llmClient': return mockLLMClient;
+            case 'toolRegistry': return mockToolRegistry;
+            default: return null;
           }
         }),
-        process: jest.fn().mockImplementation(response => {
-          try {
-            const data = JSON.parse(response);
-            return { success: true, data };
-          } catch {
-            return { success: false, error: 'Parse error' };
-          }
+        createExecutionContext: jest.fn().mockResolvedValue({
+          lookup: jest.fn().mockImplementation(name => {
+            switch (name) {
+              case 'llmClient': return mockLLMClient;
+              case 'toolRegistry': return mockToolRegistry;
+              case 'sessionLogger': return agent.sessionLogger;
+              case 'fastToolDiscovery': return false;
+              case 'workspaceDir': return process.cwd();
+              case 'maxDepth': return 5;
+              case 'maxSubtasks': return 10;
+              case 'executionTimeout': return 60000;
+              case 'agent': return agent;
+              case 'taskManager': return agent.taskManager;
+              default: return null;
+            }
+          }),
+          parent: null,
+          additionalServices: {}
         })
       };
       
-      this.decompositionValidator = {
-        parseAndValidate: jest.fn().mockImplementation(response => {
-          try {
-            return { valid: true, data: JSON.parse(response) };
-          } catch {
-            return { valid: false, error: 'Parse error' };
-          }
-        }),
-        process: jest.fn().mockImplementation(response => {
-          try {
-            const data = JSON.parse(response);
-            return { success: true, data };
-          } catch {
-            return { success: false, error: 'Parse error' };
-          }
-        })
+      // Create session logger (agent-specific service)
+      this.sessionLogger = {
+        initialize: jest.fn().mockResolvedValue(),
+        logInteraction: jest.fn().mockResolvedValue(),
+        logSummary: jest.fn().mockResolvedValue()
       };
       
-      // Strategy is already created in constructor
-      const { ArtifactRegistry, TaskManager } = await import('@legion/tasks');
-      this.artifactRegistry = new ArtifactRegistry();
+      // Create task manager (agent-specific service)  
+      const { TaskManager } = await import('@legion/tasks');
+      this.taskManager = new TaskManager(mockLLMClient);
       
-      // Create task manager
-      this.taskManager = new TaskManager();
+      // Update strategy with services (strategy can get what it needs directly)
+      if (!this.taskStrategy.llmClient) {
+        this.taskStrategy.llmClient = mockLLMClient;
+      }
+      if (!this.taskStrategy.toolRegistry) {
+        this.taskStrategy.toolRegistry = mockToolRegistry;
+      }
     };
     
     await agent.initialize();

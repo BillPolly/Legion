@@ -11,6 +11,8 @@
 
 import { TaskStrategy } from '@legion/tasks';
 import { TemplatedPrompt } from '@legion/prompting-manager';
+import TaskClassifier from '../utils/TaskClassifier.js';
+import ToolDiscovery from '../utils/ToolDiscovery.js';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -21,12 +23,18 @@ const __dirname = path.dirname(__filename);
 let instance = null;
 
 export default class RecursiveDecompositionStrategy extends TaskStrategy {
-  constructor() {
+  constructor(llmClient = null, toolRegistry = null) {
     super();
     if (instance) {
       return instance;
     }
     instance = this;
+    
+    // Strategy-specific components (owned by this strategy)
+    this.taskClassifier = null;
+    this.toolDiscovery = null;
+    this.llmClient = llmClient;
+    this.toolRegistry = toolRegistry;
     
     // Prompt templates will be initialized on first use
     this.decompositionPrompt = null;
@@ -36,11 +44,39 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
   }
   
   /**
+   * Initialize strategy components with provided or discovered services
+   */
+  async _initializeComponents(context) {
+    // Get services from constructor or context
+    const llmClient = this.llmClient || (context.lookup ? context.lookup('llmClient') : context.llmClient);
+    const toolRegistry = this.toolRegistry || (context.lookup ? context.lookup('toolRegistry') : context.toolRegistry);
+    
+    if (!llmClient) {
+      throw new Error('LLM client is required for RecursiveDecompositionStrategy');
+    }
+    
+    // Initialize TaskClassifier if not already done
+    if (!this.taskClassifier) {
+      this.taskClassifier = new TaskClassifier(llmClient);
+      await this.taskClassifier.initialize();
+    }
+    
+    // Initialize ToolDiscovery if not already done
+    if (!this.toolDiscovery && toolRegistry) {
+      this.toolDiscovery = new ToolDiscovery(llmClient, toolRegistry);
+    } else if (!this.toolDiscovery) {
+      throw new Error('ToolRegistry is required for RecursiveDecompositionStrategy');
+    }
+  }
+
+  /**
    * Initialize prompt templates
    */
   async _initializePrompts(context) {
-    if (!this.decompositionPrompt && context.llmClient) {
-      const promptsDir = path.join(__dirname, '..', '..', 'prompts');
+    const llmClient = this.llmClient || (context.lookup ? context.lookup('llmClient') : context.llmClient);
+    
+    if (!this.decompositionPrompt && llmClient) {
+      const promptsDir = path.join(__dirname, 'prompts');
       
       // Load decomposition prompt
       const decompositionTemplate = await fs.readFile(
@@ -50,7 +86,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
       this.decompositionPrompt = new TemplatedPrompt({
         prompt: decompositionTemplate,
         responseSchema: this._getDecompositionSchema(),
-        llmClient: context.llmClient,
+        llmClient: llmClient,
         maxRetries: 3
       });
       
@@ -62,7 +98,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
       this.executionPrompt = new TemplatedPrompt({
         prompt: executionTemplate,
         responseSchema: this._getSimpleTaskSchema(),
-        llmClient: context.llmClient,
+        llmClient: llmClient,
         maxRetries: 3
       });
       
@@ -74,7 +110,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
       this.parentEvaluationPrompt = new TemplatedPrompt({
         prompt: parentEvalTemplate,
         responseSchema: this._getParentEvaluationSchema(),
-        llmClient: context.llmClient,
+        llmClient: llmClient,
         maxRetries: 3
       });
       
@@ -86,7 +122,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
       this.completionEvaluationPrompt = new TemplatedPrompt({
         prompt: completionEvalTemplate,
         responseSchema: this._getCompletionEvaluationSchema(),
-        llmClient: context.llmClient,
+        llmClient: llmClient,
         maxRetries: 3
       });
     }
@@ -196,9 +232,9 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
   /**
    * Get singleton instance
    */
-  static getInstance() {
+  static getInstance(llmClient = null, toolRegistry = null) {
     if (!instance) {
-      instance = new RecursiveDecompositionStrategy();
+      instance = new RecursiveDecompositionStrategy(llmClient, toolRegistry);
     }
     return instance;
   }
@@ -215,9 +251,12 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
     // Get context from the task (it has everything we need)
     const context = this._getContextFromTask(task);
     
+    // Initialize strategy components if needed
+    await this._initializeComponents(context);
+    
     // Classify the task (unless already classified)
     if (!task.metadata.classification) {
-      const classification = await this._classify(task, context);
+      const classification = await this._classify(task);
       task.metadata.classification = classification.complexity;
       task.addConversationEntry('system', `Task classified as ${classification.complexity}: ${classification.reasoning}`);
     }
@@ -241,6 +280,9 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
     }
     
     const context = this._getContextFromTask(task);
+    
+    // Initialize strategy components if needed
+    await this._initializeComponents(context);
     
     // Route based on message type
     switch (message.type) {
@@ -288,18 +330,21 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
    * @private
    */
   _getContextFromTask(task) {
+    // Task context should now use hierarchical lookup for global services
+    // Strategy-specific components (taskClassifier, toolDiscovery) are owned by this strategy
     return {
-      llmClient: task.llmClient,
-      taskClassifier: task.taskClassifier,
-      toolDiscovery: task.toolDiscovery,
-      sessionLogger: task.sessionLogger,
-      fastToolDiscovery: task.fastToolDiscovery,
-      workspaceDir: task.workspaceDir,
-      agent: task.agent,
-      maxDepth: task.maxDepth,
-      maxSubtasks: task.maxSubtasks,
-      executionTimeout: task.executionTimeout,
-      taskManager: task.taskManager
+      // Try to get context from task if it has hierarchical lookup, otherwise direct properties
+      llmClient: task.lookup ? task.lookup('llmClient') : task.llmClient,
+      fastToolDiscovery: task.lookup ? task.lookup('fastToolDiscovery') : task.fastToolDiscovery,
+      workspaceDir: task.lookup ? task.lookup('workspaceDir') : task.workspaceDir,
+      agent: task.lookup ? task.lookup('agent') : task.agent,
+      maxDepth: task.lookup ? task.lookup('maxDepth') : task.maxDepth,
+      maxSubtasks: task.lookup ? task.lookup('maxSubtasks') : task.maxSubtasks,
+      executionTimeout: task.lookup ? task.lookup('executionTimeout') : task.executionTimeout,
+      taskManager: task.lookup ? task.lookup('taskManager') : task.taskManager,
+      
+      // Add lookup capability for accessing global services
+      lookup: task.lookup ? task.lookup.bind(task) : null
     };
   }
 
@@ -307,21 +352,16 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
    * Classify task using LLM (internal utility, was public classify())
    * @private
    */
-  async _classify(task, context) {
-    const { taskClassifier, sessionLogger } = context;
-    
-    if (!taskClassifier) {
-      throw new Error('TaskClassifier is required for classification');
+  async _classify(task) {
+    if (!this.taskClassifier) {
+      throw new Error('TaskClassifier is not initialized - call _initializeComponents first');
     }
 
-    // Resolve any artifact references in the task description
-    const resolvedDescription = task.artifactRegistry 
-      ? task.artifactRegistry.resolveReferences(task.description)
-      : task.description;
+    // Use task description directly - artifact resolution happens in context
+    const resolvedDescription = task.description;
 
-    const classification = await taskClassifier.classify(
-      { description: resolvedDescription }, 
-      sessionLogger
+    const classification = await this.taskClassifier.classify(
+      { description: resolvedDescription }
     );
     
     console.log(`📋 Task "${task.description}" classified as ${classification.complexity}: ${classification.reasoning}`);
@@ -337,13 +377,15 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
    * @private
    */
   async _decompose(task, context) {
-    const { llmClient, sessionLogger } = context;
+    // Get LLM client from strategy or context (consistent with _initializeComponents)
+    const llmClient = this.llmClient || (context.lookup ? context.lookup('llmClient') : context.llmClient);
     
     if (!llmClient) {
       throw new Error('LLM client is required for decomposition');
     }
 
-    // Initialize prompts if needed
+    // Initialize strategy components and prompts if needed
+    await this._initializeComponents(context);
     await this._initializePrompts(context);
 
     // Execute decomposition prompt with placeholders
@@ -361,13 +403,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
       throw new Error(`Invalid decomposition response: ${errorMessages.join(', ')}`);
     }
     
-    if (sessionLogger) {
-      // Log the interaction (prompt template and response)
-      await sessionLogger.logInteraction(task, 'decomposition', 
-        `Task: ${task.description}`, 
-        JSON.stringify(result.data)
-      );
-    }
+    // Strategy no longer does session logging - that's the agent's responsibility
 
     return result.data;
   }
@@ -377,13 +413,15 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
    * @private
    */
   async _executeSimple(task, context) {
-    const { toolDiscovery, sessionLogger } = context;
+    if (!this.toolDiscovery) {
+      throw new Error('ToolDiscovery is not initialized - call _initializeComponents first');
+    }
     
     // Discover tools
     console.log(`🔧 Discovering tools for SIMPLE task...`);
     
     // Normal semantic tool discovery
-    const discoveredTools = await toolDiscovery.discoverTools(task.description);
+    const discoveredTools = await this.toolDiscovery.discoverTools(task.description);
     
     task.addConversationEntry('system', `Discovered ${discoveredTools.length} tools`);
     
@@ -392,17 +430,12 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
       return {
         success: false,
         result: `Unable to find suitable tools for this task`,
-        artifacts: task.artifactRegistry?.toJSON() || []
+        artifacts: Object.values(task.getAllArtifacts())
       };
     }
     
     // Save discovered tools for this task
     task.currentTools = discoveredTools;
-    
-    // Also save on agent for test compatibility
-    if (context.agent) {
-      context.agent.currentTools = discoveredTools;
-    }
     
     // Get execution plan from LLM
     const executionPlan = await this._getSimpleTaskExecution(task, discoveredTools, context);
@@ -424,7 +457,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
       return {
         success: true,
         result: executionPlan.response || 'Task completed',
-        artifacts: task.artifactRegistry?.toJSON() || []
+        artifacts: Object.values(task.getAllArtifacts())
       };
     }
   }
@@ -443,7 +476,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
         return {
           success: false,
           result: `Unable to decompose this complex task`,
-          artifacts: task.artifactRegistry?.toJSON() || []
+          artifacts: Object.values(task.getAllArtifacts())
         };
       }
       
@@ -488,14 +521,12 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
    */
   async _onChildComplete(task, childTask, result, context) {
     // Receive goal outputs from the child
-    if (childTask.artifactRegistry && task.artifactRegistry) {
-      const delivered = await childTask.deliverGoalOutputs(task.artifactRegistry);
-      if (delivered.length > 0) {
-        console.log(`📦 Parent received ${delivered.length} artifacts from child: ${delivered.join(', ')}`);
-        // Add delivered artifacts to parent's artifact set
-        for (const name of delivered) {
-          task.addArtifact(name);
-        }
+    const delivered = childTask.deliverGoalOutputs(task);
+    if (delivered.length > 0) {
+      console.log(`📦 Parent received ${delivered.length} artifacts from child: ${delivered.join(', ')}`);
+      // Add delivered artifacts to parent's artifact set
+      for (const name of delivered) {
+        task.addArtifact(name);
       }
     }
     
@@ -577,7 +608,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
     return {
       success: false,
       result: `Subtask failed: ${error.message}`,
-      artifacts: task.artifactRegistry?.toJSON() || []
+      artifacts: Object.values(task.getAllArtifacts())
     };
   }
 
@@ -586,11 +617,11 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
    * @private
    */
   async _evaluateCompletion(task, context) {
-    const { sessionLogger } = context;
     
     console.log(`🎯 Evaluating if task "${task.description}" is complete...`);
     
-    // Initialize prompts if needed
+    // Initialize strategy components and prompts if needed
+    await this._initializeComponents(context);
     await this._initializePrompts(context);
     
     // Execute completion evaluation prompt with placeholders
@@ -601,12 +632,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
       completedSubtasks: JSON.stringify(task.getCompletedSubtasks() || [])
     });
     
-    if (sessionLogger) {
-      await sessionLogger.logInteraction(task, 'completion_evaluation', 
-        `Task: ${task.description}`, 
-        JSON.stringify(result.data || result)
-      );
-    }
+    // Strategy no longer does session logging - that's the agent's responsibility
 
     // Handle the response
     let evaluation;
@@ -635,7 +661,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
           message: 'Task completed',
           summary: evaluation.summary || `Task "${task.description}" completed successfully`
         },
-        artifacts: task.artifactRegistry?.toJSON() || []
+        artifacts: Object.values(task.getAllArtifacts())
       };
       
       task.complete(result);
@@ -670,7 +696,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
       return {
         success: false,
         result: evaluation.reasoning || 'Task could not be completed',
-        artifacts: task.artifactRegistry?.toJSON() || []
+        artifacts: Object.values(task.getAllArtifacts())
       };
     }
   }
@@ -680,9 +706,9 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
    * @private
    */
   async _getSimpleTaskExecution(task, discoveredTools, context) {
-    const { sessionLogger } = context;
     
-    // Initialize prompts if needed
+    // Initialize strategy components and prompts if needed
+    await this._initializeComponents(context);
     await this._initializePrompts(context);
     
     // Format tools for prompt
@@ -700,12 +726,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
       artifacts: JSON.stringify(task.getArtifactsContext() || {})
     });
     
-    if (sessionLogger) {
-      await sessionLogger.logInteraction(task, 'simple_execution',
-        `Task: ${task.description}, Tools: ${discoveredTools.map(t => t.name).join(', ')}`,
-        JSON.stringify(result.data || result)
-      );
-    }
+    // Strategy no longer does session logging - that's the agent's responsibility
 
     if (!result.success) {
       throw new Error(`Invalid execution response: ${result.errors?.join(', ') || 'Unknown error'}`);
@@ -751,14 +772,12 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
         
         // Handle file artifacts
         if (tool.name === 'file_write' && toolCall.inputs.filepath) {
-          await task.ensureArtifactRegistry();
-          task.artifactRegistry.store(
+          task.storeArtifact(
             toolCall.inputs.filepath,
             toolCall.inputs.content,
             `File created at ${toolCall.inputs.filepath}`,
             'file'
           );
-          task.addArtifact(toolCall.inputs.filepath);
         }
       } catch (error) {
         console.log(`❌ Tool execution failed: ${error.message}`);
@@ -774,7 +793,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
     return {
       success: results.some(r => r.success),
       results: results,
-      artifacts: task.artifactRegistry?.toJSON() || []
+      artifacts: Object.values(task.getAllArtifacts())
     };
   }
 
@@ -783,9 +802,9 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
    * @private
    */
   async _getParentEvaluation(task, childTask, context) {
-    const { sessionLogger } = context;
     
-    // Initialize prompts if needed
+    // Initialize strategy components and prompts if needed
+    await this._initializeComponents(context);
     await this._initializePrompts(context);
     
     // Execute parent evaluation prompt with placeholders
@@ -797,12 +816,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
       completedSubtasks: JSON.stringify(task.getCompletedSubtasks() || [])
     });
     
-    if (sessionLogger) {
-      await sessionLogger.logInteraction(task, 'parent_evaluation',
-        `Parent: ${task.description}, Child: ${childTask.description}`,
-        JSON.stringify(result.data || result)
-      );
-    }
+    // Strategy no longer does session logging - that's the agent's responsibility
 
     // Handle the response
     if (!result.success) {

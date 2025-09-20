@@ -7,22 +7,16 @@
  * 3. COMPLEX tasks: Decompose into subtasks recursively
  */
 
-import { ResourceManager } from '@legion/resource-manager';
-import { ToolRegistry } from '@legion/tools-registry';
-import { Task, TaskManager, ArtifactRegistry, ExecutionContext } from '@legion/tasks';
-import ToolDiscovery from '../utils/ToolDiscovery.js';
-import TaskClassifier from '../utils/TaskClassifier.js';
-import SessionLogger from '../utils/SessionLogger.js';
-import RecursiveDecompositionStrategy from './strategies/RecursiveDecompositionStrategy.js';
+import { Task, TaskManager, GlobalContext } from '@legion/tasks';
+import SessionLogger from './utils/SessionLogger.js';
+import RecursiveDecompositionStrategy from './strategies/recursive/RecursiveDecompositionStrategy.js';
 
 export default class SimpleROMAAgent {
   constructor(options = {}) {
-    this.resourceManager = null;
-    this.llmClient = null;
-    this.toolRegistry = null;
-    this.toolDiscovery = null;
-    this.taskClassifier = null;
-    this.currentTools = []; // Current discovered tools for the task
+    // Global context for hierarchical service lookup
+    this.globalContext = null;
+    
+    // Agent-level services (these remain on the agent)
     this.sessionLogger = null; // Session logger for debugging
     this.taskManager = null; // Task hierarchy manager
     
@@ -40,21 +34,27 @@ export default class SimpleROMAAgent {
   }
 
   async initialize() {
-    this.resourceManager = await ResourceManager.getInstance();
-    this.llmClient = await this.resourceManager.get('llmClient');
-    this.toolRegistry = await ToolRegistry.getInstance();
-    this.toolDiscovery = new ToolDiscovery(this.llmClient, this.toolRegistry);
-    this.taskClassifier = new TaskClassifier(this.llmClient);
-    await this.taskClassifier.initialize();
+    // Initialize global context with all shared resources
+    this.globalContext = new GlobalContext();
+    await this.globalContext.initialize();
     
-    // ResponseValidators removed - TemplatedPrompt handles validation internally
-    
-    // Initialize session logger
+    // Initialize agent-level services that are not global
+    // (SessionLogger is agent-specific, TaskManager is agent-specific)
     this.sessionLogger = new SessionLogger({ outputDir: this.outputDir });
     await this.sessionLogger.initialize();
     
     // Initialize task manager
-    this.taskManager = new TaskManager(this.llmClient);
+    const llmClient = this.globalContext.getService('llmClient');
+    this.taskManager = new TaskManager(llmClient);
+    
+    // Update strategy with services (strategy can get what it needs directly)
+    const toolRegistry = this.globalContext.getService('toolRegistry');
+    if (!this.taskStrategy.llmClient) {
+      this.taskStrategy.llmClient = llmClient;
+    }
+    if (!this.taskStrategy.toolRegistry) {
+      this.taskStrategy.toolRegistry = toolRegistry;
+    }
   }
 
 
@@ -84,15 +84,12 @@ export default class SimpleROMAAgent {
     // Reset task manager for new execution
     this.taskManager.reset();
     
-    // Create execution context with all services
-    const executionContext = new ExecutionContext({
-      // Services
-      llmClient: this.llmClient,
-      taskClassifier: this.taskClassifier,
-      toolDiscovery: this.toolDiscovery,
+    // Create execution context with global context as parent
+    const executionContext = await this.globalContext.createExecutionContext({
+      // Agent-specific services (not in global context)
       sessionLogger: this.sessionLogger,
       
-      // Configuration
+      // Task-specific configuration
       fastToolDiscovery: this.fastToolDiscovery,
       workspaceDir: process.cwd(),
       maxDepth: this.maxDepth,
@@ -105,8 +102,7 @@ export default class SimpleROMAAgent {
     // Create root task with strategy and execution context
     const rootTask = new Task(taskDescription, null, {
       metadata: { originalTask: task },
-      strategy: this.taskStrategy,
-      ArtifactRegistryClass: ArtifactRegistry
+      strategy: this.taskStrategy
     });
     
     // Update the task's context to the execution context
@@ -114,19 +110,17 @@ export default class SimpleROMAAgent {
     
     // Track root task in manager (TaskManager tracks tasks via constructor)
     this.taskManager.taskMap.set(rootTask.id, rootTask);
-    this.taskManager.rootTaskId = rootTask.id;
+    this.taskManager.rootTask = rootTask;
     
     // Execute the root task (it will manage its own flow)
     const result = await this._runTask(rootTask);
     
     // Write session summary
     if (this.sessionLogger) {
-      const artifactCount = rootTask.artifactRegistry?.size() || 0;
       const taskTree = this.taskManager.getTaskTree();
       await this.sessionLogger.logSummary({
         'Task Depth': taskTree?.depth || 0,
         'Total Tasks': this.taskManager.taskMap.size,
-        'Artifacts Created': artifactCount,
         'Final Success': result.success
       });
     }
@@ -153,7 +147,7 @@ export default class SimpleROMAAgent {
       return {
         success: false,
         result: `Maximum recursion depth exceeded (${this.maxDepth})`,
-        artifacts: task.artifactRegistry?.toJSON() || []
+        artifacts: Object.values(task.getAllArtifacts())
       };
     }
     
