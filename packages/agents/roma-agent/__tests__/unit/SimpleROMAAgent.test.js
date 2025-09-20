@@ -119,6 +119,10 @@ describe('SimpleROMAAgent Unit Tests', () => {
       const task = { description: 'create a text file with hello world' };
       const result = await agent.execute(task);
       
+      console.log('TEST DEBUG - Result:', JSON.stringify(result, null, 2));
+      console.log('TEST DEBUG - mockToolDiscovery.discoverTools called:', mockToolDiscovery.discoverTools.mock.calls.length);
+      console.log('TEST DEBUG - mockToolDiscovery.discoverTools results:', mockToolDiscovery.discoverTools.mock.results);
+      
       expect(mockTaskClassifier.classify).toHaveBeenCalledWith(
         task,
         agent.sessionLogger
@@ -156,15 +160,13 @@ describe('SimpleROMAAgent Unit Tests', () => {
         .mockResolvedValueOnce([mockTool])  // For HTML subtask
         .mockResolvedValueOnce([mockTool]); // For CSS subtask
       
-      // Set up proper LLM call sequence (8 calls total):
+      // Set up proper LLM call sequence (6 calls total):
       // 1. Main task decomposition
       // 2. HTML subtask execution  
       // 3. Parent evaluates after HTML subtask
       // 4. CSS subtask execution
       // 5. Parent evaluates after CSS subtask  
       // 6. Parent completion evaluation
-      // 7. Parent evaluates (recursive)
-      // 8. Parent completion evaluation (recursive)
       mockLLMClient.complete = jest.fn()
         // 1. Main task decomposition
         .mockResolvedValueOnce(JSON.stringify({
@@ -185,6 +187,8 @@ describe('SimpleROMAAgent Unit Tests', () => {
         // 3. Parent evaluates after HTML subtask
         .mockResolvedValueOnce(JSON.stringify({ 
           action: 'continue',
+          relevantArtifacts: [],
+          result: 'HTML subtask completed successfully',
           reason: 'HTML task completed, continue with CSS'
         }))
         // 4. CSS subtask execution
@@ -198,31 +202,20 @@ describe('SimpleROMAAgent Unit Tests', () => {
         // 5. Parent evaluates after CSS subtask - should continue to completion evaluation
         .mockResolvedValueOnce(JSON.stringify({ 
           action: 'complete',
-          result: { success: true, message: 'Web application completed' },
+          result: 'All subtasks completed successfully',
+          relevantArtifacts: [],
           reason: 'All subtasks completed successfully'
         }))
         // 6. Parent completion evaluation (after step 5 action: complete)
         .mockResolvedValueOnce(JSON.stringify({
           complete: true,
-          result: { success: true, message: 'All done' },
+          result: 'All done',
           reason: 'Task completed'
         }))
-        // 7. Parent evaluates (recursive call after completion)
-        .mockResolvedValueOnce(JSON.stringify({ 
-          action: 'complete',
-          result: { success: true, message: 'All done' },
-          reason: 'Final parent evaluation'
-        }))
-        // 8. Parent completion evaluation (final recursive)
-        .mockResolvedValueOnce(JSON.stringify({
-          complete: true,
-          result: { success: true, message: 'All done' },
-          reason: 'Final completion evaluation'
-        }))
-        // 9. Fallback response in case there's an extra call
+        // Fallback response in case there's an extra call
         .mockResolvedValue(JSON.stringify({
           complete: true,
-          result: { success: true, message: 'All done' },
+          result: 'All done',
           reason: 'Fallback response'
         }));
       
@@ -230,7 +223,7 @@ describe('SimpleROMAAgent Unit Tests', () => {
       const result = await agent.execute(task);
       
       expect(mockTaskClassifier.classify).toHaveBeenCalledTimes(3); // Main + 2 subtasks
-      expect(mockLLMClient.complete.mock.calls.length).toBeGreaterThanOrEqual(8); // At least 8 calls
+      expect(mockLLMClient.complete.mock.calls.length).toBeGreaterThanOrEqual(6); // At least 6 calls
       expect(result.success).toBe(true);
       expect(result.result.message).toBe('Task completed');
     });
@@ -359,6 +352,7 @@ describe('SimpleROMAAgent Unit Tests', () => {
         // 3. Parent evaluates after first subtask
         .mockResolvedValueOnce(JSON.stringify({ 
           action: 'continue',
+          relevantArtifacts: [],
           reason: 'First subtask completed, continue with next'
         }))
         // 4. Second subtask execution
@@ -369,13 +363,14 @@ describe('SimpleROMAAgent Unit Tests', () => {
         // 5. Parent evaluates after second subtask - should complete
         .mockResolvedValueOnce(JSON.stringify({ 
           action: 'complete',
-          result: { success: true, message: 'All subtasks completed successfully' },
+          relevantArtifacts: [],
+          result: 'All subtasks completed successfully',
           reason: 'All subtasks completed successfully'
         }))
         // 6. Parent completion evaluation
         .mockResolvedValueOnce(JSON.stringify({
           complete: true,
-          result: { success: true, message: 'All subtasks completed successfully' },
+          result: 'All subtasks completed successfully',
           reason: 'Task completed'
         }))
         // 7-10. Additional fallback responses for any extra calls
@@ -387,6 +382,9 @@ describe('SimpleROMAAgent Unit Tests', () => {
       
       const task = { description: 'create a complete Node.js application' };
       const result = await agent.execute(task);
+      
+      console.log('TEST DEBUG - Complex task result:', JSON.stringify(result, null, 2));
+      console.log('TEST DEBUG - LLM calls:', mockLLMClient.complete.mock.calls.length);
       
       // The complex task should complete successfully when all subtasks succeed
       expect(result.success).toBe(true);

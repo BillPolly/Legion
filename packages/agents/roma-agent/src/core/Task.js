@@ -11,6 +11,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import PromptBuilder from '../utils/PromptBuilder.js';
+import RecursiveDecompositionStrategy from './strategies/RecursiveDecompositionStrategy.js';
 
 export default class Task {
   constructor(description, parent = null, context = {}) {
@@ -33,6 +34,9 @@ export default class Task {
       isDecomposed: false, // Track if we've done decomposition
       ...context.metadata
     };
+    
+    // STRATEGY - This is what makes the task behavior pluggable
+    this.strategy = context.strategy || RecursiveDecompositionStrategy.getInstance();
     
     // Each task owns its own ArtifactRegistry
     const ArtifactRegistry = context.ArtifactRegistryClass;
@@ -77,6 +81,9 @@ export default class Task {
     this.promptBuilder = new PromptBuilder();
     this.promptBuilderInitialized = false;
     
+    // Current tools (for simple task execution)
+    this.currentTools = null;
+    
     // Initialize conversation with task description
     this.addConversationEntry('system', `Task: ${description}`);
     
@@ -84,6 +91,22 @@ export default class Task {
     if (parent) {
       parent.addChild(this);
     }
+  }
+
+  /**
+   * Set the task strategy
+   * @param {TaskStrategy} strategy - The strategy to use
+   */
+  setStrategy(strategy) {
+    this.strategy = strategy;
+  }
+
+  /**
+   * Get the current strategy
+   * @returns {TaskStrategy} The current strategy
+   */
+  getStrategy() {
+    return this.strategy;
   }
   
   /**
@@ -497,6 +520,30 @@ export default class Task {
   }
   
   /**
+   * Get artifacts context as formatted string
+   * @returns {string} Formatted artifacts list
+   */
+  getArtifactsContext() {
+    if (!this.artifactRegistry) {
+      return 'No artifacts';
+    }
+    
+    const artifacts = this.artifactRegistry.list ? 
+      this.artifactRegistry.list() : 
+      this.artifactRegistry.listArtifacts ? 
+        this.artifactRegistry.listArtifacts() : 
+        [];
+    
+    if (artifacts.length === 0) {
+      return 'No artifacts';
+    }
+    
+    return artifacts
+      .map(a => `- ${a.name} (${a.type || 'unknown'})`)
+      .join('\n');
+  }
+  
+  /**
    * Inherit artifacts from parent (LLM will decide which ones)
    */
   inheritArtifacts(artifactNames) {
@@ -805,9 +852,36 @@ export default class Task {
     return this.plannedSubtasks;
   }
   
+  // Method removed - using the earlier implementation with goal input/output parsing
+  
+  /**
+   * Get completed subtasks
+   * @returns {Array} Completed child tasks
+   */
+  getCompletedSubtasks() {
+    return this.children.filter(child => child.status === 'completed');
+  }
+  
+  /**
+   * Get remaining planned subtasks
+   * @returns {Array} Remaining subtask descriptions
+   */
+  getRemainingSubtasks() {
+    if (!this.plannedSubtasks) return [];
+    return this.plannedSubtasks.slice(this.currentSubtaskIndex + 1);
+  }
+  
+  /**
+   * Get the task result
+   * @returns {Object} Task result
+   */
+  getResult() {
+    return this.result;
+  }
+  
   /**
    * Execute this task based on its classification
-   * This is the main entry point for task execution
+   * This is the main entry point for task execution - DELEGATES TO STRATEGY
    */
   async execute() {
     // Start the task
@@ -824,36 +898,73 @@ export default class Task {
       };
     }
     
-    // Resolve any artifact references in the task description
-    const resolvedDescription = this.artifactRegistry 
-      ? this.artifactRegistry.resolveReferences(this.description)
-      : this.description;
+    // Initialize prompt builder if needed
+    await this.initializePromptBuilder();
     
-    // Step 1: Classify the task (unless already classified)
+    // Build execution context for strategy
+    const context = this._buildExecutionContext();
+    
+    // Classify the task (unless already classified)
     if (!this.metadata.classification) {
-      const classification = await this.taskClassifier.classify(
-        { description: resolvedDescription }, 
-        this.sessionLogger
-      );
-      
-      console.log(`📋 Task "${this.description}" classified as ${classification.complexity}: ${classification.reasoning}`);
-      
+      const classification = await this.strategy.classify(this, context);
       this.metadata.classification = classification.complexity;
       this.addConversationEntry('system', `Task classified as ${classification.complexity}: ${classification.reasoning}`);
     }
     
-    // Step 2: Execute based on classification
+    // Execute based on classification - DELEGATE TO STRATEGY
+    let result;
     if (this.metadata.classification === 'SIMPLE') {
-      // SIMPLE task: discover tools and execute
-      return await this.executeSimple();
+      result = await this.strategy.executeSimple(this, context);
     } else {
-      // COMPLEX task: decompose and execute subtasks
-      return await this.executeComplex();
+      result = await this.strategy.executeComplex(this, context);
+    }
+    
+    // Handle result
+    if (result.success) {
+      this.complete(result);
+    } else if (this.status !== 'failed') {
+      this.fail(new Error(result.result || 'Task execution failed'));
+    }
+    
+    return result;
+  }
+
+  /**
+   * Build execution context for strategy
+   * @private
+   */
+  _buildExecutionContext() {
+    return {
+      llmClient: this.llmClient,
+      taskClassifier: this.taskClassifier,
+      toolDiscovery: this.toolDiscovery,
+      sessionLogger: this.sessionLogger,
+      simpleTaskValidator: this.simpleTaskValidator,
+      decompositionValidator: this.decompositionValidator,
+      parentEvaluationValidator: this.parentEvaluationValidator,
+      completionEvaluationValidator: this.completionEvaluationValidator,
+      fastToolDiscovery: this.fastToolDiscovery,
+      workspaceDir: this.workspaceDir,
+      agent: this.agent,
+      testMode: this.testMode,
+      taskManager: this.metadata.taskManager,
+      maxDepth: this.agent?.maxDepth || 5
+    };
+  }
+
+  /**
+   * Initialize prompt builder
+   */
+  async initializePromptBuilder() {
+    if (!this.promptBuilderInitialized) {
+      await this.promptBuilder.initialize();
+      this.promptBuilderInitialized = true;
     }
   }
   
   /**
    * Execute a SIMPLE task - discover tools and execute them
+   * @deprecated Use strategy.executeSimple() instead
    */
   async executeSimple() {
     // Discover tools for this SIMPLE task
@@ -931,6 +1042,7 @@ export default class Task {
   
   /**
    * Execute a COMPLEX task - decompose into subtasks
+   * @deprecated Use strategy.executeComplex() instead
    */
   async executeComplex() {
     // Step 1: Task decomposes itself (unless already done)
@@ -982,6 +1094,7 @@ export default class Task {
   
   /**
    * Parent task evaluates after child completes and decides what to do
+   * @deprecated Use strategy.onChildComplete() or strategy.onChildFailure() instead
    */
   async evaluateChild(childTask) {
     // First, receive goal outputs from the child

@@ -17,6 +17,8 @@ import ToolDiscovery from '../utils/ToolDiscovery.js';
 import TaskClassifier from '../utils/TaskClassifier.js';
 import SessionLogger from '../utils/SessionLogger.js';
 import TaskManager from './TaskManager.js';
+import Task from './Task.js';
+import RecursiveDecompositionStrategy from './strategies/RecursiveDecompositionStrategy.js';
 
 export default class SimpleROMAAgent {
   constructor(options = {}) {
@@ -30,9 +32,16 @@ export default class SimpleROMAAgent {
     this.sessionLogger = null; // Session logger for debugging
     this.taskManager = null; // Task hierarchy manager
     
+    // Task execution strategy (pluggable)
+    this.taskStrategy = options.taskStrategy || RecursiveDecompositionStrategy.getInstance();
+    
     // Test mode configuration for fast integration tests
     this.testMode = options.testMode || false;
     this.fastToolDiscovery = options.fastToolDiscovery || false;
+    
+    // Configuration
+    this.maxDepth = options.maxDepth || 5;
+    this.outputDir = options.outputDir || null;
   }
 
   async initialize() {
@@ -70,7 +79,7 @@ export default class SimpleROMAAgent {
     });
     
     // Initialize session logger
-    this.sessionLogger = new SessionLogger();
+    this.sessionLogger = new SessionLogger({ outputDir: this.outputDir });
     await this.sessionLogger.initialize();
     
     // Initialize task manager
@@ -412,22 +421,38 @@ export default class SimpleROMAAgent {
     // Reset task manager for new execution
     this.taskManager.reset();
     
-    // Create root task with all the services it needs
-    const rootTask = this.taskManager.createRootTask(taskDescription, {
-      metadata: { originalTask: task },
+    // Create root task with strategy and all the services it needs
+    const rootTask = new Task(taskDescription, null, {
+      metadata: { originalTask: task, taskManager: this.taskManager },
+      
+      // Strategy
+      strategy: this.taskStrategy,
+      
+      // Services
       llmClient: this.llmClient,
       taskClassifier: this.taskClassifier,
       toolDiscovery: this.toolDiscovery,
-      artifactRegistry: new ArtifactRegistry(),
       sessionLogger: this.sessionLogger,
+      
+      // Validators
       simpleTaskValidator: this.simpleTaskValidator,
       decompositionValidator: this.decompositionValidator,
       parentEvaluationValidator: this.parentEvaluationValidator,
       completionEvaluationValidator: this.completionEvaluationValidator,
-      // Output prompts accessed via Task.getOutputPrompts() static method
+      
+      // Configuration
       fastToolDiscovery: this.fastToolDiscovery,
-      agent: this  // Pass reference to agent for helper methods
+      workspaceDir: process.cwd(),
+      testMode: this.testMode,
+      agent: this,  // Pass reference to agent for helper methods
+      
+      // Artifact registry
+      ArtifactRegistryClass: ArtifactRegistry
     });
+    
+    // Track root task in manager (TaskManager tracks tasks via constructor)
+    this.taskManager.taskMap.set(rootTask.id, rootTask);
+    this.taskManager.rootTaskId = rootTask.id;
     
     // Execute the root task (it will manage its own flow)
     const result = await this._runTask(rootTask);
@@ -445,6 +470,14 @@ export default class SimpleROMAAgent {
     }
     
     return result;
+  }
+
+  /**
+   * Set the task execution strategy
+   * @param {TaskStrategy} strategy - The strategy to use
+   */
+  setTaskStrategy(strategy) {
+    this.taskStrategy = strategy;
   }
 
   /**

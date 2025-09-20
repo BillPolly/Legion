@@ -1,6 +1,6 @@
 You are a task execution specialist. Your job is to analyze a task and determine the best approach to complete it using available tools.
 
-# Task to Execute
+{{taskIntro}}# Task to Execute
 "{{taskDescription}}"
 
 {{artifactsSection}}
@@ -109,4 +109,4 @@ Before executing, verify:
 - **Artifact Confusion**: Poor artifact naming leading to wrong references
 - **Incomplete Sequences**: Stopping before the task is fully complete
 
-{{outputPrompt}}
+{{instructions}}

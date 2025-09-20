@@ -11,7 +11,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default class SessionLogger {
-  constructor(logDir = null) {
+  constructor(options = {}) {
+    // Handle both old string constructor and new options object
+    const logDir = typeof options === 'string' ? options : options.outputDir;
+    
     // Default to logs directory in package root
     this.logDir = logDir || path.join(__dirname, '../../logs');
     this.sessionId = this.generateSessionId();

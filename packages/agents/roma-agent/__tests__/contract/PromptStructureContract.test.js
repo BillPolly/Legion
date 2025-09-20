@@ -63,20 +63,20 @@ describe('Prompt Structure Contract Tests', () => {
 
       const prompt = promptBuilder.buildDecompositionPrompt(task, context);
 
-      // Required sections
-      expect(prompt).toMatch(/Break down this complex task/i);
+      // Required sections - updated to match actual template
+      expect(prompt).toMatch(/Task to Decompose/);
       expect(prompt).toContain('Build a web application');
       expect(prompt).toContain('Multiple components required');
       expect(prompt).toContain('Break into subtasks');
       
       // Schema requirements
-      expect(prompt).toMatch(/"decompose":\s*true/);
+      expect(prompt).toMatch(/"decompose":\s*<boolean>/);
       expect(prompt).toMatch(/"subtasks":\s*\[/);
-      expect(prompt).toMatch(/"description":\s*".*"/);
-      expect(prompt).toMatch(/"outputs":\s*"@.*"/);
+      expect(prompt).toMatch(/"description":\s*"<string:/);
+      expect(prompt).toMatch(/"outputs":\s*"<string:/);
 
       // Artifact reference instructions
-      expect(prompt).toMatch(/@artifact_name/);
+      expect(prompt).toMatch(/@\w+/); // Any artifact name with @
       expect(prompt).toMatch(/AVAILABLE ARTIFACTS/);
     });
 
@@ -105,7 +105,7 @@ describe('Prompt Structure Contract Tests', () => {
       const prompt = promptBuilder.buildDecompositionPrompt(task, context);
 
       expect(prompt).not.toMatch(/AVAILABLE ARTIFACTS/);
-      expect(prompt).toMatch(/Break down this complex task/);
+      expect(prompt).toMatch(/Task to Decompose/);
     });
 
     it('should have consistent JSON schema format', () => {
@@ -143,10 +143,10 @@ describe('Prompt Structure Contract Tests', () => {
 
       const prompt = await promptBuilder.buildExecutionPrompt(task, context);
 
-      // Required sections
+      // Required sections - updated to match actual template content
       expect(prompt).toContain('This task has been classified as SIMPLE');
       expect(prompt).toContain('Write a file');
-      expect(prompt).toMatch(/AVAILABLE TOOLS.*discovered for this task/i);
+      expect(prompt).toMatch(/AVAILABLE TOOLS \(discovered for this task\):/);
       expect(prompt).toMatch(/file_write.*confidence: 90%/);
       
       // Tool call format requirements
@@ -220,35 +220,42 @@ describe('Prompt Structure Contract Tests', () => {
 
   describe('TaskClassifier Prompt Contract', () => {
     it('should contain required classification criteria', async () => {
-      const mockLLMClient = { complete: jest.fn() };
+      const mockLLMClient = { 
+        complete: jest.fn().mockResolvedValue(JSON.stringify({
+          complexity: 'SIMPLE',
+          reasoning: 'Direct tool call'
+        }))
+      };
       const classifier = new TaskClassifier(mockLLMClient);
 
-      // Mock format instructions
-      classifier.responseValidator.generateInstructions = jest.fn().mockReturnValue(
-        'Return JSON with complexity and reasoning fields'
-      );
+      // The classifier now uses Prompt internally, not ResponseValidator
+      // We can test that the prompt is created correctly
+      expect(classifier.prompt).toBeDefined();
+      expect(classifier.prompt.llmClient).toBe(mockLLMClient);
 
       await classifier.classify('test task');
 
+      // The Prompt class calls the LLM client
+      expect(mockLLMClient.complete).toHaveBeenCalled();
       const capturedPrompt = mockLLMClient.complete.mock.calls[0][0];
 
-      // Required sections
-      expect(capturedPrompt).toMatch(/Analyze this task.*classify.*SIMPLE or COMPLEX/i);
-      expect(capturedPrompt).toMatch(/Task:\s*["']test task["']/);
-      expect(capturedPrompt).toMatch(/Classification criteria:/);
+      // Required sections - updated to match actual template
+      expect(capturedPrompt).toMatch(/Task to Analyze/);
+      expect(capturedPrompt).toMatch(/"test task"/);
+      expect(capturedPrompt).toMatch(/Classification Framework/);
       
-      // SIMPLE criteria
-      expect(capturedPrompt).toMatch(/SIMPLE:.*sequence.*direct tool calls/i);
-      expect(capturedPrompt).toMatch(/Examples:.*read a file.*parse JSON/);
+      // SIMPLE criteria - updated to match actual template
+      expect(capturedPrompt).toMatch(/SIMPLE.*direct sequence of tool calls/si);
+      expect(capturedPrompt).toMatch(/Read configuration from config\.json.*parse/);
       
-      // COMPLEX criteria
-      expect(capturedPrompt).toMatch(/COMPLEX:.*breaking down.*multiple.*operations/i);
-      expect(capturedPrompt).toMatch(/Examples:.*build a web application.*refactor/);
+      // COMPLEX criteria - updated to match actual template
+      expect(capturedPrompt).toMatch(/COMPLEX.*breaking down into smaller subtasks/si);
+      expect(capturedPrompt).toMatch(/Build a complete web application.*authentication/);
       
-      // Consideration points
-      expect(capturedPrompt).toMatch(/Consider:/);
-      expect(capturedPrompt).toMatch(/clear, direct solution/);
-      expect(capturedPrompt).toMatch(/multiple related operations/);
+      // Decision process - updated to match actual template
+      expect(capturedPrompt).toMatch(/Decision Process/);
+      expect(capturedPrompt).toMatch(/Tool Sufficiency/);
+      expect(capturedPrompt).toMatch(/Coordination Need/);
     });
 
     it('should include format instructions from ResponseValidator', async () => {
@@ -482,16 +489,18 @@ describe('Prompt Structure Contract Tests', () => {
 
       const prompt = await promptBuilder.buildExecutionPrompt(task, context);
 
-      // Order: Task -> Tools -> Artifacts -> Instructions
-      const taskIndex = prompt.indexOf('Task:');
-      const toolsIndex = prompt.indexOf('AVAILABLE TOOLS');
+      // Actual order from template: Task -> Artifacts -> Tool Selection Strategy -> Tools -> Instructions
+      const taskIndex = prompt.indexOf('Task to Execute');
       const artifactsIndex = prompt.indexOf('AVAILABLE ARTIFACTS');
-      const instructionsIndex = prompt.indexOf('SIMPLE task');
+      const strategyIndex = prompt.indexOf('Tool Selection Strategy');
+      const toolsIndex = prompt.indexOf('AVAILABLE TOOLS');
+      const instructionsIndex = prompt.indexOf('Since this is a SIMPLE task');
 
       expect(taskIndex).toBeGreaterThan(-1);
-      expect(toolsIndex).toBeGreaterThan(taskIndex);
-      expect(artifactsIndex).toBeGreaterThan(toolsIndex);
-      expect(instructionsIndex).toBeGreaterThan(artifactsIndex);
+      expect(artifactsIndex).toBeGreaterThan(taskIndex);
+      expect(strategyIndex).toBeGreaterThan(artifactsIndex);
+      expect(toolsIndex).toBeGreaterThan(strategyIndex);
+      expect(instructionsIndex).toBeGreaterThan(toolsIndex);
     });
   });
 });

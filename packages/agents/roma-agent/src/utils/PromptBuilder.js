@@ -110,14 +110,37 @@ export default class PromptBuilder {
   }
   /**
    * Build decomposition prompt for COMPLEX tasks
-   * @param {Object} task - The task to decompose
-   * @param {Object} context - Execution context with classification info
+   * Can be called with different signatures for compatibility
+   * @param {string|Object} taskOrDescription - Task description string or task object
+   * @param {Array|Object} conversationOrContext - Conversation array or context object
+   * @param {Object} artifactsContext - Artifacts context (when using 3 params)
    * @returns {string} The formatted decomposition prompt
    */
-  buildDecompositionPrompt(task, context) {
-    const taskDescription = task.description || JSON.stringify(task);
+  buildDecompositionPrompt(taskOrDescription, conversationOrContext, artifactsContext) {
+    // Handle different call signatures
+    let taskDescription, context;
     
-    // Format classification info
+    if (typeof taskOrDescription === 'string') {
+      // Could be called with (string, context) from tests or (string, conversation, artifacts) from strategy
+      taskDescription = taskOrDescription;
+      
+      // If second param is an array, it's conversation from strategy
+      if (Array.isArray(conversationOrContext)) {
+        context = {
+          conversation: conversationOrContext || [],
+          artifactRegistry: artifactsContext?.artifactRegistry || null
+        };
+      } else {
+        // Otherwise it's a context object from tests
+        context = conversationOrContext || {};
+      }
+    } else {
+      // Called with (task, context) - legacy signature
+      taskDescription = taskOrDescription.description || JSON.stringify(taskOrDescription);
+      context = conversationOrContext || {};
+    }
+    
+    // Format classification info if available
     const classificationReasoning = context.classification?.reasoning 
       ? `Classification reasoning: ${context.classification.reasoning}`
       : '';
@@ -141,37 +164,134 @@ export default class PromptBuilder {
 
   /**
    * Build execution prompt for SIMPLE tasks
-   * @param {Object} task - The task to execute
-   * @param {Object} context - Execution context with artifactRegistry, toolRegistry, and discoveredTools
-   * @returns {Promise<string>} The formatted prompt
+   * Can be called with different signatures for compatibility
+   * @param {string|Object} taskOrDescription - Task description string or task object
+   * @param {Array|Object} toolsOrContext - Discovered tools array or context object
+   * @param {Array} conversationContext - Conversation context (when using 4 params)
+   * @param {Object} artifactsContext - Artifacts context (when using 4 params)
+   * @returns {string|Promise<string>} The formatted prompt
    */
-  async buildExecutionPrompt(task, context) {
-    const taskDescription = task.description || JSON.stringify(task);
+  async buildExecutionPrompt(taskOrDescription, toolsOrContext, conversationContext, artifactsContext) {
+    let taskDescription, context;
     
-    // Use discovered tools if available, otherwise fall back to listing all tools
-    const toolsSection = context.discoveredTools && context.discoveredTools.length > 0
-      ? this.formatDiscoveredToolsSection(context.discoveredTools)
-      : await this.formatToolsSection(context.toolRegistry);
+    if (typeof taskOrDescription === 'string') {
+      // Called from RecursiveDecompositionStrategy with (description, tools, conversation, artifacts)
+      taskDescription = taskOrDescription;
+      const toolsSection = Array.isArray(toolsOrContext) 
+        ? this.formatDiscoveredToolsSection(toolsOrContext)
+        : 'No tools available';
+      
+      const artifactsSection = artifactsContext?.artifactRegistry
+        ? this.formatArtifactsSection(artifactsContext.artifactRegistry)
+        : '';
+      
+      // For RecursiveDecompositionStrategy - return sync result
+      return this.buildPrompt('task-execution', {
+        taskIntro: 'This is a SIMPLE task that can be executed with tool calls.\n\n',
+        taskDescription,
+        toolsSection,
+        artifactsSection,
+        instructions: this.getSimpleTaskInstructions()
+      });
+    } else {
+      // Legacy signature with (task, context)
+      taskDescription = taskOrDescription.description || JSON.stringify(taskOrDescription);
+      context = toolsOrContext || {};
+      
+      // Use discovered tools if available, otherwise fall back to listing all tools
+      const toolsSection = context.discoveredTools && context.discoveredTools.length > 0
+        ? this.formatDiscoveredToolsSection(context.discoveredTools)
+        : await this.formatToolsSection(context.toolRegistry);
+      
+      // Format artifacts section
+      const artifactsSection = this.formatArtifactsSection(context.artifactRegistry);
+      
+      // Prepare intro based on task type
+      const taskIntro = context.isSimpleTask 
+        ? `This task has been classified as SIMPLE and can be executed with a sequence of tool calls.\n\n`
+        : `You are a task execution agent. Analyze this task and decide how to execute it.\n\n`;
+      
+      // Prepare instructions based on task type
+      const instructions = context.isSimpleTask 
+        ? this.getSimpleTaskInstructions()
+        : this.getDecisionInstructions();
+      
+      return this.buildPrompt('task-execution', {
+        taskIntro,
+        taskDescription,
+        toolsSection,
+        artifactsSection,
+        instructions
+      });
+    }
+  }
+
+  /**
+   * Build completion evaluation prompt
+   * @param {string} taskDescription - The task description
+   * @param {Array} conversationContext - Conversation context
+   * @param {Object} artifactsContext - Artifacts context
+   * @param {Array} completedSubtasks - List of completed subtasks
+   * @returns {string} The formatted prompt
+   */
+  buildCompletionEvaluationPrompt(taskDescription, conversationContext, artifactsContext, completedSubtasks) {
+    const conversationHistory = Array.isArray(conversationContext) 
+      ? conversationContext.map(entry => `${entry.role}: ${entry.content}`).join('\n')
+      : '';
     
-    // Format artifacts section
-    const artifactsSection = this.formatArtifactsSection(context.artifactRegistry);
+    const artifactsSection = artifactsContext?.artifactRegistry
+      ? this.formatArtifactsSection(artifactsContext.artifactRegistry)
+      : '';
     
-    // Prepare intro based on task type
-    const taskIntro = context.isSimpleTask 
-      ? `This task has been classified as SIMPLE and can be executed with a sequence of tool calls.\n\n`
-      : `You are a task execution agent. Analyze this task and decide how to execute it.\n\n`;
+    const subtasksSection = completedSubtasks && completedSubtasks.length > 0
+      ? completedSubtasks.map(t => `- ${t.description} (${t.status})`).join('\n')
+      : 'No subtasks';
     
-    // Prepare instructions based on task type
-    const instructions = context.isSimpleTask 
-      ? this.getSimpleTaskInstructions()
-      : this.getDecisionInstructions();
-    
-    return this.buildPrompt('task-execution', {
-      taskIntro,
+    return this.buildPrompt('completion-evaluation', {
       taskDescription,
-      toolsSection,
+      conversationHistory,
       artifactsSection,
-      instructions
+      subtasksCompleted: subtasksSection
+    });
+  }
+
+  /**
+   * Build parent evaluation prompt
+   * @param {string} parentDescription - The parent task description
+   * @param {string} childDescription - The child task description
+   * @param {*} childResult - The child task result
+   * @param {Array} parentConversation - Parent conversation context
+   * @param {Object} parentArtifacts - Parent artifacts context
+   * @param {Array} completedSubtasks - List of completed subtasks
+   * @param {Array} remainingSubtasks - List of remaining subtasks
+   * @returns {string} The formatted prompt
+   */
+  buildParentEvaluationPrompt(parentDescription, childDescription, childResult, parentConversation, parentArtifacts, completedSubtasks, remainingSubtasks) {
+    const parentConversationHistory = Array.isArray(parentConversation) 
+      ? parentConversation.map(entry => `${entry.role}: ${entry.content}`).join('\n')
+      : '';
+    
+    const artifactsSection = parentArtifacts?.artifactRegistry
+      ? this.formatArtifactsSection(parentArtifacts.artifactRegistry)
+      : '';
+    
+    const completedSection = completedSubtasks && completedSubtasks.length > 0
+      ? completedSubtasks.map(t => `- ${t.description} (${t.status})`).join('\n')
+      : 'None';
+    
+    const remainingSection = remainingSubtasks && remainingSubtasks.length > 0
+      ? remainingSubtasks.map(t => `- ${t.description}`).join('\n')
+      : 'None';
+    
+    return this.buildPrompt('parent-evaluation', {
+      parentDescription,
+      childDescription,
+      childStatus: 'completed',
+      childResult: JSON.stringify(childResult),
+      parentConversation: parentConversationHistory,
+      availableArtifacts: artifactsSection,
+      completedSubtasks: completedSection,
+      remainingSubtasks: remainingSection
     });
   }
 
