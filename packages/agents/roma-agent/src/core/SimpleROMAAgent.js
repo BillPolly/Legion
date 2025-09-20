@@ -9,7 +9,6 @@
 
 import { ResourceManager } from '@legion/resource-manager';
 import { ToolRegistry } from '@legion/tools-registry';
-import { ResponseValidator } from '@legion/output-schema';
 import { Task, TaskManager, ArtifactRegistry, ExecutionContext } from '@legion/tasks';
 import ToolDiscovery from '../utils/ToolDiscovery.js';
 import TaskClassifier from '../utils/TaskClassifier.js';
@@ -23,7 +22,6 @@ export default class SimpleROMAAgent {
     this.toolRegistry = null;
     this.toolDiscovery = null;
     this.taskClassifier = null;
-    this.responseValidator = null;
     this.currentTools = []; // Current discovered tools for the task
     this.sessionLogger = null; // Session logger for debugging
     this.taskManager = null; // Task hierarchy manager
@@ -48,11 +46,7 @@ export default class SimpleROMAAgent {
     this.taskClassifier = new TaskClassifier(this.llmClient);
     await this.taskClassifier.initialize();
     
-    // Create response validators for different response types (keeping for legacy compatibility)
-    this.simpleTaskValidator = this._createSimpleTaskValidator();
-    this.decompositionValidator = this._createDecompositionValidator();
-    this.parentEvaluationValidator = this._createParentEvaluationValidator();
-    this.completionEvaluationValidator = this._createCompletionEvaluationValidator();
+    // ResponseValidators removed - TemplatedPrompt handles validation internally
     
     // Initialize session logger
     this.sessionLogger = new SessionLogger({ outputDir: this.outputDir });
@@ -60,314 +54,6 @@ export default class SimpleROMAAgent {
     
     // Initialize task manager
     this.taskManager = new TaskManager(this.llmClient);
-  }
-
-  /**
-   * Create ResponseValidator for simple task execution responses
-   */
-  _createSimpleTaskValidator() {
-    const simpleTaskSchema = {
-      type: 'object',
-      anyOf: [
-        {
-          type: 'object',
-          properties: {
-            useTools: { type: 'boolean', const: true },
-            toolCalls: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  tool: { type: 'string' },
-                  inputs: { type: 'object' },
-                  outputs: { type: 'object' }
-                },
-                required: ['tool', 'inputs']
-              }
-            }
-          },
-          required: ['useTools', 'toolCalls']
-        },
-        {
-          type: 'object',
-          properties: {
-            response: { type: 'string' }
-          },
-          required: ['response']
-        }
-      ],
-      format: 'json'
-    };
-    
-    return new ResponseValidator(simpleTaskSchema, {
-      preferredFormat: 'json',
-      autoRepair: true
-    });
-  }
-
-  /**
-   * Create ResponseValidator for task decomposition responses
-   */
-  _createDecompositionValidator() {
-    const decompositionSchema = {
-      type: 'object',
-      properties: {
-        decompose: { type: 'boolean' },
-        subtasks: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              description: { type: 'string' },
-              inputs: { type: 'string' },
-              outputs: { type: 'string' }
-            },
-            required: ['description']
-          }
-        }
-      },
-      required: ['decompose', 'subtasks'],
-      format: 'json'
-    };
-    
-    return new ResponseValidator(decompositionSchema, {
-      preferredFormat: 'json',
-      autoRepair: true
-    });
-  }
-
-  /**
-   * Create ResponseValidator for parent evaluation responses
-   */
-  _createParentEvaluationValidator() {
-    const parentEvaluationSchema = {
-      type: 'object',
-      properties: {
-        action: {
-          type: 'string',
-          enum: ['continue', 'complete', 'fail', 'create-subtask'],
-          description: 'The decision for what the parent task should do next'
-        },
-        relevantArtifacts: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'List of artifact names that are relevant for the next action'
-        },
-        reason: {
-          type: 'string',
-          description: 'Brief explanation of why this decision was made'
-        },
-        result: {
-          type: 'string',
-          description: 'Summary of the task result (only required if action is complete)'
-        },
-        newSubtask: {
-          type: 'object',
-          properties: {
-            description: { type: 'string' },
-            artifacts: {
-              type: 'array',
-              items: { type: 'string' }
-            }
-          },
-          required: ['description'],
-          description: 'Description of new subtask to create (only required if action is create-subtask)'
-        }
-      },
-      required: ['action', 'relevantArtifacts', 'reason'],
-      format: 'json'
-    };
-    
-    return new ResponseValidator(parentEvaluationSchema, {
-      preferredFormat: 'json',
-      autoRepair: true
-    });
-  }
-
-  /**
-   * Create ResponseValidator for completion evaluation responses
-   */
-  _createCompletionEvaluationValidator() {
-    const completionEvaluationSchema = {
-      type: 'object',
-      properties: {
-        complete: {
-          type: 'boolean',
-          description: 'Whether the task has been fully completed'
-        },
-        reason: {
-          type: 'string',
-          description: 'Brief explanation of the evaluation decision'
-        },
-        result: {
-          type: 'string',
-          description: 'Summary of what was accomplished (required if complete is true)'
-        },
-        additionalSubtask: {
-          type: 'object',
-          properties: {
-            description: { type: 'string' },
-            artifacts: {
-              type: 'array',
-              items: { type: 'string' }
-            }
-          },
-          required: ['description'],
-          description: 'Description of additional work needed (required if complete is false)'
-        }
-      },
-      required: ['complete', 'reason'],
-      format: 'json'
-    };
-    
-    return new ResponseValidator(completionEvaluationSchema, {
-      preferredFormat: 'json',
-      autoRepair: true
-    });
-  }
-  
-  /**
-   * Get schema for parent evaluation responses (for Prompt class)
-   */
-  _getParentEvaluationSchema() {
-    return {
-      type: 'object',
-      properties: {
-        action: {
-          type: 'string',
-          enum: ['continue', 'complete', 'fail', 'create-subtask'],
-          description: 'The decision for what the parent task should do next'
-        },
-        relevantArtifacts: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'List of artifact names that are relevant for the next action'
-        },
-        reason: {
-          type: 'string',
-          description: 'Brief explanation of why this decision was made'
-        },
-        result: {
-          type: 'string',
-          description: 'Summary of the task result (only required if action is complete)'
-        },
-        newSubtask: {
-          type: 'object',
-          properties: {
-            description: { type: 'string' },
-            artifacts: {
-              type: 'array',
-              items: { type: 'string' }
-            }
-          },
-          required: ['description'],
-          description: 'Description of new subtask to create (only required if action is create-subtask)'
-        }
-      },
-      required: ['action', 'relevantArtifacts', 'reason'],
-      format: 'json'
-    };
-  }
-  
-  /**
-   * Get schema for completion evaluation responses (for Prompt class)
-   */
-  _getCompletionEvaluationSchema() {
-    return {
-      type: 'object',
-      properties: {
-        complete: {
-          type: 'boolean',
-          description: 'Whether the task has been fully completed'
-        },
-        reason: {
-          type: 'string',
-          description: 'Brief explanation of the evaluation decision'
-        },
-        result: {
-          type: 'string',
-          description: 'Summary of what was accomplished (required if complete is true)'
-        },
-        additionalSubtask: {
-          type: 'object',
-          properties: {
-            description: { type: 'string' },
-            artifacts: {
-              type: 'array',
-              items: { type: 'string' }
-            }
-          },
-          required: ['description'],
-          description: 'Description of additional work needed (required if complete is false)'
-        }
-      },
-      required: ['complete', 'reason'],
-      format: 'json'
-    };
-  }
-  
-  /**
-   * Get schema for simple task execution responses (for Prompt class)
-   */
-  _getSimpleTaskSchema() {
-    return {
-      type: 'object',
-      anyOf: [
-        {
-          type: 'object',
-          properties: {
-            useTools: { type: 'boolean', const: true },
-            toolCalls: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  tool: { type: 'string' },
-                  inputs: { type: 'object' },
-                  outputs: { type: 'object' }
-                },
-                required: ['tool', 'inputs']
-              }
-            }
-          },
-          required: ['useTools', 'toolCalls']
-        },
-        {
-          type: 'object',
-          properties: {
-            response: { type: 'string' }
-          },
-          required: ['response']
-        }
-      ],
-      format: 'json'
-    };
-  }
-  
-  /**
-   * Get schema for task decomposition responses (for Prompt class)
-   */
-  _getDecompositionSchema() {
-    return {
-      type: 'object',
-      properties: {
-        decompose: { type: 'boolean' },
-        subtasks: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              description: { type: 'string' },
-              inputs: { type: 'string' },
-              outputs: { type: 'string' }
-            },
-            required: ['description']
-          }
-        }
-      },
-      required: ['decompose', 'subtasks'],
-      format: 'json'
-    };
   }
 
 
@@ -404,12 +90,6 @@ export default class SimpleROMAAgent {
       taskClassifier: this.taskClassifier,
       toolDiscovery: this.toolDiscovery,
       sessionLogger: this.sessionLogger,
-      
-      // Validators
-      simpleTaskValidator: this.simpleTaskValidator,
-      decompositionValidator: this.decompositionValidator,
-      parentEvaluationValidator: this.parentEvaluationValidator,
-      completionEvaluationValidator: this.completionEvaluationValidator,
       
       // Configuration
       fastToolDiscovery: this.fastToolDiscovery,

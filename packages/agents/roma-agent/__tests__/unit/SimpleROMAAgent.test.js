@@ -63,13 +63,7 @@ describe('SimpleROMAAgent Unit Tests', () => {
     agent.toolDiscovery = mockToolDiscovery;
     agent.taskClassifier = mockTaskClassifier;
     
-    // No longer need promptBuilder - it has been removed
-    
-    // Create real validators for schema testing
-    agent.simpleTaskValidator = agent._createSimpleTaskValidator();
-    agent.decompositionValidator = agent._createDecompositionValidator();
-    agent.parentEvaluationValidator = agent._createParentEvaluationValidator();
-    agent.completionEvaluationValidator = agent._createCompletionEvaluationValidator();
+    // No longer need promptBuilder or validators - TemplatedPrompt handles validation
     
     // Create mock Prompt instances (simulating what initialize() would create)
     const mockPromptBase = {
@@ -548,56 +542,12 @@ describe('SimpleROMAAgent Unit Tests', () => {
       expect(agent.parentEvaluationPrompt.maxRetries).toBe(3);
     });
 
-    it('should maintain legacy ResponseValidator instances for compatibility', () => {
-      // Legacy validators should still exist for backward compatibility
-      expect(agent.simpleTaskValidator).toBeDefined();
-      expect(agent.decompositionValidator).toBeDefined();
-      expect(agent.parentEvaluationValidator).toBeDefined();
-      expect(agent.completionEvaluationValidator).toBeDefined();
-    });
-    
-    it('should validate simple task responses against schema', () => {
-      const validToolCallResponse = {
-        useTools: true,
-        toolCalls: [{
-          tool: 'calculator',
-          inputs: { expression: '2 + 2' }
-        }]
-      };
-      
-      const result = agent.simpleTaskValidator.validateExample(validToolCallResponse);
-      expect(result.success).toBe(true);
-    });
-    
-    it('should validate direct response format', () => {
-      const validDirectResponse = {
-        response: 'This is a direct answer'
-      };
-      
-      const result = agent.simpleTaskValidator.validateExample(validDirectResponse);
-      expect(result.success).toBe(true);
-    });
-    
-    it('should validate decomposition responses against schema', () => {
-      const validDecomposition = {
-        decompose: true,
-        subtasks: [
-          { description: 'First subtask' },
-          { description: 'Second subtask', outputs: '@result' }
-        ]
-      };
-      
-      const result = agent.decompositionValidator.validateExample(validDecomposition);
-      expect(result.success).toBe(true);
-    });
-    
-    it('should reject invalid response formats', () => {
-      const invalidResponse = {
-        wrongField: 'invalid structure'
-      };
-      
-      const result = agent.simpleTaskValidator.validateExample(invalidResponse);
-      expect(result.success).toBe(false);
+    it('should use TemplatedPrompt for all validation', () => {
+      // All validation is now handled internally by TemplatedPrompt instances
+      expect(agent.parentEvaluationPrompt).toBeDefined();
+      expect(agent.completionEvaluationPrompt).toBeDefined();
+      expect(agent.simpleTaskPrompt).toBeDefined();
+      expect(agent.decompositionPrompt).toBeDefined();
     });
   });
   

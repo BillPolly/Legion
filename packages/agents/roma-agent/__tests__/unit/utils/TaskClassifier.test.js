@@ -5,7 +5,6 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import TaskClassifier from '../../../src/utils/TaskClassifier.js';
-import { ResponseValidator } from '@legion/output-schema';
 
 describe('TaskClassifier Unit Tests', () => {
   let classifier;

@@ -293,10 +293,6 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
       taskClassifier: task.taskClassifier,
       toolDiscovery: task.toolDiscovery,
       sessionLogger: task.sessionLogger,
-      simpleTaskValidator: task.simpleTaskValidator,
-      decompositionValidator: task.decompositionValidator,
-      parentEvaluationValidator: task.parentEvaluationValidator,
-      completionEvaluationValidator: task.completionEvaluationValidator,
       fastToolDiscovery: task.fastToolDiscovery,
       workspaceDir: task.workspaceDir,
       agent: task.agent,
@@ -339,7 +335,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
    * @private
    */
   async _decompose(task, context) {
-    const { llmClient, decompositionValidator, sessionLogger } = context;
+    const { llmClient, sessionLogger } = context;
     
     if (!llmClient) {
       throw new Error('LLM client is required for decomposition');
@@ -379,7 +375,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
    * @private
    */
   async _executeSimple(task, context) {
-    const { toolDiscovery, llmClient, simpleTaskValidator, sessionLogger } = context;
+    const { toolDiscovery, sessionLogger } = context;
     
     // Discover tools
     console.log(`🔧 Discovering tools for SIMPLE task...`);
@@ -588,7 +584,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
    * @private
    */
   async _evaluateCompletion(task, context) {
-    const { llmClient, completionEvaluationValidator, sessionLogger } = context;
+    const { sessionLogger } = context;
     
     console.log(`🎯 Evaluating if task "${task.description}" is complete...`);
     
@@ -682,7 +678,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
    * @private
    */
   async _getSimpleTaskExecution(task, discoveredTools, context) {
-    const { llmClient, simpleTaskValidator, sessionLogger } = context;
+    const { sessionLogger } = context;
     
     // Initialize prompts if needed
     await this._initializePrompts(context);
@@ -785,7 +781,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
    * @private
    */
   async _getParentEvaluation(task, childTask, context) {
-    const { llmClient, parentEvaluationValidator, sessionLogger } = context;
+    const { sessionLogger } = context;
     
     // Initialize prompts if needed
     await this._initializePrompts(context);
@@ -816,77 +812,4 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
     return result.data;
   }
 
-  /**
-   * Parse decomposition response (fallback)
-   * @private
-   */
-  _parseDecompositionResponse(response) {
-    try {
-      const parsed = JSON.parse(response);
-      return parsed;
-    } catch (e) {
-      // Try to extract subtasks from response
-      const subtaskMatches = response.match(/\d+\.\s+(.+)/g);
-      if (subtaskMatches) {
-        return {
-          subtasks: subtaskMatches.map(match => ({
-            description: match.replace(/^\d+\.\s+/, '')
-          }))
-        };
-      }
-      return { subtasks: [] };
-    }
-  }
-
-  /**
-   * Parse execution response (fallback)
-   * @private
-   */
-  _parseExecutionResponse(response) {
-    try {
-      const parsed = JSON.parse(response);
-      return parsed;
-    } catch (e) {
-      // Try to extract tool calls from response
-      return { response: response };
-    }
-  }
-
-  /**
-   * Parse parent evaluation response (fallback)
-   * @private
-   */
-  _parseParentEvaluation(response) {
-    try {
-      const parsed = JSON.parse(response);
-      return parsed;
-    } catch (e) {
-      // Default to continuing
-      return {
-        decision: 'CONTINUE',
-        reasoning: 'Could not parse evaluation response'
-      };
-    }
-  }
-
-  /**
-   * Parse completion evaluation response (fallback)
-   * @private
-   */
-  _parseCompletionEvaluation(response) {
-    try {
-      const parsed = JSON.parse(response);
-      return {
-        isComplete: parsed.isComplete || parsed.complete || false,
-        reasoning: parsed.reasoning || parsed.reason || 'No reason provided',
-        summary: parsed.summary || parsed.result
-      };
-    } catch (e) {
-      // Default to incomplete
-      return {
-        isComplete: false,
-        reasoning: 'Could not parse evaluation response'
-      };
-    }
-  }
 }
