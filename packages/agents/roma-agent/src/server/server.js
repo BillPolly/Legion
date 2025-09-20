@@ -8,7 +8,7 @@ import express from 'express';
 import { WebSocketServer } from 'ws';
 import http from 'http';
 import { ResourceManager } from '@legion/resource-manager';
-import ROMAServerActor from './actors/server/ROMAServerActor.js';
+import ROMAServerActor from '../actors/server/ROMAServerActor.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 

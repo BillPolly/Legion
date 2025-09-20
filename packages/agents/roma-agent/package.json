@@ -9,7 +9,19 @@
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
     "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/unit",
-    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/integration"
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/integration",
+    "roma": "NODE_OPTIONS='--experimental-vm-modules' node scripts/roma.js",
+    "roma:stop": "NODE_OPTIONS='--experimental-vm-modules' node scripts/roma.js stop",
+    "roma:server": "NODE_OPTIONS='--experimental-vm-modules' node scripts/roma.js server",
+    "roma:status": "NODE_OPTIONS='--experimental-vm-modules' node scripts/roma.js status",
+    "roma:execute": "NODE_OPTIONS='--experimental-vm-modules' node scripts/roma.js execute",
+    "roma:history": "NODE_OPTIONS='--experimental-vm-modules' node scripts/roma.js history",
+    "server": "NODE_OPTIONS='--experimental-vm-modules' node src/server/server.js",
+    "server:start": "NODE_OPTIONS='--experimental-vm-modules' node src/server/server.js",
+    "cli": "cd cli && npm run start",
+    "cli:install": "cd cli && npm install",
+    "cli:status": "cd cli && npm run status",
+    "cli:history": "cd cli && npm run history"
   },
   "keywords": [
     "agent",

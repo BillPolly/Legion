@@ -3,7 +3,7 @@
  * Provides real-time task execution with progress tracking and visualization
  */
 
-import SimpleROMAAgent from '../../SimpleROMAAgent.js';
+import ChatAgent from '../../core/ChatAgent.js';
 import { ResourceManager } from '@legion/resource-manager';
 
 /**
@@ -13,7 +13,7 @@ export default class ROMAServerActor {
   constructor(services = {}) {
     this.services = services;
     this.remoteActor = null;
-    this.romaAgent = null;
+    this.chatAgent = null;
     this.isReady = false;
     this.activeExecutions = new Map();
     
@@ -45,15 +45,15 @@ export default class ROMAServerActor {
         this.resourceManager = await this._createResourceManager();
       }
       
-      console.log('🎭 Creating SimpleROMAAgent...');
+      console.log('🎭 Creating ChatAgent...');
       
-      // Initialize ROMA agent
-      this.romaAgent = new SimpleROMAAgent();
+      // Initialize ChatAgent (which internally uses SimpleROMAAgent)
+      this.chatAgent = new ChatAgent();
       
       // Initialize the agent
-      await this.romaAgent.initialize();
+      await this.chatAgent.initialize();
       
-      console.log('✅ ROMAAgent wrapped in server actor and ready');
+      console.log('✅ ChatAgent wrapped in server actor and ready');
       
       // Wait for client to be fully ready before sending ready signal
       setTimeout(() => {
@@ -135,7 +135,7 @@ export default class ROMAServerActor {
    */
   async _handleExecuteTask(data) {
     const { executionId, task } = data;
-    console.log('🚀 [ROMA ACTOR] Starting task execution:', executionId);
+    console.log('🚀 [ROMA ACTOR] Processing input with ChatAgent:', executionId);
     
     try {
       // Store execution reference
@@ -151,32 +151,46 @@ export default class ROMAServerActor {
         timestamp: new Date().toISOString()
       });
       
-      // Execute task
-      const result = await this.romaAgent.execute(task);
+      // Process input through ChatAgent (handles both chat and task execution)
+      const input = typeof task === 'string' ? task : task.description;
+      const response = await this.chatAgent.processInput(input, {
+        executionId,
+        source: 'cli'
+      });
       
       // Update execution status
       const execution = this.activeExecutions.get(executionId);
       if (execution) {
-        execution.status = result.success ? 'completed' : 'failed';
+        execution.status = response.error ? 'failed' : 'completed';
         execution.endTime = Date.now();
         execution.duration = execution.endTime - execution.startTime;
       }
       
-      console.log('✅ [ROMA ACTOR] Task execution completed:', result.success);
+      console.log('✅ [ROMA ACTOR] Processing completed, type:', response.type);
       
-      if (result.success) {
-        // Send completion event for successful execution
-        this.remoteActor.receive('execution_complete', {
-          executionId,
-          result,
-          statistics: this.getStatistics(),
-          timestamp: new Date().toISOString()
-        });
-      } else {
+      // Format result based on response type
+      const result = {
+        success: !response.error,
+        message: response.message,
+        type: response.type,
+        executionId: response.executionId || executionId,
+        metadata: response.metadata
+      };
+      
+      if (response.error) {
         // Send error event for failed execution
         this.remoteActor.receive('execution_error', {
           executionId,
-          error: result.error || 'Task execution failed',
+          error: response.message,
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        // Send completion event with response type
+        this.remoteActor.receive('execution_complete', {
+          executionId,
+          result,
+          responseType: response.type,
+          statistics: this.getStatistics(),
           timestamp: new Date().toISOString()
         });
       }
