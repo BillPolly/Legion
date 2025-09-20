@@ -21,7 +21,7 @@ export default class SimpleROMAAgent {
     this.taskManager = null; // Task hierarchy manager
     
     // Task execution strategy (pluggable)
-    this.taskStrategy = options.taskStrategy || RecursiveDecompositionStrategy.getInstance();
+    this.taskStrategy = options.taskStrategy || new RecursiveDecompositionStrategy();
     
     // Configuration
     this.maxDepth = options.maxDepth || 5;

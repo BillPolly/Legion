@@ -24,8 +24,7 @@ describe('SimpleROMAAgent Unit Tests', () => {
   });
   
   afterEach(() => {
-    // Reset the RecursiveDecompositionStrategy singleton after each test
-    RecursiveDecompositionStrategy.resetInstance();
+    // Clean up after each test
   });
   
   beforeEach(async () => {
@@ -57,9 +56,6 @@ describe('SimpleROMAAgent Unit Tests', () => {
         return null; // Simplified for unit tests
       })
     };
-    
-    // Reset the singleton to ensure we get a fresh instance
-    RecursiveDecompositionStrategy.resetInstance();
     
     // Create a mock strategy with all methods defined from the start
     const mockStrategy = {

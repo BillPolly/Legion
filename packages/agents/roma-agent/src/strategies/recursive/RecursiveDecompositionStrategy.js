@@ -10,25 +10,18 @@
  */
 
 import { TaskStrategy } from '@legion/tasks';
-import { TemplatedPrompt } from '@legion/prompting-manager';
+import { TemplatedPrompt, PromptRegistry } from '@legion/prompting-manager';
 import TaskClassifier from '../utils/TaskClassifier.js';
 import ToolDiscovery from '../utils/ToolDiscovery.js';
-import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-let instance = null;
-
 export default class RecursiveDecompositionStrategy extends TaskStrategy {
   constructor(llmClient = null, toolRegistry = null) {
     super();
-    if (instance) {
-      return instance;
-    }
-    instance = this;
     
     // Strategy-specific components (owned by this strategy)
     this.taskClassifier = null;
@@ -76,13 +69,11 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
     const llmClient = this.llmClient || (context.lookup ? context.lookup('llmClient') : context.llmClient);
     
     if (!this.decompositionPrompt && llmClient) {
-      const promptsDir = path.join(__dirname, 'prompts');
+      // Initialize PromptRegistry with prompts directory
+      const promptRegistry = new PromptRegistry(path.join(__dirname, 'prompts'));
       
       // Load decomposition prompt
-      const decompositionTemplate = await fs.readFile(
-        path.join(promptsDir, 'task-decomposition.md'), 
-        'utf-8'
-      );
+      const decompositionTemplate = await promptRegistry.load('task-decomposition');
       this.decompositionPrompt = new TemplatedPrompt({
         prompt: decompositionTemplate,
         responseSchema: this._getDecompositionSchema(),
@@ -91,10 +82,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
       });
       
       // Load execution prompt
-      const executionTemplate = await fs.readFile(
-        path.join(promptsDir, 'task-execution.md'),
-        'utf-8'
-      );
+      const executionTemplate = await promptRegistry.load('task-execution');
       this.executionPrompt = new TemplatedPrompt({
         prompt: executionTemplate,
         responseSchema: this._getSimpleTaskSchema(),
@@ -103,10 +91,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
       });
       
       // Load parent evaluation prompt
-      const parentEvalTemplate = await fs.readFile(
-        path.join(promptsDir, 'parent-evaluation.md'),
-        'utf-8'
-      );
+      const parentEvalTemplate = await promptRegistry.load('parent-evaluation');
       this.parentEvaluationPrompt = new TemplatedPrompt({
         prompt: parentEvalTemplate,
         responseSchema: this._getParentEvaluationSchema(),
@@ -115,10 +100,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
       });
       
       // Load completion evaluation prompt
-      const completionEvalTemplate = await fs.readFile(
-        path.join(promptsDir, 'completion-evaluation.md'),
-        'utf-8'
-      );
+      const completionEvalTemplate = await promptRegistry.load('completion-evaluation');
       this.completionEvaluationPrompt = new TemplatedPrompt({
         prompt: completionEvalTemplate,
         responseSchema: this._getCompletionEvaluationSchema(),
@@ -229,22 +211,6 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
     };
   }
 
-  /**
-   * Get singleton instance
-   */
-  static getInstance(llmClient = null, toolRegistry = null) {
-    if (!instance) {
-      instance = new RecursiveDecompositionStrategy(llmClient, toolRegistry);
-    }
-    return instance;
-  }
-  
-  /**
-   * Reset singleton instance (for testing)
-   */
-  static resetInstance() {
-    instance = null;
-  }
 
   getName() {
     return 'RecursiveDecomposition';

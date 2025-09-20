@@ -7,7 +7,6 @@
  */
 
 import { TemplatedPrompt, PromptRegistry } from '@legion/prompting-manager';
-import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -47,9 +46,9 @@ export default class TaskClassifier {
       estimatedSteps: 2
     }];
     
-    // Load prompt template from file
-    const promptPath = path.join(__dirname, '..', 'recursive', 'prompts', 'task-classification.md');
-    const promptTemplate = await fs.readFile(promptPath, 'utf-8');
+    // Load prompt template using PromptRegistry
+    const promptRegistry = new PromptRegistry(path.join(__dirname, '..', 'recursive', 'prompts'));
+    const promptTemplate = await promptRegistry.load('task-classification');
     
     // Create prompt instance for task classification
     this.prompt = new TemplatedPrompt({
