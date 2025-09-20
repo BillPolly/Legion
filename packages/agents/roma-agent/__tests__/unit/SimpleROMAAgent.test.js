@@ -58,6 +58,16 @@ describe('SimpleROMAAgent Unit Tests', () => {
     agent.toolDiscovery = mockToolDiscovery;
     agent.taskClassifier = mockTaskClassifier;
     
+    // Create mock prompt builder with all required methods
+    agent.promptBuilder = {
+      buildExecutionPrompt: jest.fn().mockResolvedValue('mock execution prompt'),
+      buildDecompositionPrompt: jest.fn().mockReturnValue('mock decomposition prompt'),
+      buildCompletionEvaluationPrompt: jest.fn().mockReturnValue('mock completion prompt'),
+      buildParentEvaluationPrompt: jest.fn().mockReturnValue('mock parent evaluation prompt'),
+      formatDiscoveredToolsSection: jest.fn().mockReturnValue('mock tools section'),
+      formatArtifactsSection: jest.fn().mockReturnValue('mock artifacts section')
+    };
+    
     // Create real validators for schema testing
     agent.simpleTaskValidator = agent._createSimpleTaskValidator();
     agent.decompositionValidator = agent._createDecompositionValidator();

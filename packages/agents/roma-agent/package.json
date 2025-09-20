@@ -38,7 +38,8 @@
     "@legion/resource-manager": "file:../../resource-manager",
     "@legion/llm-client": "file:../../prompting/llm-client",
     "@legion/schema": "file:../../schema",
-    "@legion/tools": "file:../../tools"
+    "@legion/tools": "file:../../tools",
+    "@legion/tasks": "file:../../tasks"
   },
   "devDependencies": {
     "jest": "^29.7.0"

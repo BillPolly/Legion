@@ -10,14 +10,12 @@
 import { ResourceManager } from '@legion/resource-manager';
 import { ToolRegistry } from '@legion/tools-registry';
 import { ResponseValidator } from '@legion/output-schema';
-import ArtifactRegistry from './ArtifactRegistry.js';
+import { Task, TaskManager, ArtifactRegistry, ExecutionContext } from '../../../../tasks/src/index.js';
 import PromptBuilder from '../utils/PromptBuilder.js';
 import Prompt from '../utils/Prompt.js';
 import ToolDiscovery from '../utils/ToolDiscovery.js';
 import TaskClassifier from '../utils/TaskClassifier.js';
 import SessionLogger from '../utils/SessionLogger.js';
-import TaskManager from './TaskManager.js';
-import Task from './Task.js';
 import RecursiveDecompositionStrategy from './strategies/RecursiveDecompositionStrategy.js';
 
 export default class SimpleROMAAgent {
@@ -77,6 +75,10 @@ export default class SimpleROMAAgent {
       llmClient: this.llmClient,
       maxRetries: 3
     });
+    
+    // Initialize prompt builder
+    this.promptBuilder = new PromptBuilder();
+    await this.promptBuilder.initialize();
     
     // Initialize session logger
     this.sessionLogger = new SessionLogger({ outputDir: this.outputDir });
@@ -421,18 +423,14 @@ export default class SimpleROMAAgent {
     // Reset task manager for new execution
     this.taskManager.reset();
     
-    // Create root task with strategy and all the services it needs
-    const rootTask = new Task(taskDescription, null, {
-      metadata: { originalTask: task, taskManager: this.taskManager },
-      
-      // Strategy
-      strategy: this.taskStrategy,
-      
+    // Create execution context with all services
+    const executionContext = new ExecutionContext({
       // Services
       llmClient: this.llmClient,
       taskClassifier: this.taskClassifier,
       toolDiscovery: this.toolDiscovery,
       sessionLogger: this.sessionLogger,
+      promptBuilder: this.promptBuilder, // Add promptBuilder to context
       
       // Validators
       simpleTaskValidator: this.simpleTaskValidator,
@@ -445,10 +443,18 @@ export default class SimpleROMAAgent {
       workspaceDir: process.cwd(),
       testMode: this.testMode,
       agent: this,  // Pass reference to agent for helper methods
-      
-      // Artifact registry
+      taskManager: this.taskManager
+    });
+    
+    // Create root task with strategy and execution context
+    const rootTask = new Task(taskDescription, null, {
+      metadata: { originalTask: task },
+      strategy: this.taskStrategy,
       ArtifactRegistryClass: ArtifactRegistry
     });
+    
+    // Update the task's context to the execution context
+    rootTask.updateContext(executionContext);
     
     // Track root task in manager (TaskManager tracks tasks via constructor)
     this.taskManager.taskMap.set(rootTask.id, rootTask);

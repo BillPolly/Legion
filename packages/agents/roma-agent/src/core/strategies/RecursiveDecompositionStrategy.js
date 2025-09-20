@@ -9,7 +9,7 @@
  * All the existing behavior (classification, decomposition, execution) is preserved as internal methods.
  */
 
-import TaskStrategy from './TaskStrategy.js';
+import { TaskStrategy } from '../../../../../tasks/src/index.js';
 
 let instance = null;
 

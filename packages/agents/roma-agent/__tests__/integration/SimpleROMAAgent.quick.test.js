@@ -89,6 +89,16 @@ describe('SimpleROMAAgent Quick Integration', () => {
       this.toolDiscovery = new ToolDiscovery(this.llmClient, this.toolRegistry);
       this.taskClassifier = new TaskClassifier(this.llmClient);
       
+      // Create mock prompt builder with all required methods
+      this.promptBuilder = {
+        buildExecutionPrompt: jest.fn().mockResolvedValue('mock execution prompt'),
+        buildDecompositionPrompt: jest.fn().mockReturnValue('mock decomposition prompt'),
+        buildCompletionEvaluationPrompt: jest.fn().mockReturnValue('mock completion prompt'),
+        buildParentEvaluationPrompt: jest.fn().mockReturnValue('mock parent evaluation prompt'),
+        formatDiscoveredToolsSection: jest.fn().mockReturnValue('mock tools section'),
+        formatArtifactsSection: jest.fn().mockReturnValue('mock artifacts section')
+      };
+
       // Create validators (simplified)
       this.simpleTaskValidator = {
         parseAndValidate: jest.fn().mockImplementation(response => {
