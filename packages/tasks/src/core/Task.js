@@ -746,10 +746,10 @@ export default class Task {
     // Route message based on sender
     try {
       if (fromTask === this.parent) {
-        // Message from parent
-        return await this.strategy.onParentMessage(fromTask, message);
+        // Message from parent - pass THIS task as the task to work on
+        return await this.strategy.onParentMessage(this, message);
       } else if (this.children.includes(fromTask)) {
-        // Message from child
+        // Message from child - pass the child task
         return await this.strategy.onChildMessage(fromTask, message);
       } else if (!fromTask) {
         // Initial message or external message
@@ -768,6 +768,7 @@ export default class Task {
           throw new Error('Strategy has no onParentMessage method');
         }
         
+        console.log('Task.receiveMessage calling strategy.onParentMessage with task:', this.description, 'strategy:', this.strategy.getName ? this.strategy.getName() : 'unknown');
         return await this.strategy.onParentMessage(this, message);
       } else {
         // Unknown sender
