@@ -6,6 +6,7 @@
  */
 
 import { ResponseValidator } from '@legion/output-schema';
+import Handlebars from 'handlebars';
 
 export class TemplatedPrompt {
   constructor({
@@ -33,9 +34,12 @@ export class TemplatedPrompt {
     this.maxRetries = maxRetries;
     this.sessionLogger = sessionLogger;
 
+    // Detect format from schema or default to 'json'
+    this.outputFormat = this._detectOutputFormat(responseSchema);
+
     // Initialize response validator with auto-repair enabled
+    // The validator will use the format detected from schema (defaults to JSON)
     this.validator = new ResponseValidator(responseSchema, {
-      preferredFormat: 'json',
       autoRepair: true
     });
 
@@ -44,12 +48,35 @@ export class TemplatedPrompt {
   }
 
   /**
+   * Detect the output format from the schema
+   * @private
+   */
+  _detectOutputFormat(schema) {
+    // Check for x-output-format extension in schema
+    if (schema['x-output-format']) {
+      return schema['x-output-format'];
+    }
+    
+    // Check for format hint in x-format extension
+    if (schema['x-format']) {
+      // If x-format has properties for specific formats, use the first one
+      const formats = Object.keys(schema['x-format']);
+      if (formats.length > 0 && !formats.includes('preferredFormat')) {
+        return formats[0];
+      }
+    }
+    
+    // Default to json
+    return 'json';
+  }
+
+  /**
    * Generate the output prompt from schema and examples
    */
   generateOutputPrompt() {
     // Use generateInstructions method from ResponseValidator
     const instructions = this.validator.generateInstructions(this.examples, {
-      format: 'json',
+      format: this.outputFormat,
       verbosity: 'concise'
     });
     return instructions;
@@ -78,6 +105,8 @@ export class TemplatedPrompt {
 
       // Process template and execute with retry logic
       let lastError = null;
+      let lastResponse = null;
+      let lastDetectedFormat = null;
       
       for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
         try {
@@ -91,6 +120,7 @@ export class TemplatedPrompt {
 
           // Call LLM
           const response = await this.llmClient.complete(processedPrompt);
+          lastResponse = response; // Save for debugging
           
           // Log response if available
           if (this.sessionLogger) {
@@ -100,6 +130,11 @@ export class TemplatedPrompt {
           // Validate and parse response using ResponseValidator's process method
           const validationResult = this.validator.process(response);
           
+          // Capture detected format if available
+          if (validationResult.format) {
+            lastDetectedFormat = validationResult.format;
+          }
+          
           if (validationResult.success) {
             return {
               success: true,
@@ -108,7 +143,17 @@ export class TemplatedPrompt {
           }
 
           // Validation failed, prepare error for retry
-          lastError = validationResult.errors ? validationResult.errors.join(', ') : 'Validation failed';
+          // Handle error objects properly
+          let errorMessages = [];
+          if (validationResult.errors) {
+            errorMessages = validationResult.errors.map(err => {
+              if (typeof err === 'object') {
+                return err.message || JSON.stringify(err);
+              }
+              return err;
+            });
+          }
+          lastError = errorMessages.length > 0 ? errorMessages.join(', ') : 'Validation failed';
           errors.push(`Attempt ${attempt}: ${lastError}`);
 
           // If not the last attempt, add error feedback for retry
@@ -133,10 +178,20 @@ export class TemplatedPrompt {
         }
       }
 
-      // All attempts failed
+      // All attempts failed - include debug information
       return {
         success: false,
-        errors: errors
+        errors: errors,
+        data: {
+          // Include the final prompt that was sent
+          prompt: this.substituteTemplate(finalPrompt, values),
+          // Include the last LLM response for debugging
+          lastResponse: lastResponse || null,
+          // Include the format that was expected
+          expectedFormat: this.outputFormat,
+          // Include what format was detected
+          detectedFormat: lastDetectedFormat || 'unknown'
+        }
       };
 
     } catch (error) {
@@ -149,30 +204,41 @@ export class TemplatedPrompt {
   }
 
   /**
-   * Substitute placeholders in template with values
+   * Substitute placeholders in template with values using Handlebars
    */
   substituteTemplate(template, values) {
-    let result = template;
-
-    // Replace all placeholders
-    for (const [key, value] of Object.entries(values)) {
-      const placeholder = `{{${key}}}`;
-      const regex = new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+    try {
+      // Compile the template with Handlebars
+      const compiledTemplate = Handlebars.compile(template);
       
-      // Handle different value types
-      let replacement;
-      if (value === null || value === undefined) {
-        replacement = '';
-      } else if (typeof value === 'object') {
-        replacement = JSON.stringify(value, null, 2);
-      } else {
-        replacement = String(value);
+      // Execute the template with the provided values
+      return compiledTemplate(values);
+    } catch (error) {
+      // If Handlebars fails, fall back to simple substitution for backwards compatibility
+      console.warn('Handlebars template compilation failed, falling back to simple substitution:', error.message);
+      
+      let result = template;
+
+      // Replace all simple placeholders (no loops/conditionals)
+      for (const [key, value] of Object.entries(values)) {
+        const placeholder = `{{${key}}}`;
+        const regex = new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+        
+        // Handle different value types
+        let replacement;
+        if (value === null || value === undefined) {
+          replacement = '';
+        } else if (typeof value === 'object') {
+          replacement = JSON.stringify(value, null, 2);
+        } else {
+          replacement = String(value);
+        }
+
+        result = result.replace(regex, replacement);
       }
 
-      result = result.replace(regex, replacement);
+      return result;
     }
-
-    return result;
   }
 
   /**

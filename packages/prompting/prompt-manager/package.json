@@ -25,7 +25,8 @@
     "@legion/kg-object-query": "file:../../km/kg-object-query",
     "@legion/prompt-builder": "file:../prompt-builder", 
     "@legion/output-schema": "file:../output-schema",
-    "@legion/resource-manager": "file:../../resource-manager"
+    "@legion/resource-manager": "file:../../resource-manager",
+    "handlebars": "^4.7.8"
   },
   "devDependencies": {
     "jest": "^29.0.0"

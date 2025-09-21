@@ -22,7 +22,6 @@ export class ResponseValidator {
     this.schema = schema;
     this.options = {
       strictMode: false,
-      preferredFormat: 'auto',
       autoRepair: true,
       partialResults: true,
       coerceTypes: true,
@@ -64,8 +63,11 @@ export class ResponseValidator {
    * @returns {string} Generated prompt instructions
    */
   generateInstructions(exampleData, options = {}) {
+    // Detect format from schema x-output-format, or use provided format, or default to JSON
+    const format = this.schema['x-output-format'] || options.format || 'json';
+    
     const instructionOptions = {
-      format: this.options.preferredFormat === 'auto' ? 'json' : this.options.preferredFormat,
+      format: format,
       verbosity: 'detailed',
       includeExample: !!exampleData,
       includeConstraints: true,

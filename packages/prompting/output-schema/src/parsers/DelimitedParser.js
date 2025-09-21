@@ -53,56 +53,77 @@ export class DelimitedParser {
     let match;
 
     while ((match = sectionPattern.exec(text)) !== null) {
-      const sectionName = match[1].toLowerCase();
+      const rawSectionName = match[1];
       let sectionContent = match[2].trim();
       
       // Remove explicit end marker if present
-      const endMarker = new RegExp(`---END-${match[1]}---`, 'i');
+      const endMarker = new RegExp(`---END-${rawSectionName}---`, 'i');
       sectionContent = sectionContent.replace(endMarker, '').trim();
       
-      // Parse array content if it looks like a list
-      if (this._isListContent(sectionContent)) {
-        result[sectionName] = this._parseListContent(sectionContent);
-      } else {
-        result[sectionName] = sectionContent;
-      }
+      // Map section name to schema property name
+      const propertyName = this._mapSectionToProperty(rawSectionName);
+      
+      // Try to parse JSON content if it looks like JSON, otherwise return raw text
+      result[propertyName] = this._parseContent(sectionContent);
     }
 
     return result;
   }
 
   /**
-   * Check if content looks like a list
+   * Map delimiter section name to schema property name
    * @private
    */
-  _isListContent(content) {
-    const lines = content.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-    if (lines.length <= 1) return false;
+  _mapSectionToProperty(sectionName) {
+    // Get schema properties
+    const schemaProperties = this.schema.properties || {};
+    const propertyNames = Object.keys(schemaProperties);
     
-    // Check for numbered lists
-    const numberedPattern = /^\d+\.\s+/;
-    const numberedCount = lines.filter(line => numberedPattern.test(line)).length;
+    // Try exact match first
+    if (propertyNames.includes(sectionName)) {
+      return sectionName;
+    }
     
-    // Check for bullet lists
-    const bulletPattern = /^[-*•]\s+/;
-    const bulletCount = lines.filter(line => bulletPattern.test(line)).length;
+    // Try lowercase match
+    const lowerSection = sectionName.toLowerCase();
+    if (propertyNames.includes(lowerSection)) {
+      return lowerSection;
+    }
     
-    return numberedCount >= lines.length * 0.7 || bulletCount >= lines.length * 0.7;
+    // Try case-insensitive match
+    const matchingProperty = propertyNames.find(prop => 
+      prop.toLowerCase() === lowerSection
+    );
+    
+    if (matchingProperty) {
+      return matchingProperty;
+    }
+    
+    // If no match found, return the original section name converted to lowercase
+    // This maintains backwards compatibility
+    return lowerSection;
   }
 
   /**
-   * Parse list content into array
+   * Parse content - if it looks like JSON, parse it; otherwise return as string
    * @private
    */
-  _parseListContent(content) {
-    const lines = content.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  _parseContent(content) {
+    // Try to detect if content is JSON
+    const trimmed = content.trim();
     
-    return lines.map(line => {
-      // Remove list markers
-      return line
-        .replace(/^\d+\.\s+/, '')  // Remove "1. "
-        .replace(/^[-*•]\s+/, '')  // Remove "- " or "* " or "• "
-        .trim();
-    });
+    // Check if it looks like JSON array or object
+    if ((trimmed.startsWith('[') && trimmed.endsWith(']')) ||
+        (trimmed.startsWith('{') && trimmed.endsWith('}'))) {
+      try {
+        return JSON.parse(trimmed);
+      } catch (e) {
+        // If JSON parsing fails, return as string
+        return content;
+      }
+    }
+    
+    // Not JSON-like, return as string
+    return content;
   }
 }

@@ -86,7 +86,14 @@ export default class TaskClassifier {
       // Validate result complexity
       const data = result.data;
       if (!data.complexity || !['SIMPLE', 'COMPLEX'].includes(data.complexity)) {
-        data.complexity = 'COMPLEX'; // Default to COMPLEX if unclear
+        // Invalid complexity value - return error format
+        console.warn('Task classification failed: Invalid complexity value:', data.complexity);
+        return {
+          complexity: 'COMPLEX',
+          reasoning: `Classification error: Invalid complexity value received`,
+          suggestedApproach: 'Break down into subtasks due to classification error',
+          estimatedSteps: 5
+        };
       }
       
       // Session logging is handled by the agent, not the strategy

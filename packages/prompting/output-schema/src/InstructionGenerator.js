@@ -184,27 +184,51 @@ export class InstructionGenerator {
       json: [
         'Return ONLY valid JSON, no additional text or markdown',
         'Use double quotes for all string keys and values',
-        'No trailing commas in JSON'
+        'No trailing commas in JSON',
+        'Do NOT include any explanatory text before or after the JSON',
+        'Do NOT wrap the JSON in code blocks or markdown'
       ],
       xml: [
+        'Return ONLY valid XML, no additional text',
         'Ensure all opening tags have matching closing tags',
         'Use proper XML syntax with < and > characters',
-        'Close self-closing tags with />'
+        'Close self-closing tags with />',
+        'Do NOT include any explanatory text before or after the XML'
       ],
       delimited: [
-        'Use exact delimiter format as shown',
+        'Return ONLY the delimited sections as shown',
+        'Use exact delimiter format (three dashes followed by section name)',
         'Include all required sections',
-        'Keep section content between delimiters'
+        'Keep section content between delimiters',
+        'Do NOT include any explanatory text before or after the sections',
+        'Do NOT add any commentary or descriptions',
+        'Start immediately with the first delimiter'
       ]
     };
 
     const errors = commonErrors[format] || [];
     if (errors.length === 0) return '';
 
-    let section = 'IMPORTANT:\n';
+    let section = '\nCRITICAL REQUIREMENTS:\n';
     errors.forEach(error => {
       section += `- ${error}\n`;
     });
+    
+    // Add final emphatic instruction
+    section += '\n**FINAL INSTRUCTION**: ';
+    switch (format) {
+      case 'json':
+        section += 'Your response must be ONLY valid JSON. No other text.\n';
+        break;
+      case 'xml':
+        section += 'Your response must be ONLY valid XML. No other text.\n';
+        break;
+      case 'delimited':
+        section += 'Your response must start with the first delimiter (---) and contain ONLY the delimited sections. No introductory or explanatory text.\n';
+        break;
+      default:
+        section += `Your response must be ONLY in ${format} format. No other text.\n`;
+    }
     section += '\n';
 
     return section;
