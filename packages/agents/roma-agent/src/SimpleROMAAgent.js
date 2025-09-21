@@ -129,14 +129,6 @@ export default class SimpleROMAAgent {
   }
 
   /**
-   * Set the task execution strategy
-   * @param {TaskStrategy} strategy - The strategy to use
-   */
-  setTaskStrategy(strategy) {
-    this.taskStrategy = strategy;
-  }
-
-  /**
    * Run a task - delegates to the task's own execute method
    */
   async _runTask(task) {

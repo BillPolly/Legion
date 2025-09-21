@@ -209,3 +209,5 @@ when you are fixing tests READ THE ACTAUL code being tested! do not guess
 NO BACWARDS COMPATIBILITY EVER! we only ever have one way of doing things.
 
 NEVER skip tests, FAIL FAST!
+
+test files always use jest and always go under __tests__ in the package root
