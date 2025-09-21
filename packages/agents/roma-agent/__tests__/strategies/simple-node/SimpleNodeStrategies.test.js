@@ -6,7 +6,7 @@
 
 import { jest } from '@jest/globals';
 import { ResourceManager } from '@legion/resource-manager';
-import { ToolRegistry } from '@legion/tools-registry';
+import { getToolRegistry } from '@legion/tools-registry';
 import { 
   SimpleNodeServerStrategy, 
   SimpleNodeTestStrategy, 
@@ -66,7 +66,7 @@ describe('Simple Node.js Strategies', () => {
     resourceManager = await ResourceManager.getInstance();
     
     // Get services
-    toolRegistry = await ToolRegistry.getInstance();
+    toolRegistry = await getToolRegistry();
     llmClient = await resourceManager.get('llmClient');
   }, 30000);
   

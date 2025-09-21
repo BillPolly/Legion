@@ -93,49 +93,22 @@ export class StreamProxy extends Handle {
   }
   
   /**
-   * Filter stream results
+   * Create filtered StreamProxy with predicate function
    * @param {Function} predicate - Filter predicate function
-   * @returns {StreamProxy} New StreamProxy with filtered results
+   * @returns {StreamProxy} New filtered StreamProxy instance
    */
   filter(predicate) {
     this._validateNotDestroyed();
     
-    // Validate filter predicate
     if (!predicate || typeof predicate !== 'function') {
       throw new Error('Filter predicate function is required');
     }
     
-    // Create a wrapper that filters the query results
-    const filteredSpec = {
-      find: this.querySpec.find,
-      where: this.querySpec.where,
-      _filter: predicate // Store filter for later application
-    };
-    
-    // Return a new StreamProxy with filter wrapper
-    const FilteredStreamProxy = class extends StreamProxy {
-      value() {
-        const results = super.value();
-        return results.filter(predicate);
-      }
-      
-      subscribe(callbackOrQuerySpec, maybeCallback) {
-        const actualCallback = maybeCallback || callbackOrQuerySpec;
-        const wrappedCallback = (results) => {
-          const filtered = results.filter(predicate);
-          actualCallback(filtered);
-        };
-        
-        if (maybeCallback) {
-          return super.subscribe(callbackOrQuerySpec, wrappedCallback);
-        } else {
-          return super.subscribe(wrappedCallback);
-        }
-      }
-    };
-    
-    return new FilteredStreamProxy(this.resourceManager, this.querySpec);
+    // Create new StreamProxy that applies the filter
+    const filteredProxy = new FilteredStreamProxy(this.resourceManager, this.querySpec, predicate);
+    return filteredProxy;
   }
+  
   
   /**
    * Create subscription for continuous result streaming
@@ -169,6 +142,105 @@ export class StreamProxy extends Handle {
     
     // Create subscription through resourceManager
     const resourceSubscription = this.resourceManager.subscribe(querySpec, callbackFn);
+    
+    // Create wrapper subscription that integrates with Handle's subscription tracking
+    const wrapperSubscription = {
+      id: resourceSubscription.id,
+      unsubscribe: () => {
+        this._subscriptions.delete(wrapperSubscription);
+        resourceSubscription.unsubscribe();
+      }
+    };
+    
+    // Track subscription for cleanup
+    this._subscriptions.add(wrapperSubscription);
+    
+    return wrapperSubscription;
+  }
+}
+
+/**
+ * FilteredStreamProxy - StreamProxy that applies filtering to results
+ * Extends StreamProxy to add filtering capability
+ */
+class FilteredStreamProxy extends StreamProxy {
+  constructor(resourceManager, querySpec, predicate) {
+    super(resourceManager, querySpec);
+    this.predicate = predicate;
+  }
+  
+  /**
+   * Get current query results with filter applied
+   * @returns {Array} Filtered query results
+   */
+  value() {
+    this._validateNotDestroyed();
+    
+    const results = this.resourceManager.query(this.querySpec);
+    
+    if (!Array.isArray(results)) {
+      return results;
+    }
+    
+    // Apply filter predicate
+    return results.filter(item => {
+      try {
+        return this.predicate(item);
+      } catch (error) {
+        // If predicate throws, exclude the item
+        return false;
+      }
+    });
+  }
+  
+  /**
+   * Create subscription with filtering applied to callback
+   * @param {Object|Function} querySpecOrCallback - Query specification or callback
+   * @param {Function} [callback] - Callback function for updates
+   * @returns {Object} Subscription object with unsubscribe method
+   */
+  subscribe(querySpecOrCallback, callback) {
+    this._validateNotDestroyed();
+    
+    let querySpec;
+    let callbackFn;
+    
+    // Handle overloaded parameters
+    if (typeof querySpecOrCallback === 'function') {
+      // First parameter is the callback - monitor current stream query
+      callbackFn = querySpecOrCallback;
+      querySpec = this.querySpec;
+    } else if (callback === undefined) {
+      // Single parameter that's not a function - invalid
+      this._validateCallback(querySpecOrCallback);
+    } else {
+      // Traditional call with querySpec and callback
+      querySpec = querySpecOrCallback;
+      callbackFn = callback;
+    }
+    
+    // Validate parameters
+    this._validateQuerySpec(querySpec);
+    this._validateCallback(callbackFn);
+    
+    // Create wrapped callback that applies filtering
+    const filteredCallback = (results) => {
+      if (Array.isArray(results)) {
+        const filteredResults = results.filter(item => {
+          try {
+            return this.predicate(item);
+          } catch (error) {
+            return false;
+          }
+        });
+        callbackFn(filteredResults);
+      } else {
+        callbackFn(results);
+      }
+    };
+    
+    // Create subscription through resourceManager with filtered callback
+    const resourceSubscription = this.resourceManager.subscribe(querySpec, filteredCallback);
     
     // Create wrapper subscription that integrates with Handle's subscription tracking
     const wrapperSubscription = {

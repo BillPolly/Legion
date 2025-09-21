@@ -6,8 +6,12 @@
  */
 
 import { TaskStrategy } from '@legion/tasks';
-import PromptFactory from '../../utils/PromptFactory.js';
+import { EnhancedPromptRegistry } from '@legion/prompting-manager';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default class SimpleNodeTestStrategy extends TaskStrategy {
   constructor(llmClient = null, toolRegistry = null, options = {}) {
@@ -24,8 +28,9 @@ export default class SimpleNodeTestStrategy extends TaskStrategy {
       commandExecutor: null
     };
     
-    // Prompts will be created during initialization
-    this.prompts = null;
+    // Initialize prompt registry
+    const promptsPath = path.resolve(__dirname, '../../../prompts');
+    this.promptRegistry = new EnhancedPromptRegistry(promptsPath);
   }
   
   getName() {
@@ -52,16 +57,47 @@ export default class SimpleNodeTestStrategy extends TaskStrategy {
     this.tools.fileWrite = await this.toolRegistry.getTool('file_write');
     this.tools.fileRead = await this.toolRegistry.getTool('file_read');
     this.tools.commandExecutor = await this.toolRegistry.getTool('command_executor');
-    
-    // Create prompts using PromptFactory
-    this.prompts = PromptFactory.createPrompts(
-      this._getPromptDefinitions(),
-      this.llmClient
-    );
   }
   
   /**
-   * Define all prompts as data
+   * Execute prompt with LLM
+   */
+  async _executePrompt(promptPath, variables) {
+    const prompt = await this.promptRegistry.fill(promptPath, variables);
+    const response = await this.llmClient.complete(prompt);
+    
+    // Parse response based on expected format
+    const metadata = await this.promptRegistry.getMetadata(promptPath);
+    
+    if (metadata.responseFormat === 'json') {
+      try {
+        // Extract JSON from response
+        const jsonMatch = response.match(/```json\s*([\s\S]*?)```/) || response.match(/{[\s\S]*}/);        
+        const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : response;
+        const data = JSON.parse(jsonStr);
+        return { success: true, data };
+      } catch (error) {
+        return { success: false, errors: [`Failed to parse JSON: ${error.message}`] };
+      }
+    } else if (metadata.responseFormat === 'delimited') {
+      // For delimited responses, extract code and description
+      const codeMatch = response.match(/```(?:javascript|js)?\s*([\s\S]*?)```/);
+      const descMatch = response.match(/description:\s*([^\n]+)/i);
+      
+      return {
+        success: true,
+        data: {
+          testCode: codeMatch ? codeMatch[1].trim() : response,
+          testDescription: descMatch ? descMatch[1].trim() : 'Test code generated'
+        }
+      };
+    }
+    
+    return { success: true, data: response };
+  }
+  
+  /**
+   * DEPRECATED: Define all prompts as data
    */
   _getPromptDefinitions() {
     return {
@@ -330,8 +366,8 @@ Include:
    * Analyze code to identify test targets
    */
   async _analyzeCode(code) {
-    const result = await PromptFactory.executePrompt(
-      this.prompts.analyzeCodeForTesting,
+    const result = await this._executePrompt(
+      'strategies/simple-node/test/analyze-code',
       { code: code }
     );
     
@@ -346,13 +382,16 @@ Include:
    * Generate test for a specific target
    */
   async _generateTest(target, edgeCases) {
-    const result = await PromptFactory.executePrompt(
-      this.prompts.generateTestCode,
+    // Format edge cases for template
+    const edgeCasesStr = (edgeCases || []).map(e => `- ${e}`).join('\n');
+    
+    const result = await this._executePrompt(
+      'strategies/simple-node/test/generate-test',
       {
         targetName: target.name,
         targetType: target.type,
         targetDescription: target.description,
-        edgeCases: edgeCases || []
+        edgeCases: edgeCasesStr
       }
     );
     
@@ -367,8 +406,8 @@ Include:
    * Generate test configuration
    */
   async _generateTestConfig(testFiles) {
-    const result = await PromptFactory.executePrompt(
-      this.prompts.generateTestScript,
+    const result = await this._executePrompt(
+      'strategies/simple-node/test/generate-test-config',
       {
         testFiles: testFiles.join(', ')
       }

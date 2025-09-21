@@ -23,9 +23,10 @@
   "license": "MIT",
   "dependencies": {
     "@legion/kg-object-query": "file:../../km/kg-object-query",
-    "@legion/prompt-builder": "file:../prompt-builder", 
     "@legion/output-schema": "file:../output-schema",
+    "@legion/prompt-builder": "file:../prompt-builder",
     "@legion/resource-manager": "file:../../resource-manager",
+    "gray-matter": "^4.0.3",
     "handlebars": "^4.7.8"
   },
   "devDependencies": {

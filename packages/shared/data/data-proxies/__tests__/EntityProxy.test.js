@@ -6,6 +6,7 @@
  */
 
 import { EntityProxy } from '../src/EntityProxy.js';
+import { DefaultQueryBuilder } from '../src/DefaultQueryBuilder.js';
 import { Handle } from '@legion/handle';
 
 // Import jest for spies and mocks
@@ -16,6 +17,10 @@ class MockResourceManager {
   constructor() {
     this.entities = new Map();
     this.subscribers = [];
+  }
+  
+  queryBuilder(sourceHandle) {
+    return new DefaultQueryBuilder(this, sourceHandle);
   }
   
   query(spec) {
@@ -401,6 +406,9 @@ describe('EntityProxy extending Handle', () => {
         },
         getSchema() {
           return { version: '1.0.0' };
+        },
+        queryBuilder(sourceHandle) {
+          return new DefaultQueryBuilder(this, sourceHandle);
         }
       };
       

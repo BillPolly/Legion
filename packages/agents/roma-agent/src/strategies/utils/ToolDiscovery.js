@@ -7,6 +7,12 @@
  * 3. Better semantic matching than direct task-to-tool search
  */
 
+import { EnhancedPromptRegistry } from '@legion/prompting-manager';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 export default class ToolDiscovery {
   constructor(llmClient, toolRegistry) {
     this.llmClient = llmClient;
@@ -16,6 +22,10 @@ export default class ToolDiscovery {
     this.minDescriptions = 5;
     this.maxDescriptions = 8;
     this.toolCache = new Map(); // Cache discovered tools by name
+    
+    // Initialize prompt registry
+    const promptsPath = path.resolve(__dirname, '../../../prompts');
+    this.promptRegistry = new EnhancedPromptRegistry(promptsPath);
   }
 
   /**
@@ -71,43 +81,11 @@ export default class ToolDiscovery {
    * @returns {Promise<Array<string>>} Array of tool descriptions
    */
   async generateToolDescriptions(taskDescription) {
-    const prompt = `
-Given this task: "${taskDescription}"
-
-Generate tool descriptions at TWO levels:
-
-1. GENERAL/HIGH-LEVEL descriptions (2-3):
-   - Code generation tools: "write JavaScript code", "generate Node.js program", "create TypeScript file"
-   - File creation tools: "write file to disk", "create new file"
-   - Think of tools that would GENERATE CODE or CREATE FILES
-
-2. SPECIFIC/DETAILED descriptions (3-5):
-   - Concrete action tools (e.g., "hash password", "read file", "parse JSON")
-   - Step-by-step operation tools
-   - Think of tools that would PERFORM SPECIFIC OPERATIONS
-
-Total: ${this.minDescriptions}-${this.maxDescriptions + 2} descriptions mixing both levels.
-
-Each description should:
-- Be 1-2 sentences describing a tool capability
-- Focus on the ACTION the tool performs
-- Be searchable (avoid vague terms like "process" or "handle")
-
-Format as a JSON array of strings:
-["description1", "description2", ...]
-
-Example for task "Create REST API endpoint for user authentication":
-[
-  "Write JavaScript code to implement the solution",
-  "Generate Node.js program file with the required logic",
-  "Create new file on disk with the endpoint code",
-  "Hash passwords using bcrypt algorithm",
-  "Generate and validate JWT tokens",
-  "Query database for user credentials",
-  "Validate request payload structure"
-]
-
-IMPORTANT: Include descriptions for BOTH code/file generation AND specific operations.`;
+    const prompt = await this.promptRegistry.fill('utils/tools/generate-descriptions', {
+      taskDescription,
+      minDescriptions: this.minDescriptions,
+      maxDescriptions: this.maxDescriptions + 2
+    });
 
     try {
       // Use the exact format from decent planner - just pass the prompt string

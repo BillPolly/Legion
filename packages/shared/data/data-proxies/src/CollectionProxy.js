@@ -121,35 +121,38 @@ export class CollectionProxy extends Handle {
     return this.getIsEmpty();
   }
   
-  get first() {
-    return this.getFirst();
-  }
-  
-  get last() {
-    return this.getLast();
+  /**
+   * Override Handle's first() method to handle both collection-based and DataStore-based scenarios
+   * @returns {Object|null} First entity or null if empty
+   */
+  first() {
+    // Check if we're using a collection-based ResourceManager (like PlainObjectResourceManager)
+    // vs a DataStore-based one. Collection-based should use Handle's query combinator methods.
+    if (this.collectionSpec && this.collectionSpec.collection) {
+      // Collection-based - delegate to Handle's first() method which uses query builders
+      return super.first();
+    } else {
+      // DataStore-based - use CollectionProxy's getFirst() method
+      return this.getFirst();
+    }
   }
   
   /**
-   * Filter collection entities
-   * @param {Function} predicate - Filter predicate function
-   * @returns {Array} Filtered array of entities
+   * Override Handle's last() method to handle both collection-based and DataStore-based scenarios
+   * @returns {Object|null} Last entity or null if empty
    */
-  filter(predicate) {
-    if (typeof predicate !== 'function') {
-      throw new Error('Filter predicate must be a function');
+  last() {
+    // Check if we're using a collection-based ResourceManager (like PlainObjectResourceManager)
+    // vs a DataStore-based one. Collection-based should use Handle's query combinator methods.
+    if (this.collectionSpec && this.collectionSpec.collection) {
+      // Collection-based - delegate to Handle's last() method which uses query builders
+      return super.last();
+    } else {
+      // DataStore-based - use CollectionProxy's getLast() method
+      return this.getLast();
     }
-    
-    const entities = this.toArray();
-    const results = [];
-    
-    for (const entity of entities) {
-      if (predicate(entity)) {
-        results.push(entity);
-      }
-    }
-    
-    return results;
   }
+  
   
   /**
    * Map over collection entities
@@ -172,6 +175,30 @@ export class CollectionProxy extends Handle {
     return results;
   }
   
+  /**
+   * Filter collection entities
+   * @param {Function} predicate - Filter predicate function
+   * @returns {Array} Filtered array of entities
+   */
+  filter(predicate) {
+    this._validateNotDestroyed();
+    
+    if (typeof predicate !== 'function') {
+      throw new Error('Filter predicate function is required');
+    }
+    
+    const entities = this.toArray();
+    
+    return entities.filter(entity => {
+      try {
+        return predicate(entity);
+      } catch (error) {
+        // If predicate throws, exclude the item
+        return false;
+      }
+    });
+  }
+
   /**
    * Find entity in collection
    * @param {Function} predicate - Search predicate function
@@ -238,7 +265,7 @@ export class CollectionProxy extends Handle {
   }
   
   /**
-   * Convert collection to array
+   * Convert collection to array (CollectionProxy-specific implementation)
    * @returns {Array} Array of entities
    */
   toArray() {
@@ -246,6 +273,21 @@ export class CollectionProxy extends Handle {
       throw new Error('Handle has been destroyed');
     }
     
+    // Check if this is being called from Handle's query combinator toArray()
+    // If so, delegate to ResourceManager's query builder
+    if (this._isQueryCombinatorCall) {
+      return super.toArray();
+    }
+    
+    // Handle collection-based specs (e.g., { collection: 'users' })
+    // These should return data directly from the ResourceManager
+    if (this.collectionSpec && this.collectionSpec.collection) {
+      const results = this.resourceManager.query(this.collectionSpec);
+      return Array.isArray(results) ? results : [];
+    }
+    
+    // Handle DataStore-based specs (e.g., { find: ['?e'], where: [...] })
+    // These use entity IDs and need conversion
     const entityIds = this._getEntityIds();
     const entities = [];
     
@@ -482,6 +524,17 @@ export class CollectionProxy extends Handle {
       throw new Error('Collection specification must be an object');
     }
     
+    // Support both DataStore-style queries and simple collection names
+    if (collectionSpec.collection) {
+      // Simple collection-based specification (for plain object/API ResourceManagers)
+      if (typeof collectionSpec.collection !== 'string') {
+        throw new Error('Collection name must be a string');
+      }
+      // No further validation needed for simple collection specs
+      return;
+    }
+    
+    // DataStore-style query specification
     if (!collectionSpec.find || (Array.isArray(collectionSpec.find) && collectionSpec.find.length === 0)) {
       throw new Error('Collection specification must have find clause');
     }

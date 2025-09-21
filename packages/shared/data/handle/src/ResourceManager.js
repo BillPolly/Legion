@@ -90,6 +90,22 @@ export const ResourceManagerInterface = {
    */
   getMetadata: () => {
     throw new Error('ResourceManager getMetadata() method not implemented');
+  },
+  
+  /**
+   * Create query builder for Handle - REQUIRED METHOD
+   * CRITICAL: Must be synchronous - no await!
+   * 
+   * Returns a query builder that can create new Handle projections through
+   * query combinator methods. The query builder analyzes the Handle type
+   * and creates appropriate projections (collections, entities, streams, scalars).
+   * 
+   * @param {Handle} sourceHandle - Handle to build queries from
+   * @returns {Object} Query builder object with combinator methods
+   * @throws {Error} If query builder cannot be created
+   */
+  queryBuilder: (sourceHandle) => {
+    throw new Error('ResourceManager must implement queryBuilder(sourceHandle) method');
   }
 };
 
@@ -107,7 +123,7 @@ export function validateResourceManagerInterface(resourceManager, context = 'Res
   }
   
   // Check required methods
-  const requiredMethods = ['query', 'subscribe', 'getSchema'];
+  const requiredMethods = ['query', 'subscribe', 'getSchema', 'queryBuilder'];
   
   for (const method of requiredMethods) {
     if (typeof resourceManager[method] !== 'function') {
@@ -240,9 +256,25 @@ export class ResourceManagerTemplate {
         query: true,
         subscribe: true,
         update: typeof this.update === 'function',
-        validate: typeof this.validate === 'function'
+        validate: typeof this.validate === 'function',
+        queryBuilder: true
       }
     };
+  }
+  
+  /**
+   * REQUIRED: Implement query builder creation
+   * CRITICAL: Must be synchronous - no await!
+   */
+  queryBuilder(sourceHandle) {
+    if (!sourceHandle) {
+      throw new Error('Source Handle is required for query builder');
+    }
+    
+    // Return a query builder that can create projections
+    // This is a basic template - real implementations should provide
+    // resource-specific query builders (e.g., DataStoreQueryBuilder)
+    return this._createQueryBuilder(sourceHandle);
   }
   
   // Implementation-specific methods (adapt to your data source)
@@ -302,6 +334,78 @@ export class ResourceManagerTemplate {
     // Validate data against schema
     // Return true if valid, false otherwise
     return true; // Simplified - implement based on your schema
+  }
+  
+  _createQueryBuilder(sourceHandle) {
+    // Create a basic query builder template
+    // Real implementations should replace this with resource-specific builders
+    
+    const builder = {
+      _sourceHandle: sourceHandle,
+      _operations: [],
+      
+      // Add operation to chain
+      _addOperation(type, ...args) {
+        this._operations.push({ type, args });
+        return this; // Return self for chaining
+      },
+      
+      // Combinator methods that return new query builders
+      where(predicate) {
+        return this._addOperation('where', predicate);
+      },
+      
+      select(mapper) {
+        return this._addOperation('select', mapper);
+      },
+      
+      join(otherHandle, joinCondition) {
+        return this._addOperation('join', otherHandle, joinCondition);
+      },
+      
+      orderBy(orderBy, direction = 'asc') {
+        return this._addOperation('orderBy', orderBy, direction);
+      },
+      
+      limit(count) {
+        return this._addOperation('limit', count);
+      },
+      
+      skip(count) {
+        return this._addOperation('skip', count);
+      },
+      
+      groupBy(groupBy) {
+        return this._addOperation('groupBy', groupBy);
+      },
+      
+      aggregate(aggregateFunction, field) {
+        return this._addOperation('aggregate', aggregateFunction, field);
+      },
+      
+      // Terminal methods that execute the query
+      first() {
+        // Execute operations and return first result as appropriate Handle type
+        throw new Error('_createQueryBuilder first() must be implemented by ResourceManager');
+      },
+      
+      last() {
+        // Execute operations and return last result as appropriate Handle type
+        throw new Error('_createQueryBuilder last() must be implemented by ResourceManager');
+      },
+      
+      count() {
+        // Execute operations and return count
+        throw new Error('_createQueryBuilder count() must be implemented by ResourceManager');
+      },
+      
+      toArray() {
+        // Execute operations and return array of results
+        throw new Error('_createQueryBuilder toArray() must be implemented by ResourceManager');
+      }
+    };
+    
+    return builder;
   }
 }
 

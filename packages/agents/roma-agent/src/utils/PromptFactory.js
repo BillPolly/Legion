@@ -67,6 +67,7 @@
  * { code: 'function hello() { return "Hello"; }', explanation: '...' }
  */
 
+// Import real dependencies - NO MOCKS IN IMPLEMENTATION CODE!
 import { TemplatedPrompt } from '@legion/prompting-manager';
 import { ResponseValidator } from '@legion/output-schema';
 

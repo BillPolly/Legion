@@ -452,7 +452,7 @@ export class PrototypeFactory {
     this.registerSchemaAdapter('datascript', {
       analyze: (schema) => {
         const types = new Map();
-        const relationships = new Map();
+        const relationships = new Map(); // Keep for backward compatibility but don't use
         const capabilities = new Map();
         
         // Parse DataScript schema format
@@ -473,28 +473,16 @@ export class PrototypeFactory {
             });
           }
           
-          // Add attribute info
+          // Add ALL attributes (including refs) to attributes map with unified handling
           types.get(typeName).attributes.set(attrLocalName, {
             fullName: attrName,
             type: attrDef[':db/valueType']?.replace(':db.type/', '') || 'string',
+            valueType: attrDef[':db/valueType'] === ':db.type/ref' ? 'ref' : 'scalar',
             cardinality: attrDef[':db/cardinality']?.replace(':db.cardinality/', '') || 'one',
             required: attrDef[':db/required'] || false,
             unique: attrDef[':db/unique'] || false,
             definition: attrDef
           });
-          
-          // Track relationships
-          if (attrDef[':db/valueType'] === ':db.type/ref') {
-            if (!relationships.has(typeName)) {
-              relationships.set(typeName, new Map());
-            }
-            relationships.get(typeName).set(attrLocalName, {
-              type: 'reference',
-              targetType: 'unknown', // Would need more analysis to determine
-              cardinality: attrDef[':db/cardinality']?.replace(':db.cardinality/', '') || 'one',
-              fullName: attrName
-            });
-          }
         }
         
         return { types, relationships, capabilities };

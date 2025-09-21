@@ -8,6 +8,8 @@
  * Handle validation expects specific method signatures.
  */
 
+import { DefaultQueryBuilder } from './DefaultQueryBuilder.js';
+
 export class DataStoreResourceManager {
   constructor(dataStore) {
     
@@ -83,6 +85,15 @@ export class DataStoreResourceManager {
     } catch (error) {
       throw error;
     }
+  }
+  
+  /**
+   * Create query builder for Handle-based queries
+   * @param {Object} sourceHandle - Handle that initiated the query
+   * @returns {Object} Query builder instance
+   */
+  queryBuilder(sourceHandle) {
+    return new DefaultQueryBuilder(this, sourceHandle);
   }
   
   /**

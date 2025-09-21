@@ -293,4 +293,211 @@ export class Handle extends Actor {
       throw new Error(`${context} function is required`);
     }
   }
+  
+  // Query Combinator Methods - Universal projection pattern
+  
+  /**
+   * Filter entities using a predicate function
+   * Creates new proxy through projection with filter applied
+   * @param {Function} predicate - Filter predicate function
+   * @returns {Handle} New Handle proxy with filter applied
+   */
+  where(predicate) {
+    this._validateNotDestroyed();
+    
+    if (!predicate || typeof predicate !== 'function') {
+      throw new Error('Where predicate function is required');
+    }
+    
+    // Delegate to ResourceManager's query builder for universal handling
+    return this.resourceManager.queryBuilder(this).where(predicate);
+  }
+  
+  /**
+   * Transform entities using a mapper function
+   * Creates new proxy through projection with transformation applied
+   * @param {Function} mapper - Transformation function
+   * @returns {Handle} New Handle proxy with transformation applied
+   */
+  select(mapper) {
+    this._validateNotDestroyed();
+    
+    if (!mapper || typeof mapper !== 'function') {
+      throw new Error('Select mapper function is required');
+    }
+    
+    // Delegate to ResourceManager's query builder for universal handling
+    return this.resourceManager.queryBuilder(this).select(mapper);
+  }
+  
+  /**
+   * Join with another Handle using a join condition
+   * Creates new proxy through projection with join applied
+   * @param {Handle} otherHandle - Handle to join with
+   * @param {Function|string} joinCondition - Join condition function or attribute name
+   * @returns {Handle} New Handle proxy with join applied
+   */
+  join(otherHandle, joinCondition) {
+    this._validateNotDestroyed();
+    
+    if (!otherHandle || !(otherHandle instanceof Handle)) {
+      throw new Error('Join requires another Handle instance');
+    }
+    
+    if (!joinCondition) {
+      throw new Error('Join condition is required');
+    }
+    
+    // Delegate to ResourceManager's query builder for universal handling
+    return this.resourceManager.queryBuilder(this).join(otherHandle, joinCondition);
+  }
+  
+  /**
+   * Order entities by a key or function
+   * Creates new proxy through projection with ordering applied
+   * @param {Function|string} orderBy - Order function or attribute name
+   * @param {string} direction - 'asc' or 'desc' (default: 'asc')
+   * @returns {Handle} New Handle proxy with ordering applied
+   */
+  orderBy(orderBy, direction = 'asc') {
+    this._validateNotDestroyed();
+    
+    if (!orderBy) {
+      throw new Error('OrderBy field or function is required');
+    }
+    
+    if (direction !== 'asc' && direction !== 'desc') {
+      throw new Error('OrderBy direction must be "asc" or "desc"');
+    }
+    
+    // Delegate to ResourceManager's query builder for universal handling
+    return this.resourceManager.queryBuilder(this).orderBy(orderBy, direction);
+  }
+  
+  /**
+   * Limit the number of results
+   * Creates new proxy through projection with limit applied
+   * @param {number} count - Maximum number of results
+   * @returns {Handle} New Handle proxy with limit applied
+   */
+  limit(count) {
+    this._validateNotDestroyed();
+    
+    if (typeof count !== 'number' || count <= 0) {
+      throw new Error('Limit count must be a positive number');
+    }
+    
+    // Delegate to ResourceManager's query builder for universal handling
+    return this.resourceManager.queryBuilder(this).limit(count);
+  }
+  
+  /**
+   * Skip a number of results
+   * Creates new proxy through projection with offset applied
+   * @param {number} count - Number of results to skip
+   * @returns {Handle} New Handle proxy with offset applied
+   */
+  skip(count) {
+    this._validateNotDestroyed();
+    
+    if (typeof count !== 'number' || count < 0) {
+      throw new Error('Skip count must be a non-negative number');
+    }
+    
+    // Delegate to ResourceManager's query builder for universal handling
+    return this.resourceManager.queryBuilder(this).skip(count);
+  }
+  
+  /**
+   * Group entities by a key or function
+   * Creates new proxy through projection with grouping applied
+   * @param {Function|string} groupBy - Group function or attribute name
+   * @returns {Handle} New Handle proxy with grouping applied
+   */
+  groupBy(groupBy) {
+    this._validateNotDestroyed();
+    
+    if (!groupBy) {
+      throw new Error('GroupBy field or function is required');
+    }
+    
+    // Delegate to ResourceManager's query builder for universal handling
+    return this.resourceManager.queryBuilder(this).groupBy(groupBy);
+  }
+  
+  /**
+   * Aggregate entities using an aggregation function
+   * Creates new proxy through projection with aggregation applied
+   * @param {Function|string} aggregateFunction - Aggregation function ('count', 'sum', 'avg', etc.) or custom function
+   * @param {string} [field] - Field to aggregate (for built-in functions)
+   * @returns {Handle} New Handle proxy with aggregation applied
+   */
+  aggregate(aggregateFunction, field) {
+    this._validateNotDestroyed();
+    
+    if (!aggregateFunction) {
+      throw new Error('Aggregate function is required');
+    }
+    
+    // Delegate to ResourceManager's query builder for universal handling
+    return this.resourceManager.queryBuilder(this).aggregate(aggregateFunction, field);
+  }
+  
+  /**
+   * Take first N results (alias for limit with semantic meaning)
+   * Creates new proxy through projection with take applied
+   * @param {number} count - Number of results to take
+   * @returns {Handle} New Handle proxy with take applied
+   */
+  take(count) {
+    return this.limit(count);
+  }
+  
+  /**
+   * Get first result as entity proxy
+   * Terminal method that returns an EntityProxy or scalar value
+   * @returns {Handle} EntityProxy for first result or null if empty
+   */
+  first() {
+    this._validateNotDestroyed();
+    
+    // Delegate to ResourceManager's query builder for terminal operation
+    return this.resourceManager.queryBuilder(this).first();
+  }
+  
+  /**
+   * Get last result as entity proxy
+   * Terminal method that returns an EntityProxy or scalar value
+   * @returns {Handle} EntityProxy for last result or null if empty
+   */
+  last() {
+    this._validateNotDestroyed();
+    
+    // Delegate to ResourceManager's query builder for terminal operation
+    return this.resourceManager.queryBuilder(this).last();
+  }
+  
+  /**
+   * Count the number of results
+   * Terminal method that returns a scalar value
+   * @returns {number} Count of results
+   */
+  count() {
+    this._validateNotDestroyed();
+    
+    // Delegate to ResourceManager's query builder for terminal operation
+    return this.resourceManager.queryBuilder(this).count();
+  }
+  
+  /**
+   * Execute query and return results as array
+   * Terminal method that materializes the query
+   * @returns {Array} Array of results
+   */
+  toArray() {
+    this._validateNotDestroyed();
+    
+    // Delegate to ResourceManager's query builder for terminal operation
+    return this.resourceManager.queryBuilder(this).toArray();
+  }
 }

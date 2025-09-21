@@ -6,8 +6,12 @@
  */
 
 import { TaskStrategy } from '@legion/tasks';
-import PromptFactory from '../../utils/PromptFactory.js';
+import { EnhancedPromptRegistry } from '@legion/prompting-manager';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default class SimpleNodeDebugStrategy extends TaskStrategy {
   constructor(llmClient = null, toolRegistry = null, options = {}) {
@@ -24,8 +28,9 @@ export default class SimpleNodeDebugStrategy extends TaskStrategy {
       commandExecutor: null
     };
     
-    // Prompts will be created during initialization
-    this.prompts = null;
+    // Initialize prompt registry
+    const promptsPath = path.resolve(__dirname, '../../../prompts');
+    this.promptRegistry = new EnhancedPromptRegistry(promptsPath);
   }
   
   getName() {
@@ -52,16 +57,52 @@ export default class SimpleNodeDebugStrategy extends TaskStrategy {
     this.tools.fileRead = await this.toolRegistry.getTool('file_read');
     this.tools.fileWrite = await this.toolRegistry.getTool('file_write');
     this.tools.commandExecutor = await this.toolRegistry.getTool('command_executor');
-    
-    // Create prompts using PromptFactory
-    this.prompts = PromptFactory.createPrompts(
-      this._getPromptDefinitions(),
-      this.llmClient
-    );
   }
   
   /**
-   * Define all prompts as data
+   * Execute prompt with LLM
+   */
+  async _executePrompt(promptPath, variables) {
+    const prompt = await this.promptRegistry.fill(promptPath, variables);
+    const response = await this.llmClient.complete(prompt);
+    
+    // Parse response based on expected format
+    const metadata = await this.promptRegistry.getMetadata(promptPath);
+    
+    if (metadata.responseFormat === 'json') {
+      try {
+        // Extract JSON from response
+        const jsonMatch = response.match(/```json\s*([\s\S]*?)```/) || response.match(/{[\s\S]*}/);        
+        const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : response;
+        const data = JSON.parse(jsonStr);
+        return { success: true, data };
+      } catch (error) {
+        return { success: false, errors: [`Failed to parse JSON: ${error.message}`] };
+      }
+    } else if (metadata.responseFormat === 'delimited') {
+      // For delimited responses, extract sections
+      const codeMatch = response.match(/```(?:javascript|js)?\s*([\s\S]*?)```/);
+      const explainMatch = response.match(/explanation:\s*([\s\S]*?)(?=testing:|$)/i);
+      const testingMatch = response.match(/testing:\s*([\s\S]*?)$/i);
+      const debugMatch = response.match(/debug\s*points?:\s*([\s\S]*?)$/i);
+      
+      return {
+        success: true,
+        data: {
+          fixedCode: codeMatch ? codeMatch[1].trim() : '',
+          debugCode: codeMatch ? codeMatch[1].trim() : '',
+          explanation: explainMatch ? explainMatch[1].trim() : '',
+          testingSteps: testingMatch ? testingMatch[1].trim() : '',
+          debugPoints: debugMatch ? debugMatch[1].trim() : ''
+        }
+      };
+    }
+    
+    return { success: true, data: response };
+  }
+  
+  /**
+   * DEPRECATED: Define all prompts as data
    */
   _getPromptDefinitions() {
     return {
@@ -308,8 +349,8 @@ Keep changes minimal and focused.`,
     const errorInfo = await this._extractErrorInfo(task);
     
     // Analyze the error
-    const analysis = await PromptFactory.executePrompt(
-      this.prompts.analyzeError,
+    const analysis = await this._executePrompt(
+      'strategies/simple-node/debug/analyze-error',
       {
         errorMessage: errorInfo.message,
         stackTrace: errorInfo.stack,
@@ -325,8 +366,8 @@ Keep changes minimal and focused.`,
     
     // Generate fix if code is available
     if (errorInfo.code) {
-      const fix = await PromptFactory.executePrompt(
-        this.prompts.generateFix,
+      const fix = await this._executePrompt(
+        'strategies/simple-node/debug/generate-fix',
         {
           problem: errorInfo.message,
           rootCause: analysis.data.rootCause,
@@ -373,8 +414,8 @@ Keep changes minimal and focused.`,
     }
     
     // Add performance debugging
-    const result = await PromptFactory.executePrompt(
-      this.prompts.addDebugging,
+    const result = await this._executePrompt(
+      'strategies/simple-node/debug/add-debugging',
       { code: code }
     );
     
@@ -407,8 +448,8 @@ Keep changes minimal and focused.`,
     }
     
     // Add debugging statements
-    const result = await PromptFactory.executePrompt(
-      this.prompts.addDebugging,
+    const result = await this._executePrompt(
+      'strategies/simple-node/debug/add-debugging',
       { code: code }
     );
     
@@ -440,8 +481,8 @@ Keep changes minimal and focused.`,
       throw new Error('No code provided for debugging');
     }
     
-    const result = await PromptFactory.executePrompt(
-      this.prompts.addDebugging,
+    const result = await this._executePrompt(
+      'strategies/simple-node/debug/add-debugging',
       { code: code }
     );
     

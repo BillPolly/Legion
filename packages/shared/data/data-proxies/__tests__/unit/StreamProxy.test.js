@@ -5,6 +5,7 @@
 
 import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { StreamProxy } from '../../src/StreamProxy.js';
+import { DefaultQueryBuilder } from '../../src/DefaultQueryBuilder.js';
 
 describe('StreamProxy Unit Tests', () => {
   let mockResourceManager;
@@ -21,7 +22,8 @@ describe('StreamProxy Unit Tests', () => {
       subscribe: jest.fn(),
       getSchema: jest.fn(),
       transact: jest.fn(),
-      get: jest.fn()
+      get: jest.fn(),
+      queryBuilder: jest.fn((sourceHandle) => new DefaultQueryBuilder(mockResourceManager, sourceHandle))
     };
   });
 
