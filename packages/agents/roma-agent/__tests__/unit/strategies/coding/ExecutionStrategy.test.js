@@ -20,11 +20,19 @@ describe('ExecutionStrategy', () => {
         execute: jest.fn(async (task, context) => ({
           success: true,
           artifacts: [{ id: 'artifact-1', content: 'code' }]
+        })),
+        onParentMessage: jest.fn(async (childTask, message) => ({
+          success: true,
+          artifacts: [{ id: 'artifact-1', content: 'code' }]
         }))
       },
       FileSystem: {
         getName: () => 'FileSystem',
         execute: jest.fn(async (task, context) => ({
+          success: true,
+          artifacts: []
+        })),
+        onParentMessage: jest.fn(async (childTask, message) => ({
           success: true,
           artifacts: []
         }))
@@ -117,6 +125,13 @@ describe('ExecutionStrategy', () => {
             throw new Error('Temporary failure');
           }
           return { success: true, artifacts: [] };
+        }),
+        onParentMessage: jest.fn(async (childTask, message) => {
+          attempts++;
+          if (attempts < 2) {
+            throw new Error('Temporary failure');
+          }
+          return { success: true, artifacts: [] };
         })
       };
       
@@ -131,13 +146,16 @@ describe('ExecutionStrategy', () => {
       const result = await executionStrategy.execute(failingTask);
       
       expect(result.success).toBe(true);
-      expect(failingStrategy.execute).toHaveBeenCalledTimes(2);
+      expect(failingStrategy.onParentMessage).toHaveBeenCalledTimes(2);
     });
     
     test('should fail after max retry attempts', async () => {
       const alwaysFailStrategy = {
         getName: () => 'AlwaysFailStrategy',
         execute: jest.fn(async () => {
+          throw new Error('Permanent failure');
+        }),
+        onParentMessage: jest.fn(async (childTask, message) => {
           throw new Error('Permanent failure');
         })
       };
@@ -153,7 +171,7 @@ describe('ExecutionStrategy', () => {
       await expect(executionStrategy.execute(failingTask))
         .rejects.toThrow('Task failed after 2 attempts');
       
-      expect(alwaysFailStrategy.execute).toHaveBeenCalledTimes(2);
+      expect(alwaysFailStrategy.onParentMessage).toHaveBeenCalledTimes(2);
     });
   });
   

@@ -57,15 +57,18 @@ describe('ProjectPlannerStrategy', () => {
       const strategy = new ProjectPlannerStrategy();
       
       // Components should be null before initialization
-      expect(strategy.requirementsAnalyzer).toBeNull();
-      expect(strategy.projectPlanner).toBeNull();
-      expect(strategy.executionOrchestrator).toBeNull();
-      expect(strategy.qualityController).toBeNull();
-      expect(strategy.progressTracker).toBeNull();
+      // Utility components should be null initially
       expect(strategy.stateManager).toBeNull();
       expect(strategy.parallelExecutor).toBeNull();
-      expect(strategy.recoveryManager).toBeNull();
       expect(strategy.eventStream).toBeNull();
+      
+      // Strategy placeholders should be null initially
+      expect(strategy.analysisStrategy).toBeNull();
+      expect(strategy.planningStrategy).toBeNull();
+      expect(strategy.executionStrategy).toBeNull();
+      expect(strategy.qualityStrategy).toBeNull();
+      expect(strategy.recoveryStrategy).toBeNull();
+      expect(strategy.monitoringStrategy).toBeNull();
     });
 
     test('should initialize sub-strategies object', () => {
@@ -98,15 +101,9 @@ describe('ProjectPlannerStrategy', () => {
       expect(strategy.llmClient).toBe(llmClient);
       expect(strategy.toolRegistry).toBe(toolRegistry);
       
-      // Should initialize all components
-      expect(strategy.requirementsAnalyzer).toBeDefined();
-      expect(strategy.projectPlanner).toBeDefined();
-      expect(strategy.executionOrchestrator).toBeDefined();
-      expect(strategy.qualityController).toBeDefined();
-      expect(strategy.progressTracker).toBeDefined();
+      // Should initialize utility components
       expect(strategy.stateManager).toBeDefined();
       expect(strategy.parallelExecutor).toBeDefined();
-      expect(strategy.recoveryManager).toBeDefined();
       expect(strategy.eventStream).toBeDefined();
       
       // Should initialize sub-strategies
@@ -114,9 +111,14 @@ describe('ProjectPlannerStrategy', () => {
       expect(strategy.strategies.test).toBeDefined();
       expect(strategy.strategies.debug).toBeDefined();
       
-      // Should initialize new strategies (Phase 1: Migration)
+      // Should initialize all new strategies
       expect(strategy.analysisStrategy).toBeDefined();
       expect(strategy.analysisStrategy.getName()).toBe('Analysis');
+      expect(strategy.planningStrategy).toBeDefined();
+      expect(strategy.executionStrategy).toBeDefined();
+      expect(strategy.qualityStrategy).toBeDefined();
+      expect(strategy.recoveryStrategy).toBeDefined();
+      expect(strategy.monitoringStrategy).toBeDefined();
       
       // Should load or create project state
       expect(strategy.state).toBeDefined();
@@ -198,25 +200,19 @@ describe('ProjectPlannerStrategy', () => {
   });
 
   describe('Component Initialization Validation', () => {
-    test('should initialize RequirementsAnalyzer with LLM client', async () => {
+    test('should initialize strategies with correct services', async () => {
       const strategy = new ProjectPlannerStrategy(llmClient, toolRegistry);
       const mockTask = { id: 'test-req', context: {} };
       
       await strategy.initialize(mockTask);
       
-      expect(strategy.requirementsAnalyzer).toBeDefined();
-      expect(strategy.requirementsAnalyzer.llmClient).toBe(llmClient);
-    });
-
-    test('should initialize ProjectStructurePlanner with services', async () => {
-      const strategy = new ProjectPlannerStrategy(llmClient, toolRegistry);
-      const mockTask = { id: 'test-plan', context: {} };
-      
-      await strategy.initialize(mockTask);
-      
-      expect(strategy.projectPlanner).toBeDefined();
-      expect(strategy.projectPlanner.llmClient).toBe(llmClient);
-      expect(strategy.projectPlanner.toolRegistry).toBe(toolRegistry);
+      // Check new strategy-based architecture
+      expect(strategy.analysisStrategy).toBeDefined();
+      expect(strategy.planningStrategy).toBeDefined();
+      expect(strategy.executionStrategy).toBeDefined();
+      expect(strategy.qualityStrategy).toBeDefined();
+      expect(strategy.recoveryStrategy).toBeDefined();
+      expect(strategy.monitoringStrategy).toBeDefined();
     });
 
     test('should initialize StateManager with project root', async () => {

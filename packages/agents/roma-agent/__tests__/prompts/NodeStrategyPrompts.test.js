@@ -57,7 +57,7 @@ describe('Node Strategy Prompts', () => {
       expect(firstEndpoint).toHaveProperty('method');
       expect(firstEndpoint).toHaveProperty('path');
       expect(firstEndpoint).toHaveProperty('description');
-    });
+    }, 30000);
 
     test('generateServerCode prompt should generate server code', async () => {
       const result = await PromptFactory.executePrompt(
@@ -81,7 +81,7 @@ describe('Node Strategy Prompts', () => {
       expect(result.data.code).toContain('/api/health');
       expect(result.data.dependencies).toBeInstanceOf(Array);
       expect(result.data.dependencies).toContain('express');
-    }, 15000);
+    }, 30000);
 
     test('generatePackageJson prompt should create valid package.json', async () => {
       const result = await PromptFactory.executePrompt(
@@ -100,7 +100,7 @@ describe('Node Strategy Prompts', () => {
       expect(result.data.packageJson.scripts).toBeDefined();
       expect(result.data.packageJson.scripts.start).toBeDefined();
       expect(result.data.packageJson.type).toBe('module');
-    });
+    }, 30000);
   });
 
   describe('SimpleNodeTestStrategy prompts', () => {
@@ -144,7 +144,7 @@ describe('Node Strategy Prompts', () => {
       
       expect(result.data.edgeCases).toBeInstanceOf(Array);
       expect(result.data.errorScenarios).toBeInstanceOf(Array);
-    }, 15000);
+    }, 30000);
 
     test('generateTestCode prompt should generate Jest tests', async () => {
       const result = await PromptFactory.executePrompt(

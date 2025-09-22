@@ -9,7 +9,7 @@ describe('RecoveryStrategy', () => {
 
   beforeEach(() => {
     mockLlmClient = {
-      sendMessage: jest.fn()
+      complete: jest.fn()
     };
 
     mockToolRegistry = {
@@ -25,8 +25,8 @@ describe('RecoveryStrategy', () => {
   });
 
   describe('Initialization', () => {
-    it('should create a RecoveryManager instance', () => {
-      expect(recoveryManager).toBeInstanceOf(RecoveryManager);
+    it('should create a RecoveryStrategy instance', () => {
+      expect(recoveryStrategy).toBeInstanceOf(RecoveryStrategy);
     });
 
     it('should initialize with proper dependencies', () => {
@@ -103,7 +103,7 @@ describe('RecoveryStrategy', () => {
       const error = new Error('ECONNRESET');
       const attempt = 1;
 
-      jest.spyOn(recoveryManager, 'retryWithBackoff').mockResolvedValue({ success: true });
+      jest.spyOn(recoveryStrategy, 'retryWithBackoff').mockResolvedValue({ success: true });
 
       const result = await recoveryStrategy.recover(error, task, attempt);
 
@@ -116,8 +116,8 @@ describe('RecoveryStrategy', () => {
       const error = new Error('JavaScript heap out of memory');
       const attempt = 1;
 
-      jest.spyOn(recoveryManager, 'freeResources').mockResolvedValue(true);
-      jest.spyOn(recoveryManager, 'retryTask').mockResolvedValue({ success: true });
+      jest.spyOn(recoveryStrategy, 'freeResources').mockResolvedValue(true);
+      jest.spyOn(recoveryStrategy, 'retryTask').mockResolvedValue({ success: true });
 
       const result = await recoveryStrategy.recover(error, task, attempt);
 
@@ -132,8 +132,8 @@ describe('RecoveryStrategy', () => {
       const attempt = 1;
 
       const mockReplan = { tasks: [{ id: 'replanned-task' }] };
-      jest.spyOn(recoveryManager, 'replanTask').mockResolvedValue(mockReplan);
-      jest.spyOn(recoveryManager, 'executeReplan').mockResolvedValue({ success: true });
+      jest.spyOn(recoveryStrategy, 'replanTask').mockResolvedValue(mockReplan);
+      jest.spyOn(recoveryStrategy, 'executeReplan').mockResolvedValue({ success: true });
 
       const result = await recoveryStrategy.recover(error, task, attempt);
 
@@ -147,7 +147,7 @@ describe('RecoveryStrategy', () => {
       const error = new Error('State corruption detected');
       const attempt = 1;
 
-      jest.spyOn(recoveryManager, 'rollbackToCheckpoint').mockResolvedValue(true);
+      jest.spyOn(recoveryStrategy, 'rollbackToCheckpoint').mockResolvedValue(true);
 
       await expect(recoveryStrategy.recover(error, task, attempt)).rejects.toThrow('Fatal error: State corruption detected');
       expect(recoveryStrategy.rollbackToCheckpoint).toHaveBeenCalled();
@@ -263,21 +263,15 @@ describe('RecoveryStrategy', () => {
       };
       const error = new Error('Missing dependency: express');
 
-      mockLlmClient.sendMessage.mockResolvedValue({
-        choices: [{
-          message: {
-            content: JSON.stringify({
-              reason: 'missing_dependency',
-              missingItems: ['express'],
-              failedApproaches: ['SimpleNodeServer'],
-              suggestedConstraints: {
-                ensureDependencies: ['express'],
-                useAlternativeStrategy: true
-              }
-            })
-          }
-        }]
-      });
+      mockLlmClient.complete.mockResolvedValue(JSON.stringify({
+        reason: 'missing_dependency',
+        missingItems: ['express'],
+        failedApproaches: ['SimpleNodeServer'],
+        suggestedConstraints: {
+          ensureDependencies: ['express'],
+          useAlternativeStrategy: true
+        }
+      }));
 
       const analysis = await recoveryStrategy.analyzeFailure(task, error);
 
@@ -333,7 +327,7 @@ describe('RecoveryStrategy', () => {
         ]
       };
 
-      jest.spyOn(recoveryManager, 'analyzeFailure').mockResolvedValue(mockAnalysis);
+      jest.spyOn(recoveryStrategy, 'analyzeFailure').mockResolvedValue(mockAnalysis);
       mockProjectPlanner.replan.mockResolvedValue(mockReplan);
 
       const result = await recoveryStrategy.replanTask(task, error);
@@ -489,8 +483,8 @@ describe('RecoveryStrategy', () => {
         resourceCleanupEnabled: false
       };
 
-      const customRecoveryManager = new RecoveryManager(mockLlmClient, mockToolRegistry, customConfig);
-      const config = customRecoveryManager.getConfiguration();
+      const customRecoveryStrategy = new RecoveryStrategy(mockLlmClient, mockToolRegistry, customConfig);
+      const config = customRecoveryStrategy.getConfiguration();
 
       expect(config.maxRetries.TRANSIENT).toBe(5);
       expect(config.backoffStrategy).toBe('linear');
@@ -504,8 +498,8 @@ describe('RecoveryStrategy', () => {
         }
       };
 
-      const customRecoveryManager = new RecoveryManager(mockLlmClient, mockToolRegistry, partialConfig);
-      const config = customRecoveryManager.getConfiguration();
+      const customRecoveryStrategy = new RecoveryStrategy(mockLlmClient, mockToolRegistry, partialConfig);
+      const config = customRecoveryStrategy.getConfiguration();
 
       expect(config.maxRetries.TRANSIENT).toBe(10); // Custom value
       expect(config.maxRetries.RESOURCE).toBe(2);   // Default value

@@ -505,6 +505,45 @@ export default class MonitoringStrategy extends TaskStrategy {
   }
 
   /**
+   * Collect metrics for a project
+   * This is a public method for integration with other strategies
+   */
+  async collectMetrics(project) {
+    if (!project) {
+      return this.getMetrics();
+    }
+    
+    // Update metrics based on the project
+    const progress = this.calculateProgress(project);
+    const taskStats = this.getTaskStats(project);
+    const timing = this.calculateTiming(project);
+    const bottlenecks = this.identifyBottlenecks(project);
+    
+    // Update internal metrics
+    this.metrics.overall = progress.overall;
+    this.metrics.byPhase = progress.byPhase;
+    this.metrics.tasks = taskStats;
+    this.metrics.timing = timing;
+    this.metrics.bottlenecks = bottlenecks;
+    
+    // Store in history
+    this.progressHistory.push({
+      timestamp: Date.now(),
+      overall: progress.overall,
+      byPhase: { ...progress.byPhase },
+      tasks: { ...taskStats }
+    });
+    
+    return {
+      phases: progress.byPhase,
+      tasks: taskStats,
+      overall: progress.overall,
+      timing: timing,
+      bottlenecks: bottlenecks
+    };
+  }
+
+  /**
    * Update project and recalculate metrics
    */
   updateProject(project) {

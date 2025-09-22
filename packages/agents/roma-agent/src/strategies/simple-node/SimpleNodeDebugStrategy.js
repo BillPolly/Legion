@@ -7,6 +7,7 @@
 
 import { TaskStrategy } from '@legion/tasks';
 import { EnhancedPromptRegistry } from '@legion/prompting-manager';
+import PromptFactory from '../../utils/PromptFactory.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -513,12 +514,12 @@ Keep changes minimal and focused.`,
     for (const artifact of Object.values(artifacts)) {
       if (artifact.type === 'error' || artifact.name.includes('error')) {
         // Get code from error artifact if available, otherwise from task artifacts
-        const codeFromError = artifact.content.code || '';
+        const codeFromError = artifact.value.code || '';
         const codeFromTask = codeFromError || await this._getCodeFromTask(task) || '';
         
         return {
-          message: artifact.content.message || artifact.content,
-          stack: artifact.content.stack || '',
+          message: artifact.value.message || artifact.value,
+          stack: artifact.value.stack || '',
           code: codeFromTask
         };
       }
@@ -541,7 +542,7 @@ Keep changes minimal and focused.`,
     
     for (const artifact of Object.values(artifacts)) {
       if (artifact.type === 'file' && artifact.name.endsWith('.js')) {
-        return artifact.content;
+        return artifact.value;
       }
     }
     

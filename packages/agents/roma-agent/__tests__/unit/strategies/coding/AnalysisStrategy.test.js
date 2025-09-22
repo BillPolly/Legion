@@ -65,11 +65,7 @@ describe('AnalysisStrategy', () => {
     });
   });
 
-  describe('Component Wrapping', () => {
-    test('should not initialize component until first use', () => {
-      expect(strategy.requirementsAnalyzer).toBeNull();
-    });
-
+  describe('Helper Methods', () => {
     test('should have extractRequirements helper method', () => {
       expect(typeof strategy._extractRequirements).toBe('function');
     });

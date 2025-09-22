@@ -7,6 +7,7 @@
 
 import { TaskStrategy } from '@legion/tasks';
 import { EnhancedPromptRegistry } from '@legion/prompting-manager';
+import PromptFactory from '../../utils/PromptFactory.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -344,7 +345,7 @@ Include:
     const artifacts = task.getAllArtifacts();
     for (const artifact of Object.values(artifacts)) {
       if (artifact.type === 'file' && artifact.name.endsWith('.js')) {
-        return artifact.content;
+        return artifact.value;
       }
     }
     

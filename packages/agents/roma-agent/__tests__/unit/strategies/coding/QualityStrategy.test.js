@@ -15,12 +15,10 @@ describe('QualityStrategy', () => {
   beforeEach(() => {
     // Create mock LLM client for requirements validation
     mockLLMClient = {
-      createMessage: jest.fn(async (prompt) => ({
-        content: JSON.stringify({
-          features: ['authentication', 'database', 'api'],
-          issues: [],
-          score: 8
-        })
+      complete: jest.fn(async (prompt) => JSON.stringify({
+        features: ['authentication', 'database', 'api'],
+        issues: [],
+        score: 8
       }))
     };
     
@@ -228,7 +226,7 @@ describe('QualityStrategy', () => {
       
       await qualityStrategy.validateRequirements(artifact, requirements);
       
-      expect(mockLLMClient.createMessage).toHaveBeenCalled();
+      expect(mockLLMClient.complete).toHaveBeenCalled();
     });
   });
   

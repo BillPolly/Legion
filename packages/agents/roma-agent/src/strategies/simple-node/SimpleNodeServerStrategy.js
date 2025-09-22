@@ -7,6 +7,7 @@
 
 import { TaskStrategy } from '@legion/tasks';
 import { EnhancedPromptRegistry } from '@legion/prompting-manager';
+import PromptFactory from '../../utils/PromptFactory.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -431,7 +432,9 @@ Include:
       throw new Error(`Failed to generate package.json: ${result.errors?.join(', ') || 'Unknown error'}`);
     }
     
-    return result.data.packageJson;
+    // The LLM returns the package.json directly as result.data
+    // If it's wrapped in packageJson property, use that, otherwise use data directly
+    return result.data.packageJson || result.data;
   }
   
   /**

@@ -92,8 +92,8 @@ describe('MonitoringStrategy', () => {
   });
 
   describe('Initialization', () => {
-    it('should create a ProgressTracker instance', () => {
-      expect(tracker).toBeInstanceOf(ProgressTracker);
+    it('should create a MonitoringStrategy instance', () => {
+      expect(monitoringStrategy).toBeInstanceOf(MonitoringStrategy);
     });
 
     it('should initialize with empty metrics', () => {
