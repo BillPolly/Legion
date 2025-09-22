@@ -160,38 +160,27 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
   /**
    * Handle messages from parent task
    */
-  async onParentMessage(parentTask, message) {
+  async onMessage(sourceTask, message) {
     switch (message.type) {
       case 'start':
-        return await this._planAndExecuteProject(parentTask);
+        return await this._planAndExecuteProject(sourceTask);
       case 'status':
-        return await this._reportStatus(parentTask);
+        return await this._reportStatus(sourceTask);
       case 'cancel':
-        return await this._cancelExecution(parentTask);
-      default:
-        return { acknowledged: true };
-    }
-  }
-  
-  /**
-   * Handle messages from child tasks (Phase 2: Migration to hierarchical delegation)
-   */
-  async onChildMessage(childTask, message) {
-    const task = childTask.parent;
-    if (!task) {
-      throw new Error('Child task has no parent');
-    }
-
-    switch (message.type) {
+        return await this._cancelExecution(sourceTask);
       case 'completed':
-        // Determine child task type and handle accordingly
-        return await this._onChildComplete(task, childTask, message.result);
-        
+        // Handle child task completion
+        if (!sourceTask.parent) {
+          throw new Error('Child task has no parent');
+        }
+        return await this._onChildComplete(sourceTask.parent, sourceTask, message.result);
       case 'failed':
-        // Child failed - propagate failure to parent
-        task.fail(message.error);
+        // Handle child task failure
+        if (!sourceTask.parent) {
+          throw new Error('Child task has no parent');
+        }
+        sourceTask.parent.fail(message.error);
         return { acknowledged: true };
-        
       default:
         return { acknowledged: true };
     }
@@ -211,13 +200,13 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
       
       // Phase 1: Analyze requirements (using child task delegation)
       this.eventStream.emit({ type: 'phase.started', data: { phase: 'requirements' } });
-      await this.monitoringStrategy.onParentMessage(task, { 
+      await this.monitoringStrategy.onMessage(task, { 
         type: 'update', 
         progressData: { taskStarted: 'requirements', description: 'Analyzing project requirements' }
       });
       const requirements = await this._delegateRequirementsAnalysis(task);
       await this.stateManager.updateRequirements(requirements);
-      await this.monitoringStrategy.onParentMessage(task, { 
+      await this.monitoringStrategy.onMessage(task, { 
         type: 'update', 
         progressData: { taskCompleted: 'requirements', success: true }
       });
@@ -225,13 +214,13 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
       
       // Phase 2: Create project plan (using child task delegation)
       this.eventStream.emit({ type: 'phase.started', data: { phase: 'planning' } });
-      await this.monitoringStrategy.onParentMessage(task, { 
+      await this.monitoringStrategy.onMessage(task, { 
         type: 'update', 
         progressData: { taskStarted: 'planning', description: 'Creating project plan' }
       });
       const plan = await this._delegateProjectPlanning(task, requirements);
       await this.stateManager.savePlan(plan);
-      await this.monitoringStrategy.onParentMessage(task, { 
+      await this.monitoringStrategy.onMessage(task, { 
         type: 'update', 
         progressData: { taskCompleted: 'planning', success: true }
       });
@@ -239,12 +228,12 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
       
       // Phase 3: Execute plan (using child task delegation)
       this.eventStream.emit({ type: 'phase.started', data: { phase: 'execution' } });
-      await this.monitoringStrategy.onParentMessage(task, { 
+      await this.monitoringStrategy.onMessage(task, { 
         type: 'update', 
         progressData: { taskStarted: 'execution', description: 'Executing project plan' }
       });
       const result = await this._delegateExecution(task, plan);
-      await this.monitoringStrategy.onParentMessage(task, { 
+      await this.monitoringStrategy.onMessage(task, { 
         type: 'update', 
         progressData: { taskCompleted: 'execution', success: true }
       });
@@ -252,7 +241,7 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
       
       // Phase 4: Validate quality (using child task delegation)
       this.eventStream.emit({ type: 'phase.started', data: { phase: 'validation' } });
-      await this.monitoringStrategy.onParentMessage(task, { 
+      await this.monitoringStrategy.onMessage(task, { 
         type: 'update', 
         progressData: { taskStarted: 'validation', description: 'Validating project quality' }
       });
@@ -266,7 +255,7 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
         }
       }
       
-      await this.monitoringStrategy.onParentMessage(task, { 
+      await this.monitoringStrategy.onMessage(task, { 
         type: 'update', 
         progressData: { taskCompleted: 'validation', success: validation.passed }
       });
@@ -399,7 +388,7 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
   async _attemptRecovery(issues) {
     try {
       // Use task delegation pattern for recovery strategy
-      const recoveryResult = await this.recoveryStrategy.onParentMessage(null, {
+      const recoveryResult = await this.recoveryStrategy.onMessage(null, {
         type: 'recover',
         error: issues,
         attempt: 1

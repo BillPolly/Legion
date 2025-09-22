@@ -747,10 +747,10 @@ export default class Task {
     try {
       if (fromTask === this.parent) {
         // Message from parent - pass THIS task as the task to work on
-        return await this.strategy.onParentMessage(this, message);
+        return await this.strategy.onMessage(this, message);
       } else if (this.children.includes(fromTask)) {
         // Message from child - pass the child task
-        return await this.strategy.onChildMessage(fromTask, message);
+        return await this.strategy.onMessage(fromTask, message);
       } else if (!fromTask) {
         // Initial message or external message
         if (message.type === 'start' || message.type === 'work') {
@@ -764,12 +764,12 @@ export default class Task {
         if (!this.strategy) {
           throw new Error('Task has no strategy');
         }
-        if (typeof this.strategy.onParentMessage !== 'function') {
-          throw new Error('Strategy has no onParentMessage method');
+        if (typeof this.strategy.onMessage !== 'function') {
+          throw new Error('Strategy has no onMessage method');
         }
         
-        console.log('Task.receiveMessage calling strategy.onParentMessage with task:', this.description, 'strategy:', this.strategy.getName ? this.strategy.getName() : 'unknown');
-        return await this.strategy.onParentMessage(this, message);
+        console.log('Task.receiveMessage calling strategy.onMessage with task:', this.description, 'strategy:', this.strategy.getName ? this.strategy.getName() : 'unknown');
+        return await this.strategy.onMessage(this, message);
       } else {
         // Unknown sender
         return {

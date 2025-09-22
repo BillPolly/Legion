@@ -24,24 +24,12 @@ export default class TaskStrategy {
 
 
   /**
-   * Handle message from a child task
-   * @param {Task} childTask - The child task sending the message
+   * Handle message from any source task
+   * @param {Task} sourceTask - The task sending the message
    * @param {Object} message - Message object with type and payload
-   * @returns {Promise<Object>} Response to child
+   * @returns {Promise<Object>} Response to sender
    */
-  async onChildMessage(childTask, message) {
-    throw new Error('TaskStrategy.onChildMessage() must be implemented by subclass');
-  }
-
-  /**
-   * Handle message from parent task
-   * @param {Task} parentTask - The parent task sending the message
-   * @param {Object} message - Message object with type and payload
-   * @returns {Promise<Object>} Response to parent
-   */
-  async onParentMessage(parentTask, message) {
-    // Default implementation - ignore parent messages
-    // Subclasses can override to handle parent directives
-    return { acknowledged: true };
+  async onMessage(sourceTask, message) {
+    throw new Error('TaskStrategy.onMessage() must be implemented by subclass');
   }
 }

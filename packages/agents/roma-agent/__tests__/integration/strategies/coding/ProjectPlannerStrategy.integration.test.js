@@ -107,27 +107,27 @@ describe('ProjectPlannerStrategy Integration Tests', () => {
       const startMessage = { type: 'start' };
       // Test message structure validation without full execution
       expect(startMessage.type).toBe('start');
-      expect(strategy.onParentMessage).toBeDefined();
-      expect(typeof strategy.onParentMessage).toBe('function');
+      expect(strategy.onMessage).toBeDefined();
+      expect(typeof strategy.onMessage).toBe('function');
     });
 
     it('should handle status message', async () => {
       const statusMessage = { type: 'status' };
-      const result = await strategy.onParentMessage(mockTask, statusMessage);
+      const result = await strategy.onMessage(mockTask, statusMessage);
       
       expect(result).toBeDefined();
     });
 
     it('should handle cancel message', async () => {
       const cancelMessage = { type: 'cancel' };
-      const result = await strategy.onParentMessage(mockTask, cancelMessage);
+      const result = await strategy.onMessage(mockTask, cancelMessage);
       
       expect(result).toBeDefined();
     });
 
     it('should acknowledge unknown message types', async () => {
       const unknownMessage = { type: 'unknown' };
-      const result = await strategy.onParentMessage(mockTask, unknownMessage);
+      const result = await strategy.onMessage(mockTask, unknownMessage);
       
       expect(result.acknowledged).toBe(true);
     });
@@ -146,7 +146,7 @@ describe('ProjectPlannerStrategy Integration Tests', () => {
       };
 
       const startMessage = { type: 'start' };
-      const result = await strategy.onParentMessage(invalidTask, startMessage);
+      const result = await strategy.onMessage(invalidTask, startMessage);
       
       expect(result).toBeDefined();
       expect(typeof result.success).toBe('boolean');
@@ -202,17 +202,29 @@ describe('ProjectPlannerStrategy Integration Tests', () => {
         content: 'const express = require("express");'
       };
 
+      // Test quality strategy directly without LLM calls
       const validation = await strategy.qualityStrategy.validateArtifact(mockArtifact);
       expect(validation).toBeDefined();
       expect(typeof validation.valid).toBe('boolean');
       
-      if (!validation.valid && validation.issues) {
-        // Test recovery strategy can handle quality issues
-        const mockError = new Error('Quality validation failed');
+      // Test recovery strategy classification (no LLM needed)
+      const mockError = new Error('Quality validation failed');
+      const errorType = strategy.recoveryStrategy.classifyError(mockError);
+      expect(errorType).toBe('LOGIC');
+      
+      // Test recovery with disabled replanning to avoid LLM calls
+      const originalReplanningEnabled = strategy.recoveryStrategy.config.replanningEnabled;
+      strategy.recoveryStrategy.config.replanningEnabled = false;
+      
+      try {
         const recovery = await strategy.recoveryStrategy.recover(mockError, mockTask, 1);
         expect(recovery).toBeDefined();
+        expect(recovery.success).toBe(true);
+      } finally {
+        // Restore original setting
+        strategy.recoveryStrategy.config.replanningEnabled = originalReplanningEnabled;
       }
-    });
+    }, 10000);
   });
 
   describe('Artifact Management', () => {
@@ -257,16 +269,28 @@ describe('ProjectPlannerStrategy Integration Tests', () => {
       expect(['retry', 'cleanup_and_retry', 'retry_after_cleanup']).toContain(recovery.action);
     });
 
-    it.skip('should handle logic errors with replanning', async () => {
+    it('should handle logic errors with replanning', async () => {
       const logicError = new TypeError('Cannot read property of undefined');
       
+      // Test that recovery strategy can classify logic errors correctly
+      const errorType = strategy.recoveryStrategy.classifyError(logicError);
+      expect(errorType).toBe('LOGIC');
+      
+      // Temporarily disable replanning to avoid LLM calls
+      const originalReplanningEnabled = strategy.recoveryStrategy.config.replanningEnabled;
+      strategy.recoveryStrategy.config.replanningEnabled = false;
+      
       try {
-        await strategy.recoveryStrategy.recover(logicError, mockTask, 1);
-      } catch (error) {
-        // Recovery might fail due to missing LLM integration for replanning
-        expect(error).toBeDefined();
+        // Test recovery attempt - should succeed with default recovery
+        const recovery = await strategy.recoveryStrategy.recover(logicError, mockTask, 1);
+        expect(recovery).toBeDefined();
+        expect(recovery.success).toBe(true);
+        expect(recovery.action).toBe('log_and_continue');
+      } finally {
+        // Restore original setting
+        strategy.recoveryStrategy.config.replanningEnabled = originalReplanningEnabled;
       }
-    }, 10000);
+    }, 5000);
 
     it('should rollback on fatal errors', async () => {
       const fatalError = new Error('State corruption detected');

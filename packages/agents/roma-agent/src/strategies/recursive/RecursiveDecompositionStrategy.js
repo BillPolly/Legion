@@ -218,59 +218,54 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
 
 
   /**
-   * Handle messages from child tasks
+   * Handle messages from any source task
    */
-  async onChildMessage(childTask, message) {
-    // Get parent task and context
-    const task = childTask.parent;
-    if (!task) {
-      throw new Error('Child task has no parent');
-    }
-    
-    const context = this._getContextFromTask(task);
-    
-    // Initialize strategy components if needed
-    await this._initializeComponents(context);
-    
-    // Route based on message type
-    switch (message.type) {
-      case 'completed':
-        return await this._onChildComplete(task, childTask, message.result, context);
+  async onMessage(sourceTask, message) {
+    // Determine if this is from a child task by checking if the source has a parent
+    if (sourceTask.parent) {
+      // Message from child task - get parent task and context
+      const task = sourceTask.parent;
+      const context = this._getContextFromTask(task);
       
-      case 'failed':
-        return await this._onChildFailure(task, childTask, message.error, context);
+      // Initialize strategy components if needed
+      await this._initializeComponents(context);
       
-      case 'progress':
-        // Could handle progress updates in future
-        console.log(`📊 Progress from ${childTask.description}: ${message.status}`);
-        return { acknowledged: true };
-      
-      default:
-        console.log(`⚠️ Unknown message type from child: ${message.type}`);
-        return { acknowledged: false, error: 'Unknown message type' };
-    }
-  }
-
-  /**
-   * Handle messages from parent task
-   */
-  async onParentMessage(parentTask, message) {
-    switch (message.type) {
-      case 'start':
-      case 'work':
-        // This is the main entry point - equivalent to old execute()
-        return await this._handleWorkMessage(message.task || parentTask);
+      // Route based on message type
+      switch (message.type) {
+        case 'completed':
+          return await this._onChildComplete(task, sourceTask, message.result, context);
         
-      case 'abort':
-        console.log(`🛑 Received abort from parent`);
-        return { acknowledged: true, aborted: true };
-      
-      case 'update_context':
-        console.log(`🔄 Received context update from parent`);
-        return { acknowledged: true };
-      
-      default:
-        return { acknowledged: true };
+        case 'failed':
+          return await this._onChildFailure(task, sourceTask, message.error, context);
+        
+        case 'progress':
+          // Could handle progress updates in future
+          console.log(`📊 Progress from ${sourceTask.description}: ${message.status}`);
+          return { acknowledged: true };
+        
+        default:
+          console.log(`⚠️ Unknown message type from child: ${message.type}`);
+          return { acknowledged: false, error: 'Unknown message type' };
+      }
+    } else {
+      // Message from parent task
+      switch (message.type) {
+        case 'start':
+        case 'work':
+          // This is the main entry point - equivalent to old execute()
+          return await this._handleWorkMessage(message.task || sourceTask);
+          
+        case 'abort':
+          console.log(`🛑 Received abort from parent`);
+          return { acknowledged: true, aborted: true };
+        
+        case 'update_context':
+          console.log(`🔄 Received context update from parent`);
+          return { acknowledged: true };
+        
+        default:
+          return { acknowledged: true };
+      }
     }
   }
 
@@ -484,9 +479,9 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
     
     // Handle child completion or failure through messages
     if (subtaskResult.success) {
-      return await this.onChildMessage(subtask, { type: 'completed', result: subtaskResult });
+      return await this.onMessage(subtask, { type: 'completed', result: subtaskResult });
     } else {
-      return await this.onChildMessage(subtask, { type: 'failed', error: new Error(subtaskResult.result) });
+      return await this.onMessage(subtask, { type: 'failed', error: new Error(subtaskResult.result) });
     }
   }
 
@@ -528,9 +523,9 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
         
         // Recursively handle the next subtask result through messages
         if (nextResult.success) {
-          return await this.onChildMessage(nextSubtask, { type: 'completed', result: nextResult });
+          return await this.onMessage(nextSubtask, { type: 'completed', result: nextResult });
         } else {
-          return await this.onChildMessage(nextSubtask, { type: 'failed', error: new Error(nextResult.result) });
+          return await this.onMessage(nextSubtask, { type: 'failed', error: new Error(nextResult.result) });
         }
         
       case 'COMPLETE':
@@ -544,9 +539,9 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
         
         // Recursively handle retry result through messages
         if (retryResult.success) {
-          return await this.onChildMessage(childTask, { type: 'completed', result: retryResult });
+          return await this.onMessage(childTask, { type: 'completed', result: retryResult });
         } else {
-          return await this.onChildMessage(childTask, { type: 'failed', error: new Error(retryResult.result) });
+          return await this.onMessage(childTask, { type: 'failed', error: new Error(retryResult.result) });
         }
         
       case 'REPLAN':
@@ -643,7 +638,7 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
       
       // If task has a parent, let parent evaluate through message
       if (task.parent) {
-        return await this.onChildMessage(task, { type: 'completed', result });
+        return await this.onMessage(task, { type: 'completed', result });
       }
       
       return result;
@@ -657,9 +652,9 @@ export default class RecursiveDecompositionStrategy extends TaskStrategy {
           const nextResult = await nextSubtask.receiveMessage({type: 'start'});
           
           if (nextResult.success) {
-            return await this.onChildMessage(nextSubtask, { type: 'completed', result: nextResult });
+            return await this.onMessage(nextSubtask, { type: 'completed', result: nextResult });
           } else {
-            return await this.onChildMessage(nextSubtask, { type: 'failed', error: new Error(nextResult.result) });
+            return await this.onMessage(nextSubtask, { type: 'failed', error: new Error(nextResult.result) });
           }
         }
       }

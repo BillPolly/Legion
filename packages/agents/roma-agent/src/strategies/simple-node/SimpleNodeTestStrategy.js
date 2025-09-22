@@ -241,23 +241,16 @@ Include:
   }
   
   /**
-   * Handle parent messages
+   * Handle messages from any source task
    */
-  async onParentMessage(parentTask, message) {
+  async onMessage(sourceTask, message) {
     switch (message.type) {
       case 'start':
       case 'work':
-        return await this._handleTestGeneration(parentTask);
+        return await this._handleTestGeneration(sourceTask);
       default:
         return { acknowledged: true };
     }
-  }
-  
-  /**
-   * Handle child messages (not used - leaf strategy)
-   */
-  async onChildMessage(childTask, message) {
-    return { acknowledged: false, error: 'SimpleNodeTestStrategy does not handle child messages' };
   }
   
   /**

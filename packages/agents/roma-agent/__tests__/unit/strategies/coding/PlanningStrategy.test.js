@@ -58,12 +58,12 @@ describe('PlanningStrategy', () => {
       expect(strategy.getName()).toBe('Planning');
     });
 
-    test('should implement onParentMessage method', () => {
-      expect(typeof strategy.onParentMessage).toBe('function');
+    test('should implement onMessage method', () => {
+      expect(typeof strategy.onMessage).toBe('function');
     });
 
-    test('should implement onChildMessage method', () => {
-      expect(typeof strategy.onChildMessage).toBe('function');
+    test('should handle messages from both parent and child tasks', () => {
+      expect(typeof strategy.onMessage).toBe('function');
     });
   });
 
@@ -103,7 +103,7 @@ describe('PlanningStrategy', () => {
         storeArtifact: jest.fn()
       };
 
-      const result = await strategy.onParentMessage(mockTask, { type: 'start' });
+      const result = await strategy.onMessage(mockTask, { type: 'start' });
       
       // Should return successful result
       expect(result).toBeDefined();
@@ -124,7 +124,7 @@ describe('PlanningStrategy', () => {
         storeArtifact: jest.fn()
       };
 
-      const result = await strategy.onParentMessage(mockTask, { type: 'start' });
+      const result = await strategy.onMessage(mockTask, { type: 'start' });
       
       expect(result).toBeDefined();
       expect(result.success).toBe(true);
@@ -134,7 +134,7 @@ describe('PlanningStrategy', () => {
     test('should handle abort message', async () => {
       const mockTask = {};
       
-      const result = await strategy.onParentMessage(mockTask, { type: 'abort' });
+      const result = await strategy.onMessage(mockTask, { type: 'abort' });
       
       expect(result.acknowledged).toBe(true);
       expect(result.aborted).toBe(true);
@@ -143,7 +143,7 @@ describe('PlanningStrategy', () => {
     test('should handle unknown message types', async () => {
       const mockTask = {};
       
-      const result = await strategy.onParentMessage(mockTask, { type: 'unknown' });
+      const result = await strategy.onMessage(mockTask, { type: 'unknown' });
       
       expect(result.acknowledged).toBe(true);
     });
@@ -157,7 +157,7 @@ describe('PlanningStrategy', () => {
         storeArtifact: jest.fn()
       };
 
-      const result = await strategy.onParentMessage(mockTask, { type: 'work' });
+      const result = await strategy.onMessage(mockTask, { type: 'work' });
       
       expect(result).toBeDefined();
       expect(result.success).toBe(true);
@@ -318,7 +318,7 @@ describe('PlanningStrategy', () => {
         addConversationEntry: jest.fn()
       };
 
-      const result = await strategy.onParentMessage(mockTask, { type: 'start' });
+      const result = await strategy.onMessage(mockTask, { type: 'start' });
       
       expect(result.success).toBe(false);
       expect(result.result).toBe('No requirements found for planning');
@@ -334,7 +334,7 @@ describe('PlanningStrategy', () => {
         addConversationEntry: jest.fn()
       };
 
-      const result = await invalidStrategy.onParentMessage(mockTask, { type: 'start' });
+      const result = await invalidStrategy.onMessage(mockTask, { type: 'start' });
       
       expect(result.success).toBe(false);
       expect(result.result).toMatch(/requires LLM client and ToolRegistry/);
@@ -347,7 +347,7 @@ describe('PlanningStrategy', () => {
         parent: { id: 'parent-task' }
       };
       
-      const result = await strategy.onChildMessage(mockChildTask, { type: 'completed' });
+      const result = await strategy.onMessage(mockChildTask, { type: 'completed' });
       
       expect(result.acknowledged).toBe(true);
     });
@@ -357,7 +357,7 @@ describe('PlanningStrategy', () => {
         parent: { id: 'parent-task' }
       };
       
-      const result = await strategy.onChildMessage(mockChildTask, { type: 'failed' });
+      const result = await strategy.onMessage(mockChildTask, { type: 'failed' });
       
       expect(result.acknowledged).toBe(true);
     });
@@ -365,7 +365,7 @@ describe('PlanningStrategy', () => {
     test('should require child task to have parent', async () => {
       const orphanChild = { parent: null };
       
-      await expect(strategy.onChildMessage(orphanChild, { type: 'completed' }))
+      await expect(strategy.onMessage(orphanChild, { type: 'completed' }))
         .rejects.toThrow('Child task has no parent');
     });
   });

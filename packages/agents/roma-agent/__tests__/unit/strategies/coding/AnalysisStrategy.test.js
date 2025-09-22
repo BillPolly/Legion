@@ -56,12 +56,12 @@ describe('AnalysisStrategy', () => {
       expect(strategy.getName()).toBe('Analysis');
     });
 
-    test('should implement onParentMessage method', () => {
-      expect(typeof strategy.onParentMessage).toBe('function');
+    test('should implement onMessage method', () => {
+      expect(typeof strategy.onMessage).toBe('function');
     });
 
-    test('should implement onChildMessage method', () => {
-      expect(typeof strategy.onChildMessage).toBe('function');
+    test('should handle messages from both parent and child tasks', () => {
+      expect(typeof strategy.onMessage).toBe('function');
     });
   });
 
@@ -85,7 +85,7 @@ describe('AnalysisStrategy', () => {
         complete: jest.fn()
       };
 
-      const result = await strategy.onParentMessage(mockTask, { type: 'start' });
+      const result = await strategy.onMessage(mockTask, { type: 'start' });
       
       // Should return result object
       expect(result).toBeDefined();
@@ -95,7 +95,7 @@ describe('AnalysisStrategy', () => {
     test('should handle abort message', async () => {
       const mockTask = {};
       
-      const result = await strategy.onParentMessage(mockTask, { type: 'abort' });
+      const result = await strategy.onMessage(mockTask, { type: 'abort' });
       
       expect(result.acknowledged).toBe(true);
       expect(result.aborted).toBe(true);
@@ -104,7 +104,7 @@ describe('AnalysisStrategy', () => {
     test('should handle unknown message types', async () => {
       const mockTask = {};
       
-      const result = await strategy.onParentMessage(mockTask, { type: 'unknown' });
+      const result = await strategy.onMessage(mockTask, { type: 'unknown' });
       
       expect(result.acknowledged).toBe(true);
     });

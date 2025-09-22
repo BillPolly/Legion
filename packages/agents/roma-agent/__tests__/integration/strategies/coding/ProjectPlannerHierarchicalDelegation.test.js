@@ -186,7 +186,7 @@ describe('ProjectPlannerStrategy - Hierarchical Delegation', () => {
       };
       
       // Execute: Handle analysis child completion
-      const result = await strategy.onChildMessage(mockChildTask, {
+      const result = await strategy.onMessage(mockChildTask, {
         type: 'completed',
         result: childResult
       });
@@ -226,7 +226,7 @@ describe('ProjectPlannerStrategy - Hierarchical Delegation', () => {
       };
       
       // Execute: Handle planning child completion
-      const result = await strategy.onChildMessage(mockPlanningChild, {
+      const result = await strategy.onMessage(mockPlanningChild, {
         type: 'completed',
         result: childResult
       });
@@ -284,7 +284,7 @@ describe('ProjectPlannerStrategy - Hierarchical Delegation', () => {
       };
       
       // Execute: Handle execution child completion
-      const result = await strategy.onChildMessage(mockExecutionChild, {
+      const result = await strategy.onMessage(mockExecutionChild, {
         type: 'completed',
         result: childResult
       });
@@ -304,7 +304,7 @@ describe('ProjectPlannerStrategy - Hierarchical Delegation', () => {
       const childError = new Error('Child analysis failed');
       
       // Execute: Handle child failure
-      const result = await strategy.onChildMessage(mockChildTask, {
+      const result = await strategy.onMessage(mockChildTask, {
         type: 'failed',
         error: childError
       });
@@ -321,7 +321,7 @@ describe('ProjectPlannerStrategy - Hierarchical Delegation', () => {
       const orphanChild = { ...mockChildTask, parent: null };
       
       // Execute and verify: Should throw error
-      await expect(strategy.onChildMessage(orphanChild, { type: 'completed' }))
+      await expect(strategy.onMessage(orphanChild, { type: 'completed' }))
         .rejects.toThrow('Child task has no parent');
       
       console.log('✅ Parent validation verified');
@@ -963,7 +963,7 @@ describe('ProjectPlannerStrategy - Hierarchical Delegation', () => {
       };
       
       // Execute: Handle quality child completion
-      const result = await strategy.onChildMessage(mockQualityChild, {
+      const result = await strategy.onMessage(mockQualityChild, {
         type: 'completed',
         result: childResult
       });
@@ -1014,7 +1014,7 @@ describe('ProjectPlannerStrategy - Hierarchical Delegation', () => {
 
     test('should handle unknown child message types', async () => {
       // Execute: Send unknown message type
-      const result = await strategy.onChildMessage(mockChildTask, {
+      const result = await strategy.onMessage(mockChildTask, {
         type: 'unknown-message-type'
       });
       

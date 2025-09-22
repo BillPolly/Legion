@@ -284,37 +284,30 @@ Include:
   }
   
   /**
-   * Handle parent messages
+   * Handle messages from any source task
    */
-  async onParentMessage(parentTask, message) {
+  async onMessage(sourceTask, message) {
     switch (message.type) {
       case 'start':
       case 'work':
         // Determine handler based on action type
-        switch (parentTask.action) {
+        switch (sourceTask.action) {
           case 'create_directory_structure':
-            return await this._handleDirectoryCreation(parentTask);
+            return await this._handleDirectoryCreation(sourceTask);
           case 'initialize_package_json':
-            return await this._handlePackageJsonCreation(parentTask);
+            return await this._handlePackageJsonCreation(sourceTask);
           case 'install_dependencies':
-            return await this._handleDependencyInstallation(parentTask);
+            return await this._handleDependencyInstallation(sourceTask);
           case 'generate_server_code':
           case 'create_base_routes':
           case 'implement_feature':
           case 'add_basic_features':
           default:
-            return await this._handleServerGeneration(parentTask);
+            return await this._handleServerGeneration(sourceTask);
         }
       default:
         return { acknowledged: true };
     }
-  }
-  
-  /**
-   * Handle child messages (not used - leaf strategy)
-   */
-  async onChildMessage(childTask, message) {
-    return { acknowledged: false, error: 'SimpleNodeServerStrategy does not handle child messages' };
   }
   
   /**

@@ -60,18 +60,18 @@ describe('SimpleROMAAgent Unit Tests', () => {
     // Create a mock strategy with all methods defined from the start
     const mockStrategy = {
       getName: jest.fn().mockReturnValue('MockStrategy'),
-      // Define onParentMessage implementation right away
-      onParentMessage: jest.fn(async (parentTask, message) => {
-        // In the message-passing model, parentTask is the task to work on
+      // Define onMessage implementation right away
+      onMessage: jest.fn(async (sourceTask, message) => {
+        // In the message-passing model, sourceTask is the task to work on
         // The message tells us what to do with it
-        console.log('onParentMessage called with:', 
-          'type:', typeof parentTask,
-          'truthy:', !!parentTask,
-          'description:', parentTask?.description,
-          'keys:', parentTask ? Object.keys(parentTask).slice(0, 5) : 'null'
+        console.log('onMessage called with:', 
+          'type:', typeof sourceTask,
+          'truthy:', !!sourceTask,
+          'description:', sourceTask?.description,
+          'keys:', sourceTask ? Object.keys(sourceTask).slice(0, 5) : 'null'
         );
-        if (!parentTask) {
-          console.error('onParentMessage called with null/falsy task');
+        if (!sourceTask) {
+          console.error('onMessage called with null/falsy task');
           return {
             success: false,
             result: 'Task is null'
@@ -81,11 +81,11 @@ describe('SimpleROMAAgent Unit Tests', () => {
         // Simple mock that simulates classification and execution
         if (message.type === 'start' || message.type === 'work') {
           // Check depth limit first (like the real strategy does)
-          const maxDepth = parentTask?.context?.getService ? parentTask.context.getService('maxDepth') : 5;
-          if (parentTask?.metadata?.depth >= maxDepth) {
+          const maxDepth = sourceTask?.context?.getService ? sourceTask.context.getService('maxDepth') : 5;
+          if (sourceTask?.metadata?.depth >= maxDepth) {
             // Fail the task properly
-            if (parentTask.fail) {
-              parentTask.fail(new Error(`Maximum recursion depth exceeded (${maxDepth})`));
+            if (sourceTask.fail) {
+              sourceTask.fail(new Error(`Maximum recursion depth exceeded (${maxDepth})`));
             }
             return {
               success: false,
@@ -95,7 +95,7 @@ describe('SimpleROMAAgent Unit Tests', () => {
           
           // Use the task classifier and tool discovery mocks
           // The task should have a description set when it was created
-          const taskDescription = parentTask.description || 'test task';
+          const taskDescription = sourceTask.description || 'test task';
           const classification = await mockTaskClassifier.classify({ description: taskDescription });
           
           if (classification.complexity === 'SIMPLE') {
@@ -124,13 +124,13 @@ describe('SimpleROMAAgent Unit Tests', () => {
               return { 
                 success: true, 
                 result: 'Task completed',
-                artifacts: parentTask?.getAllArtifacts ? Object.values(parentTask.getAllArtifacts()) : []
+                artifacts: sourceTask?.getAllArtifacts ? Object.values(sourceTask.getAllArtifacts()) : []
               };
             } else {
               return { 
                 success: false, 
                 result: 'Unable to find suitable tools for this task',
-                artifacts: parentTask?.getAllArtifacts ? Object.values(parentTask.getAllArtifacts()) : []
+                artifacts: sourceTask?.getAllArtifacts ? Object.values(sourceTask.getAllArtifacts()) : []
               };
             }
           } else {
@@ -139,27 +139,24 @@ describe('SimpleROMAAgent Unit Tests', () => {
             const decomposition = await mockStrategy.decompositionPrompt.execute({});
             
             // Check if we would exceed depth creating a subtask
-            const nextDepth = (parentTask?.metadata?.depth || 0) + 1;
+            const nextDepth = (sourceTask?.metadata?.depth || 0) + 1;
             if (nextDepth >= maxDepth) {
               // Would exceed depth with next subtask
-              parentTask.fail(new Error(`Maximum recursion depth exceeded (${maxDepth})`));
+              sourceTask.fail(new Error(`Maximum recursion depth exceeded (${maxDepth})`));
               return {
                 success: false,
                 result: `Maximum recursion depth exceeded (${maxDepth})`,
-                artifacts: parentTask?.getAllArtifacts ? Object.values(parentTask.getAllArtifacts()) : []
+                artifacts: sourceTask?.getAllArtifacts ? Object.values(sourceTask.getAllArtifacts()) : []
               };
             }
             
             return { 
               success: true, 
               result: 'Task decomposed and executed',
-              artifacts: parentTask?.getAllArtifacts ? Object.values(parentTask.getAllArtifacts()) : []
+              artifacts: sourceTask?.getAllArtifacts ? Object.values(sourceTask.getAllArtifacts()) : []
             };
           }
         }
-        return { acknowledged: true };
-      }),
-      onChildMessage: jest.fn().mockImplementation(async (childTask, message) => {
         return { acknowledged: true };
       }),
       // Add the prompt mocks
@@ -277,7 +274,7 @@ describe('SimpleROMAAgent Unit Tests', () => {
       };
       mockToolDiscovery.discoverTools.mockResolvedValue([mockTool]);
       
-      // The mock strategy's onParentMessage should handle the task
+      // The mock strategy's onMessage should handle the task
       // Don't replace the mock implementation - it's already set up in beforeEach
       const mockStrategy = agent.taskStrategy;
       mockStrategy.executionPrompt.execute.mockResolvedValueOnce({
@@ -629,11 +626,11 @@ describe('SimpleROMAAgent Unit Tests', () => {
         }
       });
       
-      // For infinite recursion test, override the onParentMessage to simulate hitting depth limit
+      // For infinite recursion test, override the onMessage to simulate hitting depth limit
       // The test mocks all tasks as COMPLEX, which would normally recurse infinitely
       // We need to simulate the depth limit being hit
-      mockStrategy.onParentMessage.mockImplementation(async (parentTask, message) => {
-        if (!parentTask) {
+      mockStrategy.onMessage.mockImplementation(async (sourceTask, message) => {
+        if (!sourceTask) {
           return { success: false, result: 'Task is null' };
         }
         
@@ -683,8 +680,7 @@ describe('SimpleROMAAgent Unit Tests', () => {
       // All execution logic is now handled by the strategy via message-passing
       const strategy = agent.taskStrategy;
       expect(strategy).toBeDefined();
-      expect(typeof strategy.onChildMessage).toBe('function');
-      expect(typeof strategy.onParentMessage).toBe('function');
+      expect(typeof strategy.onMessage).toBe('function');
     });
   });
   

@@ -43,33 +43,26 @@ export default class ExecutionStrategy extends TaskStrategy {
   }
   
   /**
-   * Handle messages from parent task
+   * Handle messages from any source task
    */
-  async onParentMessage(parentTask, message) {
+  async onMessage(sourceTask, message) {
     switch (message.type) {
       case 'start':
       case 'work':
-        return await this._handleExecutionRequest(message.task || parentTask);
+        return await this._handleExecutionRequest(message.task || sourceTask);
       case 'abort':
         return await this._handleAbortRequest();
-      default:
-        return { acknowledged: true };
-    }
-  }
-  
-  /**
-   * Handle messages from child tasks (ExecutionStrategy may create children for parallel execution)
-   */
-  async onChildMessage(childTask, message) {
-    const task = childTask.parent;
-    if (!task) {
-      throw new Error('Child task has no parent');
-    }
-
-    switch (message.type) {
       case 'completed':
+        // Handle child task completion
+        if (sourceTask.parent) {
+          return { acknowledged: true };
+        }
         return { acknowledged: true };
       case 'failed':
+        // Handle child task failure
+        if (sourceTask.parent) {
+          return { acknowledged: true };
+        }
         return { acknowledged: true };
       default:
         return { acknowledged: true };
@@ -312,7 +305,7 @@ export default class ExecutionStrategy extends TaskStrategy {
         const childTask = await this.createChildTask(task, strategy);
         
         // Execute strategy using message-based interface
-        result = await strategy.onParentMessage(childTask, {
+        result = await strategy.onMessage(childTask, {
           type: 'start',
           context: context,
           input: task.input

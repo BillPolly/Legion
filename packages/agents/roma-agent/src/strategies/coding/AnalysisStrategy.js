@@ -39,43 +39,30 @@ export default class AnalysisStrategy extends TaskStrategy {
   }
 
   /**
-   * Handle messages from parent task
+   * Handle messages from any source task
    */
-  async onParentMessage(parentTask, message) {
+  async onMessage(sourceTask, message) {
     switch (message.type) {
       case 'start':
       case 'work':
-        return await this._handleAnalysisRequest(message.task || parentTask);
+        return await this._handleAnalysisRequest(message.task || sourceTask);
         
       case 'abort':
         console.log(`🛑 Analysis task aborted`);
         return { acknowledged: true, aborted: true };
         
-      default:
-        return { acknowledged: true };
-    }
-  }
-
-  /**
-   * Handle messages from child tasks  
-   * Note: Analysis tasks are typically leaf tasks that don't create children
-   */
-  async onChildMessage(childTask, message) {
-    // AnalysisStrategy typically doesn't create child tasks
-    // But if it did, we would handle completion/failure here
-    const task = childTask.parent;
-    if (!task) {
-      throw new Error('Child task has no parent');
-    }
-
-    switch (message.type) {
       case 'completed':
-        // Child completed successfully
+        // Handle child task completion
+        if (sourceTask.parent) {
+          return { acknowledged: true };
+        }
         return { acknowledged: true };
         
       case 'failed':
-        // Child failed - propagate failure to parent
-        task.fail(message.error);
+        // Handle child task failure
+        if (sourceTask.parent) {
+          sourceTask.parent.fail(message.error);
+        }
         return { acknowledged: true };
         
       default:

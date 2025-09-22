@@ -78,37 +78,30 @@ export default class RecoveryStrategy extends TaskStrategy {
   }
 
   /**
-   * Handle messages from parent task
+   * Handle messages from any source task
    */
-  async onParentMessage(parentTask, message) {
+  async onMessage(sourceTask, message) {
     switch (message.type) {
       case 'start':
       case 'recover':
-        return await this._handleRecoveryRequest(message.task || parentTask, message.error, message.attempt);
+        return await this._handleRecoveryRequest(message.task || sourceTask, message.error, message.attempt);
       case 'checkpoint':
-        return await this._handleCheckpointRequest(message.task || parentTask, message.state);
+        return await this._handleCheckpointRequest(message.task || sourceTask, message.state);
       case 'rollback':
         return await this._handleRollbackRequest(message.checkpointId);
       case 'stats':
         return { success: true, result: this.getRecoveryStatistics() };
-      default:
-        return { acknowledged: true };
-    }
-  }
-
-  /**
-   * Handle messages from child tasks
-   */
-  async onChildMessage(childTask, message) {
-    const task = childTask.parent;
-    if (!task) {
-      throw new Error('Child task has no parent');
-    }
-
-    switch (message.type) {
       case 'completed':
+        // Handle child task completion
+        if (sourceTask.parent) {
+          return { acknowledged: true };
+        }
         return { acknowledged: true };
       case 'failed':
+        // Handle child task failure
+        if (sourceTask.parent) {
+          return { acknowledged: true };
+        }
         return { acknowledged: true };
       default:
         return { acknowledged: true };

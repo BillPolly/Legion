@@ -48,37 +48,30 @@ export default class MonitoringStrategy extends TaskStrategy {
   }
 
   /**
-   * Handle messages from parent task
+   * Handle messages from any source task
    */
-  async onParentMessage(parentTask, message) {
+  async onMessage(sourceTask, message) {
     switch (message.type) {
       case 'start':
       case 'monitor':
-        return await this._handleMonitoringRequest(message.task || parentTask, message.project);
+        return await this._handleMonitoringRequest(message.task || sourceTask, message.project);
       case 'update':
         return await this._handleUpdateRequest(message.progressData);
       case 'report':
         return await this._handleReportRequest(message.project);
       case 'stats':
         return { success: true, result: this.getMetrics() };
-      default:
-        return { acknowledged: true };
-    }
-  }
-
-  /**
-   * Handle messages from child tasks
-   */
-  async onChildMessage(childTask, message) {
-    const task = childTask.parent;
-    if (!task) {
-      throw new Error('Child task has no parent');
-    }
-
-    switch (message.type) {
       case 'completed':
+        // Handle child task completion
+        if (sourceTask.parent) {
+          return { acknowledged: true };
+        }
         return { acknowledged: true };
       case 'failed':
+        // Handle child task failure
+        if (sourceTask.parent) {
+          return { acknowledged: true };
+        }
         return { acknowledged: true };
       default:
         return { acknowledged: true };
