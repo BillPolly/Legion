@@ -1,5 +1,6 @@
 /**
- * RecoveryManager - Handles error recovery and replanning for failed tasks
+ * RecoveryStrategy - Handles error recovery and replanning for failed tasks
+ * Converted from RecoveryManager component to follow TaskStrategy pattern
  * 
  * Responsibilities:
  * - Classifies errors into types (TRANSIENT, RESOURCE, LOGIC, FATAL)
@@ -10,6 +11,7 @@
  * - Tracks recovery statistics and metrics
  */
 
+import { TaskStrategy } from '@legion/tasks';
 import { EnhancedPromptRegistry } from '@legion/prompting-manager';
 import { fileURLToPath } from 'url';
 import path from 'path';
@@ -17,12 +19,14 @@ import path from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export default class RecoveryManager {
+export default class RecoveryStrategy extends TaskStrategy {
   constructor(llmClient = null, toolRegistry = null, configuration = {}) {
+    super();
+    
     this.llmClient = llmClient;
     this.toolRegistry = toolRegistry;
     this.projectPlanner = null; // Set externally
-    const promptsPath = path.resolve(__dirname, '../../../../prompts');
+    const promptsPath = path.resolve(__dirname, '../../../prompts');
     this.promptRegistry = new EnhancedPromptRegistry(promptsPath);
 
     // Default configuration
@@ -67,6 +71,140 @@ export default class RecoveryManager {
 
     // Optional cache for resource cleanup
     this.cache = null;
+  }
+
+  getName() {
+    return 'Recovery';
+  }
+
+  /**
+   * Handle messages from parent task
+   */
+  async onParentMessage(parentTask, message) {
+    switch (message.type) {
+      case 'start':
+      case 'recover':
+        return await this._handleRecoveryRequest(message.task || parentTask, message.error, message.attempt);
+      case 'checkpoint':
+        return await this._handleCheckpointRequest(message.task || parentTask, message.state);
+      case 'rollback':
+        return await this._handleRollbackRequest(message.checkpointId);
+      case 'stats':
+        return { success: true, result: this.getRecoveryStatistics() };
+      default:
+        return { acknowledged: true };
+    }
+  }
+
+  /**
+   * Handle messages from child tasks
+   */
+  async onChildMessage(childTask, message) {
+    const task = childTask.parent;
+    if (!task) {
+      throw new Error('Child task has no parent');
+    }
+
+    switch (message.type) {
+      case 'completed':
+        return { acknowledged: true };
+      case 'failed':
+        return { acknowledged: true };
+      default:
+        return { acknowledged: true };
+    }
+  }
+
+  /**
+   * Handle recovery request from parent task
+   */
+  async _handleRecoveryRequest(task, error, attempt = 1) {
+    try {
+      console.log(`🔄 RecoveryStrategy handling recovery for: ${task.description}`);
+      
+      // Add conversation entry
+      task.addConversationEntry('system', 
+        `Recovery attempt ${attempt} for error: ${error?.message || 'Unknown error'}`);
+      
+      // Perform recovery
+      const result = await this.recover(error, task, attempt);
+      
+      // Store recovery result as artifact
+      task.storeArtifact(
+        'recovery-result',
+        result,
+        `Recovery result for attempt ${attempt}`,
+        'recovery'
+      );
+      
+      // Add conversation entry about completion
+      task.addConversationEntry('system', 
+        `Recovery ${result.success ? 'succeeded' : 'failed'}: ${result.action}`);
+      
+      console.log(`✅ RecoveryStrategy completed: ${result.action}`);
+      
+      return {
+        success: result.success,
+        result: result,
+        artifacts: ['recovery-result']
+      };
+      
+    } catch (error) {
+      console.error(`❌ RecoveryStrategy failed: ${error.message}`);
+      
+      task.addConversationEntry('system', 
+        `Recovery strategy failed: ${error.message}`);
+      
+      return {
+        success: false,
+        result: error.message
+      };
+    }
+  }
+
+  /**
+   * Handle checkpoint creation request
+   */
+  async _handleCheckpointRequest(task, state) {
+    try {
+      const checkpointId = await this.createCheckpoint(state);
+      
+      task.storeArtifact(
+        `checkpoint-${checkpointId}`,
+        { checkpointId, state },
+        `Recovery checkpoint ${checkpointId}`,
+        'checkpoint'
+      );
+      
+      return {
+        success: true,
+        result: { checkpointId },
+        artifacts: [`checkpoint-${checkpointId}`]
+      };
+    } catch (error) {
+      return {
+        success: false,
+        result: error.message
+      };
+    }
+  }
+
+  /**
+   * Handle rollback request
+   */
+  async _handleRollbackRequest(checkpointId) {
+    try {
+      const result = await this.rollbackToCheckpoint(checkpointId);
+      return {
+        success: result.success,
+        result: result
+      };
+    } catch (error) {
+      return {
+        success: false,
+        result: error.message
+      };
+    }
   }
 
   /**

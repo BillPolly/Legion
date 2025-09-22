@@ -1,5 +1,6 @@
 /**
- * ProgressTracker - Monitors task completion status and calculates project progress metrics
+ * MonitoringStrategy - Monitors task completion status and calculates project progress metrics
+ * Converted from ProgressTracker component to follow TaskStrategy pattern
  * 
  * Responsibilities:
  * - Monitors task completion status
@@ -8,8 +9,13 @@
  * - Tracks time and resource usage
  * - Identifies bottlenecks and delays
  */
-export default class ProgressTracker {
-  constructor() {
+
+import { TaskStrategy } from '@legion/tasks';
+
+export default class MonitoringStrategy extends TaskStrategy {
+  constructor(options = {}) {
+    super();
+    
     this.metrics = {
       overall: 0,
       byPhase: {},
@@ -35,6 +41,152 @@ export default class ProgressTracker {
       average: { memory: 0, cpu: 0, duration: 0 }
     };
     this.updateCallbacks = [];
+  }
+
+  getName() {
+    return 'Monitoring';
+  }
+
+  /**
+   * Handle messages from parent task
+   */
+  async onParentMessage(parentTask, message) {
+    switch (message.type) {
+      case 'start':
+      case 'monitor':
+        return await this._handleMonitoringRequest(message.task || parentTask, message.project);
+      case 'update':
+        return await this._handleUpdateRequest(message.progressData);
+      case 'report':
+        return await this._handleReportRequest(message.project);
+      case 'stats':
+        return { success: true, result: this.getMetrics() };
+      default:
+        return { acknowledged: true };
+    }
+  }
+
+  /**
+   * Handle messages from child tasks
+   */
+  async onChildMessage(childTask, message) {
+    const task = childTask.parent;
+    if (!task) {
+      throw new Error('Child task has no parent');
+    }
+
+    switch (message.type) {
+      case 'completed':
+        return { acknowledged: true };
+      case 'failed':
+        return { acknowledged: true };
+      default:
+        return { acknowledged: true };
+    }
+  }
+
+  /**
+   * Handle monitoring request from parent task
+   */
+  async _handleMonitoringRequest(task, project) {
+    try {
+      console.log(`📊 MonitoringStrategy monitoring: ${task.description}`);
+      
+      if (!project) {
+        return {
+          success: false,
+          result: 'No project data provided for monitoring'
+        };
+      }
+      
+      // Add conversation entry
+      task.addConversationEntry('system', 
+        `Starting monitoring for project with ${project.tasks?.length || 0} tasks`);
+      
+      // Update project metrics
+      this.updateProject(project);
+      
+      // Generate comprehensive report
+      const report = this.generateReport(project);
+      
+      // Store monitoring artifacts
+      task.storeArtifact(
+        'monitoring-report',
+        report,
+        `Progress monitoring report at ${new Date().toISOString()}`,
+        'monitoring'
+      );
+      
+      task.storeArtifact(
+        'progress-metrics',
+        this.metrics,
+        'Current progress metrics',
+        'metrics'
+      );
+      
+      // Add conversation entry about completion
+      task.addConversationEntry('system', 
+        `Monitoring complete: ${report.progress.overall}% progress, ${report.tasks.completed}/${report.tasks.total} tasks completed`);
+      
+      console.log(`✅ MonitoringStrategy completed: ${report.progress.overall}% progress`);
+      
+      return {
+        success: true,
+        result: {
+          report: report,
+          metrics: this.metrics,
+          progress: report.progress.overall
+        },
+        artifacts: ['monitoring-report', 'progress-metrics']
+      };
+      
+    } catch (error) {
+      console.error(`❌ MonitoringStrategy failed: ${error.message}`);
+      
+      task.addConversationEntry('system', 
+        `Monitoring failed: ${error.message}`);
+      
+      return {
+        success: false,
+        result: error.message
+      };
+    }
+  }
+
+  /**
+   * Handle progress update request
+   */
+  async _handleUpdateRequest(progressData) {
+    try {
+      this.update(progressData);
+      return {
+        success: true,
+        result: 'Progress updated successfully'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        result: error.message
+      };
+    }
+  }
+
+  /**
+   * Handle report generation request
+   */
+  async _handleReportRequest(project) {
+    try {
+      const report = this.generateReport(project);
+      return {
+        success: true,
+        result: report
+      };
+    } catch (error) {
+      return {
+        success: false,
+        result: error.message
+      };
+    }
   }
 
   /**

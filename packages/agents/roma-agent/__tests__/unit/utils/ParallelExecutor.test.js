@@ -5,7 +5,7 @@
  */
 
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
-import ParallelExecutor from '../../../../../src/strategies/coding/components/ParallelExecutor.js';
+import ParallelExecutor from '../../../src/utils/ParallelExecutor.js';
 
 describe('ParallelExecutor', () => {
   let executor;

@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import RecoveryManager from '../../../../../src/strategies/coding/components/RecoveryManager.js';
+import RecoveryStrategy from '../../../../src/strategies/coding/RecoveryStrategy.js';
 
-describe('RecoveryManager', () => {
-  let recoveryManager;
+describe('RecoveryStrategy', () => {
+  let recoveryStrategy;
   let mockLlmClient;
   let mockToolRegistry;
   let mockProjectPlanner;
@@ -20,8 +20,8 @@ describe('RecoveryManager', () => {
       replan: jest.fn()
     };
 
-    recoveryManager = new RecoveryManager(mockLlmClient, mockToolRegistry);
-    recoveryManager.projectPlanner = mockProjectPlanner;
+    recoveryStrategy = new RecoveryStrategy(mockLlmClient, mockToolRegistry);
+    recoveryStrategy.projectPlanner = mockProjectPlanner;
   });
 
   describe('Initialization', () => {
@@ -30,12 +30,12 @@ describe('RecoveryManager', () => {
     });
 
     it('should initialize with proper dependencies', () => {
-      expect(recoveryManager.llmClient).toBe(mockLlmClient);
-      expect(recoveryManager.toolRegistry).toBe(mockToolRegistry);
+      expect(recoveryStrategy.llmClient).toBe(mockLlmClient);
+      expect(recoveryStrategy.toolRegistry).toBe(mockToolRegistry);
     });
 
     it('should initialize with default configuration', () => {
-      const config = recoveryManager.getConfiguration();
+      const config = recoveryStrategy.getConfiguration();
       expect(config).toMatchObject({
         maxRetries: {
           TRANSIENT: 3,
@@ -56,9 +56,9 @@ describe('RecoveryManager', () => {
       const rateLimitError = new Error('Rate limit exceeded');
       const timeoutError = new Error('Request timeout');
 
-      expect(recoveryManager.classifyError(networkError)).toBe('TRANSIENT');
-      expect(recoveryManager.classifyError(rateLimitError)).toBe('TRANSIENT');
-      expect(recoveryManager.classifyError(timeoutError)).toBe('TRANSIENT');
+      expect(recoveryStrategy.classifyError(networkError)).toBe('TRANSIENT');
+      expect(recoveryStrategy.classifyError(rateLimitError)).toBe('TRANSIENT');
+      expect(recoveryStrategy.classifyError(timeoutError)).toBe('TRANSIENT');
     });
 
     it('should classify resource errors correctly', () => {
@@ -66,9 +66,9 @@ describe('RecoveryManager', () => {
       const diskError = new Error('ENOSPC: no space left on device');
       const quotaError = new Error('Quota exceeded');
 
-      expect(recoveryManager.classifyError(memoryError)).toBe('RESOURCE');
-      expect(recoveryManager.classifyError(diskError)).toBe('RESOURCE');
-      expect(recoveryManager.classifyError(quotaError)).toBe('RESOURCE');
+      expect(recoveryStrategy.classifyError(memoryError)).toBe('RESOURCE');
+      expect(recoveryStrategy.classifyError(diskError)).toBe('RESOURCE');
+      expect(recoveryStrategy.classifyError(quotaError)).toBe('RESOURCE');
     });
 
     it('should classify logic errors correctly', () => {
@@ -76,9 +76,9 @@ describe('RecoveryManager', () => {
       const validationError = new Error('Invalid input: missing required field');
       const dependencyError = new Error('Missing dependency: express');
 
-      expect(recoveryManager.classifyError(typeError)).toBe('LOGIC');
-      expect(recoveryManager.classifyError(validationError)).toBe('LOGIC');
-      expect(recoveryManager.classifyError(dependencyError)).toBe('LOGIC');
+      expect(recoveryStrategy.classifyError(typeError)).toBe('LOGIC');
+      expect(recoveryStrategy.classifyError(validationError)).toBe('LOGIC');
+      expect(recoveryStrategy.classifyError(dependencyError)).toBe('LOGIC');
     });
 
     it('should classify fatal errors correctly', () => {
@@ -86,14 +86,14 @@ describe('RecoveryManager', () => {
       const systemError = new Error('System failure: critical component unavailable');
       const unrecoverableError = new Error('Unrecoverable error: data integrity compromised');
 
-      expect(recoveryManager.classifyError(corruptionError)).toBe('FATAL');
-      expect(recoveryManager.classifyError(systemError)).toBe('FATAL');
-      expect(recoveryManager.classifyError(unrecoverableError)).toBe('FATAL');
+      expect(recoveryStrategy.classifyError(corruptionError)).toBe('FATAL');
+      expect(recoveryStrategy.classifyError(systemError)).toBe('FATAL');
+      expect(recoveryStrategy.classifyError(unrecoverableError)).toBe('FATAL');
     });
 
     it('should default to LOGIC for unknown errors', () => {
       const unknownError = new Error('Some random error message');
-      expect(recoveryManager.classifyError(unknownError)).toBe('LOGIC');
+      expect(recoveryStrategy.classifyError(unknownError)).toBe('LOGIC');
     });
   });
 
@@ -105,9 +105,9 @@ describe('RecoveryManager', () => {
 
       jest.spyOn(recoveryManager, 'retryWithBackoff').mockResolvedValue({ success: true });
 
-      const result = await recoveryManager.recover(error, task, attempt);
+      const result = await recoveryStrategy.recover(error, task, attempt);
 
-      expect(recoveryManager.retryWithBackoff).toHaveBeenCalledWith(task, attempt);
+      expect(recoveryStrategy.retryWithBackoff).toHaveBeenCalledWith(task, attempt);
       expect(result.success).toBe(true);
     });
 
@@ -119,10 +119,10 @@ describe('RecoveryManager', () => {
       jest.spyOn(recoveryManager, 'freeResources').mockResolvedValue(true);
       jest.spyOn(recoveryManager, 'retryTask').mockResolvedValue({ success: true });
 
-      const result = await recoveryManager.recover(error, task, attempt);
+      const result = await recoveryStrategy.recover(error, task, attempt);
 
-      expect(recoveryManager.freeResources).toHaveBeenCalled();
-      expect(recoveryManager.retryTask).toHaveBeenCalledWith(task);
+      expect(recoveryStrategy.freeResources).toHaveBeenCalled();
+      expect(recoveryStrategy.retryTask).toHaveBeenCalledWith(task);
       expect(result.success).toBe(true);
     });
 
@@ -135,10 +135,10 @@ describe('RecoveryManager', () => {
       jest.spyOn(recoveryManager, 'replanTask').mockResolvedValue(mockReplan);
       jest.spyOn(recoveryManager, 'executeReplan').mockResolvedValue({ success: true });
 
-      const result = await recoveryManager.recover(error, task, attempt);
+      const result = await recoveryStrategy.recover(error, task, attempt);
 
-      expect(recoveryManager.replanTask).toHaveBeenCalledWith(task, error);
-      expect(recoveryManager.executeReplan).toHaveBeenCalledWith(mockReplan);
+      expect(recoveryStrategy.replanTask).toHaveBeenCalledWith(task, error);
+      expect(recoveryStrategy.executeReplan).toHaveBeenCalledWith(mockReplan);
       expect(result.success).toBe(true);
     });
 
@@ -149,16 +149,16 @@ describe('RecoveryManager', () => {
 
       jest.spyOn(recoveryManager, 'rollbackToCheckpoint').mockResolvedValue(true);
 
-      await expect(recoveryManager.recover(error, task, attempt)).rejects.toThrow('Fatal error: State corruption detected');
-      expect(recoveryManager.rollbackToCheckpoint).toHaveBeenCalled();
+      await expect(recoveryStrategy.recover(error, task, attempt)).rejects.toThrow('Fatal error: State corruption detected');
+      expect(recoveryStrategy.rollbackToCheckpoint).toHaveBeenCalled();
     });
   });
 
   describe('Retry with Backoff', () => {
     it('should calculate exponential backoff correctly', () => {
-      const delay1 = recoveryManager.calculateBackoff(1, { strategy: 'exponential', baseMs: 1000 });
-      const delay2 = recoveryManager.calculateBackoff(2, { strategy: 'exponential', baseMs: 1000 });
-      const delay3 = recoveryManager.calculateBackoff(3, { strategy: 'exponential', baseMs: 1000 });
+      const delay1 = recoveryStrategy.calculateBackoff(1, { strategy: 'exponential', baseMs: 1000 });
+      const delay2 = recoveryStrategy.calculateBackoff(2, { strategy: 'exponential', baseMs: 1000 });
+      const delay3 = recoveryStrategy.calculateBackoff(3, { strategy: 'exponential', baseMs: 1000 });
 
       expect(delay1).toBe(1000); // 1000 * 2^0
       expect(delay2).toBe(2000); // 1000 * 2^1
@@ -166,9 +166,9 @@ describe('RecoveryManager', () => {
     });
 
     it('should calculate linear backoff correctly', () => {
-      const delay1 = recoveryManager.calculateBackoff(1, { strategy: 'linear', baseMs: 1000 });
-      const delay2 = recoveryManager.calculateBackoff(2, { strategy: 'linear', baseMs: 1000 });
-      const delay3 = recoveryManager.calculateBackoff(3, { strategy: 'linear', baseMs: 1000 });
+      const delay1 = recoveryStrategy.calculateBackoff(1, { strategy: 'linear', baseMs: 1000 });
+      const delay2 = recoveryStrategy.calculateBackoff(2, { strategy: 'linear', baseMs: 1000 });
+      const delay3 = recoveryStrategy.calculateBackoff(3, { strategy: 'linear', baseMs: 1000 });
 
       expect(delay1).toBe(1000); // 1000 * 1
       expect(delay2).toBe(2000); // 1000 * 2
@@ -176,9 +176,9 @@ describe('RecoveryManager', () => {
     });
 
     it('should use fixed delay for fixed strategy', () => {
-      const delay1 = recoveryManager.calculateBackoff(1, { strategy: 'fixed', baseMs: 1500 });
-      const delay2 = recoveryManager.calculateBackoff(2, { strategy: 'fixed', baseMs: 1500 });
-      const delay3 = recoveryManager.calculateBackoff(3, { strategy: 'fixed', baseMs: 1500 });
+      const delay1 = recoveryStrategy.calculateBackoff(1, { strategy: 'fixed', baseMs: 1500 });
+      const delay2 = recoveryStrategy.calculateBackoff(2, { strategy: 'fixed', baseMs: 1500 });
+      const delay3 = recoveryStrategy.calculateBackoff(3, { strategy: 'fixed', baseMs: 1500 });
 
       expect(delay1).toBe(1500);
       expect(delay2).toBe(1500);
@@ -193,7 +193,7 @@ describe('RecoveryManager', () => {
         retry: { maxAttempts: 3, strategy: 'exponential', baseMs: 100 }
       };
 
-      const result = await recoveryManager.retryWithBackoff(task, 4); // Exceeds max attempts
+      const result = await recoveryStrategy.retryWithBackoff(task, 4); // Exceeds max attempts
 
       expect(result.success).toBe(false);
       expect(result.reason).toBe('max_retries_exceeded');
@@ -208,7 +208,7 @@ describe('RecoveryManager', () => {
         retry: { maxAttempts: 3, strategy: 'exponential', baseMs: 1000 }
       };
 
-      const result = await recoveryManager.retryWithBackoff(task, 2);
+      const result = await recoveryStrategy.retryWithBackoff(task, 2);
 
       expect(result.success).toBe(true);
       expect(result.action).toBe('retry');
@@ -221,7 +221,7 @@ describe('RecoveryManager', () => {
     it('should free memory resources', async () => {
       global.gc = jest.fn(); // Mock garbage collector
 
-      const freed = await recoveryManager.freeResources();
+      const freed = await recoveryStrategy.freeResources();
 
       expect(freed).toBe(true);
       expect(global.gc).toHaveBeenCalled();
@@ -233,9 +233,9 @@ describe('RecoveryManager', () => {
         size: 150
       };
 
-      recoveryManager.cache = mockCache;
+      recoveryStrategy.cache = mockCache;
 
-      const freed = await recoveryManager.freeResources();
+      const freed = await recoveryStrategy.freeResources();
 
       expect(freed).toBe(true);
       expect(mockCache.clear).toHaveBeenCalled();
@@ -245,7 +245,7 @@ describe('RecoveryManager', () => {
       const originalGc = global.gc;
       delete global.gc;
 
-      const freed = await recoveryManager.freeResources();
+      const freed = await recoveryStrategy.freeResources();
 
       expect(freed).toBe(true); // Should still succeed without gc
 
@@ -279,7 +279,7 @@ describe('RecoveryManager', () => {
         }]
       });
 
-      const analysis = await recoveryManager.analyzeFailure(task, error);
+      const analysis = await recoveryStrategy.analyzeFailure(task, error);
 
       expect(analysis.reason).toBe('missing_dependency');
       expect(analysis.missingItems).toContain('express');
@@ -298,7 +298,7 @@ describe('RecoveryManager', () => {
         }
       };
 
-      const constraints = recoveryManager.extractConstraints(analysis);
+      const constraints = recoveryStrategy.extractConstraints(analysis);
 
       expect(constraints).toMatchObject({
         useValidation: true,
@@ -336,7 +336,7 @@ describe('RecoveryManager', () => {
       jest.spyOn(recoveryManager, 'analyzeFailure').mockResolvedValue(mockAnalysis);
       mockProjectPlanner.replan.mockResolvedValue(mockReplan);
 
-      const result = await recoveryManager.replanTask(task, error);
+      const result = await recoveryStrategy.replanTask(task, error);
 
       expect(mockProjectPlanner.replan).toHaveBeenCalledWith({
         originalTask: task,
@@ -361,11 +361,11 @@ describe('RecoveryManager', () => {
         artifacts: [{ id: 'artifact-1', type: 'code' }]
       };
 
-      const checkpointId = await recoveryManager.createCheckpoint(state);
+      const checkpointId = await recoveryStrategy.createCheckpoint(state);
 
       expect(checkpointId).toMatch(/^checkpoint_\d+$/);
       
-      const storedCheckpoint = recoveryManager.getCheckpoint(checkpointId);
+      const storedCheckpoint = recoveryStrategy.getCheckpoint(checkpointId);
       expect(storedCheckpoint.state).toEqual(state);
       expect(storedCheckpoint.timestamp).toBeGreaterThan(Date.now() - 1000);
     });
@@ -374,10 +374,10 @@ describe('RecoveryManager', () => {
       const state1 = { projectId: 'test', tasks: [] };
       const state2 = { projectId: 'test', tasks: [{ id: 'task-1' }] };
 
-      const checkpoint1 = await recoveryManager.createCheckpoint(state1);
-      const checkpoint2 = await recoveryManager.createCheckpoint(state2);
+      const checkpoint1 = await recoveryStrategy.createCheckpoint(state1);
+      const checkpoint2 = await recoveryStrategy.createCheckpoint(state2);
 
-      const result = await recoveryManager.rollbackToCheckpoint(checkpoint1);
+      const result = await recoveryStrategy.rollbackToCheckpoint(checkpoint1);
 
       expect(result.success).toBe(true);
       expect(result.state).toEqual(state1);
@@ -388,10 +388,10 @@ describe('RecoveryManager', () => {
       const state1 = { projectId: 'test', tasks: [] };
       const state2 = { projectId: 'test', tasks: [{ id: 'task-1' }] };
 
-      await recoveryManager.createCheckpoint(state1);
-      const latest = await recoveryManager.createCheckpoint(state2);
+      await recoveryStrategy.createCheckpoint(state1);
+      const latest = await recoveryStrategy.createCheckpoint(state2);
 
-      const result = await recoveryManager.rollbackToCheckpoint();
+      const result = await recoveryStrategy.rollbackToCheckpoint();
 
       expect(result.success).toBe(true);
       expect(result.state).toEqual(state2);
@@ -399,7 +399,7 @@ describe('RecoveryManager', () => {
     });
 
     it('should handle rollback failure gracefully', async () => {
-      const result = await recoveryManager.rollbackToCheckpoint('non-existent-checkpoint');
+      const result = await recoveryStrategy.rollbackToCheckpoint('non-existent-checkpoint');
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Checkpoint not found: non-existent-checkpoint');
@@ -411,7 +411,7 @@ describe('RecoveryManager', () => {
       const task = { id: 'unknown-task', type: 'unknown', description: 'Unknown task' };
       const error = new Error('Unknown error type');
 
-      const result = await recoveryManager.defaultRecovery(task, error);
+      const result = await recoveryStrategy.defaultRecovery(task, error);
 
       expect(result.success).toBe(true);
       expect(result.action).toBe('log_and_continue');
@@ -425,7 +425,7 @@ describe('RecoveryManager', () => {
       const task = { id: 'log-task', type: 'test', description: 'Test task' };
       const error = new Error('Test error for logging');
 
-      await recoveryManager.defaultRecovery(task, error);
+      await recoveryStrategy.defaultRecovery(task, error);
 
       expect(consoleSpy).toHaveBeenCalledWith(
         'Recovery: Using default strategy for unknown error type',
@@ -441,12 +441,12 @@ describe('RecoveryManager', () => {
 
   describe('Recovery Statistics', () => {
     it('should track recovery attempts by error type', () => {
-      recoveryManager.recordRecoveryAttempt('TRANSIENT', true);
-      recoveryManager.recordRecoveryAttempt('TRANSIENT', false);
-      recoveryManager.recordRecoveryAttempt('RESOURCE', true);
-      recoveryManager.recordRecoveryAttempt('LOGIC', true);
+      recoveryStrategy.recordRecoveryAttempt('TRANSIENT', true);
+      recoveryStrategy.recordRecoveryAttempt('TRANSIENT', false);
+      recoveryStrategy.recordRecoveryAttempt('RESOURCE', true);
+      recoveryStrategy.recordRecoveryAttempt('LOGIC', true);
 
-      const stats = recoveryManager.getRecoveryStatistics();
+      const stats = recoveryStrategy.getRecoveryStatistics();
 
       expect(stats.byType.TRANSIENT).toEqual({
         total: 2,
@@ -465,12 +465,12 @@ describe('RecoveryManager', () => {
     });
 
     it('should calculate overall success rate correctly', () => {
-      recoveryManager.recordRecoveryAttempt('TRANSIENT', true);
-      recoveryManager.recordRecoveryAttempt('TRANSIENT', true);
-      recoveryManager.recordRecoveryAttempt('RESOURCE', false);
-      recoveryManager.recordRecoveryAttempt('LOGIC', true);
+      recoveryStrategy.recordRecoveryAttempt('TRANSIENT', true);
+      recoveryStrategy.recordRecoveryAttempt('TRANSIENT', true);
+      recoveryStrategy.recordRecoveryAttempt('RESOURCE', false);
+      recoveryStrategy.recordRecoveryAttempt('LOGIC', true);
 
-      const stats = recoveryManager.getRecoveryStatistics();
+      const stats = recoveryStrategy.getRecoveryStatistics();
 
       expect(stats.overall.successRate).toBe(0.75); // 3/4
     });
@@ -515,13 +515,13 @@ describe('RecoveryManager', () => {
 
   describe('Error Handling Edge Cases', () => {
     it('should handle null or undefined errors gracefully', () => {
-      expect(recoveryManager.classifyError(null)).toBe('LOGIC');
-      expect(recoveryManager.classifyError(undefined)).toBe('LOGIC');
+      expect(recoveryStrategy.classifyError(null)).toBe('LOGIC');
+      expect(recoveryStrategy.classifyError(undefined)).toBe('LOGIC');
     });
 
     it('should handle errors without message property', () => {
       const errorObject = { code: 'UNKNOWN_ERROR' };
-      expect(recoveryManager.classifyError(errorObject)).toBe('LOGIC');
+      expect(recoveryStrategy.classifyError(errorObject)).toBe('LOGIC');
     });
 
     it('should handle circular reference errors during analysis', async () => {
@@ -530,7 +530,7 @@ describe('RecoveryManager', () => {
       task.circular = task; // Create circular reference
 
       // Should not throw despite circular reference
-      const result = await recoveryManager.defaultRecovery(task, circularError);
+      const result = await recoveryStrategy.defaultRecovery(task, circularError);
       expect(result.success).toBe(true);
     });
 
@@ -538,7 +538,7 @@ describe('RecoveryManager', () => {
       const task = { id: 'format-task', type: 'test' };
       const error = new Error('Format test error');
 
-      const result = await recoveryManager.recover(error, task, 1);
+      const result = await recoveryStrategy.recover(error, task, 1);
 
       expect(result).toHaveProperty('success');
       expect(result).toHaveProperty('action');

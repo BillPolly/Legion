@@ -5,7 +5,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import StateManager from '../../../../../src/strategies/coding/components/StateManager.js';
+import StateManager from '../../../src/utils/StateManager.js';
 import fs from 'fs/promises';
 import path from 'path';
 

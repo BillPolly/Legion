@@ -22,15 +22,14 @@ import PlanningStrategy from './PlanningStrategy.js';
 import ExecutionStrategy from './ExecutionStrategy.js';
 import QualityStrategy from './QualityStrategy.js';
 
-// Import remaining components (to be migrated)
-import ProjectStructurePlanner from './components/ProjectStructurePlanner.js';
-import ExecutionOrchestrator from './components/ExecutionOrchestrator.js';
-import QualityController from './components/QualityController.js';
-import ProgressTracker from './components/ProgressTracker.js';
-import StateManager from './components/StateManager.js';
-import ParallelExecutor from './components/ParallelExecutor.js';
-import RecoveryManager from './components/RecoveryManager.js';
-import EventStream from './components/EventStream.js';
+// Import new strategies (migrated from components)
+import RecoveryStrategy from './RecoveryStrategy.js';
+import MonitoringStrategy from './MonitoringStrategy.js';
+
+// Import utilities (moved from components)
+import StateManager from '../../utils/StateManager.js';
+import ParallelExecutor from '../../utils/ParallelExecutor.js';
+import EventStream from '../../utils/EventStream.js';
 
 export default class ProjectPlannerStrategy extends TaskStrategy {
   constructor(llmClient = null, toolRegistry = null, options = {}) {
@@ -51,15 +50,12 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
     this.planningStrategy = null;
     this.executionStrategy = null;
     this.qualityStrategy = null;
+    this.recoveryStrategy = null;
+    this.monitoringStrategy = null;
     
-    // Initialize component placeholders (to be migrated)
-    this.projectPlanner = null;
-    this.executionOrchestrator = null;
-    this.qualityController = null;
-    this.progressTracker = null;
+    // Component functionality now integrated into strategies
     this.stateManager = null;
     this.parallelExecutor = null;
-    this.recoveryManager = null;
     this.eventStream = null;
     
     // Sub-strategies
@@ -105,9 +101,8 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
     this.analysisStrategy = new AnalysisStrategy(this.llmClient);
     this.planningStrategy = new PlanningStrategy(this.llmClient, this.toolRegistry);
     this.qualityStrategy = new QualityStrategy(this.llmClient, this.toolRegistry);
-    
-    // Initialize components (to be migrated)
-    this.projectPlanner = new ProjectStructurePlanner(this.llmClient, this.toolRegistry);
+    this.recoveryStrategy = new RecoveryStrategy(this.llmClient, this.toolRegistry);
+    this.monitoringStrategy = new MonitoringStrategy();
     
     // Initialize sub-strategies first
     this.strategies.server = new SimpleNodeServerStrategy(
@@ -138,23 +133,18 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
       Documentation: this.strategies.server // Documentation tasks handled by server strategy
     };
     
-    this.qualityController = new QualityController(this.llmClient, this.toolRegistry);
-    this.progressTracker = new ProgressTracker();
     this.stateManager = new StateManager(this.projectRoot);
     
-    // Initialize ExecutionStrategy (Phase 3.2: Wraps ExecutionOrchestrator)
+    // Initialize ExecutionStrategy (merged ExecutionOrchestrator functionality)
     this.executionStrategy = new ExecutionStrategy(
       strategiesForOrchestrator,
       this.stateManager
     );
-    
-    this.executionOrchestrator = new ExecutionOrchestrator(
-      strategiesForOrchestrator,
-      this.stateManager
-    );
     this.parallelExecutor = new ParallelExecutor({ maxConcurrent: this.maxConcurrent });
-    this.recoveryManager = new RecoveryManager(this.llmClient, this.toolRegistry);
     this.eventStream = new EventStream();
+    
+    // Set up recovery strategy project planner reference
+    this.recoveryStrategy.projectPlanner = this.planningStrategy;
     
     // Initialize sub-strategies
     await this.strategies.server.initialize(task);
@@ -221,23 +211,51 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
       
       // Phase 1: Analyze requirements (using child task delegation)
       this.eventStream.emit({ type: 'phase.started', data: { phase: 'requirements' } });
+      await this.monitoringStrategy.onParentMessage(task, { 
+        type: 'update', 
+        progressData: { taskStarted: 'requirements', description: 'Analyzing project requirements' }
+      });
       const requirements = await this._delegateRequirementsAnalysis(task);
       await this.stateManager.updateRequirements(requirements);
+      await this.monitoringStrategy.onParentMessage(task, { 
+        type: 'update', 
+        progressData: { taskCompleted: 'requirements', success: true }
+      });
       this.eventStream.emit({ type: 'phase.completed', data: { phase: 'requirements' } });
       
       // Phase 2: Create project plan (using child task delegation)
       this.eventStream.emit({ type: 'phase.started', data: { phase: 'planning' } });
+      await this.monitoringStrategy.onParentMessage(task, { 
+        type: 'update', 
+        progressData: { taskStarted: 'planning', description: 'Creating project plan' }
+      });
       const plan = await this._delegateProjectPlanning(task, requirements);
       await this.stateManager.savePlan(plan);
+      await this.monitoringStrategy.onParentMessage(task, { 
+        type: 'update', 
+        progressData: { taskCompleted: 'planning', success: true }
+      });
       this.eventStream.emit({ type: 'phase.completed', data: { phase: 'planning' } });
       
       // Phase 3: Execute plan (using child task delegation)
       this.eventStream.emit({ type: 'phase.started', data: { phase: 'execution' } });
+      await this.monitoringStrategy.onParentMessage(task, { 
+        type: 'update', 
+        progressData: { taskStarted: 'execution', description: 'Executing project plan' }
+      });
       const result = await this._delegateExecution(task, plan);
+      await this.monitoringStrategy.onParentMessage(task, { 
+        type: 'update', 
+        progressData: { taskCompleted: 'execution', success: true }
+      });
       this.eventStream.emit({ type: 'phase.completed', data: { phase: 'execution' } });
       
       // Phase 4: Validate quality (using child task delegation)
       this.eventStream.emit({ type: 'phase.started', data: { phase: 'validation' } });
+      await this.monitoringStrategy.onParentMessage(task, { 
+        type: 'update', 
+        progressData: { taskStarted: 'validation', description: 'Validating project quality' }
+      });
       const validation = await this._delegateQuality(task, result);
       
       if (!validation.passed) {
@@ -247,6 +265,11 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
           result = recovery.result;
         }
       }
+      
+      await this.monitoringStrategy.onParentMessage(task, { 
+        type: 'update', 
+        progressData: { taskCompleted: 'validation', success: validation.passed }
+      });
       this.eventStream.emit({ type: 'phase.completed', data: { phase: 'validation' } });
       
       // Phase 5: Finalize
@@ -285,7 +308,7 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
    * Report current project status
    */
   async _reportStatus(task) {
-    const progress = this.progressTracker.getProgress();
+    const progress = this.monitoringStrategy.getProgress();
     const state = await this.stateManager.getState();
     
     return {
@@ -303,7 +326,7 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
    */
   async _cancelExecution(task) {
     // Stop all running tasks
-    await this.executionOrchestrator.stopAll();
+    await this.executionStrategy.stopAll();
     
     // Update state
     await this.stateManager.updateStatus('cancelled');
@@ -375,8 +398,14 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
    */
   async _attemptRecovery(issues) {
     try {
-      const recovery = await this.recoveryManager.recover(issues);
-      return recovery;
+      // Use task delegation pattern for recovery strategy
+      const recoveryResult = await this.recoveryStrategy.onParentMessage(null, {
+        type: 'recover',
+        error: issues,
+        attempt: 1
+      });
+      
+      return recoveryResult.result || { success: false, error: 'Recovery failed' };
     } catch (error) {
       console.error('Recovery failed:', error);
       return { success: false, error: error.message };

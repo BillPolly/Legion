@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import ProgressTracker from '../../../../../src/strategies/coding/components/ProgressTracker.js';
+import MonitoringStrategy from '../../../../src/strategies/coding/MonitoringStrategy.js';
 
-describe('ProgressTracker', () => {
-  let tracker;
+describe('MonitoringStrategy', () => {
+  let monitoringStrategy;
   let mockProject;
 
   beforeEach(() => {
-    tracker = new ProgressTracker();
+    monitoringStrategy = new MonitoringStrategy();
     
     // Mock project structure with phases and tasks
     mockProject = {
@@ -97,7 +97,7 @@ describe('ProgressTracker', () => {
     });
 
     it('should initialize with empty metrics', () => {
-      const metrics = tracker.getMetrics();
+      const metrics = monitoringStrategy.getMetrics();
       expect(metrics).toEqual({
         overall: 0,
         byPhase: {},
@@ -120,14 +120,14 @@ describe('ProgressTracker', () => {
 
   describe('Progress Calculation', () => {
     it('should calculate overall progress percentage', () => {
-      const progress = tracker.calculateProgress(mockProject);
+      const progress = monitoringStrategy.calculateProgress(mockProject);
       
       // 3 of 6 tasks completed = 50%
       expect(progress.overall).toBe(50);
     });
 
     it('should calculate progress by phase', () => {
-      const progress = tracker.calculateProgress(mockProject);
+      const progress = monitoringStrategy.calculateProgress(mockProject);
       
       expect(progress.byPhase).toEqual({
         setup: 100,    // 2/2 tasks completed
@@ -143,7 +143,7 @@ describe('ProgressTracker', () => {
         tasks: []
       };
       
-      const progress = tracker.calculateProgress(emptyProject);
+      const progress = monitoringStrategy.calculateProgress(emptyProject);
       expect(progress.overall).toBe(0);
       expect(progress.byPhase).toEqual({});
     });
@@ -157,7 +157,7 @@ describe('ProgressTracker', () => {
         tasks: []
       };
       
-      const progress = tracker.calculateProgress(noTasksProject);
+      const progress = monitoringStrategy.calculateProgress(noTasksProject);
       expect(progress.overall).toBe(0);
       expect(progress.byPhase).toEqual({ setup: 0 });
     });
@@ -165,7 +165,7 @@ describe('ProgressTracker', () => {
 
   describe('Task Status Tracking', () => {
     it('should count tasks by status', () => {
-      const taskStats = tracker.getTaskStats(mockProject);
+      const taskStats = monitoringStrategy.getTaskStats(mockProject);
       
       expect(taskStats).toEqual({
         total: 6,
@@ -177,14 +177,14 @@ describe('ProgressTracker', () => {
     });
 
     it('should track task status changes', () => {
-      tracker.updateProject(mockProject);
+      monitoringStrategy.updateProject(mockProject);
       
       // Simulate task completion
       mockProject.tasks[3].status = 'completed';
       mockProject.tasks[3].completedAt = '2024-01-01T10:45:00Z';
       
-      tracker.updateProject(mockProject);
-      const taskStats = tracker.getTaskStats(mockProject);
+      monitoringStrategy.updateProject(mockProject);
+      const taskStats = monitoringStrategy.getTaskStats(mockProject);
       
       expect(taskStats.completed).toBe(4);
       expect(taskStats.running).toBe(0);
@@ -194,7 +194,7 @@ describe('ProgressTracker', () => {
       mockProject.tasks[3].status = 'failed';
       mockProject.tasks[3].lastError = 'Unit test failure';
       
-      const taskStats = tracker.getTaskStats(mockProject);
+      const taskStats = monitoringStrategy.getTaskStats(mockProject);
       expect(taskStats.failed).toBe(1);
       expect(taskStats.running).toBe(0);
     });
@@ -202,7 +202,7 @@ describe('ProgressTracker', () => {
 
   describe('Time Tracking', () => {
     it('should calculate average task duration', () => {
-      const timing = tracker.calculateTiming(mockProject);
+      const timing = monitoringStrategy.calculateTiming(mockProject);
       
       // Task 1: 5 minutes, Task 2: 10 minutes, Task 3: 15 minutes
       // Average: (5 + 10 + 15) / 3 = 10 minutes
@@ -210,7 +210,7 @@ describe('ProgressTracker', () => {
     });
 
     it('should calculate total elapsed time', () => {
-      const timing = tracker.calculateTiming(mockProject);
+      const timing = monitoringStrategy.calculateTiming(mockProject);
       
       // From project start to latest completion: 30 minutes
       expect(timing.totalElapsed).toBe(30 * 60 * 1000); // 30 minutes in milliseconds
@@ -219,7 +219,7 @@ describe('ProgressTracker', () => {
     it('should estimate completion time', () => {
       // 3 tasks remaining, 10 minutes average = 30 minutes from now
       const now = new Date('2024-01-01T10:30:00Z').getTime();
-      const timing = tracker.calculateTiming(mockProject, now);
+      const timing = monitoringStrategy.calculateTiming(mockProject, now);
       const expected = now + (3 * 10 * 60 * 1000);
       
       expect(timing.estimatedCompletion).toBe(expected);
@@ -235,7 +235,7 @@ describe('ProgressTracker', () => {
         }))
       };
       
-      const timing = tracker.calculateTiming(pendingProject);
+      const timing = monitoringStrategy.calculateTiming(pendingProject);
       expect(timing.averageTaskDuration).toBeNull();
       expect(timing.estimatedCompletion).toBeNull();
     });
@@ -247,7 +247,7 @@ describe('ProgressTracker', () => {
       const mockNow = new Date('2024-01-01T11:00:00Z').getTime();
       jest.spyOn(Date, 'now').mockReturnValue(mockNow);
       
-      const bottlenecks = tracker.identifyBottlenecks(mockProject);
+      const bottlenecks = monitoringStrategy.identifyBottlenecks(mockProject);
       
       // Task-4 has been running for 30 minutes, should be flagged
       expect(bottlenecks).toContainEqual({
@@ -288,7 +288,7 @@ describe('ProgressTracker', () => {
         ]
       };
       
-      const bottlenecks = tracker.identifyBottlenecks(blockedProject);
+      const bottlenecks = monitoringStrategy.identifyBottlenecks(blockedProject);
       
       expect(bottlenecks).toContainEqual(
         expect.objectContaining({
@@ -311,14 +311,14 @@ describe('ProgressTracker', () => {
         }))
       };
       
-      const bottlenecks = tracker.identifyBottlenecks(fastProject);
+      const bottlenecks = monitoringStrategy.identifyBottlenecks(fastProject);
       expect(bottlenecks).toEqual([]);
     });
   });
 
   describe('Status Reporting', () => {
     it('should generate comprehensive status report', () => {
-      const report = tracker.generateReport(mockProject);
+      const report = monitoringStrategy.generateReport(mockProject);
       
       expect(report).toMatchObject({
         projectId: 'test-project-123',
@@ -349,7 +349,7 @@ describe('ProgressTracker', () => {
     });
 
     it('should include phase details in report', () => {
-      const report = tracker.generateReport(mockProject);
+      const report = monitoringStrategy.generateReport(mockProject);
       
       expect(report.phases).toHaveLength(3);
       expect(report.phases[0]).toMatchObject({
@@ -376,7 +376,7 @@ describe('ProgressTracker', () => {
         }))
       };
       
-      const report = tracker.generateReport(completedProject);
+      const report = monitoringStrategy.generateReport(completedProject);
       expect(report.progress.overall).toBe(100);
       expect(report.status).toBe('completed');
     });
@@ -385,39 +385,39 @@ describe('ProgressTracker', () => {
   describe('Update and Monitoring', () => {
     it('should track progress updates over time', () => {
       // Initial update
-      tracker.updateProject(mockProject);
-      const initialMetrics = tracker.getMetrics();
+      monitoringStrategy.updateProject(mockProject);
+      const initialMetrics = monitoringStrategy.getMetrics();
       
       // Complete another task
       mockProject.tasks[4].status = 'completed';
       mockProject.tasks[4].completedAt = '2024-01-01T10:45:00Z';
       
-      tracker.updateProject(mockProject);
-      const updatedMetrics = tracker.getMetrics();
+      monitoringStrategy.updateProject(mockProject);
+      const updatedMetrics = monitoringStrategy.getMetrics();
       
       expect(updatedMetrics.overall).toBeGreaterThan(initialMetrics.overall);
       expect(updatedMetrics.tasks.completed).toBe(4);
     });
 
     it('should maintain history of progress updates', () => {
-      tracker.updateProject(mockProject);
+      monitoringStrategy.updateProject(mockProject);
       
       // Make changes
       mockProject.tasks[3].status = 'completed';
       mockProject.tasks[3].completedAt = '2024-01-01T10:45:00Z';
       
-      tracker.updateProject(mockProject);
+      monitoringStrategy.updateProject(mockProject);
       
-      const history = tracker.getProgressHistory();
+      const history = monitoringStrategy.getProgressHistory();
       expect(history).toHaveLength(2);
       expect(history[0].overall).toBeLessThan(history[1].overall);
     });
 
     it('should handle real-time updates', () => {
       const callback = jest.fn();
-      tracker.onProgressUpdate(callback);
+      monitoringStrategy.onProgressUpdate(callback);
       
-      tracker.updateProject(mockProject);
+      monitoringStrategy.updateProject(mockProject);
       
       expect(callback).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -436,8 +436,8 @@ describe('ProgressTracker', () => {
         duration: 15000
       };
       
-      tracker.recordResourceUsage('task-3', resourceData);
-      const usage = tracker.getResourceUsage();
+      monitoringStrategy.recordResourceUsage('task-3', resourceData);
+      const usage = monitoringStrategy.getResourceUsage();
       
       expect(usage.byTask['task-3']).toEqual(resourceData);
       expect(usage.total.memory).toBe(512);
@@ -445,11 +445,11 @@ describe('ProgressTracker', () => {
     });
 
     it('should identify resource-intensive tasks', () => {
-      tracker.recordResourceUsage('task-1', { memory: 100, cpu: 20, duration: 5000 });
-      tracker.recordResourceUsage('task-2', { memory: 800, cpu: 90, duration: 25000 });
-      tracker.recordResourceUsage('task-3', { memory: 200, cpu: 30, duration: 8000 });
+      monitoringStrategy.recordResourceUsage('task-1', { memory: 100, cpu: 20, duration: 5000 });
+      monitoringStrategy.recordResourceUsage('task-2', { memory: 800, cpu: 90, duration: 25000 });
+      monitoringStrategy.recordResourceUsage('task-3', { memory: 200, cpu: 30, duration: 8000 });
       
-      const intensive = tracker.getResourceIntensiveTasks();
+      const intensive = monitoringStrategy.getResourceIntensiveTasks();
       
       expect(intensive).toContainEqual(
         expect.objectContaining({
@@ -470,10 +470,10 @@ describe('ProgressTracker', () => {
       };
       
       expect(() => {
-        tracker.calculateProgress(malformedProject);
+        monitoringStrategy.calculateProgress(malformedProject);
       }).not.toThrow();
       
-      const progress = tracker.calculateProgress(malformedProject);
+      const progress = monitoringStrategy.calculateProgress(malformedProject);
       expect(progress.overall).toBe(0);
     });
 
@@ -487,18 +487,18 @@ describe('ProgressTracker', () => {
         }))
       };
       
-      const timing = tracker.calculateTiming(noTimingProject);
+      const timing = monitoringStrategy.calculateTiming(noTimingProject);
       expect(timing.averageTaskDuration).toBeNull();
       expect(timing.totalElapsed).toBeNull();
     });
 
     it('should validate project data structure', () => {
       expect(() => {
-        tracker.updateProject(null);
+        monitoringStrategy.updateProject(null);
       }).toThrow('Project data is required');
       
       expect(() => {
-        tracker.updateProject({});
+        monitoringStrategy.updateProject({});
       }).toThrow('Project must have a projectId');
     });
   });
