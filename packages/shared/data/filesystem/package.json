@@ -1,0 +1,35 @@
+{
+  "name": "@legion/filesystem",
+  "version": "1.0.0",
+  "description": "Filesystem Handle abstractions with pluggable ResourceManager implementations",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./handles": "./src/handles/index.js",
+    "./resourcemanagers": "./src/resourcemanagers/index.js"
+  },
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+  },
+  "dependencies": {
+    "@legion/handle": "workspace:*",
+    "@legion/data-proxies": "workspace:*",
+    "@legion/actors": "workspace:*",
+    "@legion/websocket-actor-protocol": "workspace:*"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  },
+  "keywords": [
+    "filesystem",
+    "handles",
+    "resourcemanager",
+    "legion",
+    "data-access"
+  ],
+  "author": "Legion Framework",
+  "license": "MIT"
+}

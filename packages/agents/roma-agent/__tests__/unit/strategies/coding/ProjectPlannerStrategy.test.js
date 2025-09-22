@@ -114,8 +114,9 @@ describe('ProjectPlannerStrategy', () => {
       expect(strategy.strategies.test).toBeDefined();
       expect(strategy.strategies.debug).toBeDefined();
       
-      // Should create prompts
-      expect(strategy.prompts).toBeDefined();
+      // Should initialize new strategies (Phase 1: Migration)
+      expect(strategy.analysisStrategy).toBeDefined();
+      expect(strategy.analysisStrategy.getName()).toBe('Analysis');
       
       // Should load or create project state
       expect(strategy.state).toBeDefined();

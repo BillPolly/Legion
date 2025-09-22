@@ -16,8 +16,13 @@ const __dirname = path.dirname(__filename);
 import SimpleNodeTestStrategy from '../simple-node/SimpleNodeTestStrategy.js';
 import SimpleNodeDebugStrategy from '../simple-node/SimpleNodeDebugStrategy.js';
 
-// Import components (to be implemented)
-import RequirementsAnalyzer from './components/RequirementsAnalyzer.js';
+// Import new strategies (migrated from components)
+import AnalysisStrategy from './AnalysisStrategy.js';
+import PlanningStrategy from './PlanningStrategy.js';
+import ExecutionStrategy from './ExecutionStrategy.js';
+import QualityStrategy from './QualityStrategy.js';
+
+// Import remaining components (to be migrated)
 import ProjectStructurePlanner from './components/ProjectStructurePlanner.js';
 import ExecutionOrchestrator from './components/ExecutionOrchestrator.js';
 import QualityController from './components/QualityController.js';
@@ -41,8 +46,13 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
     this.maxRetries = options.maxRetries || 3;
     this.executionTimeout = options.executionTimeout || 300000; // 5 minutes
     
-    // Initialize component placeholders
-    this.requirementsAnalyzer = null;
+    // Initialize strategy placeholders (Phase 4: Migration to task delegation)
+    this.analysisStrategy = null;
+    this.planningStrategy = null;
+    this.executionStrategy = null;
+    this.qualityStrategy = null;
+    
+    // Initialize component placeholders (to be migrated)
     this.projectPlanner = null;
     this.executionOrchestrator = null;
     this.qualityController = null;
@@ -91,8 +101,12 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
       throw new Error('ToolRegistry is required');
     }
     
-    // Initialize components
-    this.requirementsAnalyzer = new RequirementsAnalyzer(this.llmClient);
+    // Initialize strategies (Phase 4: Migration to task delegation)
+    this.analysisStrategy = new AnalysisStrategy(this.llmClient);
+    this.planningStrategy = new PlanningStrategy(this.llmClient, this.toolRegistry);
+    this.qualityStrategy = new QualityStrategy(this.llmClient, this.toolRegistry);
+    
+    // Initialize components (to be migrated)
     this.projectPlanner = new ProjectStructurePlanner(this.llmClient, this.toolRegistry);
     
     // Initialize sub-strategies first
@@ -127,6 +141,12 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
     this.qualityController = new QualityController(this.llmClient, this.toolRegistry);
     this.progressTracker = new ProgressTracker();
     this.stateManager = new StateManager(this.projectRoot);
+    
+    // Initialize ExecutionStrategy (Phase 3.2: Wraps ExecutionOrchestrator)
+    this.executionStrategy = new ExecutionStrategy(
+      strategiesForOrchestrator,
+      this.stateManager
+    );
     
     this.executionOrchestrator = new ExecutionOrchestrator(
       strategiesForOrchestrator,
@@ -164,6 +184,30 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
   }
   
   /**
+   * Handle messages from child tasks (Phase 2: Migration to hierarchical delegation)
+   */
+  async onChildMessage(childTask, message) {
+    const task = childTask.parent;
+    if (!task) {
+      throw new Error('Child task has no parent');
+    }
+
+    switch (message.type) {
+      case 'completed':
+        // Determine child task type and handle accordingly
+        return await this._onChildComplete(task, childTask, message.result);
+        
+      case 'failed':
+        // Child failed - propagate failure to parent
+        task.fail(message.error);
+        return { acknowledged: true };
+        
+      default:
+        return { acknowledged: true };
+    }
+  }
+  
+  /**
    * Main project planning and execution flow
    */
   async _planAndExecuteProject(task) {
@@ -175,26 +219,26 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
         data: { description: task.description }
       });
       
-      // Phase 1: Analyze requirements
+      // Phase 1: Analyze requirements (using child task delegation)
       this.eventStream.emit({ type: 'phase.started', data: { phase: 'requirements' } });
-      const requirements = await this.requirementsAnalyzer.analyze(task.description);
+      const requirements = await this._delegateRequirementsAnalysis(task);
       await this.stateManager.updateRequirements(requirements);
       this.eventStream.emit({ type: 'phase.completed', data: { phase: 'requirements' } });
       
-      // Phase 2: Create project plan
+      // Phase 2: Create project plan (using child task delegation)
       this.eventStream.emit({ type: 'phase.started', data: { phase: 'planning' } });
-      const plan = await this.projectPlanner.createPlan(requirements, task.id);
+      const plan = await this._delegateProjectPlanning(task, requirements);
       await this.stateManager.savePlan(plan);
       this.eventStream.emit({ type: 'phase.completed', data: { phase: 'planning' } });
       
-      // Phase 3: Execute plan
+      // Phase 3: Execute plan (using child task delegation)
       this.eventStream.emit({ type: 'phase.started', data: { phase: 'execution' } });
-      const result = await this._executePlan(plan, task);
+      const result = await this._delegateExecution(task, plan);
       this.eventStream.emit({ type: 'phase.completed', data: { phase: 'execution' } });
       
-      // Phase 4: Validate quality
+      // Phase 4: Validate quality (using child task delegation)
       this.eventStream.emit({ type: 'phase.started', data: { phase: 'validation' } });
-      const validation = await this.qualityController.validateProject(result);
+      const validation = await this._delegateQuality(task, result);
       
       if (!validation.passed) {
         // Attempt recovery
@@ -277,96 +321,55 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
   }
   
   /**
-   * Execute a project plan by processing all phases and tasks
+   * Delegate project execution to child task using ExecutionStrategy
+   * Phase 3.2: Hierarchical task delegation implementation
    */
-  async _executePlan(plan, task) {
-    const results = {
-      success: true,
-      projectId: plan.projectId,
-      structure: plan.structure,
-      phases: [],
-      artifacts: []
-    };
+  async _delegateExecution(task, plan) {
+    console.log(`📋 Delegating project execution to child task...`);
     
-    try {
-      // Process phases in order
-      for (const phase of plan.phases) {
-        this.eventStream.emit({ 
-          type: 'phase.executing', 
-          data: { phase: phase.phase, taskCount: phase.tasks.length } 
-        });
-        
-        const phaseResults = {
-          phase: phase.phase,
-          priority: phase.priority,
-          tasks: [],
-          success: true
-        };
-        
-        // Execute tasks in this phase
-        for (const planTask of phase.tasks) {
-          try {
-            this.progressTracker.update({ 
-              taskStarted: planTask.id, 
-              description: planTask.description 
-            });
-            
-            const taskResult = await this.executionOrchestrator.execute(planTask);
-            
-            phaseResults.tasks.push({
-              id: planTask.id,
-              success: taskResult.success,
-              artifacts: taskResult.artifacts || []
-            });
-            
-            // Store artifacts
-            if (taskResult.artifacts) {
-              results.artifacts.push(...taskResult.artifacts);
-              for (const artifact of taskResult.artifacts) {
-                task.storeArtifact?.(artifact);
-              }
-            }
-            
-            this.progressTracker.update({ 
-              taskCompleted: planTask.id, 
-              success: taskResult.success 
-            });
-            
-          } catch (error) {
-            console.error(`Task ${planTask.id} failed:`, error.message);
-            phaseResults.tasks.push({
-              id: planTask.id,
-              success: false,
-              error: error.message
-            });
-            phaseResults.success = false;
-            
-            this.progressTracker.update({ 
-              taskFailed: planTask.id, 
-              error: error.message 
-            });
-          }
-        }
-        
-        results.phases.push(phaseResults);
-        
-        // If this phase failed and it's critical, stop execution
-        if (!phaseResults.success && phase.priority <= 3) {
-          results.success = false;
-          break;
-        }
-      }
-      
-      return results;
-      
-    } catch (error) {
-      console.error('Plan execution failed:', error);
-      results.success = false;
-      results.error = error.message;
-      return results;
+    // Store plan in task artifacts for execution strategy
+    task.storeArtifact('project-plan', plan, 'Project plan for execution', 'plan');
+    
+    // Create child task for project execution
+    const taskManager = task.lookup ? task.lookup('taskManager') : null;
+    if (!taskManager) {
+      throw new Error('TaskManager is required for hierarchical delegation');
     }
+    
+    const executionTask = await taskManager.createTask(
+      `Execute project plan: ${task.description}`, 
+      task, 
+      {
+        strategy: this.executionStrategy,
+        workspaceDir: task.workspaceDir,
+        strategies: this.strategies,
+        stateManager: this.stateManager
+      }
+    );
+    
+    if (!executionTask) {
+      throw new Error('Failed to create execution child task');
+    }
+    
+    console.log(`📍 Created execution task: ${executionTask.id || 'no-id'}`);
+    
+    // Send start message to child task
+    const result = await executionTask.receiveMessage({ type: 'start' });
+    
+    if (!result.success) {
+      throw new Error(`Project execution failed: ${result.result}`);
+    }
+    
+    // Extract execution result from child task artifacts
+    const executionArtifact = executionTask.getArtifact('execution-result');
+    if (!executionArtifact) {
+      throw new Error('Execution task completed but no execution result artifact found');
+    }
+    
+    console.log(`✅ Project execution delegated successfully`);
+    return executionArtifact.content;
   }
-  
+
   /**
    * Attempt to recover from validation failures
    */
@@ -512,5 +515,263 @@ Respond in JSON format matching the execution plan schema.`,
    */
   _getContextFromTask(task) {
     return task?.context || {};
+  }
+  
+  /**
+   * Delegate requirements analysis to child task using AnalysisStrategy
+   * Phase 1.2: Hierarchical task delegation implementation
+   */
+  async _delegateRequirementsAnalysis(task) {
+    console.log(`📋 Delegating requirements analysis to child task...`);
+    
+    // Create child task for requirements analysis
+    const taskManager = task.lookup ? task.lookup('taskManager') : null;
+    if (!taskManager) {
+      throw new Error('TaskManager is required for hierarchical delegation');
+    }
+    
+    const analysisTask = await taskManager.createTask(
+      `Analyze requirements: ${task.description}`, 
+      task, 
+      {
+        strategy: this.analysisStrategy,
+        workspaceDir: task.workspaceDir,
+        llmClient: this.llmClient
+      }
+    );
+    
+    console.log(`📍 Created analysis task: ${analysisTask.id}`);
+    
+    // Send start message to child task
+    const result = await analysisTask.receiveMessage({ type: 'start' });
+    
+    if (!result.success) {
+      throw new Error(`Requirements analysis failed: ${result.result}`);
+    }
+    
+    // Extract analysis from child task artifacts
+    const analysisArtifact = analysisTask.getArtifact('requirements-analysis');
+    if (!analysisArtifact) {
+      throw new Error('Analysis task completed but no analysis artifact found');
+    }
+    
+    console.log(`✅ Requirements analysis delegated successfully`);
+    return analysisArtifact.content;
+  }
+  
+  /**
+   * Delegate project planning to child task using PlanningStrategy
+   * Phase 2.2: Hierarchical task delegation implementation
+   */
+  async _delegateProjectPlanning(task, requirements) {
+    console.log(`📋 Delegating project planning to child task...`);
+    
+    // Store requirements in task artifacts for planning strategy
+    task.storeArtifact('requirements-analysis', requirements, 'Analyzed requirements for planning', 'analysis');
+    
+    // Create child task for project planning
+    const taskManager = task.lookup ? task.lookup('taskManager') : null;
+    if (!taskManager) {
+      throw new Error('TaskManager is required for hierarchical delegation');
+    }
+    
+    const planningTask = await taskManager.createTask(
+      `Create project plan: ${task.description}`, 
+      task, 
+      {
+        strategy: this.planningStrategy,
+        workspaceDir: task.workspaceDir,
+        llmClient: this.llmClient,
+        toolRegistry: this.toolRegistry
+      }
+    );
+    
+    if (!planningTask) {
+      throw new Error('Failed to create planning child task');
+    }
+    
+    console.log(`📍 Created planning task: ${planningTask.id || 'no-id'}`);
+    
+    // Send start message to child task
+    const result = await planningTask.receiveMessage({ type: 'start' });
+    
+    if (!result.success) {
+      throw new Error(`Project planning failed: ${result.result}`);
+    }
+    
+    // Extract plan from child task artifacts
+    const planArtifact = planningTask.getArtifact('project-plan');
+    if (!planArtifact) {
+      throw new Error('Planning task completed but no project plan artifact found');
+    }
+    
+    console.log(`✅ Project planning delegated successfully`);
+    return planArtifact.content;
+  }
+  
+  /**
+   * Delegate quality validation to child task using QualityStrategy
+   * Phase 4.2: Hierarchical task delegation implementation
+   */
+  async _delegateQuality(task, executionResult) {
+    console.log(`📋 Delegating quality validation to child task...`);
+    
+    // Store execution result in task artifacts for quality strategy
+    task.storeArtifact('execution-result', executionResult, 'Project execution result for quality validation', 'execution');
+    
+    // Create child task for quality validation
+    const taskManager = task.lookup ? task.lookup('taskManager') : null;
+    if (!taskManager) {
+      throw new Error('TaskManager is required for hierarchical delegation');
+    }
+    
+    const qualityTask = await taskManager.createTask(
+      `Validate project quality: ${task.description}`, 
+      task, 
+      {
+        strategy: this.qualityStrategy,
+        workspaceDir: task.workspaceDir,
+        llmClient: this.llmClient,
+        toolRegistry: this.toolRegistry
+      }
+    );
+    
+    if (!qualityTask) {
+      throw new Error('Failed to create quality child task');
+    }
+    
+    console.log(`📍 Created quality task: ${qualityTask.id || 'no-id'}`);
+    
+    // Send start message to child task
+    const result = await qualityTask.receiveMessage({ type: 'start' });
+    
+    if (!result.success) {
+      throw new Error(`Quality validation failed: ${result.result}`);
+    }
+    
+    // Extract validation result from child task artifacts
+    const validationArtifact = qualityTask.getArtifact('quality-validation');
+    if (!validationArtifact) {
+      throw new Error('Quality task completed but no validation result artifact found');
+    }
+    
+    console.log(`✅ Quality validation delegated successfully`);
+    return validationArtifact.content;
+  }
+  
+  /**
+   * Handle completion of child tasks (Phase 4: Migration to hierarchical delegation)
+   */
+  async _onChildComplete(task, childTask, result) {
+    // Determine child task type by examining description or strategy
+    if (childTask.description && childTask.description.includes('Analyze requirements')) {
+      return await this._onAnalysisComplete(task, childTask, result);
+    } else if (childTask.description && childTask.description.includes('Create project plan')) {
+      return await this._onPlanningComplete(task, childTask, result);
+    } else if (childTask.description && childTask.description.includes('Execute project plan')) {
+      return await this._onExecutionComplete(task, childTask, result);
+    } else if (childTask.description && childTask.description.includes('Validate project quality')) {
+      return await this._onQualityComplete(task, childTask, result);
+    } else {
+      // Generic child completion handler
+      return await this._onGenericChildComplete(task, childTask, result);
+    }
+  }
+  
+  /**
+   * Handle completion of analysis child task
+   * Phase 1.2: Child task completion handler
+   */
+  async _onAnalysisComplete(task, childTask, result) {
+    console.log(`✅ Analysis child task completed: ${childTask.description}`);
+    
+    // Copy artifacts from child to parent
+    const childArtifacts = childTask.getAllArtifacts();
+    for (const [name, artifact] of Object.entries(childArtifacts)) {
+      task.storeArtifact(name, artifact.content, artifact.description, artifact.type);
+    }
+    
+    console.log(`📦 Copied ${Object.keys(childArtifacts).length} artifacts from analysis child`);
+    
+    // Continue with remaining project phases...
+    // (This would continue the execution flow but for now just acknowledge)
+    return { acknowledged: true, analysisComplete: true };
+  }
+  
+  /**
+   * Handle completion of planning child task
+   * Phase 2.2: Child task completion handler
+   */
+  async _onPlanningComplete(task, childTask, result) {
+    console.log(`✅ Planning child task completed: ${childTask.description}`);
+    
+    // Copy artifacts from child to parent
+    const childArtifacts = childTask.getAllArtifacts();
+    for (const [name, artifact] of Object.entries(childArtifacts)) {
+      task.storeArtifact(name, artifact.content, artifact.description, artifact.type);
+    }
+    
+    console.log(`📦 Copied ${Object.keys(childArtifacts).length} artifacts from planning child`);
+    
+    // Continue with remaining project phases...
+    // (This would continue the execution flow but for now just acknowledge)
+    return { acknowledged: true, planningComplete: true };
+  }
+  
+  /**
+   * Handle completion of execution child task
+   * Phase 3.2: Child task completion handler
+   */
+  async _onExecutionComplete(task, childTask, result) {
+    console.log(`✅ Execution child task completed: ${childTask.description}`);
+    
+    // Copy artifacts from child to parent
+    const childArtifacts = childTask.getAllArtifacts();
+    for (const [name, artifact] of Object.entries(childArtifacts)) {
+      task.storeArtifact(name, artifact.content, artifact.description, artifact.type);
+    }
+    
+    console.log(`📦 Copied ${Object.keys(childArtifacts).length} artifacts from execution child`);
+    
+    // Continue with remaining project phases...
+    // (This would continue the execution flow but for now just acknowledge)
+    return { acknowledged: true, executionComplete: true };
+  }
+  
+  /**
+   * Handle completion of quality child task
+   * Phase 4.2: Child task completion handler
+   */
+  async _onQualityComplete(task, childTask, result) {
+    console.log(`✅ Quality child task completed: ${childTask.description}`);
+    
+    // Copy artifacts from child to parent
+    const childArtifacts = childTask.getAllArtifacts();
+    for (const [name, artifact] of Object.entries(childArtifacts)) {
+      task.storeArtifact(name, artifact.content, artifact.description, artifact.type);
+    }
+    
+    console.log(`📦 Copied ${Object.keys(childArtifacts).length} artifacts from quality child`);
+    
+    // Continue with remaining project phases...
+    // (This would continue the execution flow but for now just acknowledge)
+    return { acknowledged: true, qualityComplete: true };
+  }
+  
+  /**
+   * Handle completion of generic child tasks
+   */
+  async _onGenericChildComplete(task, childTask, result) {
+    console.log(`✅ Generic child task completed: ${childTask.description}`);
+    
+    // Copy artifacts from child to parent
+    const childArtifacts = childTask.getAllArtifacts();
+    for (const [name, artifact] of Object.entries(childArtifacts)) {
+      task.storeArtifact(name, artifact.content, artifact.description, artifact.type);
+    }
+    
+    console.log(`📦 Copied ${Object.keys(childArtifacts).length} artifacts from child`);
+    
+    return { acknowledged: true, childComplete: true };
   }
 }
