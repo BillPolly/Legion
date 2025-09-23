@@ -43,34 +43,46 @@ export default class ExecutionStrategy extends TaskStrategy {
   }
   
   /**
-   * Handle messages from any source task
+   * Handle message from a task (strategy context, source task, message)
+   * @param {Task} myTask - The task this strategy belongs to (context)
+   * @param {Task} sourceTask - The task that sent the message
+   * @param {Object} message - The message received
    */
-  async onMessage(sourceTask, message) {
+  handleMessage(myTask, sourceTask, message) {
     switch (message.type) {
       case 'start':
       case 'work':
-        return await this._handleExecutionRequest(message.task || sourceTask);
+        this._handleExecutionRequest(myTask).catch(error => {
+          console.error('Execution request failed:', error);
+          myTask.fail(error);
+        });
+        break;
+        
       case 'abort':
-        return await this._handleAbortRequest();
+        this._handleAbortRequest().catch(error => {
+          console.error('Abort request failed:', error);
+        });
+        break;
+        
       case 'completed':
-        // Handle child task completion
-        if (sourceTask.parent) {
-          return { acknowledged: true };
-        }
-        return { acknowledged: true };
+        console.log(`✅ Execution task completed: ${sourceTask.description}`);
+        myTask.send(myTask.parent, { type: 'child-completed', child: sourceTask });
+        break;
+        
       case 'failed':
-        // Handle child task failure
-        if (sourceTask.parent) {
-          return { acknowledged: true };
-        }
-        return { acknowledged: true };
+        myTask.send(myTask.parent, { type: 'child-failed', child: sourceTask, error: message.error });
+        break;
+        
       default:
-        return { acknowledged: true };
+        console.log(`ℹ️ ExecutionStrategy received unhandled message type: ${message.type}`);
+        break;
     }
   }
+
   
   /**
    * Handle execution request from parent task
+   * @private
    */
   async _handleExecutionRequest(task) {
     try {
@@ -141,6 +153,7 @@ export default class ExecutionStrategy extends TaskStrategy {
   
   /**
    * Handle abort request
+   * @private
    */
   async _handleAbortRequest() {
     try {
@@ -304,12 +317,18 @@ export default class ExecutionStrategy extends TaskStrategy {
         // Create child task for strategy
         const childTask = await this.createChildTask(task, strategy);
         
-        // Execute strategy using message-based interface
-        result = await strategy.onMessage(childTask, {
-          type: 'start',
-          context: context,
-          input: task.input
-        });
+        // Fire-and-forget message to strategy (can't expect synchronous return)
+        if (strategy.handleMessage) {
+          strategy.handleMessage(childTask, this, {
+            type: 'start',
+            context: context,
+            input: task.input
+          });
+        }
+        
+        // Since we can't get synchronous result from fire-and-forget messaging,
+        // we need to wait for the child task to complete/fail via status polling
+        result = await this.waitForChildTaskCompletion(childTask);
         
         // Validate result
         if (await this.validateResult(result, task.validation)) {
@@ -521,6 +540,27 @@ export default class ExecutionStrategy extends TaskStrategy {
    */
   async delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+  
+  /**
+   * Wait for child task to complete (polling-based for fire-and-forget pattern)
+   */
+  async waitForChildTaskCompletion(childTask) {
+    const maxWait = 30000; // 30 seconds max
+    const pollInterval = 100; // Check every 100ms
+    const startTime = Date.now();
+    
+    while (Date.now() - startTime < maxWait) {
+      if (childTask.status === 'completed') {
+        return childTask.result || { success: true };
+      }
+      if (childTask.status === 'failed') {
+        throw new Error(childTask.error || 'Child task failed');
+      }
+      await this.delay(pollInterval);
+    }
+    
+    throw new Error('Child task execution timeout');
   }
 
   /**

@@ -18,6 +18,8 @@
     "packages/km/*"
   ],
   "scripts": {
+    "mcp": "node scripts/mcp.js",
+    "mcp:config": "node scripts/mcp-config-generator.js",
     "test": "npm run test --workspaces",
     "test:cli": "npm run test --workspace=@legion/cli",
     "test:tools-registry": "npm run test --workspace=@legion/tools-registry",

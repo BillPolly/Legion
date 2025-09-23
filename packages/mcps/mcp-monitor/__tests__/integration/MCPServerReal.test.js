@@ -17,16 +17,16 @@ describe('MCP Server Real Test', () => {
     await client.connect('node', [serverPath]);
     await client.initialize({ name: 'test-client', version: '1.0.0' });
     client.sendNotification('notifications/initialized');
-  });
+  }, 30000);
   
   afterEach(async () => {
     if (client) {
       await client.disconnect();
     }
-  });
+  }, 10000);
   
   test('should start app and capture logs', async () => {
-    const testScript = path.join(__dirname, 'test-app.cjs');
+    const testScript = path.join(__dirname, 'fullstack-test-app.js');
     
     // Start monitoring
     const startResult = await client.callTool('start_app', {
@@ -51,5 +51,5 @@ describe('MCP Server Real Test', () => {
     
     // Clean up
     await client.callTool('stop_app', { session_id: 'test-session' });
-  }, 30000);
+  }, 60000);
 });

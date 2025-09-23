@@ -2,9 +2,10 @@
   "mcpServers": {
     "fullstack-monitor": {
       "command": "node",
-      "args": ["packages/mcps/mcp-monitor/mcp-server.js"],
+      "args": ["--experimental-vm-modules", "packages/mcps/mcp-monitor/mcp-server.js"],
       "cwd": "/Users/maxximus/Documents/max-projects/pocs/Legion",
       "env": {
+        "NODE_OPTIONS": "--experimental-vm-modules",
         "MCP_SERVER_NAME": "fullstack-monitor",
         "MCP_SERVER_VERSION": "1.0.0",
         "MONOREPO_ROOT": "/Users/maxximus/Documents/max-projects/pocs/Legion"

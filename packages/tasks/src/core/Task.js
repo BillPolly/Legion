@@ -747,10 +747,24 @@ export default class Task {
     try {
       if (fromTask === this.parent) {
         // Message from parent - pass THIS task as the task to work on
-        return await this.strategy.onMessage(this, message);
+        if (typeof this.strategy.send === 'function') {
+          // Use new fire-and-forget message pattern
+          console.log('Task.receiveMessage using send() for fire-and-forget messaging');
+          this.strategy.send(this, message);
+          return { acknowledged: true, messagePattern: 'fire-and-forget' };
+        } else {
+          throw new Error('Strategy must implement send() method');
+        }
       } else if (this.children.includes(fromTask)) {
         // Message from child - pass the child task
-        return await this.strategy.onMessage(fromTask, message);
+        if (typeof this.strategy.send === 'function') {
+          // Use new fire-and-forget message pattern
+          console.log('Task.receiveMessage using send() for child message');
+          this.strategy.send(fromTask, message);
+          return { acknowledged: true, messagePattern: 'fire-and-forget' };
+        } else {
+          throw new Error('Strategy must implement send() method');
+        }
       } else if (!fromTask) {
         // Initial message or external message
         if (message.type === 'start' || message.type === 'work') {
@@ -764,12 +778,15 @@ export default class Task {
         if (!this.strategy) {
           throw new Error('Task has no strategy');
         }
-        if (typeof this.strategy.onMessage !== 'function') {
-          throw new Error('Strategy has no onMessage method');
-        }
         
-        console.log('Task.receiveMessage calling strategy.onMessage with task:', this.description, 'strategy:', this.strategy.getName ? this.strategy.getName() : 'unknown');
-        return await this.strategy.onMessage(this, message);
+        if (typeof this.strategy.send === 'function') {
+          // Use new fire-and-forget message pattern
+          console.log('Task.receiveMessage using send() for external message to task:', this.description, 'strategy:', this.strategy.getName ? this.strategy.getName() : 'unknown');
+          this.strategy.send(this, message);
+          return { acknowledged: true, messagePattern: 'fire-and-forget' };
+        } else {
+          throw new Error('Strategy must implement send() method');
+        }
       } else {
         // Unknown sender
         return {
@@ -788,7 +805,29 @@ export default class Task {
   }
 
   /**
-   * Send a message to another task
+   * Private synchronous message handler - delegates to strategy
+   * @param {Task} sourceTask - The task that sent the message
+   * @param {Object} message - The message received
+   */
+  _onMessage(sourceTask, message) {
+    // Pass THIS task as first param (context), source task as second
+    this.strategy.handleMessage(this, sourceTask, message);
+  }
+
+  /**
+   * Send a message to another task (fire-and-forget, queued via setImmediate)
+   * @param {Task} targetTask - The task to send the message to
+   * @param {Object} message - The message to send
+   */
+  send(targetTask, message) {
+    // Queue the message delivery on the next tick of the event loop
+    setImmediate(() => {
+      targetTask._onMessage(this, message);
+    });
+  }
+
+  /**
+   * Send a message to another task (DEPRECATED - use send() instead)
    */
   async sendMessage(targetTask, message) {
     return await targetTask.receiveMessage(message, this);

@@ -19,7 +19,7 @@ export class SimpleSessionManager {
   async getMonitor() {
     if (!this.monitor) {
       // Use the singleton ResourceManager instance from @legion/resource-manager
-      const resourceManager = ResourceManager.getInstance();
+      const resourceManager = await ResourceManager.getInstance();
       
       // Pass the wsAgentPort to FullStackMonitor
       this.monitor = await FullStackMonitor.create(resourceManager, {

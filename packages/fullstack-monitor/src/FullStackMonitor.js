@@ -16,8 +16,12 @@ import * as url from 'url';
 
 // Dynamic import for Puppeteer to handle missing dependencies
 let puppeteer;
+let PuppeteerScreenRecorder;
 try {
   puppeteer = (await import('puppeteer')).default;
+  // Also import the screen recorder
+  const recorderModule = await import('puppeteer-screen-recorder');
+  PuppeteerScreenRecorder = recorderModule.PuppeteerScreenRecorder;
 } catch (e) {
   console.warn('⚠️  Puppeteer not available - browser features will be disabled');
 }
@@ -1672,7 +1676,7 @@ ENVIRONMENT VARIABLES:
       const isHeadless = options.headless !== undefined ? options.headless : false;
       
       const launchOptions = {
-        headless: isHeadless ? 'new' : false, // Use new headless mode or visible
+        headless: isHeadless ? true : false, // Use old headless mode for compatibility
         devtools: options.devtools || false,
         defaultViewport: options.viewport !== undefined ? options.viewport : null,  // null = responsive viewport
         ignoreDefaultArgs: false,
@@ -1927,6 +1931,253 @@ ENVIRONMENT VARIABLES:
   }
 
   /**
+   * Start video recording of a page
+   */
+  async startVideoRecording(sessionId, options = {}) {
+    if (!puppeteer || !PuppeteerScreenRecorder) {
+      throw new Error('Video recording requires Puppeteer and puppeteer-screen-recorder to be installed');
+    }
+
+    const pages = this.getSessionPages(sessionId);
+    if (!pages || pages.length === 0) {
+      throw new Error('No page open for this session. Use monitorPage first.');
+    }
+
+    const pageInfo = pages[0];
+    
+    // Check if already recording
+    if (pageInfo.videoRecorder) {
+      throw new Error('Video recording already in progress for this session');
+    }
+
+    // Determine video format from path or options
+    const format = options.format || (options.output_path && path.extname(options.output_path).slice(1)) || 'mp4';
+    
+    // Generate video path if not provided
+    const videoPath = options.output_path || path.join(
+      process.cwd(), 
+      'videos',
+      `recording-${sessionId}-${Date.now()}.${format}`
+    );
+
+    // Ensure video directory exists
+    const videoDir = path.dirname(videoPath);
+    await fs.mkdir(videoDir, { recursive: true });
+
+    // Configure recorder options
+    const recorderOptions = {
+      followNewTab: false,  // Don't follow new tabs
+      fps: options.fps || 25,
+      videoFrame: {
+        width: options.width || 1280,
+        height: options.height || 720,
+      },
+      videoCrf: 18, // Quality (lower = better, 18-28 typical)
+      videoCodec: 'libx264', // H.264 codec for compatibility
+      videoPreset: 'ultrafast', // Fast encoding
+      videoBitrate: options.bitrate || 1000,
+      autopad: {
+        color: 'black'
+      },
+      aspectRatio: '16:9',
+    };
+
+    // Create and start the recorder
+    const page = pageInfo.page;
+    const recorder = new PuppeteerScreenRecorder(page, recorderOptions);
+    
+    try {
+      await recorder.start(videoPath);
+      
+      // Store recorder instance
+      pageInfo.videoRecorder = recorder;
+      pageInfo.videoPath = videoPath;
+      pageInfo.videoStartTime = Date.now();
+      
+      console.log(`🎥 Video recording started for session ${sessionId}`);
+      console.log(`   Format: ${format.toUpperCase()}`);
+      console.log(`   Resolution: ${recorderOptions.videoFrame.width}x${recorderOptions.videoFrame.height}`);
+      console.log(`   FPS: ${recorderOptions.fps}`);
+      console.log(`   Output: ${videoPath}`);
+      
+      return {
+        success: true,
+        message: 'Video recording started',
+        sessionId,
+        outputPath: videoPath,
+        format,
+        resolution: `${recorderOptions.videoFrame.width}x${recorderOptions.videoFrame.height}`,
+        fps: recorderOptions.fps
+      };
+    } catch (error) {
+      console.error(`❌ Failed to start video recording: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Stop video recording and save the file
+   */
+  async stopVideoRecording(sessionId) {
+    const pages = this.getSessionPages(sessionId);
+    if (!pages || pages.length === 0) {
+      throw new Error('No page open for this session');
+    }
+
+    const pageInfo = pages[0];
+    
+    if (!pageInfo.videoRecorder) {
+      throw new Error('No video recording in progress for this session');
+    }
+
+    const recorder = pageInfo.videoRecorder;
+    const videoPath = pageInfo.videoPath;
+    const startTime = pageInfo.videoStartTime;
+
+    try {
+      // Stop the recorder
+      await recorder.stop();
+      
+      const duration = (Date.now() - startTime) / 1000;
+      
+      // Clear recording info
+      delete pageInfo.videoRecorder;
+      delete pageInfo.videoPath;
+      delete pageInfo.videoStartTime;
+
+      // Get file stats
+      let fileStats = null;
+      try {
+        const stats = await fs.stat(videoPath);
+        fileStats = {
+          size: stats.size,
+          sizeKB: (stats.size / 1024).toFixed(2),
+          sizeMB: (stats.size / 1024 / 1024).toFixed(2),
+          created: stats.birthtime
+        };
+      } catch (e) {
+        console.warn('Could not get video file stats:', e.message);
+      }
+
+      console.log(`🎬 Video recording stopped`);
+      console.log(`   Duration: ${duration.toFixed(1)}s`);
+      if (fileStats) {
+        console.log(`   File size: ${fileStats.sizeKB} KB (${fileStats.sizeMB} MB)`);
+      }
+      console.log(`   Output: ${videoPath}`);
+
+      return {
+        success: true,
+        message: 'Video recording stopped and saved',
+        sessionId,
+        outputPath: videoPath,
+        duration: duration.toFixed(1),
+        fileStats
+      };
+    } catch (error) {
+      // Clean up on error
+      delete pageInfo.videoRecorder;
+      delete pageInfo.videoPath;
+      delete pageInfo.videoStartTime;
+      console.error(`❌ Failed to stop video recording: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Check if ffmpeg is available
+   */
+  async _checkFfmpeg() {
+    try {
+      const { execSync } = await import('child_process');
+      execSync('ffmpeg -version', { stdio: 'ignore' });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Encode captured frames to video using ffmpeg
+   */
+  async _encodeFramesToVideo(frames, outputPath, options = {}) {
+    const { exec } = await import('child_process');
+    const { promisify } = await import('util');
+    const execAsync = promisify(exec);
+    
+    // Create temp directory for frames
+    const tempDir = path.join(path.dirname(outputPath), `.temp-${Date.now()}`);
+    await fs.mkdir(tempDir, { recursive: true });
+
+    try {
+      // Save frames as images
+      for (let i = 0; i < frames.length; i++) {
+        const framePath = path.join(tempDir, `frame-${String(i).padStart(6, '0')}.png`);
+        const buffer = Buffer.from(frames[i].data, 'base64');
+        await fs.writeFile(framePath, buffer);
+      }
+
+      // Use ffmpeg to create video from frames
+      const fps = options.fps || 30;
+      const quality = options.quality || 80;
+      const format = path.extname(outputPath).slice(1) || 'webm';
+      
+      let ffmpegCmd;
+      if (format === 'webm') {
+        ffmpegCmd = `ffmpeg -framerate ${fps} -i "${tempDir}/frame-%06d.png" -c:v libvpx-vp9 -crf ${100 - quality} -b:v 0 "${outputPath}" -y`;
+      } else if (format === 'mp4') {
+        ffmpegCmd = `ffmpeg -framerate ${fps} -i "${tempDir}/frame-%06d.png" -c:v libx264 -preset fast -crf ${Math.round((100 - quality) * 0.51)} "${outputPath}" -y`;
+      } else {
+        ffmpegCmd = `ffmpeg -framerate ${fps} -i "${tempDir}/frame-%06d.png" "${outputPath}" -y`;
+      }
+
+      await execAsync(ffmpegCmd);
+
+      // Clean up temp frames
+      await fs.rm(tempDir, { recursive: true, force: true });
+    } catch (error) {
+      // Clean up on error
+      try {
+        await fs.rm(tempDir, { recursive: true, force: true });
+      } catch {}
+      throw new Error(`Failed to encode video: ${error.message}`);
+    }
+  }
+
+  /**
+   * Simple API: Start video recording
+   */
+  async startVideo(sessionId, options = {}) {
+    try {
+      const result = await this.startVideoRecording(sessionId, options);
+      return { content: [{ type: 'text', text: `✅ ${result.message}\n📁 Output: ${result.outputPath}` }] };
+    } catch (error) {
+      console.error('Error starting video:', error);
+      return { content: [{ type: 'text', text: `❌ Failed to start video: ${error.message}` }] };
+    }
+  }
+
+  /**
+   * Simple API: Stop video recording
+   */
+  async stopVideo(sessionId) {
+    try {
+      const result = await this.stopVideoRecording(sessionId);
+      let message = `✅ ${result.message}\n`;
+      message += `📁 Output: ${result.outputPath}\n`;
+      message += `⏱️ Duration: ${result.duration.toFixed(1)}s\n`;
+      message += `🎞️ Frames: ${result.frameCount}`;
+      if (result.fileStats) {
+        message += `\n📊 Size: ${(result.fileStats.size / 1024 / 1024).toFixed(2)} MB`;
+      }
+      return { content: [{ type: 'text', text: message }] };
+    } catch (error) {
+      console.error('Error stopping video:', error);
+      return { content: [{ type: 'text', text: `❌ Failed to stop video: ${error.message}` }] };
+    }
+  }
+
+  /**
    * Execute browser command on a page
    */
   async executeBrowserCommand(sessionId, command, args = []) {
@@ -1983,6 +2234,21 @@ ENVIRONMENT VARIABLES:
     
     // Set cleanup flag to prevent logging after cleanup
     this.isCleaningUp = true;
+    
+    // Stop any video recordings in progress
+    for (const [sessionId, pageIds] of this.sessionPages) {
+      for (const pageId of pageIds) {
+        const pageInfo = this.browserPages.get(pageId);
+        if (pageInfo && pageInfo.videoRecording) {
+          try {
+            await this.stopVideoRecording(sessionId);
+            console.log(`  Stopped video recording for session ${sessionId}`);
+          } catch (error) {
+            console.warn(`  Warning: Failed to stop video recording for session ${sessionId}:`, error.message);
+          }
+        }
+      }
+    }
     
     // Stop Agent WebSocket server
     if (this.agentServer) {

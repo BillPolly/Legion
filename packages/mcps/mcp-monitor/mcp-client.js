@@ -33,6 +33,11 @@ export class MCPClient {
     try {
       const message = JSON.parse(messageStr);
       
+      // Only process JSON-RPC messages
+      if (!message.jsonrpc) {
+        return; // Skip non-JSON-RPC messages
+      }
+      
       if (message.id && this.pendingRequests.has(message.id)) {
         const { resolve, reject } = this.pendingRequests.get(message.id);
         this.pendingRequests.delete(message.id);
@@ -44,7 +49,11 @@ export class MCPClient {
         }
       }
     } catch (error) {
-      console.error('Error parsing message:', error, messageStr);
+      // Silently ignore non-JSON messages (they're just console output from the monitor)
+      // Only log if it looks like it should be JSON
+      if (messageStr.startsWith('{') || messageStr.startsWith('[')) {
+        console.error('Error parsing potential JSON message:', error.message);
+      }
     }
   }
 

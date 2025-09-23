@@ -3,7 +3,7 @@
     "fullstack-monitor": {
       "command": "node",
       "args": ["mcp-server.js"],
-      "cwd": "/Users/maxximus/Documents/max/pocs/LegionCopy/packages/mcps/mcp-monitor",
+      "cwd": "/Users/maxximus/Documents/max-projects/pocs/Legion/packages/mcps/mcp-monitor",
       "env": {
         "NODE_OPTIONS": "--experimental-vm-modules"
       }

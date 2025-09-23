@@ -158,36 +158,63 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
   }
   
   /**
-   * Handle messages from parent task
+   * Private synchronous message handler (fire-and-forget pattern)
    */
-  async onMessage(sourceTask, message) {
+  #onMessage(sourceTask, message) {
     switch (message.type) {
       case 'start':
-        return await this._planAndExecuteProject(sourceTask);
+        // Fire-and-forget: trigger project planning but don't return result
+        this._planAndExecuteProject(sourceTask).catch(error => {
+          console.error('Project planning failed:', error);
+          if (sourceTask.fail) {
+            sourceTask.fail(error);
+          }
+        });
+        break;
+        
       case 'status':
-        return await this._reportStatus(sourceTask);
+        // Fire-and-forget: report status but don't return result
+        this._reportStatus(sourceTask).catch(error => {
+          console.error('Status report failed:', error);
+        });
+        break;
+        
       case 'cancel':
-        return await this._cancelExecution(sourceTask);
+        this._cancelExecution(sourceTask).catch(error => {
+          console.error('Cancellation failed:', error);
+        });
+        break;
+        
       case 'completed':
         // Handle child task completion
         if (!sourceTask.parent) {
-          throw new Error('Child task has no parent');
+          console.error('Child task has no parent');
+          break;
         }
-        return await this._onChildComplete(sourceTask.parent, sourceTask, message.result);
+        this._onChildComplete(sourceTask.parent, sourceTask, message.result).catch(error => {
+          console.error('Child completion handling failed:', error);
+        });
+        break;
+        
       case 'failed':
         // Handle child task failure
         if (!sourceTask.parent) {
-          throw new Error('Child task has no parent');
+          console.error('Child task has no parent');
+          break;
         }
         sourceTask.parent.fail(message.error);
-        return { acknowledged: true };
+        break;
+        
       default:
-        return { acknowledged: true };
+        console.log(`ℹ️ ProjectPlannerStrategy received unhandled message type: ${message.type}`);
+        break;
     }
   }
+
   
   /**
    * Main project planning and execution flow
+   * @private
    */
   async _planAndExecuteProject(task) {
     try {
@@ -200,13 +227,14 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
       
       // Phase 1: Analyze requirements (using child task delegation)
       this.eventStream.emit({ type: 'phase.started', data: { phase: 'requirements' } });
-      await this.monitoringStrategy.onMessage(task, { 
+      // Use fire-and-forget messaging for monitoring updates
+      this.monitoringStrategy.send(task, { 
         type: 'update', 
         progressData: { taskStarted: 'requirements', description: 'Analyzing project requirements' }
       });
       const requirements = await this._delegateRequirementsAnalysis(task);
       await this.stateManager.updateRequirements(requirements);
-      await this.monitoringStrategy.onMessage(task, { 
+      this.monitoringStrategy.send(task, { 
         type: 'update', 
         progressData: { taskCompleted: 'requirements', success: true }
       });
@@ -214,13 +242,13 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
       
       // Phase 2: Create project plan (using child task delegation)
       this.eventStream.emit({ type: 'phase.started', data: { phase: 'planning' } });
-      await this.monitoringStrategy.onMessage(task, { 
+      this.monitoringStrategy.send(task, { 
         type: 'update', 
         progressData: { taskStarted: 'planning', description: 'Creating project plan' }
       });
       const plan = await this._delegateProjectPlanning(task, requirements);
       await this.stateManager.savePlan(plan);
-      await this.monitoringStrategy.onMessage(task, { 
+      this.monitoringStrategy.send(task, { 
         type: 'update', 
         progressData: { taskCompleted: 'planning', success: true }
       });
@@ -228,12 +256,12 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
       
       // Phase 3: Execute plan (using child task delegation)
       this.eventStream.emit({ type: 'phase.started', data: { phase: 'execution' } });
-      await this.monitoringStrategy.onMessage(task, { 
+      this.monitoringStrategy.send(task, { 
         type: 'update', 
         progressData: { taskStarted: 'execution', description: 'Executing project plan' }
       });
       const result = await this._delegateExecution(task, plan);
-      await this.monitoringStrategy.onMessage(task, { 
+      this.monitoringStrategy.send(task, { 
         type: 'update', 
         progressData: { taskCompleted: 'execution', success: true }
       });
@@ -241,7 +269,7 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
       
       // Phase 4: Validate quality (using child task delegation)
       this.eventStream.emit({ type: 'phase.started', data: { phase: 'validation' } });
-      await this.monitoringStrategy.onMessage(task, { 
+      this.monitoringStrategy.send(task, { 
         type: 'update', 
         progressData: { taskStarted: 'validation', description: 'Validating project quality' }
       });
@@ -255,7 +283,7 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
         }
       }
       
-      await this.monitoringStrategy.onMessage(task, { 
+      this.monitoringStrategy.send(task, { 
         type: 'update', 
         progressData: { taskCompleted: 'validation', success: validation.passed }
       });
@@ -295,6 +323,7 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
   
   /**
    * Report current project status
+   * @private
    */
   async _reportStatus(task) {
     const progress = this.monitoringStrategy.getProgress();
@@ -312,6 +341,7 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
   
   /**
    * Cancel project execution
+   * @private
    */
   async _cancelExecution(task) {
     // Stop all running tasks
@@ -387,7 +417,9 @@ export default class ProjectPlannerStrategy extends TaskStrategy {
    */
   async _attemptRecovery(issues) {
     try {
-      // Use task delegation pattern for recovery strategy
+      // TODO: Recovery should not use message pattern since it needs synchronous return value
+      // Consider refactoring to direct method call or using promise-based coordination
+      console.warn('_attemptRecovery using deprecated onMessage pattern - should be refactored');
       const recoveryResult = await this.recoveryStrategy.onMessage(null, {
         type: 'recover',
         error: issues,

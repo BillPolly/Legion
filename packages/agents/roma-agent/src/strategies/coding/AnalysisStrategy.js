@@ -39,36 +39,40 @@ export default class AnalysisStrategy extends TaskStrategy {
   }
 
   /**
-   * Handle messages from any source task
+   * Handle message from a task (strategy context, source task, message)
+   * @param {Task} myTask - The task this strategy belongs to (context)
+   * @param {Task} sourceTask - The task that sent the message
+   * @param {Object} message - The message received
    */
-  async onMessage(sourceTask, message) {
+  handleMessage(myTask, sourceTask, message) {
     switch (message.type) {
       case 'start':
       case 'work':
-        return await this._handleAnalysisRequest(message.task || sourceTask);
+        this._handleAnalysisRequest(myTask).catch(error => {
+          console.error('Analysis request failed:', error);
+          myTask.fail(error);
+        });
+        break;
         
       case 'abort':
         console.log(`🛑 Analysis task aborted`);
-        return { acknowledged: true, aborted: true };
+        break;
         
       case 'completed':
-        // Handle child task completion
-        if (sourceTask.parent) {
-          return { acknowledged: true };
-        }
-        return { acknowledged: true };
+        console.log(`✅ Analysis task completed for ${myTask.description}`);
+        myTask.send(myTask.parent, { type: 'child-completed', child: myTask });
+        break;
         
       case 'failed':
-        // Handle child task failure
-        if (sourceTask.parent) {
-          sourceTask.parent.fail(message.error);
-        }
-        return { acknowledged: true };
+        myTask.send(myTask.parent, { type: 'child-failed', child: myTask, error: message.error });
+        break;
         
       default:
-        return { acknowledged: true };
+        console.log(`ℹ️ AnalysisStrategy received unhandled message type: ${message.type}`);
+        break;
     }
   }
+
 
   /**
    * Handle analysis request - main execution logic

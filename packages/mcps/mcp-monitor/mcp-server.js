@@ -1,21 +1,73 @@
 #!/usr/bin/env node
 
-// Ensure we're always running from the Legion repo root
-const LEGION_ROOT = '/Users/williampearson/Documents/p/agents/Legion';
+// Imports MUST come first in ES modules
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+import { SimpleSessionManager } from './handlers/SimpleSessionManager.js';
+import { SimpleToolHandler } from './handlers/SimpleToolHandler.js';
+import { findAvailablePortSync } from './utils/portFinder.js';
+import FileLogger from './logger.js';
+// Import Legion modules conditionally
+
+// Now setup paths AFTER imports
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Function to find Legion root by looking for package.json with "legion" workspace
+function findLegionRoot(startDir) {
+  let currentDir = startDir;
+  
+  while (currentDir !== path.parse(currentDir).root) {
+    const packageJsonPath = path.join(currentDir, 'package.json');
+    
+    if (fs.existsSync(packageJsonPath)) {
+      try {
+        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+        // Check if this is the Legion monorepo root
+        if ((packageJson.name === '@legion/monorepo' || packageJson.name === 'legion') && packageJson.workspaces) {
+          return currentDir;
+        }
+      } catch (e) {
+        // Continue searching
+      }
+    }
+    
+    currentDir = path.dirname(currentDir);
+  }
+  
+  // Fallback to relative path if not found
+  return path.resolve(__dirname, '../../..');
+}
+
+const LEGION_ROOT = findLegionRoot(__dirname);
+
+// Set MONOREPO_ROOT environment variable for ResourceManager
+process.env.MONOREPO_ROOT = LEGION_ROOT;
+
+// Change directory to Legion root for module resolution
 if (process.cwd() !== LEGION_ROOT) {
   console.error(`[MCP Server] Changing directory from ${process.cwd()} to ${LEGION_ROOT}`);
   process.chdir(LEGION_ROOT);
 }
 
-import { SimpleSessionManager } from './handlers/SimpleSessionManager.js';
-import { SimpleToolHandler } from './handlers/SimpleToolHandler.js';
-import { findAvailablePortSync } from './utils/portFinder.js';
-import FileLogger from './logger.js';
-import { getResourceManager } from '../../resource-manager/src/index.js';
-import { PictureAnalysisModule } from '../../modules/picture-analysis/src/index.js';
-
 class MCPServer {
   constructor() {
+    // CRITICAL: Redirect ALL stdout to stderr IMMEDIATELY
+    // This prevents FullStackMonitor from contaminating MCP protocol
+    const originalStdoutWrite = process.stdout.write;
+    this.mcpStarted = false;
+    
+    process.stdout.write = (chunk, encoding, callback) => {
+      if (this.mcpStarted) {
+        // After MCP starts, allow JSON-RPC through
+        return originalStdoutWrite.call(process.stdout, chunk, encoding, callback);
+      } else {
+        // Before MCP starts, redirect everything to stderr
+        return process.stderr.write(chunk, encoding, callback);
+      }
+    };
+    
     // Find available port first
     this.wsAgentPort = findAvailablePortSync(9901);
     
@@ -35,8 +87,11 @@ class MCPServer {
     // Track if tools are initialized
     this.pictureAnalysisInitialized = false;
     
-    // Create the monitor ONCE at startup
-    this.initializeMonitor();
+    // Initialize monitor and picture analysis in the background
+    // Don't await these in constructor - let them run async
+    this.initializeMonitor().catch(err => {
+      this.logger.error('Monitor initialization failed', { error: err.message });
+    });
     
     // Initialize Picture Analysis in the background
     this.initializePictureAnalysis().then(() => {
@@ -64,6 +119,24 @@ class MCPServer {
   async initializePictureAnalysis() {
     try {
       this.logger.info('Starting Picture Analysis module initialization...');
+      
+      // Try to import dependencies
+      let getResourceManager, PictureAnalysisModule;
+      try {
+        const resourceManagerModule = await import('@legion/resource-manager');
+        getResourceManager = resourceManagerModule.getResourceManager;
+      } catch (e) {
+        this.logger.warn('Picture Analysis disabled: @legion/resource-manager not available');
+        return;
+      }
+      
+      try {
+        const pictureAnalysisModule = await import('@legion/picture-analysis');
+        PictureAnalysisModule = pictureAnalysisModule.PictureAnalysisModule;
+      } catch (e) {
+        this.logger.warn('Picture Analysis disabled: @legion/picture-analysis not available');
+        return;
+      }
       
       // Initialize Picture Analysis Module
       const resourceManager = await getResourceManager();
@@ -103,24 +176,53 @@ class MCPServer {
   }
   
   async start() {
-    process.stdin.setEncoding('utf8');
-    process.stdout.setEncoding('utf8');
-    
-    let buffer = '';
-    process.stdin.on('data', (chunk) => {
-      buffer += chunk;
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
+    try {
+      // Redirect console.log to stderr so only MCP JSON-RPC goes to stdout
+      const originalConsoleLog = console.log;
+      console.log = (...args) => {
+        process.stderr.write(args.join(' ') + '\n');
+      };
       
-      for (const line of lines) {
-        if (line.trim()) {
-          this.handleMessage(line.trim()).catch(console.error);
+      process.stdin.setEncoding('utf8');
+      process.stdout.setEncoding('utf8');
+      
+      this.logger.info('MCP Server started - PID: ' + process.pid);
+      this.logger.info('Ready for MCP protocol communication');
+      
+      // Now it's safe to enable MCP protocol on stdout
+      this.mcpStarted = true;
+      
+      let buffer = '';
+      process.stdin.on('data', (chunk) => {
+        buffer += chunk;
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+        
+        for (const line of lines) {
+          if (line.trim()) {
+            this.handleMessage(line.trim()).catch((error) => {
+              this.logger.error('Error handling message', { error: error.message, stack: error.stack });
+            });
+          }
         }
-      }
-    });
-    
-    process.stdin.on('end', () => process.exit(0));
-    process.on('SIGINT', () => process.exit(0));
+      });
+      
+      process.stdin.on('end', () => {
+        this.logger.info('stdin ended, shutting down');
+        process.exit(0);
+      });
+      
+      process.stdin.on('error', (error) => {
+        this.logger.error('stdin error', { error: error.message });
+      });
+      
+      // Keep the process alive
+      process.stdin.resume();
+      
+    } catch (error) {
+      this.logger.error('Error in start method', { error: error.message, stack: error.stack });
+      throw error;
+    }
   }
   
   async handleMessage(messageStr) {
@@ -206,26 +308,60 @@ class MCPServer {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const server = new MCPServer();
+  let server;
   
-  // Handle clean shutdown
-  process.on('SIGINT', () => {
-    server.logger.info('MCP Server received SIGINT');
-    server.logger.close();
-    process.exit(0);
-  });
+  async function startServer() {
+    try {
+      server = new MCPServer();
+      
+      // Handle clean shutdown
+      process.on('SIGINT', () => {
+        if (server?.logger) {
+          server.logger.info('MCP Server received SIGINT');
+          server.logger.close();
+        }
+        process.exit(0);
+      });
+      
+      process.on('SIGTERM', () => {
+        if (server?.logger) {
+          server.logger.info('MCP Server received SIGTERM');
+          server.logger.close();
+        }
+        process.exit(0);
+      });
+      
+      process.on('uncaughtException', (err) => {
+        if (server?.logger) {
+          server.logger.error('Uncaught exception', { error: err.message, stack: err.stack });
+          server.logger.close();
+        } else {
+          console.error('Uncaught exception before logger ready:', err);
+        }
+        process.exit(1);
+      });
+      
+      process.on('unhandledRejection', (reason, promise) => {
+        if (server?.logger) {
+          server.logger.error('Unhandled rejection', { reason: reason?.message || reason, stack: reason?.stack });
+        } else {
+          console.error('Unhandled rejection before logger ready:', reason);
+        }
+        // Don't exit on unhandled rejection, just log it
+      });
+      
+      // Wait a bit for initialization to complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      await server.start();
+    } catch (error) {
+      console.error('Failed to start MCP server:', error);
+      process.exit(1);
+    }
+  }
   
-  process.on('SIGTERM', () => {
-    server.logger.info('MCP Server received SIGTERM');
-    server.logger.close();
-    process.exit(0);
-  });
-  
-  process.on('uncaughtException', (err) => {
-    server.logger.error('Uncaught exception', { error: err.message, stack: err.stack });
-    server.logger.close();
+  startServer().catch(error => {
+    console.error('Critical error starting server:', error);
     process.exit(1);
   });
-  
-  server.start();
 }

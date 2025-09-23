@@ -15,8 +15,7 @@ describe('Complete Fullstack MCP Integration', () => {
   let monitor;
   
   beforeEach(async () => {
-    resourceManager = ResourceManager.getInstance();
-    await resourceManager.initialize();
+    resourceManager = await ResourceManager.getInstance();
     monitor = await FullStackMonitor.create(resourceManager);
   });
   
@@ -27,7 +26,7 @@ describe('Complete Fullstack MCP Integration', () => {
   });
   
   test('should capture both backend and browser logs in unified stream', async () => {
-    const testScript = path.join(__dirname, 'fullstack-test-app.cjs');
+    const testScript = path.join(__dirname, 'fullstack-test-app.js');
     
     console.log('🚀 Starting fullstack monitoring test...');
     

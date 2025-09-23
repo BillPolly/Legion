@@ -64,6 +64,34 @@ export class SimpleToolHandler {
         } 
       },
       { 
+        name: 'start_video', 
+        description: 'Start recording video of the browser session. Records all browser activity including page interactions, animations, and updates. Video is saved in WebM format by default, or MP4 if ffmpeg is available and format is specified.', 
+        inputSchema: { 
+          type: 'object', 
+          properties: { 
+            session_id: { type: 'string', description: 'Session ID with an active browser page' },
+            output_path: { type: 'string', description: 'Optional: File path to save video (defaults to videos/recording-{timestamp}.webm)' },
+            format: { type: 'string', description: 'Optional: Video format - webm or mp4 (default: webm, mp4 requires ffmpeg)' },
+            fps: { type: 'number', description: 'Optional: Frames per second for recording (default: 30)' },
+            quality: { type: 'number', description: 'Optional: Video quality 1-100 (default: 80)' },
+            width: { type: 'number', description: 'Optional: Video width in pixels (default: 1280)' },
+            height: { type: 'number', description: 'Optional: Video height in pixels (default: 720)' }
+          },
+          required: ['session_id']
+        } 
+      },
+      { 
+        name: 'stop_video', 
+        description: 'Stop video recording and save the video file. Returns the video file path and recording statistics including duration and frame count. If ffmpeg is not available, saves individual frames as images.', 
+        inputSchema: { 
+          type: 'object', 
+          properties: { 
+            session_id: { type: 'string', description: 'Session ID with an active video recording' }
+          },
+          required: ['session_id']
+        } 
+      },
+      { 
         name: 'browser_execute', 
         description: 'Execute Puppeteer command formats on an active page. All standard Puppeteer page methods are available. Common examples: "title" (get page title), "url" (get current URL), "click" (click element, args: [selector]), "type" (type text, args: [selector, text]), "evaluate" (run JavaScript, args: [function_string]). Requires active browser page from open_page.', 
         inputSchema: { 
@@ -170,6 +198,22 @@ Examples:
           
         case 'take_screenshot':
           return await monitor.screenshot(args.session_id || 'default', args);
+          
+        case 'start_video':
+          // Map the tool args to the FullStackMonitor method parameters
+          const videoOptions = {
+            output_path: args.output_path,
+            format: args.format,
+            fps: args.fps || 30,
+            videoFrame: {
+              width: args.width || 1280,
+              height: args.height || 720
+            }
+          };
+          return await monitor.startVideoRecording(args.session_id || 'default', videoOptions);
+          
+        case 'stop_video':
+          return await monitor.stopVideoRecording(args.session_id || 'default');
           
         case 'browser_execute':
           return await monitor.browserCommand(args.session_id || 'default', args.command, args.args);
