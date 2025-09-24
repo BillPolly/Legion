@@ -1,6 +1,6 @@
 /**
  * MonitoringStrategy - Monitors task completion status and calculates project progress metrics
- * Converted to pure prototypal pattern
+ * Refactored to use EnhancedTaskStrategy and utilities
  * 
  * Responsibilities:
  * - Monitors task completion status
@@ -8,133 +8,70 @@
  * - Generates status reports
  * - Tracks time and resource usage
  * - Identifies bottlenecks and delays
+ * 
+ * Now uses the new abstractions to eliminate boilerplate:
+ * - EnhancedTaskStrategy for message routing and error handling
+ * - ConfigBuilder for configuration setup
+ * - StrategyHelpers for common operations
  */
 
-import { TaskStrategy } from '@legion/tasks';
+import { EnhancedTaskStrategy } from '@legion/tasks';
+import { ConfigBuilder } from '../utils/ConfigBuilder.js';
+import { getTaskContext } from '../utils/StrategyHelpers.js';
 
 /**
  * Create a MonitoringStrategy prototype
- * This factory function creates the strategy with its dependencies
+ * Dramatically simplified using the new abstractions
  */
 export function createMonitoringStrategy(options = {}) {
-  // Create the strategy as an object that inherits from TaskStrategy
-  const strategy = Object.create(TaskStrategy);
+  // Create strategy inheriting from EnhancedTaskStrategy (which has built-in patterns)
+  const strategy = Object.create(EnhancedTaskStrategy);
   
-  // Store configuration in closure
-  const config = {
+  // Build configuration using ConfigBuilder preset
+  const config = ConfigBuilder.createFromPreset('monitoring', {
     options: {
       updateInterval: 5000,
       enableResourceTracking: true,
       ...options
-    },
-    metrics: {
-      overall: 0,
-      byPhase: {},
-      tasks: {
-        total: 0,
-        completed: 0,
-        running: 0,
-        pending: 0,
-        failed: 0
-      },
-      timing: {
-        estimatedCompletion: null,
-        averageTaskDuration: null,
-        totalElapsed: null
-      },
-      bottlenecks: []
-    },
-    progressHistory: [],
-    resourceUsage: {
-      byTask: {},
-      total: { memory: 0, cpu: 0, duration: 0 },
-      average: { memory: 0, cpu: 0, duration: 0 }
-    },
-    updateCallbacks: []
+    }
+  });
+  
+  // Add monitoring-specific tracking structures to config
+  config.progressHistory = [];
+  config.resourceUsage = {
+    byTask: {},
+    total: { memory: 0, cpu: 0, duration: 0 },
+    average: { memory: 0, cpu: 0, duration: 0 }
   };
+  config.updateCallbacks = [];
+  
+  // Store dependencies in strategy for access
+  strategy.config = config;
 
   /**
-   * The only required method - handles all messages
+   * Override doWork - the only method we need to implement
+   * EnhancedTaskStrategy handles all the message routing and error boundaries
    */
-  strategy.onMessage = function onMessage(senderTask, message) {
-    // 'this' is the task instance that received the message
+  strategy.doWork = async function doWork(senderTask, message) {
+    // Extract task context
+    const taskContext = getTaskContext(this);
     
-    try {
-      // Determine if message is from child or parent/initiator
-      if (senderTask.parent === this) {
-        // Message from child task
-        switch (message.type) {
-          case 'completed':
-            console.log(`✅ Monitoring child task completed: ${senderTask.description}`);
-            this.send(this.parent, { type: 'child-completed', child: senderTask });
-            break;
-            
-          case 'failed':
-            this.send(this.parent, { type: 'child-failed', child: senderTask, error: message.error });
-            break;
-            
-          default:
-            console.log(`ℹ️ MonitoringStrategy received unhandled message from child: ${message.type}`);
-        }
-      } else {
-        // Message from parent or initiator
-        switch (message.type) {
-          case 'start':
-          case 'monitor':
-            // Fire-and-forget async operation with error boundary
-            handleMonitoringRequest.call(this, config, message).catch(error => {
-              console.error(`❌ MonitoringStrategy async operation failed: ${error.message}`);
-              // Don't let async errors escape - handle them internally
-              try {
-                this.fail(error);
-                if (this.parent) {
-                  this.send(this.parent, { type: 'failed', error });
-                }
-              } catch (innerError) {
-                console.error(`❌ Failed to handle async error: ${innerError.message}`);
-              }
-            });
-            break;
-            
-          case 'update':
-            // Fire-and-forget async operation
-            handleUpdateRequest.call(this, config, message).catch(error => {
-              console.error(`❌ MonitoringStrategy update failed: ${error.message}`);
-            });
-            break;
-            
-          case 'report':
-            // Fire-and-forget async operation
-            handleReportRequest.call(this, config, message).catch(error => {
-              console.error(`❌ MonitoringStrategy report failed: ${error.message}`);
-            });
-            break;
-            
-          case 'stats':
-            // Fire-and-forget - respond via send
-            this.send(senderTask, { type: 'stats-response', stats: getMetrics(config) });
-            break;
-            
-          case 'abort':
-            console.log(`🛑 Monitoring task aborted`);
-            break;
-            
-          default:
-            console.log(`ℹ️ MonitoringStrategy received unhandled message: ${message.type}`);
-        }
+    // Perform the monitoring
+    const result = await performMonitoring(taskContext, this, config, message);
+    
+    // Complete with artifacts using built-in helper
+    this.completeWithArtifacts({
+      'monitoring-report': {
+        value: result.report,
+        description: `Progress monitoring report at ${new Date().toISOString()}`,
+        type: 'monitoring'
+      },
+      'progress-metrics': {
+        value: result.metrics,
+        description: 'Current progress metrics',
+        type: 'metrics'
       }
-    } catch (error) {
-      // Catch any synchronous errors in message handling
-      console.error(`❌ MonitoringStrategy message handler error: ${error.message}`);
-      // Don't let errors escape the message handler - handle them gracefully
-      try {
-        if (this.addConversationEntry) {
-          this.addConversationEntry('system', `Message handling error: ${error.message}`);
-        }
-      } catch (innerError) {
-        console.error(`❌ Failed to log message handling error: ${innerError.message}`);
-      }
-    }
+    }, result);
   };
   
   return strategy;
@@ -149,137 +86,72 @@ export default createMonitoringStrategy;
 // ============================================================================
 
 /**
- * Handle monitoring request - main execution logic
- * Called with task as 'this' context
+ * Perform monitoring using simplified approach
+ * All the error handling and parent notification is handled by EnhancedTaskStrategy
  */
-async function handleMonitoringRequest(config, message) {
-  try {
-    console.log(`📊 MonitoringStrategy monitoring: ${this.description}`);
-    
-    const project = message.project;
-    if (!project) {
-      this.fail(new Error('No project data provided for monitoring'));
-      // Notify parent of failure (fire-and-forget)
-      if (this.parent) {
-        this.send(this.parent, { 
-          type: 'failed', 
-          error: new Error('No project data provided for monitoring') 
-        });
-      }
-      return; // Fire-and-forget - no return value
-    }
-    
-    // Add conversation entry
-    this.addConversationEntry('system', 
-      `Starting monitoring for project with ${project.tasks?.length || 0} tasks`);
-    
-    // Update project metrics
-    updateProject(project, config);
-    
-    // Generate comprehensive report
-    const report = generateReport(project, config);
-    
-    // Store monitoring artifacts
-    this.storeArtifact(
-      'monitoring-report',
-      report,
-      `Progress monitoring report at ${new Date().toISOString()}`,
-      'monitoring'
-    );
-    
-    this.storeArtifact(
-      'progress-metrics',
-      config.metrics,
-      'Current progress metrics',
-      'metrics'
-    );
-    
-    // Add conversation entry about completion
-    this.addConversationEntry('system', 
-      `Monitoring complete: ${report.progress.overall}% progress, ${report.tasks.completed}/${report.tasks.total} tasks completed`);
-    
-    console.log(`✅ MonitoringStrategy completed: ${report.progress.overall}% progress`);
-    
-    const result = {
-      success: true,
-      result: {
-        report: report,
-        metrics: config.metrics,
-        progress: report.progress.overall
-      },
-      artifacts: ['monitoring-report', 'progress-metrics']
-    };
-    
-    this.complete(result);
-    
-    // Notify parent if exists (fire-and-forget message passing)
-    if (this.parent) {
-      this.send(this.parent, { type: 'completed', result });
-    }
-    
-    // Fire-and-forget - no return value
-    
-  } catch (error) {
-    console.error(`❌ MonitoringStrategy failed: ${error.message}`);
-    
-    this.addConversationEntry('system', 
-      `Monitoring failed: ${error.message}`);
-    
-    this.fail(error);
-    
-    // Notify parent of failure if exists (fire-and-forget message passing)
-    if (this.parent) {
-      this.send(this.parent, { type: 'failed', error });
-    }
-    
-    // Fire-and-forget - no return value
+async function performMonitoring(taskContext, task, config, message) {
+  console.log(`📊 MonitoringStrategy monitoring: ${taskContext.description}`);
+  
+  // Extract project data from message or task
+  const project = message.project || extractProjectData(task);
+  if (!project) {
+    throw new Error('No project data provided for monitoring');
   }
+  
+  // Add conversation entry
+  task.addConversationEntry('system', 
+    `Starting monitoring for project with ${project.tasks?.length || 0} tasks`);
+  
+  // Update project metrics
+  updateProject(project, config);
+  
+  // Generate comprehensive report
+  const report = generateReport(project, config);
+  
+  // Add conversation entry about completion
+  task.addConversationEntry('system', 
+    `Monitoring complete: ${report.progress.overall}% progress, ${report.tasks.completed}/${report.tasks.total} tasks completed`);
+  
+  console.log(`✅ MonitoringStrategy completed: ${report.progress.overall}% progress`);
+  
+  return {
+    success: true,
+    report: report,
+    metrics: config.metrics,
+    progress: report.progress.overall
+  };
 }
 
 /**
- * Handle progress update request
+ * Extract project data from task context
  */
-async function handleUpdateRequest(config, message) {
-  try {
-    update(message.progressData, config);
-    this.addConversationEntry('system', 'Progress updated successfully');
-    
-    // Fire-and-forget - no return value
-    
-  } catch (error) {
-    console.error(`❌ MonitoringStrategy update failed: ${error.message}`);
-    this.addConversationEntry('system', `Progress update failed: ${error.message}`);
-    
-    // Fire-and-forget - no return value
+function extractProjectData(task) {
+  // Check for project-plan artifact first
+  const projectPlanArtifact = task.getArtifact('project-plan');
+  if (projectPlanArtifact?.value) {
+    return projectPlanArtifact.value;
   }
-}
-
-/**
- * Handle report generation request
- */
-async function handleReportRequest(config, message) {
-  try {
-    const report = generateReport(message.project, config);
-    
-    // Send response back to requester
-    this.send(message.sender || this.parent, {
-      type: 'report-response',
-      report: report
-    });
-    
-    // Fire-and-forget - no return value
-    
-  } catch (error) {
-    console.error(`❌ MonitoringStrategy report failed: ${error.message}`);
-    
-    // Send error response
-    this.send(message.sender || this.parent, {
-      type: 'report-error',
-      error: error.message
-    });
-    
-    // Fire-and-forget - no return value
+  
+  // Check for project artifact
+  const projectArtifact = task.getArtifact('project');
+  if (projectArtifact?.value) {
+    return projectArtifact.value;
   }
+  
+  // Check for plan in metadata
+  if (task.metadata?.project) {
+    return task.metadata.project;
+  }
+  
+  // Check for plan from parent task
+  if (task.parent) {
+    const parentProject = task.parent.getArtifact('project-plan');
+    if (parentProject?.value) {
+      return parentProject.value;
+    }
+  }
+  
+  return null;
 }
 
 /**

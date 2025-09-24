@@ -1,12 +1,19 @@
 /**
  * ProjectPlannerStrategy - Meta-strategy for orchestrating complete Node.js project development
- * Converted to pure prototypal pattern
+ * Refactored to use EnhancedTaskStrategy and utilities
  * 
  * Coordinates specialized sub-strategies to transform requirements into fully functional applications.
  * Manages multi-phase workflows with automatic error recovery and quality assurance.
+ * 
+ * Now uses the new abstractions to eliminate boilerplate:
+ * - EnhancedTaskStrategy for message routing and error handling
+ * - ConfigBuilder for configuration setup
+ * - StrategyHelpers for common operations
  */
 
-import { TaskStrategy } from '@legion/tasks';
+import { EnhancedTaskStrategy } from '@legion/tasks';
+import { ConfigBuilder } from '../utils/ConfigBuilder.js';
+import { getTaskContext } from '../utils/StrategyHelpers.js';
 import { EnhancedPromptRegistry } from '@legion/prompting-manager';
 import { createSimpleNodeServerStrategy } from '../simple-node/SimpleNodeServerStrategy.js';
 import path from 'path';

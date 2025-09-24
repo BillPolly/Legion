@@ -15,6 +15,7 @@
 
 // Core framework - new prototypal system
 export { default as TaskStrategy } from './core/TaskStrategy.js';
+export { default as EnhancedTaskStrategy } from './core/EnhancedTaskStrategy.js';
 export { createTask } from './core/createTask.js';
 
 // DEPRECATED - Task class kept temporarily for compatibility

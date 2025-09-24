@@ -1,107 +1,73 @@
 /**
  * PlanningStrategy - Handles project planning and structure generation
- * Converted to pure prototypal pattern
+ * Refactored to use EnhancedTaskStrategy and utilities
  * 
  * This strategy directly implements all project planning functionality including:
  * - Project structure generation
  * - Phase and task creation
  * - Quality gate definition
  * - Plan validation and updates
+ * 
+ * Now uses the new abstractions to eliminate boilerplate:
+ * - EnhancedTaskStrategy for message routing and error handling
+ * - ConfigBuilder for configuration setup
+ * - StrategyHelpers for common operations
  */
 
-import { TaskStrategy } from '@legion/tasks';
+import { EnhancedTaskStrategy } from '@legion/tasks';
+import { ConfigBuilder } from '../utils/ConfigBuilder.js';
+import { getTaskContext } from '../utils/StrategyHelpers.js';
 
 /**
  * Create a PlanningStrategy prototype
- * This factory function creates the strategy with its dependencies
+ * Dramatically simplified using the new abstractions
  */
 export function createPlanningStrategy(llmClient = null, toolRegistry = null, options = {}) {
-  // Create the strategy as an object that inherits from TaskStrategy
-  const strategy = Object.create(TaskStrategy);
+  // Create strategy inheriting from EnhancedTaskStrategy (which has built-in patterns)
+  const strategy = Object.create(EnhancedTaskStrategy);
   
-  // Store configuration
-  const config = {
-    llmClient: llmClient,
-    toolRegistry: toolRegistry,
-    options: {
-      outputFormat: 'json',
-      validateResults: true,
-      ...options
-    },
-    // Track initialization state
-    initialized: false,
-    // Project planning templates
-    templates: {
-      api: getAPITemplate(),
-      cli: getCLITemplate(),
-      webapp: getWebAppTemplate(),
-      library: getLibraryTemplate()
-    }
+  // Build configuration using ConfigBuilder preset
+  const config = ConfigBuilder.createFromPreset('planning', {
+    llmClient,
+    toolRegistry,
+    options
+  });
+  
+  // Add planning-specific templates to config
+  config.templates = {
+    api: getAPITemplate(),
+    cli: getCLITemplate(),
+    webapp: getWebAppTemplate(),
+    library: getLibraryTemplate()
   };
   
+  // Store dependencies in strategy for access
+  strategy.config = config;
+  
   /**
-   * The only required method - handles all messages
+   * Override doWork - the only method we need to implement
+   * EnhancedTaskStrategy handles all the message routing and error boundaries
    */
-  strategy.onMessage = function onMessage(senderTask, message) {
-    // 'this' is the task instance that received the message
+  strategy.doWork = async function doWork(senderTask, message) {
+    // Extract task context
+    const taskContext = getTaskContext(this);
     
-    try {
-      // Determine if message is from child or parent/initiator
-      if (senderTask.parent === this) {
-        // Message from child task
-        switch (message.type) {
-          case 'completed':
-            console.log(`✅ Planning task completed for ${this.description}`);
-            this.send(this.parent, { type: 'child-completed', child: this });
-            break;
-            
-          case 'failed':
-            this.send(this.parent, { type: 'child-failed', child: this, error: message.error });
-            break;
-            
-          default:
-            console.log(`ℹ️ PlanningStrategy received unhandled message from child: ${message.type}`);
-        }
-      } else {
-        // Message from parent or initiator
-        switch (message.type) {
-          case 'start':
-          case 'work':
-            // Fire-and-forget async operation with error boundary
-            handlePlanningRequest.call(this, config).catch(error => {
-              console.error(`❌ PlanningStrategy async operation failed: ${error.message}`);
-              // Don't let async errors escape - handle them internally
-              try {
-                this.fail(error);
-                if (this.parent) {
-                  this.send(this.parent, { type: 'failed', error });
-                }
-              } catch (innerError) {
-                console.error(`❌ Failed to handle async error: ${innerError.message}`);
-              }
-            });
-            break;
-            
-          case 'abort':
-            console.log(`🛑 Planning task aborted`);
-            break;
-            
-          default:
-            console.log(`ℹ️ PlanningStrategy received unhandled message: ${message.type}`);
-        }
+    // Perform the planning
+    const result = await performPlanning(taskContext, this, config);
+    
+    // Complete with artifacts using built-in helper
+    this.completeWithArtifacts({
+      'project-plan': {
+        value: result.plan,
+        description: `Project execution plan with ${result.plan.phases.length} phases`,
+        type: 'plan'
+      },
+      'project-structure': {
+        value: result.plan.structure,
+        description: 'Project directory and file structure',
+        type: 'structure'
       }
-    } catch (error) {
-      // Catch any synchronous errors in message handling
-      console.error(`❌ PlanningStrategy message handler error: ${error.message}`);
-      // Don't let errors escape the message handler - handle them gracefully
-      try {
-        if (this.addConversationEntry) {
-          this.addConversationEntry('system', `Message handling error: ${error.message}`);
-        }
-      } catch (innerError) {
-        console.error(`❌ Failed to log message handling error: ${innerError.message}`);
-      }
-    }
+    }, result);
   };
   
   return strategy;
@@ -116,95 +82,42 @@ export default createPlanningStrategy;
 // ============================================================================
   
 /**
- * Handle planning request - main execution logic
- * Called with task as 'this' context
+ * Perform planning using simplified approach
+ * All the error handling and parent notification is handled by EnhancedTaskStrategy
  */
-async function handlePlanningRequest(config) {
-  try {
-    console.log(`📋 PlanningStrategy handling: ${this.description}`);
-    
-    // Extract requirements from task
-    const requirements = extractRequirements(this);
-    if (!requirements) {
-      this.fail(new Error('No requirements found for planning'));
-      // Notify parent of failure (fire-and-forget)
-      if (this.parent) {
-        this.send(this.parent, { 
-          type: 'failed', 
-          error: new Error('No requirements found for planning') 
-        });
-      }
-      return; // Fire-and-forget - no return value
-    }
-    
-    // Get project context
-    const projectId = getProjectId(this);
-    
-    // Add conversation entry
-    this.addConversationEntry('system', 
-      `Planning project structure for: ${JSON.stringify(requirements)}`);
-    
-    // Initialize if needed
-    await initializePlanning(config, this);
-    
-    // Create project plan directly (absorbed from component)
-    const plan = await createPlan.call(this, requirements, projectId, config);
-    
-    // Store planning artifacts
-    this.storeArtifact(
-      'project-plan',
-      plan,
-      `Project execution plan with ${plan.phases.length} phases`,
-      'plan'
-    );
-    
-    this.storeArtifact(
-      'project-structure',
-      plan.structure,
-      'Project directory and file structure',
-      'structure'
-    );
-    
-    // Add conversation entry about completion
-    this.addConversationEntry('system', 
-      `Generated project plan with ${plan.phases.length} phases: ${plan.phases.map(p => p.phase).join(', ')}`);
-    
-    console.log(`✅ PlanningStrategy completed successfully`);
-    
-    const result = {
-      success: true,
-      result: {
-        plan: plan,
-        structure: plan.structure,
-        phases: plan.phases.length
-      },
-      artifacts: ['project-plan', 'project-structure']
-    };
-    
-    this.complete(result);
-    
-    // Notify parent if exists (fire-and-forget message passing)
-    if (this.parent) {
-      this.send(this.parent, { type: 'completed', result });
-    }
-    
-    // Fire-and-forget - no return value
-    
-  } catch (error) {
-    console.error(`❌ PlanningStrategy failed: ${error.message}`);
-    
-    this.addConversationEntry('system', 
-      `Planning failed: ${error.message}`);
-    
-    this.fail(error);
-    
-    // Notify parent of failure if exists (fire-and-forget message passing)
-    if (this.parent) {
-      this.send(this.parent, { type: 'failed', error });
-    }
-    
-    // Fire-and-forget - no return value
+async function performPlanning(taskContext, task, config) {
+  console.log(`📋 PlanningStrategy handling: ${taskContext.description}`);
+  
+  // Extract requirements from task
+  const requirements = extractRequirements(task);
+  if (!requirements) {
+    throw new Error('No requirements found for planning');
   }
+  
+  // Get project context
+  const projectId = getProjectId(task);
+  
+  // Add conversation entry
+  task.addConversationEntry('system', 
+    `Planning project structure for: ${JSON.stringify(requirements)}`);
+  
+  // Initialize if needed
+  await initializePlanning(config, task);
+  
+  // Create project plan directly
+  const plan = await createPlan.call(task, requirements, projectId, config);
+  
+  // Add conversation entry about completion
+  task.addConversationEntry('system', 
+    `Generated project plan with ${plan.phases.length} phases: ${plan.phases.map(p => p.phase).join(', ')}`);
+  
+  console.log(`✅ PlanningStrategy completed successfully`);
+  
+  return {
+    success: true,
+    plan: plan,
+    phases: plan.phases.length
+  };
 }
   
 /**

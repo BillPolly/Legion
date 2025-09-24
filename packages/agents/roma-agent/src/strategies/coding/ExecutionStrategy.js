@@ -1,6 +1,6 @@
 /**
  * ExecutionStrategy - Manages task execution and coordination
- * Converted to pure prototypal pattern
+ * Refactored to use EnhancedTaskStrategy and utilities
  * 
  * Responsibilities:
  * - Handles dependency resolution, retry logic, and artifact management
@@ -8,108 +8,71 @@
  * - Manages task state and artifact storage
  * - Implements comprehensive validation and error handling
  * - Orchestrates complex multi-phase project execution
+ * 
+ * Now uses the new abstractions to eliminate boilerplate:
+ * - EnhancedTaskStrategy for message routing and error handling
+ * - ConfigBuilder for configuration setup
+ * - StrategyHelpers for common operations
  */
 
-import { TaskStrategy } from '@legion/tasks';
+import { EnhancedTaskStrategy } from '@legion/tasks';
+import { ConfigBuilder } from '../utils/ConfigBuilder.js';
+import { getTaskContext } from '../utils/StrategyHelpers.js';
 
 /**
  * Create an ExecutionStrategy prototype
- * This factory function creates the strategy with its dependencies
+ * Dramatically simplified using the new abstractions
  */
 export function createExecutionStrategy(strategies = null, stateManager = null, options = {}) {
-  // Create the strategy as an object that inherits from TaskStrategy
-  const strategy = Object.create(TaskStrategy);
+  // Create strategy inheriting from EnhancedTaskStrategy (which has built-in patterns)
+  const strategy = Object.create(EnhancedTaskStrategy);
   
-  // Store configuration
-  const config = {
-    strategies: strategies,
-    stateManager: stateManager,
-    options: {
-      maxRetries: 3,
-      backoffStrategy: 'exponential',
-      validateResults: true,
-      ...options
-    },
-    // Track execution state
-    completed: new Set(),
-    executing: new Set(),
-    artifacts: new Map()
+  // Build configuration using ConfigBuilder preset
+  const config = ConfigBuilder.createFromPreset('execution', {
+    strategies,
+    stateManager,
+    options
+  });
+  
+  // Store dependencies in strategy for access
+  strategy.config = config;
+  
+  /**
+   * Override doWork - the only method we need to implement
+   * EnhancedTaskStrategy handles all the message routing and error boundaries
+   */
+  strategy.doWork = async function doWork(senderTask, message) {
+    // Extract task context
+    const taskContext = getTaskContext(this);
+    
+    // Perform the execution
+    const result = await performExecution(taskContext, this, config);
+    
+    // Complete with artifacts using built-in helper
+    this.completeWithArtifacts({
+      'execution-result': {
+        value: result,
+        description: `Execution result with ${result.phases?.length || 0} completed phases`,
+        type: 'execution'
+      },
+      'execution-artifacts': {
+        value: result.artifacts,
+        description: `${result.artifacts?.length || 0} artifacts produced during execution`,
+        type: 'artifacts'
+      }
+    }, result);
   };
   
   /**
-   * The only required method - handles all messages
+   * Override abort handler for execution-specific cleanup
    */
-  strategy.onMessage = function onMessage(senderTask, message) {
-    // 'this' is the task instance that received the message
+  strategy.onAbort = async function onAbort(senderTask, message) {
+    // Clear execution state
+    config.completed.clear();
+    config.executing.clear();
+    config.artifacts.clear();
     
-    try {
-      // Determine if message is from child or parent/initiator
-      if (senderTask.parent === this) {
-        // Message from child task
-        switch (message.type) {
-          case 'completed':
-            console.log(`✅ Execution task completed: ${senderTask.description}`);
-            this.send(this.parent, { type: 'child-completed', child: senderTask });
-            break;
-            
-          case 'failed':
-            this.send(this.parent, { type: 'child-failed', child: senderTask, error: message.error });
-            break;
-            
-          default:
-            console.log(`ℹ️ ExecutionStrategy received unhandled message from child: ${message.type}`);
-        }
-      } else {
-        // Message from parent or initiator
-        switch (message.type) {
-          case 'start':
-          case 'work':
-            // Fire-and-forget async operation with error boundary
-            handleExecutionRequest.call(this, config).catch(error => {
-              console.error(`❌ ExecutionStrategy async operation failed: ${error.message}`);
-              // Don't let async errors escape - handle them internally
-              try {
-                this.fail(error);
-                if (this.parent) {
-                  this.send(this.parent, { type: 'failed', error });
-                }
-              } catch (innerError) {
-                console.error(`❌ Failed to handle async error: ${innerError.message}`);
-              }
-            });
-            break;
-            
-          case 'abort':
-            // Fire-and-forget async operation with error boundary
-            handleAbortRequest.call(this, config).catch(error => {
-              console.error(`❌ ExecutionStrategy abort failed: ${error.message}`);
-              try {
-                this.fail(error);
-                if (this.parent) {
-                  this.send(this.parent, { type: 'failed', error });
-                }
-              } catch (innerError) {
-                console.error(`❌ Failed to handle abort error: ${innerError.message}`);
-              }
-            });
-            break;
-            
-          default:
-            console.log(`ℹ️ ExecutionStrategy received unhandled message: ${message.type}`);
-        }
-      }
-    } catch (error) {
-      // Catch any synchronous errors in message handling
-      console.error(`❌ ExecutionStrategy message handler error: ${error.message}`);
-      // Don't let errors escape the message handler - handle them gracefully
-      try {
-        if (this.addConversationEntry) {
-          this.addConversationEntry('system', `Message handling error: ${error.message}`);
-        }
-      } catch (innerError) {
-        console.error(`❌ Failed to log message handling error: ${innerError.message}`);
-      }
-    }
+    this.addConversationEntry('system', 'Execution aborted');
   };
   
   return strategy;
@@ -119,143 +82,42 @@ export function createExecutionStrategy(strategies = null, stateManager = null, 
 export default createExecutionStrategy;
 
 // ============================================================================
-// Internal implementation functions
-// These work with the task instance and strategy config
+// Internal implementation functions - now much simpler
 // ============================================================================
 
 /**
- * Handle execution request from parent task
+ * Perform execution using simplified approach
+ * All the error handling and parent notification is handled by EnhancedTaskStrategy
  */
-async function handleExecutionRequest(config) {
-  try {
-    console.log(`⚙️ ExecutionStrategy handling: ${this.description}`);
-    
-    // Extract execution plan from task
-    const plan = extractExecutionPlan(this);
-    if (!plan) {
-      this.fail(new Error('No execution plan found for execution'));
-      // Notify parent of failure (fire-and-forget)
-      if (this.parent) {
-        this.send(this.parent, { 
-          type: 'failed', 
-          error: new Error('No execution plan found for execution') 
-        });
-      }
-      return; // Fire-and-forget - no return value
-    }
-    
-    // Add conversation entry
-    this.addConversationEntry('system', 
-      `Executing project plan with ${plan.phases?.length || 0} phases`);
-    
-    // Execute plan using direct implementation
-    const result = await executePlan(plan, this, config);
-    
-    // Store execution artifacts
-    this.storeArtifact(
-      'execution-result',
-      result,
-      `Execution result with ${result.phases?.length || 0} completed phases`,
-      'execution'
-    );
-    
-    if (result.artifacts && result.artifacts.length > 0) {
-      this.storeArtifact(
-        'execution-artifacts',
-        result.artifacts,
-        `${result.artifacts.length} artifacts produced during execution`,
-        'artifacts'
-      );
-    }
-    
-    // Add conversation entry about completion
-    this.addConversationEntry('system', 
-      `Execution completed: ${result.success ? 'SUCCESS' : 'FAILED'} - ${result.phases?.length || 0} phases processed`);
-    
-    console.log(`✅ ExecutionStrategy completed: ${result.success ? 'SUCCESS' : 'FAILED'}`);
-    
-    const finalResult = {
-      success: result.success,
-      result: {
-        execution: result,
-        projectId: result.projectId,
-        phasesCompleted: result.phases?.length || 0,
-        artifactsCreated: result.artifacts?.length || 0
-      },
-      artifacts: ['execution-result', 'execution-artifacts']
-    };
-    
-    if (result.success) {
-      this.complete(finalResult);
-      // Notify parent of success (fire-and-forget)
-      if (this.parent) {
-        this.send(this.parent, { type: 'completed', result: finalResult });
-      }
-    } else {
-      this.fail(new Error(result.message || 'Execution failed'));
-      // Notify parent of failure (fire-and-forget)
-      if (this.parent) {
-        this.send(this.parent, { 
-          type: 'failed', 
-          error: new Error(result.message || 'Execution failed') 
-        });
-      }
-    }
-    
-    // Fire-and-forget - no return value
-    
-  } catch (error) {
-    console.error(`❌ ExecutionStrategy failed: ${error.message}`);
-    
-    this.addConversationEntry('system', 
-      `Execution failed: ${error.message}`);
-    
-    this.fail(error);
-    
-    // Notify parent of failure (fire-and-forget)
-    if (this.parent) {
-      this.send(this.parent, { type: 'failed', error });
-    }
-    
-    // Fire-and-forget - no return value
+async function performExecution(taskContext, task, config) {
+  console.log(`⚙️ ExecutionStrategy handling: ${taskContext.description}`);
+  
+  // Extract execution plan from task
+  const plan = extractExecutionPlan(task);
+  if (!plan) {
+    throw new Error('No execution plan found for execution');
   }
+  
+  // Add conversation entry
+  task.addConversationEntry('system', 
+    `Executing project plan with ${plan.phases?.length || 0} phases`);
+  
+  // Execute plan using direct implementation
+  const result = await executePlan(plan, task, config);
+  
+  // Add conversation entry about completion
+  task.addConversationEntry('system', 
+    `Execution completed: ${result.success ? 'SUCCESS' : 'FAILED'} - ${result.phases?.length || 0} phases processed`);
+  
+  console.log(`✅ ExecutionStrategy completed: ${result.success ? 'SUCCESS' : 'FAILED'}`);
+  
+  if (!result.success) {
+    throw new Error(result.message || 'Execution failed');
+  }
+  
+  return result;
 }
 
-/**
- * Handle abort request
- */
-async function handleAbortRequest(config) {
-  try {
-    console.log('🛑 Aborting execution...');
-    
-    // Clear execution state
-    config.executing.clear();
-    config.completed.clear();
-    config.artifacts.clear();
-    
-    this.addConversationEntry('system', 'Execution aborted');
-    
-    // Mark task as aborted
-    this.fail(new Error('Execution aborted'));
-    
-    // Notify parent of abort (fire-and-forget)
-    if (this.parent) {
-      this.send(this.parent, { 
-        type: 'failed', 
-        error: new Error('Execution aborted'),
-        aborted: true 
-      });
-    }
-    
-    // Fire-and-forget - no return value
-  } catch (error) {
-    console.error('Failed to abort execution:', error);
-    // Even in error, don't return - just notify parent
-    if (this.parent) {
-      this.send(this.parent, { type: 'failed', error });
-    }
-  }
-}
 
 /**
  * Extract execution plan from task
