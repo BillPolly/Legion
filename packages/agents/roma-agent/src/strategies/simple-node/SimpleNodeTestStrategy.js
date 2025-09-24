@@ -3,50 +3,160 @@
  * Converted to pure prototypal pattern
  * 
  * Focused on generating and running tests for Node.js servers and modules.
- * Uses PromptFactory for all LLM interactions with data-driven prompts.
+ * Uses TemplatedPrompt for all LLM interactions with schema validation.
  */
 
 import { TaskStrategy } from '@legion/tasks';
-import { PromptRegistry } from '@legion/prompting-manager';
-import PromptFactory from '../../utils/PromptFactory.js';
+import { TemplatedPrompt } from '@legion/prompting-manager';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs/promises';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
+ * Define prompt schemas for TemplatedPrompt
+ * Each prompt will be loaded from a file and validated against these schemas
+ */
+const PROMPT_SCHEMAS = {
+  analyzeCode: {
+    type: 'object',
+    properties: {
+      testTargets: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+            type: { type: 'string' },
+            description: { type: 'string' }
+          },
+          required: ['name', 'type']
+        }
+      },
+      edgeCases: {
+        type: 'array',
+        items: { type: 'string' }
+      },
+      errorScenarios: {
+        type: 'array',
+        items: { type: 'string' }
+      }
+    },
+    required: ['testTargets']
+  },
+  
+  generateTest: {
+    type: 'object',
+    properties: {
+      testCode: { type: 'string' },
+      testDescription: { type: 'string' },
+      debugNotes: { type: 'string' }
+    },
+    required: ['testCode']
+  },
+  
+  generateTestConfig: {
+    type: 'object',
+    properties: {
+      jestConfig: { type: 'object' },
+      instructions: { type: 'string' }
+    },
+    required: ['jestConfig']
+  }
+};
+
+/**
+ * Load a prompt template from the prompts directory
+ */
+async function loadPromptTemplate(promptPath) {
+  const fullPath = path.join(__dirname, '../../../prompts', promptPath + '.md');
+  try {
+    return await fs.readFile(fullPath, 'utf8');
+  } catch (error) {
+    throw new Error(`Failed to load prompt template at ${fullPath}: ${error.message}`);
+  }
+}
+
+/**
  * Create a SimpleNodeTestStrategy prototype
  * This factory function creates the strategy with its dependencies
  */
-export function createSimpleNodeTestStrategy(llmClient = null, toolRegistry = null, options = {}) {
+export function createSimpleNodeTestStrategy(context = {}, options = {}) {
+  // Support legacy signature for backward compatibility
+  let actualContext = context;
+  let actualOptions = options;
+  if (arguments.length === 3) {
+    // Called with old signature: (llmClient, toolRegistry, options)
+    actualContext = { llmClient: arguments[0], toolRegistry: arguments[1] };
+    actualOptions = arguments[2] || {};
+  } else if (arguments.length === 2 && arguments[1] && !arguments[1].llmClient && !arguments[1].toolRegistry) {
+    // Second arg is options, not toolRegistry
+    if (context.llmClient || context.toolRegistry) {
+      actualOptions = arguments[1];
+    } else {
+      // Old signature: (llmClient, toolRegistry)
+      actualContext = { llmClient: arguments[0], toolRegistry: arguments[1] };
+      actualOptions = {};
+    }
+  }
+  
   // Create the strategy as an object that inherits from TaskStrategy
   const strategy = Object.create(TaskStrategy);
   
+  // Store llmClient and sessionLogger for creating TemplatedPrompts
+  strategy.llmClient = actualContext.llmClient;
+  strategy.sessionLogger = actualOptions.sessionLogger;
+  
+  // Store prompt schemas for lazy initialization
+  strategy.promptSchemas = PROMPT_SCHEMAS;
+  strategy.prompts = {};
+  
   // Store configuration
   const config = {
-    llmClient: llmClient,
-    toolRegistry: toolRegistry,
-    projectRoot: options.projectRoot || '/tmp/roma-projects',
+    context: actualContext,
+    projectRoot: actualOptions.projectRoot || '/tmp/roma-projects',
     
     // Pre-instantiated tools
     tools: {
       fileWrite: null,
       fileRead: null,
       commandExecutor: null
-    },
-    
-    // Initialize prompt registry
-    promptRegistry: null,
-
-    // Cached prompt instances
-    prompts: null
+    }
   };
   
-  // Initialize prompt registry
-  const promptsPath = path.resolve(__dirname, '../../../prompts');
-  config.promptRegistry = new PromptRegistry();
-  config.promptRegistry.addDirectory(promptsPath);
+  // Store config on strategy for access
+  strategy.config = config;
+  
+  /**
+   * Lazily create a TemplatedPrompt instance
+   */
+  strategy.getPrompt = async function(promptName) {
+    if (!this.prompts[promptName]) {
+      if (!this.promptSchemas[promptName]) {
+        throw new Error(`Unknown prompt: ${promptName}`);
+      }
+      
+      if (!this.llmClient) {
+        throw new Error('LLMClient is required for TemplatedPrompt');
+      }
+      
+      // Load the prompt template
+      const templatePath = `simple-node-test/${promptName.replace(/([A-Z])/g, '-$1').toLowerCase().slice(1)}`;
+      const template = await loadPromptTemplate(templatePath);
+      
+      // Create TemplatedPrompt instance
+      this.prompts[promptName] = new TemplatedPrompt({
+        prompt: template,
+        responseSchema: this.promptSchemas[promptName],
+        llmClient: this.llmClient,
+        maxRetries: 3,
+        sessionLogger: this.sessionLogger
+      });
+    }
+    return this.prompts[promptName];
+  };
   
   /**
    * The only required method - handles all messages
@@ -155,8 +265,8 @@ async function handleChildComplete(senderTask, result, config) {
 async function initializeDependencies(config, task) {
   // Get services from task context
   const context = getContextFromTask(task);
-  config.llmClient = config.llmClient || context.llmClient;
-  config.toolRegistry = config.toolRegistry || context.toolRegistry;
+  config.llmClient = config.llmClient || config.context?.llmClient || context.llmClient;
+  config.toolRegistry = config.toolRegistry || config.context?.toolRegistry || context.toolRegistry;
   
   if (!config.llmClient) {
     throw new Error('LLM client is required');
@@ -170,8 +280,6 @@ async function initializeDependencies(config, task) {
   config.tools.fileWrite = await config.toolRegistry.getTool('file_write');
   config.tools.fileRead = await config.toolRegistry.getTool('file_read');
   config.tools.commandExecutor = await config.toolRegistry.getTool('command_executor');
-
-  await ensurePrompts(config);
 }
 /**
  * Main test generation handler
@@ -190,13 +298,13 @@ async function handleTestGeneration(config) {
     }
     
     // Analyze code for testing
-    const analysis = await analyzeCode(config, codeToTest);
+    const analysis = await analyzeCode(this, codeToTest);
     this.addConversationEntry('system', `Found ${analysis.testTargets.length} test targets`);
     
     // Generate tests for each target
     const tests = [];
     for (const target of analysis.testTargets) {
-      const test = await generateTest(config, target, analysis.edgeCases);
+      const test = await generateTest(this, target, analysis.edgeCases);
       tests.push(test);
     }
     
@@ -216,7 +324,7 @@ async function handleTestGeneration(config) {
     }
     
     // Generate test configuration
-    const testConfig = await generateTestConfig(config, testFiles);
+    const testConfig = await generateTestConfig(this, testFiles);
     await config.tools.fileWrite.execute({ 
       filepath: path.join(testDir, 'jest.config.js'), 
       content: `module.exports = ${JSON.stringify(testConfig.jestConfig, null, 2)};` 
@@ -260,119 +368,6 @@ async function handleTestGeneration(config) {
 }
 
 /**
- * Ensure TemplatedPrompt instances are available for the strategy
- */
-async function ensurePrompts(config) {
-  if (config.prompts) {
-    return config.prompts;
-  }
-
-  if (!config.llmClient) {
-    throw new Error('LLM client is required to initialize prompts');
-  }
-
-  const prompts = {};
-
-  const analyzeTemplate = await config.promptRegistry.load('strategies/simple-node/test/analyze-code');
-  const analyzeSchema = PromptFactory.createJsonSchema({
-    testTargets: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          name: { type: 'string' },
-          type: { type: 'string' },
-          description: { type: 'string' }
-        },
-        required: ['name', 'type']
-      }
-    },
-    edgeCases: {
-      type: 'array',
-      items: { type: 'string' }
-    },
-    errorScenarios: {
-      type: 'array',
-      items: { type: 'string' }
-    }
-  }, ['testTargets']);
-
-  const analyzeExamples = [{
-    testTargets: [
-      {
-        name: 'createUser',
-        type: 'function',
-        description: 'Creates a new user and saves to the database'
-      },
-      {
-        name: 'GET /users',
-        type: 'endpoint',
-        description: 'Returns a list of users'
-      }
-    ],
-    edgeCases: ['missing input data', 'database connection failure'],
-    errorScenarios: ['throws validation error when email invalid']
-  }];
-
-  prompts.analyzeCode = PromptFactory.createPrompt({
-    template: analyzeTemplate.content,
-    responseSchema: analyzeSchema,
-    examples: analyzeExamples
-  }, config.llmClient);
-
-  const generateTestTemplate = await config.promptRegistry.load('strategies/simple-node/test/generate-test');
-  const generateTestSchema = PromptFactory.createJsonSchema({
-    testCode: { type: 'string' },
-    testDescription: { type: 'string' },
-    debugNotes: { type: 'string' }
-  }, ['testCode'], 'delimited');
-
-  const generateTestExamples = [{
-    testCode: `import request from 'supertest';
-import app from '../app.js';
-
-describe('GET /users', () => {
-  it('returns a list of users', async () => {
-    const response = await request(app).get('/users');
-    expect(response.status).toBe(200);
-    expect(Array.isArray(response.body)).toBe(true);
-  });
-});`,
-    testDescription: 'Integration tests for GET /users endpoint',
-    debugNotes: 'Covers happy path and validates response format'
-  }];
-
-  prompts.generateTest = PromptFactory.createPrompt({
-    template: generateTestTemplate.content,
-    responseSchema: generateTestSchema,
-    examples: generateTestExamples
-  }, config.llmClient);
-
-  const generateConfigTemplate = await config.promptRegistry.load('strategies/simple-node/test/generate-test-config');
-  const generateConfigSchema = PromptFactory.createJsonSchema({
-    jestConfig: { type: 'object' },
-    instructions: { type: 'string' }
-  }, ['jestConfig']);
-
-  const generateConfigExamples = [{
-    jestConfig: {
-      testEnvironment: 'node',
-      transform: {},
-      collectCoverage: true
-    },
-    instructions: 'Run tests with "npm test" to ensure coverage targets are met.'
-  }];
-
-  prompts.generateTestConfig = PromptFactory.createPrompt({
-    template: generateConfigTemplate.content,
-    responseSchema: generateConfigSchema,
-    examples: generateConfigExamples
-  }, config.llmClient);
-
-  config.prompts = prompts;
-  return config.prompts;
-}
-/**
  * Get code to test from task artifacts or file
  */
 async function getCodeToTest(config, task) {
@@ -401,9 +396,11 @@ async function getCodeToTest(config, task) {
 /**
  * Analyze code to identify test targets
  */
-async function analyzeCode(config, code) {
-  const prompts = await ensurePrompts(config);
-  const result = await prompts.analyzeCode.execute({ code });
+async function analyzeCode(task, code) {
+  // Get the TemplatedPrompt instance through the strategy
+  const prompt = await task.getPrompt('analyzeCode');
+  
+  const result = await prompt.execute({ code });
   
   if (!result.success) {
     throw new Error(`Failed to analyze code: ${result.errors?.join(', ') || 'Unknown error'}`);
@@ -415,12 +412,14 @@ async function analyzeCode(config, code) {
 /**
  * Generate test for a specific target
  */
-async function generateTest(config, target, edgeCases) {
+async function generateTest(task, target, edgeCases) {
   // Format edge cases for template
   const edgeCasesStr = (edgeCases || []).map(e => `- ${e}`).join('\n');
   
-  const prompts = await ensurePrompts(config);
-  const result = await prompts.generateTest.execute({
+  // Get the TemplatedPrompt instance through the strategy
+  const prompt = await task.getPrompt('generateTest');
+  
+  const result = await prompt.execute({
     targetName: target.name,
     targetType: target.type,
     targetDescription: target.description,
@@ -437,9 +436,11 @@ async function generateTest(config, target, edgeCases) {
 /**
  * Generate test configuration
  */
-async function generateTestConfig(config, testFiles) {
-  const prompts = await ensurePrompts(config);
-  const result = await prompts.generateTestConfig.execute({
+async function generateTestConfig(task, testFiles) {
+  // Get the TemplatedPrompt instance through the strategy
+  const prompt = await task.getPrompt('generateTestConfig');
+  
+  const result = await prompt.execute({
     testFiles: testFiles.join(', ')
   });
   

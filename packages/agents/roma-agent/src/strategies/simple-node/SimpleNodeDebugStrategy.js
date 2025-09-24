@@ -3,50 +3,157 @@
  * Converted to pure prototypal pattern
  * 
  * Focused on identifying and fixing issues in Node.js code.
- * Uses PromptFactory for all LLM interactions with data-driven prompts.
+ * Uses TemplatedPrompt for all LLM interactions with schema validation.
  */
 
 import { TaskStrategy } from '@legion/tasks';
-import { PromptRegistry } from '@legion/prompting-manager';
-import PromptFactory from '../../utils/PromptFactory.js';
+import { TemplatedPrompt } from '@legion/prompting-manager';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs/promises';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
+ * Define prompt schemas for TemplatedPrompt
+ * Each prompt will be loaded from a file and validated against these schemas
+ */
+const PROMPT_SCHEMAS = {
+  analyzeError: {
+    type: 'object',
+    properties: {
+      rootCause: { type: 'string' },
+      errorType: { type: 'string' },
+      location: {
+        type: 'object',
+        properties: {
+          file: { type: 'string' },
+          line: { type: 'number' },
+          function: { type: 'string' }
+        },
+        required: ['file']
+      },
+      suggestedFix: { type: 'string' },
+      confidence: { type: 'string', enum: ['low', 'medium', 'high'] }
+    },
+    required: ['rootCause', 'errorType', 'suggestedFix']
+  },
+  
+  generateFix: {
+    type: 'object',
+    properties: {
+      fixedCode: { type: 'string' },
+      explanation: { type: 'string' },
+      testInstructions: { type: 'string' }
+    },
+    required: ['fixedCode', 'explanation']
+  },
+  
+  addDebugging: {
+    type: 'object',
+    properties: {
+      debugCode: { type: 'string' },
+      debugPoints: {
+        type: 'array',
+        items: { type: 'string' }
+      },
+      recommendations: { type: 'string' }
+    },
+    required: ['debugCode']
+  }
+};
+
+/**
+ * Load a prompt template from the prompts directory
+ */
+async function loadPromptTemplate(promptPath) {
+  const fullPath = path.join(__dirname, '../../../prompts', promptPath + '.md');
+  try {
+    return await fs.readFile(fullPath, 'utf8');
+  } catch (error) {
+    throw new Error(`Failed to load prompt template at ${fullPath}: ${error.message}`);
+  }
+}
+
+/**
  * Create a SimpleNodeDebugStrategy prototype
  * This factory function creates the strategy with its dependencies
  */
-export function createSimpleNodeDebugStrategy(llmClient = null, toolRegistry = null, options = {}) {
+export function createSimpleNodeDebugStrategy(context = {}, options = {}) {
+  // Support legacy signature for backward compatibility
+  let actualContext = context;
+  let actualOptions = options;
+  if (arguments.length === 3) {
+    // Called with old signature: (llmClient, toolRegistry, options)
+    actualContext = { llmClient: arguments[0], toolRegistry: arguments[1] };
+    actualOptions = arguments[2] || {};
+  } else if (arguments.length === 2 && arguments[1] && !arguments[1].llmClient && !arguments[1].toolRegistry) {
+    // Second arg is options, not toolRegistry
+    if (context.llmClient || context.toolRegistry) {
+      actualOptions = arguments[1];
+    } else {
+      // Old signature: (llmClient, toolRegistry)
+      actualContext = { llmClient: arguments[0], toolRegistry: arguments[1] };
+      actualOptions = {};
+    }
+  }
+  
   // Create the strategy as an object that inherits from TaskStrategy
   const strategy = Object.create(TaskStrategy);
   
+  // Store llmClient and sessionLogger for creating TemplatedPrompts
+  strategy.llmClient = actualContext.llmClient;
+  strategy.sessionLogger = actualOptions.sessionLogger;
+  
+  // Store prompt schemas for lazy initialization
+  strategy.promptSchemas = PROMPT_SCHEMAS;
+  strategy.prompts = {};
+  
   // Store configuration
   const config = {
-    llmClient: llmClient,
-    toolRegistry: toolRegistry,
-    projectRoot: options.projectRoot || '/tmp/roma-projects',
+    context: actualContext,
+    projectRoot: actualOptions.projectRoot || '/tmp/roma-projects',
     
     // Pre-instantiated tools
     tools: {
       fileRead: null,
       fileWrite: null,
       commandExecutor: null
-    },
-    
-    // Initialize prompt registry
-    promptRegistry: null,
-
-    // Cached prompt instances
-    prompts: null
+    }
   };
   
-  // Initialize prompt registry
-  const promptsPath = path.resolve(__dirname, '../../../prompts');
-  config.promptRegistry = new PromptRegistry();
-  config.promptRegistry.addDirectory(promptsPath);
+  // Store config on strategy for access
+  strategy.config = config;
+  
+  /**
+   * Lazily create a TemplatedPrompt instance
+   */
+  strategy.getPrompt = async function(promptName) {
+    if (!this.prompts[promptName]) {
+      if (!this.promptSchemas[promptName]) {
+        throw new Error(`Unknown prompt: ${promptName}`);
+      }
+      
+      if (!this.llmClient) {
+        throw new Error('LLMClient is required for TemplatedPrompt');
+      }
+      
+      // Load the prompt template
+      const templatePath = `strategies/simple-node/debug/${promptName.replace(/([A-Z])/g, '-$1').toLowerCase().slice(1)}`;
+      const template = await loadPromptTemplate(templatePath);
+      
+      // Create TemplatedPrompt instance
+      this.prompts[promptName] = new TemplatedPrompt({
+        prompt: template,
+        responseSchema: this.promptSchemas[promptName],
+        llmClient: this.llmClient,
+        maxRetries: 3,
+        sessionLogger: this.sessionLogger
+      });
+    }
+    return this.prompts[promptName];
+  };
   
   /**
    * The only required method - handles all messages
@@ -155,8 +262,8 @@ async function handleChildComplete(senderTask, result, config) {
 async function initializeDependencies(config, task) {
   // Get services from task context
   const context = getContextFromTask(task);
-  config.llmClient = config.llmClient || context.llmClient;
-  config.toolRegistry = config.toolRegistry || context.toolRegistry;
+  config.llmClient = config.llmClient || config.context?.llmClient || context.llmClient;
+  config.toolRegistry = config.toolRegistry || config.context?.toolRegistry || context.toolRegistry;
   
   if (!config.llmClient) {
     throw new Error('LLM client is required');
@@ -170,8 +277,6 @@ async function initializeDependencies(config, task) {
   config.tools.fileRead = await config.toolRegistry.getTool('file_read');
   config.tools.fileWrite = await config.toolRegistry.getTool('file_write');
   config.tools.commandExecutor = await config.toolRegistry.getTool('command_executor');
-
-  await ensurePrompts(config);
 }
 /**
  * Main debugging handler
@@ -223,107 +328,6 @@ async function handleDebugging(config) {
   }
 }
 
-async function ensurePrompts(config) {
-  if (config.prompts) {
-    return config.prompts;
-  }
-
-  if (!config.llmClient) {
-    throw new Error('LLM client is required to initialize prompts');
-  }
-
-  const prompts = {};
-
-  const analyzeTemplate = await config.promptRegistry.load('strategies/simple-node/debug/analyze-error');
-  const analyzeSchema = PromptFactory.createJsonSchema({
-    rootCause: { type: 'string' },
-    errorType: { type: 'string' },
-    location: {
-      type: 'object',
-      properties: {
-        file: { type: 'string' },
-        line: { type: 'number' },
-        function: { type: 'string' }
-      },
-      required: ['file']
-    },
-    suggestedFix: { type: 'string' },
-    confidence: { type: 'string', enum: ['low', 'medium', 'high'] }
-  }, ['rootCause', 'errorType', 'suggestedFix']);
-
-  const analyzeExamples = [{
-    rootCause: 'Unhandled null input when parsing user data',
-    errorType: 'TypeError',
-    location: {
-      file: 'controllers/userController.js',
-      line: 42,
-      function: 'createUser'
-    },
-    suggestedFix: 'Add null check before accessing user.email',
-    confidence: 'high'
-  }];
-
-  prompts.analyzeError = PromptFactory.createPrompt({
-    template: analyzeTemplate.content,
-    responseSchema: analyzeSchema,
-    examples: analyzeExamples
-  }, config.llmClient);
-
-  const fixTemplate = await config.promptRegistry.load('strategies/simple-node/debug/generate-fix');
-  const fixSchema = PromptFactory.createJsonSchema({
-    fixedCode: { type: 'string' },
-    explanation: { type: 'string' },
-    testInstructions: { type: 'string' }
-  }, ['fixedCode', 'explanation'], 'delimited');
-
-  const fixExamples = [{
-    fixedCode: `function createUser(req, res) {
-  if (!req.body || !req.body.email) {
-    return res.status(400).json({ error: 'Email required' });
-  }
-  // ...rest of implementation
-}`,
-    explanation: 'Adds input validation before accessing email',
-    testInstructions: 'Run POST /users with and without email to confirm validation.'
-  }];
-
-  prompts.generateFix = PromptFactory.createPrompt({
-    template: fixTemplate.content,
-    responseSchema: fixSchema,
-    examples: fixExamples
-  }, config.llmClient);
-
-  const debugTemplate = await config.promptRegistry.load('strategies/simple-node/debug/add-debugging');
-  const debugSchema = PromptFactory.createJsonSchema({
-    debugCode: { type: 'string' },
-    debugPoints: {
-      type: 'array',
-      items: { type: 'string' }
-    },
-    recommendations: { type: 'string' }
-  }, ['debugCode'], 'delimited');
-
-  const debugExamples = [{
-    debugCode: `app.get('/users', async (req, res) => {
-  console.time('getUsers');
-  console.log('Fetching users for tenant', req.headers['x-tenant']);
-  const users = await userService.list();
-  console.timeEnd('getUsers');
-  res.json(users);
-});`,
-    debugPoints: ['Log tenant header', 'Capture execution time'],
-    recommendations: 'Review logs to identify slow database calls.'
-  }];
-
-  prompts.addDebugging = PromptFactory.createPrompt({
-    template: debugTemplate.content,
-    responseSchema: debugSchema,
-    examples: debugExamples
-  }, config.llmClient);
-
-  config.prompts = prompts;
-  return config.prompts;
-}
 /**
  * Determine type of debugging needed
  */
@@ -349,10 +353,12 @@ function determineDebugType(description) {
 async function debugError(config, task) {
   // Get error information from task
   const errorInfo = await extractErrorInfo(config, task);
-  const prompts = await ensurePrompts(config);
+  
+  // Get the TemplatedPrompt instance through the strategy
+  const analyzePrompt = await task.getPrompt('analyzeError');
   
   // Analyze the error
-  const analysis = await prompts.analyzeError.execute({
+  const analysis = await analyzePrompt.execute({
     errorMessage: errorInfo.message,
     stackTrace: errorInfo.stack,
     codeContext: errorInfo.code
@@ -366,7 +372,8 @@ async function debugError(config, task) {
   
   // Generate fix if code is available
   if (errorInfo.code) {
-    const fix = await prompts.generateFix.execute({
+    const fixPrompt = await task.getPrompt('generateFix');
+    const fix = await fixPrompt.execute({
       problem: errorInfo.message,
       rootCause: analysis.data.rootCause,
       originalCode: errorInfo.code
@@ -410,10 +417,11 @@ async function debugPerformance(config, task) {
     throw new Error('No code provided for performance debugging');
   }
   
-  const prompts = await ensurePrompts(config);
+  // Get the TemplatedPrompt instance through the strategy
+  const debugPrompt = await task.getPrompt('addDebugging');
 
   // Add performance debugging
-  const result = await prompts.addDebugging.execute({ code });
+  const result = await debugPrompt.execute({ code });
   
   if (!result.success) {
     throw new Error(`Failed to add debugging: ${result.errors?.join(', ') || 'Unknown error'}`);
@@ -443,10 +451,11 @@ async function debugLogic(config, task) {
     throw new Error('No code provided for logic debugging');
   }
   
-  const prompts = await ensurePrompts(config);
+  // Get the TemplatedPrompt instance through the strategy
+  const debugPrompt = await task.getPrompt('addDebugging');
 
   // Add debugging statements
-  const result = await prompts.addDebugging.execute({ code });
+  const result = await debugPrompt.execute({ code });
   
   if (!result.success) {
     throw new Error(`Failed to add debugging: ${result.errors?.join(', ') || 'Unknown error'}`);
@@ -476,8 +485,9 @@ async function addDebugging(config, task) {
     throw new Error('No code provided for debugging');
   }
   
-  const prompts = await ensurePrompts(config);
-  const result = await prompts.addDebugging.execute({ code });
+  // Get the TemplatedPrompt instance through the strategy
+  const debugPrompt = await task.getPrompt('addDebugging');
+  const result = await debugPrompt.execute({ code });
   
   if (!result.success) {
     throw new Error(`Failed to add debugging: ${result.errors?.join(', ') || 'Unknown error'}`);

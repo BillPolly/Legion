@@ -7,157 +7,80 @@
  */
 
 import { TaskStrategy } from '@legion/tasks';
-import PromptFactory from '../../utils/PromptFactory.js';
-import { PromptExecutor } from '../../utils/PromptExecutor.js';
+import { TemplatedPrompt } from '@legion/prompting-manager';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs/promises';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * Create prompt schemas and examples for all LLM interactions
- * This ensures all LLM calls go through proper validation and parsing
+ * Define prompt schemas for TemplatedPrompt
+ * Each prompt will be loaded from a file and validated against these schemas
  */
-function getPromptConfigurations() {
-  // Define response schemas and examples for each prompt
-  
-  // 1. Requirements Analysis Schema
-  const requirementsSchema = PromptFactory.createJsonSchema({
-    serverType: { 
-      type: 'string', 
-      enum: ['express', 'fastify', 'http'],
-      description: 'Type of Node.js server framework'
-    },
-    endpoints: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          method: { type: 'string', enum: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'] },
-          path: { type: 'string' },
-          description: { type: 'string' }
-        },
-        required: ['method', 'path', 'description']
-      }
-    }
-  }, ['serverType', 'endpoints']);
-
-  const requirementsExamples = [
-    {
-      serverType: 'express',
-      endpoints: [
-        { method: 'GET', path: '/', description: 'Homepage endpoint' },
-        { method: 'GET', path: '/api/users', description: 'Get all users' },
-        { method: 'POST', path: '/api/users', description: 'Create a new user' }
-      ]
-    }
-  ];
-
-  // 2. Code Generation Schema (using delimited format for code)
-  const codeSchema = PromptFactory.createJsonSchema({
-    code: { type: 'string', description: 'Generated Node.js server code' },
-    dependencies: {
-      type: 'array',
-      items: { type: 'string' },
-      description: 'NPM dependencies required'
-    }
-  }, ['code'], 'delimited');
-
-  const codeExamples = [
-    {
-      code: `const express = require('express');
-const app = express();
-const PORT = 3000;
-
-app.get('/', (req, res) => {
-  res.json({ message: 'Hello World' });
-});
-
-app.listen(PORT, () => {
-  console.log(\`Server running on port \${PORT}\`);
-});`,
-      dependencies: ['express']
-    }
-  ];
-
-  // 3. Package.json Generation Schema
-  const packageSchema = PromptFactory.createJsonSchema({
-    name: { type: 'string' },
-    version: { type: 'string' },
-    description: { type: 'string' },
-    main: { type: 'string' },
-    scripts: { type: 'object' },
-    dependencies: { type: 'object' }
-  }, ['name', 'version', 'main', 'dependencies']);
-
-  const packageExamples = [
-    {
-      name: 'node-server',
-      version: '1.0.0',
-      description: 'Generated Node.js server',
-      main: 'server.js',
-      scripts: {
-        start: 'node server.js',
-        dev: 'nodemon server.js'
+const PROMPT_SCHEMAS = {
+  analyzeRequirements: {
+    type: 'object',
+    properties: {
+      serverType: { 
+        type: 'string', 
+        enum: ['express', 'fastify', 'http'],
+        description: 'Type of Node.js server framework'
       },
-      dependencies: {
-        express: '^4.18.0'
+      endpoints: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            method: { type: 'string', enum: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'] },
+            path: { type: 'string' },
+            description: { type: 'string' }
+          },
+          required: ['method', 'path', 'description']
+        }
       }
-    }
-  ];
-
-  // Return prompt configurations to be used with PromptExecutor
-  return {
-    analyzeRequirements: {
-      template: `Analyze the following task description and determine what type of Node.js server to create and what endpoints are needed.
-
-Task: {{taskDescription}}
-
-Determine:
-1. What server framework to use (express, fastify, or http)  
-2. What API endpoints are needed based on the task description
-3. For each endpoint, specify the HTTP method, path, and description
-
-{{outputPrompt}}`,
-      responseSchema: requirementsSchema,
-      examples: requirementsExamples
     },
-
-    generateCode: {
-      template: `Generate Node.js server code for the following requirements:
-
-Server Type: {{serverType}}
-Endpoints: {{endpoints}}
-
-Generate complete, working server code that:
-1. Uses the specified server framework
-2. Implements all requested endpoints
-3. Includes proper error handling
-4. Uses modern JavaScript practices
-5. Is ready to run
-
-{{outputPrompt}}`,
-      responseSchema: codeSchema,
-      examples: codeExamples
+    required: ['serverType', 'endpoints']
+  },
+  
+  generateCode: {
+    type: 'object',
+    properties: {
+      code: { type: 'string', description: 'Generated Node.js server code' },
+      dependencies: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'NPM dependencies required'
+      }
     },
+    required: ['code']
+  },
+  
+  generatePackageJson: {
+    type: 'object',
+    properties: {
+      name: { type: 'string' },
+      version: { type: 'string' },
+      description: { type: 'string' },
+      main: { type: 'string' },
+      scripts: { type: 'object' },
+      dependencies: { type: 'object' }
+    },
+    required: ['name', 'version', 'main', 'dependencies']
+  }
+};
 
-    generatePackageJson: {
-      template: `Generate a package.json file for a {{serverType}} server project.
-
-Dependencies needed: {{dependencies}}
-
-Create a complete package.json with:
-1. Appropriate project name and description
-2. Required dependencies
-3. Useful scripts (start, dev)
-4. Proper versioning
-
-{{outputPrompt}}`,
-      responseSchema: packageSchema,
-      examples: packageExamples
-    }
-  };
+/**
+ * Load a prompt template from the prompts directory
+ */
+async function loadPromptTemplate(promptPath) {
+  const fullPath = path.join(__dirname, '../../../prompts', promptPath + '.md');
+  try {
+    return await fs.readFile(fullPath, 'utf8');
+  } catch (error) {
+    throw new Error(`Failed to load prompt template at ${fullPath}: ${error.message}`);
+  }
 }
 
 /**
@@ -186,25 +109,57 @@ export function createSimpleNodeServerStrategy(context = {}, options = {}) {
   // Create the strategy as an object that inherits from TaskStrategy
   const strategy = Object.create(TaskStrategy);
   
+  // Store llmClient and sessionLogger for creating TemplatedPrompts
+  strategy.llmClient = actualContext.llmClient;
+  strategy.sessionLogger = actualOptions.sessionLogger;
+  
+  // Store prompt schemas for lazy initialization
+  strategy.promptSchemas = PROMPT_SCHEMAS;
+  strategy.prompts = {};
+  
   // Store configuration
   const config = {
     context: actualContext,
-    promptExecutor: new PromptExecutor(actualContext),
     projectRoot: actualOptions.projectRoot || '/tmp/roma-projects',
     
     // Pre-instantiated tools
     tools: {
       fileWrite: null,
       directoryCreate: null
-    },
-    
-    // Prompt configurations - will be used with PromptExecutor
-    promptConfigs: getPromptConfigurations()
+    }
   };
   
-  // Note: No longer creating TemplatedPrompt instances here
-  // We'll use PromptExecutor directly in the implementation
-  }
+  // Store config on strategy for access
+  strategy.config = config;
+  
+  /**
+   * Lazily create a TemplatedPrompt instance
+   */
+  strategy.getPrompt = async function(promptName) {
+    if (!this.prompts[promptName]) {
+      if (!this.promptSchemas[promptName]) {
+        throw new Error(`Unknown prompt: ${promptName}`);
+      }
+      
+      if (!this.llmClient) {
+        throw new Error('LLMClient is required for TemplatedPrompt');
+      }
+      
+      // Load the prompt template
+      const templatePath = `simple-node-server/${promptName.replace(/([A-Z])/g, '-$1').toLowerCase().slice(1)}`;
+      const template = await loadPromptTemplate(templatePath);
+      
+      // Create TemplatedPrompt instance
+      this.prompts[promptName] = new TemplatedPrompt({
+        prompt: template,
+        responseSchema: this.promptSchemas[promptName],
+        llmClient: this.llmClient,
+        maxRetries: 3,
+        sessionLogger: this.sessionLogger
+      });
+    }
+    return this.prompts[promptName];
+  };
   
   /**
    * The only required method - handles all messages
@@ -352,8 +307,8 @@ async function handleChildComplete(senderTask, result, config) {
 async function initializeDependencies(config, task) {
   // Get services from task context
   const context = getContextFromTask(task);
-  config.llmClient = config.llmClient || context.llmClient;
-  config.toolRegistry = config.toolRegistry || context.toolRegistry;
+  config.llmClient = config.llmClient || config.context?.llmClient || context.llmClient;
+  config.toolRegistry = config.toolRegistry || config.context?.toolRegistry || context.toolRegistry;
   
   if (!config.llmClient) {
     throw new Error('LLM client is required');
@@ -366,11 +321,6 @@ async function initializeDependencies(config, task) {
   // Load required tools
   config.tools.fileWrite = await config.toolRegistry.getTool('file_write');
   config.tools.directoryCreate = await config.toolRegistry.getTool('directory_create');
-
-  // Ensure prompts are instantiated once LLM client is available
-  if (config.llmClient && (!config.prompts || Object.keys(config.prompts).length === 0)) {
-    config.prompts = createPromptInstances(config.llmClient);
-  }
 }
 
 /**
@@ -388,7 +338,7 @@ async function handleServerGeneration(config) {
     this.addConversationEntry('system', `Server type: ${requirements.serverType}, Endpoints: ${requirements.endpoints.length}`);
     
     // Generate server code
-    const serverCode = await generateServer(config, requirements);
+    const serverCode = await generateServer(config, requirements, this);
     
     // Setup project structure
     const projectDir = await setupProject(config, this);
@@ -401,7 +351,7 @@ async function handleServerGeneration(config) {
     });
     
     // Generate and write package.json
-    const packageJson = await generatePackageJson(config, requirements.serverType, serverCode.dependencies);
+    const packageJson = await generatePackageJson(config, requirements.serverType, serverCode.dependencies, this);
     await config.tools.fileWrite.execute({ 
       filepath: path.join(projectDir, 'package.json'), 
       content: JSON.stringify(packageJson, null, 2) 
@@ -488,7 +438,7 @@ async function handlePackageJsonCreation(config) {
     await initializeDependencies(config, this);
     
     // Generate a basic package.json
-    const packageJson = await generatePackageJson(config, 'express', ['express']);
+    const packageJson = await generatePackageJson(config, 'express', ['express'], this);
     
     // For this task, we'll store it but not write to file system
     // The actual writing will be done by server generation task
@@ -556,7 +506,10 @@ async function handleDependencyInstallation(config) {
  * Analyze server requirements from task description
  */
 async function analyzeRequirements(config, task) {
-  const result = await config.prompts.analyzeRequirements.execute({
+  // Get the TemplatedPrompt instance through the strategy
+  const prompt = await task.getPrompt('analyzeRequirements');
+  
+  const result = await prompt.execute({
     taskDescription: task.description
   });
   
@@ -571,17 +524,16 @@ async function analyzeRequirements(config, task) {
 /**
  * Generate server code based on requirements
  */
-async function generateServer(config, requirements) {
-  if (!config.prompts?.generateCode) {
-    throw new Error('Server generation prompt is not initialized');
-  }
+async function generateServer(config, requirements, task) {
+  // Get the TemplatedPrompt instance through the strategy
+  const prompt = await task.getPrompt('generateCode');
 
   // Format endpoints for template
   const endpointsStr = requirements.endpoints.map(
     e => `- ${e.method} ${e.path}: ${e.description}`
   ).join('\n');
 
-  const result = await config.prompts.generateCode.execute({
+  const result = await prompt.execute({
     serverType: requirements.serverType,
     endpoints: endpointsStr
   });
@@ -597,12 +549,11 @@ async function generateServer(config, requirements) {
 /**
  * Generate package.json
  */
-async function generatePackageJson(config, serverType, dependencies) {
-  if (!config.prompts?.generatePackageJson) {
-    throw new Error('Package.json prompt is not initialized');
-  }
+async function generatePackageJson(config, serverType, dependencies, task) {
+  // Get the TemplatedPrompt instance through the strategy
+  const prompt = await task.getPrompt('generatePackageJson');
 
-  const result = await config.prompts.generatePackageJson.execute({
+  const result = await prompt.execute({
     serverType: serverType,
     dependencies: dependencies.join(', ')
   });
@@ -630,9 +581,6 @@ async function setupProject(config, task) {
   return projectDir;
 }
 
-/**
- * Execute prompt with LLM
- */
 /**
  * Helper to extract context from task
  */

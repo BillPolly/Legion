@@ -11,13 +11,71 @@
  */
 
 import { TaskStrategy } from '@legion/tasks';
-import { PromptRegistry } from '@legion/prompting-manager';
-import { PromptExecutor } from '../../utils/PromptExecutor.js';
+import { TemplatedPrompt } from '@legion/prompting-manager';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import fs from 'fs/promises';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+/**
+ * Define prompt schemas for TemplatedPrompt
+ * Each prompt will be loaded from a file and validated against these schemas
+ */
+const PROMPT_SCHEMAS = {
+  validateRequirements: {
+    type: 'object',
+    properties: {
+      features: {
+        type: 'array',
+        items: { type: 'string' }
+      },
+      missingRequirements: {
+        type: 'array',
+        items: { type: 'string' }
+      },
+      coverage: {
+        type: 'number',
+        minimum: 0,
+        maximum: 100
+      }
+    },
+    required: ['features']
+  },
+  
+  rateCodeQuality: {
+    type: 'object',
+    properties: {
+      score: {
+        type: 'number',
+        minimum: 0,
+        maximum: 10
+      },
+      issues: {
+        type: 'array',
+        items: { type: 'string' }
+      },
+      recommendations: {
+        type: 'array',
+        items: { type: 'string' }
+      }
+    },
+    required: ['score', 'issues']
+  }
+};
+
+/**
+ * Load a prompt template from the prompts directory
+ */
+async function loadPromptTemplate(promptPath) {
+  const fullPath = path.join(__dirname, '../../../prompts', promptPath + '.md');
+  try {
+    return await fs.readFile(fullPath, 'utf8');
+  } catch (error) {
+    throw new Error(`Failed to load prompt template at ${fullPath}: ${error.message}`);
+  }
+}
 
 /**
  * Create a QualityStrategy prototype
@@ -45,17 +103,22 @@ export function createQualityStrategy(context = {}, options = {}) {
   // Create the strategy as an object that inherits from TaskStrategy
   const strategy = Object.create(TaskStrategy);
   
+  // Store llmClient and sessionLogger for creating TemplatedPrompts
+  strategy.llmClient = actualContext.llmClient;
+  strategy.sessionLogger = actualOptions.sessionLogger;
+  
+  // Store prompt schemas for lazy initialization
+  strategy.promptSchemas = PROMPT_SCHEMAS;
+  strategy.prompts = {};
+  
   // Store configuration in closure
   const config = {
     context: actualContext,
-    promptExecutor: new PromptExecutor(actualContext),
-    promptRegistry: null,
-    prompts: null,
     options: {
       validateResults: true,
       qualityThreshold: 7,
       requireAllPhases: true,
-      ...options
+      ...actualOptions
     },
     // Default quality gates for each phase
     qualityGates: options.qualityGates || {

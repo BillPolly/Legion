@@ -1,35 +1,47 @@
 /**
  * AnalysisStrategy - Requirements analysis strategy
- * Refactored to use EnhancedTaskStrategy and utilities
+ * Refactored to use EnhancedTaskStrategy and TemplatedPrompt
  * 
  * This strategy handles requirements analysis tasks by performing analysis
  * directly within the strategy, following proper parent→child task delegation patterns.
  * 
  * Now uses the new abstractions to eliminate boilerplate:
  * - EnhancedTaskStrategy for message routing and error handling
- * - PromptManager for centralized prompt management
+ * - TemplatedPrompt for LLM interactions with schema validation
  * - ConfigBuilder for configuration setup
  * - StrategyHelpers for common operations
  */
 
 import { EnhancedTaskStrategy } from '@legion/tasks';
+import { TemplatedPrompt } from '@legion/prompting-manager';
 import { fileURLToPath } from 'url';
 import path from 'path';
-import { PromptManager } from '../utils/PromptManager.js';
+import fs from 'fs/promises';
 import { createFromPreset } from '../utils/ConfigBuilder.js';
 import { 
   parseJsonResponse, 
   getTaskContext,
   ensureInitialized 
 } from '../utils/StrategyHelpers.js';
-import { PromptExecutor } from '../../utils/PromptExecutor.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
+ * Load a prompt template from the prompts directory
+ */
+async function loadPromptTemplate(promptPath) {
+  const fullPath = path.join(__dirname, '../../prompts', promptPath + '.md');
+  try {
+    return await fs.readFile(fullPath, 'utf8');
+  } catch (error) {
+    throw new Error(`Failed to load prompt template at ${fullPath}: ${error.message}`);
+  }
+}
+
+/**
  * Create an AnalysisStrategy prototype
- * Dramatically simplified using the new abstractions
+ * Using TemplatedPrompt for all LLM interactions
  */
 export function createAnalysisStrategy(context = {}, options = {}) {
   // Support legacy signature for backward compatibility
@@ -54,186 +66,180 @@ export function createAnalysisStrategy(context = {}, options = {}) {
     options: actualOptions
   });
   
-  // Create PromptExecutor for handling prompts
-  const promptExecutor = new PromptExecutor(actualContext);
+  // Store the llmClient for creating TemplatedPrompts
+  strategy.llmClient = actualContext.llmClient;
   
-  // Create PromptManager for centralized prompt handling (will be replaced by PromptExecutor usage)
-  const promptManager = new PromptManager(__dirname, actualContext);
-  
-  // Define required prompts with schemas
-  const promptDefinitions = [
-    {
-      path: 'requirements-analysis/functional-requirements',
-      schema: {
-        type: 'object',
-        properties: {
-          requirements: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                id: { type: 'string' },
-                description: { type: 'string' },
-                priority: { type: 'string', enum: ['high', 'medium', 'low'] },
-                acceptance_criteria: { type: 'array', items: { type: 'string' } }
-              },
-              required: ['description']
-            }
+  // Define prompt schemas for each analysis type
+  const promptSchemas = {
+    functionalRequirements: {
+      type: 'object',
+      properties: {
+        requirements: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              description: { type: 'string' },
+              priority: { type: 'string', enum: ['high', 'medium', 'low'] },
+              acceptance_criteria: { type: 'array', items: { type: 'string' } }
+            },
+            required: ['description']
           }
-        },
-        required: ['requirements'],
-        format: 'json'
+        }
+      },
+      required: ['requirements']
+    },
+    technicalRequirements: {
+      type: 'object',
+      properties: {
+        requirements: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              description: { type: 'string' },
+              category: { type: 'string' },
+              specifications: { type: 'array', items: { type: 'string' } }
+            },
+            required: ['description']
+          }
+        }
+      },
+      required: ['requirements']
+    },
+    componentArchitecture: {
+      type: 'object',
+      properties: {
+        components: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              description: { type: 'string' },
+              responsibilities: { type: 'array', items: { type: 'string' } },
+              dependencies: { type: 'array', items: { type: 'string' } }
+            },
+            required: ['name', 'description']
+          }
+        }
+      },
+      required: ['components']
+    },
+    dataModel: {
+      type: 'object',
+      properties: {
+        entities: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              description: { type: 'string' },
+              attributes: { type: 'array', items: { type: 'object' } },
+              relationships: { type: 'array', items: { type: 'object' } }
+            },
+            required: ['name']
+          }
+        }
       }
     },
-    {
-      path: 'requirements-analysis/technical-requirements',
-      schema: {
-        type: 'object',
-        properties: {
-          requirements: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                id: { type: 'string' },
-                description: { type: 'string' },
-                category: { type: 'string' },
-                specifications: { type: 'array', items: { type: 'string' } }
-              },
-              required: ['description']
-            }
+    apiSpecification: {
+      type: 'object',
+      properties: {
+        endpoints: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              path: { type: 'string' },
+              method: { type: 'string' },
+              description: { type: 'string' },
+              parameters: { type: 'array', items: { type: 'object' } },
+              responses: { type: 'object' }
+            },
+            required: ['path', 'method']
           }
-        },
-        required: ['requirements'],
-        format: 'json'
+        }
       }
     },
-    {
-      path: 'requirements-analysis/component-architecture',
-      schema: {
-        type: 'object',
-        properties: {
-          components: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                name: { type: 'string' },
-                description: { type: 'string' },
-                responsibilities: { type: 'array', items: { type: 'string' } },
-                dependencies: { type: 'array', items: { type: 'string' } }
-              },
-              required: ['name', 'description']
-            }
+    dependencies: {
+      type: 'object',
+      properties: {
+        dependencies: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              version: { type: 'string' },
+              purpose: { type: 'string' }
+            },
+            required: ['name']
           }
-        },
-        required: ['components'],
-        format: 'json'
-      }
+        }
+      },
+      required: ['dependencies']
     },
-    {
-      path: 'requirements-analysis/data-model',
-      schema: {
-        type: 'object',
-        properties: {
-          entities: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                name: { type: 'string' },
-                description: { type: 'string' },
-                attributes: { type: 'array', items: { type: 'object' } },
-                relationships: { type: 'array', items: { type: 'object' } }
-              },
-              required: ['name']
-            }
-          }
-        },
-        format: 'json'
-      }
-    },
-    {
-      path: 'requirements-analysis/api-specification',
-      schema: {
-        type: 'object',
-        properties: {
-          endpoints: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                path: { type: 'string' },
-                method: { type: 'string' },
-                description: { type: 'string' },
-                parameters: { type: 'array', items: { type: 'object' } },
-                responses: { type: 'object' }
-              },
-              required: ['path', 'method']
-            }
-          }
-        },
-        format: 'json'
-      }
-    },
-    {
-      path: 'requirements-analysis/dependencies',
-      schema: {
-        type: 'object',
-        properties: {
-          dependencies: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                name: { type: 'string' },
-                version: { type: 'string' },
-                purpose: { type: 'string' }
-              },
-              required: ['name']
-            }
-          }
-        },
-        required: ['dependencies'],
-        format: 'json'
-      }
-    },
-    {
-      path: 'requirements-analysis/constraints',
-      schema: {
-        type: 'object',
-        properties: {
-          constraints: { type: 'array', items: { type: 'string' } },
-          assumptions: { type: 'array', items: { type: 'string' } }
-        },
-        format: 'json'
+    constraints: {
+      type: 'object',
+      properties: {
+        constraints: { type: 'array', items: { type: 'string' } },
+        assumptions: { type: 'array', items: { type: 'string' } }
       }
     }
-  ];
+  };
   
-  // Load all prompts using PromptManager (handles FAIL FAST internally)
-  promptManager.loadPrompts(promptDefinitions);
+  // Initialize TemplatedPrompt instances when strategy is created
+  // These will be loaded lazily when first needed
+  strategy.prompts = {};
   
   // Store dependencies in strategy for access
   strategy.config = config;
-  strategy.promptManager = promptManager;
+  strategy.promptSchemas = promptSchemas;
+  strategy.sessionLogger = actualOptions.sessionLogger;
+  
+  /**
+   * Lazily create a TemplatedPrompt instance
+   */
+  strategy.getPrompt = async function(promptName) {
+    if (!this.prompts[promptName]) {
+      if (!this.promptSchemas[promptName]) {
+        throw new Error(`Unknown prompt: ${promptName}`);
+      }
+      
+      if (!this.llmClient) {
+        throw new Error('LLMClient is required for TemplatedPrompt');
+      }
+      
+      // Load the prompt template
+      const templatePath = `requirements-analysis/${promptName.replace(/([A-Z])/g, '-$1').toLowerCase().slice(1)}`;
+      const template = await loadPromptTemplate(templatePath);
+      
+      // Create TemplatedPrompt instance
+      this.prompts[promptName] = new TemplatedPrompt({
+        prompt: template,
+        responseSchema: this.promptSchemas[promptName],
+        llmClient: this.llmClient,
+        maxRetries: 3,
+        sessionLogger: this.sessionLogger
+      });
+    }
+    return this.prompts[promptName];
+  };
   
   /**
    * Override doWork - the only method we need to implement
    * EnhancedTaskStrategy handles all the message routing and error boundaries
    */
   strategy.doWork = async function doWork(senderTask, message) {
-    // Ensure prompts are initialized
-    await promptManager.ensureInitialized();
-    
-    // Get services using helper
-    const services = this.requireServices(['llmClient']);
-    
     // Extract task context
     const taskContext = getTaskContext(this);
     
-    // Perform the analysis
-    const analysis = await performAnalysis(taskContext, this, promptManager);
+    // Perform the analysis using TemplatedPrompt
+    const analysis = await performAnalysis(taskContext, this);
     
     // Complete with artifacts using built-in helper
     this.completeWithArtifacts({
@@ -298,9 +304,9 @@ function extractTaskDetails(taskContext) {
 
 /**
  * Perform comprehensive requirements analysis
- * Simplified using PromptManager
+ * Using TemplatedPrompt for all LLM interactions
  */
-async function performAnalysis(taskContext, task, promptManager) {
+async function performAnalysis(taskContext, task) {
   // Extract task details for analysis
   const taskDetails = extractTaskDetails(taskContext);
   const analysis = {
@@ -319,7 +325,7 @@ async function performAnalysis(taskContext, task, promptManager) {
     // Step 1: Functional Requirements Analysis
     console.log('  → Analyzing functional requirements...');
     const functionalReqs = await analyzeFunctionalRequirements(
-      taskDetails, promptManager
+      taskDetails, task
     );
     analysis.functionalRequirements = functionalReqs;
     task.addConversationEntry('system', 
@@ -328,7 +334,7 @@ async function performAnalysis(taskContext, task, promptManager) {
     // Step 2: Technical Requirements Analysis
     console.log('  → Analyzing technical requirements...');
     const technicalReqs = await analyzeTechnicalRequirements(
-      taskDetails, functionalReqs, promptManager
+      taskDetails, functionalReqs, task
     );
     analysis.technicalRequirements = technicalReqs;
     task.addConversationEntry('system', 
@@ -337,7 +343,7 @@ async function performAnalysis(taskContext, task, promptManager) {
     // Step 3: Component Architecture
     console.log('  → Determining component architecture...');
     const components = await analyzeComponentArchitecture(
-      taskDetails, functionalReqs, technicalReqs, promptManager
+      taskDetails, functionalReqs, technicalReqs, task
     );
     analysis.components = components;
     task.addConversationEntry('system', 
@@ -347,7 +353,7 @@ async function performAnalysis(taskContext, task, promptManager) {
     if (needsDataModel(taskDetails, functionalReqs)) {
       console.log('  → Designing data model...');
       const dataModel = await analyzeDataModel(
-        taskDetails, functionalReqs, promptManager
+        taskDetails, functionalReqs, task
       );
       analysis.dataModel = dataModel;
       task.addConversationEntry('system', 
@@ -358,7 +364,7 @@ async function performAnalysis(taskContext, task, promptManager) {
     if (needsApiSpec(taskDetails, functionalReqs)) {
       console.log('  → Defining API specification...');
       const apiSpec = await analyzeApiSpecification(
-        taskDetails, functionalReqs, analysis.dataModel, promptManager
+        taskDetails, functionalReqs, analysis.dataModel, task
       );
       analysis.apiSpecification = apiSpec;
       task.addConversationEntry('system', 
@@ -368,13 +374,13 @@ async function performAnalysis(taskContext, task, promptManager) {
     // Step 6: Dependencies
     console.log('  → Identifying dependencies...');
     const dependencies = await analyzeDependencies(
-      taskDetails, technicalReqs, components, promptManager
+      taskDetails, technicalReqs, components, task
     );
     analysis.dependencies = dependencies;
     
     // Step 7: Constraints and Assumptions
     console.log('  → Documenting constraints and assumptions...');
-    const constraints = await analyzeConstraints(taskDetails, promptManager);
+    const constraints = await analyzeConstraints(taskDetails, task);
     analysis.constraints = constraints.constraints || [];
     analysis.assumptions = constraints.assumptions || [];
     
@@ -390,13 +396,12 @@ async function performAnalysis(taskContext, task, promptManager) {
 }
 
 /**
- * Analyze functional requirements - simplified with PromptManager
+ * Analyze functional requirements - using TemplatedPrompt
  */
-async function analyzeFunctionalRequirements(taskDetails, promptManager) {
-  const result = await promptManager.executePrompt(
-    'requirements-analysis/functional-requirements',
-    {
-      projectDescription: taskDetails.description,
+async function analyzeFunctionalRequirements(taskDetails, task) {
+  const prompt = await task.getPrompt('functionalRequirements');
+  const result = await prompt.execute({
+    projectDescription: taskDetails.description,
       projectType: taskDetails.projectType,
       components: JSON.stringify(taskDetails.components)
     }
@@ -408,9 +413,9 @@ async function analyzeFunctionalRequirements(taskDetails, promptManager) {
 /**
  * Analyze technical requirements - simplified with PromptManager
  */
-async function analyzeTechnicalRequirements(taskDetails, functionalReqs, promptManager) {
-  const result = await promptManager.executePrompt(
-    'requirements-analysis/technical-requirements',
+async function analyzeTechnicalRequirements(taskDetails, functionalReqs, task) {
+  const prompt = await task.getPrompt('technicalRequirements');
+  const result = await prompt.execute(
     {
       projectDescription: taskDetails.description,
       projectType: taskDetails.projectType,
@@ -424,9 +429,9 @@ async function analyzeTechnicalRequirements(taskDetails, functionalReqs, promptM
 /**
  * Analyze component architecture - simplified with PromptManager
  */
-async function analyzeComponentArchitecture(taskDetails, functionalReqs, technicalReqs, promptManager) {
-  const result = await promptManager.executePrompt(
-    'requirements-analysis/component-architecture',
+async function analyzeComponentArchitecture(taskDetails, functionalReqs, technicalReqs, task) {
+  const prompt = await task.getPrompt('componentArchitecture');
+  const result = await prompt.execute(
     {
       projectDescription: taskDetails.description,
       projectType: taskDetails.projectType,
@@ -441,9 +446,9 @@ async function analyzeComponentArchitecture(taskDetails, functionalReqs, technic
 /**
  * Analyze data model - simplified with PromptManager
  */
-async function analyzeDataModel(taskDetails, functionalReqs, promptManager) {
-  const result = await promptManager.executePrompt(
-    'requirements-analysis/data-model',
+async function analyzeDataModel(taskDetails, functionalReqs, task) {
+  const prompt = await task.getPrompt('dataModel');
+  const result = await prompt.execute(
     {
       projectDescription: taskDetails.description,
       functionalRequirements: JSON.stringify(functionalReqs)
@@ -456,9 +461,9 @@ async function analyzeDataModel(taskDetails, functionalReqs, promptManager) {
 /**
  * Analyze API specification - simplified with PromptManager
  */
-async function analyzeApiSpecification(taskDetails, functionalReqs, dataModel, promptManager) {
-  const result = await promptManager.executePrompt(
-    'requirements-analysis/api-specification',
+async function analyzeApiSpecification(taskDetails, functionalReqs, dataModel, task) {
+  const prompt = await task.getPrompt('apiSpecification');
+  const result = await prompt.execute(
     {
       projectDescription: taskDetails.description,
       functionalRequirements: JSON.stringify(functionalReqs),
@@ -472,9 +477,9 @@ async function analyzeApiSpecification(taskDetails, functionalReqs, dataModel, p
 /**
  * Analyze dependencies - simplified with PromptManager
  */
-async function analyzeDependencies(taskDetails, technicalReqs, components, promptManager) {
-  const result = await promptManager.executePrompt(
-    'requirements-analysis/dependencies',
+async function analyzeDependencies(taskDetails, technicalReqs, components, task) {
+  const prompt = await task.getPrompt('dependencies');
+  const result = await prompt.execute(
     {
       projectType: taskDetails.projectType,
       components: JSON.stringify(components),
@@ -488,9 +493,9 @@ async function analyzeDependencies(taskDetails, technicalReqs, components, promp
 /**
  * Analyze constraints and assumptions - simplified with PromptManager
  */
-async function analyzeConstraints(taskDetails, promptManager) {
-  const result = await promptManager.executePrompt(
-    'requirements-analysis/constraints',
+async function analyzeConstraints(taskDetails, task) {
+  const prompt = await task.getPrompt('constraints');
+  const result = await prompt.execute(
     {
       projectDescription: taskDetails.description,
       projectType: taskDetails.projectType

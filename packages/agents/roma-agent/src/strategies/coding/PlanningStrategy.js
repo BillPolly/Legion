@@ -17,7 +17,13 @@
 import { EnhancedTaskStrategy } from '@legion/tasks';
 import { createFromPreset } from '../utils/ConfigBuilder.js';
 import { getTaskContext } from '../utils/StrategyHelpers.js';
-import { PromptExecutor } from '../../utils/PromptExecutor.js';
+import { TemplatedPrompt } from '@legion/prompting-manager';
+import path from 'path';
+import fs from 'fs/promises';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Create a PlanningStrategy prototype
@@ -51,8 +57,9 @@ export function createPlanningStrategy(context = {}, options = {}) {
     options: actualOptions
   });
   
-  // Add PromptExecutor to config
-  config.promptExecutor = new PromptExecutor(actualContext);
+  // Store llmClient for potential future use with TemplatedPrompt
+  strategy.llmClient = actualContext.llmClient;
+  strategy.sessionLogger = actualOptions.sessionLogger;
   
   // Add planning-specific templates to config
   config.templates = {

@@ -14,11 +14,11 @@
 import { EnhancedTaskStrategy } from '@legion/tasks';
 import { createFromPreset } from '../utils/ConfigBuilder.js';
 import { getTaskContext } from '../utils/StrategyHelpers.js';
-import { PromptRegistry } from '@legion/prompting-manager';
-import { PromptExecutor } from '../../utils/PromptExecutor.js';
+import { TemplatedPrompt } from '@legion/prompting-manager';
 import { createSimpleNodeServerStrategy } from '../simple-node/SimpleNodeServerStrategy.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs/promises';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -156,10 +156,17 @@ export function createProjectPlannerStrategy(context = {}, options = {}) {
   // Create the strategy as an object that inherits from EnhancedTaskStrategy
   const strategy = Object.create(EnhancedTaskStrategy);
   
+  // Store llmClient and sessionLogger for creating TemplatedPrompts
+  strategy.llmClient = actualContext.llmClient;
+  strategy.sessionLogger = actualOptions.sessionLogger;
+  
+  // Store prompt schemas for lazy initialization
+  strategy.promptSchemas = PROJECT_PROMPT_DEFINITIONS;
+  strategy.prompts = {};
+  
   // Store configuration
   const config = {
     context: actualContext,
-    promptExecutor: null,
     options: {
       projectRoot: '/tmp/roma-projects',
       maxConcurrent: 3,
@@ -187,18 +194,47 @@ export function createProjectPlannerStrategy(context = {}, options = {}) {
       debug: null
     },
     
-    // Initialize prompt registry
-    promptRegistry: null,
-    promptInstances: new Map(),
-    
     // Project state
     state: null
   };
   
-  // Initialize prompt registry
-  const promptsPath = path.resolve(__dirname, '../../../prompts');
-  config.promptRegistry = new PromptRegistry();
-  config.promptRegistry.addDirectory(promptsPath);
+  // Store config on strategy for access
+  strategy.config = config;
+  
+  /**
+   * Lazily create a TemplatedPrompt instance
+   */
+  strategy.getPrompt = async function(promptPath) {
+    if (!this.prompts[promptPath]) {
+      const definition = this.promptSchemas[promptPath];
+      if (!definition) {
+        throw new Error(`Unknown prompt: ${promptPath}`);
+      }
+      
+      if (!this.llmClient) {
+        throw new Error('LLMClient is required for TemplatedPrompt');
+      }
+      
+      // Load the prompt template
+      const fullPath = path.join(__dirname, '../../prompts', promptPath + '.md');
+      let template;
+      try {
+        template = await fs.readFile(fullPath, 'utf8');
+      } catch (error) {
+        throw new Error(`Failed to load prompt template at ${fullPath}: ${error.message}`);
+      }
+      
+      // Create TemplatedPrompt instance
+      this.prompts[promptPath] = new TemplatedPrompt({
+        prompt: template,
+        responseSchema: definition.schema,
+        llmClient: this.llmClient,
+        maxRetries: 3,
+        sessionLogger: this.sessionLogger
+      });
+    }
+    return this.prompts[promptPath];
+  };
   
   /**
    * The only required method - handles all messages
@@ -746,50 +782,8 @@ async function attemptRecovery(config, issues) {
 }
 
 /**
- * Execute prompt with LLM
- */
-async function executePrompt(config, promptPath, variables) {
-  const prompt = await getTemplatedPrompt(config, promptPath, getContextFromTask(this));
-  return await prompt.execute(variables);
-}
-
-/**
  * Helper to extract context from task
  */
 function getContextFromTask(task) {
   return task?.context || {};
-}
-
-async function getTemplatedPrompt(config, promptPath, taskContext = {}) {
-  if (!config.promptInstances.has(promptPath)) {
-    const definition = PROJECT_PROMPT_DEFINITIONS[promptPath];
-    if (!definition) {
-      throw new Error(`No prompt definition registered for ${promptPath}`);
-    }
-
-    // Initialize PromptExecutor if not done
-    if (!config.promptExecutor) {
-      const mergedContext = { ...config.context, ...taskContext };
-      config.promptExecutor = new PromptExecutor(mergedContext);
-    }
-
-    const template = await config.promptRegistry.load(promptPath);
-    
-    // Create a wrapper that mimics TemplatedPrompt interface
-    const promptWrapper = {
-      execute: async (variables) => {
-        return await config.promptExecutor.execute(
-          template.content || template,
-          variables,
-          definition.schema,
-          definition.examples || [],
-          { maxRetries: 3 }
-        );
-      }
-    };
-
-    config.promptInstances.set(promptPath, promptWrapper);
-  }
-
-  return config.promptInstances.get(promptPath);
 }
