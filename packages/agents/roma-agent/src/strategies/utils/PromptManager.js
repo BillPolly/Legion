@@ -9,7 +9,7 @@
  * - Schema-based prompt definitions
  */
 
-import { EnhancedPromptRegistry, TemplatedPrompt } from '@legion/prompting-manager';
+import { PromptRegistry, TemplatedPrompt } from '@legion/prompting-manager';
 import path from 'path';
 import { parseJsonResponse } from './StrategyHelpers.js';
 
@@ -28,7 +28,10 @@ export class PromptManager {
     this.promptsPath = options.promptsPath || path.resolve(basePath, '../../../prompts');
     
     // Initialize prompt registry
-    this.registry = options.registry || new EnhancedPromptRegistry(this.promptsPath);
+    this.registry = options.registry || new PromptRegistry();
+    if (!options.registry) {
+      this.registry.addDirectory(this.promptsPath);
+    }
     
     // Store loaded prompts
     this.prompts = {};
@@ -137,32 +140,41 @@ export class PromptManager {
       return await prompt.execute(variables);
     }
     
-    // Otherwise, handle raw template
+    // Otherwise, upgrade raw template to a TemplatedPrompt on demand
     const llmClient = options.llmClient || this.llmClient;
     if (!llmClient) {
       throw new Error('LLM client required for prompt execution');
     }
-    
-    // Replace variables in template
-    const promptContent = this.replaceVariables(prompt.content || prompt, variables);
-    
-    // Execute with LLM
-    const response = await llmClient.complete(promptContent);
-    
-    // Parse response if needed
-    if (options.parseJson !== false) {
-      const parsed = parseJsonResponse(response);
-      return {
-        success: parsed !== null,
-        data: parsed,
-        raw: response
-      };
+
+    const schema = options.responseSchema || {
+      type: 'string'
+    };
+
+    const templatedPrompt = new TemplatedPrompt({
+      prompt: prompt.content || prompt,
+      responseSchema: schema,
+      examples: options.examples || [],
+      llmClient,
+      maxRetries: options.maxRetries || 3
+    });
+
+    // Cache the upgraded prompt for future calls
+    this.prompts[path] = templatedPrompt;
+
+    const result = await templatedPrompt.execute(variables);
+
+    if (options.parseJson !== false && typeof result.data === 'string') {
+      const parsed = parseJsonResponse(result.data);
+      if (parsed !== null) {
+        result.data = parsed;
+      }
     }
-    
+
     return {
-      success: true,
-      data: response,
-      raw: response
+      success: result.success,
+      data: result.data,
+      raw: result.data,
+      errors: result.errors
     };
   }
   

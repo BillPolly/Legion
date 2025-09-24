@@ -7,8 +7,8 @@
  */
 
 import { TaskStrategy } from '@legion/tasks';
-import { EnhancedPromptRegistry } from '@legion/prompting-manager';
 import PromptFactory from '../../utils/PromptFactory.js';
+import { PromptExecutor } from '../../utils/PromptExecutor.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -16,18 +16,181 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
+ * Create prompt schemas and examples for all LLM interactions
+ * This ensures all LLM calls go through proper validation and parsing
+ */
+function getPromptConfigurations() {
+  // Define response schemas and examples for each prompt
+  
+  // 1. Requirements Analysis Schema
+  const requirementsSchema = PromptFactory.createJsonSchema({
+    serverType: { 
+      type: 'string', 
+      enum: ['express', 'fastify', 'http'],
+      description: 'Type of Node.js server framework'
+    },
+    endpoints: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          method: { type: 'string', enum: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'] },
+          path: { type: 'string' },
+          description: { type: 'string' }
+        },
+        required: ['method', 'path', 'description']
+      }
+    }
+  }, ['serverType', 'endpoints']);
+
+  const requirementsExamples = [
+    {
+      serverType: 'express',
+      endpoints: [
+        { method: 'GET', path: '/', description: 'Homepage endpoint' },
+        { method: 'GET', path: '/api/users', description: 'Get all users' },
+        { method: 'POST', path: '/api/users', description: 'Create a new user' }
+      ]
+    }
+  ];
+
+  // 2. Code Generation Schema (using delimited format for code)
+  const codeSchema = PromptFactory.createJsonSchema({
+    code: { type: 'string', description: 'Generated Node.js server code' },
+    dependencies: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'NPM dependencies required'
+    }
+  }, ['code'], 'delimited');
+
+  const codeExamples = [
+    {
+      code: `const express = require('express');
+const app = express();
+const PORT = 3000;
+
+app.get('/', (req, res) => {
+  res.json({ message: 'Hello World' });
+});
+
+app.listen(PORT, () => {
+  console.log(\`Server running on port \${PORT}\`);
+});`,
+      dependencies: ['express']
+    }
+  ];
+
+  // 3. Package.json Generation Schema
+  const packageSchema = PromptFactory.createJsonSchema({
+    name: { type: 'string' },
+    version: { type: 'string' },
+    description: { type: 'string' },
+    main: { type: 'string' },
+    scripts: { type: 'object' },
+    dependencies: { type: 'object' }
+  }, ['name', 'version', 'main', 'dependencies']);
+
+  const packageExamples = [
+    {
+      name: 'node-server',
+      version: '1.0.0',
+      description: 'Generated Node.js server',
+      main: 'server.js',
+      scripts: {
+        start: 'node server.js',
+        dev: 'nodemon server.js'
+      },
+      dependencies: {
+        express: '^4.18.0'
+      }
+    }
+  ];
+
+  // Return prompt configurations to be used with PromptExecutor
+  return {
+    analyzeRequirements: {
+      template: `Analyze the following task description and determine what type of Node.js server to create and what endpoints are needed.
+
+Task: {{taskDescription}}
+
+Determine:
+1. What server framework to use (express, fastify, or http)  
+2. What API endpoints are needed based on the task description
+3. For each endpoint, specify the HTTP method, path, and description
+
+{{outputPrompt}}`,
+      responseSchema: requirementsSchema,
+      examples: requirementsExamples
+    },
+
+    generateCode: {
+      template: `Generate Node.js server code for the following requirements:
+
+Server Type: {{serverType}}
+Endpoints: {{endpoints}}
+
+Generate complete, working server code that:
+1. Uses the specified server framework
+2. Implements all requested endpoints
+3. Includes proper error handling
+4. Uses modern JavaScript practices
+5. Is ready to run
+
+{{outputPrompt}}`,
+      responseSchema: codeSchema,
+      examples: codeExamples
+    },
+
+    generatePackageJson: {
+      template: `Generate a package.json file for a {{serverType}} server project.
+
+Dependencies needed: {{dependencies}}
+
+Create a complete package.json with:
+1. Appropriate project name and description
+2. Required dependencies
+3. Useful scripts (start, dev)
+4. Proper versioning
+
+{{outputPrompt}}`,
+      responseSchema: packageSchema,
+      examples: packageExamples
+    }
+  };
+}
+
+/**
  * Create a SimpleNodeServerStrategy prototype
  * This factory function creates the strategy with its dependencies
  */
-export function createSimpleNodeServerStrategy(llmClient = null, toolRegistry = null, options = {}) {
+export function createSimpleNodeServerStrategy(context = {}, options = {}) {
+  // Support legacy signature for backward compatibility
+  let actualContext = context;
+  let actualOptions = options;
+  if (arguments.length === 3) {
+    // Called with old signature: (llmClient, toolRegistry, options)
+    actualContext = { llmClient: arguments[0], toolRegistry: arguments[1] };
+    actualOptions = arguments[2] || {};
+  } else if (arguments.length === 2 && arguments[1] && !arguments[1].llmClient && !arguments[1].toolRegistry) {
+    // Second arg is options, not toolRegistry
+    if (context.llmClient || context.toolRegistry) {
+      actualOptions = arguments[1];
+    } else {
+      // Old signature: (llmClient, toolRegistry)
+      actualContext = { llmClient: arguments[0], toolRegistry: arguments[1] };
+      actualOptions = {};
+    }
+  }
+  
   // Create the strategy as an object that inherits from TaskStrategy
   const strategy = Object.create(TaskStrategy);
   
   // Store configuration
   const config = {
-    llmClient: llmClient,
-    toolRegistry: toolRegistry,
-    projectRoot: options.projectRoot || '/tmp/roma-projects',
+    context: actualContext,
+    promptExecutor: new PromptExecutor(actualContext),
+    projectRoot: actualOptions.projectRoot || '/tmp/roma-projects',
     
     // Pre-instantiated tools
     tools: {
@@ -35,13 +198,13 @@ export function createSimpleNodeServerStrategy(llmClient = null, toolRegistry = 
       directoryCreate: null
     },
     
-    // Initialize prompt registry
-    promptRegistry: null
+    // Prompt configurations - will be used with PromptExecutor
+    promptConfigs: getPromptConfigurations()
   };
   
-  // Initialize prompt registry
-  const promptsPath = path.resolve(__dirname, '../../../prompts');
-  config.promptRegistry = new EnhancedPromptRegistry(promptsPath);
+  // Note: No longer creating TemplatedPrompt instances here
+  // We'll use PromptExecutor directly in the implementation
+  }
   
   /**
    * The only required method - handles all messages
@@ -195,14 +358,19 @@ async function initializeDependencies(config, task) {
   if (!config.llmClient) {
     throw new Error('LLM client is required');
   }
-  
+
   if (!config.toolRegistry) {
     throw new Error('ToolRegistry is required');
   }
-  
+
   // Load required tools
   config.tools.fileWrite = await config.toolRegistry.getTool('file_write');
   config.tools.directoryCreate = await config.toolRegistry.getTool('directory_create');
+
+  // Ensure prompts are instantiated once LLM client is available
+  if (config.llmClient && (!config.prompts || Object.keys(config.prompts).length === 0)) {
+    config.prompts = createPromptInstances(config.llmClient);
+  }
 }
 
 /**
@@ -388,10 +556,9 @@ async function handleDependencyInstallation(config) {
  * Analyze server requirements from task description
  */
 async function analyzeRequirements(config, task) {
-  const result = await executePrompt(config,
-    'strategies/simple-node/server/analyze-requirements',
-    { taskDescription: task.description }
-  );
+  const result = await config.prompts.analyzeRequirements.execute({
+    taskDescription: task.description
+  });
   
   if (!result.success) {
     const errorMsg = result.errors?.map(e => typeof e === 'object' ? JSON.stringify(e) : e).join(', ') || 'Unknown error';
@@ -405,23 +572,25 @@ async function analyzeRequirements(config, task) {
  * Generate server code based on requirements
  */
 async function generateServer(config, requirements) {
+  if (!config.prompts?.generateCode) {
+    throw new Error('Server generation prompt is not initialized');
+  }
+
   // Format endpoints for template
   const endpointsStr = requirements.endpoints.map(
     e => `- ${e.method} ${e.path}: ${e.description}`
   ).join('\n');
-  
-  const result = await executePrompt(config,
-    'strategies/simple-node/server/generate-code',
-    {
-      serverType: requirements.serverType,
-      endpoints: endpointsStr
-    }
-  );
-  
+
+  const result = await config.prompts.generateCode.execute({
+    serverType: requirements.serverType,
+    endpoints: endpointsStr
+  });
+
   if (!result.success) {
-    throw new Error(`Failed to generate server: ${result.errors?.join(', ') || 'Unknown error'}`);
+    const errorMsg = result.errors?.join(', ') || 'Unknown error';
+    throw new Error(`Failed to generate server: ${errorMsg}`);
   }
-  
+
   return result.data;
 }
 
@@ -429,21 +598,22 @@ async function generateServer(config, requirements) {
  * Generate package.json
  */
 async function generatePackageJson(config, serverType, dependencies) {
-  const result = await executePrompt(config,
-    'strategies/simple-node/server/generate-package-json',
-    {
-      serverType: serverType,
-      dependencies: dependencies.join(', ')
-    }
-  );
-  
-  if (!result.success) {
-    throw new Error(`Failed to generate package.json: ${result.errors?.join(', ') || 'Unknown error'}`);
+  if (!config.prompts?.generatePackageJson) {
+    throw new Error('Package.json prompt is not initialized');
   }
-  
-  // The LLM returns the package.json directly as result.data
-  // If it's wrapped in packageJson property, use that, otherwise use data directly
-  return result.data.packageJson || result.data;
+
+  const result = await config.prompts.generatePackageJson.execute({
+    serverType: serverType,
+    dependencies: dependencies.join(', ')
+  });
+
+  if (!result.success) {
+    const errorMsg = result.errors?.join(', ') || 'Unknown error';
+    throw new Error(`Failed to generate package.json: ${errorMsg}`);
+  }
+
+  const data = result.data || {};
+  return data.packageJson || data;
 }
 
 /**
@@ -463,52 +633,6 @@ async function setupProject(config, task) {
 /**
  * Execute prompt with LLM
  */
-async function executePrompt(config, promptPath, variables) {
-  const prompt = await config.promptRegistry.fill(promptPath, variables);
-  const response = await config.llmClient.complete(prompt);
-  
-  // Parse response based on expected format
-  const metadata = await config.promptRegistry.getMetadata(promptPath);
-  
-  if (metadata.responseFormat === 'json') {
-    try {
-      // Extract JSON from response
-      const jsonMatch = response.match(/```json\s*([\s\S]*?)```/) || response.match(/{[\s\S]*}/);        
-      const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : response;
-      const data = JSON.parse(jsonStr);
-      return { success: true, data };
-    } catch (error) {
-      return { success: false, errors: [`Failed to parse JSON: ${error.message}`] };
-    }
-  } else if (metadata.responseFormat === 'delimited') {
-    // For delimited responses, extract sections
-    const sections = response.split(/---+/);
-    if (sections.length >= 3) {
-      return {
-        success: true,
-        data: {
-          code: sections[0].trim(),
-          dependencies: sections[1] ? sections[1].trim().split(',').map(d => d.trim()).filter(d => d) : [],
-          explanation: sections[2] ? sections[2].trim() : ''
-        }
-      };
-    }
-    // Fall back to structured parsing
-    const codeMatch = response.match(/```(?:javascript|js)?\s*([\s\S]*?)```/);
-    const depsMatch = response.match(/dependencies?:\s*\[([^\]]+)\]/i) || response.match(/dependencies?:\s*([^\n]+)/i);
-    
-    return {
-      success: true,
-      data: {
-        code: codeMatch ? codeMatch[1].trim() : response,
-        dependencies: depsMatch ? depsMatch[1].split(',').map(d => d.trim().replace(/["']/g, '')) : []
-      }
-    };
-  }
-  
-  return { success: true, data: response };
-}
-
 /**
  * Helper to extract context from task
  */

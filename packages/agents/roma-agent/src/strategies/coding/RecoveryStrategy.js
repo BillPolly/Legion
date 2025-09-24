@@ -12,7 +12,8 @@
  */
 
 import { TaskStrategy } from '@legion/tasks';
-import { EnhancedPromptRegistry } from '@legion/prompting-manager';
+import { PromptRegistry } from '@legion/prompting-manager';
+import { PromptExecutor } from '../../utils/PromptExecutor.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
@@ -23,14 +24,32 @@ const __dirname = path.dirname(__filename);
  * Create a RecoveryStrategy prototype
  * This factory function creates the strategy with its dependencies
  */
-export function createRecoveryStrategy(llmClient = null, toolRegistry = null, configuration = {}) {
+export function createRecoveryStrategy(context = {}, configuration = {}) {
+  // Support legacy signature for backward compatibility
+  let actualContext = context;
+  let actualOptions = configuration;
+  if (arguments.length === 3) {
+    // Called with old signature: (llmClient, toolRegistry, options)
+    actualContext = { llmClient: arguments[0], toolRegistry: arguments[1] };
+    actualOptions = arguments[2] || {};
+  } else if (arguments.length === 2 && arguments[1] && !arguments[1].llmClient && !arguments[1].toolRegistry) {
+    // Second arg is options, not toolRegistry
+    if (context.llmClient || context.toolRegistry) {
+      actualOptions = arguments[1];
+    } else {
+      // Old signature: (llmClient, toolRegistry)
+      actualContext = { llmClient: arguments[0], toolRegistry: arguments[1] };
+      actualOptions = {};
+    }
+  }
+  
   // Create the strategy as an object that inherits from TaskStrategy
   const strategy = Object.create(TaskStrategy);
   
   // Store configuration in closure
   const config = {
-    llmClient: llmClient,
-    toolRegistry: toolRegistry,
+    context: actualContext,
+    promptExecutor: new PromptExecutor(actualContext),
     projectPlanner: null, // Set externally
     promptRegistry: null,
 
@@ -64,12 +83,16 @@ export function createRecoveryStrategy(llmClient = null, toolRegistry = null, co
     checkpointCounter: 0,
 
     // Optional cache for resource cleanup
-    cache: null
+    cache: null,
+
+    // Cached prompt instances
+    prompts: null
   };
   
   // Initialize prompt registry
   const promptsPath = path.resolve(__dirname, '../../../prompts');
-  config.promptRegistry = new EnhancedPromptRegistry(promptsPath);
+  config.promptRegistry = new PromptRegistry();
+  config.promptRegistry.addDirectory(promptsPath);
   
   // Merge nested objects properly
   if (configuration.maxRetries) {
@@ -478,6 +501,35 @@ async function freeResources(config) {
   return true;
 }
 
+async function ensureRecoveryPrompts(config) {
+  if (config.prompts) {
+    return config.prompts;
+  }
+
+  if (!config.llmClient) {
+    throw new Error('LLM client is required to initialize recovery prompts');
+  }
+
+  const template = await config.promptRegistry.load('coding/recovery/analyze-failure');
+  const schema = template.metadata?.schema;
+  if (!schema) {
+    throw new Error('Recovery prompt metadata missing schema definition');
+  }
+
+  const examples = template.metadata?.examples || template.metadata?.samples || [];
+
+  config.prompts = {
+    analyzeFailure: new TemplatedPrompt({
+      prompt: template.content,
+      responseSchema: schema,
+      examples,
+      llmClient: config.llmClient
+    })
+  };
+
+  return config.prompts;
+}
+
 /**
  * Analyze failure to understand root cause
  */
@@ -495,14 +547,25 @@ async function analyzeFailure(config, task, error) {
   }
 
   try {
-    const prompt = await config.promptRegistry.fill('coding/recovery/analyze-failure', {
+    const prompts = await ensureRecoveryPrompts(config);
+    const analysisResult = await prompts.analyzeFailure.execute({
       task: JSON.stringify(task, null, 2),
       error: error.message,
       errorType: error.constructor.name
     });
 
-    const content = await config.llmClient.complete(prompt);
-    return JSON.parse(content);
+    if (analysisResult.success) {
+      return analysisResult.data;
+    }
+
+    return {
+      reason: 'analysis_failed',
+      failedApproaches: [task.strategy],
+      suggestedConstraints: {
+        useSimpleApproach: true,
+        avoidStrategies: [task.strategy]
+      }
+    };
   } catch (analysisError) {
     console.error('Failure analysis failed:', analysisError);
     return {

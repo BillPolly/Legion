@@ -5,17 +5,21 @@
  * 1. Task description → LLM generates tool descriptions
  * 2. Tool descriptions → semantic search → unified tools
  * 3. Better semantic matching than direct task-to-tool search
+ * 
+ * Now uses PromptExecutor to hide all llmClient complexity
  */
 
-import { EnhancedPromptRegistry } from '@legion/prompting-manager';
+import { PromptRegistry } from '@legion/prompting-manager';
+import { PromptExecutor } from '../../utils/PromptExecutor.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default class ToolDiscovery {
-  constructor(llmClient, toolRegistry) {
-    this.llmClient = llmClient;
+  constructor(taskOrContext, toolRegistry) {
+    // Create PromptExecutor instead of storing llmClient
+    this.executor = new PromptExecutor(taskOrContext);
     this.toolRegistry = toolRegistry;
     this.confidenceThreshold = 0.6;
     this.maxTools = 20;
@@ -25,7 +29,11 @@ export default class ToolDiscovery {
     
     // Initialize prompt registry
     const promptsPath = path.resolve(__dirname, '../../../prompts');
-    this.promptRegistry = new EnhancedPromptRegistry(promptsPath);
+    this.promptRegistry = new PromptRegistry();
+    this.promptRegistry.addDirectory(promptsPath);
+
+    this.prompts = null;
+    this.promptsPromise = null;
   }
 
   /**
@@ -81,25 +89,27 @@ export default class ToolDiscovery {
    * @returns {Promise<Array<string>>} Array of tool descriptions
    */
   async generateToolDescriptions(taskDescription) {
-    const prompt = await this.promptRegistry.fill('utils/tools/generate-descriptions', {
-      taskDescription,
-      minDescriptions: this.minDescriptions,
-      maxDescriptions: this.maxDescriptions + 2
-    });
+    await this.ensurePrompts();
 
     try {
-      // Use the exact format from decent planner - just pass the prompt string
-      const response = await this.llmClient.complete(prompt);
+      // Use PromptExecutor instead of TemplatedPrompt directly
+      const result = await this.executor.execute(
+        this.promptTemplate,
+        {
+          taskDescription,
+          minDescriptions: this.minDescriptions,
+          maxDescriptions: this.maxDescriptions + 2
+        },
+        this.responseSchema,
+        this.examples
+      );
 
-      // Parse JSON response using the exact regex from decent planner
-      const jsonMatch = response.match(/\[[\s\S]*\]/);
-      if (!jsonMatch) {
-        throw new Error('LLM response does not contain valid JSON array');
+      if (!result.success) {
+        throw new Error(result.errors?.join(', ') || 'Prompt execution failed');
       }
 
-      const descriptions = JSON.parse(jsonMatch[0]);
+      const descriptions = result.data;
 
-      // Validate and filter descriptions
       if (!Array.isArray(descriptions)) {
         throw new Error('LLM response is not an array');
       }
@@ -277,5 +287,28 @@ export default class ToolDiscovery {
     }
 
     return lines.join('\n');
+  }
+
+  async ensurePrompts() {
+    if (this.promptTemplate) {
+      return;
+    }
+
+    const template = await this.promptRegistry.load('utils/tools/generate-descriptions');
+    
+    this.promptTemplate = template.content || template;
+    
+    this.responseSchema = template.metadata?.schema || {
+      type: 'array',
+      items: { type: 'string' }
+    };
+
+    this.examples = template.metadata?.examples || [
+      [
+        'Write JavaScript code to implement the required feature',
+        'Create or update project files with generated source code',
+        'Validate JSON configuration files for correctness'
+      ]
+    ];
   }
 }

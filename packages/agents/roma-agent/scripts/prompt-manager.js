@@ -377,8 +377,20 @@ class PromptManagerCLI {
           }
         }
         
-        const prompt = await this.registry.fill(promptPath, sampleVars);
-        const response = await llmClient.complete(prompt);
+        const filledTemplate = await this.registry.fill(promptPath, sampleVars);
+        
+        // Create a simple TemplatedPrompt for testing
+        const { TemplatedPrompt } = await import('@legion/prompting-manager');
+        const testPrompt = new TemplatedPrompt({
+          prompt: filledTemplate,
+          responseSchema: { type: 'string' }, // Simple string response for testing
+          examples: ['Sample response text'],
+          llmClient,
+          maxRetries: 1
+        });
+        
+        const result = await testPrompt.execute({});
+        const response = result.success ? result.data : `Error: ${result.errors?.join(', ')}`;
         
         console.log('\n📤 LLM Response:');
         console.log('─'.repeat(50));

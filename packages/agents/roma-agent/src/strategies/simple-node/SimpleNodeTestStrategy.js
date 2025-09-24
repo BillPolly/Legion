@@ -7,7 +7,7 @@
  */
 
 import { TaskStrategy } from '@legion/tasks';
-import { EnhancedPromptRegistry } from '@legion/prompting-manager';
+import { PromptRegistry } from '@legion/prompting-manager';
 import PromptFactory from '../../utils/PromptFactory.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -37,12 +37,16 @@ export function createSimpleNodeTestStrategy(llmClient = null, toolRegistry = nu
     },
     
     // Initialize prompt registry
-    promptRegistry: null
+    promptRegistry: null,
+
+    // Cached prompt instances
+    prompts: null
   };
   
   // Initialize prompt registry
   const promptsPath = path.resolve(__dirname, '../../../prompts');
-  config.promptRegistry = new EnhancedPromptRegistry(promptsPath);
+  config.promptRegistry = new PromptRegistry();
+  config.promptRegistry.addDirectory(promptsPath);
   
   /**
    * The only required method - handles all messages
@@ -166,6 +170,8 @@ async function initializeDependencies(config, task) {
   config.tools.fileWrite = await config.toolRegistry.getTool('file_write');
   config.tools.fileRead = await config.toolRegistry.getTool('file_read');
   config.tools.commandExecutor = await config.toolRegistry.getTool('command_executor');
+
+  await ensurePrompts(config);
 }
 /**
  * Main test generation handler
@@ -254,40 +260,117 @@ async function handleTestGeneration(config) {
 }
 
 /**
- * Execute prompt with LLM
+ * Ensure TemplatedPrompt instances are available for the strategy
  */
-async function executePrompt(config, promptPath, variables) {
-  const prompt = await config.promptRegistry.fill(promptPath, variables);
-  const response = await config.llmClient.complete(prompt);
-  
-  // Parse response based on expected format
-  const metadata = await config.promptRegistry.getMetadata(promptPath);
-  
-  if (metadata.responseFormat === 'json') {
-    try {
-      // Extract JSON from response
-      const jsonMatch = response.match(/```json\s*([\s\S]*?)```/) || response.match(/{[\s\S]*}/);        
-      const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : response;
-      const data = JSON.parse(jsonStr);
-      return { success: true, data };
-    } catch (error) {
-      return { success: false, errors: [`Failed to parse JSON: ${error.message}`] };
-    }
-  } else if (metadata.responseFormat === 'delimited') {
-    // For delimited responses, extract code and description
-    const codeMatch = response.match(/```(?:javascript|js)?\s*([\s\S]*?)```/);
-    const descMatch = response.match(/description:\s*([^\n]+)/i);
-    
-    return {
-      success: true,
-      data: {
-        testCode: codeMatch ? codeMatch[1].trim() : response,
-        testDescription: descMatch ? descMatch[1].trim() : 'Test code generated'
-      }
-    };
+async function ensurePrompts(config) {
+  if (config.prompts) {
+    return config.prompts;
   }
-  
-  return { success: true, data: response };
+
+  if (!config.llmClient) {
+    throw new Error('LLM client is required to initialize prompts');
+  }
+
+  const prompts = {};
+
+  const analyzeTemplate = await config.promptRegistry.load('strategies/simple-node/test/analyze-code');
+  const analyzeSchema = PromptFactory.createJsonSchema({
+    testTargets: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          type: { type: 'string' },
+          description: { type: 'string' }
+        },
+        required: ['name', 'type']
+      }
+    },
+    edgeCases: {
+      type: 'array',
+      items: { type: 'string' }
+    },
+    errorScenarios: {
+      type: 'array',
+      items: { type: 'string' }
+    }
+  }, ['testTargets']);
+
+  const analyzeExamples = [{
+    testTargets: [
+      {
+        name: 'createUser',
+        type: 'function',
+        description: 'Creates a new user and saves to the database'
+      },
+      {
+        name: 'GET /users',
+        type: 'endpoint',
+        description: 'Returns a list of users'
+      }
+    ],
+    edgeCases: ['missing input data', 'database connection failure'],
+    errorScenarios: ['throws validation error when email invalid']
+  }];
+
+  prompts.analyzeCode = PromptFactory.createPrompt({
+    template: analyzeTemplate.content,
+    responseSchema: analyzeSchema,
+    examples: analyzeExamples
+  }, config.llmClient);
+
+  const generateTestTemplate = await config.promptRegistry.load('strategies/simple-node/test/generate-test');
+  const generateTestSchema = PromptFactory.createJsonSchema({
+    testCode: { type: 'string' },
+    testDescription: { type: 'string' },
+    debugNotes: { type: 'string' }
+  }, ['testCode'], 'delimited');
+
+  const generateTestExamples = [{
+    testCode: `import request from 'supertest';
+import app from '../app.js';
+
+describe('GET /users', () => {
+  it('returns a list of users', async () => {
+    const response = await request(app).get('/users');
+    expect(response.status).toBe(200);
+    expect(Array.isArray(response.body)).toBe(true);
+  });
+});`,
+    testDescription: 'Integration tests for GET /users endpoint',
+    debugNotes: 'Covers happy path and validates response format'
+  }];
+
+  prompts.generateTest = PromptFactory.createPrompt({
+    template: generateTestTemplate.content,
+    responseSchema: generateTestSchema,
+    examples: generateTestExamples
+  }, config.llmClient);
+
+  const generateConfigTemplate = await config.promptRegistry.load('strategies/simple-node/test/generate-test-config');
+  const generateConfigSchema = PromptFactory.createJsonSchema({
+    jestConfig: { type: 'object' },
+    instructions: { type: 'string' }
+  }, ['jestConfig']);
+
+  const generateConfigExamples = [{
+    jestConfig: {
+      testEnvironment: 'node',
+      transform: {},
+      collectCoverage: true
+    },
+    instructions: 'Run tests with "npm test" to ensure coverage targets are met.'
+  }];
+
+  prompts.generateTestConfig = PromptFactory.createPrompt({
+    template: generateConfigTemplate.content,
+    responseSchema: generateConfigSchema,
+    examples: generateConfigExamples
+  }, config.llmClient);
+
+  config.prompts = prompts;
+  return config.prompts;
 }
 /**
  * Get code to test from task artifacts or file
@@ -319,10 +402,8 @@ async function getCodeToTest(config, task) {
  * Analyze code to identify test targets
  */
 async function analyzeCode(config, code) {
-  const result = await executePrompt(config,
-    'strategies/simple-node/test/analyze-code',
-    { code: code }
-  );
+  const prompts = await ensurePrompts(config);
+  const result = await prompts.analyzeCode.execute({ code });
   
   if (!result.success) {
     throw new Error(`Failed to analyze code: ${result.errors?.join(', ') || 'Unknown error'}`);
@@ -338,15 +419,13 @@ async function generateTest(config, target, edgeCases) {
   // Format edge cases for template
   const edgeCasesStr = (edgeCases || []).map(e => `- ${e}`).join('\n');
   
-  const result = await executePrompt(config,
-    'strategies/simple-node/test/generate-test',
-    {
-      targetName: target.name,
-      targetType: target.type,
-      targetDescription: target.description,
-      edgeCases: edgeCasesStr
-    }
-  );
+  const prompts = await ensurePrompts(config);
+  const result = await prompts.generateTest.execute({
+    targetName: target.name,
+    targetType: target.type,
+    targetDescription: target.description,
+    edgeCases: edgeCasesStr
+  });
   
   if (!result.success) {
     throw new Error(`Failed to generate test: ${result.errors?.join(', ') || 'Unknown error'}`);
@@ -359,12 +438,10 @@ async function generateTest(config, target, edgeCases) {
  * Generate test configuration
  */
 async function generateTestConfig(config, testFiles) {
-  const result = await executePrompt(config,
-    'strategies/simple-node/test/generate-test-config',
-    {
-      testFiles: testFiles.join(', ')
-    }
-  );
+  const prompts = await ensurePrompts(config);
+  const result = await prompts.generateTestConfig.execute({
+    testFiles: testFiles.join(', ')
+  });
   
   if (!result.success) {
     throw new Error(`Failed to generate test config: ${result.errors?.join(', ') || 'Unknown error'}`);

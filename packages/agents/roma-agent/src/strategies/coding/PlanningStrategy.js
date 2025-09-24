@@ -15,23 +15,44 @@
  */
 
 import { EnhancedTaskStrategy } from '@legion/tasks';
-import { ConfigBuilder } from '../utils/ConfigBuilder.js';
+import { createFromPreset } from '../utils/ConfigBuilder.js';
 import { getTaskContext } from '../utils/StrategyHelpers.js';
+import { PromptExecutor } from '../../utils/PromptExecutor.js';
 
 /**
  * Create a PlanningStrategy prototype
  * Dramatically simplified using the new abstractions
  */
-export function createPlanningStrategy(llmClient = null, toolRegistry = null, options = {}) {
+export function createPlanningStrategy(context = {}, options = {}) {
+  // Support legacy signature for backward compatibility
+  let actualContext = context;
+  let actualOptions = options;
+  if (arguments.length === 3) {
+    // Called with old signature: (llmClient, toolRegistry, options)
+    actualContext = { llmClient: arguments[0], toolRegistry: arguments[1] };
+    actualOptions = arguments[2] || {};
+  } else if (arguments.length === 2 && arguments[1] && !arguments[1].llmClient && !arguments[1].toolRegistry) {
+    // Second arg is options, not toolRegistry
+    if (context.llmClient || context.toolRegistry) {
+      actualOptions = arguments[1];
+    } else {
+      // Old signature: (llmClient, toolRegistry)
+      actualContext = { llmClient: arguments[0], toolRegistry: arguments[1] };
+      actualOptions = {};
+    }
+  }
+  
   // Create strategy inheriting from EnhancedTaskStrategy (which has built-in patterns)
   const strategy = Object.create(EnhancedTaskStrategy);
   
   // Build configuration using ConfigBuilder preset
-  const config = ConfigBuilder.createFromPreset('planning', {
-    llmClient,
-    toolRegistry,
-    options
+  const config = createFromPreset('planning', {
+    context: actualContext,
+    options: actualOptions
   });
+  
+  // Add PromptExecutor to config
+  config.promptExecutor = new PromptExecutor(actualContext);
   
   // Add planning-specific templates to config
   config.templates = {
@@ -828,4 +849,3 @@ function getLibraryTemplate() {
       }
     };
   }
-}

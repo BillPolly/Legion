@@ -16,12 +16,13 @@ import { EnhancedTaskStrategy } from '@legion/tasks';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import { PromptManager } from '../utils/PromptManager.js';
-import { ConfigBuilder } from '../utils/ConfigBuilder.js';
+import { createFromPreset } from '../utils/ConfigBuilder.js';
 import { 
   parseJsonResponse, 
   getTaskContext,
   ensureInitialized 
 } from '../utils/StrategyHelpers.js';
+import { PromptExecutor } from '../../utils/PromptExecutor.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -30,18 +31,34 @@ const __dirname = path.dirname(__filename);
  * Create an AnalysisStrategy prototype
  * Dramatically simplified using the new abstractions
  */
-export function createAnalysisStrategy(llmClient = null, options = {}) {
+export function createAnalysisStrategy(context = {}, options = {}) {
+  // Support legacy signature for backward compatibility
+  let actualContext = context;
+  let actualOptions = options;
+  if (arguments.length === 2 && typeof arguments[0] !== 'object') {
+    // Old signature: (llmClient, options)
+    actualContext = { llmClient: arguments[0] };
+    actualOptions = arguments[1] || {};
+  } else if (!context.llmClient && !context.toolRegistry && arguments.length === 1) {
+    // Passed just llmClient
+    actualContext = { llmClient: arguments[0] };
+    actualOptions = {};
+  }
+  
   // Create strategy inheriting from EnhancedTaskStrategy (which has built-in patterns)
   const strategy = Object.create(EnhancedTaskStrategy);
   
   // Build configuration using ConfigBuilder preset
-  const config = ConfigBuilder.createFromPreset('analysis', {
-    llmClient,
-    options
+  const config = createFromPreset('analysis', {
+    context: actualContext,
+    options: actualOptions
   });
   
-  // Create PromptManager for centralized prompt handling
-  const promptManager = new PromptManager(__dirname, { llmClient });
+  // Create PromptExecutor for handling prompts
+  const promptExecutor = new PromptExecutor(actualContext);
+  
+  // Create PromptManager for centralized prompt handling (will be replaced by PromptExecutor usage)
+  const promptManager = new PromptManager(__dirname, actualContext);
   
   // Define required prompts with schemas
   const promptDefinitions = [

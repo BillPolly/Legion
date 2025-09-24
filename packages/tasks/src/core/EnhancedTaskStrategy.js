@@ -11,7 +11,7 @@
  * Strategies that extend this only need to implement business logic methods.
  */
 
-import { TaskStrategy } from './TaskStrategy.js';
+import TaskStrategy from './TaskStrategy.js';
 
 /**
  * Enhanced Task Strategy with built-in patterns

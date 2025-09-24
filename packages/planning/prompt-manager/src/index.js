@@ -7,7 +7,7 @@ export { default as TemplatedPrompt } from './TemplatedPrompt.js';
 export { default as PromptRegistry } from './PromptRegistry.js';
 
 // Convenience factory functions
-export function createPrompt(template, options = {}) {
+export async function createPrompt(template, options = {}) {
   const { default: TemplatedPrompt } = await import('./TemplatedPrompt.js');
   return new TemplatedPrompt(template, options);
 }

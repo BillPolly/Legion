@@ -12,9 +12,10 @@
  */
 
 import { EnhancedTaskStrategy } from '@legion/tasks';
-import { ConfigBuilder } from '../utils/ConfigBuilder.js';
+import { createFromPreset } from '../utils/ConfigBuilder.js';
 import { getTaskContext } from '../utils/StrategyHelpers.js';
-import { EnhancedPromptRegistry, TemplatedPrompt } from '@legion/prompting-manager';
+import { PromptRegistry } from '@legion/prompting-manager';
+import { PromptExecutor } from '../../utils/PromptExecutor.js';
 import { createSimpleNodeServerStrategy } from '../simple-node/SimpleNodeServerStrategy.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -133,20 +134,38 @@ const PROJECT_PROMPT_DEFINITIONS = {
  * Create a ProjectPlannerStrategy prototype
  * This factory function creates the strategy with its dependencies
  */
-export function createProjectPlannerStrategy(llmClient = null, toolRegistry = null, options = {}) {
-  // Create the strategy as an object that inherits from TaskStrategy
-  const strategy = Object.create(TaskStrategy);
+export function createProjectPlannerStrategy(context = {}, options = {}) {
+  // Support legacy signature for backward compatibility
+  let actualContext = context;
+  let actualOptions = options;
+  if (arguments.length === 3) {
+    // Called with old signature: (llmClient, toolRegistry, options)
+    actualContext = { llmClient: arguments[0], toolRegistry: arguments[1] };
+    actualOptions = arguments[2] || {};
+  } else if (arguments.length === 2 && arguments[1] && !arguments[1].llmClient && !arguments[1].toolRegistry) {
+    // Second arg is options, not toolRegistry
+    if (context.llmClient || context.toolRegistry) {
+      actualOptions = arguments[1];
+    } else {
+      // Old signature: (llmClient, toolRegistry)
+      actualContext = { llmClient: arguments[0], toolRegistry: arguments[1] };
+      actualOptions = {};
+    }
+  }
+  
+  // Create the strategy as an object that inherits from EnhancedTaskStrategy
+  const strategy = Object.create(EnhancedTaskStrategy);
   
   // Store configuration
   const config = {
-    llmClient: llmClient,
-    toolRegistry: toolRegistry,
+    context: actualContext,
+    promptExecutor: null,
     options: {
       projectRoot: '/tmp/roma-projects',
       maxConcurrent: 3,
       maxRetries: 3,
       executionTimeout: 300000, // 5 minutes
-      ...options
+      ...actualOptions
     },
     // Initialize strategy placeholders (Phase 4: Migration to task delegation)
     analysisStrategy: null,
@@ -178,7 +197,8 @@ export function createProjectPlannerStrategy(llmClient = null, toolRegistry = nu
   
   // Initialize prompt registry
   const promptsPath = path.resolve(__dirname, '../../../prompts');
-  config.promptRegistry = new EnhancedPromptRegistry(promptsPath);
+  config.promptRegistry = new PromptRegistry();
+  config.promptRegistry.addDirectory(promptsPath);
   
   /**
    * The only required method - handles all messages
@@ -323,8 +343,8 @@ async function initializeDependencies(config) {
   
   // Get services from task context
   const context = getContextFromTask(this);
-  config.llmClient = config.llmClient || context.llmClient;
-  config.toolRegistry = config.toolRegistry || context.toolRegistry;
+  config.llmClient = config.llmClient || config.context?.llmClient || context.llmClient;
+  config.toolRegistry = config.toolRegistry || config.context?.toolRegistry || context.toolRegistry;
   
   if (!config.llmClient) {
     throw new Error('LLM client is required for ProjectPlannerStrategy');
@@ -334,18 +354,19 @@ async function initializeDependencies(config) {
     throw new Error('ToolRegistry is required for ProjectPlannerStrategy');
   }
   
-  // Initialize core strategies with proper factory function calls
-  config.analysisStrategy = AnalysisStrategy(config.llmClient, config.toolRegistry, config.options);
-  config.planningStrategy = PlanningStrategy(config.llmClient, config.toolRegistry, config.options);
+  // Initialize core strategies with context object
+  const strategyContext = { llmClient: config.llmClient, toolRegistry: config.toolRegistry };
+  config.analysisStrategy = AnalysisStrategy(strategyContext, config.options);
+  config.planningStrategy = PlanningStrategy(strategyContext, config.options);
   config.executionStrategy = ExecutionStrategy(config.strategies, config.stateManager, config.options);
-  config.qualityStrategy = QualityStrategy(config.llmClient, config.toolRegistry, config.options);
-  config.recoveryStrategy = RecoveryStrategy(config.llmClient, config.toolRegistry, config.options);
+  config.qualityStrategy = QualityStrategy(strategyContext, config.options);
+  config.recoveryStrategy = RecoveryStrategy(strategyContext, config.options);
   config.monitoringStrategy = MonitoringStrategy(config.options);
   
-  // Initialize sub-strategies using factory functions
-  config.strategies.server = createSimpleNodeServerStrategy(config.llmClient, config.toolRegistry, config.options);
-  config.strategies.test = createSimpleNodeTestStrategy(config.llmClient, config.toolRegistry, config.options);
-  config.strategies.debug = createSimpleNodeDebugStrategy(config.llmClient, config.toolRegistry, config.options);
+  // Initialize sub-strategies using factory functions with context object
+  config.strategies.server = createSimpleNodeServerStrategy(strategyContext, config.options);
+  config.strategies.test = createSimpleNodeTestStrategy(strategyContext, config.options);
+  config.strategies.debug = createSimpleNodeDebugStrategy(strategyContext, config.options);
   
   // Initialize components
   config.stateManager = new StateManager();
@@ -536,7 +557,8 @@ async function delegateRequirementsAnalysis(config, task) {
     {
       strategy: config.analysisStrategy,
       workspaceDir: task.workspaceDir,
-      llmClient: config.llmClient
+      llmClient: config.llmClient,
+      toolRegistry: config.toolRegistry
     }
   );
   
@@ -727,11 +749,7 @@ async function attemptRecovery(config, issues) {
  * Execute prompt with LLM
  */
 async function executePrompt(config, promptPath, variables) {
-  if (!config.llmClient) {
-    throw new Error('LLM client is required to execute prompts');
-  }
-
-  const prompt = await getTemplatedPrompt(config, promptPath);
+  const prompt = await getTemplatedPrompt(config, promptPath, getContextFromTask(this));
   return await prompt.execute(variables);
 }
 
@@ -742,22 +760,35 @@ function getContextFromTask(task) {
   return task?.context || {};
 }
 
-async function getTemplatedPrompt(config, promptPath) {
+async function getTemplatedPrompt(config, promptPath, taskContext = {}) {
   if (!config.promptInstances.has(promptPath)) {
     const definition = PROJECT_PROMPT_DEFINITIONS[promptPath];
     if (!definition) {
       throw new Error(`No prompt definition registered for ${promptPath}`);
     }
 
-    const template = await config.promptRegistry.load(promptPath);
-    const prompt = new TemplatedPrompt({
-      prompt: template.content,
-      responseSchema: definition.schema,
-      examples: definition.examples || [],
-      llmClient: config.llmClient
-    });
+    // Initialize PromptExecutor if not done
+    if (!config.promptExecutor) {
+      const mergedContext = { ...config.context, ...taskContext };
+      config.promptExecutor = new PromptExecutor(mergedContext);
+    }
 
-    config.promptInstances.set(promptPath, prompt);
+    const template = await config.promptRegistry.load(promptPath);
+    
+    // Create a wrapper that mimics TemplatedPrompt interface
+    const promptWrapper = {
+      execute: async (variables) => {
+        return await config.promptExecutor.execute(
+          template.content || template,
+          variables,
+          definition.schema,
+          definition.examples || [],
+          { maxRetries: 3 }
+        );
+      }
+    };
+
+    config.promptInstances.set(promptPath, promptWrapper);
   }
 
   return config.promptInstances.get(promptPath);

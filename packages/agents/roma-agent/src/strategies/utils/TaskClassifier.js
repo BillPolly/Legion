@@ -4,9 +4,12 @@
  * Based on decent planner's approach:
  * - SIMPLE: Can be done with a sequence of tool calls
  * - COMPLEX: Needs decomposition into subtasks
+ * 
+ * Now uses PromptExecutor to hide all llmClient complexity
  */
 
-import { TemplatedPrompt, PromptRegistry } from '@legion/prompting-manager';
+import { PromptExecutor } from '../../utils/PromptExecutor.js';
+import { PromptRegistry } from '@legion/prompting-manager';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -14,16 +17,20 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default class TaskClassifier {
-  constructor(llmClient) {
-    this.llmClient = llmClient;
+  constructor(taskOrContext) {
+    // Create PromptExecutor instead of storing llmClient
+    this.executor = new PromptExecutor(taskOrContext);
     this.initialized = false;
+    this.classificationSchema = null;
+    this.examples = null;
+    this.promptTemplate = null;
   }
 
   async initialize() {
     if (this.initialized) return;
     
     // Define classification schema
-    const classificationSchema = {
+    this.classificationSchema = {
       type: 'object',
       properties: {
         complexity: { 
@@ -39,7 +46,7 @@ export default class TaskClassifier {
     };
     
     // Create example data for better output instructions
-    const examples = [{
+    this.examples = [{
       complexity: 'SIMPLE',
       reasoning: 'This task can be completed with a direct sequence of tool calls - file reading and JSON parsing are straightforward operations that don\'t require coordination.',
       suggestedApproach: 'Use file_read tool followed by json_parse tool',
@@ -48,16 +55,7 @@ export default class TaskClassifier {
     
     // Load prompt template using PromptRegistry
     const promptRegistry = new PromptRegistry(path.join(__dirname, '..', 'recursive', 'prompts'));
-    const promptTemplate = await promptRegistry.load('task-classification');
-    
-    // Create prompt instance for task classification
-    this.prompt = new TemplatedPrompt({
-      prompt: promptTemplate,
-      responseSchema: classificationSchema,
-      examples,
-      llmClient: this.llmClient,
-      maxRetries: 3
-    });
+    this.promptTemplate = await promptRegistry.load('task-classification');
     
     this.initialized = true;
   }
@@ -76,11 +74,16 @@ export default class TaskClassifier {
     // Format artifacts section if available
     const artifactsSection = this._formatArtifactsSection(context.artifactRegistry);
     
-    // Execute the prompt with task variables
-    const result = await this.prompt.execute({
-      taskDescription,
-      artifactsSection
-    });
+    // Use PromptExecutor to execute the prompt - no llmClient needed!
+    const result = await this.executor.execute(
+      this.promptTemplate,
+      {
+        taskDescription,
+        artifactsSection
+      },
+      this.classificationSchema,
+      this.examples
+    );
     
     if (result.success) {
       // Validate result complexity
@@ -95,8 +98,6 @@ export default class TaskClassifier {
           estimatedSteps: 5
         };
       }
-      
-      // Session logging is handled by the agent, not the strategy
       
       return data;
     } else {

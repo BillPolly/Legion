@@ -7,7 +7,8 @@
  */
 
 import { TaskStrategy } from '@legion/tasks';
-import { TemplatedPrompt, PromptRegistry } from '@legion/prompting-manager';
+import { PromptRegistry } from '@legion/prompting-manager';
+import { PromptExecutor } from '../../utils/PromptExecutor.js';
 import TaskClassifier from '../utils/TaskClassifier.js';
 import ToolDiscovery from '../utils/ToolDiscovery.js';
 import path from 'path';
@@ -19,8 +20,16 @@ const __dirname = path.dirname(__filename);
 /**
  * Create a RecursiveDecompositionStrategy prototype
  * This factory function creates the strategy with its dependencies
+ * @param {Object} context - Context object with llmClient and toolRegistry
  */
-export function createRecursiveDecompositionStrategy(llmClient = null, toolRegistry = null) {
+export function createRecursiveDecompositionStrategy(context = {}) {
+  // Support legacy signature for backward compatibility
+  let actualContext = context;
+  if (arguments.length === 2) {
+    // Called with old signature: (llmClient, toolRegistry)
+    actualContext = { llmClient: arguments[0], toolRegistry: arguments[1] };
+  }
+  
   // Create the strategy as an object that inherits from TaskStrategy
   const strategy = Object.create(TaskStrategy);
   
@@ -28,8 +37,9 @@ export function createRecursiveDecompositionStrategy(llmClient = null, toolRegis
   const config = {
     taskClassifier: null,
     toolDiscovery: null,
-    llmClient: llmClient,
-    toolRegistry: toolRegistry,
+    context: actualContext,  // Store the full context
+    promptExecutor: null,    // Will be created when needed
+    promptRegistry: null,
     decompositionPrompt: null,
     executionPrompt: null,
     parentEvaluationPrompt: null,
@@ -129,20 +139,26 @@ export default createRecursiveDecompositionStrategy;
  * Initialize strategy components
  */
 async function initializeComponents(config, context) {
-  const llmClient = config.llmClient || (context.lookup ? context.lookup('llmClient') : context.llmClient);
-  const toolRegistry = config.toolRegistry || (context.lookup ? context.lookup('toolRegistry') : context.toolRegistry);
+  // Get toolRegistry from either config.context or task context
+  const toolRegistry = config.context?.toolRegistry || (context.lookup ? context.lookup('toolRegistry') : context.toolRegistry);
   
-  if (!llmClient) {
-    throw new Error('LLM client is required for RecursiveDecompositionStrategy');
+  if (!config.promptExecutor) {
+    // Create PromptExecutor with the merged context
+    const mergedContext = { ...config.context, ...context };
+    config.promptExecutor = new PromptExecutor(mergedContext);
   }
   
   if (!config.taskClassifier) {
-    config.taskClassifier = new TaskClassifier(llmClient);
+    // Pass merged context for TaskClassifier
+    const mergedContext = { ...config.context, ...context };
+    config.taskClassifier = new TaskClassifier(mergedContext);
     await config.taskClassifier.initialize();
   }
   
   if (!config.toolDiscovery && toolRegistry) {
-    config.toolDiscovery = new ToolDiscovery(llmClient, toolRegistry);
+    // Pass merged context for ToolDiscovery
+    const mergedContext = { ...config.context, ...context };
+    config.toolDiscovery = new ToolDiscovery(mergedContext, toolRegistry);
   } else if (!config.toolDiscovery) {
     throw new Error('ToolRegistry is required for RecursiveDecompositionStrategy');
   }
@@ -152,42 +168,33 @@ async function initializeComponents(config, context) {
  * Initialize prompt templates
  */
 async function initializePrompts(config, context) {
-  const llmClient = config.llmClient || (context.lookup ? context.lookup('llmClient') : context.llmClient);
+  // Initialize PromptExecutor if not already done
+  if (!config.promptExecutor) {
+    const mergedContext = { ...config.context, ...context };
+    config.promptExecutor = new PromptExecutor(mergedContext);
+  }
   
-  if (!config.decompositionPrompt && llmClient) {
-    const promptRegistry = new PromptRegistry(path.join(__dirname, 'prompts'));
-    
-    const decompositionTemplate = await promptRegistry.load('task-decomposition');
-    config.decompositionPrompt = new TemplatedPrompt({
-      prompt: decompositionTemplate,
-      responseSchema: getDecompositionSchema(),
-      llmClient: llmClient,
-      maxRetries: 3
-    });
-    
-    const executionTemplate = await promptRegistry.load('task-execution');
-    config.executionPrompt = new TemplatedPrompt({
-      prompt: executionTemplate,
-      responseSchema: getSimpleTaskSchema(),
-      llmClient: llmClient,
-      maxRetries: 3
-    });
-    
-    const parentEvalTemplate = await promptRegistry.load('parent-evaluation');
-    config.parentEvaluationPrompt = new TemplatedPrompt({
-      prompt: parentEvalTemplate,
-      responseSchema: getParentEvaluationSchema(),
-      llmClient: llmClient,
-      maxRetries: 3
-    });
-    
-    const completionEvalTemplate = await promptRegistry.load('completion-evaluation');
-    config.completionEvaluationPrompt = new TemplatedPrompt({
-      prompt: completionEvalTemplate,
-      responseSchema: getCompletionEvaluationSchema(),
-      llmClient: llmClient,
-      maxRetries: 3
-    });
+  // Initialize prompt registry if not already done
+  if (!config.promptRegistry) {
+    config.promptRegistry = new PromptRegistry(path.join(__dirname, 'prompts'));
+  }
+  
+  // Load prompt templates (but don't create TemplatedPrompt objects)
+  // We'll execute them directly with PromptExecutor when needed
+  if (!config.decompositionPrompt) {
+    config.decompositionPrompt = await config.promptRegistry.load('task-decomposition');
+  }
+  
+  if (!config.executionPrompt) {
+    config.executionPrompt = await config.promptRegistry.load('task-execution');
+  }
+  
+  if (!config.parentEvaluationPrompt) {
+    config.parentEvaluationPrompt = await config.promptRegistry.load('parent-evaluation');
+  }
+  
+  if (!config.completionEvaluationPrompt) {
+    config.completionEvaluationPrompt = await config.promptRegistry.load('completion-evaluation');
   }
 }
 
@@ -337,20 +344,21 @@ async function classifyTask(task, config) {
  * Decompose complex task into subtasks
  */
 async function decompose(task, config, context) {
-  const llmClient = config.llmClient || (context.lookup ? context.lookup('llmClient') : context.llmClient);
-  
-  if (!llmClient) {
-    throw new Error('LLM client is required for decomposition');
-  }
-
   await initializeComponents(config, context);
   await initializePrompts(config, context);
 
-  const result = await config.decompositionPrompt.execute({
-    taskDescription: task.description,
-    conversation: JSON.stringify(task.getConversationContext() || []),
-    artifacts: JSON.stringify(task.getArtifactsContext() || {})
-  });
+  // Use PromptExecutor instead of calling execute on a TemplatedPrompt
+  const result = await config.promptExecutor.execute(
+    config.decompositionPrompt,
+    {
+      taskDescription: task.description,
+      conversation: JSON.stringify(task.getConversationContext() || []),
+      artifacts: JSON.stringify(task.getArtifactsContext() || {})
+    },
+    getDecompositionSchema(),
+    [], // examples
+    { maxRetries: 3 }
+  );
   
   if (!result.success) {
     const errorMessages = result.errors?.map(e => 
@@ -479,12 +487,19 @@ async function evaluateCompletion(task, config, context) {
   await initializeComponents(config, context);
   await initializePrompts(config, context);
   
-  const result = await config.completionEvaluationPrompt.execute({
-    taskDescription: task.description,
-    conversation: JSON.stringify(task.getConversationContext() || []),
-    artifacts: JSON.stringify(task.getArtifactsContext() || {}),
-    completedSubtasks: JSON.stringify(task.getCompletedSubtasks() || [])
-  });
+  // Use PromptExecutor instead of calling execute on a TemplatedPrompt
+  const result = await config.promptExecutor.execute(
+    config.completionEvaluationPrompt,
+    {
+      taskDescription: task.description,
+      conversation: JSON.stringify(task.getConversationContext() || []),
+      artifacts: JSON.stringify(task.getArtifactsContext() || {}),
+      completedSubtasks: JSON.stringify(task.getCompletedSubtasks() || [])
+    },
+    getCompletionEvaluationSchema(),
+    [], // examples
+    { maxRetries: 3 }
+  );
   
   let evaluation;
   if (!result.success) {
@@ -553,12 +568,19 @@ async function getSimpleTaskExecution(task, discoveredTools, config, context) {
     parameters: tool.inputSchema || {}
   }));
   
-  const result = await config.executionPrompt.execute({
-    taskDescription: task.description,
-    tools: JSON.stringify(toolDescriptions),
-    conversation: JSON.stringify(task.getConversationContext() || []),
-    artifacts: JSON.stringify(task.getArtifactsContext() || {})
-  });
+  // Use PromptExecutor instead of calling execute on a TemplatedPrompt
+  const result = await config.promptExecutor.execute(
+    config.executionPrompt,
+    {
+      taskDescription: task.description,
+      tools: JSON.stringify(toolDescriptions),
+      conversation: JSON.stringify(task.getConversationContext() || []),
+      artifacts: JSON.stringify(task.getArtifactsContext() || {})
+    },
+    getSimpleTaskSchema(),
+    [], // examples
+    { maxRetries: 3 }
+  );
   
   if (!result.success) {
     throw new Error(`Invalid execution response: ${result.errors?.join(', ') || 'Unknown error'}`);
@@ -633,13 +655,20 @@ async function getParentEvaluation(task, childTask, config, context) {
   await initializeComponents(config, context);
   await initializePrompts(config, context);
   
-  const result = await config.parentEvaluationPrompt.execute({
-    parentTaskDescription: task.description,
-    childTaskDescription: childTask.description,
-    conversation: JSON.stringify(task.getConversationContext() || []),
-    artifacts: JSON.stringify(task.getArtifactsContext() || {}),
-    completedSubtasks: JSON.stringify(task.getCompletedSubtasks() || [])
-  });
+  // Use PromptExecutor instead of calling execute on a TemplatedPrompt
+  const result = await config.promptExecutor.execute(
+    config.parentEvaluationPrompt,
+    {
+      parentTaskDescription: task.description,
+      childTaskDescription: childTask.description,
+      conversation: JSON.stringify(task.getConversationContext() || []),
+      artifacts: JSON.stringify(task.getArtifactsContext() || {}),
+      completedSubtasks: JSON.stringify(task.getCompletedSubtasks() || [])
+    },
+    getParentEvaluationSchema(),
+    [], // examples
+    { maxRetries: 3 }
+  );
   
   if (!result.success) {
     console.log(`⚠️ Invalid parent evaluation response: ${result.errors?.join(', ') || 'Unknown error'}`);

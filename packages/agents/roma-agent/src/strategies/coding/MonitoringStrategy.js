@@ -16,7 +16,7 @@
  */
 
 import { EnhancedTaskStrategy } from '@legion/tasks';
-import { ConfigBuilder } from '../utils/ConfigBuilder.js';
+import { createFromPreset } from '../utils/ConfigBuilder.js';
 import { getTaskContext } from '../utils/StrategyHelpers.js';
 
 /**
@@ -28,7 +28,7 @@ export function createMonitoringStrategy(options = {}) {
   const strategy = Object.create(EnhancedTaskStrategy);
   
   // Build configuration using ConfigBuilder preset
-  const config = ConfigBuilder.createFromPreset('monitoring', {
+  const config = createFromPreset('monitoring', {
     options: {
       updateInterval: 5000,
       enableResourceTracking: true,

@@ -16,7 +16,7 @@
  */
 
 import { EnhancedTaskStrategy } from '@legion/tasks';
-import { ConfigBuilder } from '../utils/ConfigBuilder.js';
+import { createFromPreset } from '../utils/ConfigBuilder.js';
 import { getTaskContext } from '../utils/StrategyHelpers.js';
 
 /**
@@ -28,7 +28,7 @@ export function createExecutionStrategy(strategies = null, stateManager = null, 
   const strategy = Object.create(EnhancedTaskStrategy);
   
   // Build configuration using ConfigBuilder preset
-  const config = ConfigBuilder.createFromPreset('execution', {
+  const config = createFromPreset('execution', {
     strategies,
     stateManager,
     options

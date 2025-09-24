@@ -11,7 +11,8 @@
  */
 
 import { TaskStrategy } from '@legion/tasks';
-import { EnhancedPromptRegistry } from '@legion/prompting-manager';
+import { PromptRegistry } from '@legion/prompting-manager';
+import { PromptExecutor } from '../../utils/PromptExecutor.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
@@ -22,15 +23,34 @@ const __dirname = path.dirname(__filename);
  * Create a QualityStrategy prototype
  * This factory function creates the strategy with its dependencies
  */
-export function createQualityStrategy(llmClient = null, toolRegistry = null, options = {}) {
+export function createQualityStrategy(context = {}, options = {}) {
+  // Support legacy signature for backward compatibility
+  let actualContext = context;
+  let actualOptions = options;
+  if (arguments.length === 3) {
+    // Called with old signature: (llmClient, toolRegistry, options)
+    actualContext = { llmClient: arguments[0], toolRegistry: arguments[1] };
+    actualOptions = arguments[2] || {};
+  } else if (arguments.length === 2 && arguments[1] && !arguments[1].llmClient && !arguments[1].toolRegistry) {
+    // Second arg is options, not toolRegistry
+    if (context.llmClient || context.toolRegistry) {
+      actualOptions = arguments[1];
+    } else {
+      // Old signature: (llmClient, toolRegistry)
+      actualContext = { llmClient: arguments[0], toolRegistry: arguments[1] };
+      actualOptions = {};
+    }
+  }
+  
   // Create the strategy as an object that inherits from TaskStrategy
   const strategy = Object.create(TaskStrategy);
   
   // Store configuration in closure
   const config = {
-    llmClient: llmClient,
-    toolRegistry: toolRegistry,
+    context: actualContext,
+    promptExecutor: new PromptExecutor(actualContext),
     promptRegistry: null,
+    prompts: null,
     options: {
       validateResults: true,
       qualityThreshold: 7,
@@ -84,7 +104,8 @@ export function createQualityStrategy(llmClient = null, toolRegistry = null, opt
   
   // Initialize prompt registry
   const promptsPath = path.resolve(__dirname, '../../../prompts');
-  config.promptRegistry = new EnhancedPromptRegistry(promptsPath);
+  config.promptRegistry = new PromptRegistry();
+  config.promptRegistry.addDirectory(promptsPath);
   
   
   /**
@@ -171,6 +192,10 @@ function handleValidationRequest(config, task) {
     try {
       console.log(`🔍 QualityStrategy handling: ${task.description}`);
       
+      if (!config.llmClient && task.context?.llmClient) {
+        config.llmClient = task.context.llmClient;
+      }
+
       // Check for required dependencies
       if (!config.llmClient && !task.context?.llmClient) {
         throw new Error('LLM client is required for quality validation');
@@ -514,6 +539,42 @@ async function validateSyntax(config, artifact) {
   }
 }
   
+async function ensureQualityPrompts(config) {
+  if (config.prompts) {
+    return config.prompts;
+  }
+
+  if (!config.llmClient) {
+    throw new Error('LLM client is required to initialize quality prompts');
+  }
+
+  const prompts = {};
+  const promptDefinitions = [
+    { key: 'validateRequirements', path: 'coding/quality/validate-requirements' },
+    { key: 'rateCodeQuality', path: 'coding/quality/rate-code-quality' }
+  ];
+
+  for (const { key, path } of promptDefinitions) {
+    const template = await config.promptRegistry.load(path);
+    const schema = template.metadata?.schema;
+    if (!schema) {
+      throw new Error(`Prompt ${path} is missing schema metadata`);
+    }
+
+    const examples = template.metadata?.examples || template.metadata?.samples || [];
+
+    prompts[key] = new TemplatedPrompt({
+      prompt: template.content,
+      responseSchema: schema,
+      examples,
+      llmClient: config.llmClient
+    });
+  }
+
+  config.prompts = prompts;
+  return config.prompts;
+}
+
 /**
  * Validate that requirements are met
  */
@@ -541,18 +602,19 @@ async function validateRequirements(config, artifact, requirements) {
   // Use LLM for more complex validation if available
   if (config.llmClient && result.missing.length > 0) {
     try {
-      const prompt = await config.promptRegistry.fill('coding/quality/validate-requirements', {
+      const prompts = await ensureQualityPrompts(config);
+      const analysisResult = await prompts.validateRequirements.execute({
         requirements: requirements.join(', '),
         code: artifact.content
       });
-      
-      const response = await config.llmClient.complete(prompt);
-      const analysis = JSON.parse(response);
-      
-      // Update missing based on LLM analysis
-      result.missing = requirements.filter(req => 
-        !analysis.features.some(f => f.toLowerCase().includes(req.toLowerCase()))
-      );
+
+      if (analysisResult.success && Array.isArray(analysisResult.data?.features)) {
+        result.missing = requirements.filter(req =>
+          !analysisResult.data.features.some(
+            f => f.toLowerCase().includes(req.toLowerCase())
+          )
+        );
+      }
     } catch (error) {
       // Continue with basic analysis if LLM fails
     }
@@ -666,15 +728,17 @@ async function analyzeQuality(config, artifact) {
   // Use LLM for deeper analysis if available
   if (config.llmClient) {
     try {
-      const prompt = await config.promptRegistry.fill('coding/quality/rate-code-quality', {
-        code: artifact.content.substring(0, 500)
+      const prompts = await ensureQualityPrompts(config);
+      const analysisResult = await prompts.rateCodeQuality.execute({
+        code: artifact.content.substring(0, 1000)
       });
-      
-      const response = await config.llmClient.complete(prompt);
-      const analysis = JSON.parse(response);
-      if (analysis.score !== undefined) {
-        // Average with our analysis
-        metrics.score = (metrics.score + analysis.score) / 2;
+
+      if (analysisResult.success && typeof analysisResult.data?.score === 'number') {
+        metrics.score = (metrics.score + analysisResult.data.score) / 2;
+
+        if (Array.isArray(analysisResult.data.issues)) {
+          metrics.issues.push(...analysisResult.data.issues);
+        }
       }
     } catch (error) {
       // Continue with local analysis

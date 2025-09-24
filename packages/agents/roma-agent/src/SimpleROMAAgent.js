@@ -51,7 +51,8 @@ export default class SimpleROMAAgent {
     // Create the strategy with services
     const toolRegistry = this.globalContext.getService('toolRegistry');
     if (typeof this.taskStrategyFactory === 'function') {
-      this.taskStrategy = this.taskStrategyFactory(llmClient, toolRegistry);
+      // Pass context object to the factory (it will handle both new and old signatures)
+      this.taskStrategy = this.taskStrategyFactory({ llmClient, toolRegistry });
     } else {
       // If a pre-created strategy was passed, use it
       this.taskStrategy = this.taskStrategyFactory;

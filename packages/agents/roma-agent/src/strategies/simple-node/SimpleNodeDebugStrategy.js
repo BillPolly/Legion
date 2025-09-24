@@ -7,7 +7,7 @@
  */
 
 import { TaskStrategy } from '@legion/tasks';
-import { EnhancedPromptRegistry } from '@legion/prompting-manager';
+import { PromptRegistry } from '@legion/prompting-manager';
 import PromptFactory from '../../utils/PromptFactory.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -37,12 +37,16 @@ export function createSimpleNodeDebugStrategy(llmClient = null, toolRegistry = n
     },
     
     // Initialize prompt registry
-    promptRegistry: null
+    promptRegistry: null,
+
+    // Cached prompt instances
+    prompts: null
   };
   
   // Initialize prompt registry
   const promptsPath = path.resolve(__dirname, '../../../prompts');
-  config.promptRegistry = new EnhancedPromptRegistry(promptsPath);
+  config.promptRegistry = new PromptRegistry();
+  config.promptRegistry.addDirectory(promptsPath);
   
   /**
    * The only required method - handles all messages
@@ -166,6 +170,8 @@ async function initializeDependencies(config, task) {
   config.tools.fileRead = await config.toolRegistry.getTool('file_read');
   config.tools.fileWrite = await config.toolRegistry.getTool('file_write');
   config.tools.commandExecutor = await config.toolRegistry.getTool('command_executor');
+
+  await ensurePrompts(config);
 }
 /**
  * Main debugging handler
@@ -217,46 +223,106 @@ async function handleDebugging(config) {
   }
 }
 
-/**
- * Execute prompt with LLM
- */
-async function executePrompt(config, promptPath, variables) {
-  const prompt = await config.promptRegistry.fill(promptPath, variables);
-  const response = await config.llmClient.complete(prompt);
-  
-  // Parse response based on expected format
-  const metadata = await config.promptRegistry.getMetadata(promptPath);
-  
-  if (metadata.responseFormat === 'json') {
-    try {
-      // Extract JSON from response
-      const jsonMatch = response.match(/```json\s*([\s\S]*?)```/) || response.match(/{[\s\S]*}/);        
-      const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : response;
-      const data = JSON.parse(jsonStr);
-      return { success: true, data };
-    } catch (error) {
-      return { success: false, errors: [`Failed to parse JSON: ${error.message}`] };
-    }
-  } else if (metadata.responseFormat === 'delimited') {
-    // For delimited responses, extract sections
-    const codeMatch = response.match(/```(?:javascript|js)?\s*([\s\S]*?)```/);
-    const explainMatch = response.match(/explanation:\s*([\s\S]*?)(?=testing:|$)/i);
-    const testingMatch = response.match(/testing:\s*([\s\S]*?)$/i);
-    const debugMatch = response.match(/debug\s*points?:\s*([\s\S]*?)$/i);
-    
-    return {
-      success: true,
-      data: {
-        fixedCode: codeMatch ? codeMatch[1].trim() : '',
-        debugCode: codeMatch ? codeMatch[1].trim() : '',
-        explanation: explainMatch ? explainMatch[1].trim() : '',
-        testingSteps: testingMatch ? testingMatch[1].trim() : '',
-        debugPoints: debugMatch ? debugMatch[1].trim() : ''
-      }
-    };
+async function ensurePrompts(config) {
+  if (config.prompts) {
+    return config.prompts;
   }
-  
-  return { success: true, data: response };
+
+  if (!config.llmClient) {
+    throw new Error('LLM client is required to initialize prompts');
+  }
+
+  const prompts = {};
+
+  const analyzeTemplate = await config.promptRegistry.load('strategies/simple-node/debug/analyze-error');
+  const analyzeSchema = PromptFactory.createJsonSchema({
+    rootCause: { type: 'string' },
+    errorType: { type: 'string' },
+    location: {
+      type: 'object',
+      properties: {
+        file: { type: 'string' },
+        line: { type: 'number' },
+        function: { type: 'string' }
+      },
+      required: ['file']
+    },
+    suggestedFix: { type: 'string' },
+    confidence: { type: 'string', enum: ['low', 'medium', 'high'] }
+  }, ['rootCause', 'errorType', 'suggestedFix']);
+
+  const analyzeExamples = [{
+    rootCause: 'Unhandled null input when parsing user data',
+    errorType: 'TypeError',
+    location: {
+      file: 'controllers/userController.js',
+      line: 42,
+      function: 'createUser'
+    },
+    suggestedFix: 'Add null check before accessing user.email',
+    confidence: 'high'
+  }];
+
+  prompts.analyzeError = PromptFactory.createPrompt({
+    template: analyzeTemplate.content,
+    responseSchema: analyzeSchema,
+    examples: analyzeExamples
+  }, config.llmClient);
+
+  const fixTemplate = await config.promptRegistry.load('strategies/simple-node/debug/generate-fix');
+  const fixSchema = PromptFactory.createJsonSchema({
+    fixedCode: { type: 'string' },
+    explanation: { type: 'string' },
+    testInstructions: { type: 'string' }
+  }, ['fixedCode', 'explanation'], 'delimited');
+
+  const fixExamples = [{
+    fixedCode: `function createUser(req, res) {
+  if (!req.body || !req.body.email) {
+    return res.status(400).json({ error: 'Email required' });
+  }
+  // ...rest of implementation
+}`,
+    explanation: 'Adds input validation before accessing email',
+    testInstructions: 'Run POST /users with and without email to confirm validation.'
+  }];
+
+  prompts.generateFix = PromptFactory.createPrompt({
+    template: fixTemplate.content,
+    responseSchema: fixSchema,
+    examples: fixExamples
+  }, config.llmClient);
+
+  const debugTemplate = await config.promptRegistry.load('strategies/simple-node/debug/add-debugging');
+  const debugSchema = PromptFactory.createJsonSchema({
+    debugCode: { type: 'string' },
+    debugPoints: {
+      type: 'array',
+      items: { type: 'string' }
+    },
+    recommendations: { type: 'string' }
+  }, ['debugCode'], 'delimited');
+
+  const debugExamples = [{
+    debugCode: `app.get('/users', async (req, res) => {
+  console.time('getUsers');
+  console.log('Fetching users for tenant', req.headers['x-tenant']);
+  const users = await userService.list();
+  console.timeEnd('getUsers');
+  res.json(users);
+});`,
+    debugPoints: ['Log tenant header', 'Capture execution time'],
+    recommendations: 'Review logs to identify slow database calls.'
+  }];
+
+  prompts.addDebugging = PromptFactory.createPrompt({
+    template: debugTemplate.content,
+    responseSchema: debugSchema,
+    examples: debugExamples
+  }, config.llmClient);
+
+  config.prompts = prompts;
+  return config.prompts;
 }
 /**
  * Determine type of debugging needed
@@ -283,16 +349,14 @@ function determineDebugType(description) {
 async function debugError(config, task) {
   // Get error information from task
   const errorInfo = await extractErrorInfo(config, task);
+  const prompts = await ensurePrompts(config);
   
   // Analyze the error
-  const analysis = await executePrompt(config,
-    'strategies/simple-node/debug/analyze-error',
-    {
-      errorMessage: errorInfo.message,
-      stackTrace: errorInfo.stack,
-      codeContext: errorInfo.code
-    }
-  );
+  const analysis = await prompts.analyzeError.execute({
+    errorMessage: errorInfo.message,
+    stackTrace: errorInfo.stack,
+    codeContext: errorInfo.code
+  });
   
   if (!analysis.success) {
     throw new Error(`Failed to analyze error: ${analysis.errors?.join(', ') || 'Unknown error'}`);
@@ -302,14 +366,11 @@ async function debugError(config, task) {
   
   // Generate fix if code is available
   if (errorInfo.code) {
-    const fix = await executePrompt(config,
-      'strategies/simple-node/debug/generate-fix',
-      {
-        problem: errorInfo.message,
-        rootCause: analysis.data.rootCause,
-        originalCode: errorInfo.code
-      }
-    );
+    const fix = await prompts.generateFix.execute({
+      problem: errorInfo.message,
+      rootCause: analysis.data.rootCause,
+      originalCode: errorInfo.code
+    });
     
     if (!fix.success) {
       throw new Error(`Failed to generate fix: ${fix.errors?.join(', ') || 'Unknown error'}`);
@@ -349,11 +410,10 @@ async function debugPerformance(config, task) {
     throw new Error('No code provided for performance debugging');
   }
   
+  const prompts = await ensurePrompts(config);
+
   // Add performance debugging
-  const result = await executePrompt(config,
-    'strategies/simple-node/debug/add-debugging',
-    { code: code }
-  );
+  const result = await prompts.addDebugging.execute({ code });
   
   if (!result.success) {
     throw new Error(`Failed to add debugging: ${result.errors?.join(', ') || 'Unknown error'}`);
@@ -383,11 +443,10 @@ async function debugLogic(config, task) {
     throw new Error('No code provided for logic debugging');
   }
   
+  const prompts = await ensurePrompts(config);
+
   // Add debugging statements
-  const result = await executePrompt(config,
-    'strategies/simple-node/debug/add-debugging',
-    { code: code }
-  );
+  const result = await prompts.addDebugging.execute({ code });
   
   if (!result.success) {
     throw new Error(`Failed to add debugging: ${result.errors?.join(', ') || 'Unknown error'}`);
@@ -417,10 +476,8 @@ async function addDebugging(config, task) {
     throw new Error('No code provided for debugging');
   }
   
-  const result = await executePrompt(config,
-    'strategies/simple-node/debug/add-debugging',
-    { code: code }
-  );
+  const prompts = await ensurePrompts(config);
+  const result = await prompts.addDebugging.execute({ code });
   
   if (!result.success) {
     throw new Error(`Failed to add debugging: ${result.errors?.join(', ') || 'Unknown error'}`);
