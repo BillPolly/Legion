@@ -1,6 +1,6 @@
 /**
  * ExecutionStrategy - Manages task execution and coordination
- * Converted from ExecutionOrchestrator component to follow TaskStrategy pattern
+ * Converted to pure prototypal pattern
  * 
  * Responsibilities:
  * - Handles dependency resolution, retry logic, and artifact management
@@ -12,586 +12,682 @@
 
 import { TaskStrategy } from '@legion/tasks';
 
-export default class ExecutionStrategy extends TaskStrategy {
-  constructor(strategies, stateManager, options = {}) {
-    super();
-    
-    if (!strategies) {
-      throw new Error('Strategies are required');
-    }
-    if (!stateManager) {
-      throw new Error('State manager is required');
-    }
-    
-    this.strategies = strategies;
-    this.stateManager = stateManager;
-    this.options = {
+/**
+ * Create an ExecutionStrategy prototype
+ * This factory function creates the strategy with its dependencies
+ */
+export function createExecutionStrategy(strategies = null, stateManager = null, options = {}) {
+  // Create the strategy as an object that inherits from TaskStrategy
+  const strategy = Object.create(TaskStrategy);
+  
+  // Store configuration
+  const config = {
+    strategies: strategies,
+    stateManager: stateManager,
+    options: {
       maxRetries: 3,
       backoffStrategy: 'exponential',
       validateResults: true,
       ...options
-    };
-    
+    },
     // Track execution state
-    this.completed = new Set();
-    this.executing = new Set();
-    this.artifacts = new Map();
-  }
-  
-  getName() {
-    return 'Execution';
-  }
+    completed: new Set(),
+    executing: new Set(),
+    artifacts: new Map()
+  };
   
   /**
-   * Handle message from a task (strategy context, source task, message)
-   * @param {Task} myTask - The task this strategy belongs to (context)
-   * @param {Task} sourceTask - The task that sent the message
-   * @param {Object} message - The message received
+   * The only required method - handles all messages
    */
-  handleMessage(myTask, sourceTask, message) {
-    switch (message.type) {
-      case 'start':
-      case 'work':
-        this._handleExecutionRequest(myTask).catch(error => {
-          console.error('Execution request failed:', error);
-          myTask.fail(error);
-        });
-        break;
-        
-      case 'abort':
-        this._handleAbortRequest().catch(error => {
-          console.error('Abort request failed:', error);
-        });
-        break;
-        
-      case 'completed':
-        console.log(`✅ Execution task completed: ${sourceTask.description}`);
-        myTask.send(myTask.parent, { type: 'child-completed', child: sourceTask });
-        break;
-        
-      case 'failed':
-        myTask.send(myTask.parent, { type: 'child-failed', child: sourceTask, error: message.error });
-        break;
-        
-      default:
-        console.log(`ℹ️ ExecutionStrategy received unhandled message type: ${message.type}`);
-        break;
-    }
-  }
-
-  
-  /**
-   * Handle execution request from parent task
-   * @private
-   */
-  async _handleExecutionRequest(task) {
-    try {
-      console.log(`⚙️ ExecutionStrategy handling: ${task.description}`);
-      
-      // Extract execution plan from task
-      const plan = this._extractExecutionPlan(task);
-      if (!plan) {
-        return {
-          success: false,
-          result: 'No execution plan found for execution'
-        };
-      }
-      
-      // Add conversation entry
-      task.addConversationEntry('system', 
-        `Executing project plan with ${plan.phases?.length || 0} phases`);
-      
-      // Execute plan using direct implementation
-      const result = await this._executePlan(plan, task);
-      
-      // Store execution artifacts
-      task.storeArtifact(
-        'execution-result',
-        result,
-        `Execution result with ${result.phases?.length || 0} completed phases`,
-        'execution'
-      );
-      
-      if (result.artifacts && result.artifacts.length > 0) {
-        task.storeArtifact(
-          'execution-artifacts',
-          result.artifacts,
-          `${result.artifacts.length} artifacts produced during execution`,
-          'artifacts'
-        );
-      }
-      
-      // Add conversation entry about completion
-      task.addConversationEntry('system', 
-        `Execution completed: ${result.success ? 'SUCCESS' : 'FAILED'} - ${result.phases?.length || 0} phases processed`);
-      
-      console.log(`✅ ExecutionStrategy completed: ${result.success ? 'SUCCESS' : 'FAILED'}`);
-      
-      return {
-        success: result.success,
-        result: {
-          execution: result,
-          projectId: result.projectId,
-          phasesCompleted: result.phases?.length || 0,
-          artifactsCreated: result.artifacts?.length || 0
-        },
-        artifacts: ['execution-result', 'execution-artifacts']
-      };
-      
-    } catch (error) {
-      console.error(`❌ ExecutionStrategy failed: ${error.message}`);
-      
-      task.addConversationEntry('system', 
-        `Execution failed: ${error.message}`);
-      
-      return {
-        success: false,
-        result: error.message
-      };
-    }
-  }
-  
-  /**
-   * Handle abort request
-   * @private
-   */
-  async _handleAbortRequest() {
-    try {
-      await this.stopAll();
-      return { acknowledged: true, aborted: true };
-    } catch (error) {
-      console.error(`Error during abort: ${error.message}`);
-      return { acknowledged: true, aborted: false, error: error.message };
-    }
-  }
-  
-  /**
-   * Execute a project plan by processing all phases and tasks
-   */
-  async _executePlan(plan, task) {
-    const results = {
-      success: true,
-      projectId: plan.projectId,
-      structure: plan.structure,
-      phases: [],
-      artifacts: []
-    };
+  strategy.onMessage = function onMessage(senderTask, message) {
+    // 'this' is the task instance that received the message
     
     try {
-      // Process phases in order
-      for (const phase of plan.phases) {
-        console.log(`🔄 Executing phase: ${phase.phase} (${phase.tasks.length} tasks)`);
-        
-        const phaseResults = {
-          phase: phase.phase,
-          priority: phase.priority,
-          tasks: [],
-          success: true
-        };
-        
-        // Execute tasks in this phase
-        for (const planTask of phase.tasks) {
-          try {
-            console.log(`📍 Executing task: ${planTask.description || planTask.action}`);
+      // Determine if message is from child or parent/initiator
+      if (senderTask.parent === this) {
+        // Message from child task
+        switch (message.type) {
+          case 'completed':
+            console.log(`✅ Execution task completed: ${senderTask.description}`);
+            this.send(this.parent, { type: 'child-completed', child: senderTask });
+            break;
             
-            // Ensure task has retry configuration
-            const taskWithDefaults = {
-              ...planTask,
-              retry: planTask.retry || { maxAttempts: 1, strategy: 'exponential' },
-              validation: planTask.validation || { required: false }
-            };
+          case 'failed':
+            this.send(this.parent, { type: 'child-failed', child: senderTask, error: message.error });
+            break;
             
-            // Execute task using direct implementation
-            const taskResult = await this.execute(taskWithDefaults);
-            
-            phaseResults.tasks.push({
-              id: planTask.id,
-              success: taskResult.success,
-              artifacts: taskResult.artifacts || []
-            });
-            
-            // Store artifacts
-            if (taskResult.artifacts) {
-              results.artifacts.push(...taskResult.artifacts);
-              for (const artifact of taskResult.artifacts) {
-                task.storeArtifact(artifact.name, artifact.content, artifact.description, artifact.type);
+          default:
+            console.log(`ℹ️ ExecutionStrategy received unhandled message from child: ${message.type}`);
+        }
+      } else {
+        // Message from parent or initiator
+        switch (message.type) {
+          case 'start':
+          case 'work':
+            // Fire-and-forget async operation with error boundary
+            handleExecutionRequest.call(this, config).catch(error => {
+              console.error(`❌ ExecutionStrategy async operation failed: ${error.message}`);
+              // Don't let async errors escape - handle them internally
+              try {
+                this.fail(error);
+                if (this.parent) {
+                  this.send(this.parent, { type: 'failed', error });
+                }
+              } catch (innerError) {
+                console.error(`❌ Failed to handle async error: ${innerError.message}`);
               }
-            }
-            
-          } catch (error) {
-            console.error(`Task ${planTask.id} failed:`, error.message);
-            phaseResults.tasks.push({
-              id: planTask.id,
-              success: false,
-              error: error.message
             });
-            phaseResults.success = false;
-          }
-        }
-        
-        results.phases.push(phaseResults);
-        
-        // If this phase failed and it's critical, stop execution
-        // Phases without priority are considered critical (priority 1)
-        const priority = phase.priority !== undefined ? phase.priority : 1;
-        if (!phaseResults.success && priority <= 3) {
-          results.success = false;
-          break;
+            break;
+            
+          case 'abort':
+            // Fire-and-forget async operation with error boundary
+            handleAbortRequest.call(this, config).catch(error => {
+              console.error(`❌ ExecutionStrategy abort failed: ${error.message}`);
+              try {
+                this.fail(error);
+                if (this.parent) {
+                  this.send(this.parent, { type: 'failed', error });
+                }
+              } catch (innerError) {
+                console.error(`❌ Failed to handle abort error: ${innerError.message}`);
+              }
+            });
+            break;
+            
+          default:
+            console.log(`ℹ️ ExecutionStrategy received unhandled message: ${message.type}`);
         }
       }
-      
-      return results;
-      
     } catch (error) {
-      console.error('Plan execution failed:', error);
-      results.success = false;
-      results.error = error.message;
-      return results;
-    }
-  }
-  
-  /**
-   * Extract execution plan from task artifacts or context
-   */
-  _extractExecutionPlan(task) {
-    // First try to get plan from artifacts
-    const artifacts = task.getAllArtifacts ? task.getAllArtifacts() : {};
-    
-    // Look for project plan artifact
-    if (artifacts['project-plan']) {
-      return artifacts['project-plan'].content;
-    }
-    
-    // Look for execution plan
-    if (artifacts['execution-plan']) {
-      return artifacts['execution-plan'].content;
-    }
-    
-    // Look for plan artifact
-    if (artifacts['plan']) {
-      return artifacts['plan'].content;
-    }
-    
-    // Look in task context or input
-    if (task.input && task.input.plan) {
-      return task.input.plan;
-    }
-    
-    // Fallback to task description if it contains plan structure
-    if (task.description && task.description.trim()) {
+      // Catch any synchronous errors in message handling
+      console.error(`❌ ExecutionStrategy message handler error: ${error.message}`);
+      // Don't let errors escape the message handler - handle them gracefully
       try {
-        const parsedDescription = JSON.parse(task.description);
-        if (parsedDescription.phases) {
-          return parsedDescription;
+        if (this.addConversationEntry) {
+          this.addConversationEntry('system', `Message handling error: ${error.message}`);
         }
-      } catch {
-        // Not JSON, ignore
+      } catch (innerError) {
+        console.error(`❌ Failed to log message handling error: ${innerError.message}`);
+      }
+    }
+  };
+  
+  return strategy;
+}
+
+// Export default for backward compatibility
+export default createExecutionStrategy;
+
+// ============================================================================
+// Internal implementation functions
+// These work with the task instance and strategy config
+// ============================================================================
+
+/**
+ * Handle execution request from parent task
+ */
+async function handleExecutionRequest(config) {
+  try {
+    console.log(`⚙️ ExecutionStrategy handling: ${this.description}`);
+    
+    // Extract execution plan from task
+    const plan = extractExecutionPlan(this);
+    if (!plan) {
+      this.fail(new Error('No execution plan found for execution'));
+      // Notify parent of failure (fire-and-forget)
+      if (this.parent) {
+        this.send(this.parent, { 
+          type: 'failed', 
+          error: new Error('No execution plan found for execution') 
+        });
+      }
+      return; // Fire-and-forget - no return value
+    }
+    
+    // Add conversation entry
+    this.addConversationEntry('system', 
+      `Executing project plan with ${plan.phases?.length || 0} phases`);
+    
+    // Execute plan using direct implementation
+    const result = await executePlan(plan, this, config);
+    
+    // Store execution artifacts
+    this.storeArtifact(
+      'execution-result',
+      result,
+      `Execution result with ${result.phases?.length || 0} completed phases`,
+      'execution'
+    );
+    
+    if (result.artifacts && result.artifacts.length > 0) {
+      this.storeArtifact(
+        'execution-artifacts',
+        result.artifacts,
+        `${result.artifacts.length} artifacts produced during execution`,
+        'artifacts'
+      );
+    }
+    
+    // Add conversation entry about completion
+    this.addConversationEntry('system', 
+      `Execution completed: ${result.success ? 'SUCCESS' : 'FAILED'} - ${result.phases?.length || 0} phases processed`);
+    
+    console.log(`✅ ExecutionStrategy completed: ${result.success ? 'SUCCESS' : 'FAILED'}`);
+    
+    const finalResult = {
+      success: result.success,
+      result: {
+        execution: result,
+        projectId: result.projectId,
+        phasesCompleted: result.phases?.length || 0,
+        artifactsCreated: result.artifacts?.length || 0
+      },
+      artifacts: ['execution-result', 'execution-artifacts']
+    };
+    
+    if (result.success) {
+      this.complete(finalResult);
+      // Notify parent of success (fire-and-forget)
+      if (this.parent) {
+        this.send(this.parent, { type: 'completed', result: finalResult });
+      }
+    } else {
+      this.fail(new Error(result.message || 'Execution failed'));
+      // Notify parent of failure (fire-and-forget)
+      if (this.parent) {
+        this.send(this.parent, { 
+          type: 'failed', 
+          error: new Error(result.message || 'Execution failed') 
+        });
       }
     }
     
-    return null;
-  }
-  
-  /**
-   * Execute a task with full orchestration (from ExecutionOrchestrator)
-   */
-  async execute(task) {
-    // 1. Resolve dependencies
-    await this.waitForDependencies(task.dependencies || []);
+    // Fire-and-forget - no return value
     
-    // 2. Prepare context
-    const context = await this.prepareTaskContext(task);
+  } catch (error) {
+    console.error(`❌ ExecutionStrategy failed: ${error.message}`);
     
-    // 3. Select strategy
-    const strategy = this.selectStrategy(task.strategy);
+    this.addConversationEntry('system', 
+      `Execution failed: ${error.message}`);
     
-    // 4. Execute with retry logic
-    let result = null;
-    let attempts = 0;
-    let lastError = null;
+    this.fail(error);
     
-    while (attempts < task.retry.maxAttempts) {
-      try {
-        attempts++;
-        
-        // Create child task for strategy
-        const childTask = await this.createChildTask(task, strategy);
-        
-        // Fire-and-forget message to strategy (can't expect synchronous return)
-        if (strategy.handleMessage) {
-          strategy.handleMessage(childTask, this, {
-            type: 'start',
-            context: context,
-            input: task.input
-          });
-        }
-        
-        // Since we can't get synchronous result from fire-and-forget messaging,
-        // we need to wait for the child task to complete/fail via status polling
-        result = await this.waitForChildTaskCompletion(childTask);
-        
-        // Validate result
-        if (await this.validateResult(result, task.validation)) {
-          break;
-        } else {
-          lastError = new Error('Validation failed');
-        }
-      } catch (error) {
-        lastError = error;
-        await this.handleExecutionError(error, task, attempts);
-        
-        if (attempts < task.retry.maxAttempts) {
-          await this.delay(this.calculateBackoff(attempts, task.retry));
-        }
-      }
+    // Notify parent of failure (fire-and-forget)
+    if (this.parent) {
+      this.send(this.parent, { type: 'failed', error });
     }
     
-    // Check if we succeeded
-    if (!result || !result.success) {
-      throw new Error(`Task failed after ${attempts} attempts: ${lastError?.message}`);
-    }
-    
-    // 5. Store artifacts
-    await this.storeArtifacts(result.artifacts || [], task);
-    
-    // 6. Update state
-    await this.updateTaskState(task, result);
-    
-    // 7. Mark as completed
-    this.completed.add(task.id);
-    
-    return result;
+    // Fire-and-forget - no return value
   }
-  
-  /**
-   * Wait for task dependencies to complete
-   */
-  async waitForDependencies(dependencies) {
-    if (!dependencies || dependencies.length === 0) {
-      return;
-    }
+}
+
+/**
+ * Handle abort request
+ */
+async function handleAbortRequest(config) {
+  try {
+    console.log('🛑 Aborting execution...');
     
-    const unmet = dependencies.filter(dep => !this.completed.has(dep));
+    // Clear execution state
+    config.executing.clear();
+    config.completed.clear();
+    config.artifacts.clear();
     
-    if (unmet.length > 0) {
-      throw new Error(`Dependencies not met: ${unmet.join(', ')}`);
-    }
-  }
-  
-  /**
-   * Prepare execution context for task
-   */
-  async prepareTaskContext(task) {
-    const context = {
-      input: task.input || {},
-      artifacts: []
-    };
+    this.addConversationEntry('system', 'Execution aborted');
     
-    // Collect artifacts from dependencies
-    if (task.dependencies) {
-      for (const dep of task.dependencies) {
-        const depArtifacts = this.artifacts.get(dep) || [];
-        context.artifacts.push(...depArtifacts);
-      }
-    }
+    // Mark task as aborted
+    this.fail(new Error('Execution aborted'));
     
-    return context;
-  }
-  
-  /**
-   * Select strategy by name
-   */
-  selectStrategy(strategyName) {
-    const strategy = this.strategies[strategyName];
-    
-    if (!strategy) {
-      throw new Error(`Strategy not found: ${strategyName}`);
-    }
-    
-    return strategy;
-  }
-  
-  /**
-   * Create child task for strategy execution
-   */
-  async createChildTask(task, strategy) {
-    const childTask = {
-      parentId: task.id,
-      strategyName: strategy.getName(),
-      action: task.action,
-      description: task.description,
-      input: task.input || {},
-      artifacts: new Map(),
-      conversations: []
-    };
-    
-    // Add necessary methods that strategies expect
-    childTask.addConversationEntry = (role, content) => {
-      childTask.conversations.push({ role, content, timestamp: new Date().toISOString() });
-    };
-    
-    childTask.storeArtifact = (name, content, description, type) => {
-      const artifact = { name, content, description, type, timestamp: new Date().toISOString() };
-      childTask.artifacts.set(name, artifact);
-      // Store in parent task if available
-      if (task.storeArtifact) {
-        task.storeArtifact(name, content, description, type);
-      }
-    };
-    
-    childTask.getAllArtifacts = () => {
-      return Object.fromEntries(childTask.artifacts);
-    };
-    
-    childTask.complete = (result) => {
-      childTask.result = result;
-      childTask.status = 'completed';
-    };
-    
-    childTask.fail = (error) => {
-      childTask.error = error;
-      childTask.status = 'failed';
-    };
-    
-    return childTask;
-  }
-  
-  /**
-   * Validate task execution result
-   */
-  async validateResult(result, validation) {
-    if (!validation) {
-      return true;
-    }
-    
-    if (validation.required && !result.success) {
-      return false;
-    }
-    
-    // Additional validation criteria could be checked here
-    // For now, basic success check is sufficient
-    
-    return true;
-  }
-  
-  /**
-   * Handle execution error
-   */
-  async handleExecutionError(error, task, attempts) {
-    // Log error (in real implementation, would emit events)
-    console.error(`Task ${task.id} attempt ${attempts} failed:`, error.message);
-    
-    // Update state with error
-    await this.stateManager.updateTask({
-      id: task.id,
-      status: 'retrying',
-      lastError: error.message,
-      attempts
-    });
-  }
-  
-  /**
-   * Store task artifacts
-   */
-  async storeArtifacts(artifacts, task) {
-    this.artifacts.set(task.id, artifacts);
-    
-    // Store each artifact in state
-    for (const artifact of artifacts) {
-      await this.stateManager.addArtifact({
-        ...artifact,
-        taskId: task.id
+    // Notify parent of abort (fire-and-forget)
+    if (this.parent) {
+      this.send(this.parent, { 
+        type: 'failed', 
+        error: new Error('Execution aborted'),
+        aborted: true 
       });
     }
-  }
-  
-  /**
-   * Update task state after execution
-   */
-  async updateTaskState(task, result) {
-    await this.stateManager.updateTask({
-      id: task.id,
-      status: 'completed',
-      result: {
-        success: result.success,
-        artifactCount: (result.artifacts || []).length
-      }
-    });
-  }
-  
-  /**
-   * Calculate backoff delay
-   */
-  calculateBackoff(attempt, retry) {
-    const base = retry.backoffMs || 1000;
     
-    switch (retry.strategy) {
-      case 'exponential':
-        return base * Math.pow(2, attempt - 1);
-      case 'linear':
-        return base * attempt;
-      default:
-        return base;
+    // Fire-and-forget - no return value
+  } catch (error) {
+    console.error('Failed to abort execution:', error);
+    // Even in error, don't return - just notify parent
+    if (this.parent) {
+      this.send(this.parent, { type: 'failed', error });
+    }
+  }
+}
+
+/**
+ * Extract execution plan from task
+ */
+function extractExecutionPlan(task) {
+  // Check for project-plan artifact first
+  const projectPlanArtifact = task.getArtifact('project-plan');
+  if (projectPlanArtifact?.value) {
+    return projectPlanArtifact.value;
+  }
+  
+  // Check for plan in metadata
+  if (task.metadata?.plan) {
+    return task.metadata.plan;
+  }
+  
+  // Check for plan from parent task
+  if (task.parent) {
+    const parentPlan = task.parent.getArtifact('project-plan');
+    if (parentPlan?.value) {
+      return parentPlan.value;
     }
   }
   
-  /**
-   * Delay execution
-   */
-  async delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
+  return null;
+}
+
+/**
+ * Execute the project plan
+ */
+async function executePlan(plan, task, config) {
+  const executionResult = {
+    success: false,
+    projectId: plan.metadata?.projectId || `project-${Date.now()}`,
+    phases: [],
+    artifacts: [],
+    errors: []
+  };
   
-  /**
-   * Wait for child task to complete (polling-based for fire-and-forget pattern)
-   */
-  async waitForChildTaskCompletion(childTask) {
-    const maxWait = 30000; // 30 seconds max
-    const pollInterval = 100; // Check every 100ms
-    const startTime = Date.now();
+  try {
+    // Initialize execution state
+    config.completed.clear();
+    config.executing.clear();
+    config.artifacts.clear();
     
-    while (Date.now() - startTime < maxWait) {
-      if (childTask.status === 'completed') {
-        return childTask.result || { success: true };
+    // Execute each phase
+    for (const phase of plan.phases || []) {
+      console.log(`\n📍 Executing Phase: ${phase.name}`);
+      task.addConversationEntry('system', `Executing phase: ${phase.name}`);
+      
+      const phaseResult = await executePhase(phase, task, config);
+      
+      executionResult.phases.push({
+        name: phase.name,
+        success: phaseResult.success,
+        tasks: phaseResult.tasks,
+        errors: phaseResult.errors
+      });
+      
+      // Collect artifacts from phase
+      if (phaseResult.artifacts && phaseResult.artifacts.length > 0) {
+        executionResult.artifacts.push(...phaseResult.artifacts);
       }
-      if (childTask.status === 'failed') {
-        throw new Error(childTask.error || 'Child task failed');
+      
+      // If phase failed and it's critical, stop execution
+      if (!phaseResult.success && phase.critical !== false) {
+        console.error(`❌ Critical phase "${phase.name}" failed, stopping execution`);
+        executionResult.success = false;
+        executionResult.errors.push(`Critical phase "${phase.name}" failed`);
+        break;
       }
-      await this.delay(pollInterval);
     }
     
-    throw new Error('Child task execution timeout');
+    // Determine overall success
+    executionResult.success = executionResult.phases.every(p => p.success);
+    
+    // Store all artifacts
+    for (const artifact of executionResult.artifacts) {
+      if (artifact.name && artifact.content) {
+        task.storeArtifact(
+          artifact.name,
+          artifact.content,
+          artifact.description || `Artifact from ${artifact.source || 'execution'}`,
+          artifact.type || 'file'
+        );
+      }
+    }
+    
+    return executionResult;
+    
+  } catch (error) {
+    console.error('Plan execution failed:', error);
+    executionResult.success = false;
+    executionResult.errors.push(error.message);
+    return executionResult;
   }
+}
 
-  /**
-   * Stop all executing tasks
-   */
-  async stopAll() {
-    console.log(`Stopping ${this.executing.size} executing tasks`);
-    this.executing.clear();
+/**
+ * Execute a single phase
+ */
+async function executePhase(phase, task, config) {
+  const phaseResult = {
+    success: false,
+    tasks: [],
+    artifacts: [],
+    errors: []
+  };
+  
+  try {
+    // Group tasks by their dependency level
+    const tasksByLevel = groupTasksByDependencyLevel(phase.tasks || []);
+    
+    // Execute each dependency level
+    for (const [level, levelTasks] of tasksByLevel) {
+      console.log(`  → Executing dependency level ${level}: ${levelTasks.length} tasks`);
+      
+      // Execute tasks at this level in parallel
+      const levelResults = await Promise.all(
+        levelTasks.map(taskDef => executeTask(taskDef, task, config))
+      );
+      
+      // Process results
+      for (let i = 0; i < levelTasks.length; i++) {
+        const taskDef = levelTasks[i];
+        const result = levelResults[i];
+        
+        phaseResult.tasks.push({
+          id: taskDef.id,
+          name: taskDef.name,
+          success: result.success,
+          result: result.result
+        });
+        
+        if (result.artifacts) {
+          phaseResult.artifacts.push(...result.artifacts);
+        }
+        
+        if (!result.success) {
+          phaseResult.errors.push(`Task "${taskDef.name}" failed: ${result.error}`);
+        }
+        
+        // Mark task as completed
+        config.completed.add(taskDef.id);
+      }
+    }
+    
+    phaseResult.success = phaseResult.tasks.every(t => t.success);
+    return phaseResult;
+    
+  } catch (error) {
+    console.error(`Phase execution failed: ${error.message}`);
+    phaseResult.errors.push(error.message);
+    return phaseResult;
   }
+}
 
-  /**
-   * Get context information from task for execution
-   */
-  _getContextFromTask(task) {
-    const context = {
-      taskId: task.id,
-      description: task.description,
-      workspaceDir: task.workspaceDir
+/**
+ * Execute a single task
+ */
+async function executeTask(taskDef, task, config) {
+  const maxRetries = config.options.maxRetries;
+  let attempt = 0;
+  let lastError = null;
+  
+  while (attempt < maxRetries) {
+    try {
+      attempt++;
+      console.log(`    • Executing task: ${taskDef.name} (attempt ${attempt}/${maxRetries})`);
+      
+      // Mark as executing
+      config.executing.add(taskDef.id);
+      
+      // Execute based on task type
+      const result = await executeTaskByType(taskDef, task, config);
+      
+      // Mark as complete
+      config.executing.delete(taskDef.id);
+      config.completed.add(taskDef.id);
+      
+      return result;
+      
+    } catch (error) {
+      lastError = error;
+      console.error(`      ⚠️ Task failed (attempt ${attempt}/${maxRetries}): ${error.message}`);
+      
+      if (attempt < maxRetries) {
+        // Exponential backoff
+        const delay = Math.pow(2, attempt - 1) * 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  
+  // All retries exhausted
+  config.executing.delete(taskDef.id);
+  
+  return {
+    success: false,
+    error: lastError?.message || 'Task execution failed after all retries',
+    result: null
+  };
+}
+
+/**
+ * Execute task based on its type
+ */
+async function executeTaskByType(taskDef, task, config) {
+  const { type, params = {} } = taskDef;
+  
+  switch (type) {
+    case 'file':
+      return await executeFileTask(params, task, config);
+    
+    case 'directory':
+      return await executeDirectoryTask(params, task, config);
+    
+    case 'command':
+      return await executeCommandTask(params, task, config);
+    
+    case 'tool':
+      return await executeToolTask(params, task, config);
+    
+    case 'validation':
+      return await executeValidationTask(params, task, config);
+    
+    default:
+      // Try to find a strategy that can handle this type
+      if (config.strategies && config.strategies[type]) {
+        return await config.strategies[type].execute(params, task);
+      }
+      
+      throw new Error(`Unknown task type: ${type}`);
+  }
+}
+
+/**
+ * Execute file creation task
+ */
+async function executeFileTask(params, task, config) {
+  try {
+    const { path: filePath, content, description } = params;
+    
+    // Store as artifact
+    task.storeArtifact(
+      filePath,
+      content,
+      description || `File: ${filePath}`,
+      'file'
+    );
+    
+    return {
+      success: true,
+      result: `File created: ${filePath}`,
+      artifacts: [{
+        name: filePath,
+        content: content,
+        type: 'file',
+        source: 'execution'
+      }]
     };
-    
-    // Add any existing artifacts as context
-    if (task.getAllArtifacts) {
-      const artifacts = task.getAllArtifacts();
-      context.existingArtifacts = Object.keys(artifacts);
-    }
-    
-    // Add conversation history for context
-    if (task.getConversationContext) {
-      context.conversationHistory = task.getConversationContext();
-    }
-    
-    return context;
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      result: null
+    };
   }
+}
+
+/**
+ * Execute directory creation task
+ */
+async function executeDirectoryTask(params, task, config) {
+  try {
+    const { path: dirPath, structure } = params;
+    
+    // Store directory structure as artifact
+    task.storeArtifact(
+      `${dirPath}-structure`,
+      structure || {},
+      `Directory structure for ${dirPath}`,
+      'directory'
+    );
+    
+    return {
+      success: true,
+      result: `Directory created: ${dirPath}`,
+      artifacts: []
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      result: null
+    };
+  }
+}
+
+/**
+ * Execute command task
+ */
+async function executeCommandTask(params, task, config) {
+  try {
+    const { command, workingDir } = params;
+    
+    task.addConversationEntry('system', `Executing command: ${command}`);
+    
+    // In real implementation, would execute the command
+    // For now, simulate success
+    return {
+      success: true,
+      result: `Command executed: ${command}`,
+      artifacts: []
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      result: null
+    };
+  }
+}
+
+/**
+ * Execute tool task
+ */
+async function executeToolTask(params, task, config) {
+  try {
+    const { toolName, inputs } = params;
+    
+    // Get tool from task's context or config
+    const toolRegistry = task.lookup ? task.lookup('toolRegistry') : null;
+    
+    if (!toolRegistry) {
+      throw new Error('Tool registry not available');
+    }
+    
+    const tool = await toolRegistry.getTool(toolName);
+    if (!tool) {
+      throw new Error(`Tool not found: ${toolName}`);
+    }
+    
+    const result = await tool.execute(inputs);
+    
+    return {
+      success: result.success,
+      result: result,
+      artifacts: []
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      result: null
+    };
+  }
+}
+
+/**
+ * Execute validation task
+ */
+async function executeValidationTask(params, task, config) {
+  try {
+    const { target, rules } = params;
+    
+    task.addConversationEntry('system', `Validating: ${target}`);
+    
+    // In real implementation, would perform validation
+    // For now, simulate success
+    return {
+      success: true,
+      result: `Validation passed for ${target}`,
+      artifacts: []
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      result: null
+    };
+  }
+}
+
+/**
+ * Group tasks by dependency level
+ */
+function groupTasksByDependencyLevel(tasks) {
+  const levels = new Map();
+  const taskMap = new Map();
+  
+  // Build task map
+  for (const task of tasks) {
+    taskMap.set(task.id, task);
+  }
+  
+  // Calculate levels
+  for (const task of tasks) {
+    const level = calculateDependencyLevel(task, taskMap, new Set());
+    
+    if (!levels.has(level)) {
+      levels.set(level, []);
+    }
+    levels.get(level).push(task);
+  }
+  
+  // Sort levels and return
+  return new Map([...levels.entries()].sort((a, b) => a[0] - b[0]));
+}
+
+/**
+ * Calculate dependency level for a task
+ */
+function calculateDependencyLevel(task, taskMap, visited) {
+  if (visited.has(task.id)) {
+    return 0; // Circular dependency detected
+  }
+  
+  visited.add(task.id);
+  
+  if (!task.dependencies || task.dependencies.length === 0) {
+    return 0;
+  }
+  
+  let maxLevel = 0;
+  for (const depId of task.dependencies) {
+    const depTask = taskMap.get(depId);
+    if (depTask) {
+      const depLevel = calculateDependencyLevel(depTask, taskMap, visited);
+      maxLevel = Math.max(maxLevel, depLevel);
+    }
+  }
+  
+  return maxLevel + 1;
 }

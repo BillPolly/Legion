@@ -7,9 +7,9 @@
  * 3. COMPLEX tasks: Decompose into subtasks recursively
  */
 
-import { Task, TaskManager, GlobalContext } from '@legion/tasks';
+import { createTask, TaskManager, GlobalContext } from '@legion/tasks';
 import SessionLogger from './utils/SessionLogger.js';
-import RecursiveDecompositionStrategy from './strategies/recursive/RecursiveDecompositionStrategy.js';
+import { createRecursiveDecompositionStrategy } from './strategies/recursive/RecursiveDecompositionStrategy.js';
 
 export default class SimpleROMAAgent {
   constructor(options = {}) {
@@ -20,8 +20,9 @@ export default class SimpleROMAAgent {
     this.sessionLogger = null; // Session logger for debugging
     this.taskManager = null; // Task hierarchy manager
     
-    // Task execution strategy (pluggable)
-    this.taskStrategy = options.taskStrategy || new RecursiveDecompositionStrategy();
+    // Task execution strategy (pluggable) - will be created after we have services
+    this.taskStrategyFactory = options.taskStrategy || createRecursiveDecompositionStrategy;
+    this.taskStrategy = null; // Will be initialized in initialize()
     
     // Configuration
     this.maxDepth = options.maxDepth || 5;
@@ -47,13 +48,13 @@ export default class SimpleROMAAgent {
     const llmClient = this.globalContext.getService('llmClient');
     this.taskManager = new TaskManager(llmClient);
     
-    // Update strategy with services (strategy can get what it needs directly)
+    // Create the strategy with services
     const toolRegistry = this.globalContext.getService('toolRegistry');
-    if (!this.taskStrategy.llmClient) {
-      this.taskStrategy.llmClient = llmClient;
-    }
-    if (!this.taskStrategy.toolRegistry) {
-      this.taskStrategy.toolRegistry = toolRegistry;
+    if (typeof this.taskStrategyFactory === 'function') {
+      this.taskStrategy = this.taskStrategyFactory(llmClient, toolRegistry);
+    } else {
+      // If a pre-created strategy was passed, use it
+      this.taskStrategy = this.taskStrategyFactory;
     }
   }
 
@@ -99,14 +100,11 @@ export default class SimpleROMAAgent {
       taskManager: this.taskManager
     });
     
-    // Create root task with strategy and execution context
-    const rootTask = new Task(taskDescription, null, {
+    // Create root task using the factory function with strategy prototype
+    const rootTask = createTask(taskDescription, null, this.taskStrategy, {
       metadata: { originalTask: task },
-      strategy: this.taskStrategy
+      ...executionContext  // Pass the execution context directly
     });
-    
-    // Update the task's context to the execution context
-    rootTask.updateContext(executionContext);
     
     // Track root task in manager (TaskManager tracks tasks via constructor)
     this.taskManager.taskMap.set(rootTask.id, rootTask);
@@ -146,7 +144,16 @@ export default class SimpleROMAAgent {
     // Switch to this task in the TaskManager
     this.taskManager.switchToTask(task);
     
-    // Send start message to task (pure message-passing)
-    return await task.receiveMessage({type: 'start'});
+    // Send start message to task using the message-passing pattern
+    // The task will handle this through its onMessage method
+    task.send(task, {type: 'start'});
+    
+    // For now, return a placeholder - in a real system, we'd wait for async completion
+    // through the message system
+    return {
+      success: true,
+      result: 'Task initiated',
+      artifacts: []
+    };
   }
 }

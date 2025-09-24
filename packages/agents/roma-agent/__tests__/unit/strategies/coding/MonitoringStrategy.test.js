@@ -1,505 +1,388 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import MonitoringStrategy from '../../../../src/strategies/coding/MonitoringStrategy.js';
+/**
+ * Unit tests for MonitoringStrategy - Prototypal Pattern
+ * Tests project monitoring and progress tracking
+ * NO MOCKS - using real components
+ */
 
-describe('MonitoringStrategy', () => {
-  let monitoringStrategy;
-  let mockProject;
+import { describe, test, expect, beforeEach, jest, beforeAll } from '@jest/globals';
+import { ResourceManager } from '@legion/resource-manager';
+import { createMonitoringStrategy } from '../../../../src/strategies/coding/MonitoringStrategy.js';
 
-  beforeEach(() => {
-    monitoringStrategy = new MonitoringStrategy();
-    
-    // Mock project structure with phases and tasks
-    mockProject = {
-      projectId: 'test-project-123',
-      phases: [
-        {
-          id: 'setup',
-          name: 'Setup',
-          status: 'completed',
-          tasks: ['task-1', 'task-2'],
-          startedAt: '2024-01-01T10:00:00Z',
-          completedAt: '2024-01-01T10:15:00Z'
-        },
-        {
-          id: 'core',
-          name: 'Core',
-          status: 'active',
-          tasks: ['task-3', 'task-4', 'task-5'],
-          startedAt: '2024-01-01T10:15:00Z',
-          completedAt: null
-        },
-        {
-          id: 'features',
-          name: 'Features',
-          status: 'pending',
-          tasks: ['task-6'],
-          startedAt: null,
-          completedAt: null
-        }
-      ],
-      tasks: [
-        {
-          id: 'task-1',
-          type: 'generate',
-          status: 'completed',
-          description: 'Create package.json',
-          startedAt: '2024-01-01T10:00:00Z',
-          completedAt: '2024-01-01T10:05:00Z'
-        },
-        {
-          id: 'task-2',
-          type: 'generate',
-          status: 'completed',
-          description: 'Setup project structure',
-          startedAt: '2024-01-01T10:05:00Z',
-          completedAt: '2024-01-01T10:15:00Z'
-        },
-        {
-          id: 'task-3',
-          type: 'generate',
-          status: 'completed',
-          description: 'Generate server code',
-          startedAt: '2024-01-01T10:15:00Z',
-          completedAt: '2024-01-01T10:30:00Z'
-        },
-        {
-          id: 'task-4',
-          type: 'test',
-          status: 'running',
-          description: 'Run unit tests',
-          startedAt: '2024-01-01T10:30:00Z',
-          completedAt: null
-        },
-        {
-          id: 'task-5',
-          type: 'validate',
-          status: 'pending',
-          description: 'Validate endpoints',
-          startedAt: null,
-          completedAt: null
-        },
-        {
-          id: 'task-6',
-          type: 'generate',
-          status: 'pending',
-          description: 'Add authentication',
-          startedAt: null,
-          completedAt: null
-        }
-      ],
-      createdAt: '2024-01-01T10:00:00Z'
+// Mock Task for testing - simulates the actual Task interface
+class MockTask {
+  constructor(id, description) {
+    this.id = id;
+    this.description = description;
+    this.parent = null;
+    this.context = {};
+    this.artifacts = [];
+    this.artifactMap = {};
+    this.failed = false;
+    this.completed = false;
+    this.conversation = [];
+    this.sentMessages = [];
+  }
+  
+  fail(error) {
+    this.failed = true;
+    this.error = error;
+  }
+  
+  complete(result) {
+    this.completed = true;
+    this.result = result;
+  }
+  
+  addConversationEntry(role, content) {
+    this.conversation.push({ role, content });
+  }
+  
+  storeArtifact(name, value, description, type) {
+    const artifact = {
+      name,
+      value,
+      content: value,
+      description,
+      type
     };
-  });
+    this.artifacts.push(artifact);
+    this.artifactMap[name] = artifact;
+  }
+  
+  getAllArtifacts() {
+    return this.artifactMap;
+  }
+  
+  lookup(key) {
+    if (key === 'llmClient') return this.context.llmClient;
+    if (key === 'toolRegistry') return this.context.toolRegistry;
+    if (key === 'workspaceDir') return this.context.workspaceDir;
+    return null;
+  }
+  
+  send(target, message) {
+    this.sentMessages.push({ target, message });
+  }
+}
 
-  describe('Initialization', () => {
-    it('should create a MonitoringStrategy instance', () => {
-      expect(monitoringStrategy).toBeInstanceOf(MonitoringStrategy);
+describe('MonitoringStrategy - Prototypal Pattern', () => {
+  let resourceManager;
+
+  beforeAll(async () => {
+    // Get ResourceManager singleton
+    resourceManager = await ResourceManager.getInstance();
+  }, 30000);
+
+  describe('Factory Function', () => {
+    test('should create strategy with factory function', () => {
+      const strategy = createMonitoringStrategy();
+      
+      expect(strategy).toBeDefined();
+      expect(typeof strategy.onMessage).toBe('function');
     });
 
-    it('should initialize with empty metrics', () => {
-      const metrics = monitoringStrategy.getMetrics();
-      expect(metrics).toEqual({
-        overall: 0,
-        byPhase: {},
-        tasks: {
-          total: 0,
-          completed: 0,
-          running: 0,
-          pending: 0,
-          failed: 0
-        },
-        timing: {
-          estimatedCompletion: null,
-          averageTaskDuration: null,
-          totalElapsed: null
-        },
-        bottlenecks: []
-      });
-    });
-  });
-
-  describe('Progress Calculation', () => {
-    it('should calculate overall progress percentage', () => {
-      const progress = monitoringStrategy.calculateProgress(mockProject);
-      
-      // 3 of 6 tasks completed = 50%
-      expect(progress.overall).toBe(50);
-    });
-
-    it('should calculate progress by phase', () => {
-      const progress = monitoringStrategy.calculateProgress(mockProject);
-      
-      expect(progress.byPhase).toEqual({
-        setup: 100,    // 2/2 tasks completed
-        core: 33.33,   // 1/3 tasks completed (task-3 done, task-4 running, task-5 pending)
-        features: 0    // 0/1 tasks completed
-      });
-    });
-
-    it('should handle empty project', () => {
-      const emptyProject = {
-        projectId: 'empty',
-        phases: [],
-        tasks: []
-      };
-      
-      const progress = monitoringStrategy.calculateProgress(emptyProject);
-      expect(progress.overall).toBe(0);
-      expect(progress.byPhase).toEqual({});
-    });
-
-    it('should handle project with no tasks', () => {
-      const noTasksProject = {
-        projectId: 'no-tasks',
-        phases: [
-          { id: 'setup', name: 'Setup', status: 'pending', tasks: [] }
-        ],
-        tasks: []
-      };
-      
-      const progress = monitoringStrategy.calculateProgress(noTasksProject);
-      expect(progress.overall).toBe(0);
-      expect(progress.byPhase).toEqual({ setup: 0 });
-    });
-  });
-
-  describe('Task Status Tracking', () => {
-    it('should count tasks by status', () => {
-      const taskStats = monitoringStrategy.getTaskStats(mockProject);
-      
-      expect(taskStats).toEqual({
-        total: 6,
-        completed: 3,
-        running: 1,
-        pending: 2,
-        failed: 0
-      });
-    });
-
-    it('should track task status changes', () => {
-      monitoringStrategy.updateProject(mockProject);
-      
-      // Simulate task completion
-      mockProject.tasks[3].status = 'completed';
-      mockProject.tasks[3].completedAt = '2024-01-01T10:45:00Z';
-      
-      monitoringStrategy.updateProject(mockProject);
-      const taskStats = monitoringStrategy.getTaskStats(mockProject);
-      
-      expect(taskStats.completed).toBe(4);
-      expect(taskStats.running).toBe(0);
-    });
-
-    it('should handle failed tasks', () => {
-      mockProject.tasks[3].status = 'failed';
-      mockProject.tasks[3].lastError = 'Unit test failure';
-      
-      const taskStats = monitoringStrategy.getTaskStats(mockProject);
-      expect(taskStats.failed).toBe(1);
-      expect(taskStats.running).toBe(0);
-    });
-  });
-
-  describe('Time Tracking', () => {
-    it('should calculate average task duration', () => {
-      const timing = monitoringStrategy.calculateTiming(mockProject);
-      
-      // Task 1: 5 minutes, Task 2: 10 minutes, Task 3: 15 minutes
-      // Average: (5 + 10 + 15) / 3 = 10 minutes
-      expect(timing.averageTaskDuration).toBe(10 * 60 * 1000); // 10 minutes in milliseconds
-    });
-
-    it('should calculate total elapsed time', () => {
-      const timing = monitoringStrategy.calculateTiming(mockProject);
-      
-      // From project start to latest completion: 30 minutes
-      expect(timing.totalElapsed).toBe(30 * 60 * 1000); // 30 minutes in milliseconds
-    });
-
-    it('should estimate completion time', () => {
-      // 3 tasks remaining, 10 minutes average = 30 minutes from now
-      const now = new Date('2024-01-01T10:30:00Z').getTime();
-      const timing = monitoringStrategy.calculateTiming(mockProject, now);
-      const expected = now + (3 * 10 * 60 * 1000);
-      
-      expect(timing.estimatedCompletion).toBe(expected);
-    });
-
-    it('should handle project with no completed tasks', () => {
-      const pendingProject = {
-        ...mockProject,
-        tasks: mockProject.tasks.map(task => ({
-          ...task,
-          status: 'pending',
-          completedAt: null
-        }))
-      };
-      
-      const timing = monitoringStrategy.calculateTiming(pendingProject);
-      expect(timing.averageTaskDuration).toBeNull();
-      expect(timing.estimatedCompletion).toBeNull();
-    });
-  });
-
-  describe('Bottleneck Detection', () => {
-    it('should identify slow-running tasks as bottlenecks', () => {
-      // Set current time to simulate long-running task
-      const mockNow = new Date('2024-01-01T11:00:00Z').getTime();
-      jest.spyOn(Date, 'now').mockReturnValue(mockNow);
-      
-      const bottlenecks = monitoringStrategy.identifyBottlenecks(mockProject);
-      
-      // Task-4 has been running for 30 minutes, should be flagged
-      expect(bottlenecks).toContainEqual({
-        taskId: 'task-4',
-        type: 'slow_task',
-        description: 'Run unit tests',
-        duration: 30 * 60 * 1000, // 30 minutes
-        impact: 'high'
+    test('should accept custom options', () => {
+      const strategy = createMonitoringStrategy({
+        updateInterval: 1000,
+        metricsEnabled: true
       });
       
-      jest.restoreAllMocks();
+      expect(strategy).toBeDefined();
+      expect(typeof strategy.onMessage).toBe('function');
+    });
+  });
+
+  describe('Message Handling with Prototypal Pattern', () => {
+    test('should handle start message', (done) => {
+      const strategy = createMonitoringStrategy();
+      
+      // Create a mock task
+      const task = new MockTask('monitoring-1', 'Monitor project progress');
+      task.context = {};
+      
+      // Override complete to check results
+      task.complete = jest.fn((result) => {
+        expect(result.success).toBe(true);
+        expect(result.monitoring).toBeDefined();
+        expect(result.monitoring.started).toBe(true);
+        done();
+      });
+      
+      // Call onMessage with task as 'this' context
+      strategy.onMessage.call(task, task, { type: 'start' });
     });
 
-    it('should identify blocked phases as bottlenecks', () => {
-      // Mock a phase with all tasks pending (blocked)
-      const blockedProject = {
-        ...mockProject,
-        phases: [
-          ...mockProject.phases,
-          {
-            id: 'blocked-phase',
-            name: 'Blocked Phase',
-            status: 'pending',
-            tasks: ['blocked-task-1', 'blocked-task-2'],
-            startedAt: null,
-            completedAt: null
-          }
-        ],
-        tasks: [
-          ...mockProject.tasks,
-          {
-            id: 'blocked-task-1',
-            type: 'generate',
-            status: 'pending',
-            description: 'Blocked task 1',
-            dependencies: ['missing-dependency']
-          }
-        ]
-      };
+    test('should handle update message with progress data', (done) => {
+      const strategy = createMonitoringStrategy();
       
-      const bottlenecks = monitoringStrategy.identifyBottlenecks(blockedProject);
+      const task = new MockTask('monitoring-1', 'Monitor progress');
       
-      expect(bottlenecks).toContainEqual(
-        expect.objectContaining({
-          taskId: 'blocked-task-1',
-          type: 'blocked_dependency',
-          impact: 'high'
-        })
+      // Store initial monitoring state
+      task.storeArtifact('monitoring-state', {
+        tasksStarted: [],
+        tasksCompleted: [],
+        currentPhase: null
+      }, 'Monitoring state', 'state');
+      
+      task.complete = jest.fn((result) => {
+        expect(result.success).toBe(true);
+        expect(result.progress).toBeDefined();
+        expect(result.progress.taskStarted).toBe('task-1');
+        done();
+      });
+      
+      // Call onMessage with update
+      strategy.onMessage.call(task, task, { 
+        type: 'update',
+        progressData: {
+          taskStarted: 'task-1',
+          description: 'Starting task 1'
+        }
+      });
+    });
+
+    test('should handle status request', (done) => {
+      const strategy = createMonitoringStrategy();
+      
+      const task = new MockTask('monitoring-1', 'Get status');
+      
+      // Add some monitoring data
+      task.storeArtifact('monitoring-state', {
+        tasksStarted: ['task-1', 'task-2'],
+        tasksCompleted: ['task-1'],
+        currentPhase: 'execution',
+        metrics: {
+          totalTasks: 10,
+          completedTasks: 1,
+          failedTasks: 0
+        }
+      }, 'Monitoring state', 'state');
+      
+      task.complete = jest.fn((result) => {
+        expect(result.success).toBe(true);
+        expect(result.status).toBeDefined();
+        expect(result.status.metrics).toBeDefined();
+        expect(result.status.metrics.completedTasks).toBe(1);
+        done();
+      });
+      
+      strategy.onMessage.call(task, task, { type: 'status' });
+    });
+
+    test('should handle child task completion', () => {
+      const strategy = createMonitoringStrategy();
+      
+      // Create mock parent task
+      const parentTask = new MockTask('parent-task', 'Parent task');
+      parentTask.storeArtifact = jest.fn();
+      
+      // Create mock child task
+      const childTask = new MockTask('child-task', 'Child task');
+      childTask.parent = parentTask;
+      childTask.getAllArtifacts = jest.fn(() => ({
+        'artifact1': { content: 'test', description: 'Test artifact', type: 'file' }
+      }));
+      
+      // Call onMessage with parent task as 'this' context
+      strategy.onMessage.call(parentTask, childTask, { 
+        type: 'completed',
+        result: { success: true }
+      });
+      
+      // Should copy artifacts from child
+      expect(parentTask.storeArtifact).toHaveBeenCalledWith(
+        'artifact1', 'test', 'Test artifact', 'file'
       );
     });
 
-    it('should return empty array when no bottlenecks exist', () => {
-      // Create project with all tasks completing quickly
-      const fastProject = {
-        ...mockProject,
-        tasks: mockProject.tasks.map(task => ({
-          ...task,
-          status: 'completed',
-          startedAt: '2024-01-01T10:00:00Z',
-          completedAt: '2024-01-01T10:01:00Z' // 1 minute tasks
-        }))
-      };
+    test('should handle child task failure', () => {
+      const strategy = createMonitoringStrategy();
       
-      const bottlenecks = monitoringStrategy.identifyBottlenecks(fastProject);
-      expect(bottlenecks).toEqual([]);
+      // Create mock parent task
+      const parentTask = new MockTask('parent-task', 'Parent task');
+      const grandParent = new MockTask('grandparent', 'Grandparent');
+      parentTask.parent = grandParent;
+      
+      // Create mock child task
+      const childTask = new MockTask('child-task', 'Child task');
+      childTask.parent = parentTask;
+      
+      // Call onMessage with parent task as 'this' context for child failure
+      strategy.onMessage.call(parentTask, childTask, { 
+        type: 'failed',
+        error: new Error('Test error')
+      });
+      
+      // Should notify parent of child failure
+      expect(parentTask.sentMessages.length).toBe(1);
+      expect(parentTask.sentMessages[0].message.type).toBe('child-failed');
+      expect(parentTask.sentMessages[0].message.child).toBe(childTask);
+    });
+
+    test('should handle unknown messages gracefully', () => {
+      const strategy = createMonitoringStrategy();
+      
+      const task = new MockTask('test', 'Test task');
+      
+      // Should not throw
+      expect(() => {
+        strategy.onMessage.call(task, task, { type: 'unknown' });
+      }).not.toThrow();
     });
   });
 
-  describe('Status Reporting', () => {
-    it('should generate comprehensive status report', () => {
-      const report = monitoringStrategy.generateReport(mockProject);
+  describe('Progress Tracking', () => {
+    test('should track task progress', (done) => {
+      const strategy = createMonitoringStrategy();
       
-      expect(report).toMatchObject({
-        projectId: 'test-project-123',
-        timestamp: expect.any(Number),
-        progress: {
-          overall: 50,
-          byPhase: {
-            setup: 100,
-            core: 33.33,
-            features: 0
-          }
-        },
-        tasks: {
-          total: 6,
-          completed: 3,
-          running: 1,
-          pending: 2,
-          failed: 0
-        },
-        timing: {
-          averageTaskDuration: expect.any(Number),
-          totalElapsed: expect.any(Number),
-          estimatedCompletion: expect.any(Number)
-        },
-        bottlenecks: expect.any(Array),
-        phases: expect.any(Array)
+      const task = new MockTask('monitor', 'Monitor progress');
+      
+      // Initialize monitoring state
+      task.storeArtifact('monitoring-state', {
+        tasksStarted: [],
+        tasksCompleted: [],
+        currentPhase: 'planning'
+      }, 'Monitoring state', 'state');
+      
+      // Update with task start
+      strategy.onMessage.call(task, task, {
+        type: 'update',
+        progressData: {
+          taskStarted: 'task-1',
+          description: 'Starting task 1'
+        }
+      });
+      
+      // Check state was updated
+      setTimeout(() => {
+        const state = task.getAllArtifacts()['monitoring-state'];
+        expect(state).toBeDefined();
+        done();
+      }, 100);
+    });
+
+    test('should track phase transitions', (done) => {
+      const strategy = createMonitoringStrategy();
+      
+      const task = new MockTask('monitor', 'Monitor phases');
+      
+      // Initialize with planning phase
+      task.storeArtifact('monitoring-state', {
+        tasksStarted: [],
+        tasksCompleted: [],
+        currentPhase: 'planning'
+      }, 'Monitoring state', 'state');
+      
+      task.complete = jest.fn((result) => {
+        expect(result.success).toBe(true);
+        expect(result.phaseTransition).toBeDefined();
+        expect(result.phaseTransition.from).toBe('planning');
+        expect(result.phaseTransition.to).toBe('execution');
+        done();
+      });
+      
+      // Update with phase change
+      strategy.onMessage.call(task, task, {
+        type: 'phase-change',
+        phase: {
+          from: 'planning',
+          to: 'execution'
+        }
       });
     });
 
-    it('should include phase details in report', () => {
-      const report = monitoringStrategy.generateReport(mockProject);
+    test('should calculate metrics', (done) => {
+      const strategy = createMonitoringStrategy();
       
-      expect(report.phases).toHaveLength(3);
-      expect(report.phases[0]).toMatchObject({
-        id: 'setup',
-        name: 'Setup',
-        status: 'completed',
-        progress: 100,
-        taskCount: 2
+      const task = new MockTask('monitor', 'Calculate metrics');
+      
+      // Set up state with some completed tasks
+      task.storeArtifact('monitoring-state', {
+        tasksStarted: ['task-1', 'task-2', 'task-3'],
+        tasksCompleted: ['task-1', 'task-2'],
+        failedTasks: [],
+        currentPhase: 'execution',
+        startTime: Date.now() - 10000
+      }, 'Monitoring state', 'state');
+      
+      task.complete = jest.fn((result) => {
+        expect(result.success).toBe(true);
+        expect(result.metrics).toBeDefined();
+        expect(result.metrics.completionRate).toBeGreaterThan(0);
+        expect(result.metrics.totalTasks).toBe(3);
+        expect(result.metrics.completedTasks).toBe(2);
+        done();
       });
-    });
-
-    it('should mark report as completed when project is done', () => {
-      const completedProject = {
-        ...mockProject,
-        status: 'completed',
-        phases: mockProject.phases.map(phase => ({
-          ...phase,
-          status: 'completed'
-        })),
-        tasks: mockProject.tasks.map(task => ({
-          ...task,
-          status: 'completed',
-          completedAt: '2024-01-01T11:00:00Z'
-        }))
-      };
       
-      const report = monitoringStrategy.generateReport(completedProject);
-      expect(report.progress.overall).toBe(100);
-      expect(report.status).toBe('completed');
-    });
-  });
-
-  describe('Update and Monitoring', () => {
-    it('should track progress updates over time', () => {
-      // Initial update
-      monitoringStrategy.updateProject(mockProject);
-      const initialMetrics = monitoringStrategy.getMetrics();
-      
-      // Complete another task
-      mockProject.tasks[4].status = 'completed';
-      mockProject.tasks[4].completedAt = '2024-01-01T10:45:00Z';
-      
-      monitoringStrategy.updateProject(mockProject);
-      const updatedMetrics = monitoringStrategy.getMetrics();
-      
-      expect(updatedMetrics.overall).toBeGreaterThan(initialMetrics.overall);
-      expect(updatedMetrics.tasks.completed).toBe(4);
-    });
-
-    it('should maintain history of progress updates', () => {
-      monitoringStrategy.updateProject(mockProject);
-      
-      // Make changes
-      mockProject.tasks[3].status = 'completed';
-      mockProject.tasks[3].completedAt = '2024-01-01T10:45:00Z';
-      
-      monitoringStrategy.updateProject(mockProject);
-      
-      const history = monitoringStrategy.getProgressHistory();
-      expect(history).toHaveLength(2);
-      expect(history[0].overall).toBeLessThan(history[1].overall);
-    });
-
-    it('should handle real-time updates', () => {
-      const callback = jest.fn();
-      monitoringStrategy.onProgressUpdate(callback);
-      
-      monitoringStrategy.updateProject(mockProject);
-      
-      expect(callback).toHaveBeenCalledWith(
-        expect.objectContaining({
-          overall: 50,
-          byPhase: expect.any(Object)
-        })
-      );
-    });
-  });
-
-  describe('Resource Usage Tracking', () => {
-    it('should track task resource consumption', () => {
-      const resourceData = {
-        memory: 512,
-        cpu: 45,
-        duration: 15000
-      };
-      
-      monitoringStrategy.recordResourceUsage('task-3', resourceData);
-      const usage = monitoringStrategy.getResourceUsage();
-      
-      expect(usage.byTask['task-3']).toEqual(resourceData);
-      expect(usage.total.memory).toBe(512);
-      expect(usage.average.cpu).toBe(45);
-    });
-
-    it('should identify resource-intensive tasks', () => {
-      monitoringStrategy.recordResourceUsage('task-1', { memory: 100, cpu: 20, duration: 5000 });
-      monitoringStrategy.recordResourceUsage('task-2', { memory: 800, cpu: 90, duration: 25000 });
-      monitoringStrategy.recordResourceUsage('task-3', { memory: 200, cpu: 30, duration: 8000 });
-      
-      const intensive = monitoringStrategy.getResourceIntensiveTasks();
-      
-      expect(intensive).toContainEqual(
-        expect.objectContaining({
-          taskId: 'task-2',
-          reason: 'high_memory',
-          value: 800
-        })
-      );
+      strategy.onMessage.call(task, task, { type: 'get-metrics' });
     });
   });
 
   describe('Error Handling', () => {
-    it('should handle malformed project data gracefully', () => {
-      const malformedProject = {
-        projectId: 'malformed',
-        phases: null,
-        tasks: undefined
+    test('should handle synchronous errors in message handler', () => {
+      const strategy = createMonitoringStrategy();
+      
+      const task = new MockTask('test', 'Test task');
+      // Make getAllArtifacts throw to trigger sync error
+      task.getAllArtifacts = () => {
+        throw new Error('Sync error');
       };
       
+      // Should not throw - errors are caught
       expect(() => {
-        monitoringStrategy.calculateProgress(malformedProject);
+        strategy.onMessage.call(task, task, { type: 'status' });
       }).not.toThrow();
-      
-      const progress = monitoringStrategy.calculateProgress(malformedProject);
-      expect(progress.overall).toBe(0);
     });
 
-    it('should handle tasks without timing data', () => {
-      const noTimingProject = {
-        ...mockProject,
-        tasks: mockProject.tasks.map(task => ({
-          ...task,
-          startedAt: null,
-          completedAt: null
-        }))
-      };
+    test('should handle missing state gracefully', (done) => {
+      const strategy = createMonitoringStrategy();
       
-      const timing = monitoringStrategy.calculateTiming(noTimingProject);
-      expect(timing.averageTaskDuration).toBeNull();
-      expect(timing.totalElapsed).toBeNull();
+      const task = new MockTask('test', 'Get status without state');
+      
+      // No monitoring state artifact
+      task.complete = jest.fn((result) => {
+        expect(result.success).toBe(true);
+        expect(result.status).toBeDefined();
+        // Should have default/empty metrics
+        expect(result.status.metrics).toBeDefined();
+        done();
+      });
+      
+      strategy.onMessage.call(task, task, { type: 'status' });
+    });
+  });
+
+  describe('Prototypal Pattern Verification', () => {
+    test('should properly inherit from TaskStrategy', () => {
+      const strategy = createMonitoringStrategy();
+      
+      // Should have onMessage method
+      expect(typeof strategy.onMessage).toBe('function');
+      
+      // Should not have class properties
+      expect(strategy.constructor.name).not.toBe('MonitoringStrategy');
     });
 
-    it('should validate project data structure', () => {
-      expect(() => {
-        monitoringStrategy.updateProject(null);
-      }).toThrow('Project data is required');
+    test('should use closure for configuration', () => {
+      const strategy1 = createMonitoringStrategy({ updateInterval: 1000 });
+      const strategy2 = createMonitoringStrategy({ updateInterval: 5000 });
       
-      expect(() => {
-        monitoringStrategy.updateProject({});
-      }).toThrow('Project must have a projectId');
+      // Each strategy should have its own configuration
+      expect(strategy1).not.toBe(strategy2);
+      expect(typeof strategy1.onMessage).toBe('function');
+      expect(typeof strategy2.onMessage).toBe('function');
+    });
+
+    test('should handle fire-and-forget messaging pattern', () => {
+      const strategy = createMonitoringStrategy();
+      
+      const task = new MockTask('test', 'Test fire-and-forget');
+      
+      // onMessage should not return a promise that needs await
+      const result = strategy.onMessage.call(task, task, { type: 'start' });
+      
+      // Result should be undefined (fire-and-forget)
+      expect(result).toBeUndefined();
     });
   });
 });

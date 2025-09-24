@@ -1,12 +1,9 @@
 /**
- * RecursiveDecompositionStrategy - Current ROMA recursive decomposition behavior
+ * RecursiveDecompositionStrategy - Pure prototypal recursive decomposition behavior
  * 
- * Implements the existing recursive task decomposition pattern with minimal public interface:
- * - execute(): Main entry point that internally classifies and routes to simple/complex execution
- * - onChildMessage(): Handles messages from child tasks
- * - onParentMessage(): Handles messages from parent tasks
- * 
- * All the existing behavior (classification, decomposition, execution) is preserved as internal methods.
+ * This is now a prototype object that inherits from TaskStrategy.
+ * Only implements onMessage() to handle task messages.
+ * All decomposition logic is preserved as internal functions.
  */
 
 import { TaskStrategy } from '@legion/tasks';
@@ -19,813 +16,725 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export default class RecursiveDecompositionStrategy extends TaskStrategy {
-  constructor(llmClient = null, toolRegistry = null) {
-    super();
-    
-    // Strategy-specific components (owned by this strategy)
-    this.taskClassifier = null;
-    this.toolDiscovery = null;
-    this.llmClient = llmClient;
-    this.toolRegistry = toolRegistry;
-    
-    // Prompt templates will be initialized on first use
-    this.decompositionPrompt = null;
-    this.executionPrompt = null;
-    this.parentEvaluationPrompt = null;
-    this.completionEvaluationPrompt = null;
-  }
+/**
+ * Create a RecursiveDecompositionStrategy prototype
+ * This factory function creates the strategy with its dependencies
+ */
+export function createRecursiveDecompositionStrategy(llmClient = null, toolRegistry = null) {
+  // Create the strategy as an object that inherits from TaskStrategy
+  const strategy = Object.create(TaskStrategy);
+  
+  // Store configuration on the strategy
+  const config = {
+    taskClassifier: null,
+    toolDiscovery: null,
+    llmClient: llmClient,
+    toolRegistry: toolRegistry,
+    decompositionPrompt: null,
+    executionPrompt: null,
+    parentEvaluationPrompt: null,
+    completionEvaluationPrompt: null
+  };
   
   /**
-   * Initialize strategy components with provided or discovered services
+   * The only required method - handles all messages
    */
-  async _initializeComponents(context) {
-    // Get services from constructor or context
-    const llmClient = this.llmClient || (context.lookup ? context.lookup('llmClient') : context.llmClient);
-    const toolRegistry = this.toolRegistry || (context.lookup ? context.lookup('toolRegistry') : context.toolRegistry);
+  strategy.onMessage = function onMessage(senderTask, message) {
+    // 'this' is the task instance that received the message
     
-    if (!llmClient) {
-      throw new Error('LLM client is required for RecursiveDecompositionStrategy');
-    }
-    
-    // Initialize TaskClassifier if not already done
-    if (!this.taskClassifier) {
-      this.taskClassifier = new TaskClassifier(llmClient);
-      await this.taskClassifier.initialize();
-    }
-    
-    // Initialize ToolDiscovery if not already done
-    if (!this.toolDiscovery && toolRegistry) {
-      this.toolDiscovery = new ToolDiscovery(llmClient, toolRegistry);
-    } else if (!this.toolDiscovery) {
-      throw new Error('ToolRegistry is required for RecursiveDecompositionStrategy');
-    }
-  }
-
-  /**
-   * Initialize prompt templates
-   */
-  async _initializePrompts(context) {
-    const llmClient = this.llmClient || (context.lookup ? context.lookup('llmClient') : context.llmClient);
-    
-    if (!this.decompositionPrompt && llmClient) {
-      // Initialize PromptRegistry with prompts directory
-      const promptRegistry = new PromptRegistry(path.join(__dirname, 'prompts'));
-      
-      // Load decomposition prompt
-      const decompositionTemplate = await promptRegistry.load('task-decomposition');
-      this.decompositionPrompt = new TemplatedPrompt({
-        prompt: decompositionTemplate,
-        responseSchema: this._getDecompositionSchema(),
-        llmClient: llmClient,
-        maxRetries: 3
-      });
-      
-      // Load execution prompt
-      const executionTemplate = await promptRegistry.load('task-execution');
-      this.executionPrompt = new TemplatedPrompt({
-        prompt: executionTemplate,
-        responseSchema: this._getSimpleTaskSchema(),
-        llmClient: llmClient,
-        maxRetries: 3
-      });
-      
-      // Load parent evaluation prompt
-      const parentEvalTemplate = await promptRegistry.load('parent-evaluation');
-      this.parentEvaluationPrompt = new TemplatedPrompt({
-        prompt: parentEvalTemplate,
-        responseSchema: this._getParentEvaluationSchema(),
-        llmClient: llmClient,
-        maxRetries: 3
-      });
-      
-      // Load completion evaluation prompt
-      const completionEvalTemplate = await promptRegistry.load('completion-evaluation');
-      this.completionEvaluationPrompt = new TemplatedPrompt({
-        prompt: completionEvalTemplate,
-        responseSchema: this._getCompletionEvaluationSchema(),
-        llmClient: llmClient,
-        maxRetries: 3
-      });
-    }
-  }
-  
-  /**
-   * Get schema for decomposition responses
-   */
-  _getDecompositionSchema() {
-    return {
-      type: 'object',
-      properties: {
-        decompose: { type: 'boolean' },
-        subtasks: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              description: { type: 'string' },
-              inputs: { type: 'string' },
-              outputs: { type: 'string' }
-            },
-            required: ['description']
-          }
-        }
-      },
-      required: ['decompose', 'subtasks'],
-      format: 'json'
-    };
-  }
-  
-  /**
-   * Get schema for simple task execution responses
-   */
-  _getSimpleTaskSchema() {
-    return {
-      type: 'object',
-      anyOf: [
-        {
-          type: 'object',
-          properties: {
-            useTools: { type: 'boolean', const: true },
-            toolCalls: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  tool: { type: 'string' },
-                  inputs: { type: 'object' },
-                  outputs: { type: 'object' }
-                },
-                required: ['tool', 'inputs']
+    try {
+      // Determine if message is from child or parent
+      if (senderTask.parent === this) {
+        // Message from child task
+        switch (message.type) {
+          case 'completed':
+            // Fire-and-forget async operation with error boundary
+            handleChildComplete.call(this, senderTask, message.result, config).catch(error => {
+              console.error(`❌ RecursiveDecompositionStrategy child completion handling failed: ${error.message}`);
+              try {
+                this.fail(error);
+                if (this.parent) {
+                  this.send(this.parent, { type: 'failed', error });
+                }
+              } catch (innerError) {
+                console.error(`❌ Failed to handle child completion error: ${innerError.message}`);
               }
-            }
-          },
-          required: ['useTools', 'toolCalls']
-        },
-        {
-          type: 'object',
-          properties: {
-            response: { type: 'string' }
-          },
-          required: ['response']
+            });
+            break;
+          case 'failed':
+            // Fire-and-forget async operation with error boundary
+            handleChildFailure.call(this, senderTask, message.error, config).catch(error => {
+              console.error(`❌ RecursiveDecompositionStrategy child failure handling failed: ${error.message}`);
+              try {
+                this.fail(error);
+                if (this.parent) {
+                  this.send(this.parent, { type: 'failed', error });
+                }
+              } catch (innerError) {
+                console.error(`❌ Failed to handle child failure error: ${innerError.message}`);
+              }
+            });
+            break;
+          default:
+            console.log(`⚠️ Unknown message type from child: ${message.type}`);
         }
-      ],
-      format: 'json'
-    };
-  }
-  
-  /**
-   * Get schema for parent evaluation responses
-   */
-  _getParentEvaluationSchema() {
-    return {
-      type: 'object',
-      properties: {
-        decision: {
-          type: 'string',
-          enum: ['CONTINUE', 'COMPLETE', 'RETRY', 'REPLAN']
-        },
-        reasoning: { type: 'string' }
-      },
-      required: ['decision', 'reasoning'],
-      format: 'json'
-    };
-  }
-  
-  /**
-   * Get schema for completion evaluation responses
-   */
-  _getCompletionEvaluationSchema() {
-    return {
-      type: 'object',
-      properties: {
-        complete: { type: 'boolean' },
-        isComplete: { type: 'boolean' },
-        reason: { type: 'string' },
-        reasoning: { type: 'string' },
-        result: { type: 'string' },
-        summary: { type: 'string' }
-      },
-      required: [],
-      format: 'json'
-    };
-  }
-
-
-  getName() {
-    return 'RecursiveDecomposition';
-  }
-
-
-  /**
-   * Private synchronous message handler (fire-and-forget pattern)
-   */
-  #onMessage(sourceTask, message) {
-    // Determine if this is from a child task by checking if the source has a parent
-    if (sourceTask.parent) {
-      // Message from child task - get parent task and context
-      const task = sourceTask.parent;
-      const context = this._getContextFromTask(task);
-      
-      // Route based on message type - fire-and-forget handlers
-      switch (message.type) {
-        case 'completed':
-          this._handleChildComplete(task, sourceTask, message.result, context).catch(error => {
-            console.error('Child completion handling failed:', error);
-            if (task.fail) {
-              task.fail(error);
-            }
-          });
-          break;
-        
-        case 'failed':
-          this._handleChildFailure(task, sourceTask, message.error, context).catch(error => {
-            console.error('Child failure handling failed:', error);
-            if (task.fail) {
-              task.fail(error);
-            }
-          });
-          break;
-        
-        case 'progress':
-          // Could handle progress updates in future
-          console.log(`📊 Progress from ${sourceTask.description}: ${message.status}`);
-          break;
-        
-        default:
-          console.log(`⚠️ Unknown message type from child: ${message.type}`);
-          break;
+      } else {
+        // Message from parent or initiator
+        switch (message.type) {
+          case 'start':
+          case 'work':
+            // Fire-and-forget async operation with error boundary
+            handleWorkMessage.call(this, config).catch(error => {
+              console.error(`❌ RecursiveDecompositionStrategy work handling failed: ${error.message}`);
+              try {
+                this.fail(error);
+                if (this.parent) {
+                  this.send(this.parent, { type: 'failed', error });
+                }
+              } catch (innerError) {
+                console.error(`❌ Failed to handle work error: ${innerError.message}`);
+              }
+            });
+            break;
+          default:
+            console.log(`ℹ️ RecursiveDecompositionStrategy received unhandled message: ${message.type}`);
+        }
       }
-    } else {
-      // Message from parent task - fire-and-forget handlers
-      switch (message.type) {
-        case 'start':
-        case 'work':
-          // This is the main entry point - equivalent to old execute()
-          this._handleWorkMessage(message.task || sourceTask).catch(error => {
-            console.error('Work message handling failed:', error);
-            if (sourceTask.fail) {
-              sourceTask.fail(error);
-            }
-          });
-          break;
-          
-        case 'abort':
-          console.log(`🛑 Received abort from parent`);
-          break;
-        
-        case 'update_context':
-          console.log(`🔄 Received context update from parent`);
-          break;
-        
-        default:
-          console.log(`ℹ️ RecursiveDecompositionStrategy received unhandled message type: ${message.type}`);
-          break;
+    } catch (error) {
+      // Catch any synchronous errors in message handling
+      console.error(`❌ RecursiveDecompositionStrategy message handler error: ${error.message}`);
+      // Don't let errors escape the message handler - handle them gracefully
+      try {
+        if (this.addConversationEntry) {
+          this.addConversationEntry('system', `Message handling error: ${error.message}`);
+        }
+      } catch (innerError) {
+        console.error(`❌ Failed to log message handling error: ${innerError.message}`);
       }
     }
+  };
+  
+  return strategy;
+}
+
+// Export default for backward compatibility
+export default createRecursiveDecompositionStrategy;
+
+// ============================================================================
+// Internal implementation functions
+// These work with the task instance and strategy config
+// ============================================================================
+
+/**
+ * Initialize strategy components
+ */
+async function initializeComponents(config, context) {
+  const llmClient = config.llmClient || (context.lookup ? context.lookup('llmClient') : context.llmClient);
+  const toolRegistry = config.toolRegistry || (context.lookup ? context.lookup('toolRegistry') : context.toolRegistry);
+  
+  if (!llmClient) {
+    throw new Error('LLM client is required for RecursiveDecompositionStrategy');
   }
-
-  /**
-   * @deprecated Use send() instead. This method violates the message pattern.
-   * Handle messages from any source task
-   */
-  async onMessage(sourceTask, message) {
-    console.warn('DEPRECATED: RecursiveDecompositionStrategy.onMessage() called. Use send() instead for proper message pattern.');
-    
-    // For backward compatibility, delegate to the private method and return a generic acknowledgment
-    this.#onMessage(sourceTask, message);
-    
-    // Return a generic acknowledgment for backward compatibility
-    return { acknowledged: true };
+  
+  if (!config.taskClassifier) {
+    config.taskClassifier = new TaskClassifier(llmClient);
+    await config.taskClassifier.initialize();
   }
-
-  /**
-   * Handle work/start messages - main task execution logic (was execute())
-   * @private
-   */
-  async _handleWorkMessage(task) {
-    // Get context from the task (it has everything we need)
-    const context = this._getContextFromTask(task);
-    
-    // Initialize strategy components if needed
-    await this._initializeComponents(context);
-    
-    // Classify the task (unless already classified)
-    if (!task.metadata.classification) {
-      const classification = await this._classify(task);
-      task.metadata.classification = classification.complexity;
-      task.addConversationEntry('system', `Task classified as ${classification.complexity}: ${classification.reasoning}`);
-    }
-    
-    // Execute based on classification - same behavior as before
-    if (task.metadata.classification === 'SIMPLE') {
-      return await this._executeSimple(task, context);
-    } else {
-      return await this._executeComplex(task, context);
-    }
+  
+  if (!config.toolDiscovery && toolRegistry) {
+    config.toolDiscovery = new ToolDiscovery(llmClient, toolRegistry);
+  } else if (!config.toolDiscovery) {
+    throw new Error('ToolRegistry is required for RecursiveDecompositionStrategy');
   }
+}
 
-  /**
-   * Extract context from task (internal utility)
-   * @private
-   */
-  _getContextFromTask(task) {
-    // Task context should now use hierarchical lookup for global services
-    // Strategy-specific components (taskClassifier, toolDiscovery) are owned by this strategy
-    return {
-      // Try to get context from task if it has hierarchical lookup, otherwise direct properties
-      llmClient: task.lookup ? task.lookup('llmClient') : task.llmClient,
-      fastToolDiscovery: task.lookup ? task.lookup('fastToolDiscovery') : task.fastToolDiscovery,
-      workspaceDir: task.lookup ? task.lookup('workspaceDir') : task.workspaceDir,
-      agent: task.lookup ? task.lookup('agent') : task.agent,
-      maxDepth: task.lookup ? task.lookup('maxDepth') : task.maxDepth,
-      maxSubtasks: task.lookup ? task.lookup('maxSubtasks') : task.maxSubtasks,
-      executionTimeout: task.lookup ? task.lookup('executionTimeout') : task.executionTimeout,
-      taskManager: task.lookup ? task.lookup('taskManager') : task.taskManager,
-      
-      // Add lookup capability for accessing global services
-      lookup: task.lookup ? task.lookup.bind(task) : null
-    };
-  }
-
-  /**
-   * Classify task using LLM (internal utility, was public classify())
-   * @private
-   */
-  async _classify(task) {
-    if (!this.taskClassifier) {
-      throw new Error('TaskClassifier is not initialized - call _initializeComponents first');
-    }
-
-    // Use task description directly - artifact resolution happens in context
-    const resolvedDescription = task.description;
-
-    const classification = await this.taskClassifier.classify(
-      { description: resolvedDescription }
-    );
+/**
+ * Initialize prompt templates
+ */
+async function initializePrompts(config, context) {
+  const llmClient = config.llmClient || (context.lookup ? context.lookup('llmClient') : context.llmClient);
+  
+  if (!config.decompositionPrompt && llmClient) {
+    const promptRegistry = new PromptRegistry(path.join(__dirname, 'prompts'));
     
-    console.log(`📋 Task "${task.description}" classified as ${classification.complexity}: ${classification.reasoning}`);
-    
-    return {
-      complexity: classification.complexity,
-      reasoning: classification.reasoning
-    };
-  }
-
-  /**
-   * Decompose complex task into subtasks (internal utility, was public decompose())
-   * @private
-   */
-  async _decompose(task, context) {
-    // Get LLM client from strategy or context (consistent with _initializeComponents)
-    const llmClient = this.llmClient || (context.lookup ? context.lookup('llmClient') : context.llmClient);
-    
-    if (!llmClient) {
-      throw new Error('LLM client is required for decomposition');
-    }
-
-    // Initialize strategy components and prompts if needed
-    await this._initializeComponents(context);
-    await this._initializePrompts(context);
-
-    // Execute decomposition prompt with placeholders
-    const result = await this.decompositionPrompt.execute({
-      taskDescription: task.description,
-      conversation: JSON.stringify(task.getConversationContext() || []),
-      artifacts: JSON.stringify(task.getArtifactsContext() || {})
+    const decompositionTemplate = await promptRegistry.load('task-decomposition');
+    config.decompositionPrompt = new TemplatedPrompt({
+      prompt: decompositionTemplate,
+      responseSchema: getDecompositionSchema(),
+      llmClient: llmClient,
+      maxRetries: 3
     });
     
-    if (!result.success) {
-      // Ensure errors are properly converted to strings
-      const errorMessages = result.errors?.map(e => 
-        typeof e === 'string' ? e : (e.message || String(e))
-      ) || ['Unknown error'];
-      throw new Error(`Invalid decomposition response: ${errorMessages.join(', ')}`);
-    }
+    const executionTemplate = await promptRegistry.load('task-execution');
+    config.executionPrompt = new TemplatedPrompt({
+      prompt: executionTemplate,
+      responseSchema: getSimpleTaskSchema(),
+      llmClient: llmClient,
+      maxRetries: 3
+    });
     
-    // Strategy no longer does session logging - that's the agent's responsibility
-
-    return result.data;
+    const parentEvalTemplate = await promptRegistry.load('parent-evaluation');
+    config.parentEvaluationPrompt = new TemplatedPrompt({
+      prompt: parentEvalTemplate,
+      responseSchema: getParentEvaluationSchema(),
+      llmClient: llmClient,
+      maxRetries: 3
+    });
+    
+    const completionEvalTemplate = await promptRegistry.load('completion-evaluation');
+    config.completionEvaluationPrompt = new TemplatedPrompt({
+      prompt: completionEvalTemplate,
+      responseSchema: getCompletionEvaluationSchema(),
+      llmClient: llmClient,
+      maxRetries: 3
+    });
   }
+}
 
-  /**
-   * Execute a simple task with tools (internal utility, was public executeSimple())
-   * @private
-   */
-  async _executeSimple(task, context) {
-    if (!this.toolDiscovery) {
-      throw new Error('ToolDiscovery is not initialized - call _initializeComponents first');
+/**
+ * Handle work/start messages - main task execution
+ */
+async function handleWorkMessage(config) {
+  const context = getContextFromTask(this);
+  
+  await initializeComponents(config, context);
+  
+  // Classify the task
+  if (!this.metadata.classification) {
+    const classification = await classifyTask(this, config);
+    this.metadata.classification = classification.complexity;
+    this.addConversationEntry('system', `Task classified as ${classification.complexity}: ${classification.reasoning}`);
+  }
+  
+  // Execute based on classification (fire-and-forget)
+  if (this.metadata.classification === 'SIMPLE') {
+    await executeSimple(this, config, context);
+  } else {
+    await executeComplex(this, config, context);
+  }
+  // Fire-and-forget - no return value
+}
+
+/**
+ * Handle child task completion
+ */
+async function handleChildComplete(childTask, result, config) {
+  const context = getContextFromTask(this);
+  
+  // Receive goal outputs from child
+  const delivered = childTask.deliverGoalOutputs(this);
+  if (delivered.length > 0) {
+    console.log(`📦 Parent received ${delivered.length} artifacts from child: ${delivered.join(', ')}`);
+    for (const name of delivered) {
+      this.addArtifact(name);
     }
-    
-    // Discover tools
-    console.log(`🔧 Discovering tools for SIMPLE task...`);
-    
-    // Normal semantic tool discovery
-    const discoveredTools = await this.toolDiscovery.discoverTools(task.description);
-    
-    task.addConversationEntry('system', `Discovered ${discoveredTools.length} tools`);
-    
-    if (discoveredTools.length === 0) {
-      console.log(`⚠️ No tools found for SIMPLE task`);
-      return {
-        success: false,
-        result: `Unable to find suitable tools for this task`,
-        artifacts: Object.values(task.getAllArtifacts())
-      };
-    }
-    
-    // Save discovered tools for this task
-    task.currentTools = discoveredTools;
-    
-    // Get execution plan from LLM
-    const executionPlan = await this._getSimpleTaskExecution(task, discoveredTools, context);
-    
-    if (executionPlan.toolCalls && executionPlan.toolCalls.length > 0) {
-      // Execute the tool calls
-      const toolResult = await this._executeWithTools(task, executionPlan.toolCalls, context);
-      
-      // Add tool results to task conversation
-      for (const result of toolResult.results) {
-        if (result.tool) {
-          task.addToolResult(result.tool, result.inputs || {}, result);
-        }
+  }
+  
+  // Get parent's evaluation
+  const evaluation = await getParentEvaluation(this, childTask, config, context);
+  
+  console.log(`🤔 Parent evaluation: ${evaluation.decision} - ${evaluation.reasoning}`);
+  this.addConversationEntry('system', 
+    `Evaluated subtask completion. Decision: ${evaluation.decision}. Reasoning: ${evaluation.reasoning}`);
+  
+  // Act on the decision (all fire-and-forget)
+  switch (evaluation.decision) {
+    case 'CONTINUE':
+      const nextSubtask = await this.createNextSubtask(context.taskManager);
+      if (!nextSubtask) {
+        await evaluateCompletion(this, config, context);
+      } else {
+        console.log(`📍 Executing next subtask ${this.currentSubtaskIndex + 1}/${this.plannedSubtasks.length}: ${nextSubtask.description}`);
+        nextSubtask.send(nextSubtask, { type: 'start' });
       }
+      break;
       
-      return toolResult;
-    } else {
-      // Direct LLM response (for analysis, explanation, etc.)
-      return {
-        success: true,
-        result: executionPlan.response || 'Task completed',
-        artifacts: Object.values(task.getAllArtifacts())
-      };
-    }
+    case 'COMPLETE':
+      await evaluateCompletion(this, config, context);
+      break;
+      
+    case 'RETRY':
+      console.log(`🔄 Retrying subtask: ${childTask.description}`);
+      childTask.send(childTask, { type: 'start' });
+      break;
+      
+    case 'REPLAN':
+      console.log(`🔄 Replanning task...`);
+      this.metadata.isDecomposed = false;
+      this.plannedSubtasks = [];
+      this.currentSubtaskIndex = -1;
+      await executeComplex(this, config, context);
+      break;
+      
+    default:
+      console.log(`⚠️ Unknown evaluation decision: ${evaluation.decision}`);
+      await evaluateCompletion(this, config, context);
+  }
+  // Fire-and-forget - no return value
+}
+
+/**
+ * Handle child task failure
+ */
+async function handleChildFailure(childTask, error, config) {
+  console.log(`❌ Subtask failed: ${childTask.description}`);
+  console.log(`   Error: ${error.message}`);
+  
+  this.addConversationEntry('system', 
+    `Subtask "${childTask.description}" failed: ${error.message}`);
+  
+  this.fail(error);
+  
+  // Notify parent of failure (fire-and-forget)
+  if (this.parent) {
+    this.send(this.parent, { 
+      type: 'failed', 
+      error: new Error(`Subtask failed: ${error.message}`),
+      artifacts: Object.values(this.getAllArtifacts())
+    });
+  }
+  // Fire-and-forget - no return value
+}
+
+/**
+ * Extract context from task
+ */
+function getContextFromTask(task) {
+  return {
+    llmClient: task.lookup ? task.lookup('llmClient') : task.llmClient,
+    fastToolDiscovery: task.lookup ? task.lookup('fastToolDiscovery') : task.fastToolDiscovery,
+    workspaceDir: task.lookup ? task.lookup('workspaceDir') : task.workspaceDir,
+    agent: task.lookup ? task.lookup('agent') : task.agent,
+    maxDepth: task.lookup ? task.lookup('maxDepth') : task.maxDepth,
+    maxSubtasks: task.lookup ? task.lookup('maxSubtasks') : task.maxSubtasks,
+    executionTimeout: task.lookup ? task.lookup('executionTimeout') : task.executionTimeout,
+    taskManager: task.lookup ? task.lookup('taskManager') : task.taskManager,
+    lookup: task.lookup ? task.lookup.bind(task) : null
+  };
+}
+
+/**
+ * Classify task using LLM
+ */
+async function classifyTask(task, config) {
+  if (!config.taskClassifier) {
+    throw new Error('TaskClassifier is not initialized');
   }
 
-  /**
-   * Execute a complex task through decomposition (internal utility, was public executeComplex())
-   * @private
-   */
-  async _executeComplex(task, context) {
-    // Decompose if not already done
-    if (!task.metadata.isDecomposed) {
-      const decomposition = await this._decompose(task, context);
+  const classification = await config.taskClassifier.classify(
+    { description: task.description }
+  );
+  
+  console.log(`📋 Task "${task.description}" classified as ${classification.complexity}: ${classification.reasoning}`);
+  
+  return {
+    complexity: classification.complexity,
+    reasoning: classification.reasoning
+  };
+}
+
+/**
+ * Decompose complex task into subtasks
+ */
+async function decompose(task, config, context) {
+  const llmClient = config.llmClient || (context.lookup ? context.lookup('llmClient') : context.llmClient);
+  
+  if (!llmClient) {
+    throw new Error('LLM client is required for decomposition');
+  }
+
+  await initializeComponents(config, context);
+  await initializePrompts(config, context);
+
+  const result = await config.decompositionPrompt.execute({
+    taskDescription: task.description,
+    conversation: JSON.stringify(task.getConversationContext() || []),
+    artifacts: JSON.stringify(task.getArtifactsContext() || {})
+  });
+  
+  if (!result.success) {
+    const errorMessages = result.errors?.map(e => 
+      typeof e === 'string' ? e : (e.message || String(e))
+    ) || ['Unknown error'];
+    throw new Error(`Invalid decomposition response: ${errorMessages.join(', ')}`);
+  }
+  
+  return result.data;
+}
+
+/**
+ * Execute a simple task with tools
+ */
+async function executeSimple(task, config, context) {
+  if (!config.toolDiscovery) {
+    throw new Error('ToolDiscovery is not initialized');
+  }
+  
+  console.log(`🔧 Discovering tools for SIMPLE task...`);
+  
+  const discoveredTools = await config.toolDiscovery.discoverTools(task.description);
+  
+  task.addConversationEntry('system', `Discovered ${discoveredTools.length} tools`);
+  
+  if (discoveredTools.length === 0) {
+    console.log(`⚠️ No tools found for SIMPLE task`);
+    task.fail(new Error('Unable to find suitable tools for this task'));
+    
+    // Notify parent of failure (fire-and-forget)
+    if (task.parent) {
+      task.send(task.parent, {
+        type: 'failed',
+        error: new Error('Unable to find suitable tools for this task'),
+        artifacts: Object.values(task.getAllArtifacts())
+      });
+    }
+    return; // Fire-and-forget - no return value
+  }
+  
+  task.currentTools = discoveredTools;
+  
+  const executionPlan = await getSimpleTaskExecution(task, discoveredTools, config, context);
+  
+  if (executionPlan.toolCalls && executionPlan.toolCalls.length > 0) {
+    const toolResult = await executeWithTools(task, executionPlan.toolCalls, context);
+    
+    for (const result of toolResult.results) {
+      if (result.tool) {
+        task.addToolResult(result.tool, result.inputs || {}, result);
+      }
+    }
+    
+    // Complete task with result
+    task.complete(toolResult);
+    
+    // Notify parent (fire-and-forget)
+    if (task.parent) {
+      task.send(task.parent, { type: 'completed', result: toolResult });
+    }
+  } else {
+    const result = {
+      success: true,
+      result: executionPlan.response || 'Task completed',
+      artifacts: Object.values(task.getAllArtifacts())
+    };
+    
+    // Complete task
+    task.complete(result);
+    
+    // Notify parent (fire-and-forget)
+    if (task.parent) {
+      task.send(task.parent, { type: 'completed', result });
+    }
+  }
+  // Fire-and-forget - no return value
+}
+
+/**
+ * Execute a complex task through decomposition
+ */
+async function executeComplex(task, config, context) {
+  if (!task.metadata.isDecomposed) {
+    const decomposition = await decompose(task, config, context);
+    
+    if (!decomposition.subtasks || decomposition.subtasks.length === 0) {
+      console.log(`⚠️ Could not decompose COMPLEX task`);
+      task.fail(new Error('Unable to decompose this complex task'));
       
-      if (!decomposition.subtasks || decomposition.subtasks.length === 0) {
-        console.log(`⚠️ Could not decompose COMPLEX task`);
-        return {
-          success: false,
-          result: `Unable to decompose this complex task`,
+      // Notify parent of failure (fire-and-forget)
+      if (task.parent) {
+        task.send(task.parent, {
+          type: 'failed',
+          error: new Error('Unable to decompose this complex task'),
           artifacts: Object.values(task.getAllArtifacts())
-        };
+        });
       }
-      
-      // Store decomposition in task
-      task.setDecomposition(decomposition.subtasks);
-      console.log(`📋 Task decomposed into ${decomposition.subtasks.length} subtasks`);
+      return; // Fire-and-forget - no return value
     }
     
-    // Create and execute the next subtask
-    const subtask = await task.createNextSubtask(context.taskManager);
-    
-    if (!subtask) {
-      // No subtasks to execute - evaluate completion
-      return await this._evaluateCompletion(task, context);
-    }
-    
-    console.log(`📍 Executing subtask ${task.currentSubtaskIndex + 1}/${task.plannedSubtasks.length}: ${subtask.description}`);
-    
-    // Send start message to subtask (pure message-passing)
-    const subtaskResult = await subtask.receiveMessage({type: 'start'});
-    
-    // Check if subtask failed due to depth limit
-    if (!subtaskResult.success && subtaskResult.result && 
-        typeof subtaskResult.result === 'string' && 
-        subtaskResult.result.includes('Maximum recursion depth exceeded')) {
-      // Propagate depth limit failure immediately
-      task.fail(new Error(subtaskResult.result));
-      return subtaskResult;
-    }
-    
-    // Handle child completion or failure through direct method calls
-    if (subtaskResult.success) {
-      return await this._handleChildComplete(task, subtask, subtaskResult, context);
-    } else {
-      return await this._handleChildFailure(task, subtask, new Error(subtaskResult.result), context);
-    }
+    task.setDecomposition(decomposition.subtasks);
+    console.log(`📋 Task decomposed into ${decomposition.subtasks.length} subtasks`);
   }
+  
+  const subtask = await task.createNextSubtask(context.taskManager);
+  
+  if (!subtask) {
+    await evaluateCompletion(task, config, context);
+    return; // Fire-and-forget - no return value
+  }
+  
+  console.log(`📍 Executing subtask ${task.currentSubtaskIndex + 1}/${task.plannedSubtasks.length}: ${subtask.description}`);
+  
+  // Send start message to subtask (fire-and-forget)
+  subtask.send(subtask, { type: 'start' });
+  
+  // Fire-and-forget - no return value
+}
 
-  /**
-   * Handle child task completion (internal utility, was public onChildComplete())
-   * @private
-   */
-  async _onChildComplete(task, childTask, result, context) {
-    // Receive goal outputs from the child
-    const delivered = childTask.deliverGoalOutputs(task);
-    if (delivered.length > 0) {
-      console.log(`📦 Parent received ${delivered.length} artifacts from child: ${delivered.join(', ')}`);
-      // Add delivered artifacts to parent's artifact set
-      for (const name of delivered) {
-        task.addArtifact(name);
+/**
+ * Evaluate if task is complete
+ */
+async function evaluateCompletion(task, config, context) {
+  console.log(`🎯 Evaluating if task "${task.description}" is complete...`);
+  
+  await initializeComponents(config, context);
+  await initializePrompts(config, context);
+  
+  const result = await config.completionEvaluationPrompt.execute({
+    taskDescription: task.description,
+    conversation: JSON.stringify(task.getConversationContext() || []),
+    artifacts: JSON.stringify(task.getArtifactsContext() || {}),
+    completedSubtasks: JSON.stringify(task.getCompletedSubtasks() || [])
+  });
+  
+  let evaluation;
+  if (!result.success) {
+    console.log(`⚠️ Invalid completion evaluation response: ${result.errors?.join(', ') || 'Unknown error'}`);
+    evaluation = { isComplete: false, reasoning: 'Invalid evaluation response' };
+  } else {
+    const data = result.data;
+    evaluation = {
+      isComplete: data.complete !== undefined ? data.complete : data.isComplete,
+      reasoning: data.reason || data.reasoning || 'No reason provided',
+      summary: data.result || data.summary
+    };
+  }
+  
+  console.log(`🎯 Task completion evaluation: ${evaluation.isComplete ? 'COMPLETE' : 'INCOMPLETE'} - ${evaluation.reasoning}`);
+  
+  if (evaluation.isComplete) {
+    const result = {
+      success: true,
+      result: {
+        success: true,
+        message: 'Task completed',
+        summary: evaluation.summary || `Task "${task.description}" completed successfully`
+      },
+      artifacts: Object.values(task.getAllArtifacts())
+    };
+    
+    task.complete(result);
+    
+    if (task.parent) {
+      task.parent.send(task.parent, { type: 'completed', result });
+    }
+    
+    return result;
+  } else {
+    if (task.plannedSubtasks.length > 0 && task.currentSubtaskIndex < task.plannedSubtasks.length - 1) {
+      const nextSubtask = await task.createNextSubtask(context.taskManager);
+      if (nextSubtask) {
+        console.log(`📍 Continuing with next subtask: ${nextSubtask.description}`);
+        nextSubtask.send(nextSubtask, { type: 'start' });
+        return { status: 'continuing' };
       }
     }
     
-    // Get parent's evaluation of what to do next
-    const evaluation = await this._getParentEvaluation(task, childTask, context);
-    
-    console.log(`🤔 Parent evaluation: ${evaluation.decision} - ${evaluation.reasoning}`);
-    task.addConversationEntry('system', 
-      `Evaluated subtask completion. Decision: ${evaluation.decision}. Reasoning: ${evaluation.reasoning}`);
-    
-    // Act on the decision
-    switch (evaluation.decision) {
-      case 'CONTINUE':
-        // Continue with next subtask
-        const nextSubtask = await task.createNextSubtask(context.taskManager);
-        
-        if (!nextSubtask) {
-          // No more subtasks - evaluate completion
-          return await this._evaluateCompletion(task, context);
-        }
-        
-        console.log(`📍 Executing next subtask ${task.currentSubtaskIndex + 1}/${task.plannedSubtasks.length}: ${nextSubtask.description}`);
-        const nextResult = await nextSubtask.receiveMessage({type: 'start'});
-        
-        // Handle the next subtask result through direct method calls
-        if (nextResult.success) {
-          return await this._handleChildComplete(task, nextSubtask, nextResult, context);
-        } else {
-          return await this._handleChildFailure(task, nextSubtask, new Error(nextResult.result), context);
-        }
-        
-      case 'COMPLETE':
-        // Task is complete
-        return await this._evaluateCompletion(task, context);
-        
-      case 'RETRY':
-        // Retry the same subtask
-        console.log(`🔄 Retrying subtask: ${childTask.description}`);
-        const retryResult = await childTask.receiveMessage({type: 'start'});
-        
-        // Handle retry result through direct method calls
-        if (retryResult.success) {
-          return await this._handleChildComplete(task, childTask, retryResult, context);
-        } else {
-          return await this._handleChildFailure(task, childTask, new Error(retryResult.result), context);
-        }
-        
-      case 'REPLAN':
-        // Clear current plan and re-decompose
-        console.log(`🔄 Replanning task...`);
-        task.metadata.isDecomposed = false;
-        task.plannedSubtasks = [];
-        task.currentSubtaskIndex = -1;
-        
-        // Execute complex task again with new decomposition
-        return await this._executeComplex(task, context);
-        
-      default:
-        console.log(`⚠️ Unknown evaluation decision: ${evaluation.decision}`);
-        return await this._evaluateCompletion(task, context);
-    }
-  }
-
-  /**
-   * Handle child task failure (internal utility, was public onChildFailure())
-   * @private
-   */
-  async _onChildFailure(task, childTask, error, context) {
-    console.log(`❌ Subtask failed: ${childTask.description}`);
-    console.log(`   Error: ${error.message}`);
-    
-    task.addConversationEntry('system', 
-      `Subtask "${childTask.description}" failed: ${error.message}`);
-    
-    // For now, fail the parent task too
-    // In future, could add retry logic or alternative strategies
-    task.fail(error);
+    console.log(`⚠️ Task incomplete but no more subtasks to execute`);
+    task.fail(new Error('Task incomplete but no more subtasks to execute'));
     
     return {
       success: false,
-      result: `Subtask failed: ${error.message}`,
+      result: evaluation.reasoning || 'Task could not be completed',
       artifacts: Object.values(task.getAllArtifacts())
     };
   }
+}
 
-  /**
-   * Evaluate if task is complete (internal utility, was public evaluateCompletion())
-   * @private
-   */
-  async _evaluateCompletion(task, context) {
-    
-    console.log(`🎯 Evaluating if task "${task.description}" is complete...`);
-    
-    // Initialize strategy components and prompts if needed
-    await this._initializeComponents(context);
-    await this._initializePrompts(context);
-    
-    // Execute completion evaluation prompt with placeholders
-    const result = await this.completionEvaluationPrompt.execute({
-      taskDescription: task.description,
-      conversation: JSON.stringify(task.getConversationContext() || []),
-      artifacts: JSON.stringify(task.getArtifactsContext() || {}),
-      completedSubtasks: JSON.stringify(task.getCompletedSubtasks() || [])
-    });
-    
-    // Strategy no longer does session logging - that's the agent's responsibility
+/**
+ * Get simple task execution plan from LLM
+ */
+async function getSimpleTaskExecution(task, discoveredTools, config, context) {
+  await initializeComponents(config, context);
+  await initializePrompts(config, context);
+  
+  const toolDescriptions = discoveredTools.map(tool => ({
+    name: tool.name,
+    description: tool.description || '',
+    parameters: tool.inputSchema || {}
+  }));
+  
+  const result = await config.executionPrompt.execute({
+    taskDescription: task.description,
+    tools: JSON.stringify(toolDescriptions),
+    conversation: JSON.stringify(task.getConversationContext() || []),
+    artifacts: JSON.stringify(task.getArtifactsContext() || {})
+  });
+  
+  if (!result.success) {
+    throw new Error(`Invalid execution response: ${result.errors?.join(', ') || 'Unknown error'}`);
+  }
 
-    // Handle the response
-    let evaluation;
-    if (!result.success) {
-      console.log(`⚠️ Invalid completion evaluation response: ${result.errors?.join(', ') || 'Unknown error'}`);
-      // Default to incomplete if validation fails
-      evaluation = { isComplete: false, reasoning: 'Invalid evaluation response' };
-    } else {
-      // Map 'complete' field to 'isComplete' field for compatibility
-      const data = result.data;
-      evaluation = {
-        isComplete: data.complete !== undefined ? data.complete : data.isComplete,
-        reasoning: data.reason || data.reasoning || 'No reason provided',
-        summary: data.result || data.summary
-      };
-    }
+  return result.data;
+}
+
+/**
+ * Execute tool calls
+ */
+async function executeWithTools(task, toolCalls, context) {
+  const results = [];
+  
+  for (const toolCall of toolCalls) {
+    const tool = task.currentTools.find(t => 
+      t.name.toLowerCase() === toolCall.tool.toLowerCase()
+    );
     
-    console.log(`🎯 Task completion evaluation: ${evaluation.isComplete ? 'COMPLETE' : 'INCOMPLETE'} - ${evaluation.reasoning}`);
-    
-    if (evaluation.isComplete) {
-      // Task is complete
-      const result = {
-        success: true,
-        result: {
-          success: true,
-          message: 'Task completed',
-          summary: evaluation.summary || `Task "${task.description}" completed successfully`
-        },
-        artifacts: Object.values(task.getAllArtifacts())
-      };
-      
-      task.complete(result);
-      
-      // If task has a parent, let parent evaluate through its own strategy
-      if (task.parent && task.parent.strategy && typeof task.parent.strategy.send === 'function') {
-        task.parent.strategy.send(task, { type: 'completed', result });
-      }
-      
-      return result;
-    } else {
-      // Task is not complete - need to continue or fail
-      if (task.plannedSubtasks.length > 0 && task.currentSubtaskIndex < task.plannedSubtasks.length - 1) {
-        // Still have subtasks to execute
-        const nextSubtask = await task.createNextSubtask(context.taskManager);
-        if (nextSubtask) {
-          console.log(`📍 Continuing with next subtask: ${nextSubtask.description}`);
-          const nextResult = await nextSubtask.receiveMessage({type: 'start'});
-          
-          if (nextResult.success) {
-            return await this._handleChildComplete(task, nextSubtask, nextResult, context);
-          } else {
-            return await this._handleChildFailure(task, nextSubtask, new Error(nextResult.result), context);
-          }
-        }
-      }
-      
-      // No more subtasks but task is incomplete
-      console.log(`⚠️ Task incomplete but no more subtasks to execute`);
-      task.fail(new Error('Task incomplete but no more subtasks to execute'));
-      
-      return {
+    if (!tool) {
+      console.log(`⚠️ Tool not found: ${toolCall.tool}`);
+      results.push({
+        tool: toolCall.tool,
+        inputs: toolCall.inputs,
         success: false,
-        result: evaluation.reasoning || 'Task could not be completed',
-        artifacts: Object.values(task.getAllArtifacts())
-      };
+        error: `Tool not found: ${toolCall.tool}`
+      });
+      continue;
     }
-  }
-
-  /**
-   * Get simple task execution plan from LLM
-   * @private
-   */
-  async _getSimpleTaskExecution(task, discoveredTools, context) {
     
-    // Initialize strategy components and prompts if needed
-    await this._initializeComponents(context);
-    await this._initializePrompts(context);
-    
-    // Format tools for prompt
-    const toolDescriptions = discoveredTools.map(tool => ({
-      name: tool.name,
-      description: tool.description || '',
-      parameters: tool.inputSchema || {}
-    }));
-    
-    // Execute execution prompt with placeholders
-    const result = await this.executionPrompt.execute({
-      taskDescription: task.description,
-      tools: JSON.stringify(toolDescriptions),
-      conversation: JSON.stringify(task.getConversationContext() || []),
-      artifacts: JSON.stringify(task.getArtifactsContext() || {})
-    });
-    
-    // Strategy no longer does session logging - that's the agent's responsibility
-
-    if (!result.success) {
-      throw new Error(`Invalid execution response: ${result.errors?.join(', ') || 'Unknown error'}`);
-    }
-
-    return result.data;
-  }
-
-  /**
-   * Execute tool calls
-   * @private
-   */
-  async _executeWithTools(task, toolCalls, context) {
-    const results = [];
-    
-    for (const toolCall of toolCalls) {
-      // Case-insensitive tool matching
-      const tool = task.currentTools.find(t => 
-        t.name.toLowerCase() === toolCall.tool.toLowerCase()
-      );
+    try {
+      console.log(`🔧 Executing tool: ${tool.name}`);
+      const result = await tool.execute(toolCall.inputs);
       
-      if (!tool) {
-        console.log(`⚠️ Tool not found: ${toolCall.tool}`);
-        results.push({
-          tool: toolCall.tool,
-          inputs: toolCall.inputs,
-          success: false,
-          error: `Tool not found: ${toolCall.tool}`
-        });
-        continue;
+      results.push({
+        tool: tool.name,
+        inputs: toolCall.inputs,
+        success: true,
+        output: result
+      });
+      
+      if (tool.name === 'file_write' && toolCall.inputs.filepath) {
+        task.storeArtifact(
+          toolCall.inputs.filepath,
+          toolCall.inputs.content,
+          `File created at ${toolCall.inputs.filepath}`,
+          'file'
+        );
       }
-      
-      try {
-        console.log(`🔧 Executing tool: ${tool.name}`);
-        const result = await tool.execute(toolCall.inputs);
-        
-        results.push({
-          tool: tool.name,
-          inputs: toolCall.inputs,
-          success: true,
-          output: result
-        });
-        
-        // Handle file artifacts
-        if (tool.name === 'file_write' && toolCall.inputs.filepath) {
-          task.storeArtifact(
-            toolCall.inputs.filepath,
-            toolCall.inputs.content,
-            `File created at ${toolCall.inputs.filepath}`,
-            'file'
-          );
+    } catch (error) {
+      console.log(`❌ Tool execution failed: ${error.message}`);
+      results.push({
+        tool: tool.name,
+        inputs: toolCall.inputs,
+        success: false,
+        error: error.message
+      });
+    }
+  }
+  
+  return {
+    success: results.some(r => r.success),
+    results: results,
+    artifacts: Object.values(task.getAllArtifacts())
+  };
+}
+
+/**
+ * Get parent's evaluation of child completion
+ */
+async function getParentEvaluation(task, childTask, config, context) {
+  await initializeComponents(config, context);
+  await initializePrompts(config, context);
+  
+  const result = await config.parentEvaluationPrompt.execute({
+    parentTaskDescription: task.description,
+    childTaskDescription: childTask.description,
+    conversation: JSON.stringify(task.getConversationContext() || []),
+    artifacts: JSON.stringify(task.getArtifactsContext() || {}),
+    completedSubtasks: JSON.stringify(task.getCompletedSubtasks() || [])
+  });
+  
+  if (!result.success) {
+    console.log(`⚠️ Invalid parent evaluation response: ${result.errors?.join(', ') || 'Unknown error'}`);
+    return { decision: 'CONTINUE', reasoning: 'Invalid evaluation response' };
+  }
+
+  return result.data;
+}
+
+// Schema functions
+function getDecompositionSchema() {
+  return {
+    type: 'object',
+    properties: {
+      decompose: { type: 'boolean' },
+      subtasks: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            description: { type: 'string' },
+            inputs: { type: 'string' },
+            outputs: { type: 'string' }
+          },
+          required: ['description']
         }
-      } catch (error) {
-        console.log(`❌ Tool execution failed: ${error.message}`);
-        results.push({
-          tool: tool.name,
-          inputs: toolCall.inputs,
-          success: false,
-          error: error.message
-        });
       }
-    }
-    
-    return {
-      success: results.some(r => r.success),
-      results: results,
-      artifacts: Object.values(task.getAllArtifacts())
-    };
-  }
+    },
+    required: ['decompose', 'subtasks'],
+    format: 'json'
+  };
+}
 
-  /**
-   * Get parent's evaluation of child completion
-   * @private
-   */
-  async _getParentEvaluation(task, childTask, context) {
-    
-    // Initialize strategy components and prompts if needed
-    await this._initializeComponents(context);
-    await this._initializePrompts(context);
-    
-    // Execute parent evaluation prompt with placeholders
-    const result = await this.parentEvaluationPrompt.execute({
-      parentTaskDescription: task.description,
-      childTaskDescription: childTask.description,
-      conversation: JSON.stringify(task.getConversationContext() || []),
-      artifacts: JSON.stringify(task.getArtifactsContext() || {}),
-      completedSubtasks: JSON.stringify(task.getCompletedSubtasks() || [])
-    });
-    
-    // Strategy no longer does session logging - that's the agent's responsibility
+function getSimpleTaskSchema() {
+  return {
+    type: 'object',
+    anyOf: [
+      {
+        type: 'object',
+        properties: {
+          useTools: { type: 'boolean', const: true },
+          toolCalls: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                tool: { type: 'string' },
+                inputs: { type: 'object' },
+                outputs: { type: 'object' }
+              },
+              required: ['tool', 'inputs']
+            }
+          }
+        },
+        required: ['useTools', 'toolCalls']
+      },
+      {
+        type: 'object',
+        properties: {
+          response: { type: 'string' }
+        },
+        required: ['response']
+      }
+    ],
+    format: 'json'
+  };
+}
 
-    // Handle the response
-    if (!result.success) {
-      console.log(`⚠️ Invalid parent evaluation response: ${result.errors?.join(', ') || 'Unknown error'}`);
-      // Default to continuing if validation fails
-      return { decision: 'CONTINUE', reasoning: 'Invalid evaluation response' };
-    }
+function getParentEvaluationSchema() {
+  return {
+    type: 'object',
+    properties: {
+      decision: {
+        type: 'string',
+        enum: ['CONTINUE', 'COMPLETE', 'RETRY', 'REPLAN']
+      },
+      reasoning: { type: 'string' }
+    },
+    required: ['decision', 'reasoning'],
+    format: 'json'
+  };
+}
 
-    return result.data;
-  }
-
+function getCompletionEvaluationSchema() {
+  return {
+    type: 'object',
+    properties: {
+      complete: { type: 'boolean' },
+      isComplete: { type: 'boolean' },
+      reason: { type: 'string' },
+      reasoning: { type: 'string' },
+      result: { type: 'string' },
+      summary: { type: 'string' }
+    },
+    required: [],
+    format: 'json'
+  };
 }

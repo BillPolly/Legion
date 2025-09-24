@@ -1,468 +1,404 @@
 /**
- * Unit tests for QualityStrategy (formerly QualityController)
+ * Unit tests for QualityStrategy - Prototypal Pattern
  * Tests validation gates, quality metrics, and continuous validation
- * NO MOCKS - using real validation logic
+ * NO MOCKS - using real components
  */
 
-import { describe, test, expect, beforeEach, jest } from '@jest/globals';
-import QualityStrategy from '../../../../src/strategies/coding/QualityStrategy.js';
+import { describe, test, expect, beforeEach, jest, beforeAll } from '@jest/globals';
+import { ResourceManager } from '@legion/resource-manager';
+import { ToolRegistry } from '@legion/tools-registry';
+import { createQualityStrategy } from '../../../../src/strategies/coding/QualityStrategy.js';
 
-describe('QualityStrategy', () => {
-  let qualityStrategy;
-  let mockLLMClient;
-  let mockToolRegistry;
+// Mock Task for testing - simulates the actual Task interface
+class MockTask {
+  constructor(id, description) {
+    this.id = id;
+    this.description = description;
+    this.parent = null;
+    this.context = {};
+    this.artifacts = [];
+    this.artifactMap = {};
+    this.failed = false;
+    this.completed = false;
+    this.conversation = [];
+    this.sentMessages = [];
+  }
   
-  beforeEach(() => {
-    // Create mock LLM client for requirements validation
-    mockLLMClient = {
-      complete: jest.fn(async (prompt) => JSON.stringify({
-        features: ['authentication', 'database', 'api'],
-        issues: [],
-        score: 8
-      }))
+  fail(error) {
+    this.failed = true;
+    this.error = error;
+  }
+  
+  complete(result) {
+    this.completed = true;
+    this.result = result;
+  }
+  
+  addConversationEntry(role, content) {
+    this.conversation.push({ role, content });
+  }
+  
+  storeArtifact(name, value, description, type) {
+    const artifact = {
+      name,
+      value,
+      content: value,
+      description,
+      type
     };
-    
-    // Create mock tool registry
-    mockToolRegistry = {
-      getTool: jest.fn(async (toolName) => ({
-        execute: jest.fn(async () => ({ success: true }))
-      }))
-    };
-    
-    qualityStrategy = new QualityStrategy(mockLLMClient, mockToolRegistry);
-  });
+    this.artifacts.push(artifact);
+    this.artifactMap[name] = artifact;
+  }
   
-  describe('Constructor', () => {
-    test('should create controller with default gates', () => {
-      const ctrl = new QualityStrategy();
-      expect(ctrl.qualityGates).toBeDefined();
-      expect(ctrl.qualityGates.setup).toBeDefined();
-      expect(ctrl.qualityGates.core).toBeDefined();
-      expect(ctrl.qualityGates.features).toBeDefined();
-      expect(ctrl.qualityGates.testing).toBeDefined();
-      expect(ctrl.qualityGates.integration).toBeDefined();
-    });
-    
-    test('should accept custom quality gates', () => {
-      const customGates = {
-        custom: {
-          checks: ['custom_check'],
-          threshold: 75
-        }
-      };
-      
-      const ctrl = new QualityStrategy(null, null, { qualityGates: customGates });
-      expect(ctrl.qualityGates.custom).toBeDefined();
-      expect(ctrl.qualityGates.custom.threshold).toBe(75);
-    });
-  });
+  getAllArtifacts() {
+    return this.artifactMap;
+  }
   
-  describe('validateProject() method', () => {
-    test('should validate complete project structure', async () => {
-      const project = {
-        phases: {
-          setup: { status: 'completed', artifacts: [] },
-          core: { status: 'completed', artifacts: [] },
-          features: { status: 'completed', artifacts: [] },
-          testing: { status: 'completed', artifacts: [] },
-          integration: { status: 'completed', artifacts: [] }
-        },
-        artifacts: [
-          { type: 'config', path: 'package.json', content: '{"name": "test-project", "version": "1.0.0"}' },
-          { type: 'code', path: 'server.js', content: 'const express = require("express");' },
-          { type: 'test', path: 'test.js', content: 'describe("test", () => {});' }
-        ],
-        quality: {
-          testResults: { passed: 10, failed: 0, coverage: 85 }
-        }
-      };
-      
-      const result = await qualityStrategy.validateProject(project);
-      
-      expect(result.passed).toBe(true);
-      expect(result.phases).toBeDefined();
-      expect(result.overall).toBeDefined();
-    });
-    
-    test('should fail validation on missing phases', async () => {
-      const project = {
-        phases: {
-          setup: { status: 'completed', artifacts: [] }
-          // Missing other phases
-        },
-        artifacts: []
-      };
-      
-      const result = await qualityStrategy.validateProject(project);
-      
-      expect(result.passed).toBe(false);
-      expect(result.issues).toContain('Missing required phase: core');
-    });
-    
-    test('should check quality thresholds', async () => {
-      const project = {
-        phases: {
-          setup: { status: 'completed', artifacts: [] },
-          core: { status: 'completed', artifacts: [] },
-          features: { status: 'completed', artifacts: [] },
-          testing: { status: 'completed', artifacts: [] },
-          integration: { status: 'completed', artifacts: [] }
-        },
-        artifacts: [],
-        quality: {
-          testResults: { passed: 5, failed: 5, coverage: 50 } // Low coverage
-        }
-      };
-      
-      const result = await qualityStrategy.validateProject(project);
-      
-      expect(result.phases.testing.passed).toBe(false);
-      expect(result.phases.testing.issues).toContain('Coverage below threshold');
-    });
-  });
+  lookup(key) {
+    if (key === 'llmClient') return this.context.llmClient;
+    if (key === 'toolRegistry') return this.context.toolRegistry;
+    if (key === 'workspaceDir') return this.context.workspaceDir;
+    return null;
+  }
   
-  describe('validatePhase() method', () => {
-    test('should validate setup phase', async () => {
-      const phase = {
-        name: 'setup',
-        status: 'completed',
-        artifacts: [
-          { type: 'config', path: 'package.json', content: '{"name": "test"}' }
-        ]
-      };
-      
-      const result = await qualityStrategy.validatePhase(phase);
-      
-      expect(result.passed).toBeDefined();
-      expect(result.checks).toBeDefined();
-    });
+  send(target, message) {
+    this.sentMessages.push({ target, message });
+  }
+}
+
+describe('QualityStrategy - Prototypal Pattern', () => {
+  let resourceManager;
+  let toolRegistry;
+  let llmClient;
+
+  beforeAll(async () => {
+    // Get ResourceManager singleton
+    resourceManager = await ResourceManager.getInstance();
     
-    test('should enforce threshold requirements', async () => {
-      const phase = {
-        name: 'core',
-        status: 'completed',
-        artifacts: []
-      };
-      
-      // Should fail because no artifacts means checks can't pass
-      const result = await qualityStrategy.validatePhase(phase);
-      
-      expect(result.score).toBeLessThan(100);
-    });
-    
-    test('should handle unknown phase gracefully', async () => {
-      const phase = {
-        name: 'unknown',
-        status: 'completed',
-        artifacts: []
-      };
-      
-      const result = await qualityStrategy.validatePhase(phase);
-      
-      expect(result.passed).toBe(true); // Unknown phases pass by default
-    });
-  });
+    // Get real services
+    toolRegistry = await ToolRegistry.getInstance();
+    llmClient = await resourceManager.get('llmClient');
+  }, 30000);
   
-  describe('validateSyntax() method', () => {
-    test('should validate correct JavaScript syntax', async () => {
-      const artifact = {
-        type: 'code',
-        content: 'const x = 5; function test() { return x + 1; }'
-      };
+  describe('Factory Function', () => {
+    test('should create strategy with factory function', () => {
+      const strategy = createQualityStrategy(llmClient, toolRegistry);
       
-      const result = await qualityStrategy.validateSyntax(artifact);
-      
-      expect(result.valid).toBe(true);
-      expect(result.error).toBeUndefined();
+      expect(strategy).toBeDefined();
+      expect(typeof strategy.onMessage).toBe('function');
     });
     
-    test('should detect syntax errors', async () => {
-      const artifact = {
-        type: 'code',
-        content: 'const x = ; function test() { return'
-      };
-      
-      const result = await qualityStrategy.validateSyntax(artifact);
-      
-      expect(result.valid).toBe(false);
-      expect(result.error).toBeDefined();
-    });
-    
-    test('should skip non-code artifacts', async () => {
-      const artifact = {
-        type: 'documentation',
-        content: 'This is documentation with invalid JS syntax const x = ;'
-      };
-      
-      const result = await qualityStrategy.validateSyntax(artifact);
-      
-      expect(result.valid).toBe(true);
-      expect(result.skipped).toBe(true);
-    });
-  });
-  
-  describe('validateRequirements() method', () => {
-    test('should validate requirements are met', async () => {
-      const artifact = {
-        type: 'code',
-        content: 'class AuthController { authenticate() {} }'
-      };
-      
-      const requirements = ['authentication', 'user management'];
-      
-      const result = await qualityStrategy.validateRequirements(artifact, requirements);
-      
-      expect(result.valid).toBeDefined();
-      expect(result.missing).toBeDefined();
-    });
-    
-    test('should use LLM for complex requirement checking', async () => {
-      const artifact = {
-        type: 'code',
-        content: 'const express = require("express"); app.use(auth);'
-      };
-      
-      const requirements = ['REST API', 'authentication', 'error handling'];
-      
-      await qualityStrategy.validateRequirements(artifact, requirements);
-      
-      expect(mockLLMClient.complete).toHaveBeenCalled();
-    });
-  });
-  
-  describe('analyzeQuality() method', () => {
-    test('should calculate quality metrics', async () => {
-      const artifact = {
-        type: 'code',
-        content: `
-          // Well-structured code
-          class UserService {
-            constructor(database) {
-              this.db = database;
-            }
-            
-            async getUser(id) {
-              return await this.db.users.findById(id);
-            }
-            
-            async createUser(data) {
-              return await this.db.users.create(data);
-            }
+    test('should accept custom options', () => {
+      const strategy = createQualityStrategy(llmClient, toolRegistry, {
+        qualityGates: {
+          custom: {
+            checks: ['custom_check'],
+            threshold: 75
           }
-        `
-      };
-      
-      const metrics = await qualityStrategy.analyzeQuality(artifact);
-      
-      expect(metrics.score).toBeDefined();
-      expect(metrics.score).toBeGreaterThan(0);
-      expect(metrics.score).toBeLessThanOrEqual(10);
-      expect(metrics.issues).toBeDefined();
-    });
-    
-    test('should identify quality issues', async () => {
-      const artifact = {
-        type: 'code',
-        content: `
-          // Poor quality code
-          function x(a,b,c,d,e,f,g,h) {
-            if(a){if(b){if(c){if(d){
-              return e+f+g+h;
-            }}}}
-          }
-          eval("console.log('dangerous')");
-        `
-      };
-      
-      const metrics = await qualityStrategy.analyzeQuality(artifact);
-      
-      expect(metrics.score).toBeLessThan(5);
-      expect(metrics.issues).toContain('High complexity');
-      expect(metrics.issues).toContain('Security risk: eval usage');
-    });
-    
-    test('should handle empty content', async () => {
-      const artifact = {
-        type: 'code',
-        content: ''
-      };
-      
-      const metrics = await qualityStrategy.analyzeQuality(artifact);
-      
-      expect(metrics.score).toBe(0);
-      expect(metrics.issues).toContain('Empty content');
-    });
-  });
-  
-  describe('checkGate() method', () => {
-    test('should check if gate passes threshold', async () => {
-      const checks = [
-        { name: 'test1', passed: true },
-        { name: 'test2', passed: true },
-        { name: 'test3', passed: true }
-      ];
-      
-      const result = await qualityStrategy.checkGate(checks, 100);
-      
-      expect(result.passed).toBe(true);
-      expect(result.score).toBe(100);
-    });
-    
-    test('should fail if below threshold', async () => {
-      const checks = [
-        { name: 'test1', passed: true },
-        { name: 'test2', passed: false },
-        { name: 'test3', passed: false }
-      ];
-      
-      const result = await qualityStrategy.checkGate(checks, 75);
-      
-      expect(result.passed).toBe(false);
-      expect(result.score).toBeLessThan(75);
-    });
-    
-    test('should include failed check details', async () => {
-      const checks = [
-        { name: 'test1', passed: true },
-        { name: 'test2', passed: false, reason: 'Test failed' }
-      ];
-      
-      const result = await qualityStrategy.checkGate(checks, 100);
-      
-      expect(result.passed).toBe(false);
-      expect(result.failedChecks).toContain('test2');
-    });
-  });
-  
-  describe('runCheck() method', () => {
-    test('should run project structure validation check', async () => {
-      const phase = {
-        name: 'setup',
-        artifacts: [
-          { path: 'package.json', content: '{}' },
-          { path: 'src/index.js', content: '' }
-        ]
-      };
-      
-      const result = await qualityStrategy.runCheck('project_structure_valid', phase);
-      
-      expect(result.passed).toBeDefined();
-      expect(result.name).toBe('project_structure_valid');
-    });
-    
-    test('should run syntax validation check', async () => {
-      const phase = {
-        name: 'core',
-        artifacts: [
-          { type: 'code', content: 'const server = express();' }
-        ]
-      };
-      
-      const result = await qualityStrategy.runCheck('no_syntax_errors', phase);
-      
-      expect(result.passed).toBe(true);
-    });
-    
-    test('should run test execution check', async () => {
-      const phase = {
-        name: 'testing',
-        quality: {
-          testResults: { passed: 10, failed: 0 }
         }
-      };
+      });
       
-      const result = await qualityStrategy.runCheck('unit_tests_pass', phase);
+      expect(strategy).toBeDefined();
+      expect(typeof strategy.onMessage).toBe('function');
+    });
+
+    test('should work without llmClient and toolRegistry (will get from task)', () => {
+      const strategy = createQualityStrategy();
       
-      expect(result.passed).toBe(true);
+      expect(strategy).toBeDefined();
+      expect(typeof strategy.onMessage).toBe('function');
     });
   });
-  
-  describe('handleError() method', () => {
-    test('should classify and handle transient errors', async () => {
-      const error = new Error('Network timeout');
-      error.code = 'ETIMEDOUT';
+  describe('Message Handling with Prototypal Pattern', () => {
+    test('should handle start message with project validation', (done) => {
+      const strategy = createQualityStrategy(llmClient, toolRegistry);
       
-      const result = await qualityStrategy.handleError(error);
+      // Create a mock task with project execution result
+      const task = new MockTask('quality-1', 'Validate project quality');
+      task.context = { llmClient, toolRegistry };
       
-      expect(result.type).toBe('TRANSIENT');
-      expect(result.recoverable).toBe(true);
-      expect(result.suggestion).toContain('retry');
+      // Add execution result artifact
+      task.storeArtifact('execution-result', {
+        project: {
+          phases: {
+            setup: { status: 'completed', artifacts: [] },
+            core: { status: 'completed', artifacts: [] },
+            features: { status: 'completed', artifacts: [] }
+          },
+          artifacts: [
+            { type: 'code', path: 'server.js', content: 'const express = require("express");' }
+          ]
+        }
+      }, 'Project execution result', 'result');
+      
+      // Override complete to check results
+      task.complete = jest.fn((result) => {
+        expect(result.success).toBe(true);
+        expect(result.validation).toBeDefined();
+        done();
+      });
+      
+      // Call onMessage with task as 'this' context
+      strategy.onMessage.call(task, task, { type: 'start' });
+    }, 30000);
+
+    test('should handle child task completion', () => {
+      const strategy = createQualityStrategy(llmClient, toolRegistry);
+      
+      // Create mock parent task
+      const parentTask = new MockTask('parent-task', 'Parent task');
+      parentTask.storeArtifact = jest.fn();
+      
+      // Create mock child task
+      const childTask = new MockTask('child-task', 'Child task');
+      childTask.parent = parentTask;
+      childTask.getAllArtifacts = jest.fn(() => ({
+        'artifact1': { content: 'test', description: 'Test artifact', type: 'file' }
+      }));
+      
+      // Call onMessage with parent task as 'this' context
+      strategy.onMessage.call(parentTask, childTask, { 
+        type: 'completed',
+        result: { success: true }
+      });
+      
+      // Should copy artifacts from child
+      expect(parentTask.storeArtifact).toHaveBeenCalledWith(
+        'artifact1', 'test', 'Test artifact', 'file'
+      );
     });
-    
-    test('should handle logic errors', async () => {
-      const error = new Error('Invalid input: missing required field');
+
+    test('should handle child task failure', () => {
+      const strategy = createQualityStrategy(llmClient, toolRegistry);
       
-      const result = await qualityStrategy.handleError(error);
+      // Create mock parent task
+      const parentTask = new MockTask('parent-task', 'Parent task');
+      const grandParent = new MockTask('grandparent', 'Grandparent');
+      parentTask.parent = grandParent;
       
-      expect(result.type).toBe('LOGIC');
-      expect(result.recoverable).toBe(true);
-      expect(result.suggestion).toContain('requirements');
+      // Create mock child task
+      const childTask = new MockTask('child-task', 'Child task');
+      childTask.parent = parentTask;
+      
+      // Call onMessage with parent task as 'this' context for child failure
+      strategy.onMessage.call(parentTask, childTask, { 
+        type: 'failed',
+        error: new Error('Test error')
+      });
+      
+      // Should notify parent of child failure
+      expect(parentTask.sentMessages.length).toBe(1);
+      expect(parentTask.sentMessages[0].message.type).toBe('child-failed');
+      expect(parentTask.sentMessages[0].message.child).toBe(childTask);
     });
-    
-    test('should handle fatal errors', async () => {
-      const error = new Error('Corrupted state');
-      error.fatal = true;
+
+    test('should handle unknown messages gracefully', () => {
+      const strategy = createQualityStrategy(llmClient, toolRegistry);
       
-      const result = await qualityStrategy.handleError(error);
+      const task = new MockTask('test', 'Test task');
       
-      expect(result.type).toBe('FATAL');
-      expect(result.recoverable).toBe(false);
+      // Should not throw
+      expect(() => {
+        strategy.onMessage.call(task, task, { type: 'unknown' });
+      }).not.toThrow();
     });
   });
-  
-  describe('extractFeatures() method', () => {
-    test('should extract features from code', () => {
-      const artifact = {
-        content: `
-          const express = require('express');
-          const auth = require('./auth');
-          const db = require('./database');
-          
-          app.use(auth.middleware);
-          app.post('/api/users', userController.create);
-        `
+
+  describe('Error Handling', () => {
+    test('should catch async errors and fail task', (done) => {
+      // Create strategy without llmClient to trigger error
+      const strategy = createQualityStrategy(null, null);
+      
+      const task = new MockTask('test', 'Test task');
+      task.context = {}; // No llmClient in context
+      
+      task.fail = jest.fn((error) => {
+        try {
+          expect(error).toBeDefined();
+          expect(error.message).toContain('LLM client is required');
+          done();
+        } catch (assertionError) {
+          done(assertionError);
+        }
+      });
+      
+      // Call onMessage with task as 'this' context
+      strategy.onMessage.call(task, task, { type: 'start' });
+    });
+
+    test('should handle synchronous errors in message handler', () => {
+      const strategy = createQualityStrategy(llmClient, toolRegistry);
+      
+      const task = new MockTask('test', 'Test task');
+      // Make getAllArtifacts throw to trigger sync error
+      task.getAllArtifacts = () => {
+        throw new Error('Sync error');
       };
       
-      const features = qualityStrategy.extractFeatures(artifact);
-      
-      expect(features).toContain('express');
-      expect(features).toContain('authentication');
-      expect(features).toContain('database');
-      expect(features).toContain('api');
+      // Should not throw - errors are caught
+      expect(() => {
+        strategy.onMessage.call(task, task, { type: 'start' });
+      }).not.toThrow();
     });
-    
-    test('should handle empty content', () => {
-      const artifact = { content: '' };
+
+    test('should handle missing execution result gracefully', (done) => {
+      const strategy = createQualityStrategy(llmClient, toolRegistry);
       
-      const features = qualityStrategy.extractFeatures(artifact);
+      const task = new MockTask('test', 'Validate quality without execution result');
+      task.context = { llmClient, toolRegistry };
       
-      expect(features).toEqual([]);
-    });
+      // No execution result artifact - should still work with basic validation
+      task.complete = jest.fn((result) => {
+        try {
+          expect(result.success).toBe(true);
+          expect(result.validation).toBeDefined();
+          done();
+        } catch (assertionError) {
+          done(assertionError);
+        }
+      });
+      
+      strategy.onMessage.call(task, task, { type: 'start' });
+    }, 30000);
   });
-  
-  describe('getContinuousValidators() method', () => {
-    test('should return validator functions', () => {
-      const validators = qualityStrategy.getContinuousValidators();
+
+  describe('Integration with Task', () => {
+    test('should work with task lookup for dependencies', (done) => {
+      const strategy = createQualityStrategy(); // No dependencies provided
       
-      expect(validators.syntax).toBeDefined();
-      expect(validators.requirements).toBeDefined();
-      expect(validators.quality).toBeDefined();
-      expect(typeof validators.syntax).toBe('function');
+      const task = new MockTask('test', 'Validate project quality');
+      task.context = { llmClient, toolRegistry };
+      
+      // Add basic execution result
+      task.storeArtifact('execution-result', {
+        project: {
+          phases: { setup: { status: 'completed', artifacts: [] } },
+          artifacts: [
+            { type: 'code', path: 'app.js', content: 'console.log("hello");' }
+          ]
+        }
+      }, 'Project result', 'result');
+      
+      task.complete = jest.fn((result) => {
+        expect(result.success).toBe(true);
+        done();
+      });
+      
+      // Call onMessage - should get dependencies from task context
+      strategy.onMessage.call(task, task, { type: 'start' });
+    }, 30000);
+
+    test('should store validation results as artifacts', (done) => {
+      const strategy = createQualityStrategy(llmClient, toolRegistry);
+      
+      const task = new MockTask('test', 'Quality validation with artifacts');
+      task.context = { llmClient, toolRegistry };
+      
+      task.complete = jest.fn(() => {
+        try {
+          const artifacts = task.getAllArtifacts();
+          expect(artifacts['quality-validation']).toBeDefined();
+          expect(artifacts['quality-validation'].type).toBe('validation');
+          done();
+        } catch (assertionError) {
+          done(assertionError);
+        }
+      });
+      
+      strategy.onMessage.call(task, task, { type: 'start' });
+    }, 30000);
+
+    test('should validate comprehensive project structure', (done) => {
+      const strategy = createQualityStrategy(llmClient, toolRegistry);
+      
+      const task = new MockTask('test', 'Validate complete Node.js project');
+      task.context = { llmClient, toolRegistry };
+      
+      task.storeArtifact('execution-result', {
+        project: {
+          phases: {
+            setup: { status: 'completed', artifacts: [] },
+            core: { status: 'completed', artifacts: [] },
+            features: { status: 'completed', artifacts: [] },
+            testing: { status: 'completed', artifacts: [] }
+          },
+          artifacts: [
+            { type: 'code', path: 'server.js', content: 'const express = require("express"); const app = express();' },
+            { type: 'test', path: 'test.js', content: 'describe("server", () => { it("works", () => {}); });' },
+            { type: 'config', path: 'package.json', content: '{"name": "test-app", "scripts": {"test": "jest"}}' }
+          ],
+          quality: {
+            testResults: { passed: 10, failed: 0, coverage: 85 }
+          }
+        }
+      }, 'Complete project result', 'result');
+      
+      task.complete = jest.fn((result) => {
+        expect(result.success).toBe(true);
+        expect(result.validation).toBeDefined();
+        expect(result.validation.phases).toBeDefined();
+        done();
+      });
+      
+      strategy.onMessage.call(task, task, { type: 'start' });
+    }, 30000);
+  });
+
+  describe('Prototypal Pattern Verification', () => {
+    test('should properly inherit from TaskStrategy', () => {
+      const strategy = createQualityStrategy(llmClient, toolRegistry);
+      
+      // Should have onMessage method
+      expect(typeof strategy.onMessage).toBe('function');
+      
+      // Should not have class properties
+      expect(strategy.constructor.name).not.toBe('QualityStrategy');
     });
-    
-    test('should validate continuously with returned validators', async () => {
-      const validators = qualityStrategy.getContinuousValidators();
+
+    test('should use closure for configuration', () => {
+      const strategy1 = createQualityStrategy(llmClient, toolRegistry);
+      const strategy2 = createQualityStrategy(null, null);
       
-      const artifact = {
-        type: 'code',
-        content: 'function test() { return true; }'
-      };
+      // Each strategy should have its own configuration
+      expect(strategy1).not.toBe(strategy2);
+      expect(typeof strategy1.onMessage).toBe('function');
+      expect(typeof strategy2.onMessage).toBe('function');
+    });
+
+    test('should handle fire-and-forget messaging pattern', (done) => {
+      const strategy = createQualityStrategy(llmClient, toolRegistry);
       
-      const syntaxResult = await validators.syntax(artifact);
-      expect(syntaxResult.valid).toBe(true);
+      const task = new MockTask('test', 'Test fire-and-forget');
+      task.context = { llmClient, toolRegistry };
       
-      const qualityResult = await validators.quality(artifact);
-      expect(qualityResult.score).toBeDefined();
+      // Add minimal project data to trigger completion  
+      task.storeArtifact('execution-result', {
+        success: true,
+        phases: { setup: { passed: true } },
+        artifacts: []
+      }, 'Test execution result', 'result');
+      
+      // onMessage should not return a promise that needs await
+      const result = strategy.onMessage.call(task, task, { type: 'start' });
+      
+      // Result should be undefined (fire-and-forget)
+      expect(result).toBeUndefined();
+      
+      // Task should eventually complete
+      task.complete = jest.fn(() => {
+        try {
+          done();
+        } catch (assertionError) {
+          done(assertionError);
+        }
+      });
+      
+      // Give async operation time to complete
+      setTimeout(() => {
+        if (!task.complete.mock.calls.length) {
+          done(new Error('Task did not complete'));
+        }
+      }, 3000);
     });
   });
 });

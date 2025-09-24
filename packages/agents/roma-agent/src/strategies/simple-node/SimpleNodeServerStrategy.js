@@ -1,5 +1,6 @@
 /**
  * SimpleNodeServerStrategy - Strategy for creating simple Node.js server applications
+ * Converted to pure prototypal pattern
  * 
  * Focused on generating Express/HTTP servers with clean, testable code.
  * Uses PromptFactory for all LLM interactions with data-driven prompts.
@@ -14,545 +15,507 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export default class SimpleNodeServerStrategy extends TaskStrategy {
-  constructor(llmClient = null, toolRegistry = null, options = {}) {
-    super();
-    
-    this.llmClient = llmClient;
-    this.toolRegistry = toolRegistry;
-    this.projectRoot = options.projectRoot || '/tmp/roma-projects';
+/**
+ * Create a SimpleNodeServerStrategy prototype
+ * This factory function creates the strategy with its dependencies
+ */
+export function createSimpleNodeServerStrategy(llmClient = null, toolRegistry = null, options = {}) {
+  // Create the strategy as an object that inherits from TaskStrategy
+  const strategy = Object.create(TaskStrategy);
+  
+  // Store configuration
+  const config = {
+    llmClient: llmClient,
+    toolRegistry: toolRegistry,
+    projectRoot: options.projectRoot || '/tmp/roma-projects',
     
     // Pre-instantiated tools
-    this.tools = {
+    tools: {
       fileWrite: null,
       directoryCreate: null
-    };
+    },
     
     // Initialize prompt registry
-    const promptsPath = path.resolve(__dirname, '../../../prompts');
-    this.promptRegistry = new EnhancedPromptRegistry(promptsPath);
-  }
+    promptRegistry: null
+  };
   
-  getName() {
-    return 'SimpleNodeServer';
-  }
-  
-  /**
-   * Initialize strategy components and prompts
-   */
-  async initialize(task) {
-    // Get services from task context
-    const context = this._getContextFromTask(task);
-    this.llmClient = this.llmClient || context.llmClient;
-    this.toolRegistry = this.toolRegistry || context.toolRegistry;
-    
-    if (!this.llmClient) {
-      throw new Error('LLM client is required');
-    }
-    
-    if (!this.toolRegistry) {
-      throw new Error('ToolRegistry is required');
-    }
-    
-    // Load required tools
-    this.tools.fileWrite = await this.toolRegistry.getTool('file_write');
-    this.tools.directoryCreate = await this.toolRegistry.getTool('directory_create');
-  }
+  // Initialize prompt registry
+  const promptsPath = path.resolve(__dirname, '../../../prompts');
+  config.promptRegistry = new EnhancedPromptRegistry(promptsPath);
   
   /**
-   * Execute prompt with LLM
+   * The only required method - handles all messages
    */
-  async _executePrompt(promptPath, variables) {
-    const prompt = await this.promptRegistry.fill(promptPath, variables);
-    const response = await this.llmClient.complete(prompt);
+  strategy.onMessage = function onMessage(senderTask, message) {
+    // 'this' is the task instance that received the message
     
-    // Parse response based on expected format
-    const metadata = await this.promptRegistry.getMetadata(promptPath);
-    
-    if (metadata.responseFormat === 'json') {
+    try {
+      // Determine if message is from child or parent/initiator
+      if (senderTask.parent === this) {
+        // Message from child task
+        switch (message.type) {
+          case 'completed':
+            console.log(`✅ SimpleNodeServer child task completed: ${senderTask.description}`);
+            // Handle child task completion
+            handleChildComplete.call(this, senderTask, message.result, config).catch(error => {
+              console.error(`❌ SimpleNodeServerStrategy child completion handling failed: ${error.message}`);
+              try {
+                this.fail(error);
+                if (this.parent) {
+                  this.send(this.parent, { type: 'failed', error });
+                }
+              } catch (innerError) {
+                console.error(`❌ Failed to handle child completion error: ${innerError.message}`);
+              }
+            });
+            break;
+            
+          case 'failed':
+            console.log(`❌ SimpleNodeServer child task failed: ${senderTask.description}`);
+            this.send(this.parent, { type: 'child-failed', child: senderTask, error: message.error });
+            break;
+            
+          default:
+            console.log(`ℹ️ SimpleNodeServerStrategy received unhandled message from child: ${message.type}`);
+        }
+      } else {
+        // Message from parent or initiator
+        switch (message.type) {
+          case 'start':
+          case 'work':
+            // Determine handler based on action type
+            if (senderTask.action === 'create_directory_structure') {
+              handleDirectoryCreation.call(this, config).catch(error => {
+                console.error(`❌ Directory creation failed: ${error.message}`);
+                try {
+                  this.fail(error);
+                  if (this.parent) {
+                    this.send(this.parent, { type: 'failed', error });
+                  }
+                } catch (innerError) {
+                  console.error(`❌ Failed to handle directory creation error: ${innerError.message}`);
+                }
+              });
+            } else if (senderTask.action === 'initialize_package_json') {
+              handlePackageJsonCreation.call(this, config).catch(error => {
+                console.error(`❌ Package.json creation failed: ${error.message}`);
+                try {
+                  this.fail(error);
+                  if (this.parent) {
+                    this.send(this.parent, { type: 'failed', error });
+                  }
+                } catch (innerError) {
+                  console.error(`❌ Failed to handle package.json creation error: ${innerError.message}`);
+                }
+              });
+            } else if (senderTask.action === 'install_dependencies') {
+              handleDependencyInstallation.call(this, config).catch(error => {
+                console.error(`❌ Dependency installation failed: ${error.message}`);
+                try {
+                  this.fail(error);
+                  if (this.parent) {
+                    this.send(this.parent, { type: 'failed', error });
+                  }
+                } catch (innerError) {
+                  console.error(`❌ Failed to handle dependency installation error: ${innerError.message}`);
+                }
+              });
+            } else {
+              // Default: server generation
+              handleServerGeneration.call(this, config).catch(error => {
+                console.error(`❌ Server generation failed: ${error.message}`);
+                try {
+                  this.fail(error);
+                  if (this.parent) {
+                    this.send(this.parent, { type: 'failed', error });
+                  }
+                } catch (innerError) {
+                  console.error(`❌ Failed to handle server generation error: ${innerError.message}`);
+                }
+              });
+            }
+            break;
+            
+          default:
+            console.log(`ℹ️ SimpleNodeServerStrategy received unhandled message: ${message.type}`);
+        }
+      }
+    } catch (error) {
+      // Catch any synchronous errors in message handling
+      console.error(`❌ SimpleNodeServerStrategy message handler error: ${error.message}`);
+      // Don't let errors escape the message handler - handle them gracefully
       try {
-        // Extract JSON from response
-        const jsonMatch = response.match(/```json\s*([\s\S]*?)```/) || response.match(/{[\s\S]*}/);        
-        const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : response;
-        const data = JSON.parse(jsonStr);
-        return { success: true, data };
-      } catch (error) {
-        return { success: false, errors: [`Failed to parse JSON: ${error.message}`] };
+        if (this.addConversationEntry) {
+          this.addConversationEntry('system', `Message handling error: ${error.message}`);
+        }
+      } catch (innerError) {
+        console.error(`❌ Failed to log message handling error: ${innerError.message}`);
       }
-    } else if (metadata.responseFormat === 'delimited') {
-      // For delimited responses, extract sections
-      const sections = response.split(/---+/);
-      if (sections.length >= 3) {
-        return {
-          success: true,
-          data: {
-            code: sections[0].trim(),
-            dependencies: sections[1] ? sections[1].trim().split(',').map(d => d.trim()).filter(d => d) : [],
-            explanation: sections[2] ? sections[2].trim() : ''
-          }
-        };
-      }
-      // Fall back to structured parsing
-      const codeMatch = response.match(/```(?:javascript|js)?\s*([\s\S]*?)```/);
-      const depsMatch = response.match(/dependencies?:\s*\[([^\]]+)\]/i) || response.match(/dependencies?:\s*([^\n]+)/i);
-      
+    }
+  };
+  
+  return strategy;
+}
+
+// Export default for backward compatibility
+export default createSimpleNodeServerStrategy;
+
+// ============================================================================
+// Internal implementation functions
+// These work with the task instance and strategy config  
+// ============================================================================
+
+/**
+ * Handle child task completion
+ */
+async function handleChildComplete(senderTask, result, config) {
+  console.log(`✅ Child task completed: ${senderTask.description}`);
+  
+  // Copy artifacts from child to parent
+  const childArtifacts = senderTask.getAllArtifacts();
+  for (const [name, artifact] of Object.entries(childArtifacts)) {
+    this.storeArtifact(name, artifact.content, artifact.description, artifact.type);
+  }
+  
+  console.log(`📦 Copied ${Object.keys(childArtifacts).length} artifacts from child`);
+  
+  return { acknowledged: true, childComplete: true };
+}
+
+/**
+ * Initialize strategy components and prompts
+ * Called with task as 'this' context
+ */
+async function initializeDependencies(config, task) {
+  // Get services from task context
+  const context = getContextFromTask(task);
+  config.llmClient = config.llmClient || context.llmClient;
+  config.toolRegistry = config.toolRegistry || context.toolRegistry;
+  
+  if (!config.llmClient) {
+    throw new Error('LLM client is required');
+  }
+  
+  if (!config.toolRegistry) {
+    throw new Error('ToolRegistry is required');
+  }
+  
+  // Load required tools
+  config.tools.fileWrite = await config.toolRegistry.getTool('file_write');
+  config.tools.directoryCreate = await config.toolRegistry.getTool('directory_create');
+}
+
+/**
+ * Main server generation handler
+ */
+async function handleServerGeneration(config) {
+  try {
+    console.log(`🚀 Generating Node.js server for: ${this.description}`);
+    
+    // Initialize components
+    await initializeDependencies(config, this);
+    
+    // Analyze requirements
+    const requirements = await analyzeRequirements(config, this);
+    this.addConversationEntry('system', `Server type: ${requirements.serverType}, Endpoints: ${requirements.endpoints.length}`);
+    
+    // Generate server code
+    const serverCode = await generateServer(config, requirements);
+    
+    // Setup project structure
+    const projectDir = await setupProject(config, this);
+    
+    // Write server file
+    const serverPath = path.join(projectDir, 'server.js');
+    await config.tools.fileWrite.execute({ 
+      filepath: serverPath, 
+      content: serverCode.code 
+    });
+    
+    // Generate and write package.json
+    const packageJson = await generatePackageJson(config, requirements.serverType, serverCode.dependencies);
+    await config.tools.fileWrite.execute({ 
+      filepath: path.join(projectDir, 'package.json'), 
+      content: JSON.stringify(packageJson, null, 2) 
+    });
+    
+    // Store artifacts
+    this.storeArtifact('server.js', serverCode.code, 'Node.js server', 'file');
+    this.storeArtifact('package.json', packageJson, 'Package configuration', 'json');
+    
+    const result = {
+      success: true,
+      message: `Created ${requirements.serverType} server with ${requirements.endpoints.length} endpoints`,
+      projectDir: projectDir,
+      artifacts: Object.values(this.getAllArtifacts())
+    };
+    
+    this.complete(result);
+    
+    // Notify parent if exists (fire-and-forget message passing)
+    if (this.parent) {
+      this.send(this.parent, { type: 'completed', result });
+    }
+    
+  } catch (error) {
+    console.error(`❌ Server generation error:`, error);
+    this.fail(error);
+    
+    // Notify parent of failure if exists (fire-and-forget message passing)
+    if (this.parent) {
+      this.send(this.parent, { type: 'failed', error });
+    }
+  }
+}
+
+/**
+ * Handle directory creation tasks
+ */
+async function handleDirectoryCreation(config) {
+  try {
+    console.log(`📁 Creating directory structure for: ${this.description}`);
+    
+    // Initialize components
+    await initializeDependencies(config, this);
+    
+    // Setup project structure - this will create the directories
+    const projectDir = await setupProject(config, this);
+    
+    // Store artifact
+    this.storeArtifact('project_structure', projectDir, 'Project directory structure', 'directory');
+    
+    const result = {
+      success: true,
+      message: `Created project directory: ${projectDir}`,
+      projectDir: projectDir,
+      artifacts: Object.values(this.getAllArtifacts())
+    };
+    
+    this.complete(result);
+    
+    // Notify parent if exists (fire-and-forget message passing)
+    if (this.parent) {
+      this.send(this.parent, { type: 'completed', result });
+    }
+    
+  } catch (error) {
+    console.error(`❌ Directory creation error:`, error);
+    this.fail(error);
+    
+    // Notify parent of failure if exists (fire-and-forget message passing)
+    if (this.parent) {
+      this.send(this.parent, { type: 'failed', error });
+    }
+  }
+}
+
+/**
+ * Handle package.json creation tasks
+ */
+async function handlePackageJsonCreation(config) {
+  try {
+    console.log(`📦 Creating package.json for: ${this.description}`);
+    
+    // Initialize components
+    await initializeDependencies(config, this);
+    
+    // Generate a basic package.json
+    const packageJson = await generatePackageJson(config, 'express', ['express']);
+    
+    // For this task, we'll store it but not write to file system
+    // The actual writing will be done by server generation task
+    this.storeArtifact('package.json', packageJson, 'Package configuration', 'json');
+    
+    const result = {
+      success: true,
+      message: 'Generated package.json configuration',
+      artifacts: Object.values(this.getAllArtifacts())
+    };
+    
+    this.complete(result);
+    
+    // Notify parent if exists (fire-and-forget message passing)
+    if (this.parent) {
+      this.send(this.parent, { type: 'completed', result });
+    }
+    
+  } catch (error) {
+    console.error(`❌ Package.json creation error:`, error);
+    this.fail(error);
+    
+    // Notify parent of failure if exists (fire-and-forget message passing)
+    if (this.parent) {
+      this.send(this.parent, { type: 'failed', error });
+    }
+  }
+}
+
+/**
+ * Handle dependency installation tasks
+ */
+async function handleDependencyInstallation(config) {
+  try {
+    console.log(`⬇️  Installing dependencies for: ${this.description}`);
+    
+    // For this mock implementation, we'll just simulate success
+    this.storeArtifact('dependencies_installed', 'express@^4.18.2', 'Installed dependencies', 'text');
+    
+    const result = {
+      success: true,
+      message: 'Dependencies installed successfully',
+      artifacts: Object.values(this.getAllArtifacts())
+    };
+    
+    this.complete(result);
+    
+    // Notify parent if exists (fire-and-forget message passing)
+    if (this.parent) {
+      this.send(this.parent, { type: 'completed', result });
+    }
+    
+  } catch (error) {
+    console.error(`❌ Dependency installation error:`, error);
+    this.fail(error);
+    
+    // Notify parent of failure if exists (fire-and-forget message passing)
+    if (this.parent) {
+      this.send(this.parent, { type: 'failed', error });
+    }
+  }
+}
+
+/**
+ * Analyze server requirements from task description
+ */
+async function analyzeRequirements(config, task) {
+  const result = await executePrompt(config,
+    'strategies/simple-node/server/analyze-requirements',
+    { taskDescription: task.description }
+  );
+  
+  if (!result.success) {
+    const errorMsg = result.errors?.map(e => typeof e === 'object' ? JSON.stringify(e) : e).join(', ') || 'Unknown error';
+    throw new Error(`Failed to analyze requirements: ${errorMsg}`);
+  }
+  
+  return result.data;
+}
+
+/**
+ * Generate server code based on requirements
+ */
+async function generateServer(config, requirements) {
+  // Format endpoints for template
+  const endpointsStr = requirements.endpoints.map(
+    e => `- ${e.method} ${e.path}: ${e.description}`
+  ).join('\n');
+  
+  const result = await executePrompt(config,
+    'strategies/simple-node/server/generate-code',
+    {
+      serverType: requirements.serverType,
+      endpoints: endpointsStr
+    }
+  );
+  
+  if (!result.success) {
+    throw new Error(`Failed to generate server: ${result.errors?.join(', ') || 'Unknown error'}`);
+  }
+  
+  return result.data;
+}
+
+/**
+ * Generate package.json
+ */
+async function generatePackageJson(config, serverType, dependencies) {
+  const result = await executePrompt(config,
+    'strategies/simple-node/server/generate-package-json',
+    {
+      serverType: serverType,
+      dependencies: dependencies.join(', ')
+    }
+  );
+  
+  if (!result.success) {
+    throw new Error(`Failed to generate package.json: ${result.errors?.join(', ') || 'Unknown error'}`);
+  }
+  
+  // The LLM returns the package.json directly as result.data
+  // If it's wrapped in packageJson property, use that, otherwise use data directly
+  return result.data.packageJson || result.data;
+}
+
+/**
+ * Setup project directory
+ */
+async function setupProject(config, task) {
+  const timestamp = Date.now();
+  const projectName = `node-server-${timestamp}`;
+  const projectDir = path.join(config.projectRoot, projectName);
+  
+  await config.tools.directoryCreate.execute({ path: config.projectRoot });
+  await config.tools.directoryCreate.execute({ path: projectDir });
+  
+  return projectDir;
+}
+
+/**
+ * Execute prompt with LLM
+ */
+async function executePrompt(config, promptPath, variables) {
+  const prompt = await config.promptRegistry.fill(promptPath, variables);
+  const response = await config.llmClient.complete(prompt);
+  
+  // Parse response based on expected format
+  const metadata = await config.promptRegistry.getMetadata(promptPath);
+  
+  if (metadata.responseFormat === 'json') {
+    try {
+      // Extract JSON from response
+      const jsonMatch = response.match(/```json\s*([\s\S]*?)```/) || response.match(/{[\s\S]*}/);        
+      const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : response;
+      const data = JSON.parse(jsonStr);
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, errors: [`Failed to parse JSON: ${error.message}`] };
+    }
+  } else if (metadata.responseFormat === 'delimited') {
+    // For delimited responses, extract sections
+    const sections = response.split(/---+/);
+    if (sections.length >= 3) {
       return {
         success: true,
         data: {
-          code: codeMatch ? codeMatch[1].trim() : response,
-          dependencies: depsMatch ? depsMatch[1].split(',').map(d => d.trim().replace(/["']/g, '')) : []
+          code: sections[0].trim(),
+          dependencies: sections[1] ? sections[1].trim().split(',').map(d => d.trim()).filter(d => d) : [],
+          explanation: sections[2] ? sections[2].trim() : ''
         }
       };
     }
+    // Fall back to structured parsing
+    const codeMatch = response.match(/```(?:javascript|js)?\s*([\s\S]*?)```/);
+    const depsMatch = response.match(/dependencies?:\s*\[([^\]]+)\]/i) || response.match(/dependencies?:\s*([^\n]+)/i);
     
-    return { success: true, data: response };
-  }
-  
-  /**
-   * DEPRECATED: Define all prompts as data
-   */
-  _getPromptDefinitions() {
     return {
-      analyzeServerRequirements: {
-        template: `Analyze this Node.js server request and extract requirements:
-
-Task: "{{taskDescription}}"
-
-Extract:
-1. Server type (Express, HTTP, Fastify, Koa)
-2. API endpoints needed
-3. Middleware requirements
-4. Database/storage needs
-5. Authentication requirements`,
-        responseSchema: PromptFactory.createJsonSchema({
-          serverType: { type: 'string', enum: ['express', 'http', 'fastify', 'koa'] },
-          endpoints: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                method: { type: 'string' },
-                path: { type: 'string' },
-                description: { type: 'string' }
-              }
-            }
-          },
-          middleware: { type: 'array', items: { type: 'string' } },
-          database: { type: 'string' },
-          authentication: { type: 'boolean' }
-        }, ['serverType', 'endpoints']),
-        examples: [
-          {
-            serverType: 'express',
-            endpoints: [
-              { method: 'GET', path: '/api/users', description: 'List all users' },
-              { method: 'POST', path: '/api/users', description: 'Create a new user' },
-              { method: 'GET', path: '/health', description: 'Health check endpoint' }
-            ],
-            middleware: ['cors', 'body-parser', 'helmet'],
-            database: 'mongodb',
-            authentication: true
-          },
-          {
-            serverType: 'http',
-            endpoints: [
-              { method: 'GET', path: '/', description: 'Simple hello world' },
-              { method: 'GET', path: '/ping', description: 'Ping endpoint' }
-            ],
-            middleware: [],
-            database: 'none',
-            authentication: false
-          }
-        ]
-      },
-      
-      generateServerCode: {
-        template: `Generate a simple Node.js {{serverType}} server with exactly these endpoints:
-
-{{#each endpoints}}
-- {{method}} {{path}}: {{description}}
-{{/each}}
-
-Requirements:
-- Use {{serverType}} framework
-- Include error handling
-- Add basic logging
-- Port from environment variable (default 3000)
-- Graceful shutdown handling
-
-Generate clean, production-ready code with ONLY the endpoints listed above.`,
-        responseSchema: PromptFactory.createJsonSchema({
-          code: { type: 'string' },
-          dependencies: { type: 'array', items: { type: 'string' } }
-        }, ['code', 'dependencies'], 'delimited'),  // Use delimited format for code generation
-        examples: [
-          {
-            code: `import express from 'express';
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.use(express.json());
-
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', uptime: process.uptime() });
-});
-
-// API endpoint
-app.get('/api/hello', (req, res) => {
-  res.json({ message: 'Hello World' });
-});
-
-// Error handler
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(500).json({ error: 'Internal server error' });
-});
-
-const server = app.listen(PORT, () => {
-  console.log(\`Server running on port \${PORT}\`);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down...');
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
-  });
-});`,
-            dependencies: ['express']
-          }
-        ]
-      },
-      
-      generatePackageJson: {
-        template: `Create package.json for a Node.js server:
-
-Server type: {{serverType}}
-Dependencies needed: {{dependencies}}
-
-Include:
-- Scripts: start, dev, test
-- Type: module
-- Node version: >=18`,
-        responseSchema: PromptFactory.createJsonSchema({
-          packageJson: { type: 'object' }
-        }, ['packageJson']),
-        examples: [
-          {
-            packageJson: {
-              name: 'node-server',
-              version: '1.0.0',
-              description: 'Node.js Express server',
-              type: 'module',
-              main: 'server.js',
-              scripts: {
-                start: 'node server.js',
-                dev: 'node --watch server.js',
-                test: 'node --test'
-              },
-              engines: {
-                node: '>=18.0.0'
-              },
-              dependencies: {
-                express: '^4.18.2'
-              },
-              devDependencies: {}
-            }
-          },
-          {
-            packageJson: {
-              name: 'fastify-api',
-              version: '1.0.0',
-              type: 'module',
-              scripts: {
-                start: 'node server.js',
-                dev: 'node --watch server.js',
-                test: 'node --test'
-              },
-              dependencies: {
-                fastify: '^4.24.0',
-                '@fastify/cors': '^8.4.0'
-              }
-            }
-          }
-        ]
+      success: true,
+      data: {
+        code: codeMatch ? codeMatch[1].trim() : response,
+        dependencies: depsMatch ? depsMatch[1].split(',').map(d => d.trim().replace(/["']/g, '')) : []
       }
     };
   }
   
-  /**
-   * Handle messages from any source task
-   */
-  async onMessage(sourceTask, message) {
-    switch (message.type) {
-      case 'start':
-      case 'work':
-        // Determine handler based on action type
-        switch (sourceTask.action) {
-          case 'create_directory_structure':
-            return await this._handleDirectoryCreation(sourceTask);
-          case 'initialize_package_json':
-            return await this._handlePackageJsonCreation(sourceTask);
-          case 'install_dependencies':
-            return await this._handleDependencyInstallation(sourceTask);
-          case 'generate_server_code':
-          case 'create_base_routes':
-          case 'implement_feature':
-          case 'add_basic_features':
-          default:
-            return await this._handleServerGeneration(sourceTask);
-        }
-      default:
-        return { acknowledged: true };
-    }
-  }
-  
-  /**
-   * Main server generation handler
-   */
-  async _handleServerGeneration(task) {
-    try {
-      console.log(`🚀 Generating Node.js server for: ${task.description}`);
-      
-      // Initialize components
-      await this.initialize(task);
-      
-      // Analyze requirements
-      const requirements = await this._analyzeRequirements(task);
-      task.addConversationEntry('system', `Server type: ${requirements.serverType}, Endpoints: ${requirements.endpoints.length}`);
-      
-      // Generate server code
-      const serverCode = await this._generateServer(requirements);
-      
-      // Setup project structure
-      const projectDir = await this._setupProject(task);
-      
-      // Write server file
-      const serverPath = path.join(projectDir, 'server.js');
-      await this.tools.fileWrite.execute({ 
-        filepath: serverPath, 
-        content: serverCode.code 
-      });
-      
-      // Generate and write package.json
-      const packageJson = await this._generatePackageJson(requirements.serverType, serverCode.dependencies);
-      await this.tools.fileWrite.execute({ 
-        filepath: path.join(projectDir, 'package.json'), 
-        content: JSON.stringify(packageJson, null, 2) 
-      });
-      
-      // Store artifacts
-      task.storeArtifact('server.js', serverCode.code, 'Node.js server', 'file');
-      task.storeArtifact('package.json', packageJson, 'Package configuration', 'json');
-      
-      const result = {
-        success: true,
-        message: `Created ${requirements.serverType} server with ${requirements.endpoints.length} endpoints`,
-        projectDir: projectDir,
-        artifacts: Object.values(task.getAllArtifacts())
-      };
-      
-      task.complete(result);
-      return result;
-      
-    } catch (error) {
-      console.error(`❌ Server generation error:`, error);
-      task.fail(error);
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-  }
-  
-  /**
-   * Analyze server requirements from task description
-   */
-  async _analyzeRequirements(task) {
-    const result = await this._executePrompt(
-      'strategies/simple-node/server/analyze-requirements',
-      { taskDescription: task.description }
-    );
-    
-    if (!result.success) {
-      const errorMsg = result.errors?.map(e => typeof e === 'object' ? JSON.stringify(e) : e).join(', ') || 'Unknown error';
-      throw new Error(`Failed to analyze requirements: ${errorMsg}`);
-    }
-    
-    return result.data;
-  }
-  
-  /**
-   * Generate server code based on requirements
-   */
-  async _generateServer(requirements) {
-    // Format endpoints for template
-    const endpointsStr = requirements.endpoints.map(
-      e => `- ${e.method} ${e.path}: ${e.description}`
-    ).join('\n');
-    
-    const result = await this._executePrompt(
-      'strategies/simple-node/server/generate-code',
-      {
-        serverType: requirements.serverType,
-        endpoints: endpointsStr
-      }
-    );
-    
-    if (!result.success) {
-      throw new Error(`Failed to generate server: ${result.errors?.join(', ') || 'Unknown error'}`);
-    }
-    
-    return result.data;
-  }
-  
-  /**
-   * Generate package.json
-   */
-  async _generatePackageJson(serverType, dependencies) {
-    const result = await this._executePrompt(
-      'strategies/simple-node/server/generate-package-json',
-      {
-        serverType: serverType,
-        dependencies: dependencies.join(', ')
-      }
-    );
-    
-    if (!result.success) {
-      throw new Error(`Failed to generate package.json: ${result.errors?.join(', ') || 'Unknown error'}`);
-    }
-    
-    // The LLM returns the package.json directly as result.data
-    // If it's wrapped in packageJson property, use that, otherwise use data directly
-    return result.data.packageJson || result.data;
-  }
-  
-  /**
-   * Setup project directory
-   */
-  async _setupProject(task) {
-    const timestamp = Date.now();
-    const projectName = `node-server-${timestamp}`;
-    const projectDir = path.join(this.projectRoot, projectName);
-    
-    await this.tools.directoryCreate.execute({ path: this.projectRoot });
-    await this.tools.directoryCreate.execute({ path: projectDir });
-    
-    return projectDir;
-  }
-  
-  /**
-   * Handle directory creation tasks
-   */
-  async _handleDirectoryCreation(task) {
-    try {
-      console.log(`📁 Creating directory structure for: ${task.description}`);
-      
-      // Initialize components
-      await this.initialize(task);
-      
-      // Setup project structure - this will create the directories
-      const projectDir = await this._setupProject(task);
-      
-      // Store artifact
-      task.storeArtifact('project_structure', projectDir, 'Project directory structure', 'directory');
-      
-      const result = {
-        success: true,
-        message: `Created project directory: ${projectDir}`,
-        projectDir: projectDir,
-        artifacts: Object.values(task.getAllArtifacts())
-      };
-      
-      task.complete(result);
-      return result;
-      
-    } catch (error) {
-      console.error(`❌ Directory creation error:`, error);
-      task.fail(error);
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-  }
-  
-  /**
-   * Handle package.json creation tasks
-   */
-  async _handlePackageJsonCreation(task) {
-    try {
-      console.log(`📦 Creating package.json for: ${task.description}`);
-      
-      // Initialize components
-      await this.initialize(task);
-      
-      // Generate a basic package.json
-      const packageJson = await this._generatePackageJson('express', ['express']);
-      
-      // For this task, we'll store it but not write to file system
-      // The actual writing will be done by server generation task
-      task.storeArtifact('package.json', packageJson, 'Package configuration', 'json');
-      
-      const result = {
-        success: true,
-        message: 'Generated package.json configuration',
-        artifacts: Object.values(task.getAllArtifacts())
-      };
-      
-      task.complete(result);
-      return result;
-      
-    } catch (error) {
-      console.error(`❌ Package.json creation error:`, error);
-      task.fail(error);
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-  }
-  
-  /**
-   * Handle dependency installation tasks
-   */
-  async _handleDependencyInstallation(task) {
-    try {
-      console.log(`⬇️  Installing dependencies for: ${task.description}`);
-      
-      // For this mock implementation, we'll just simulate success
-      task.storeArtifact('dependencies_installed', 'express@^4.18.2', 'Installed dependencies', 'text');
-      
-      const result = {
-        success: true,
-        message: 'Dependencies installed successfully',
-        artifacts: Object.values(task.getAllArtifacts())
-      };
-      
-      task.complete(result);
-      return result;
-      
-    } catch (error) {
-      console.error(`❌ Dependency installation error:`, error);
-      task.fail(error);
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-  }
+  return { success: true, data: response };
+}
 
-  /**
-   * Extract context from task
-   */
-  _getContextFromTask(task) {
-    return {
-      llmClient: (task.lookup && task.lookup('llmClient')) || task.context?.llmClient,
-      toolRegistry: (task.lookup && task.lookup('toolRegistry')) || task.context?.toolRegistry,
-      workspaceDir: (task.lookup && task.lookup('workspaceDir')) || task.context?.workspaceDir || this.projectRoot
-    };
-  }
+/**
+ * Helper to extract context from task
+ */
+function getContextFromTask(task) {
+  return {
+    llmClient: (task.lookup && task.lookup('llmClient')) || task.context?.llmClient,
+    toolRegistry: (task.lookup && task.lookup('toolRegistry')) || task.context?.toolRegistry,
+    workspaceDir: (task.lookup && task.lookup('workspaceDir')) || task.context?.workspaceDir
+  };
 }

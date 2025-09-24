@@ -1,5 +1,6 @@
 /**
  * SimpleNodeDebugStrategy - Strategy for debugging Node.js applications
+ * Converted to pure prototypal pattern
  * 
  * Focused on identifying and fixing issues in Node.js code.
  * Uses PromptFactory for all LLM interactions with data-driven prompts.
@@ -14,566 +15,506 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export default class SimpleNodeDebugStrategy extends TaskStrategy {
-  constructor(llmClient = null, toolRegistry = null, options = {}) {
-    super();
-    
-    this.llmClient = llmClient;
-    this.toolRegistry = toolRegistry;
-    this.projectRoot = options.projectRoot || '/tmp/roma-projects';
+/**
+ * Create a SimpleNodeDebugStrategy prototype
+ * This factory function creates the strategy with its dependencies
+ */
+export function createSimpleNodeDebugStrategy(llmClient = null, toolRegistry = null, options = {}) {
+  // Create the strategy as an object that inherits from TaskStrategy
+  const strategy = Object.create(TaskStrategy);
+  
+  // Store configuration
+  const config = {
+    llmClient: llmClient,
+    toolRegistry: toolRegistry,
+    projectRoot: options.projectRoot || '/tmp/roma-projects',
     
     // Pre-instantiated tools
-    this.tools = {
+    tools: {
       fileRead: null,
       fileWrite: null,
       commandExecutor: null
-    };
+    },
     
     // Initialize prompt registry
-    const promptsPath = path.resolve(__dirname, '../../../prompts');
-    this.promptRegistry = new EnhancedPromptRegistry(promptsPath);
-  }
+    promptRegistry: null
+  };
   
-  getName() {
-    return 'SimpleNodeDebug';
-  }
-  
-  /**
-   * Initialize strategy components and prompts
-   */
-  async initialize(task) {
-    const context = this._getContextFromTask(task);
-    this.llmClient = this.llmClient || context.llmClient;
-    this.toolRegistry = this.toolRegistry || context.toolRegistry;
-    
-    if (!this.llmClient) {
-      throw new Error('LLM client is required');
-    }
-    
-    if (!this.toolRegistry) {
-      throw new Error('ToolRegistry is required');
-    }
-    
-    // Load required tools
-    this.tools.fileRead = await this.toolRegistry.getTool('file_read');
-    this.tools.fileWrite = await this.toolRegistry.getTool('file_write');
-    this.tools.commandExecutor = await this.toolRegistry.getTool('command_executor');
-  }
+  // Initialize prompt registry
+  const promptsPath = path.resolve(__dirname, '../../../prompts');
+  config.promptRegistry = new EnhancedPromptRegistry(promptsPath);
   
   /**
-   * Execute prompt with LLM
+   * The only required method - handles all messages
    */
-  async _executePrompt(promptPath, variables) {
-    const prompt = await this.promptRegistry.fill(promptPath, variables);
-    const response = await this.llmClient.complete(prompt);
+  strategy.onMessage = function onMessage(senderTask, message) {
+    // 'this' is the task instance that received the message
     
-    // Parse response based on expected format
-    const metadata = await this.promptRegistry.getMetadata(promptPath);
-    
-    if (metadata.responseFormat === 'json') {
-      try {
-        // Extract JSON from response
-        const jsonMatch = response.match(/```json\s*([\s\S]*?)```/) || response.match(/{[\s\S]*}/);        
-        const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : response;
-        const data = JSON.parse(jsonStr);
-        return { success: true, data };
-      } catch (error) {
-        return { success: false, errors: [`Failed to parse JSON: ${error.message}`] };
-      }
-    } else if (metadata.responseFormat === 'delimited') {
-      // For delimited responses, extract sections
-      const codeMatch = response.match(/```(?:javascript|js)?\s*([\s\S]*?)```/);
-      const explainMatch = response.match(/explanation:\s*([\s\S]*?)(?=testing:|$)/i);
-      const testingMatch = response.match(/testing:\s*([\s\S]*?)$/i);
-      const debugMatch = response.match(/debug\s*points?:\s*([\s\S]*?)$/i);
-      
-      return {
-        success: true,
-        data: {
-          fixedCode: codeMatch ? codeMatch[1].trim() : '',
-          debugCode: codeMatch ? codeMatch[1].trim() : '',
-          explanation: explainMatch ? explainMatch[1].trim() : '',
-          testingSteps: testingMatch ? testingMatch[1].trim() : '',
-          debugPoints: debugMatch ? debugMatch[1].trim() : ''
-        }
-      };
-    }
-    
-    return { success: true, data: response };
-  }
-  
-  /**
-   * DEPRECATED: Define all prompts as data
-   */
-  _getPromptDefinitions() {
-    return {
-      analyzeError: {
-        template: `Analyze this Node.js error and identify the issue:
-
-Error Message:
-{{errorMessage}}
-
-Stack Trace:
-{{stackTrace}}
-
-Code Context (if available):
-{{codeContext}}
-
-Analyze this specific error and return a single analysis object with:
-1. Root cause
-2. Error type
-3. Affected code location
-4. Suggested fix
-
-Return ONE analysis object (not an array).`,
-        responseSchema: PromptFactory.createJsonSchema({
-          rootCause: { type: 'string' },
-          errorType: { type: 'string' },
-          location: {
-            type: 'object',
-            properties: {
-              file: { type: 'string' },
-              line: { type: 'number' },
-              function: { type: 'string' }
-            }
-          },
-          suggestedFix: { type: 'string' },
-          confidence: { type: 'string', enum: ['high', 'medium', 'low'] }
-        }, ['rootCause', 'errorType', 'suggestedFix']),
-        examples: [
-          {
-            rootCause: 'Attempting to read property of undefined variable',
-            errorType: 'TypeError',
-            location: {
-              file: 'server.js',
-              line: 42,
-              function: 'handleRequest'
-            },
-            suggestedFix: 'Add null check before accessing object properties',
-            confidence: 'high'
-          },
-          {
-            rootCause: 'Port already in use by another process',
-            errorType: 'EADDRINUSE',
-            location: {
-              file: 'server.js',
-              line: 100,
-              function: 'listen'
-            },
-            suggestedFix: 'Use a different port or kill the existing process',
-            confidence: 'high'
-          },
-          {
-            rootCause: 'Module not found in node_modules',
-            errorType: 'MODULE_NOT_FOUND',
-            location: {
-              file: 'index.js',
-              line: 1,
-              function: 'require'
-            },
-            suggestedFix: 'Run npm install to install missing dependencies',
-            confidence: 'medium'
-          }
-        ]
-      },
-      
-      generateFix: {
-        template: `Fix this Node.js code issue:
-
-Problem: {{problem}}
-Root Cause: {{rootCause}}
-
-Original Code:
-{{originalCode}}
-
-Generate:
-1. Fixed code
-2. Explanation of changes
-3. How to test the fix`,
-        responseSchema: PromptFactory.createJsonSchema({
-          fixedCode: { type: 'string' },
-          explanation: { type: 'string' },
-          testingSteps: { type: 'string' }  // Changed to string for delimited format
-        }, ['fixedCode', 'explanation'], 'delimited'),  // Use delimited for code
-        examples: [
-          {
-            fixedCode: `// Fixed: Added null check to prevent TypeError
-function handleRequest(req, res) {
-  if (!req.body || !req.body.user) {
-    return res.status(400).json({ error: 'Invalid request body' });
-  }
-  
-  const username = req.body.user.name; // Now safe to access
-  // ... rest of code
-}`,
-            explanation: 'Added defensive checks to ensure req.body and req.body.user exist before accessing nested properties. This prevents TypeError when the request body is malformed or missing.',
-            testingSteps: 'Send a request with a valid user object and verify it works. Send a request with an empty body and verify it returns 400. Send a request with body but no user field and verify error handling.'
-          }
-        ]
-      },
-      
-      addDebugging: {
-        template: `Add debugging statements to this Node.js code:
-
-Code:
-{{code}}
-
-Add:
-- Console.log statements at key points
-- Error boundary checks
-- Variable state logging
-- Performance timing
-
-Keep changes minimal and focused.`,
-        responseSchema: PromptFactory.createJsonSchema({
-          debugCode: { type: 'string' },
-          debugPoints: { type: 'string' }  // Changed to string for delimited format
-        }, ['debugCode'], 'delimited'),  // Use delimited for code
-        examples: [
-          {
-            debugCode: `function processData(data) {
-  console.log('[DEBUG] processData called with:', { dataLength: data?.length, dataType: typeof data });
-  const startTime = performance.now();
-  
-  try {
-    if (!data || !Array.isArray(data)) {
-      console.error('[DEBUG] Invalid data format:', data);
-      throw new Error('Data must be a non-empty array');
-    }
-    
-    console.log('[DEBUG] Processing', data.length, 'items');
-    const result = data.map((item, index) => {
-      console.log(\`[DEBUG] Processing item \${index}:\`, item);
-      return item * 2;
-    });
-    
-    const elapsed = performance.now() - startTime;
-    console.log(\`[DEBUG] processData completed in \${elapsed.toFixed(2)}ms\`);
-    return result;
-  } catch (error) {
-    console.error('[DEBUG] Error in processData:', error);
-    throw error;
-  }
-}`,
-            debugPoints: 'Entry point with input validation, Performance timing start, Data validation check, Processing loop with item details, Completion timing, Error handling'
-          }
-        ]
-      }
-    };
-  }
-  
-  /**
-   * Handle messages from any source task
-   */
-  async onMessage(sourceTask, message) {
-    switch (message.type) {
-      case 'start':
-      case 'work':
-        return await this._handleDebugging(sourceTask);
-      default:
-        return { acknowledged: true };
-    }
-  }
-  
-  /**
-   * Main debugging handler
-   */
-  async _handleDebugging(task) {
     try {
-      console.log(`🐛 Debugging: ${task.description}`);
-      
-      // Initialize components
-      await this.initialize(task);
-      
-      // Determine debug type from task
-      const debugType = this._determineDebugType(task.description);
-      
-      let result;
-      switch (debugType) {
-        case 'error':
-          result = await this._debugError(task);
-          break;
-        case 'performance':
-          result = await this._debugPerformance(task);
-          break;
-        case 'logic':
-          result = await this._debugLogic(task);
-          break;
-        default:
-          result = await this._addDebugging(task);
-      }
-      
-      task.complete(result);
-      return result;
-      
-    } catch (error) {
-      console.error(`❌ Debugging error:`, error);
-      task.fail(error);
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-  }
-  
-  /**
-   * Determine type of debugging needed
-   */
-  _determineDebugType(description) {
-    const lower = description.toLowerCase();
-    
-    if (lower.includes('error') || lower.includes('exception') || lower.includes('crash')) {
-      return 'error';
-    }
-    if (lower.includes('slow') || lower.includes('performance') || lower.includes('timeout')) {
-      return 'performance';
-    }
-    if (lower.includes('wrong') || lower.includes('incorrect') || lower.includes('bug')) {
-      return 'logic';
-    }
-    
-    return 'general';
-  }
-  
-  /**
-   * Debug error/exception issues
-   */
-  async _debugError(task) {
-    // Get error information from task
-    const errorInfo = await this._extractErrorInfo(task);
-    
-    // Analyze the error
-    const analysis = await this._executePrompt(
-      'strategies/simple-node/debug/analyze-error',
-      {
-        errorMessage: errorInfo.message,
-        stackTrace: errorInfo.stack,
-        codeContext: errorInfo.code
-      }
-    );
-    
-    if (!analysis.success) {
-      throw new Error(`Failed to analyze error: ${analysis.errors?.join(', ') || 'Unknown error'}`);
-    }
-    
-    task.addConversationEntry('system', `Error type: ${analysis.data.errorType}, Cause: ${analysis.data.rootCause}`);
-    
-    // Generate fix if code is available
-    if (errorInfo.code) {
-      const fix = await this._executePrompt(
-        'strategies/simple-node/debug/generate-fix',
-        {
-          problem: errorInfo.message,
-          rootCause: analysis.data.rootCause,
-          originalCode: errorInfo.code
+      // Determine if message is from child or parent/initiator
+      if (senderTask.parent === this) {
+        // Message from child task
+        switch (message.type) {
+          case 'completed':
+            console.log(`✅ SimpleNodeDebug child task completed: ${senderTask.description}`);
+            // Handle child task completion
+            handleChildComplete.call(this, senderTask, message.result, config).catch(error => {
+              console.error(`❌ SimpleNodeDebugStrategy child completion handling failed: ${error.message}`);
+              try {
+                this.fail(error);
+                if (this.parent) {
+                  this.send(this.parent, { type: 'failed', error });
+                }
+              } catch (innerError) {
+                console.error(`❌ Failed to handle child completion error: ${innerError.message}`);
+              }
+            });
+            break;
+            
+          case 'failed':
+            console.log(`❌ SimpleNodeDebug child task failed: ${senderTask.description}`);
+            this.send(this.parent, { type: 'child-failed', child: senderTask, error: message.error });
+            break;
+            
+          default:
+            console.log(`ℹ️ SimpleNodeDebugStrategy received unhandled message from child: ${message.type}`);
         }
-      );
-      
-      if (!fix.success) {
-        throw new Error(`Failed to generate fix: ${fix.errors?.join(', ') || 'Unknown error'}`);
+      } else {
+        // Message from parent or initiator
+        switch (message.type) {
+          case 'start':
+          case 'work':
+            // Fire-and-forget async operation with error boundary
+            handleDebugging.call(this, config).catch(error => {
+              console.error(`❌ SimpleNodeDebugStrategy async operation failed: ${error.message}`);
+              try {
+                this.fail(error);
+                if (this.parent) {
+                  this.send(this.parent, { type: 'failed', error });
+                }
+              } catch (innerError) {
+                console.error(`❌ Failed to handle async error: ${innerError.message}`);
+              }
+            });
+            break;
+            
+          default:
+            console.log(`ℹ️ SimpleNodeDebugStrategy received unhandled message: ${message.type}`);
+        }
       }
-      
-      // Write fixed code
-      const fixedPath = await this._writeFixedCode(task, fix.data.fixedCode);
-      
-      task.storeArtifact('fixed_code.js', fix.data.fixedCode, 'Fixed code', 'file');
-      task.storeArtifact('fix_explanation.md', fix.data.explanation, 'Fix explanation', 'text');
+    } catch (error) {
+      // Catch any synchronous errors in message handling
+      console.error(`❌ SimpleNodeDebugStrategy message handler error: ${error.message}`);
+      // Don't let errors escape the message handler - handle them gracefully
+      try {
+        if (this.addConversationEntry) {
+          this.addConversationEntry('system', `Message handling error: ${error.message}`);
+        }
+      } catch (innerError) {
+        console.error(`❌ Failed to log message handling error: ${innerError.message}`);
+      }
+    }
+  };
+  
+  return strategy;
+}
+
+// Export default for backward compatibility
+export default createSimpleNodeDebugStrategy;
+
+// ============================================================================
+// Internal implementation functions
+// These work with the task instance and strategy config  
+// ============================================================================
+
+/**
+ * Handle child task completion
+ */
+async function handleChildComplete(senderTask, result, config) {
+  console.log(`✅ Child task completed: ${senderTask.description}`);
+  
+  // Copy artifacts from child to parent
+  const childArtifacts = senderTask.getAllArtifacts();
+  for (const [name, artifact] of Object.entries(childArtifacts)) {
+    this.storeArtifact(name, artifact.content, artifact.description, artifact.type);
+  }
+  
+  console.log(`📦 Copied ${Object.keys(childArtifacts).length} artifacts from child`);
+  
+  return { acknowledged: true, childComplete: true };
+}
+
+/**
+ * Initialize strategy components and prompts
+ * Called with task as 'this' context
+ */
+async function initializeDependencies(config, task) {
+  // Get services from task context
+  const context = getContextFromTask(task);
+  config.llmClient = config.llmClient || context.llmClient;
+  config.toolRegistry = config.toolRegistry || context.toolRegistry;
+  
+  if (!config.llmClient) {
+    throw new Error('LLM client is required');
+  }
+  
+  if (!config.toolRegistry) {
+    throw new Error('ToolRegistry is required');
+  }
+  
+  // Load required tools
+  config.tools.fileRead = await config.toolRegistry.getTool('file_read');
+  config.tools.fileWrite = await config.toolRegistry.getTool('file_write');
+  config.tools.commandExecutor = await config.toolRegistry.getTool('command_executor');
+}
+/**
+ * Main debugging handler
+ */
+async function handleDebugging(config) {
+  try {
+    console.log(`🐛 Debugging: ${this.description}`);
+    
+    // Initialize components
+    await initializeDependencies(config, this);
+    
+    // Determine debug type from task
+    const debugType = determineDebugType(this.description);
+    
+    let result;
+    switch (debugType) {
+      case 'error':
+        result = await debugError(config, this);
+        break;
+      case 'performance':
+        result = await debugPerformance(config, this);
+        break;
+      case 'logic':
+        result = await debugLogic(config, this);
+        break;
+      default:
+        result = await addDebugging(config, this);
+    }
+    
+    this.complete(result);
+    
+    // Notify parent if exists (fire-and-forget message passing)
+    if (this.parent) {
+      this.send(this.parent, { type: 'completed', result });
+    }
+    
+  } catch (error) {
+    console.error(`❌ Debugging error:`, error);
+    
+    this.addConversationEntry('system', 
+      `Debugging failed: ${error.message}`);
+    
+    this.fail(error);
+    
+    // Notify parent of failure if exists (fire-and-forget message passing)
+    if (this.parent) {
+      this.send(this.parent, { type: 'failed', error });
+    }
+  }
+}
+
+/**
+ * Execute prompt with LLM
+ */
+async function executePrompt(config, promptPath, variables) {
+  const prompt = await config.promptRegistry.fill(promptPath, variables);
+  const response = await config.llmClient.complete(prompt);
+  
+  // Parse response based on expected format
+  const metadata = await config.promptRegistry.getMetadata(promptPath);
+  
+  if (metadata.responseFormat === 'json') {
+    try {
+      // Extract JSON from response
+      const jsonMatch = response.match(/```json\s*([\s\S]*?)```/) || response.match(/{[\s\S]*}/);        
+      const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : response;
+      const data = JSON.parse(jsonStr);
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, errors: [`Failed to parse JSON: ${error.message}`] };
+    }
+  } else if (metadata.responseFormat === 'delimited') {
+    // For delimited responses, extract sections
+    const codeMatch = response.match(/```(?:javascript|js)?\s*([\s\S]*?)```/);
+    const explainMatch = response.match(/explanation:\s*([\s\S]*?)(?=testing:|$)/i);
+    const testingMatch = response.match(/testing:\s*([\s\S]*?)$/i);
+    const debugMatch = response.match(/debug\s*points?:\s*([\s\S]*?)$/i);
+    
+    return {
+      success: true,
+      data: {
+        fixedCode: codeMatch ? codeMatch[1].trim() : '',
+        debugCode: codeMatch ? codeMatch[1].trim() : '',
+        explanation: explainMatch ? explainMatch[1].trim() : '',
+        testingSteps: testingMatch ? testingMatch[1].trim() : '',
+        debugPoints: debugMatch ? debugMatch[1].trim() : ''
+      }
+    };
+  }
+  
+  return { success: true, data: response };
+}
+/**
+ * Determine type of debugging needed
+ */
+function determineDebugType(description) {
+  const lower = description.toLowerCase();
+  
+  if (lower.includes('error') || lower.includes('exception') || lower.includes('crash')) {
+    return 'error';
+  }
+  if (lower.includes('slow') || lower.includes('performance') || lower.includes('timeout')) {
+    return 'performance';
+  }
+  if (lower.includes('wrong') || lower.includes('incorrect') || lower.includes('bug')) {
+    return 'logic';
+  }
+  
+  return 'general';
+}
+
+/**
+ * Debug error/exception issues
+ */
+async function debugError(config, task) {
+  // Get error information from task
+  const errorInfo = await extractErrorInfo(config, task);
+  
+  // Analyze the error
+  const analysis = await executePrompt(config,
+    'strategies/simple-node/debug/analyze-error',
+    {
+      errorMessage: errorInfo.message,
+      stackTrace: errorInfo.stack,
+      codeContext: errorInfo.code
+    }
+  );
+  
+  if (!analysis.success) {
+    throw new Error(`Failed to analyze error: ${analysis.errors?.join(', ') || 'Unknown error'}`);
+  }
+  
+  task.addConversationEntry('system', `Error type: ${analysis.data.errorType}, Cause: ${analysis.data.rootCause}`);
+  
+  // Generate fix if code is available
+  if (errorInfo.code) {
+    const fix = await executePrompt(config,
+      'strategies/simple-node/debug/generate-fix',
+      {
+        problem: errorInfo.message,
+        rootCause: analysis.data.rootCause,
+        originalCode: errorInfo.code
+      }
+    );
+    
+    if (!fix.success) {
+      throw new Error(`Failed to generate fix: ${fix.errors?.join(', ') || 'Unknown error'}`);
+    }
+    
+    // Write fixed code
+    const fixedPath = await writeFixedCode(config, task, fix.data.fixedCode);
+    
+    task.storeArtifact('fixed_code.js', fix.data.fixedCode, 'Fixed code', 'file');
+    task.storeArtifact('fix_explanation.md', fix.data.explanation, 'Fix explanation', 'text');
+    
+    return {
+      success: true,
+      message: `Fixed ${analysis.data.errorType} error`,
+      analysis: analysis.data,
+      fix: fix.data,
+      fixedFile: fixedPath,
+      artifacts: Object.values(task.getAllArtifacts())
+    };
+  }
+  
+  return {
+    success: true,
+    message: 'Error analyzed',
+    analysis: analysis.data,
+    artifacts: Object.values(task.getAllArtifacts())
+  };
+}
+
+/**
+ * Debug performance issues
+ */
+async function debugPerformance(config, task) {
+  const code = await getCodeFromTask(config, task);
+  
+  if (!code) {
+    throw new Error('No code provided for performance debugging');
+  }
+  
+  // Add performance debugging
+  const result = await executePrompt(config,
+    'strategies/simple-node/debug/add-debugging',
+    { code: code }
+  );
+  
+  if (!result.success) {
+    throw new Error(`Failed to add debugging: ${result.errors?.join(', ') || 'Unknown error'}`);
+  }
+  
+  // Write debug version
+  const debugPath = await writeDebugCode(config, task, result.data.debugCode);
+  
+  task.storeArtifact('debug_code.js', result.data.debugCode, 'Code with performance debugging', 'file');
+  
+  return {
+    success: true,
+    message: 'Added performance debugging',
+    debugPoints: result.data.debugPoints,
+    debugFile: debugPath,
+    artifacts: Object.values(task.getAllArtifacts())
+  };
+}
+
+/**
+ * Debug logic issues
+ */
+async function debugLogic(config, task) {
+  const code = await getCodeFromTask(config, task);
+  
+  if (!code) {
+    throw new Error('No code provided for logic debugging');
+  }
+  
+  // Add debugging statements
+  const result = await executePrompt(config,
+    'strategies/simple-node/debug/add-debugging',
+    { code: code }
+  );
+  
+  if (!result.success) {
+    throw new Error(`Failed to add debugging: ${result.errors?.join(', ') || 'Unknown error'}`);
+  }
+  
+  // Write debug version
+  const debugPath = await writeDebugCode(config, task, result.data.debugCode);
+  
+  task.storeArtifact('debug_code.js', result.data.debugCode, 'Code with logic debugging', 'file');
+  
+  return {
+    success: true,
+    message: 'Added logic debugging',
+    debugPoints: result.data.debugPoints,
+    debugFile: debugPath,
+    artifacts: Object.values(task.getAllArtifacts())
+  };
+}
+
+/**
+ * Add general debugging
+ */
+async function addDebugging(config, task) {
+  const code = await getCodeFromTask(config, task);
+  
+  if (!code) {
+    throw new Error('No code provided for debugging');
+  }
+  
+  const result = await executePrompt(config,
+    'strategies/simple-node/debug/add-debugging',
+    { code: code }
+  );
+  
+  if (!result.success) {
+    throw new Error(`Failed to add debugging: ${result.errors?.join(', ') || 'Unknown error'}`);
+  }
+  
+  const debugPath = await writeDebugCode(config, task, result.data.debugCode);
+  
+  task.storeArtifact('debug_code.js', result.data.debugCode, 'Code with debugging', 'file');
+  
+  return {
+    success: true,
+    message: 'Added debugging statements',
+    debugPoints: result.data.debugPoints,
+    debugFile: debugPath,
+    artifacts: Object.values(task.getAllArtifacts())
+  };
+}
+
+/**
+ * Extract error information from task
+ */
+async function extractErrorInfo(config, task) {
+  const artifacts = task.getAllArtifacts();
+  
+  // Look for error artifact
+  for (const artifact of Object.values(artifacts)) {
+    if (artifact.type === 'error' || artifact.name.includes('error')) {
+      // Get code from error artifact if available, otherwise from task artifacts
+      const codeFromError = artifact.value.code || '';
+      const codeFromTask = codeFromError || await getCodeFromTask(config, task) || '';
       
       return {
-        success: true,
-        message: `Fixed ${analysis.data.errorType} error`,
-        analysis: analysis.data,
-        fix: fix.data,
-        fixedFile: fixedPath,
-        artifacts: Object.values(task.getAllArtifacts())
+        message: artifact.value.message || artifact.value,
+        stack: artifact.value.stack || '',
+        code: codeFromTask
       };
     }
-    
-    return {
-      success: true,
-      message: 'Error analyzed',
-      analysis: analysis.data,
-      artifacts: Object.values(task.getAllArtifacts())
-    };
   }
   
-  /**
-   * Debug performance issues
-   */
-  async _debugPerformance(task) {
-    const code = await this._getCodeFromTask(task);
-    
-    if (!code) {
-      throw new Error('No code provided for performance debugging');
+  // Try to extract from description
+  const description = task.description;
+  return {
+    message: description,
+    stack: '',
+    code: await getCodeFromTask(config, task) || ''
+  };
+}
+
+/**
+ * Get code from task artifacts or file
+ */
+async function getCodeFromTask(config, task) {
+  const artifacts = task.getAllArtifacts();
+  
+  for (const artifact of Object.values(artifacts)) {
+    if (artifact.type === 'file' && artifact.name.endsWith('.js')) {
+      return artifact.value;
     }
-    
-    // Add performance debugging
-    const result = await this._executePrompt(
-      'strategies/simple-node/debug/add-debugging',
-      { code: code }
-    );
-    
-    if (!result.success) {
-      throw new Error(`Failed to add debugging: ${result.errors?.join(', ') || 'Unknown error'}`);
-    }
-    
-    // Write debug version
-    const debugPath = await this._writeDebugCode(task, result.data.debugCode);
-    
-    task.storeArtifact('debug_code.js', result.data.debugCode, 'Code with performance debugging', 'file');
-    
-    return {
-      success: true,
-      message: 'Added performance debugging',
-      debugPoints: result.data.debugPoints,
-      debugFile: debugPath,
-      artifacts: Object.values(task.getAllArtifacts())
-    };
   }
   
-  /**
-   * Debug logic issues
-   */
-  async _debugLogic(task) {
-    const code = await this._getCodeFromTask(task);
-    
-    if (!code) {
-      throw new Error('No code provided for logic debugging');
-    }
-    
-    // Add debugging statements
-    const result = await this._executePrompt(
-      'strategies/simple-node/debug/add-debugging',
-      { code: code }
-    );
-    
-    if (!result.success) {
-      throw new Error(`Failed to add debugging: ${result.errors?.join(', ') || 'Unknown error'}`);
-    }
-    
-    // Write debug version
-    const debugPath = await this._writeDebugCode(task, result.data.debugCode);
-    
-    task.storeArtifact('debug_code.js', result.data.debugCode, 'Code with logic debugging', 'file');
-    
-    return {
-      success: true,
-      message: 'Added logic debugging',
-      debugPoints: result.data.debugPoints,
-      debugFile: debugPath,
-      artifacts: Object.values(task.getAllArtifacts())
-    };
-  }
+  return null;
+}
+
+/**
+ * Write fixed code to file
+ */
+async function writeFixedCode(config, task, code) {
+  const timestamp = Date.now();
+  const filename = `fixed-${timestamp}.js`;
+  const filepath = path.join(config.projectRoot, filename);
   
-  /**
-   * Add general debugging
-   */
-  async _addDebugging(task) {
-    const code = await this._getCodeFromTask(task);
-    
-    if (!code) {
-      throw new Error('No code provided for debugging');
-    }
-    
-    const result = await this._executePrompt(
-      'strategies/simple-node/debug/add-debugging',
-      { code: code }
-    );
-    
-    if (!result.success) {
-      throw new Error(`Failed to add debugging: ${result.errors?.join(', ') || 'Unknown error'}`);
-    }
-    
-    const debugPath = await this._writeDebugCode(task, result.data.debugCode);
-    
-    task.storeArtifact('debug_code.js', result.data.debugCode, 'Code with debugging', 'file');
-    
-    return {
-      success: true,
-      message: 'Added debugging statements',
-      debugPoints: result.data.debugPoints,
-      debugFile: debugPath,
-      artifacts: Object.values(task.getAllArtifacts())
-    };
-  }
+  await config.tools.fileWrite.execute({ filepath, content: code });
+  return filepath;
+}
+
+/**
+ * Write debug code to file
+ */
+async function writeDebugCode(config, task, code) {
+  const timestamp = Date.now();
+  const filename = `debug-${timestamp}.js`;
+  const filepath = path.join(config.projectRoot, filename);
   
-  /**
-   * Extract error information from task
-   */
-  async _extractErrorInfo(task) {
-    const artifacts = task.getAllArtifacts();
-    
-    // Look for error artifact
-    for (const artifact of Object.values(artifacts)) {
-      if (artifact.type === 'error' || artifact.name.includes('error')) {
-        // Get code from error artifact if available, otherwise from task artifacts
-        const codeFromError = artifact.value.code || '';
-        const codeFromTask = codeFromError || await this._getCodeFromTask(task) || '';
-        
-        return {
-          message: artifact.value.message || artifact.value,
-          stack: artifact.value.stack || '',
-          code: codeFromTask
-        };
-      }
-    }
-    
-    // Try to extract from description
-    const description = task.description;
-    return {
-      message: description,
-      stack: '',
-      code: await this._getCodeFromTask(task) || ''
-    };
-  }
-  
-  /**
-   * Get code from task artifacts or file
-   */
-  async _getCodeFromTask(task) {
-    const artifacts = task.getAllArtifacts();
-    
-    for (const artifact of Object.values(artifacts)) {
-      if (artifact.type === 'file' && artifact.name.endsWith('.js')) {
-        return artifact.value;
-      }
-    }
-    
-    return null;
-  }
-  
-  /**
-   * Write fixed code to file
-   */
-  async _writeFixedCode(task, code) {
-    const timestamp = Date.now();
-    const filename = `fixed-${timestamp}.js`;
-    const filepath = path.join(this.projectRoot, filename);
-    
-    await this.tools.fileWrite.execute({ filepath, content: code });
-    return filepath;
-  }
-  
-  /**
-   * Write debug code to file
-   */
-  async _writeDebugCode(task, code) {
-    const timestamp = Date.now();
-    const filename = `debug-${timestamp}.js`;
-    const filepath = path.join(this.projectRoot, filename);
-    
-    await this.tools.fileWrite.execute({ filepath, content: code });
-    return filepath;
-  }
-  
-  /**
-   * Extract context from task
-   */
-  _getContextFromTask(task) {
-    return {
-      llmClient: (task.lookup && task.lookup('llmClient')) || task.context?.llmClient,
-      toolRegistry: (task.lookup && task.lookup('toolRegistry')) || task.context?.toolRegistry,
-      workspaceDir: (task.lookup && task.lookup('workspaceDir')) || task.context?.workspaceDir || this.projectRoot
-    };
-  }
+  await config.tools.fileWrite.execute({ filepath, content: code });
+  return filepath;
+}
+
+/**
+ * Helper to extract context from task
+ */
+function getContextFromTask(task) {
+  return {
+    llmClient: (task.lookup && task.lookup('llmClient')) || task.context?.llmClient,
+    toolRegistry: (task.lookup && task.lookup('toolRegistry')) || task.context?.toolRegistry,
+    workspaceDir: (task.lookup && task.lookup('workspaceDir')) || task.context?.workspaceDir
+  };
 }

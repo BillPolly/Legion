@@ -1,6 +1,6 @@
 /**
  * MonitoringStrategy - Monitors task completion status and calculates project progress metrics
- * Converted from ProgressTracker component to follow TaskStrategy pattern
+ * Converted to pure prototypal pattern
  * 
  * Responsibilities:
  * - Monitors task completion status
@@ -12,11 +12,22 @@
 
 import { TaskStrategy } from '@legion/tasks';
 
-export default class MonitoringStrategy extends TaskStrategy {
-  constructor(options = {}) {
-    super();
-    
-    this.metrics = {
+/**
+ * Create a MonitoringStrategy prototype
+ * This factory function creates the strategy with its dependencies
+ */
+export function createMonitoringStrategy(options = {}) {
+  // Create the strategy as an object that inherits from TaskStrategy
+  const strategy = Object.create(TaskStrategy);
+  
+  // Store configuration in closure
+  const config = {
+    options: {
+      updateInterval: 5000,
+      enableResourceTracking: true,
+      ...options
+    },
+    metrics: {
       overall: 0,
       byPhase: {},
       tasks: {
@@ -32,263 +43,352 @@ export default class MonitoringStrategy extends TaskStrategy {
         totalElapsed: null
       },
       bottlenecks: []
-    };
-    
-    this.progressHistory = [];
-    this.resourceUsage = {
+    },
+    progressHistory: [],
+    resourceUsage: {
       byTask: {},
       total: { memory: 0, cpu: 0, duration: 0 },
       average: { memory: 0, cpu: 0, duration: 0 }
-    };
-    this.updateCallbacks = [];
-  }
-
-  getName() {
-    return 'Monitoring';
-  }
+    },
+    updateCallbacks: []
+  };
 
   /**
-   * Handle messages from any source task
+   * The only required method - handles all messages
    */
-  async onMessage(sourceTask, message) {
-    switch (message.type) {
-      case 'start':
-      case 'monitor':
-        return await this._handleMonitoringRequest(message.task || sourceTask, message.project);
-      case 'update':
-        return await this._handleUpdateRequest(message.progressData);
-      case 'report':
-        return await this._handleReportRequest(message.project);
-      case 'stats':
-        return { success: true, result: this.getMetrics() };
-      case 'completed':
-        // Handle child task completion
-        if (sourceTask.parent) {
-          return { acknowledged: true };
-        }
-        return { acknowledged: true };
-      case 'failed':
-        // Handle child task failure
-        if (sourceTask.parent) {
-          return { acknowledged: true };
-        }
-        return { acknowledged: true };
-      default:
-        return { acknowledged: true };
-    }
-  }
-
-  /**
-   * Handle monitoring request from parent task
-   */
-  async _handleMonitoringRequest(task, project) {
+  strategy.onMessage = function onMessage(senderTask, message) {
+    // 'this' is the task instance that received the message
+    
     try {
-      console.log(`📊 MonitoringStrategy monitoring: ${task.description}`);
-      
-      if (!project) {
-        return {
-          success: false,
-          result: 'No project data provided for monitoring'
-        };
+      // Determine if message is from child or parent/initiator
+      if (senderTask.parent === this) {
+        // Message from child task
+        switch (message.type) {
+          case 'completed':
+            console.log(`✅ Monitoring child task completed: ${senderTask.description}`);
+            this.send(this.parent, { type: 'child-completed', child: senderTask });
+            break;
+            
+          case 'failed':
+            this.send(this.parent, { type: 'child-failed', child: senderTask, error: message.error });
+            break;
+            
+          default:
+            console.log(`ℹ️ MonitoringStrategy received unhandled message from child: ${message.type}`);
+        }
+      } else {
+        // Message from parent or initiator
+        switch (message.type) {
+          case 'start':
+          case 'monitor':
+            // Fire-and-forget async operation with error boundary
+            handleMonitoringRequest.call(this, config, message).catch(error => {
+              console.error(`❌ MonitoringStrategy async operation failed: ${error.message}`);
+              // Don't let async errors escape - handle them internally
+              try {
+                this.fail(error);
+                if (this.parent) {
+                  this.send(this.parent, { type: 'failed', error });
+                }
+              } catch (innerError) {
+                console.error(`❌ Failed to handle async error: ${innerError.message}`);
+              }
+            });
+            break;
+            
+          case 'update':
+            // Fire-and-forget async operation
+            handleUpdateRequest.call(this, config, message).catch(error => {
+              console.error(`❌ MonitoringStrategy update failed: ${error.message}`);
+            });
+            break;
+            
+          case 'report':
+            // Fire-and-forget async operation
+            handleReportRequest.call(this, config, message).catch(error => {
+              console.error(`❌ MonitoringStrategy report failed: ${error.message}`);
+            });
+            break;
+            
+          case 'stats':
+            // Fire-and-forget - respond via send
+            this.send(senderTask, { type: 'stats-response', stats: getMetrics(config) });
+            break;
+            
+          case 'abort':
+            console.log(`🛑 Monitoring task aborted`);
+            break;
+            
+          default:
+            console.log(`ℹ️ MonitoringStrategy received unhandled message: ${message.type}`);
+        }
       }
-      
-      // Add conversation entry
-      task.addConversationEntry('system', 
-        `Starting monitoring for project with ${project.tasks?.length || 0} tasks`);
-      
-      // Update project metrics
-      this.updateProject(project);
-      
-      // Generate comprehensive report
-      const report = this.generateReport(project);
-      
-      // Store monitoring artifacts
-      task.storeArtifact(
-        'monitoring-report',
-        report,
-        `Progress monitoring report at ${new Date().toISOString()}`,
-        'monitoring'
-      );
-      
-      task.storeArtifact(
-        'progress-metrics',
-        this.metrics,
-        'Current progress metrics',
-        'metrics'
-      );
-      
-      // Add conversation entry about completion
-      task.addConversationEntry('system', 
-        `Monitoring complete: ${report.progress.overall}% progress, ${report.tasks.completed}/${report.tasks.total} tasks completed`);
-      
-      console.log(`✅ MonitoringStrategy completed: ${report.progress.overall}% progress`);
-      
-      return {
-        success: true,
-        result: {
-          report: report,
-          metrics: this.metrics,
-          progress: report.progress.overall
-        },
-        artifacts: ['monitoring-report', 'progress-metrics']
-      };
-      
     } catch (error) {
-      console.error(`❌ MonitoringStrategy failed: ${error.message}`);
-      
-      task.addConversationEntry('system', 
-        `Monitoring failed: ${error.message}`);
-      
-      return {
-        success: false,
-        result: error.message
-      };
+      // Catch any synchronous errors in message handling
+      console.error(`❌ MonitoringStrategy message handler error: ${error.message}`);
+      // Don't let errors escape the message handler - handle them gracefully
+      try {
+        if (this.addConversationEntry) {
+          this.addConversationEntry('system', `Message handling error: ${error.message}`);
+        }
+      } catch (innerError) {
+        console.error(`❌ Failed to log message handling error: ${innerError.message}`);
+      }
     }
-  }
+  };
+  
+  return strategy;
+}
 
-  /**
-   * Handle progress update request
-   */
-  async _handleUpdateRequest(progressData) {
-    try {
-      this.update(progressData);
-      return {
-        success: true,
-        result: 'Progress updated successfully'
-      };
-    } catch (error) {
-      return {
-        success: false,
-        result: error.message
-      };
+// Export default for backward compatibility
+export default createMonitoringStrategy;
+
+// ============================================================================
+// Internal implementation functions
+// These work with the task instance and strategy config
+// ============================================================================
+
+/**
+ * Handle monitoring request - main execution logic
+ * Called with task as 'this' context
+ */
+async function handleMonitoringRequest(config, message) {
+  try {
+    console.log(`📊 MonitoringStrategy monitoring: ${this.description}`);
+    
+    const project = message.project;
+    if (!project) {
+      this.fail(new Error('No project data provided for monitoring'));
+      // Notify parent of failure (fire-and-forget)
+      if (this.parent) {
+        this.send(this.parent, { 
+          type: 'failed', 
+          error: new Error('No project data provided for monitoring') 
+        });
+      }
+      return; // Fire-and-forget - no return value
     }
-  }
-
-  /**
-   * Handle report generation request
-   */
-  async _handleReportRequest(project) {
-    try {
-      const report = this.generateReport(project);
-      return {
-        success: true,
-        result: report
-      };
-    } catch (error) {
-      return {
-        success: false,
-        result: error.message
-      };
+    
+    // Add conversation entry
+    this.addConversationEntry('system', 
+      `Starting monitoring for project with ${project.tasks?.length || 0} tasks`);
+    
+    // Update project metrics
+    updateProject(project, config);
+    
+    // Generate comprehensive report
+    const report = generateReport(project, config);
+    
+    // Store monitoring artifacts
+    this.storeArtifact(
+      'monitoring-report',
+      report,
+      `Progress monitoring report at ${new Date().toISOString()}`,
+      'monitoring'
+    );
+    
+    this.storeArtifact(
+      'progress-metrics',
+      config.metrics,
+      'Current progress metrics',
+      'metrics'
+    );
+    
+    // Add conversation entry about completion
+    this.addConversationEntry('system', 
+      `Monitoring complete: ${report.progress.overall}% progress, ${report.tasks.completed}/${report.tasks.total} tasks completed`);
+    
+    console.log(`✅ MonitoringStrategy completed: ${report.progress.overall}% progress`);
+    
+    const result = {
+      success: true,
+      result: {
+        report: report,
+        metrics: config.metrics,
+        progress: report.progress.overall
+      },
+      artifacts: ['monitoring-report', 'progress-metrics']
+    };
+    
+    this.complete(result);
+    
+    // Notify parent if exists (fire-and-forget message passing)
+    if (this.parent) {
+      this.send(this.parent, { type: 'completed', result });
     }
+    
+    // Fire-and-forget - no return value
+    
+  } catch (error) {
+    console.error(`❌ MonitoringStrategy failed: ${error.message}`);
+    
+    this.addConversationEntry('system', 
+      `Monitoring failed: ${error.message}`);
+    
+    this.fail(error);
+    
+    // Notify parent of failure if exists (fire-and-forget message passing)
+    if (this.parent) {
+      this.send(this.parent, { type: 'failed', error });
+    }
+    
+    // Fire-and-forget - no return value
   }
+}
 
-  /**
-   * Get current metrics
-   */
-  getMetrics() {
-    return { ...this.metrics };
+/**
+ * Handle progress update request
+ */
+async function handleUpdateRequest(config, message) {
+  try {
+    update(message.progressData, config);
+    this.addConversationEntry('system', 'Progress updated successfully');
+    
+    // Fire-and-forget - no return value
+    
+  } catch (error) {
+    console.error(`❌ MonitoringStrategy update failed: ${error.message}`);
+    this.addConversationEntry('system', `Progress update failed: ${error.message}`);
+    
+    // Fire-and-forget - no return value
   }
+}
 
-  /**
-   * Get current progress (alias for getMetrics for compatibility)
-   */
-  getProgress() {
-    return this.getMetrics();
+/**
+ * Handle report generation request
+ */
+async function handleReportRequest(config, message) {
+  try {
+    const report = generateReport(message.project, config);
+    
+    // Send response back to requester
+    this.send(message.sender || this.parent, {
+      type: 'report-response',
+      report: report
+    });
+    
+    // Fire-and-forget - no return value
+    
+  } catch (error) {
+    console.error(`❌ MonitoringStrategy report failed: ${error.message}`);
+    
+    // Send error response
+    this.send(message.sender || this.parent, {
+      type: 'report-error',
+      error: error.message
+    });
+    
+    // Fire-and-forget - no return value
+  }
+}
+
+/**
+ * Get current metrics
+ */
+function getMetrics(config) {
+  return { ...config.metrics };
+}
+
+/**
+ * Get current progress (alias for getMetrics for compatibility)
+ */
+function getProgress(config) {
+  return getMetrics(config);
+}
+  
+/**
+ * Update progress with new data
+ */
+function update(progressData, config) {
+  // Handle different types of progress updates
+  if (progressData.taskStarted) {
+    console.log(`Task started: ${progressData.taskStarted} - ${progressData.description || ''}`);
+    config.activeTask = progressData.taskStarted;
   }
   
-  /**
-   * Update progress with new data
-   */
-  update(progressData) {
-    // Handle different types of progress updates
-    if (progressData.taskStarted) {
-      console.log(`Task started: ${progressData.taskStarted} - ${progressData.description || ''}`);
-      this.activeTask = progressData.taskStarted;
-    }
-    
-    if (progressData.taskCompleted) {
-      console.log(`Task completed: ${progressData.taskCompleted} - Success: ${progressData.success}`);
-      this.completedTasks = this.completedTasks || [];
-      this.completedTasks.push({
-        id: progressData.taskCompleted,
-        success: progressData.success,
-        completedAt: new Date().toISOString()
-      });
-    }
-    
-    if (progressData.taskFailed) {
-      console.log(`Task failed: ${progressData.taskFailed} - Error: ${progressData.error}`);
-      this.failedTasks = this.failedTasks || [];
-      this.failedTasks.push({
-        id: progressData.taskFailed,
-        error: progressData.error,
-        failedAt: new Date().toISOString()
-      });
-    }
-    
-    // Emit progress update events if callbacks exist
-    if (this.updateCallbacks && this.updateCallbacks.length > 0) {
-      this.updateCallbacks.forEach(callback => {
-        try {
-          callback(progressData);
-        } catch (error) {
-          console.error('Progress update callback failed:', error);
-        }
-      });
-    }
-  }
-
-  /**
-   * Calculate overall project progress
-   */
-  calculateProgress(project) {
-    if (!project || !project.tasks || !Array.isArray(project.tasks)) {
-      return { overall: 0, byPhase: {} };
-    }
-
-    const tasks = project.tasks;
-    const phases = project.phases || [];
-    
-    // Calculate overall progress
-    const totalTasks = tasks.length;
-    if (totalTasks === 0) {
-      return { overall: 0, byPhase: this._calculatePhaseProgress(phases, tasks) };
-    }
-
-    const completedTasks = tasks.filter(task => task.status === 'completed').length;
-    const overall = Math.round((completedTasks / totalTasks) * 100);
-
-    return {
-      overall,
-      byPhase: this._calculatePhaseProgress(phases, tasks)
-    };
-  }
-
-  /**
-   * Calculate progress by phase
-   */
-  _calculatePhaseProgress(phases, tasks) {
-    const byPhase = {};
-    
-    phases.forEach(phase => {
-      const phaseTasks = tasks.filter(task => phase.tasks && phase.tasks.includes(task.id));
-      
-      if (phaseTasks.length === 0) {
-        byPhase[phase.id] = 0;
-        return;
-      }
-
-      const completed = phaseTasks.filter(task => task.status === 'completed').length;
-      byPhase[phase.id] = Math.round((completed / phaseTasks.length) * 100 * 100) / 100; // Round to 2 decimal places
+  if (progressData.taskCompleted) {
+    console.log(`Task completed: ${progressData.taskCompleted} - Success: ${progressData.success}`);
+    config.completedTasks = config.completedTasks || [];
+    config.completedTasks.push({
+      id: progressData.taskCompleted,
+      success: progressData.success,
+      completedAt: new Date().toISOString()
     });
+  }
+  
+  if (progressData.taskFailed) {
+    console.log(`Task failed: ${progressData.taskFailed} - Error: ${progressData.error}`);
+    config.failedTasks = config.failedTasks || [];
+    config.failedTasks.push({
+      id: progressData.taskFailed,
+      error: progressData.error,
+      failedAt: new Date().toISOString()
+    });
+  }
+  
+  // Emit progress update events if callbacks exist
+  if (config.updateCallbacks && config.updateCallbacks.length > 0) {
+    config.updateCallbacks.forEach(callback => {
+      try {
+        callback(progressData);
+      } catch (error) {
+        console.error('Progress update callback failed:', error);
+      }
+    });
+  }
+}
 
-    return byPhase;
+/**
+ * Calculate overall project progress
+ */
+function calculateProgress(project, config) {
+  if (!project || !project.tasks || !Array.isArray(project.tasks)) {
+    return { overall: 0, byPhase: {} };
   }
 
-  /**
-   * Get task statistics by status
-   */
-  getTaskStats(project) {
+  const tasks = project.tasks;
+  const phases = project.phases || [];
+  
+  // Calculate overall progress
+  const totalTasks = tasks.length;
+  if (totalTasks === 0) {
+    return { overall: 0, byPhase: calculatePhaseProgress(phases, tasks) };
+  }
+
+  const completedTasks = tasks.filter(task => task.status === 'completed').length;
+  const overall = Math.round((completedTasks / totalTasks) * 100);
+
+  return {
+    overall,
+    byPhase: calculatePhaseProgress(phases, tasks)
+  };
+}
+
+/**
+ * Calculate progress by phase
+ */
+function calculatePhaseProgress(phases, tasks) {
+  const byPhase = {};
+  
+  phases.forEach(phase => {
+    const phaseTasks = tasks.filter(task => phase.tasks && phase.tasks.includes(task.id));
+    
+    if (phaseTasks.length === 0) {
+      byPhase[phase.id] = 0;
+      return;
+    }
+
+    const completed = phaseTasks.filter(task => task.status === 'completed').length;
+    byPhase[phase.id] = Math.round((completed / phaseTasks.length) * 100 * 100) / 100; // Round to 2 decimal places
+  });
+
+  return byPhase;
+}
+
+/**
+ * Get task statistics by status
+ */
+function getTaskStats(project) {
     if (!project || !project.tasks || !Array.isArray(project.tasks)) {
       return {
         total: 0,
@@ -328,10 +428,10 @@ export default class MonitoringStrategy extends TaskStrategy {
     return stats;
   }
 
-  /**
-   * Calculate timing metrics
-   */
-  calculateTiming(project, currentTime = null) {
+/**
+ * Calculate timing metrics
+ */
+function calculateTiming(project, currentTime = null) {
     if (!project || !project.tasks || !Array.isArray(project.tasks)) {
       return {
         averageTaskDuration: null,
@@ -389,10 +489,10 @@ export default class MonitoringStrategy extends TaskStrategy {
     };
   }
 
-  /**
-   * Identify bottlenecks and delays
-   */
-  identifyBottlenecks(project) {
+/**
+ * Identify bottlenecks and delays
+ */
+function identifyBottlenecks(project) {
     const bottlenecks = [];
     
     if (!project || !project.tasks || !Array.isArray(project.tasks)) {
@@ -444,18 +544,18 @@ export default class MonitoringStrategy extends TaskStrategy {
     return bottlenecks;
   }
 
-  /**
-   * Generate comprehensive status report
-   */
-  generateReport(project) {
-    if (!project) {
-      throw new Error('Project data is required');
-    }
+/**
+ * Generate comprehensive status report
+ */
+function generateReport(project, config) {
+  if (!project) {
+    throw new Error('Project data is required');
+  }
 
-    const progress = this.calculateProgress(project);
-    const taskStats = this.getTaskStats(project);
-    const timing = this.calculateTiming(project);
-    const bottlenecks = this.identifyBottlenecks(project);
+  const progress = calculateProgress(project, config);
+  const taskStats = getTaskStats(project);
+  const timing = calculateTiming(project);
+  const bottlenecks = identifyBottlenecks(project);
 
     // Generate phase details
     const phases = (project.phases || []).map(phase => {
@@ -493,172 +593,171 @@ export default class MonitoringStrategy extends TaskStrategy {
       timing,
       bottlenecks,
       phases,
-      resourceUsage: this.getResourceUsage()
+      resourceUsage: getResourceUsage(config)
     };
   }
 
-  /**
-   * Collect metrics for a project
-   * This is a public method for integration with other strategies
-   */
-  async collectMetrics(project) {
-    if (!project) {
-      return this.getMetrics();
+/**
+ * Collect metrics for a project
+ * This is a public method for integration with other strategies
+ */
+function collectMetrics(project, config) {
+  if (!project) {
+    return getMetrics(config);
+  }
+  
+  // Update metrics based on the project
+  const progress = calculateProgress(project, config);
+  const taskStats = getTaskStats(project);
+  const timing = calculateTiming(project);
+  const bottlenecks = identifyBottlenecks(project);
+  
+  // Update internal metrics
+  config.metrics.overall = progress.overall;
+  config.metrics.byPhase = progress.byPhase;
+  config.metrics.tasks = taskStats;
+  config.metrics.timing = timing;
+  config.metrics.bottlenecks = bottlenecks;
+  
+  // Store in history
+  config.progressHistory.push({
+    timestamp: Date.now(),
+    overall: progress.overall,
+    byPhase: { ...progress.byPhase },
+    tasks: { ...taskStats }
+  });
+  
+  return {
+    phases: progress.byPhase,
+    tasks: taskStats,
+    overall: progress.overall,
+    timing: timing,
+    bottlenecks: bottlenecks
+  };
+}
+
+/**
+ * Update project and recalculate metrics
+ */
+function updateProject(project, config) {
+  if (!project) {
+    throw new Error('Project data is required');
+  }
+  
+  if (!project.projectId) {
+    throw new Error('Project must have a projectId');
+  }
+
+  // Calculate new metrics
+  const progress = calculateProgress(project, config);
+  const taskStats = getTaskStats(project);
+  const timing = calculateTiming(project);
+  const bottlenecks = identifyBottlenecks(project);
+
+  // Update metrics
+  config.metrics = {
+    overall: progress.overall,
+    byPhase: progress.byPhase,
+    tasks: taskStats,
+    timing,
+    bottlenecks
+  };
+
+  // Add to history
+  config.progressHistory.push({
+    timestamp: Date.now(),
+    ...progress,
+    taskStats
+  });
+
+  // Notify callbacks
+  config.updateCallbacks.forEach(callback => {
+    try {
+      callback(progress);
+    } catch (error) {
+      console.error('Progress update callback failed:', error);
     }
+  });
+}
+
+/**
+ * Get progress history
+ */
+function getProgressHistory(config) {
+  return [...config.progressHistory];
+}
+
+/**
+ * Register progress update callback
+ */
+function onProgressUpdate(callback, config) {
+  if (typeof callback === 'function') {
+    config.updateCallbacks.push(callback);
+  }
+}
+
+/**
+ * Record resource usage for a task
+ */
+function recordResourceUsage(taskId, usage, config) {
+  config.resourceUsage.byTask[taskId] = usage;
+  
+  // Update totals and averages
+  const allUsage = Object.values(config.resourceUsage.byTask);
+  if (allUsage.length > 0) {
+    config.resourceUsage.total = {
+      memory: allUsage.reduce((sum, u) => sum + (u.memory || 0), 0),
+      cpu: allUsage.reduce((sum, u) => sum + (u.cpu || 0), 0),
+      duration: allUsage.reduce((sum, u) => sum + (u.duration || 0), 0)
+    };
     
-    // Update metrics based on the project
-    const progress = this.calculateProgress(project);
-    const taskStats = this.getTaskStats(project);
-    const timing = this.calculateTiming(project);
-    const bottlenecks = this.identifyBottlenecks(project);
-    
-    // Update internal metrics
-    this.metrics.overall = progress.overall;
-    this.metrics.byPhase = progress.byPhase;
-    this.metrics.tasks = taskStats;
-    this.metrics.timing = timing;
-    this.metrics.bottlenecks = bottlenecks;
-    
-    // Store in history
-    this.progressHistory.push({
-      timestamp: Date.now(),
-      overall: progress.overall,
-      byPhase: { ...progress.byPhase },
-      tasks: { ...taskStats }
-    });
-    
-    return {
-      phases: progress.byPhase,
-      tasks: taskStats,
-      overall: progress.overall,
-      timing: timing,
-      bottlenecks: bottlenecks
+    config.resourceUsage.average = {
+      memory: Math.round(config.resourceUsage.total.memory / allUsage.length),
+      cpu: Math.round(config.resourceUsage.total.cpu / allUsage.length),
+      duration: Math.round(config.resourceUsage.total.duration / allUsage.length)
     };
   }
+}
 
-  /**
-   * Update project and recalculate metrics
-   */
-  updateProject(project) {
-    if (!project) {
-      throw new Error('Project data is required');
+/**
+ * Get resource usage data
+ */
+function getResourceUsage(config) {
+  return { ...config.resourceUsage };
+}
+
+/**
+ * Get resource-intensive tasks
+ */
+function getResourceIntensiveTasks(config) {
+  const intensive = [];
+  const usage = config.resourceUsage.byTask;
+  
+  Object.entries(usage).forEach(([taskId, data]) => {
+    if (data.memory && data.memory > 500) {
+      intensive.push({
+        taskId,
+        reason: 'high_memory',
+        value: data.memory
+      });
     }
     
-    if (!project.projectId) {
-      throw new Error('Project must have a projectId');
+    if (data.cpu && data.cpu > 80) {
+      intensive.push({
+        taskId,
+        reason: 'high_cpu',
+        value: data.cpu
+      });
     }
-
-    // Calculate new metrics
-    const progress = this.calculateProgress(project);
-    const taskStats = this.getTaskStats(project);
-    const timing = this.calculateTiming(project);
-    const bottlenecks = this.identifyBottlenecks(project);
-
-    // Update metrics
-    this.metrics = {
-      overall: progress.overall,
-      byPhase: progress.byPhase,
-      tasks: taskStats,
-      timing,
-      bottlenecks
-    };
-
-    // Add to history
-    this.progressHistory.push({
-      timestamp: Date.now(),
-      ...progress,
-      taskStats
-    });
-
-    // Notify callbacks
-    this.updateCallbacks.forEach(callback => {
-      try {
-        callback(progress);
-      } catch (error) {
-        console.error('Progress update callback failed:', error);
-      }
-    });
-  }
-
-  /**
-   * Get progress history
-   */
-  getProgressHistory() {
-    return [...this.progressHistory];
-  }
-
-  /**
-   * Register progress update callback
-   */
-  onProgressUpdate(callback) {
-    if (typeof callback === 'function') {
-      this.updateCallbacks.push(callback);
+    
+    if (data.duration && data.duration > 20000) {
+      intensive.push({
+        taskId,
+        reason: 'long_duration',
+        value: data.duration
+      });
     }
-  }
-
-  /**
-   * Record resource usage for a task
-   */
-  recordResourceUsage(taskId, usage) {
-    this.resourceUsage.byTask[taskId] = usage;
-    
-    // Update totals and averages
-    const allUsage = Object.values(this.resourceUsage.byTask);
-    if (allUsage.length > 0) {
-      this.resourceUsage.total = {
-        memory: allUsage.reduce((sum, u) => sum + (u.memory || 0), 0),
-        cpu: allUsage.reduce((sum, u) => sum + (u.cpu || 0), 0),
-        duration: allUsage.reduce((sum, u) => sum + (u.duration || 0), 0)
-      };
-      
-      this.resourceUsage.average = {
-        memory: Math.round(this.resourceUsage.total.memory / allUsage.length),
-        cpu: Math.round(this.resourceUsage.total.cpu / allUsage.length),
-        duration: Math.round(this.resourceUsage.total.duration / allUsage.length)
-      };
-    }
-  }
-
-  /**
-   * Get resource usage data
-   */
-  getResourceUsage() {
-    return { ...this.resourceUsage };
-  }
-
-  /**
-   * Get resource-intensive tasks
-   */
-  getResourceIntensiveTasks() {
-    const intensive = [];
-    const usage = this.resourceUsage.byTask;
-    
-    Object.entries(usage).forEach(([taskId, data]) => {
-      if (data.memory && data.memory > 500) {
-        intensive.push({
-          taskId,
-          reason: 'high_memory',
-          value: data.memory
-        });
-      }
-      
-      if (data.cpu && data.cpu > 80) {
-        intensive.push({
-          taskId,
-          reason: 'high_cpu',
-          value: data.cpu
-        });
-      }
-      
-      if (data.duration && data.duration > 20000) {
-        intensive.push({
-          taskId,
-          reason: 'long_duration',
-          value: data.duration
-        });
-      }
-    });
-    
-    return intensive;
-  }
+  });
+  
+  return intensive;
 }

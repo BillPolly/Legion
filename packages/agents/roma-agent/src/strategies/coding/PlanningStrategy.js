@@ -1,6 +1,6 @@
 /**
  * PlanningStrategy - Handles project planning and structure generation
- * Phase 2.2: Component code fully absorbed into strategy
+ * Converted to pure prototypal pattern
  * 
  * This strategy directly implements all project planning functionality including:
  * - Project structure generation
@@ -11,151 +11,222 @@
 
 import { TaskStrategy } from '@legion/tasks';
 
-export default class PlanningStrategy extends TaskStrategy {
-  constructor(llmClient, toolRegistry, options = {}) {
-    super();
-    
-    this.llmClient = llmClient;
-    this.toolRegistry = toolRegistry;
-    this.options = {
+/**
+ * Create a PlanningStrategy prototype
+ * This factory function creates the strategy with its dependencies
+ */
+export function createPlanningStrategy(llmClient = null, toolRegistry = null, options = {}) {
+  // Create the strategy as an object that inherits from TaskStrategy
+  const strategy = Object.create(TaskStrategy);
+  
+  // Store configuration
+  const config = {
+    llmClient: llmClient,
+    toolRegistry: toolRegistry,
+    options: {
       outputFormat: 'json',
       validateResults: true,
       ...options
-    };
-    
+    },
     // Track initialization state
-    this.initialized = false;
-    
+    initialized: false,
     // Project planning templates
-    this.templates = {
-      api: this._getAPITemplate(),
-      cli: this._getCLITemplate(),
-      webapp: this._getWebAppTemplate(),
-      library: this._getLibraryTemplate()
-    };
-  }
-  
-  getName() {
-    return 'Planning';
-  }
-  
-  /**
-   * Initialize the strategy
-   */
-  async initialize() {
-    if (this.initialized) return;
-    
-    if (!this.llmClient || !this.toolRegistry) {
-      throw new Error('PlanningStrategy requires LLM client and ToolRegistry');
+    templates: {
+      api: getAPITemplate(),
+      cli: getCLITemplate(),
+      webapp: getWebAppTemplate(),
+      library: getLibraryTemplate()
     }
+  };
+  
+  /**
+   * The only required method - handles all messages
+   */
+  strategy.onMessage = function onMessage(senderTask, message) {
+    // 'this' is the task instance that received the message
     
-    this.initialized = true;
-  }
-  
-  /**
-   * Handle messages from any source task
-   */
-  async onMessage(sourceTask, message) {
-    switch (message.type) {
-      case 'start':
-      case 'work':
-        return await this._handlePlanningRequest(message.task || sourceTask);
-      case 'abort':
-        return { acknowledged: true, aborted: true };
-      case 'completed':
-        // Handle child task completion
-        if (!sourceTask.parent) {
-          throw new Error('Child task has no parent');
-        }
-        return { acknowledged: true };
-      case 'failed':
-        // Handle child task failure
-        if (!sourceTask.parent) {
-          throw new Error('Child task has no parent');
-        }
-        return { acknowledged: true };
-      default:
-        return { acknowledged: true };
-    }
-  }
-  
-  /**
-   * Handle planning request from parent task
-   */
-  async _handlePlanningRequest(task) {
     try {
-      console.log(`📋 PlanningStrategy handling: ${task.description}`);
-      
-      // Extract requirements from task
-      const requirements = this._extractRequirements(task);
-      if (!requirements) {
-        return {
-          success: false,
-          result: 'No requirements found for planning'
-        };
+      // Determine if message is from child or parent/initiator
+      if (senderTask.parent === this) {
+        // Message from child task
+        switch (message.type) {
+          case 'completed':
+            console.log(`✅ Planning task completed for ${this.description}`);
+            this.send(this.parent, { type: 'child-completed', child: this });
+            break;
+            
+          case 'failed':
+            this.send(this.parent, { type: 'child-failed', child: this, error: message.error });
+            break;
+            
+          default:
+            console.log(`ℹ️ PlanningStrategy received unhandled message from child: ${message.type}`);
+        }
+      } else {
+        // Message from parent or initiator
+        switch (message.type) {
+          case 'start':
+          case 'work':
+            // Fire-and-forget async operation with error boundary
+            handlePlanningRequest.call(this, config).catch(error => {
+              console.error(`❌ PlanningStrategy async operation failed: ${error.message}`);
+              // Don't let async errors escape - handle them internally
+              try {
+                this.fail(error);
+                if (this.parent) {
+                  this.send(this.parent, { type: 'failed', error });
+                }
+              } catch (innerError) {
+                console.error(`❌ Failed to handle async error: ${innerError.message}`);
+              }
+            });
+            break;
+            
+          case 'abort':
+            console.log(`🛑 Planning task aborted`);
+            break;
+            
+          default:
+            console.log(`ℹ️ PlanningStrategy received unhandled message: ${message.type}`);
+        }
       }
-      
-      // Get project context
-      const projectId = this._getProjectId(task);
-      
-      // Add conversation entry
-      task.addConversationEntry('system', 
-        `Planning project structure for: ${JSON.stringify(requirements)}`);
-      
-      // Initialize if needed
-      await this.initialize();
-      
-      // Create project plan directly (absorbed from component)
-      const plan = await this.createPlan(requirements, projectId);
-      
-      // Store planning artifacts
-      task.storeArtifact(
-        'project-plan',
-        plan,
-        `Project execution plan with ${plan.phases.length} phases`,
-        'plan'
-      );
-      
-      task.storeArtifact(
-        'project-structure',
-        plan.structure,
-        'Project directory and file structure',
-        'structure'
-      );
-      
-      // Add conversation entry about completion
-      task.addConversationEntry('system', 
-        `Generated project plan with ${plan.phases.length} phases: ${plan.phases.map(p => p.phase).join(', ')}`);
-      
-      console.log(`✅ PlanningStrategy completed successfully`);
-      
-      return {
-        success: true,
-        result: {
-          plan: plan,
-          structure: plan.structure,
-          phases: plan.phases.length
-        },
-        artifacts: ['project-plan', 'project-structure']
-      };
-      
     } catch (error) {
-      console.error(`❌ PlanningStrategy failed: ${error.message}`);
-      
-      task.addConversationEntry('system', 
-        `Planning failed: ${error.message}`);
-      
-      return {
-        success: false,
-        result: error.message
-      };
+      // Catch any synchronous errors in message handling
+      console.error(`❌ PlanningStrategy message handler error: ${error.message}`);
+      // Don't let errors escape the message handler - handle them gracefully
+      try {
+        if (this.addConversationEntry) {
+          this.addConversationEntry('system', `Message handling error: ${error.message}`);
+        }
+      } catch (innerError) {
+        console.error(`❌ Failed to log message handling error: ${innerError.message}`);
+      }
     }
+  };
+  
+  return strategy;
+}
+
+// Export default for backward compatibility
+export default createPlanningStrategy;
+
+// ============================================================================
+// Internal implementation functions
+// These work with the task instance and strategy config
+// ============================================================================
+  
+/**
+ * Handle planning request - main execution logic
+ * Called with task as 'this' context
+ */
+async function handlePlanningRequest(config) {
+  try {
+    console.log(`📋 PlanningStrategy handling: ${this.description}`);
+    
+    // Extract requirements from task
+    const requirements = extractRequirements(this);
+    if (!requirements) {
+      this.fail(new Error('No requirements found for planning'));
+      // Notify parent of failure (fire-and-forget)
+      if (this.parent) {
+        this.send(this.parent, { 
+          type: 'failed', 
+          error: new Error('No requirements found for planning') 
+        });
+      }
+      return; // Fire-and-forget - no return value
+    }
+    
+    // Get project context
+    const projectId = getProjectId(this);
+    
+    // Add conversation entry
+    this.addConversationEntry('system', 
+      `Planning project structure for: ${JSON.stringify(requirements)}`);
+    
+    // Initialize if needed
+    await initializePlanning(config, this);
+    
+    // Create project plan directly (absorbed from component)
+    const plan = await createPlan.call(this, requirements, projectId, config);
+    
+    // Store planning artifacts
+    this.storeArtifact(
+      'project-plan',
+      plan,
+      `Project execution plan with ${plan.phases.length} phases`,
+      'plan'
+    );
+    
+    this.storeArtifact(
+      'project-structure',
+      plan.structure,
+      'Project directory and file structure',
+      'structure'
+    );
+    
+    // Add conversation entry about completion
+    this.addConversationEntry('system', 
+      `Generated project plan with ${plan.phases.length} phases: ${plan.phases.map(p => p.phase).join(', ')}`);
+    
+    console.log(`✅ PlanningStrategy completed successfully`);
+    
+    const result = {
+      success: true,
+      result: {
+        plan: plan,
+        structure: plan.structure,
+        phases: plan.phases.length
+      },
+      artifacts: ['project-plan', 'project-structure']
+    };
+    
+    this.complete(result);
+    
+    // Notify parent if exists (fire-and-forget message passing)
+    if (this.parent) {
+      this.send(this.parent, { type: 'completed', result });
+    }
+    
+    // Fire-and-forget - no return value
+    
+  } catch (error) {
+    console.error(`❌ PlanningStrategy failed: ${error.message}`);
+    
+    this.addConversationEntry('system', 
+      `Planning failed: ${error.message}`);
+    
+    this.fail(error);
+    
+    // Notify parent of failure if exists (fire-and-forget message passing)
+    if (this.parent) {
+      this.send(this.parent, { type: 'failed', error });
+    }
+    
+    // Fire-and-forget - no return value
+  }
+}
+  
+/**
+ * Initialize strategy if needed
+ */
+async function initializePlanning(config, task) {
+  if (config.initialized) return;
+  
+  const llmClient = config.llmClient || (task.lookup ? task.lookup('llmClient') : task.llmClient);
+  const toolRegistry = config.toolRegistry || (task.lookup ? task.lookup('toolRegistry') : task.toolRegistry);
+  
+  if (!llmClient || !toolRegistry) {
+    throw new Error('PlanningStrategy requires LLM client and ToolRegistry');
   }
   
-  /**
-   * Extract requirements from task artifacts or description
-   */
-  _extractRequirements(task) {
+  config.initialized = true;
+}
+
+/**
+ * Extract requirements from task artifacts or description
+ */
+function extractRequirements(task) {
     // First try to get requirements from artifacts
     const artifacts = task.getAllArtifacts ? task.getAllArtifacts() : {};
     
@@ -194,10 +265,10 @@ export default class PlanningStrategy extends TaskStrategy {
     return null;
   }
   
-  /**
-   * Extract project ID from task context
-   */
-  _getProjectId(task) {
+/**
+ * Extract project ID from task context
+ */
+function getProjectId(task) {
     // Try to get from task
     if (task.projectId) {
       return task.projectId;
@@ -212,10 +283,10 @@ export default class PlanningStrategy extends TaskStrategy {
     return `project-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
   
-  /**
-   * Get context information from task for planning
-   */
-  _getContextFromTask(task) {
+/**
+ * Get context information from task for planning
+ */
+function getContextFromTask(task) {
     const context = {
       taskId: task.id,
       description: task.description,
@@ -240,18 +311,19 @@ export default class PlanningStrategy extends TaskStrategy {
   // Methods absorbed from ProjectStructurePlanner
   // ==========================================
 
-  /**
-   * Create a comprehensive project plan
-   */
-  async createPlan(requirements, projectId = null) {
+/**
+ * Create a comprehensive project plan
+ * Called with task as 'this' context
+ */
+async function createPlan(requirements, projectId = null, config) {
     const projectType = requirements.type || 'api';
-    const template = this.templates[projectType] || this.templates.api;
+    const template = config.templates[projectType] || config.templates.api;
     
     // Generate structure
-    const structure = await this._generateStructure(requirements, template);
+    const structure = await generateStructure(requirements, template);
     
     // Create execution phases
-    const phases = await this._createPhases(requirements, structure, template);
+    const phases = await createPhases(requirements, structure, template);
     
     // Create the complete plan
     const plan = {
@@ -262,17 +334,17 @@ export default class PlanningStrategy extends TaskStrategy {
       structure: structure,
       phases: phases,
       technologies: requirements.technologies || [],
-      dependencies: this._extractDependencies(requirements),
+      dependencies: extractDependencies(requirements),
       metadata: {
         createdAt: new Date().toISOString(),
         version: '1.0.0',
-        estimatedDuration: this._estimateDuration(phases),
-        totalTasks: this._countTasks(phases)
+        estimatedDuration: estimateDuration(phases),
+        totalTasks: countTasks(phases)
       }
     };
     
     // Validate the plan
-    const validation = this._validatePlan(plan);
+    const validation = validatePlan(plan);
     if (!validation.valid) {
       throw new Error(`Invalid plan: ${validation.errors.join(', ')}`);
     }
@@ -280,67 +352,67 @@ export default class PlanningStrategy extends TaskStrategy {
     return plan;
   }
 
-  /**
-   * Generate project structure
-   */
-  async _generateStructure(requirements, template) {
+/**
+ * Generate project structure
+ */
+async function generateStructure(requirements, template) {
     // Use template as base
     const structure = JSON.parse(JSON.stringify(template.structure));
     
     // Customize based on requirements
     if (requirements.features) {
       for (const feature of requirements.features) {
-        this._addFeatureToStructure(structure, feature);
+        addFeatureToStructure(structure, feature);
       }
     }
     
     // Add test structure if testing is required
     if (requirements.testing !== false) {
-      this._addTestStructure(structure);
+      addTestStructure(structure);
     }
     
     // Add documentation structure
     if (requirements.documentation !== false) {
-      this._addDocumentationStructure(structure);
+      addDocumentationStructure(structure);
     }
     
     return structure;
   }
 
-  /**
-   * Create execution phases
-   */
-  async _createPhases(requirements, structure, template) {
+/**
+ * Create execution phases
+ */
+async function createPhases(requirements, structure, template) {
     const phases = [];
     
     // Phase 1: Setup
-    phases.push(this._createSetupPhase(requirements, structure));
+    phases.push(createSetupPhase(requirements, structure));
     
     // Phase 2: Core Implementation
-    phases.push(this._createImplementationPhase(requirements, structure, template));
+    phases.push(createImplementationPhase(requirements, structure, template));
     
     // Phase 3: Testing (if required)
     if (requirements.testing !== false) {
-      phases.push(this._createTestingPhase(requirements, structure));
+      phases.push(createTestingPhase(requirements, structure));
     }
     
     // Phase 4: Documentation
     if (requirements.documentation !== false) {
-      phases.push(this._createDocumentationPhase(requirements));
+      phases.push(createDocumentationPhase(requirements));
     }
     
     // Phase 5: Deployment (if required)
     if (requirements.deployment) {
-      phases.push(this._createDeploymentPhase(requirements));
+      phases.push(createDeploymentPhase(requirements));
     }
     
     return phases;
   }
 
-  /**
-   * Create setup phase
-   */
-  _createSetupPhase(requirements, structure) {
+/**
+ * Create setup phase
+ */
+function createSetupPhase(requirements, structure) {
     return {
       phase: 'Setup',
       description: 'Initialize project structure and dependencies',
@@ -367,7 +439,7 @@ export default class PlanningStrategy extends TaskStrategy {
           name: 'Install dependencies',
           type: 'dependencies',
           data: {
-            dependencies: this._extractDependencies(requirements)
+            dependencies: extractDependencies(requirements)
           }
         }
       ],
@@ -386,17 +458,18 @@ export default class PlanningStrategy extends TaskStrategy {
     };
   }
 
-  /**
-   * Create implementation phase
-   */
-  _createImplementationPhase(requirements, structure, template) {
+/**
+ * Create implementation phase
+ */
+function createImplementationPhase(requirements, structure, template) {
     const tasks = [];
     
     // Create tasks for each file in the structure
     for (const file of structure.files) {
       if (!file.path.includes('test') && !file.path.includes('spec')) {
         tasks.push({
-          id: `impl-${this._sanitizeId(file.path)}`,
+          id: `impl-${sanitizeId(file.path)}`,
+
           name: `Implement ${file.path}`,
           type: 'implementation',
           data: {
@@ -427,10 +500,10 @@ export default class PlanningStrategy extends TaskStrategy {
     };
   }
 
-  /**
-   * Create testing phase
-   */
-  _createTestingPhase(requirements, structure) {
+/**
+ * Create testing phase
+ */
+function createTestingPhase(requirements, structure) {
     const tasks = [];
     
     // Create test tasks for implementation files
@@ -439,7 +512,8 @@ export default class PlanningStrategy extends TaskStrategy {
           (file.path.endsWith('.js') || file.path.endsWith('.ts'))) {
         const testFile = file.path.replace(/\.(js|ts)$/, '.test.$1');
         tasks.push({
-          id: `test-${this._sanitizeId(file.path)}`,
+          id: `test-${sanitizeId(file.path)}`,
+
           name: `Create tests for ${file.path}`,
           type: 'testing',
           data: {
@@ -469,10 +543,10 @@ export default class PlanningStrategy extends TaskStrategy {
     };
   }
 
-  /**
-   * Create documentation phase
-   */
-  _createDocumentationPhase(requirements) {
+/**
+ * Create documentation phase
+ */
+function createDocumentationPhase(requirements) {
     return {
       phase: 'Documentation',
       description: 'Create project documentation',
@@ -504,10 +578,10 @@ export default class PlanningStrategy extends TaskStrategy {
     };
   }
 
-  /**
-   * Create deployment phase
-   */
-  _createDeploymentPhase(requirements) {
+/**
+ * Create deployment phase
+ */
+function createDeploymentPhase(requirements) {
     return {
       phase: 'Deployment',
       description: 'Deploy to production',
@@ -545,10 +619,10 @@ export default class PlanningStrategy extends TaskStrategy {
     };
   }
 
-  /**
-   * Add feature to structure
-   */
-  _addFeatureToStructure(structure, feature) {
+/**
+ * Add feature to structure
+ */
+function addFeatureToStructure(structure, feature) {
     const featureName = feature.name || feature;
     const featureDir = `src/features/${featureName}`;
     
@@ -571,10 +645,10 @@ export default class PlanningStrategy extends TaskStrategy {
     });
   }
 
-  /**
-   * Add test structure
-   */
-  _addTestStructure(structure) {
+/**
+ * Add test structure
+ */
+function addTestStructure(structure) {
     if (!structure.directories.includes('tests')) {
       structure.directories.push('tests');
       structure.directories.push('tests/unit');
@@ -589,10 +663,10 @@ export default class PlanningStrategy extends TaskStrategy {
     });
   }
 
-  /**
-   * Add documentation structure
-   */
-  _addDocumentationStructure(structure) {
+/**
+ * Add documentation structure
+ */
+function addDocumentationStructure(structure) {
     if (!structure.directories.includes('docs')) {
       structure.directories.push('docs');
     }
@@ -610,10 +684,10 @@ export default class PlanningStrategy extends TaskStrategy {
     });
   }
 
-  /**
-   * Extract dependencies from requirements
-   */
-  _extractDependencies(requirements) {
+/**
+ * Extract dependencies from requirements
+ */
+function extractDependencies(requirements) {
     const dependencies = requirements.dependencies || {};
     
     // Add framework dependencies based on type
@@ -639,10 +713,10 @@ export default class PlanningStrategy extends TaskStrategy {
     return dependencies;
   }
 
-  /**
-   * Validate plan
-   */
-  _validatePlan(plan) {
+/**
+ * Validate plan
+ */
+function validatePlan(plan) {
     const errors = [];
     
     if (!plan.projectId) {
@@ -673,10 +747,10 @@ export default class PlanningStrategy extends TaskStrategy {
     };
   }
 
-  /**
-   * Estimate duration
-   */
-  _estimateDuration(phases) {
+/**
+ * Estimate duration
+ */
+function estimateDuration(phases) {
     let totalMinutes = 0;
     phases.forEach(phase => {
       totalMinutes += phase.tasks.length * 15; // 15 minutes per task estimate
@@ -684,17 +758,17 @@ export default class PlanningStrategy extends TaskStrategy {
     return `${Math.round(totalMinutes / 60)} hours`;
   }
 
-  /**
-   * Count tasks
-   */
-  _countTasks(phases) {
+/**
+ * Count tasks
+ */
+function countTasks(phases) {
     return phases.reduce((total, phase) => total + phase.tasks.length, 0);
   }
 
-  /**
-   * Sanitize ID
-   */
-  _sanitizeId(path) {
+/**
+ * Sanitize ID
+ */
+function sanitizeId(path) {
     return path.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
   }
 
@@ -702,7 +776,7 @@ export default class PlanningStrategy extends TaskStrategy {
   // Project Templates
   // ==========================================
 
-  _getAPITemplate() {
+function getAPITemplate() {
     return {
       structure: {
         directories: [
@@ -746,7 +820,7 @@ export default class PlanningStrategy extends TaskStrategy {
     };
   }
 
-  _getCLITemplate() {
+function getCLITemplate() {
     return {
       structure: {
         directories: [
@@ -776,7 +850,7 @@ export default class PlanningStrategy extends TaskStrategy {
     };
   }
 
-  _getWebAppTemplate() {
+function getWebAppTemplate() {
     return {
       structure: {
         directories: [
@@ -813,7 +887,7 @@ export default class PlanningStrategy extends TaskStrategy {
     };
   }
 
-  _getLibraryTemplate() {
+function getLibraryTemplate() {
     return {
       structure: {
         directories: [

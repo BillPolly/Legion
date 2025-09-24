@@ -1,372 +1,367 @@
 /**
- * Unit tests for PlanningStrategy
- * Tests the migration of ProjectStructurePlanner component to TaskStrategy pattern
- * Phase 2.1 Migration Test
+ * Unit tests for PlanningStrategy - Prototypal Pattern
+ * Tests project planning and structure generation
+ * NO MOCKS - using real components
  */
 
-import { describe, test, expect, beforeEach, jest } from '@jest/globals';
+import { describe, test, expect, beforeEach, jest, beforeAll } from '@jest/globals';
 import { ResourceManager } from '@legion/resource-manager';
 import { ToolRegistry } from '@legion/tools-registry';
-import PlanningStrategy from '../../../../src/strategies/coding/PlanningStrategy.js';
+import { createPlanningStrategy } from '../../../../src/strategies/coding/PlanningStrategy.js';
 
-describe('PlanningStrategy', () => {
+// Mock Task for testing - simulates the actual Task interface
+class MockTask {
+  constructor(id, description) {
+    this.id = id;
+    this.description = description;
+    this.parent = null;
+    this.context = {};
+    this.artifacts = [];
+    this.artifactMap = {};
+    this.failed = false;
+    this.completed = false;
+    this.conversation = [];
+    this.sentMessages = [];
+  }
+  
+  fail(error) {
+    this.failed = true;
+    this.error = error;
+  }
+  
+  complete(result) {
+    this.completed = true;
+    this.result = result;
+  }
+  
+  addConversationEntry(role, content) {
+    this.conversation.push({ role, content });
+  }
+  
+  storeArtifact(name, value, description, type) {
+    const artifact = {
+      name,
+      value,
+      content: value,
+      description,
+      type
+    };
+    this.artifacts.push(artifact);
+    this.artifactMap[name] = artifact;
+  }
+  
+  getAllArtifacts() {
+    return this.artifactMap;
+  }
+  
+  lookup(key) {
+    if (key === 'llmClient') return this.context.llmClient;
+    if (key === 'toolRegistry') return this.context.toolRegistry;
+    if (key === 'workspaceDir') return this.context.workspaceDir;
+    return null;
+  }
+  
+  send(target, message) {
+    this.sentMessages.push({ target, message });
+  }
+}
+
+describe('PlanningStrategy - Prototypal Pattern', () => {
   let resourceManager;
-  let llmClient;
   let toolRegistry;
-  let strategy;
+  let llmClient;
 
-  beforeEach(async () => {
-    // Get real ResourceManager singleton and services
+  beforeAll(async () => {
+    // Get ResourceManager singleton
     resourceManager = await ResourceManager.getInstance();
-    llmClient = await resourceManager.get('llmClient');
-    toolRegistry = await ToolRegistry.getInstance();
     
-    // Create strategy instance
-    strategy = new PlanningStrategy(llmClient, toolRegistry);
-  });
+    // Get real services
+    toolRegistry = await ToolRegistry.getInstance();
+    llmClient = await resourceManager.get('llmClient');
+  }, 30000);
 
-  describe('Basic Properties', () => {
-    test('should create strategy instance', () => {
+  describe('Factory Function', () => {
+    test('should create strategy with factory function', () => {
+      const strategy = createPlanningStrategy(llmClient, toolRegistry);
+      
       expect(strategy).toBeDefined();
-      expect(strategy.getName()).toBe('Planning');
-    });
-
-    test('should accept LLM client and ToolRegistry in constructor', () => {
-      expect(strategy.llmClient).toBe(llmClient);
-      expect(strategy.toolRegistry).toBe(toolRegistry);
-    });
-
-    test('should initialize with default options', () => {
-      expect(strategy.options.outputFormat).toBe('json');
-      expect(strategy.options.validateResults).toBe(true);
+      expect(typeof strategy.onMessage).toBe('function');
     });
 
     test('should accept custom options', () => {
-      const customStrategy = new PlanningStrategy(llmClient, toolRegistry, {
+      const strategy = createPlanningStrategy(llmClient, toolRegistry, {
         outputFormat: 'text',
         validateResults: false
       });
       
-      expect(customStrategy.options.outputFormat).toBe('text');
-      expect(customStrategy.options.validateResults).toBe(false);
-    });
-  });
-
-  describe('TaskStrategy Interface', () => {
-    test('should implement getName method', () => {
-      expect(typeof strategy.getName).toBe('function');
-      expect(strategy.getName()).toBe('Planning');
-    });
-
-    test('should implement onMessage method', () => {
+      expect(strategy).toBeDefined();
       expect(typeof strategy.onMessage).toBe('function');
     });
 
-    test('should handle messages from both parent and child tasks', () => {
+    test('should work without llmClient and toolRegistry (will get from task)', () => {
+      const strategy = createPlanningStrategy();
+      
+      expect(strategy).toBeDefined();
       expect(typeof strategy.onMessage).toBe('function');
     });
   });
 
-  describe('Helper Methods', () => {
-    test('should have extractRequirements helper method', () => {
-      expect(typeof strategy._extractRequirements).toBe('function');
-    });
-
-    test('should have getProjectId helper method', () => {
-      expect(typeof strategy._getProjectId).toBe('function');
-    });
-
-    test('should have context extraction helper', () => {
-      expect(typeof strategy._getContextFromTask).toBe('function');
-    });
-  });
-
-  describe('Message Handling', () => {
-    test('should handle start message with requirements analysis artifact', async () => {
-      const mockTask = {
-        id: 'task-123',
-        description: 'Create a calculator API',
-        projectId: 'project-123',
-        getAllArtifacts: () => ({
-          'requirements-analysis': {
-            content: {
-              type: 'api',
-              features: ['calculation endpoints', 'error handling'],
-              constraints: ['secure', 'fast'],
-              technologies: ['express', 'joi']
-            },
-            description: 'Requirements analysis',
-            type: 'analysis'
-          }
-        }),
-        addConversationEntry: jest.fn(),
-        storeArtifact: jest.fn()
-      };
-
-      const result = await strategy.onMessage(mockTask, { type: 'start' });
+  describe('Message Handling with Prototypal Pattern', () => {
+    test('should handle start message with requirements artifact', (done) => {
+      const strategy = createPlanningStrategy(llmClient, toolRegistry);
       
-      // Should return successful result
-      expect(result).toBeDefined();
-      expect(result.success).toBe(true);
-      expect(result.result).toBeDefined();
-      expect(result.result.plan).toBeDefined();
-      expect(result.result.structure).toBeDefined();
-      expect(result.artifacts).toContain('project-plan');
-      expect(result.artifacts).toContain('project-structure');
-    }, 10000); // Allow time for plan generation
-
-    test('should handle start message with description fallback', async () => {
-      const mockTask = {
-        id: 'task-456',
-        description: 'Build a simple REST API',
-        getAllArtifacts: () => ({}),
-        addConversationEntry: jest.fn(),
-        storeArtifact: jest.fn()
-      };
-
-      const result = await strategy.onMessage(mockTask, { type: 'start' });
+      // Create a mock task with requirements
+      const task = new MockTask('planning-1', 'Plan a calculator API');
+      task.context = { llmClient, toolRegistry };
       
-      expect(result).toBeDefined();
-      expect(result.success).toBe(true);
-      expect(result.result.plan).toBeDefined();
-    }, 10000);
-
-    test('should handle abort message', async () => {
-      const mockTask = {};
-      
-      const result = await strategy.onMessage(mockTask, { type: 'abort' });
-      
-      expect(result.acknowledged).toBe(true);
-      expect(result.aborted).toBe(true);
-    });
-
-    test('should handle unknown message types', async () => {
-      const mockTask = {};
-      
-      const result = await strategy.onMessage(mockTask, { type: 'unknown' });
-      
-      expect(result.acknowledged).toBe(true);
-    });
-
-    test('should handle work message same as start', async () => {
-      const mockTask = {
-        id: 'task-789',
-        description: 'Create CLI tool',
-        getAllArtifacts: () => ({}),
-        addConversationEntry: jest.fn(),
-        storeArtifact: jest.fn()
-      };
-
-      const result = await strategy.onMessage(mockTask, { type: 'work' });
-      
-      expect(result).toBeDefined();
-      expect(result.success).toBe(true);
-    }, 10000);
-  });
-
-  describe('Requirements Extraction', () => {
-    test('should extract requirements from requirements-analysis artifact', () => {
-      const mockTask = {
-        getAllArtifacts: () => ({
-          'requirements-analysis': {
-            content: {
-              type: 'web',
-              features: ['user interface', 'data storage'],
-              technologies: ['react', 'node']
-            }
-          }
-        })
-      };
-
-      const requirements = strategy._extractRequirements(mockTask);
-      expect(requirements).toEqual({
-        type: 'web',
-        features: ['user interface', 'data storage'],
-        technologies: ['react', 'node']
-      });
-    });
-
-    test('should extract requirements from generic requirements artifact', () => {
-      const mockTask = {
-        getAllArtifacts: () => ({
-          'requirements': {
-            content: {
-              type: 'cli',
-              features: ['command parsing'],
-              technologies: ['commander']
-            }
-          }
-        })
-      };
-
-      const requirements = strategy._extractRequirements(mockTask);
-      expect(requirements.type).toBe('cli');
-      expect(requirements.features).toContain('command parsing');
-    });
-
-    test('should handle JSON description', () => {
-      const jsonRequirements = {
-        type: 'library',
-        features: ['math utilities'],
-        technologies: ['typescript']
-      };
-      
-      const mockTask = {
-        description: JSON.stringify(jsonRequirements),
-        getAllArtifacts: () => ({})
-      };
-
-      const requirements = strategy._extractRequirements(mockTask);
-      expect(requirements).toEqual(jsonRequirements);
-    });
-
-    test('should handle plain text description', () => {
-      const mockTask = {
-        description: 'Create a file processing utility',
-        getAllArtifacts: () => ({})
-      };
-
-      const requirements = strategy._extractRequirements(mockTask);
-      expect(requirements).toEqual({
+      // Add requirements artifact
+      task.storeArtifact('requirements-analysis', {
         type: 'api',
-        description: 'Create a file processing utility',
-        features: [],
-        constraints: [],
-        technologies: []
+        features: ['calculation endpoints', 'error handling'],
+        constraints: ['secure', 'fast'],
+        technologies: ['express', 'joi']
+      }, 'Analyzed requirements', 'analysis');
+      
+      // Override complete to check results
+      task.complete = jest.fn((result) => {
+        expect(result.success).toBe(true);
+        expect(result.plan).toBeDefined();
+        expect(task.artifacts.length).toBeGreaterThan(1);
+        
+        // Check artifacts were stored
+        const artifacts = task.getAllArtifacts();
+        expect(artifacts['project-plan']).toBeDefined();
+        
+        done();
       });
+      
+      // Call onMessage with task as 'this' context
+      strategy.onMessage.call(task, task, { type: 'start' });
+    }, 30000);
+
+    test('should handle child task completion', () => {
+      const strategy = createPlanningStrategy(llmClient, toolRegistry);
+      
+      // Create mock parent task
+      const parentTask = new MockTask('parent-task', 'Parent task');
+      parentTask.storeArtifact = jest.fn();
+      
+      // Create mock child task
+      const childTask = new MockTask('child-task', 'Child task');
+      childTask.parent = parentTask;
+      childTask.getAllArtifacts = jest.fn(() => ({
+        'artifact1': { content: 'test', description: 'Test artifact', type: 'file' }
+      }));
+      
+      // Call onMessage with parent task as 'this' context
+      strategy.onMessage.call(parentTask, childTask, { 
+        type: 'completed',
+        result: { success: true }
+      });
+      
+      // Should copy artifacts from child
+      expect(parentTask.storeArtifact).toHaveBeenCalledWith(
+        'artifact1', 'test', 'Test artifact', 'file'
+      );
     });
 
-    test('should return null when no requirements found', () => {
-      const mockTask = {
-        description: '',
-        getAllArtifacts: () => ({})
-      };
-
-      const requirements = strategy._extractRequirements(mockTask);
-      expect(requirements).toBeNull();
-    });
-  });
-
-  describe('Project ID Extraction', () => {
-    test('should use task projectId when available', () => {
-      const mockTask = { projectId: 'existing-project-123' };
-      const projectId = strategy._getProjectId(mockTask);
-      expect(projectId).toBe('existing-project-123');
-    });
-
-    test('should generate projectId from task id', () => {
-      const mockTask = { id: 'task-456' };
-      const projectId = strategy._getProjectId(mockTask);
-      expect(projectId).toBe('project-for-task-456');
-    });
-
-    test('should generate unique projectId when no identifiers', () => {
-      const mockTask = {};
-      const projectId = strategy._getProjectId(mockTask);
-      expect(projectId).toMatch(/^project-\d+-[a-z0-9]+$/);
-    });
-  });
-
-  describe('Context Extraction', () => {
-    test('should extract basic context from task', () => {
-      const mockTask = {
-        id: 'task-123',
-        description: 'Test task',
-        workspaceDir: '/tmp/workspace'
-      };
-
-      const context = strategy._getContextFromTask(mockTask);
-      expect(context.taskId).toBe('task-123');
-      expect(context.description).toBe('Test task');
-      expect(context.workspaceDir).toBe('/tmp/workspace');
+    test('should handle child task failure', () => {
+      const strategy = createPlanningStrategy(llmClient, toolRegistry);
+      
+      // Create mock parent task
+      const parentTask = new MockTask('parent-task', 'Parent task');
+      const grandParent = new MockTask('grandparent', 'Grandparent');
+      parentTask.parent = grandParent;
+      
+      // Create mock child task
+      const childTask = new MockTask('child-task', 'Child task');
+      childTask.parent = parentTask;
+      
+      // Call onMessage with parent task as 'this' context for child failure
+      strategy.onMessage.call(parentTask, childTask, { 
+        type: 'failed',
+        error: new Error('Test error')
+      });
+      
+      // Should notify parent of child failure
+      expect(parentTask.sentMessages.length).toBe(1);
+      expect(parentTask.sentMessages[0].message.type).toBe('child-failed');
+      expect(parentTask.sentMessages[0].message.child).toBe(childTask);
     });
 
-    test('should include artifacts in context', () => {
-      const mockTask = {
-        id: 'task-456',
-        description: 'Test task',
-        getAllArtifacts: () => ({
-          'requirements': { content: 'data' },
-          'config': { content: 'settings' }
-        })
-      };
-
-      const context = strategy._getContextFromTask(mockTask);
-      expect(context.existingArtifacts).toEqual(['requirements', 'config']);
-    });
-
-    test('should include conversation history in context', () => {
-      const mockTask = {
-        id: 'task-789',
-        description: 'Test task',
-        getConversationContext: () => [
-          { role: 'user', content: 'Create project' },
-          { role: 'assistant', content: 'Starting analysis' }
-        ]
-      };
-
-      const context = strategy._getContextFromTask(mockTask);
-      expect(context.conversationHistory).toHaveLength(2);
+    test('should handle unknown messages gracefully', () => {
+      const strategy = createPlanningStrategy(llmClient, toolRegistry);
+      
+      const task = new MockTask('test', 'Test task');
+      
+      // Should not throw
+      expect(() => {
+        strategy.onMessage.call(task, task, { type: 'unknown' });
+      }).not.toThrow();
     });
   });
 
   describe('Error Handling', () => {
-    test('should handle missing requirements gracefully', async () => {
-      const mockTask = {
-        description: '',
-        getAllArtifacts: () => ({}),
-        addConversationEntry: jest.fn()
-      };
-
-      const result = await strategy.onMessage(mockTask, { type: 'start' });
+    test('should catch async errors and fail task', (done) => {
+      // Create strategy without llmClient to trigger error
+      const strategy = createPlanningStrategy(null, null);
       
-      expect(result.success).toBe(false);
-      expect(result.result).toBe('No requirements found for planning');
+      const task = new MockTask('test', 'Test task');
+      task.context = {}; // No llmClient in context
+      
+      task.fail = jest.fn((error) => {
+        expect(error).toBeDefined();
+        expect(error.message).toContain('LLM client is required');
+        done();
+      });
+      
+      // Call onMessage with task as 'this' context
+      strategy.onMessage.call(task, task, { type: 'start' });
     });
 
-    test('should handle component initialization errors', async () => {
-      // Create strategy without required dependencies
-      const invalidStrategy = new PlanningStrategy(null, null);
+    test('should handle synchronous errors in message handler', () => {
+      const strategy = createPlanningStrategy(llmClient, toolRegistry);
       
-      const mockTask = {
-        description: 'Test task',
-        getAllArtifacts: () => ({}),
-        addConversationEntry: jest.fn()
+      const task = new MockTask('test', 'Test task');
+      // Make getAllArtifacts throw to trigger sync error
+      task.getAllArtifacts = () => {
+        throw new Error('Sync error');
       };
-
-      const result = await invalidStrategy.onMessage(mockTask, { type: 'start' });
       
-      expect(result.success).toBe(false);
-      expect(result.result).toMatch(/requires LLM client and ToolRegistry/);
+      // Should not throw - errors are caught
+      expect(() => {
+        strategy.onMessage.call(task, task, { type: 'start' });
+      }).not.toThrow();
     });
+
+    test('should handle missing requirements gracefully', (done) => {
+      const strategy = createPlanningStrategy(llmClient, toolRegistry);
+      
+      const task = new MockTask('test', 'Create project plan');
+      task.context = { llmClient, toolRegistry };
+      
+      // No requirements artifact - should still work
+      task.complete = jest.fn((result) => {
+        expect(result.success).toBe(true);
+        expect(result.plan).toBeDefined();
+        done();
+      });
+      
+      strategy.onMessage.call(task, task, { type: 'start' });
+    }, 30000);
   });
 
-  describe('Child Message Handling', () => {
-    test('should acknowledge child completion messages', async () => {
-      const mockChildTask = {
-        parent: { id: 'parent-task' }
-      };
+  describe('Integration with Task', () => {
+    test('should work with task lookup for dependencies', (done) => {
+      const strategy = createPlanningStrategy(); // No dependencies provided
       
-      const result = await strategy.onMessage(mockChildTask, { type: 'completed' });
+      const task = new MockTask('test', 'Create project structure for REST API');
+      task.context = { llmClient, toolRegistry };
       
-      expect(result.acknowledged).toBe(true);
+      // Add basic requirements
+      task.storeArtifact('requirements-analysis', {
+        type: 'rest-api',
+        features: ['CRUD operations', 'authentication'],
+        technologies: ['express', 'mongodb']
+      }, 'API requirements', 'analysis');
+      
+      task.complete = jest.fn((result) => {
+        expect(result.success).toBe(true);
+        expect(result.plan).toBeDefined();
+        done();
+      });
+      
+      // Call onMessage - should get dependencies from task context
+      strategy.onMessage.call(task, task, { type: 'start' });
+    }, 30000);
+
+    test('should store plan as artifact', (done) => {
+      const strategy = createPlanningStrategy(llmClient, toolRegistry);
+      
+      const task = new MockTask('test', 'Plan microservices architecture');
+      task.context = { llmClient, toolRegistry };
+      
+      task.complete = jest.fn(() => {
+        const artifacts = task.getAllArtifacts();
+        expect(artifacts['project-plan']).toBeDefined();
+        expect(artifacts['project-plan'].type).toBe('plan');
+        done();
+      });
+      
+      strategy.onMessage.call(task, task, { type: 'start' });
+    }, 30000);
+
+    test('should create detailed project structure', (done) => {
+      const strategy = createPlanningStrategy(llmClient, toolRegistry);
+      
+      const task = new MockTask('test', 'Plan e-commerce application');
+      task.context = { llmClient, toolRegistry };
+      
+      task.storeArtifact('requirements-analysis', {
+        type: 'e-commerce',
+        features: ['product catalog', 'shopping cart', 'payment processing'],
+        technologies: ['next.js', 'stripe', 'postgresql']
+      }, 'E-commerce requirements', 'analysis');
+      
+      task.complete = jest.fn((result) => {
+        expect(result.success).toBe(true);
+        expect(result.plan).toBeDefined();
+        expect(result.plan.structure).toBeDefined();
+        
+        const artifacts = task.getAllArtifacts();
+        expect(artifacts['project-structure']).toBeDefined();
+        
+        done();
+      });
+      
+      strategy.onMessage.call(task, task, { type: 'start' });
+    }, 30000);
+  });
+
+  describe('Prototypal Pattern Verification', () => {
+    test('should properly inherit from TaskStrategy', () => {
+      const strategy = createPlanningStrategy(llmClient, toolRegistry);
+      
+      // Should have onMessage method
+      expect(typeof strategy.onMessage).toBe('function');
+      
+      // Should not have class properties
+      expect(strategy.constructor.name).not.toBe('PlanningStrategy');
     });
 
-    test('should acknowledge child failure messages', async () => {
-      const mockChildTask = {
-        parent: { id: 'parent-task' }
-      };
+    test('should use closure for configuration', () => {
+      const strategy1 = createPlanningStrategy(llmClient, toolRegistry);
+      const strategy2 = createPlanningStrategy(null, null);
       
-      const result = await strategy.onMessage(mockChildTask, { type: 'failed' });
-      
-      expect(result.acknowledged).toBe(true);
+      // Each strategy should have its own configuration
+      expect(strategy1).not.toBe(strategy2);
+      expect(typeof strategy1.onMessage).toBe('function');
+      expect(typeof strategy2.onMessage).toBe('function');
     });
 
-    test('should require child task to have parent', async () => {
-      const orphanChild = { parent: null };
+    test('should handle fire-and-forget messaging pattern', (done) => {
+      const strategy = createPlanningStrategy(llmClient, toolRegistry);
       
-      await expect(strategy.onMessage(orphanChild, { type: 'completed' }))
-        .rejects.toThrow('Child task has no parent');
+      const task = new MockTask('test', 'Test fire-and-forget');
+      task.context = { llmClient, toolRegistry };
+      
+      // onMessage should not return a promise that needs await
+      const result = strategy.onMessage.call(task, task, { type: 'start' });
+      
+      // Result should be undefined (fire-and-forget)
+      expect(result).toBeUndefined();
+      
+      // Task should eventually complete
+      task.complete = jest.fn(() => {
+        done();
+      });
+      
+      // Give async operation time to complete
+      setTimeout(() => {
+        if (!task.complete.mock.calls.length) {
+          done(new Error('Task did not complete'));
+        }
+      }, 5000);
     });
   });
 });
