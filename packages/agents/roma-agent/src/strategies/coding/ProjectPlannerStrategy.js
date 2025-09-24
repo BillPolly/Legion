@@ -14,7 +14,7 @@
 import { EnhancedTaskStrategy } from '@legion/tasks';
 import { ConfigBuilder } from '../utils/ConfigBuilder.js';
 import { getTaskContext } from '../utils/StrategyHelpers.js';
-import { EnhancedPromptRegistry } from '@legion/prompting-manager';
+import { EnhancedPromptRegistry, TemplatedPrompt } from '@legion/prompting-manager';
 import { createSimpleNodeServerStrategy } from '../simple-node/SimpleNodeServerStrategy.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -38,6 +38,96 @@ import { createMonitoringStrategy as MonitoringStrategy } from './MonitoringStra
 import StateManager from '../../utils/StateManager.js';
 import ParallelExecutor from '../../utils/ParallelExecutor.js';
 import EventStream from '../../utils/EventStream.js';
+
+const PROJECT_PROMPT_DEFINITIONS = {
+  'strategies/project-planner/analyze-requirements': {
+    schema: {
+      type: 'object',
+      properties: {
+        type: { type: 'string' },
+        features: {
+          type: 'array',
+          items: { type: 'string' }
+        },
+        constraints: {
+          type: 'array',
+          items: { type: 'string' }
+        },
+        technologies: {
+          type: 'array',
+          items: { type: 'string' }
+        }
+      },
+      required: ['type', 'features']
+    },
+    examples: [
+      {
+        type: 'api',
+        features: ['User authentication', 'CRUD endpoints'],
+        constraints: ['Use PostgreSQL', 'Deploy on AWS'],
+        technologies: ['Node.js', 'Express', 'PostgreSQL']
+      }
+    ]
+  },
+  'strategies/project-planner/create-project-plan': {
+    schema: {
+      type: 'object',
+      properties: {
+        planId: { type: 'string' },
+        phases: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              phase: { type: 'string' },
+              priority: { type: 'number' },
+              tasks: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    action: { type: 'string' },
+                    dependencies: {
+                      type: 'array',
+                      items: { type: 'string' }
+                    }
+                  },
+                  required: ['id', 'action']
+                }
+              }
+            },
+            required: ['phase', 'tasks']
+          }
+        }
+      },
+      required: ['planId', 'phases']
+    },
+    examples: [
+      {
+        planId: 'plan-001',
+        phases: [
+          {
+            phase: 'Discovery',
+            priority: 1,
+            tasks: [
+              {
+                id: 'req-01',
+                action: 'Gather detailed requirements',
+                dependencies: []
+              },
+              {
+                id: 'arch-01',
+                action: 'Draft initial architecture diagram',
+                dependencies: ['req-01']
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+};
 
 /**
  * Create a ProjectPlannerStrategy prototype
@@ -80,6 +170,7 @@ export function createProjectPlannerStrategy(llmClient = null, toolRegistry = nu
     
     // Initialize prompt registry
     promptRegistry: null,
+    promptInstances: new Map(),
     
     // Project state
     state: null
@@ -636,25 +727,12 @@ async function attemptRecovery(config, issues) {
  * Execute prompt with LLM
  */
 async function executePrompt(config, promptPath, variables) {
-  const prompt = await config.promptRegistry.fill(promptPath, variables);
-  const response = await config.llmClient.complete(prompt);
-  
-  // Parse response based on expected format
-  const metadata = await config.promptRegistry.getMetadata(promptPath);
-  
-  if (metadata.responseFormat === 'json') {
-    try {
-      // Extract JSON from response
-      const jsonMatch = response.match(/```json\s*([\s\S]*?)```/) || response.match(/{[\s\S]*}/);
-      const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : response;
-      const data = JSON.parse(jsonStr);
-      return { success: true, data };
-    } catch (error) {
-      return { success: false, errors: [`Failed to parse JSON: ${error.message}`] };
-    }
+  if (!config.llmClient) {
+    throw new Error('LLM client is required to execute prompts');
   }
-  
-  return { success: true, data: response };
+
+  const prompt = await getTemplatedPrompt(config, promptPath);
+  return await prompt.execute(variables);
 }
 
 /**
@@ -662,4 +740,25 @@ async function executePrompt(config, promptPath, variables) {
  */
 function getContextFromTask(task) {
   return task?.context || {};
+}
+
+async function getTemplatedPrompt(config, promptPath) {
+  if (!config.promptInstances.has(promptPath)) {
+    const definition = PROJECT_PROMPT_DEFINITIONS[promptPath];
+    if (!definition) {
+      throw new Error(`No prompt definition registered for ${promptPath}`);
+    }
+
+    const template = await config.promptRegistry.load(promptPath);
+    const prompt = new TemplatedPrompt({
+      prompt: template.content,
+      responseSchema: definition.schema,
+      examples: definition.examples || [],
+      llmClient: config.llmClient
+    });
+
+    config.promptInstances.set(promptPath, prompt);
+  }
+
+  return config.promptInstances.get(promptPath);
 }
