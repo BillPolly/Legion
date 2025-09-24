@@ -1,6 +1,6 @@
-# @jsenvoy/llm
+# @legion/llm
 
-LLM client package with retry logic and error handling for jsEnvoy.
+LLM client package with retry logic and error handling for Legion.
 
 ## Features
 
@@ -15,7 +15,7 @@ LLM client package with retry logic and error handling for jsEnvoy.
 ## Installation
 
 ```bash
-npm install @jsenvoy/llm
+npm install @legion/llm
 ```
 
 ## Usage
@@ -23,7 +23,7 @@ npm install @jsenvoy/llm
 ### Basic Usage (Prompt-based)
 
 ```javascript
-import { LLMClient } from '@jsenvoy/llm';
+import { LLMClient } from '@legion/llm';
 
 const client = new LLMClient({
   provider: 'openai',

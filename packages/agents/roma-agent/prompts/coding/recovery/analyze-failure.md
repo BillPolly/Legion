@@ -10,8 +10,7 @@ variables:
   - task
   - error
   - errorType
-responseFormat: json
-schema:
+responseSchema:
   type: object
   properties:
     reason:
@@ -65,38 +64,3 @@ Analyze this task failure and provide recovery recommendations:
 - For external failures: Propose fallback mechanisms or retries
 - For validation failures: Define proper input constraints
 
-# Response Format
-
-Provide your analysis as JSON with the following structure:
-
-```json
-{
-  "reason": "specific_failure_reason",
-  "missingItems": ["array of missing dependencies or requirements"],
-  "failedApproaches": ["array of strategies that failed"],
-  "suggestedConstraints": {
-    "key": "value pairs of recommended constraints"
-  }
-}
-```
-
-## Example Response
-```json
-{
-  "reason": "missing_authentication_middleware",
-  "missingItems": ["jsonwebtoken package", "auth middleware configuration"],
-  "failedApproaches": ["direct_implementation", "basic_auth"],
-  "suggestedConstraints": {
-    "useJWT": true,
-    "requireAuthMiddleware": true,
-    "avoidStrategies": ["basic_auth"],
-    "installPackages": ["jsonwebtoken", "bcrypt"]
-  }
-}
-```
-
-**Important:**
-- Return ONLY valid JSON, no additional text
-- Be specific about the failure reason
-- Constraints should be actionable and specific
-- Failed approaches help avoid repeating mistakes

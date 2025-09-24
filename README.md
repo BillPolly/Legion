@@ -81,24 +81,21 @@ npm run storage:kill
 ### Using the CLI
 
 ```bash
-# Install globally
-npm install -g @jsenvoy/cli @jsenvoy/core
-
-# Execute a tool
-jsenvoy calculator.calculator_evaluate --expression "2 + 2"
-
 # Interactive mode
-jsenvoy interactive
+npm run cli
+
+# Help
+npm run cli:help
 
 # List available tools
-jsenvoy list tools
+npm run cli:list
 ```
 
 ### Building an Agent
 
 ```javascript
-const { Agent } = require('@jsenvoy/agent');
-const { calculatorTool, fileReaderTool } = require('@jsenvoy/tools');
+const { Agent } = require('@legion/agent');
+const { calculatorTool, fileReaderTool } = require('@legion/tools');
 
 const agent = new Agent({
   modelConfig: {
@@ -115,8 +112,8 @@ const result = await agent.execute("Calculate the sum of numbers in data.txt");
 ### Code Generation with Agent
 
 ```javascript
-// The CLI automatically loads CodeAgent for code generation
-node packages/agent/src/cli.js
+// The CLI can launch the Code Agent for code generation
+npm run cli
 
 // Example interactions:
 // "Create a React calculator app with modern styling"
@@ -124,7 +121,7 @@ node packages/agent/src/cli.js
 // "Generate a complete blog application with authentication"
 
 // Run the example script
-node packages/agent/examples/chat-with-codeagent.js
+node packages/modules/code-agent/examples/chat-integration.js
 ```
 
 ### Creating Custom Modules
@@ -159,7 +156,7 @@ class MyModule extends OpenAIModule {
 ## Project Structure
 
 ```
-jsEnvoy/
+Legion/
 ├── packages/
 │   ├── core/              # Core infrastructure
 │   ├── cli/               # Command-line interface
@@ -240,7 +237,7 @@ See [Architecture Documentation](docs/ARCHITECTURE.md) for details.
 
 ## Event System
 
-jsEnvoy includes a comprehensive event system for real-time monitoring and feedback:
+Legion includes a comprehensive event system for real-time monitoring and feedback:
 
 ### Event Types
 - **progress** - Track operation progress with percentage and status
@@ -257,8 +254,8 @@ jsEnvoy includes a comprehensive event system for real-time monitoring and feedb
 ### Example: Monitoring Agent Execution
 
 ```javascript
-const { Agent } = require('@jsenvoy/agent');
-const { FileModule } = require('@jsenvoy/tools');
+const { Agent } = require('@legion/agent');
+const { FileModule } = require('@legion/tools');
 
 const agent = new Agent({
   name: 'DataProcessor',

@@ -3,7 +3,7 @@
 /**
  * Run the Example2 Full Workflow
  * 
- * This script demonstrates the complete workflow using only jsEnvoy modules:
+* This script demonstrates the complete workflow using only Legion modules:
  * 1. Generate code with CodeAgent
  * 2. Test with CodeAgent.testApplication()
  * 3. Push to GitHub via CodeAgent's Git integration
@@ -115,7 +115,7 @@ async function runExample2Workflow() {
 
     const developResult = await agent.develop({
       projectName: PROJECT_NAME,
-      description: 'A simple web application demonstrating the full jsEnvoy workflow',
+description: 'A simple web application demonstrating the full Legion workflow',
       requirements: {
         backend: `Create an Express.js server with the following:
           1. GET / - Serve the HTML page from public/index.html

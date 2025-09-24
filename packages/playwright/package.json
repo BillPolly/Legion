@@ -1,7 +1,7 @@
 {
   "name": "@legion/playwright",
   "version": "1.0.0",
-  "description": "Browser automation and web testing using Playwright for jsEnvoy",
+"description": "Browser automation and web testing using Playwright for Legion",
   "type": "module",
   "main": "./src/PlaywrightWrapper.js",
   "scripts": {
@@ -10,7 +10,7 @@
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
   },
   "keywords": [
-    "jsenvoy",
+"legion",
     "playwright",
     "browser",
     "automation",
@@ -18,7 +18,7 @@
     "web",
     "scraping"
   ],
-  "author": "jsEnvoy Team",
+"author": "Legion Team",
   "license": "MIT",
   "engines": {
     "node": ">=18.0.0"

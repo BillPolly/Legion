@@ -8,8 +8,7 @@ tags:
 category: coding
 variables:
   - requirements
-responseFormat: json
-schema:
+responseSchema:
   type: object
   properties:
     type:
@@ -77,22 +76,3 @@ Suggest appropriate technologies based on:
 - Technical constraints
 - Industry best practices
 
-# Response Format
-
-Provide your analysis as JSON with the following structure:
-
-```json
-{
-  "type": "api|web|cli|library",
-  "features": ["feature1", "feature2"],
-  "constraints": ["constraint1", "constraint2"],
-  "technologies": ["tech1", "tech2"]
-}
-```
-
-**Important:**
-- Return ONLY valid JSON, no additional text or markdown
-- Ensure all arrays contain string values
-- Technologies should be specific package/framework names (e.g., "express" not "web framework")
-- Features should be concise and descriptive
-- Constraints should be actionable requirements

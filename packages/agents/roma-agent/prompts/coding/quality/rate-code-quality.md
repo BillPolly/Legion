@@ -8,8 +8,7 @@ tags:
 category: coding
 variables:
   - code
-responseFormat: json
-schema:
+responseSchema:
   type: object
   properties:
     score:
@@ -75,19 +74,3 @@ Rate the quality of the following code on a scale of 0-10:
 - **1-2**: Poor quality, requires rewrite
 - **0**: Non-functional or severely flawed
 
-# Response Format
-
-Return your assessment as JSON:
-
-```json
-{
-  "score": 7.5,
-  "issues": ["optional list of specific issues found"],
-  "strengths": ["optional list of code strengths"]
-}
-```
-
-**Important:**
-- Return ONLY valid JSON
-- Score must be a number between 0 and 10
-- Issues and strengths are optional but helpful

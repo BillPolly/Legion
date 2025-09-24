@@ -1,6 +1,6 @@
-# jsEnvoy Scripts
+# Legion Scripts
 
-This directory contains JavaScript utilities for managing the jsEnvoy monorepo.
+This directory contains JavaScript utilities for managing the Legion monorepo.
 
 ## Splitting the Monorepo
 
@@ -65,11 +65,11 @@ This script supports any hierarchical package structure (e.g., `packages/apps/*`
 ### What Gets Created
 
 Each package will be pushed to its own repository:
-- `BillPolly/jsenvoy-modules`
-- `BillPolly/jsenvoy-cli`
-- `BillPolly/jsenvoy-tools`
-- `BillPolly/jsenvoy-response-parser`
-- `BillPolly/jsenvoy-agent`
+- `BillPolly/legion-modules`
+- `BillPolly/legion-cli`
+- `BillPolly/legion-tools`
+- `BillPolly/legion-response-parser`
+- `BillPolly/legion-agent`
 
 ### Package Preparation
 

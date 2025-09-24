@@ -1,6 +1,6 @@
-# @jsenvoy/log-manager
+# @legion/log-manager
 
-Comprehensive log capture, aggregation, and analysis for jsEnvoy AI agents.
+Comprehensive log capture, aggregation, and analysis for Legion AI agents.
 
 ## Overview
 
@@ -20,27 +20,27 @@ This package provides powerful log management capabilities for AI agents, includ
 ## Installation
 
 ```bash
-npm install @jsenvoy/log-manager
+npm install @legion/log-manager
 ```
 
 ## Usage
 
 ### As a JSON Module (Recommended)
 
-The package can be loaded as a JSON module using the jsEnvoy module loader:
+The package can be loaded as a JSON module using the Legion module loader:
 
 ```javascript
-import { ModuleFactory } from '@jsenvoy/module-loader';
+import { ModuleFactory } from '@legion/module-loader';
 
 const moduleFactory = new ModuleFactory();
-const logModule = await moduleFactory.createJsonModule('./node_modules/@jsenvoy/log-manager/module.json');
+const logModule = await moduleFactory.createJsonModule('./node_modules/@legion/log-manager/module.json');
 const tools = await logModule.getTools();
 ```
 
 ### Direct Usage
 
 ```javascript
-import LogManager from '@jsenvoy/log-manager';
+import LogManager from '@legion/log-manager';
 
 const logManager = new LogManager({
   defaultBufferSize: 1000,

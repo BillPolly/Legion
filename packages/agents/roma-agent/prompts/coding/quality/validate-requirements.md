@@ -9,8 +9,7 @@ category: coding
 variables:
   - requirements
   - code
-responseFormat: json
-schema:
+responseSchema:
   type: object
   properties:
     features:
@@ -64,20 +63,3 @@ Check for common implementation problems:
 - 2-3: Few requirements implemented or critical issues
 - 0-1: Requirements not met or code non-functional
 
-# Response Format
-
-Return your analysis as JSON with this structure:
-
-```json
-{
-  "features": ["list of implemented features"],
-  "issues": ["list of identified issues"],
-  "score": 7.5
-}
-```
-
-**Important:**
-- Return ONLY valid JSON, no additional text
-- Features should match the requirement descriptions
-- Issues should be specific and actionable
-- Score should be a number between 0 and 10

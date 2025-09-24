@@ -1,8 +1,8 @@
-# @jsenvoy/code-agent - Comprehensive Documentation
+# @legion/code-agent - Comprehensive Documentation
 
 ## Overview
 
-The **@jsenvoy/code-agent** is an AI-powered code generation platform that creates, tests, and validates complete JavaScript projects using real-world testing capabilities. Unlike traditional code generators, it provides end-to-end validation through actual test execution, browser automation, and comprehensive log analysis.
+The **@legion/code-agent** is an AI-powered code generation platform that creates, tests, and validates complete JavaScript projects using real-world testing capabilities. Unlike traditional code generators, it provides end-to-end validation through actual test execution, browser automation, and comprehensive log analysis.
 
 ## Table of Contents
 
@@ -23,13 +23,13 @@ The **@jsenvoy/code-agent** is an AI-powered code generation platform that creat
 ### Installation
 
 ```bash
-npm install @jsenvoy/code-agent
+npm install @legion/code-agent
 ```
 
 ### Basic Usage (Mock Testing)
 
 ```javascript
-import { CodeAgent } from '@jsenvoy/code-agent';
+import { CodeAgent } from '@legion/code-agent';
 
 const agent = new CodeAgent({
   projectType: 'fullstack',
@@ -52,7 +52,7 @@ const result = await agent.develop({
 ### Enhanced Usage (Real Testing + Browser Automation)
 
 ```javascript
-import { EnhancedCodeAgent } from '@jsenvoy/code-agent';
+import { EnhancedCodeAgent } from '@legion/code-agent';
 
 const agent = new EnhancedCodeAgent({
   projectType: 'fullstack',
@@ -493,7 +493,7 @@ console.log(`Score: ${a11yResults.score}/100`);
 ### Complete Web Application
 
 ```javascript
-import { EnhancedCodeAgent } from '@jsenvoy/code-agent';
+import { EnhancedCodeAgent } from '@legion/code-agent';
 
 const agent = new EnhancedCodeAgent({
   projectType: 'fullstack',
@@ -756,7 +756,7 @@ console.log(`Browser tests: ${result.enhanced.browserTesting.testsRun}`);
 ### Project Structure
 
 ```
-@jsenvoy/code-agent/
+@legion/code-agent/
 ├── src/
 │   ├── agent/                    # Core agent classes
 │   │   ├── CodeAgent.js         # Base agent implementation
@@ -800,7 +800,7 @@ npm run test:watch
 ### Key Dependencies
 
 - **Core**: `eslint`, `jest`, `zod`, `@babel/parser`
-- **jsEnvoy Integration**: Uses file operations, LLM client, module loader
+- **Legion Integration**: Uses file operations, LLM client, module loader
 - **Browser Testing**: Playwright integration
 - **Enhanced Features**: Log manager, node runner integration
 
@@ -818,11 +818,11 @@ MIT License - See [LICENSE](../LICENSE) for details.
 ## Support
 
 For issues, questions, or feature requests:
-- **GitHub Issues**: [Report issues](https://github.com/maxximus-dev/jsenvoy-code-agent/issues)
+- **GitHub Issues**: [Report issues](https://github.com/maxximus-dev/Legion/issues)
 - **Documentation**: This comprehensive guide
 - **Examples**: See [examples/](../examples/) directory
 - **Tests**: See [__tests__/](../__tests__/) for usage patterns
 
 ---
 
-*This documentation reflects the current state of the enhanced @jsenvoy/code-agent with real runtime testing, browser automation, and AI-powered analysis capabilities.*
+*This documentation reflects the current state of the enhanced @legion/code-agent with real runtime testing, browser automation, and AI-powered analysis capabilities.*

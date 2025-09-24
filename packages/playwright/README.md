@@ -1,6 +1,6 @@
-# @jsenvoy/playwright
+# @legion/playwright
 
-Browser automation and web testing using Playwright for jsEnvoy AI agents.
+Browser automation and web testing using Playwright for Legion AI agents.
 
 ## Overview
 
@@ -22,27 +22,27 @@ This package provides a comprehensive Playwright wrapper that exposes browser au
 ## Installation
 
 ```bash
-npm install @jsenvoy/playwright
+npm install @legion/playwright
 ```
 
 ## Usage
 
 ### As a JSON Module (Recommended)
 
-The package can be loaded as a JSON module using the jsEnvoy module loader:
+The package can be loaded as a JSON module using the Legion module loader:
 
 ```javascript
-import { ModuleFactory } from '@jsenvoy/module-loader';
+import { ModuleFactory } from '@legion/module-loader';
 
 const moduleFactory = new ModuleFactory();
-const playwrightModule = await moduleFactory.createJsonModule('./node_modules/@jsenvoy/playwright/module.json');
+const playwrightModule = await moduleFactory.createJsonModule('./node_modules/@legion/playwright/module.json');
 const tools = await playwrightModule.getTools();
 ```
 
 ### Direct Usage
 
 ```javascript
-import PlaywrightWrapper from '@jsenvoy/playwright';
+import PlaywrightWrapper from '@legion/playwright';
 
 const browser = new PlaywrightWrapper({
   browserType: 'chromium',

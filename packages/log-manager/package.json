@@ -1,7 +1,7 @@
 {
   "name": "@legion/log-manager",
   "version": "1.0.0",
-  "description": "Comprehensive log capture, aggregation, and analysis for jsEnvoy AI agents",
+"description": "Comprehensive log capture, aggregation, and analysis for Legion AI agents",
   "type": "module",
   "main": "src/index.js",
   "scripts": {
@@ -10,7 +10,7 @@
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
   },
   "keywords": [
-    "jsenvoy",
+"legion",
     "logs",
     "logging",
     "analysis",
@@ -18,7 +18,7 @@
     "ai",
     "agents"
   ],
-  "author": "jsEnvoy Team",
+"author": "Legion Team",
   "license": "MIT",
   "dependencies": {
     "tail": "^2.2.6",

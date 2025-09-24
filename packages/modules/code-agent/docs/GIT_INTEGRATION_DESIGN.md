@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This document outlines the comprehensive integration of Git and GitHub functionality into the `@jsenvoy/code-agent` system. The design leverages the existing jsEnvoy ecosystem, particularly the Resource Manager pattern and existing GitHub tools, to provide seamless version control capabilities throughout the code generation and testing workflow.
+This document outlines the comprehensive integration of Git and GitHub functionality into the `@legion/code-agent` system. The design leverages the existing Legion ecosystem, particularly the Resource Manager pattern and existing GitHub tools, to provide seamless version control capabilities throughout the code generation and testing workflow.
 
 ## Table of Contents
 
@@ -22,7 +22,7 @@ This document outlines the comprehensive integration of Git and GitHub functiona
 ## Overview
 
 ### Current State
-The `@jsenvoy/code-agent` currently generates, tests, and validates JavaScript projects but lacks integrated version control. Generated projects exist only locally without automatic repository management or change tracking.
+The `@legion/code-agent` currently generates, tests, and validates JavaScript projects but lacks integrated version control. Generated projects exist only locally without automatic repository management or change tracking.
 
 ### Target State
 Enhanced code agent with seamless Git/GitHub integration that:
@@ -443,7 +443,7 @@ const defaultRepoConfig = {
   organization: 'AgentResults',
   private: false,              // Public for transparency
   autoInit: false,             // Agent handles initialization
-  description: 'AI-generated project by @jsenvoy/code-agent',
+description: 'AI-generated project by @legion/code-agent',
   topics: ['ai-generated', 'jsenvoy', 'code-agent'],
   defaultBranch: 'main',
   allowMergeCommit: true,
@@ -634,7 +634,7 @@ class GitHubAuthentication {
   getAuthHeaders() {
     return {
       'Authorization': `token ${this.token}`,
-      'User-Agent': 'jsenvoy-code-agent',
+'User-Agent': 'legion-code-agent',
       'Accept': 'application/vnd.github.v3+json'
     };
   }

@@ -5,11 +5,10 @@
  * - SIMPLE: Can be done with a sequence of tool calls
  * - COMPLEX: Needs decomposition into subtasks
  * 
- * Now uses PromptExecutor to hide all llmClient complexity
+ * Uses PromptLoader for declarative prompt configuration
  */
 
-import { PromptExecutor } from '../../utils/PromptExecutor.js';
-import { PromptRegistry } from '@legion/prompting-manager';
+import { PromptLoader } from './PromptLoader.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -18,44 +17,19 @@ const __dirname = path.dirname(__filename);
 
 export default class TaskClassifier {
   constructor(taskOrContext) {
-    // Create PromptExecutor instead of storing llmClient
-    this.executor = new PromptExecutor(taskOrContext);
+    // Store context for PromptLoader
+    this.context = taskOrContext;
     this.initialized = false;
-    this.classificationSchema = null;
-    this.examples = null;
-    this.promptTemplate = null;
+    // Use a more flexible base path that PromptLoader can resolve
+    this.promptLoader = new PromptLoader(path.resolve(__dirname, '../../'));
+    this.templatedPrompt = null;
   }
 
   async initialize() {
     if (this.initialized) return;
     
-    // Define classification schema
-    this.classificationSchema = {
-      type: 'object',
-      properties: {
-        complexity: { 
-          type: 'string', 
-          enum: ['SIMPLE', 'COMPLEX'] 
-        },
-        reasoning: { type: 'string' },
-        suggestedApproach: { type: 'string' },
-        estimatedSteps: { type: 'number' }
-      },
-      required: ['complexity', 'reasoning'],
-      format: 'json'
-    };
-    
-    // Create example data for better output instructions
-    this.examples = [{
-      complexity: 'SIMPLE',
-      reasoning: 'This task can be completed with a direct sequence of tool calls - file reading and JSON parsing are straightforward operations that don\'t require coordination.',
-      suggestedApproach: 'Use file_read tool followed by json_parse tool',
-      estimatedSteps: 2
-    }];
-    
-    // Load prompt template using PromptRegistry
-    const promptRegistry = new PromptRegistry(path.join(__dirname, '..', 'recursive', 'prompts'));
-    this.promptTemplate = await promptRegistry.load('task-classification');
+    // Load prompt using PromptLoader - all configuration is declarative now
+    this.templatedPrompt = await this.promptLoader.loadPrompt('strategies/recursive/prompts/task-classification', this.context);
     
     this.initialized = true;
   }
@@ -74,22 +48,27 @@ export default class TaskClassifier {
     // Format artifacts section if available
     const artifactsSection = this._formatArtifactsSection(context.artifactRegistry);
     
-    // Use PromptExecutor to execute the prompt - no llmClient needed!
-    const result = await this.executor.execute(
-      this.promptTemplate,
-      {
+    // Use TemplatedPrompt directly - all configuration is declarative
+    try {
+      const result = await this.templatedPrompt.execute({
         taskDescription,
         artifactsSection
-      },
-      this.classificationSchema,
-      this.examples
-    );
-    
-    if (result.success) {
-      // Validate result complexity
+      });
+      
+      if (!result.success) {
+        console.warn('Task classification failed:', result.errors);
+        return {
+          complexity: 'COMPLEX',
+          reasoning: `Classification error: ${result.errors?.join(', ') || 'Unknown error'}`,
+          suggestedApproach: 'Break down into subtasks due to classification error',
+          estimatedSteps: 5
+        };
+      }
+      
       const data = result.data;
+      
+      // Validate result complexity
       if (!data.complexity || !['SIMPLE', 'COMPLEX'].includes(data.complexity)) {
-        // Invalid complexity value - return error format
         console.warn('Task classification failed: Invalid complexity value:', data.complexity);
         return {
           complexity: 'COMPLEX',
@@ -100,12 +79,12 @@ export default class TaskClassifier {
       }
       
       return data;
-    } else {
+    } catch (error) {
       // Handle error case - default to COMPLEX (safer to decompose)
-      console.warn('Task classification failed:', result.errors?.join(', '));
+      console.warn('Task classification failed:', error.message);
       return {
         complexity: 'COMPLEX',
-        reasoning: `Classification error: ${result.errors?.[0] || 'Unknown error'}`,
+        reasoning: `Classification error: ${error.message}`,
         suggestedApproach: 'Break down into subtasks due to classification error',
         estimatedSteps: 5
       };

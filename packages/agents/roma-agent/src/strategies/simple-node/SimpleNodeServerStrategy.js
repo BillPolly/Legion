@@ -3,85 +3,17 @@
  * Converted to pure prototypal pattern
  * 
  * Focused on generating Express/HTTP servers with clean, testable code.
- * Uses PromptFactory for all LLM interactions with data-driven prompts.
+ * Uses PromptLoader for declarative prompt configuration.
  */
 
 import { TaskStrategy } from '@legion/tasks';
-import { TemplatedPrompt } from '@legion/prompting-manager';
+import { PromptLoader } from '../utils/PromptLoader.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-/**
- * Define prompt schemas for TemplatedPrompt
- * Each prompt will be loaded from a file and validated against these schemas
- */
-const PROMPT_SCHEMAS = {
-  analyzeRequirements: {
-    type: 'object',
-    properties: {
-      serverType: { 
-        type: 'string', 
-        enum: ['express', 'fastify', 'http'],
-        description: 'Type of Node.js server framework'
-      },
-      endpoints: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            method: { type: 'string', enum: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'] },
-            path: { type: 'string' },
-            description: { type: 'string' }
-          },
-          required: ['method', 'path', 'description']
-        }
-      }
-    },
-    required: ['serverType', 'endpoints']
-  },
-  
-  generateCode: {
-    type: 'object',
-    properties: {
-      code: { type: 'string', description: 'Generated Node.js server code' },
-      dependencies: {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'NPM dependencies required'
-      }
-    },
-    required: ['code']
-  },
-  
-  generatePackageJson: {
-    type: 'object',
-    properties: {
-      name: { type: 'string' },
-      version: { type: 'string' },
-      description: { type: 'string' },
-      main: { type: 'string' },
-      scripts: { type: 'object' },
-      dependencies: { type: 'object' }
-    },
-    required: ['name', 'version', 'main', 'dependencies']
-  }
-};
-
-/**
- * Load a prompt template from the prompts directory
- */
-async function loadPromptTemplate(promptPath) {
-  const fullPath = path.join(__dirname, '../../../prompts', promptPath + '.md');
-  try {
-    return await fs.readFile(fullPath, 'utf8');
-  } catch (error) {
-    throw new Error(`Failed to load prompt template at ${fullPath}: ${error.message}`);
-  }
-}
 
 /**
  * Create a SimpleNodeServerStrategy prototype
@@ -109,12 +41,12 @@ export function createSimpleNodeServerStrategy(context = {}, options = {}) {
   // Create the strategy as an object that inherits from TaskStrategy
   const strategy = Object.create(TaskStrategy);
   
-  // Store llmClient and sessionLogger for creating TemplatedPrompts
-  strategy.llmClient = actualContext.llmClient;
+  // Store context for PromptLoader
+  strategy.context = actualContext;
   strategy.sessionLogger = actualOptions.sessionLogger;
   
-  // Store prompt schemas for lazy initialization
-  strategy.promptSchemas = PROMPT_SCHEMAS;
+  // Initialize PromptLoader for declarative prompts
+  strategy.promptLoader = new PromptLoader(path.resolve(__dirname, '../../'));
   strategy.prompts = {};
   
   // Store configuration
@@ -133,30 +65,28 @@ export function createSimpleNodeServerStrategy(context = {}, options = {}) {
   strategy.config = config;
   
   /**
-   * Lazily create a TemplatedPrompt instance
+   * Lazily load a prompt using PromptLoader
    */
   strategy.getPrompt = async function(promptName) {
     if (!this.prompts[promptName]) {
-      if (!this.promptSchemas[promptName]) {
+      if (!this.context.llmClient) {
+        throw new Error('LLMClient is required in context for TemplatedPrompt');
+      }
+      
+      // Map prompt names to file paths
+      const promptPaths = {
+        analyzeRequirements: 'strategies/simple-node/server/analyze-requirements',
+        generateCode: 'strategies/simple-node/server/generate-code', 
+        generatePackageJson: 'strategies/simple-node/server/generate-package-json'
+      };
+      
+      const templatePath = promptPaths[promptName];
+      if (!templatePath) {
         throw new Error(`Unknown prompt: ${promptName}`);
       }
       
-      if (!this.llmClient) {
-        throw new Error('LLMClient is required for TemplatedPrompt');
-      }
-      
-      // Load the prompt template
-      const templatePath = `simple-node-server/${promptName.replace(/([A-Z])/g, '-$1').toLowerCase().slice(1)}`;
-      const template = await loadPromptTemplate(templatePath);
-      
-      // Create TemplatedPrompt instance
-      this.prompts[promptName] = new TemplatedPrompt({
-        prompt: template,
-        responseSchema: this.promptSchemas[promptName],
-        llmClient: this.llmClient,
-        maxRetries: 3,
-        sessionLogger: this.sessionLogger
-      });
+      // Load prompt using PromptLoader - all configuration is declarative
+      this.prompts[promptName] = await this.promptLoader.loadPrompt(templatePath, this.context);
     }
     return this.prompts[promptName];
   };

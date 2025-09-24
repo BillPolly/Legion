@@ -1,7 +1,7 @@
 {
   "name": "@legion/railway",
   "version": "1.0.0",
-  "description": "Railway deployment provider for jsEnvoy AI agent framework",
+"description": "Railway deployment provider for the Legion AI agent framework",
   "type": "module",
   "main": "src/index.js",
   "scripts": {
@@ -14,11 +14,11 @@
     "railway",
     "deployment",
     "cloud",
-    "jsenvoy",
+"legion",
     "ai-agent",
     "provider"
   ],
-  "author": "jsEnvoy",
+"author": "Legion Team",
   "license": "MIT",
   "dependencies": {
     "node-fetch": "^3.3.2",

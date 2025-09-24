@@ -1,6 +1,7 @@
 /**
  * Unit tests for TaskClassifier
  * Tests task classification logic with mocked LLM responses
+ * Updated for PromptLoader declarative approach
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
@@ -9,49 +10,63 @@ import TaskClassifier from '../../../src/strategies/utils/TaskClassifier.js';
 describe('TaskClassifier Unit Tests', () => {
   let classifier;
   let mockLLMClient;
+  let mockContext;
 
   beforeEach(async () => {
-    // Create mock LLM client
+    // Create mock LLM client with complete and render methods for TemplatedPrompt
     mockLLMClient = {
-      complete: jest.fn()
+      complete: jest.fn(),
+      render: jest.fn()
     };
 
-    // Create classifier instance and initialize
-    classifier = new TaskClassifier(mockLLMClient);
+    // Create mock context as expected by PromptLoader
+    mockContext = {
+      llmClient: mockLLMClient
+    };
+
+    // Create classifier instance with context and initialize
+    classifier = new TaskClassifier(mockContext);
     await classifier.initialize();
   });
 
   describe('Constructor and Initialization', () => {
-    it('should initialize with LLM client and create Prompt instance', () => {
-      expect(classifier.llmClient).toBe(mockLLMClient);
-      expect(classifier.prompt).toBeDefined();
+    it('should initialize with context and create TemplatedPrompt instance', () => {
+      expect(classifier.context.llmClient).toBe(mockLLMClient);
+      expect(classifier.templatedPrompt).toBeDefined();
       expect(classifier.initialized).toBe(true);
     });
 
-    it('should create Prompt with correct schema validation', async () => {
-      // Test that the prompt accepts valid classification responses
-      const validResponse = JSON.stringify({
-        complexity: 'SIMPLE',
-        reasoning: 'Can be done with file operations',
-        suggestedApproach: 'Use file_write tool',
-        estimatedSteps: 2
-      });
+    it('should create TemplatedPrompt with correct schema validation', async () => {
+      // Mock TemplatedPrompt execute method to return validated response
+      const validExecuteResponse = {
+        success: true,
+        data: {
+          complexity: 'SIMPLE',
+          reasoning: 'Can be done with file operations',
+          suggestedApproach: 'Use file_write tool',
+          estimatedSteps: 2
+        }
+      };
 
-      mockLLMClient.complete.mockResolvedValue(validResponse);
+      // Mock the templatedPrompt execute method directly
+      classifier.templatedPrompt.execute = jest.fn().mockResolvedValue(validExecuteResponse);
 
       const result = await classifier.classify('test task');
       expect(result.complexity).toBe('SIMPLE');
       expect(result.reasoning).toContain('file operations');
     });
 
-    it('should reject invalid responses through Prompt validation', async () => {
-      // Test invalid complexity value
-      const invalidResponse = JSON.stringify({
-        complexity: 'MEDIUM', // Invalid - should be SIMPLE or COMPLEX
-        reasoning: 'Test reasoning'
-      });
+    it('should handle invalid responses through validation', async () => {
+      // Mock TemplatedPrompt to return invalid complexity value
+      const invalidExecuteResponse = {
+        success: true,
+        data: {
+          complexity: 'MEDIUM', // Invalid - should be SIMPLE or COMPLEX
+          reasoning: 'Test reasoning'
+        }
+      };
 
-      mockLLMClient.complete.mockResolvedValue(invalidResponse);
+      classifier.templatedPrompt.execute = jest.fn().mockResolvedValue(invalidExecuteResponse);
 
       const result = await classifier.classify('test task');
       expect(result.complexity).toBe('COMPLEX'); // Should default to COMPLEX on validation failure

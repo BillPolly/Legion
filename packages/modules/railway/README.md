@@ -1,10 +1,10 @@
-# @jsenvoy/railway
+# @legion/railway
 
-Railway deployment provider and tools for the jsEnvoy framework.
+Railway deployment provider and tools for the Legion framework.
 
 ## Overview
 
-This package provides a comprehensive Railway integration for deploying applications to Railway's cloud platform. It includes both a provider API and jsEnvoy tools for Railway operations.
+This package provides a comprehensive Railway integration for deploying applications to Railway's cloud platform. It includes both a provider API and Legion tools for Railway operations.
 
 ## Features
 
@@ -18,7 +18,7 @@ This package provides a comprehensive Railway integration for deploying applicat
 ## Installation
 
 ```bash
-npm install @jsenvoy/railway
+npm install @legion/railway
 ```
 
 ## Usage
@@ -26,7 +26,7 @@ npm install @jsenvoy/railway
 ### As a Railway Provider
 
 ```javascript
-import { RailwayProvider } from '@jsenvoy/railway';
+import { RailwayProvider } from '@legion/railway';
 
 // Initialize with API key
 const provider = new RailwayProvider(apiKey);
@@ -50,13 +50,13 @@ const projects = await provider.listProjects();
 const details = await provider.getProjectDetails(projectId);
 ```
 
-### As jsEnvoy Tools
+### As Legion Tools
 
-When using with the jsEnvoy framework:
+When using with the Legion framework:
 
 ```javascript
-import { ModuleFactory } from '@jsenvoy/module-loader';
-import RailwayModule from '@jsenvoy/railway';
+import { ModuleFactory } from '@legion/module-loader';
+import RailwayModule from '@legion/railway';
 
 const moduleFactory = new ModuleFactory(resourceManager);
 const railwayModule = moduleFactory.createModule(RailwayModule);
