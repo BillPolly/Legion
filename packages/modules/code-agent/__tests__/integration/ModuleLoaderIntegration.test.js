@@ -381,7 +381,7 @@ describe('ModuleLoaderIntegration', () => {
     });
   });
 
-  describe('Integration with jsEnvoy Module Loader', () => {
+describe('Integration with Legion Module Loader', () => {
     test('should use ModuleFactory from @legion/module-loader', async () => {
       await integration.initialize();
       
@@ -396,13 +396,13 @@ describe('ModuleLoaderIntegration', () => {
       expect(typeof integration.resourceManager.register).toBe('function');
     });
 
-    test('should handle jsEnvoy module patterns correctly', async () => {
+test('should handle Legion module patterns correctly', async () => {
       await integration.initialize();
       
-      const moduleName = 'jsenvoy-pattern-module';
+const moduleName = 'legion-pattern-module';
       const moduleConfig = {
         name: moduleName,
-        type: 'jsenvoy-module',
+type: 'legion-module',
         exports: ['tool1', 'tool2']
       };
 

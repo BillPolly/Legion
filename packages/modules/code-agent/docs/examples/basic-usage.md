@@ -16,8 +16,8 @@ This guide provides practical examples of using the Git integration in common de
 ### Setting Up a Code Agent with Git Integration
 
 ```javascript
-import { ResourceManager } from '@jsenvoy/module-loader';
-import { CodeAgent } from '@jsenvoy/code-agent';
+import { ResourceManager } from '@legion/module-loader';
+import { CodeAgent } from '@legion/code-agent';
 
 // Initialize resource manager
 const resourceManager = new ResourceManager();

@@ -169,11 +169,11 @@ describe('FileOperationsManager', () => {
     });
   });
 
-  describe('Integration with jsEnvoy Tools', () => {
+describe('Integration with Legion Tools', () => {
     test('should use FileModule from @legion/general-tools', async () => {
       await manager.initialize();
       
-      // Verify that it's using the actual jsEnvoy file module
+// Verify that it's using the actual Legion file module
       expect(manager.fileModule).toBeDefined();
       expect(typeof manager.fileModule.invoke).toBe('function');
     });

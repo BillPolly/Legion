@@ -67,18 +67,4 @@ Each description should:
 - Focus on the ACTION the tool performs
 - Be searchable (avoid vague terms like "process" or "handle")
 
-Format as a JSON array of strings:
-["description1", "description2", ...]
-
-Example for task "Create REST API endpoint for user authentication":
-[
-  "Write JavaScript code to implement the solution",
-  "Generate Node.js program file with the required logic",
-  "Create new file on disk with the endpoint code",
-  "Hash passwords using bcrypt algorithm",
-  "Generate and validate JWT tokens",
-  "Query database for user credentials",
-  "Validate request payload structure"
-]
-
 IMPORTANT: Include descriptions for BOTH code/file generation AND specific operations.

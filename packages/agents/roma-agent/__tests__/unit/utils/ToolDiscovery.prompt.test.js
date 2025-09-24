@@ -23,29 +23,37 @@ describe('ToolDiscovery Prompt Loading', () => {
   });
 
   it('should load prompts from markdown files', async () => {
-    // Test that the prompt registry is initialized
-    expect(toolDiscovery.promptRegistry).toBeDefined();
+    // Test that the prompt loader is initialized
+    expect(toolDiscovery.promptLoader).toBeDefined();
     
-    // Test loading a prompt template
-    const template = await toolDiscovery.promptRegistry.load('utils/tools/generate-descriptions');
-    expect(template).toBeDefined();
-    expect(template.content).toBeDefined();
-    expect(template.metadata).toBeDefined();
-    expect(template.metadata.category).toBe('utils');
+    // Test loading a prompt configuration
+    const config = await toolDiscovery.promptLoader.loadPromptConfig('utils/tools/generate-descriptions');
+    expect(config).toBeDefined();
+    expect(config.template).toBeDefined();
+    expect(config.metadata).toBeDefined();
+    expect(config.metadata.category).toBe('utils');
+    expect(config.responseSchema).toBeDefined();
+    expect(config.examples).toBeDefined();
   });
 
-  it('should fill prompt templates with variables', async () => {
-    const taskDescription = 'Create a REST API endpoint';
-    const filled = await toolDiscovery.promptRegistry.fill('utils/tools/generate-descriptions', {
-      taskDescription,
-      minDescriptions: 5,
-      maxDescriptions: 10
-    });
+  it('should initialize prompt configuration correctly', async () => {
+    // Call ensurePrompts to initialize the prompt data
+    await toolDiscovery.ensurePrompts();
     
-    expect(filled).toBeDefined();
-    expect(filled).toContain(taskDescription);
-    expect(filled).not.toContain('{{taskDescription}}');
-    expect(filled).toContain('5-10');
+    // Verify that prompt configuration is loaded
+    expect(toolDiscovery.promptTemplate).toBeDefined();
+    expect(toolDiscovery.responseSchema).toBeDefined();
+    expect(toolDiscovery.examples).toBeDefined();
+    expect(toolDiscovery.outputPrompt).toBeDefined();
+    
+    // Verify template contains placeholder variables
+    expect(toolDiscovery.promptTemplate).toContain('{{taskDescription}}');
+    expect(toolDiscovery.promptTemplate).toContain('{{minDescriptions}}');
+    expect(toolDiscovery.promptTemplate).toContain('{{maxDescriptions}}');
+    
+    // Verify schema structure
+    expect(toolDiscovery.responseSchema.type).toBe('array');
+    expect(toolDiscovery.responseSchema.items.type).toBe('string');
   });
 
   it('should generate tool descriptions with new prompt system', async () => {

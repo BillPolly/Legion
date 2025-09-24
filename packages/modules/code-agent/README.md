@@ -1,4 +1,4 @@
-# @jsenvoy/code-agent
+# @legion/code-agent
 
 An intelligent coding agent that generates, tests, and validates vanilla JavaScript projects with automated quality assurance. Now with **real runtime testing** capabilities!
 
@@ -56,7 +56,7 @@ The enhanced version provides real-world validation:
 ## Installation
 
 ```bash
-npm install @jsenvoy/code-agent
+npm install @legion/code-agent
 ```
 
 ## Quick Start
@@ -64,7 +64,7 @@ npm install @jsenvoy/code-agent
 ### Basic Usage (Mocked Testing)
 
 ```javascript
-import { CodeAgent } from '@jsenvoy/code-agent';
+import { CodeAgent } from '@legion/code-agent';
 
 const agent = new CodeAgent();
 
@@ -86,7 +86,7 @@ await agent.develop({
 ### Enhanced Usage (Real Testing) 🆕
 
 ```javascript
-import { EnhancedCodeAgent } from '@jsenvoy/code-agent';
+import { EnhancedCodeAgent } from '@legion/code-agent';
 
 const agent = new EnhancedCodeAgent({
   enhancedConfig: {
@@ -227,14 +227,14 @@ Ideal for fixing issues and making improvements:
 - Re-validates quality gates
 - Continues until successful
 
-## Integration with jsEnvoy
+## Integration with Legion
 
-The Code Agent seamlessly integrates with the jsEnvoy ecosystem:
+The Code Agent seamlessly integrates with the Legion ecosystem:
 
-- **File Operations**: Uses `@jsenvoy/general-tools` for file system operations
-- **LLM Integration**: Leverages `@jsenvoy/llm` for intelligent code generation
-- **Module Loading**: Follows `@jsenvoy/module-loader` patterns
-- **Resource Management**: Can be managed by `@jsenvoy/resource-manager`
+- **File Operations**: Uses `@legion/general-tools` for file system operations
+- **LLM Integration**: Leverages `@legion/llm` for intelligent code generation
+- **Module Loading**: Follows `@legion/module-loader` patterns
+- **Resource Management**: Can be managed by `@legion/resource-manager`
 
 ## Configuration
 
@@ -361,9 +361,9 @@ await agent.develop({
 - Internet connection for LLM integration
 
 ### Additional Requirements for Enhanced Features
-- `@jsenvoy/log-manager` - Log capture and analysis
-- `@jsenvoy/node-runner` - Process execution
-- `@jsenvoy/playwright` - Browser automation
+- `@legion/log-manager` - Log capture and analysis
+- `@legion/node-runner` - Process execution
+- `@legion/playwright` - Browser automation
 - Jest, ESLint, and Puppeteer as peer dependencies
 
 ## License

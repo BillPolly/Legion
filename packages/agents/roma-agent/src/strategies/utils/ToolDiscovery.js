@@ -9,7 +9,7 @@
  * Now uses PromptExecutor to hide all llmClient complexity
  */
 
-import { PromptRegistry } from '@legion/prompting-manager';
+import { PromptLoader } from './PromptLoader.js';
 import { PromptExecutor } from '../../utils/PromptExecutor.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
@@ -27,13 +27,9 @@ export default class ToolDiscovery {
     this.maxDescriptions = 8;
     this.toolCache = new Map(); // Cache discovered tools by name
     
-    // Initialize prompt registry
+    // Initialize prompt loader
     const promptsPath = path.resolve(__dirname, '../../../prompts');
-    this.promptRegistry = new PromptRegistry();
-    this.promptRegistry.addDirectory(promptsPath);
-
-    this.prompts = null;
-    this.promptsPromise = null;
+    this.promptLoader = new PromptLoader(promptsPath);
   }
 
   /**
@@ -294,21 +290,11 @@ export default class ToolDiscovery {
       return;
     }
 
-    const template = await this.promptRegistry.load('utils/tools/generate-descriptions');
+    const promptConfig = await this.promptLoader.loadPromptConfig('utils/tools/generate-descriptions');
     
-    this.promptTemplate = template.content || template;
-    
-    this.responseSchema = template.metadata?.schema || {
-      type: 'array',
-      items: { type: 'string' }
-    };
-
-    this.examples = template.metadata?.examples || [
-      [
-        'Write JavaScript code to implement the required feature',
-        'Create or update project files with generated source code',
-        'Validate JSON configuration files for correctness'
-      ]
-    ];
+    this.promptTemplate = promptConfig.template;
+    this.responseSchema = promptConfig.responseSchema;
+    this.examples = promptConfig.examples;
+    this.outputPrompt = promptConfig.outputPrompt;
   }
 }

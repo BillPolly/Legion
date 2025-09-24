@@ -17,7 +17,7 @@ The deployment functionality is implemented through several key components:
    - Handles deployment lifecycle (deploy, monitor, stop, remove)
 
 2. **DeploymentIntegration** (`src/integration/DeploymentIntegration.js`)
-   - Integrates `@jsenvoy/conan-the-deployer` module
+- Integrates `@legion/conan-the-deployer` module
    - Manages module loading and initialization
    - Provides abstraction layer for deployment operations
    - Tracks active deployments
@@ -193,11 +193,11 @@ await agent.deploymentPhase.stopDeployment('deploy-123');
 await agent.deploymentPhase.removeDeployment('deploy-123');
 ```
 
-## Integration with jsEnvoy Ecosystem
+## Integration with Legion Ecosystem
 
 The deployment functionality integrates seamlessly with:
 
-1. **Module Loader**: Uses `@jsenvoy/module-loader` for dynamic loading
+1. **Module Loader**: Uses `@legion/module-loader` for dynamic loading
 2. **Resource Manager**: Shares resources across modules
 3. **Conan-the-Deployer**: Provides deployment implementation
 4. **Railway Module**: Optional Railway-specific features
@@ -323,7 +323,7 @@ const prodDeploy = await agent.deployApplication({
 ### Common Issues
 
 1. **Module Loading Failures**
-   - Ensure `@jsenvoy/conan-the-deployer` is installed
+- Ensure `@legion/conan-the-deployer` is installed
    - Check module path resolution
    - Verify ResourceManager initialization
 

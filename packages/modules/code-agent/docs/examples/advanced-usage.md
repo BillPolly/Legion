@@ -17,7 +17,7 @@ This guide demonstrates advanced Git integration patterns and sophisticated usag
 ### Implementing a Custom Branch Strategy
 
 ```javascript
-import { BranchManager } from '@jsenvoy/code-agent';
+import { BranchManager } from '@legion/code-agent';
 
 class CustomBranchStrategy {
   constructor(config) {

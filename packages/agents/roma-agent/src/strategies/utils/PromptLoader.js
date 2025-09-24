@@ -220,6 +220,28 @@ export class PromptLoader {
   }
 
   /**
+   * Load prompt configuration without creating TemplatedPrompt
+   * @param {string} promptPath - Path to prompt file (relative to basePath)
+   * @returns {Promise<Object>} Parsed prompt configuration
+   */
+  async loadPromptConfig(promptPath) {
+    const cacheKey = promptPath;
+    
+    // Return cached configuration if available
+    if (this.loadedPrompts.has(cacheKey)) {
+      return this.loadedPrompts.get(cacheKey);
+    }
+
+    const promptFile = await this.readPromptFile(promptPath);
+    const config = this.parsePromptFile(promptFile);
+    
+    // Cache the parsed configuration
+    this.loadedPrompts.set(cacheKey, config);
+    
+    return config;
+  }
+
+  /**
    * Create TemplatedPrompt instance from configuration
    * @param {Object} config - Parsed prompt configuration
    * @param {Object} context - Context with llmClient
