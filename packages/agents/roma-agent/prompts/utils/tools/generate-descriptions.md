@@ -16,34 +16,23 @@ responseSchema:
   minItems: 3
   maxItems: 10
 examples:
-  - input:
-      taskDescription: "Create REST API endpoint for user authentication"
-      minDescriptions: 5
-      maxDescriptions: 7
-    output:
-      - "Write JavaScript code to implement the solution"
-      - "Generate Node.js program file with the required logic"
-      - "Create new file on disk with the endpoint code"
-      - "Hash passwords using bcrypt algorithm"
-      - "Generate and validate JWT tokens"
-      - "Query database for user credentials"
-      - "Validate request payload structure"
-  - input:
-      taskDescription: "Parse CSV file and convert to JSON"
-      minDescriptions: 4
-      maxDescriptions: 6
-    output:
-      - "Read CSV file from disk"
-      - "Parse CSV format into structured data"
-      - "Convert data structure to JSON format"
-      - "Write JSON output to new file"
-      - "Validate CSV column headers and data types"
-      - "Handle file encoding and character sets"
+  - "Write JavaScript code to implement the solution"
+  - "Generate Node.js program file with the required logic"
+  - "Create new file on disk with the endpoint code"
+  - "Hash passwords using bcrypt algorithm"
+  - "Generate and validate JWT tokens"
+  - "Query database for user credentials"
+  - "Validate request payload structure"
+  - "Read CSV file from disk"
+  - "Parse CSV format into structured data"
+  - "Convert data structure to JSON format"
+  - "Write JSON output to new file"
+  - "Validate CSV column headers and data types"
+  - "Handle file encoding and character sets"
 responseProcessor:
   type: json
   validation: strict
   retries: 3
-outputPrompt: "Return a JSON array of tool description strings, mixing both high-level and specific descriptions as shown in the examples."
 ---
 
 Given this task: "{{taskDescription}}"

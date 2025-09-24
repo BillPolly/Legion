@@ -6,10 +6,10 @@
 
 import { describe, test, expect, beforeAll, jest } from '@jest/globals';
 import { ResourceManager } from '@legion/resource-manager';
-import { ToolRegistry } from '@legion/tools-registry';
-import createSimpleNodeServerStrategy from '../../../src/strategies/simple-node/SimpleNodeServerStrategy.js';
-import createSimpleNodeTestStrategy from '../../../src/strategies/simple-node/SimpleNodeTestStrategy.js';
-import createSimpleNodeDebugStrategy from '../../../src/strategies/simple-node/SimpleNodeDebugStrategy.js';
+import { getToolRegistry } from '@legion/tools-registry';
+import { createSimpleNodeServerStrategy } from '../../../src/strategies/simple-node/SimpleNodeServerStrategy.js';
+import { createSimpleNodeTestStrategy } from '../../../src/strategies/simple-node/SimpleNodeTestStrategy.js';
+import { createSimpleNodeDebugStrategy } from '../../../src/strategies/simple-node/SimpleNodeDebugStrategy.js';
 
 // Mock Task for testing - simulates the actual Task interface
 class MockTask {
@@ -79,20 +79,20 @@ describe('Simple Node.js Strategies - Prototypal Pattern', () => {
     resourceManager = await ResourceManager.getInstance();
     
     // Get real services
-    toolRegistry = await ToolRegistry.getInstance();
+    toolRegistry = await getToolRegistry();
     llmClient = await resourceManager.get('llmClient');
   }, 30000);
   
   describe('SimpleNodeServerStrategy', () => {
     test('should create strategy with factory function', () => {
-      const strategy = createSimpleNodeServerStrategy(llmClient, toolRegistry);
+      const strategy = createSimpleNodeServerStrategy;
       
       expect(strategy).toBeDefined();
       expect(typeof strategy.onMessage).toBe('function');
     });
 
     test('should handle start message and create Express server', (done) => {
-      const strategy = createSimpleNodeServerStrategy(llmClient, toolRegistry);
+      const strategy = createSimpleNodeServerStrategy;
       
       // Create a mock task
       const task = new MockTask('simple-server', 'Create a simple Express server with GET /hello endpoint');
@@ -121,7 +121,7 @@ describe('Simple Node.js Strategies - Prototypal Pattern', () => {
     }, 60000);
     
     test('should handle child task completion', () => {
-      const strategy = createSimpleNodeServerStrategy(llmClient, toolRegistry);
+      const strategy = createSimpleNodeServerStrategy;
       
       // Create mock parent task
       const parentTask = new MockTask('parent-task', 'Parent task');
@@ -149,14 +149,14 @@ describe('Simple Node.js Strategies - Prototypal Pattern', () => {
   
   describe('SimpleNodeTestStrategy', () => {
     test('should create strategy with factory function', () => {
-      const strategy = createSimpleNodeTestStrategy(llmClient, toolRegistry);
+      const strategy = createSimpleNodeTestStrategy;
       
       expect(strategy).toBeDefined();
       expect(typeof strategy.onMessage).toBe('function');
     });
 
     test('should generate tests for provided code', (done) => {
-      const strategy = createSimpleNodeTestStrategy(llmClient, toolRegistry);
+      const strategy = createSimpleNodeTestStrategy;
       
       // Create task with code artifact
       const task = new MockTask('test-generation', 'Write tests for the provided function');
@@ -196,14 +196,14 @@ describe('Simple Node.js Strategies - Prototypal Pattern', () => {
   
   describe('SimpleNodeDebugStrategy', () => {
     test('should create strategy with factory function', () => {
-      const strategy = createSimpleNodeDebugStrategy(llmClient, toolRegistry);
+      const strategy = createSimpleNodeDebugStrategy;
       
       expect(strategy).toBeDefined();
       expect(typeof strategy.onMessage).toBe('function');
     });
 
     test('should analyze and fix code errors', (done) => {
-      const strategy = createSimpleNodeDebugStrategy(llmClient, toolRegistry);
+      const strategy = createSimpleNodeDebugStrategy;
       
       // Create task with error
       const task = new MockTask('debug-error', 'Fix the TypeError in the code');
@@ -244,7 +244,7 @@ describe('Simple Node.js Strategies - Prototypal Pattern', () => {
     }, 60000);
     
     test('should add debugging statements', (done) => {
-      const strategy = createSimpleNodeDebugStrategy(llmClient, toolRegistry);
+      const strategy = createSimpleNodeDebugStrategy;
       
       const task = new MockTask('add-debug', 'Add debugging to understand the flow');
       task.context = { llmClient, toolRegistry };
@@ -279,9 +279,9 @@ describe('Simple Node.js Strategies - Prototypal Pattern', () => {
   
   describe('Prototypal pattern integration', () => {
     test('should coordinate multiple strategies using factory functions', () => {
-      const serverStrategy = createSimpleNodeServerStrategy(llmClient, toolRegistry);
-      const testStrategy = createSimpleNodeTestStrategy(llmClient, toolRegistry);
-      const debugStrategy = createSimpleNodeDebugStrategy(llmClient, toolRegistry);
+      const serverStrategy = createSimpleNodeServerStrategy;
+      const testStrategy = createSimpleNodeTestStrategy;
+      const debugStrategy = createSimpleNodeDebugStrategy;
       
       // Test 1: Verify strategies are objects with onMessage
       expect(typeof serverStrategy).toBe('object');
@@ -341,7 +341,7 @@ describe('Simple Node.js Strategies - Prototypal Pattern', () => {
     });
 
     test('should handle message passing between strategies', () => {
-      const serverStrategy = createSimpleNodeServerStrategy(llmClient, toolRegistry);
+      const serverStrategy = createSimpleNodeServerStrategy;
       
       // Test parent-child message passing pattern
       const parentTask = new MockTask('parent', 'Parent task');

@@ -6,8 +6,8 @@
 
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { ResourceManager } from '@legion/resource-manager';
-import { ToolRegistry } from '@legion/tools-registry';
-import ProjectPlannerStrategy from '../../../../src/strategies/coding/ProjectPlannerStrategy.js';
+import { getToolRegistry } from '@legion/tools-registry';
+import { createProjectPlannerStrategy } from '../../../../src/strategies/coding/ProjectPlannerStrategy.js';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -25,16 +25,14 @@ describe('ProjectPlannerStrategy - Hierarchical Delegation', () => {
     // Get real ResourceManager singleton and services
     resourceManager = await ResourceManager.getInstance();
     llmClient = await resourceManager.get('llmClient');
-    toolRegistry = await ToolRegistry.getInstance();
+    toolRegistry = await getToolRegistry();
     
     // Create unique test workspace
     testWorkspace = `/tmp/roma-test-${Date.now()}`;
     await fs.mkdir(testWorkspace, { recursive: true });
     
     // Create strategy with real services
-    strategy = new ProjectPlannerStrategy(llmClient, toolRegistry, {
-      projectRoot: testWorkspace
-    });
+    strategy = createProjectPlannerStrategy;
     
     // Create mock TaskManager for child task creation
     mockTaskManager = {

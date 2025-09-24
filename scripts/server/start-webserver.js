@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Script to start the jsEnvoy web server with automatic port cleanup
+* Script to start the Legion web server with automatic port cleanup
  * Usage: node scripts/start-webserver.js [port] [--force-kill] [--browser] [--no-browser]
  * Example: node scripts/start-webserver.js
  * Example: node scripts/start-webserver.js 8080
@@ -167,7 +167,7 @@ async function main() {
     }
   }
   
-  console.log('🌐 jsEnvoy Web Server Starter');
+console.log('🌐 Legion Web Server Starter');
   console.log('============================');
   console.log(`📡 Port: ${port}`);
   console.log(`🧹 Force kill: ${forceKill ? 'yes' : 'no'}`);

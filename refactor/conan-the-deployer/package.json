@@ -38,17 +38,17 @@
     "rolling-update"
   ],
   "author": {
-    "name": "jsEnvoy",
-    "url": "https://github.com/jsenvoy"
+"name": "Legion",
+"url": "https://github.com/maxximus-dev"
   },
   "license": "MIT",
-  "homepage": "https://github.com/jsenvoy/conan-the-deployer#readme",
+"homepage": "https://github.com/maxximus-dev/Legion#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jsenvoy/conan-the-deployer.git"
+"url": "https://github.com/maxximus-dev/Legion.git"
   },
   "bugs": {
-    "url": "https://github.com/jsenvoy/conan-the-deployer/issues"
+"url": "https://github.com/maxximus-dev/Legion/issues"
   },
   "dependencies": {
     "@legion/node-runner": "*",

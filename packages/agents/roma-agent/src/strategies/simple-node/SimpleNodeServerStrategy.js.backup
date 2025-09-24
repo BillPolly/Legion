@@ -1,6 +1,0 @@
-/**
- * Legacy backup file retained for compatibility.
- * Delegates to the current SimpleNodeServerStrategy implementation.
- */
-
-export { createSimpleNodeServerStrategy as default, createSimpleNodeServerStrategy } from './SimpleNodeServerStrategy.js';

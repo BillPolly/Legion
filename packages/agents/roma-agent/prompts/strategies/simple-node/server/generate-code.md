@@ -49,7 +49,6 @@ responseProcessor:
   type: json
   validation: strict
   retries: 3
-outputPrompt: "Return a JSON object with 'code' containing the complete server implementation and 'dependencies' array with required NPM packages."
 ---
 
 Generate a simple Node.js {{serverType}} server with exactly these endpoints:

@@ -371,6 +371,134 @@ export async function ensureInitialized(config, initField = 'initPromise') {
   return true;
 }
 
+/**
+ * Helper to extract context from task (100% duplicated across all strategies)
+ * This replaces the getContextFromTask function found in every strategy file
+ */
+export function getContextFromTask(task) {
+  return {
+    llmClient: (task.lookup && task.lookup('llmClient')) || task.context?.llmClient,
+    toolRegistry: (task.lookup && task.lookup('toolRegistry')) || task.context?.toolRegistry,
+    workspaceDir: (task.lookup && task.lookup('workspaceDir')) || task.context?.workspaceDir
+  };
+}
+
+/**
+ * Initialize strategy dependencies (nearly identical across all strategies)
+ * This replaces the initializeDependencies function found in every strategy
+ * 
+ * @param {Object} config - Strategy configuration
+ * @param {Object} task - Task instance
+ * @param {Array<string>} requiredTools - List of required tool names
+ * @returns {Promise<void>} Resolves when initialization is complete
+ */
+export async function initializeDependencies(config, task, requiredTools = []) {
+  // Get services from task context
+  const context = getContextFromTask(task);
+  config.llmClient = config.llmClient || config.context?.llmClient || context.llmClient;
+  config.toolRegistry = config.toolRegistry || config.context?.toolRegistry || context.toolRegistry;
+  
+  if (!config.llmClient) {
+    throw new Error('LLM client is required');
+  }
+  
+  if (!config.toolRegistry) {
+    throw new Error('ToolRegistry is required');
+  }
+  
+  // Load required tools
+  for (const toolName of requiredTools) {
+    if (!config.tools[toolName]) {
+      try {
+        config.tools[toolName] = await config.toolRegistry.getTool(toolName);
+        if (!config.tools[toolName]) {
+          console.warn(`Tool '${toolName}' not found in registry`);
+        }
+      } catch (error) {
+        console.error(`Failed to load tool '${toolName}': ${error.message}`);
+      }
+    }
+  }
+}
+
+/**
+ * Standard child task completion handler (100% duplicated)
+ * This replaces the handleChildComplete function found in every strategy
+ * 
+ * @param {Object} childTask - The child task that completed
+ * @param {*} result - Result from child task
+ * @param {Object} config - Strategy configuration
+ * @returns {Promise<Object>} Completion acknowledgment
+ */
+export async function handleChildComplete(childTask, result, config) {
+  console.log(`✅ Child task completed: ${childTask.description}`);
+  
+  // Copy artifacts from child to parent (this context)
+  const childArtifacts = childTask.getAllArtifacts();
+  for (const [name, artifact] of Object.entries(childArtifacts)) {
+    this.storeArtifact(name, artifact.content, artifact.description, artifact.type);
+  }
+  
+  console.log(`📦 Copied ${Object.keys(childArtifacts).length} artifacts from child`);
+  
+  return { acknowledged: true, childComplete: true };
+}
+
+/**
+ * Create a project directory with timestamp (used by multiple strategies)
+ * 
+ * @param {Object} config - Strategy configuration
+ * @param {string} prefix - Project name prefix
+ * @returns {Promise<string>} Path to created project directory
+ */
+export async function createProjectDirectory(config, prefix = 'project') {
+  const timestamp = Date.now();
+  const projectName = `${prefix}-${timestamp}`;
+  const projectDir = path.join(config.projectRoot, projectName);
+  
+  // Ensure tools are available
+  if (!config.tools.directoryCreate) {
+    throw new Error('directoryCreate tool not available');
+  }
+  
+  await config.tools.directoryCreate.execute({ path: config.projectRoot });
+  await config.tools.directoryCreate.execute({ path: projectDir });
+  
+  return projectDir;
+}
+
+/**
+ * Write content to file using strategy's file tools
+ * 
+ * @param {Object} config - Strategy configuration  
+ * @param {string} filepath - Path to write to
+ * @param {string} content - Content to write
+ * @returns {Promise<void>} Resolves when file is written
+ */
+export async function writeFile(config, filepath, content) {
+  if (!config.tools.fileWrite) {
+    throw new Error('fileWrite tool not available');
+  }
+  
+  await config.tools.fileWrite.execute({ filepath, content });
+}
+
+/**
+ * Read content from file using strategy's file tools
+ * 
+ * @param {Object} config - Strategy configuration
+ * @param {string} filepath - Path to read from
+ * @returns {Promise<string>} File content
+ */
+export async function readFile(config, filepath) {
+  if (!config.tools.fileRead) {
+    throw new Error('fileRead tool not available');
+  }
+  
+  const result = await config.tools.fileRead.execute({ filepath });
+  return result.content || result;
+}
+
 export default {
   asyncHandler,
   getServices,
@@ -384,5 +512,11 @@ export default {
   getTaskContext,
   copyArtifacts,
   withRetry,
-  ensureInitialized
+  ensureInitialized,
+  getContextFromTask,
+  initializeDependencies,
+  handleChildComplete,
+  createProjectDirectory,
+  writeFile,
+  readFile
 };

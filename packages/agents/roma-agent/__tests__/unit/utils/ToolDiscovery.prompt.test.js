@@ -30,8 +30,7 @@ describe('ToolDiscovery Prompt Loading', () => {
     const config = await toolDiscovery.promptLoader.loadPromptConfig('utils/tools/generate-descriptions');
     expect(config).toBeDefined();
     expect(config.template).toBeDefined();
-    expect(config.metadata).toBeDefined();
-    expect(config.metadata.category).toBe('utils');
+    expect(config.category).toBe('utils');
     expect(config.responseSchema).toBeDefined();
     expect(config.examples).toBeDefined();
   });

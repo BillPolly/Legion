@@ -61,7 +61,6 @@ responseProcessor:
   type: json
   validation: strict
   retries: 3
-outputPrompt: "Return a JSON object with the analyzed server requirements matching the schema above."
 ---
 
 Analyze this Node.js server request and extract requirements:

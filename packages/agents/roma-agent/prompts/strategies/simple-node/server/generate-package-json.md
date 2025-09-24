@@ -65,7 +65,6 @@ responseProcessor:
   type: json
   validation: strict
   retries: 3
-outputPrompt: "Return a complete package.json object that can be directly saved as a file."
 ---
 
 Create package.json for a Node.js server:
@@ -84,5 +83,3 @@ Generate a complete package.json with:
 - All required dependencies for {{serverType}} server
 - Development dependencies if needed
 - Engine requirements
-
-Return as a JSON object that can be directly saved as package.json.

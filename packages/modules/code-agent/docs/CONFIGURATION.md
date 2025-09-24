@@ -578,7 +578,7 @@ const agent = new CodeAgent({
 ### Configuration Validation
 
 ```javascript
-import { GitConfigValidator } from '@jsenvoy/code-agent';
+import { GitConfigValidator } from '@legion/code-agent';
 
 // Validate configuration
 const validation = GitConfigValidator.validateConfig(config);

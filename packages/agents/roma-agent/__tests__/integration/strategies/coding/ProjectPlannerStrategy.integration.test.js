@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterEach } from '@jest/globals';
-import ProjectPlannerStrategy from '../../../../src/strategies/coding/ProjectPlannerStrategy.js';
+import { createProjectPlannerStrategy } from '../../../../src/strategies/coding/ProjectPlannerStrategy.js';
 import { ResourceManager } from '@legion/resource-manager';
 import { getToolRegistry } from '@legion/tools-registry';
 
@@ -22,9 +22,7 @@ describe('ProjectPlannerStrategy Integration Tests', () => {
 
   beforeEach(async () => {
     // Create fresh strategy instance for each test with REAL services
-    strategy = new ProjectPlannerStrategy(llmClient, toolRegistry, {
-      projectRoot: '/tmp/roma-projects-test'
-    });
+    strategy = createProjectPlannerStrategy;
 
     // Create mock task with required methods
     mockTask = {

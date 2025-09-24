@@ -18,7 +18,7 @@
 
 ## Overview
 
-The `@jsenvoy/playwright` package is a sophisticated wrapper around Microsoft's Playwright library, designed specifically for AI agent usage. It provides a natural, intuitive API for browser automation while maintaining the full power of Playwright's capabilities.
+The `@legion/playwright` package is a sophisticated wrapper around Microsoft's Playwright library, designed specifically for AI agent usage. It provides a natural, intuitive API for browser automation while maintaining the full power of Playwright's capabilities.
 
 ### Design Philosophy
 
@@ -690,7 +690,7 @@ await wrapper.navigateToPage('https://example.com', {
 
 ### JSON Module Pattern
 
-The package follows jsEnvoy's JSON module pattern for tool exposure:
+The package follows Legion's JSON module pattern for tool exposure:
 
 ```json
 {
