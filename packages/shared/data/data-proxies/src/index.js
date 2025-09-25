@@ -84,6 +84,12 @@ export { DataStoreProxy } from './DataStoreProxy.js';
 export { EntityProxy } from './EntityProxy.js';
 
 /**
+ * Dynamic proxy wrapper for entities with schema-aware property access
+ * @see {@link DynamicEntityProxy}
+ */
+export { DynamicEntityProxy, createDynamicEntityProxy } from './DynamicEntityProxy.js';
+
+/**
  * Proxy wrapper for collections of entities with iteration and filtering
  * @see {@link CollectionProxy}
  */

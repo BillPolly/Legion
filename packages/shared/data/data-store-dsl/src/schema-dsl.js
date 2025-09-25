@@ -1,7 +1,8 @@
 /**
- * Schema DSL - Template literal schema definition for data-store
+ * Schema DSL - Template literal schema definition for Handles
  * 
  * Provides natural language schema definition using template literals.
+ * Works with any Handle implementation - the Handle itself handles translation.
  */
 
 import { DSLParser } from './parser.js';
@@ -10,32 +11,32 @@ import { DSLParser } from './parser.js';
  * Tagged template literal function for schema definition
  * @param {TemplateStringsArray} strings - Template literal strings
  * @param {...any} expressions - Template literal expressions
- * @returns {Object} DataScript-compatible schema object
+ * @returns {Object} Generic schema object for Handle.defineSchema()
  */
 export function defineSchema(strings, ...expressions) {
   // Process template literal
   const templateResult = DSLParser.processTemplateLiteral(strings, expressions);
   
-  // Parse schema from DSL text
-  return DSLParser.parseSchema(templateResult.text, templateResult.expressions);
+  // Parse schema to generic format that Handles can interpret
+  return DSLParser.schemaToHandleFormat(templateResult.text, templateResult.expressions);
 }
 
 // Extend DSLParser with schema-specific methods
 Object.assign(DSLParser, {
   /**
-   * Parse schema DSL text into DataScript schema object
+   * Parse schema DSL text into generic structure
    * @param {string} dslText - Schema DSL text
    * @param {Array} expressions - Template literal expressions
-   * @returns {Object} DataScript schema object
+   * @returns {Object} Parsed schema structure
    */
-  parseSchema(dslText, expressions = []) {
+  parseSchemaStructure(dslText, expressions = []) {
     // Split into lines and filter out empty/comment lines
     const lines = dslText
       .split('\n')
       .map(line => line.trim())
       .filter(line => line && !line.startsWith('//'));
     
-    const schema = {};
+    const definitions = [];
     const seenAttributes = new Set();
     
     for (let i = 0; i < lines.length; i++) {
@@ -49,15 +50,13 @@ Object.assign(DSLParser, {
         const parsed = this.parseSchemaLine(processedLine);
         
         // Check for duplicates
-        const fullAttribute = `:${parsed.entity}/${parsed.attribute}`;
+        const fullAttribute = `${parsed.entity}/${parsed.attribute}`;
         if (seenAttributes.has(fullAttribute)) {
           throw new Error(`Duplicate attribute definition: ${parsed.entity}/${parsed.attribute}`);
         }
         seenAttributes.add(fullAttribute);
         
-        // Convert to DataScript format
-        const dataScriptDef = this.toDataScriptSchema(parsed);
-        Object.assign(schema, dataScriptDef);
+        definitions.push(parsed);
         
       } catch (error) {
         // Enhance error with line information
@@ -71,6 +70,49 @@ Object.assign(DSLParser, {
         throw enhancedError;
       }
     }
+    
+    return { definitions };
+  },
+
+  /**
+   * Convert schema DSL to generic Handle schema format
+   * @param {string} dslText - Schema DSL text
+   * @param {Array} expressions - Template literal expressions
+   * @returns {Object} Generic schema object that any Handle can interpret
+   */
+  schemaToHandleFormat(dslText, expressions = []) {
+    // Substitute expressions first
+    const processedText = this._substituteExpressions(dslText, expressions);
+    
+    // Parse schema structure
+    const parsed = this.parseSchemaStructure(processedText, expressions);
+    
+    // Return generic format - Handles will translate as needed
+    return {
+      type: 'schema',
+      definitions: parsed.definitions,
+      // Original text for Handles that want to do their own parsing
+      originalDSL: processedText
+    };
+  },
+
+  /**
+   * Convert generic Handle schema to DataScript format
+   * Used by DataStoreHandle to translate generic schemas
+   * @param {Object} handleSchema - Generic Handle schema
+   * @returns {Object} DataScript schema object
+   */
+  handleSchemaToDataScript(handleSchema) {
+    if (!handleSchema.definitions || handleSchema.definitions.length === 0) {
+      return {};
+    }
+
+    const schema = {};
+    
+    handleSchema.definitions.forEach(parsed => {
+      const dataScriptDef = this.toDataScriptSchema(parsed);
+      Object.assign(schema, dataScriptDef);
+    });
     
     // Validate complete schema
     const validation = this.validateSchema(schema);

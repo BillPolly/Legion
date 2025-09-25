@@ -1,0 +1,23 @@
+{
+  "name": "@legion/handle-dsl",
+  "version": "1.0.0",
+  "description": "Universal template literal DSL for Handle operations",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "npm test -- --watch"
+  },
+  "dependencies": {
+    "@legion/handle": "*"
+  },
+  "keywords": [
+    "dsl",
+    "handle",
+    "template-literals",
+    "query",
+    "update",
+    "universal"
+  ],
+  "license": "MIT"
+}

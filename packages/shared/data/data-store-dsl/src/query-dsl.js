@@ -1,7 +1,8 @@
 /**
- * Query DSL - Template literal query syntax for data-store
+ * Query DSL - Template literal query syntax for Handles
  * 
  * Provides natural language query syntax using template literals.
+ * Works with any Handle implementation - the Handle itself handles translation.
  */
 
 import { DSLParser } from './parser.js';
@@ -10,14 +11,14 @@ import { DSLParser } from './parser.js';
  * Tagged template literal function for query definition
  * @param {TemplateStringsArray} strings - Template literal strings
  * @param {...any} expressions - Template literal expressions
- * @returns {Object} DataScript-compatible query object
+ * @returns {Object} Generic query object for Handle.query()
  */
 export function query(strings, ...expressions) {
   // Process template literal
   const templateResult = DSLParser.processTemplateLiteral(strings, expressions);
   
-  // Parse query from DSL text
-  return DSLParser.queryToDataScript(templateResult.text, templateResult.expressions);
+  // Parse query to generic format that Handles can interpret
+  return DSLParser.queryToHandleFormat(templateResult.text, templateResult.expressions);
 }
 
 // Extend DSLParser with query-specific methods
@@ -63,22 +64,39 @@ Object.assign(DSLParser, {
   },
 
   /**
-   * Convert DSL query to DataScript query object
+   * Convert DSL query to generic Handle query format
    * @param {string} queryText - Query DSL text
    * @param {Array} expressions - Template literal expressions
-   * @returns {Object} DataScript query object
+   * @returns {Object} Generic query object that any Handle can interpret
    */
-  queryToDataScript(queryText, expressions = []) {
+  queryToHandleFormat(queryText, expressions = []) {
     // Substitute expressions first
     const processedText = this._substituteExpressions(queryText, expressions);
     
     // Parse query structure
     const parsed = this.parseQueryStructure(processedText);
     
-    // Convert to DataScript format
-    const dataScriptQuery = {
+    // Return generic format - Handles will translate as needed
+    return {
+      type: 'query',
       find: parsed.find,
-      where: parsed.where || []
+      where: parsed.where || [],
+      aliases: parsed.aliases || {},
+      // Original text for Handles that want to do their own parsing
+      originalDSL: processedText
+    };
+  },
+
+  /**
+   * Convert generic Handle query to DataScript format
+   * Used by DataStoreHandle to translate generic queries
+   * @param {Object} handleQuery - Generic Handle query
+   * @returns {Object} DataScript query object
+   */
+  handleQueryToDataScript(handleQuery) {
+    const dataScriptQuery = {
+      find: handleQuery.find,
+      where: handleQuery.where || []
     };
 
     // Add namespace prefixes to attributes

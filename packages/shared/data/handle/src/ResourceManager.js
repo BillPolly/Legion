@@ -1,24 +1,24 @@
 /**
- * ResourceManager - Abstract interface contract for all resource managers
+ * DataSource - Abstract interface contract for all data sources
  * 
  * This is NOT a class to inherit from, but an interface contract that all
- * ResourceManager implementations must fulfill. The Handle validates that
- * ResourceManagers implement the required methods.
+ * DataSource implementations must fulfill. The Handle validates that
+ * DataSources implement the required methods.
  * 
- * CRITICAL: All ResourceManager operations must be synchronous - NO await, NO promises!
+ * CRITICAL: All DataSource operations must be synchronous - NO await, NO promises!
  * The synchronous dispatcher pattern eliminates race conditions in rapid subscribe/unsubscribe scenarios.
  * 
- * ResourceManagers represent the actual resource that Handle proxies. The Handle is a
- * placeholder that delegates all real work to the ResourceManager.
+ * DataSources represent the actual data resource that Handle proxies. The Handle is a
+ * placeholder that delegates all real work to the DataSource.
  */
 
 /**
- * Abstract interface specification for ResourceManager implementations
+ * Abstract interface specification for DataSource implementations
  * 
- * This object defines the contract that all ResourceManager implementations must fulfill.
+ * This object defines the contract that all DataSource implementations must fulfill.
  * It serves as documentation and validation reference - implementations do not inherit from this.
  */
-export const ResourceManagerInterface = {
+export const DataSourceInterface = {
   /**
    * Execute query against the resource - REQUIRED METHOD
    * CRITICAL: Must be synchronous - no await!
@@ -28,7 +28,7 @@ export const ResourceManagerInterface = {
    * @throws {Error} If query is invalid or execution fails
    */
   query: (querySpec) => {
-    throw new Error('ResourceManager must implement query(querySpec) method');
+    throw new Error('DataSource must implement query(querySpec) method');
   },
   
   /**
@@ -44,7 +44,7 @@ export const ResourceManagerInterface = {
    * @throws {Error} If querySpec or callback is invalid
    */
   subscribe: (querySpec, callback) => {
-    throw new Error('ResourceManager must implement subscribe(querySpec, callback) method');
+    throw new Error('DataSource must implement subscribe(querySpec, callback) method');
   },
   
   /**
@@ -55,7 +55,7 @@ export const ResourceManagerInterface = {
    * @throws {Error} If schema is not available or cannot be generated
    */
   getSchema: () => {
-    throw new Error('ResourceManager must implement getSchema() method');
+    throw new Error('DataSource must implement getSchema() method');
   },
   
   /**
@@ -67,7 +67,7 @@ export const ResourceManagerInterface = {
    * @throws {Error} If update fails or is not supported
    */
   update: (updateSpec) => {
-    throw new Error('ResourceManager update() method not implemented');
+    throw new Error('DataSource update() method not implemented');
   },
   
   /**
@@ -79,7 +79,7 @@ export const ResourceManagerInterface = {
    * @throws {Error} If validation fails due to system error
    */
   validate: (data) => {
-    throw new Error('ResourceManager validate() method not implemented');
+    throw new Error('DataSource validate() method not implemented');
   },
   
   /**
@@ -89,7 +89,7 @@ export const ResourceManagerInterface = {
    * @returns {Object} Metadata object with resource information
    */
   getMetadata: () => {
-    throw new Error('ResourceManager getMetadata() method not implemented');
+    throw new Error('DataSource getMetadata() method not implemented');
   },
   
   /**
@@ -105,7 +105,7 @@ export const ResourceManagerInterface = {
    * @throws {Error} If query builder cannot be created
    */
   queryBuilder: (sourceHandle) => {
-    throw new Error('ResourceManager must implement queryBuilder(sourceHandle) method');
+    throw new Error('DataSource must implement queryBuilder(sourceHandle) method');
   }
 };
 

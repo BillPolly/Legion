@@ -1,7 +1,8 @@
 /**
- * Update DSL - Template literal update syntax for data-store
+ * Update DSL - Template literal update syntax for Handles
  * 
  * Provides intuitive update and relationship management syntax using template literals.
+ * Works with any Handle implementation - the Handle itself handles translation.
  */
 
 import { DSLParser } from './parser.js';
@@ -10,14 +11,14 @@ import { DSLParser } from './parser.js';
  * Tagged template literal function for update operations
  * @param {TemplateStringsArray} strings - Template literal strings
  * @param {...any} expressions - Template literal expressions
- * @returns {Object} Data-store compatible update data
+ * @returns {Object} Generic update object for Handle.update()
  */
 export function update(strings, ...expressions) {
   // Process template literal
   const templateResult = DSLParser.processTemplateLiteral(strings, expressions);
   
-  // Parse update from DSL text
-  return DSLParser.updateToDataStoreFormat(templateResult.text, templateResult.expressions);
+  // Parse update to generic format that Handles can interpret
+  return DSLParser.updateToHandleFormat(templateResult.text, templateResult.expressions);
 }
 
 // Extend DSLParser with update-specific methods
@@ -168,12 +169,12 @@ Object.assign(DSLParser, {
   },
 
   /**
-   * Convert update DSL to data-store format
+   * Convert update DSL to generic Handle update format
    * @param {string} updateText - Update DSL text
    * @param {Array} expressions - Template literal expressions
-   * @returns {Object} Data-store compatible update data
+   * @returns {Object} Generic update object that any Handle can interpret
    */
-  updateToDataStoreFormat(updateText, expressions = []) {
+  updateToHandleFormat(updateText, expressions = []) {
     // Substitute expressions first
     const processedText = this._substituteExpressions(updateText, expressions);
     
@@ -181,12 +182,32 @@ Object.assign(DSLParser, {
     const parsed = this.parseUpdateStatement(processedText);
     
     if (parsed.assignments.length === 0) {
+      return { type: 'update', assignments: [] };
+    }
+
+    // Return generic format - Handles will translate as needed
+    return {
+      type: 'update',
+      assignments: parsed.assignments,
+      // Original text for Handles that want to do their own parsing
+      originalDSL: processedText
+    };
+  },
+
+  /**
+   * Convert generic Handle update to DataStore format
+   * Used by DataStoreHandle to translate generic updates
+   * @param {Object} handleUpdate - Generic Handle update
+   * @returns {Object} Data-store compatible update data
+   */
+  handleUpdateToDataStore(handleUpdate) {
+    if (!handleUpdate.assignments || handleUpdate.assignments.length === 0) {
       return {};
     }
 
     // Separate regular assignments from relationship operations
-    const regularAssignments = parsed.assignments.filter(a => a.type === 'assignment');
-    const relationshipOps = parsed.assignments.filter(a => 
+    const regularAssignments = handleUpdate.assignments.filter(a => a.type === 'assignment');
+    const relationshipOps = handleUpdate.assignments.filter(a => 
       a.type === 'relationship-add' || a.type === 'relationship-remove'
     );
 
