@@ -27,6 +27,11 @@ export { default as ArtifactRegistry } from './core/ArtifactRegistry.js';
 export { default as ExecutionContext } from './core/ExecutionContext.js';
 export { default as GlobalContext } from './core/GlobalContext.js';
 
+// Context Handle/DataSource infrastructure
+export { ContextHandle } from './core/ContextHandle.js';
+export { ContextResourceManager } from './core/ContextResourceManager.js';
+export { ContextDataSource } from './core/ContextDataSource.js';
+
 // Version and metadata
 export const version = '1.0.0';
 export const name = '@legion/tasks';

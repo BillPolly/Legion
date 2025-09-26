@@ -48,6 +48,22 @@ export default class Task {
       this.context = new ExecutionContext(context);
     }
     
+    // Initialize ArtifactRegistry if provided (check both direct context and ExecutionContext services)
+    let ArtifactRegistryClass = null;
+    if (context instanceof ExecutionContext) {
+      // Check ExecutionContext services (additionalServices or direct properties)
+      ArtifactRegistryClass = context.getService('ArtifactRegistryClass') || context.additionalServices?.ArtifactRegistryClass;
+    } else {
+      // Check direct context property
+      ArtifactRegistryClass = context.ArtifactRegistryClass;
+    }
+    
+    if (ArtifactRegistryClass) {
+      this.artifactRegistry = new ArtifactRegistryClass();
+      // Store the class for child tasks
+      this._artifactRegistryClass = ArtifactRegistryClass;
+    }
+    
     // Artifacts are stored directly in context
     // No separate ArtifactRegistry needed - context handles everything
     
@@ -189,21 +205,49 @@ export default class Task {
   
   /**
    * Receive artifacts from parent task at task start
-   * @param {Task} parentTask - Parent task to receive artifacts from
+   * @param {Task|ArtifactRegistry} parentTask - Parent task or artifact registry to receive artifacts from
    * @param {Array} artifactNames - Specific artifact names to receive (optional)
    */
-  receiveArtifacts(parentTask, artifactNames = null) {
+  async receiveArtifacts(parentTask, artifactNames = null) {
     if (!parentTask) return;
     
     // Determine which artifacts to receive
     const toReceive = artifactNames || this.goalInputs.map(g => g.name);
     
-    const parentArtifacts = parentTask.getAllArtifacts();
+    // Handle both Task objects and ArtifactRegistry objects
+    let sourceRegistry;
+    if (parentTask.artifactRegistry) {
+      sourceRegistry = parentTask.artifactRegistry;
+    } else if (parentTask.getAllArtifacts) {
+      // Legacy Task object - get artifacts via method
+      const parentArtifacts = parentTask.getAllArtifacts();
+      for (const name of toReceive) {
+        const artifact = parentArtifacts[name];
+        if (artifact) {
+          this.storeArtifact(name, artifact.value, artifact.description, artifact.type);
+          console.log(`📥 Task received artifact @${name} from parent`);
+        }
+      }
+      if (toReceive.length > 0) {
+        this.addConversationEntry('system',
+          `Received artifacts from parent: ${toReceive.map(n => '@' + n).join(', ')}`
+        );
+      }
+      return;
+    } else {
+      // Assume it's already an ArtifactRegistry
+      sourceRegistry = parentTask;
+    }
+    
+    // Use ArtifactRegistry interface
     for (const name of toReceive) {
-      const artifact = parentArtifacts[name];
-      if (artifact) {
-        // Copy artifact to this task's context
-        this.storeArtifact(name, artifact.value, artifact.description, artifact.type);
+      if (sourceRegistry.has(name)) {
+        const artifact = sourceRegistry.get(name);
+        if (this.artifactRegistry) {
+          this.artifactRegistry.store(name, artifact.value, artifact.description, artifact.type);
+        } else {
+          this.storeArtifact(name, artifact.value, artifact.description, artifact.type);
+        }
         console.log(`📥 Task received artifact @${name} from parent`);
       }
     }
@@ -217,23 +261,42 @@ export default class Task {
   
   /**
    * Transfer achieved goal outputs back to parent upon completion
-   * @param {Task} parentTask - Parent task to transfer artifacts to
+   * @param {Task|ArtifactRegistry} parentTask - Parent task or artifact registry to transfer artifacts to
    * @returns {Array} Names of artifacts transferred
    */
-  deliverGoalOutputs(parentTask) {
+  async deliverGoalOutputs(parentTask) {
     if (!parentTask) return [];
     
     const delivered = [];
-    const myArtifacts = this.getAllArtifacts();
     
     // Transfer each goal output that was achieved
     for (const goal of this.goalOutputs) {
-      const artifact = myArtifacts[goal.name];
+      let artifact = null;
+      
+      // Get artifact from this task's registry or context
+      if (this.artifactRegistry && this.artifactRegistry.has(goal.name)) {
+        artifact = this.artifactRegistry.get(goal.name);
+      } else {
+        const myArtifacts = this.getAllArtifacts();
+        artifact = myArtifacts[goal.name];
+      }
+      
       if (artifact) {
-        // Transfer to parent's context
-        parentTask.storeArtifact(goal.name, artifact.value, 
-          artifact.description || goal.description,
-          artifact.type || goal.type);
+        // Transfer to parent's registry or context
+        if (parentTask.artifactRegistry) {
+          parentTask.artifactRegistry.store(goal.name, artifact.value, 
+            artifact.description || goal.description,
+            artifact.type || goal.type);
+        } else if (parentTask.storeArtifact) {
+          parentTask.storeArtifact(goal.name, artifact.value, 
+            artifact.description || goal.description,
+            artifact.type || goal.type);
+        } else {
+          // Assume parentTask is an ArtifactRegistry
+          parentTask.store(goal.name, artifact.value, 
+            artifact.description || goal.description,
+            artifact.type || goal.type);
+        }
         delivered.push(goal.name);
         console.log(`📤 Delivered artifact @${goal.name} to parent`);
       } else {
@@ -259,13 +322,22 @@ export default class Task {
       return true; // No inputs required
     }
     
-    const artifacts = this.getAllArtifacts();
-    for (const input of this.goalInputs) {
-      if (!artifacts[input.name]) {
-        return false;
+    if (this.artifactRegistry) {
+      for (const input of this.goalInputs) {
+        if (!this.artifactRegistry.has(input.name)) {
+          return false;
+        }
       }
+      return true;
+    } else {
+      const artifacts = this.getAllArtifacts();
+      for (const input of this.goalInputs) {
+        if (!artifacts[input.name]) {
+          return false;
+        }
+      }
+      return true;
     }
-    return true;
   }
   
   /**
@@ -277,13 +349,22 @@ export default class Task {
       return true; // No outputs required
     }
     
-    const artifacts = this.getAllArtifacts();
-    for (const output of this.goalOutputs) {
-      if (!artifacts[output.name]) {
-        return false;
+    if (this.artifactRegistry) {
+      for (const output of this.goalOutputs) {
+        if (!this.artifactRegistry.has(output.name)) {
+          return false;
+        }
       }
+      return true;
+    } else {
+      const artifacts = this.getAllArtifacts();
+      for (const output of this.goalOutputs) {
+        if (!artifacts[output.name]) {
+          return false;
+        }
+      }
+      return true;
     }
-    return true;
   }
   
   /**
@@ -573,15 +654,24 @@ export default class Task {
     const goalInputs = subtaskDef.inputs ? this._parseArtifactSpecs(subtaskDef.inputs) : [];
     const goalOutputs = subtaskDef.outputs ? this._parseArtifactSpecs(subtaskDef.outputs) : [];
     
-    // Create child context from parent context
-    const childContext = this.context.createChildContext({
+    // Create child context from parent context with ArtifactRegistryClass if available
+    const childContextData = {
       goalInputs: goalInputs,
       goalOutputs: goalOutputs,
       metadata: { 
         outputs: subtaskDef.outputs,
         plannedIndex: this.currentSubtaskIndex
       }
-    });
+    };
+    
+    // Pass ArtifactRegistryClass to child if parent has one
+    if (this._artifactRegistryClass) {
+      childContextData.ArtifactRegistryClass = this._artifactRegistryClass;
+    }
+    
+    const childContext = this.context.createChildContext ? 
+      this.context.createChildContext(childContextData) : 
+      childContextData;
     
     // Create the actual Task object for this subtask
     const subtask = new Task(subtaskDef.description, this, childContext);
@@ -593,7 +683,7 @@ export default class Task {
     
     // Transfer specified artifacts from parent to child
     if (goalInputs.length > 0) {
-      subtask.receiveArtifacts(this, goalInputs.map(g => g.name));
+      await subtask.receiveArtifacts(this, goalInputs.map(g => g.name));
     }
     
     // Register with task manager if provided
