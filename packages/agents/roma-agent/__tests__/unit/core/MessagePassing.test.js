@@ -27,22 +27,28 @@ describe('Message Passing System', () => {
   });
 
   describe('Fire-and-Forget Message Pattern', () => {
-    it('should have synchronous onMessage handlers that return nothing', () => {
+    it('should have synchronous onMessage handlers that return nothing', async () => {
+      const context1 = { llmClient: mockLlmClient, toolRegistry: mockToolRegistry };
+      const context2 = { llmClient: mockLlmClient };
+      const context3 = {};
+      
       const strategies = [
-        createRecursiveDecompositionStrategy(mockLlmClient, mockToolRegistry),
-        createAnalysisStrategy(mockLlmClient),
-        createExecutionStrategy()
+        await createRecursiveDecompositionStrategy(context1),
+        await createAnalysisStrategy(context2),
+        await createExecutionStrategy(context3)
       ];
 
       strategies.forEach(strategy => {
         // onMessage should be a regular function, not async
+        expect(typeof strategy.onMessage).toBe('function');
         expect(strategy.onMessage.constructor.name).toBe('Function');
         expect(strategy.onMessage.constructor.name).not.toBe('AsyncFunction');
       });
     });
 
-    it('should not return values from onMessage handlers', () => {
-      const strategy = createAnalysisStrategy(mockLlmClient);
+    it('should not return values from onMessage handlers', async () => {
+      const context = { llmClient: mockLlmClient };
+      const strategy = await createAnalysisStrategy(context);
       const task = createTask('Test task', null, strategy);
       
       const mockSender = { parent: null };
@@ -53,8 +59,9 @@ describe('Message Passing System', () => {
       expect(result).toBeUndefined();
     });
 
-    it('should handle messages without blocking', () => {
-      const strategy = createExecutionStrategy();
+    it('should handle messages without blocking', async () => {
+      const context = {};
+      const strategy = await createExecutionStrategy(context);
       const task = createTask('Test task', null, strategy);
       
       const mockSender = { parent: null };
@@ -78,8 +85,9 @@ describe('Message Passing System', () => {
   });
 
   describe('Message Routing and Context', () => {
-    it('should properly route messages from parent vs child', () => {
-      const strategy = createRecursiveDecompositionStrategy(mockLlmClient, mockToolRegistry);
+    it('should properly route messages from parent vs child', async () => {
+      const context = { llmClient: mockLlmClient, toolRegistry: mockToolRegistry };
+      const strategy = await createRecursiveDecompositionStrategy(context);
       const parentTask = createTask('Parent task', null, strategy);
       const childTask = createTask('Child task', parentTask, strategy);
       
@@ -104,8 +112,9 @@ describe('Message Passing System', () => {
       }).not.toThrow();
     });
 
-    it('should use proper context binding in message handlers', () => {
-      const strategy = createAnalysisStrategy(mockLlmClient);
+    it('should use proper context binding in message handlers', async () => {
+      const context = { llmClient: mockLlmClient };
+      const strategy = await createAnalysisStrategy(context);
       const task = createTask('Analysis task', null, strategy);
       
       // Spy on console.log to capture context usage
@@ -130,8 +139,9 @@ describe('Message Passing System', () => {
   });
 
   describe('Message Types and Handling', () => {
-    it('should handle start/work messages in RecursiveDecompositionStrategy', () => {
-      const strategy = createRecursiveDecompositionStrategy(mockLlmClient, mockToolRegistry);
+    it('should handle start/work messages in RecursiveDecompositionStrategy', async () => {
+      const context = { llmClient: mockLlmClient, toolRegistry: mockToolRegistry };
+      const strategy = await createRecursiveDecompositionStrategy(context);
       const task = createTask('Complex task', null, strategy);
       
       // Mock required methods to prevent errors
@@ -154,8 +164,9 @@ describe('Message Passing System', () => {
       }).not.toThrow();
     });
 
-    it('should handle child completion messages', () => {
-      const strategy = createRecursiveDecompositionStrategy(mockLlmClient, mockToolRegistry);
+    it('should handle child completion messages', async () => {
+      const context = { llmClient: mockLlmClient, toolRegistry: mockToolRegistry };
+      const strategy = await createRecursiveDecompositionStrategy(context);
       const parentTask = createTask('Parent task', null, strategy);
       const childTask = createTask('Child task', parentTask, strategy);
       
@@ -175,8 +186,9 @@ describe('Message Passing System', () => {
       }).not.toThrow();
     });
 
-    it('should handle child failure messages', () => {
-      const strategy = createRecursiveDecompositionStrategy(mockLlmClient, mockToolRegistry);
+    it('should handle child failure messages', async () => {
+      const context = { llmClient: mockLlmClient, toolRegistry: mockToolRegistry };
+      const strategy = await createRecursiveDecompositionStrategy(context);
       const parentTask = createTask('Parent task', null, strategy);
       const childTask = createTask('Child task', parentTask, strategy);
       
@@ -199,8 +211,9 @@ describe('Message Passing System', () => {
   });
 
   describe('Strategy-Specific Message Handling', () => {
-    it('should handle AnalysisStrategy messages correctly', () => {
-      const strategy = createAnalysisStrategy(mockLlmClient);
+    it('should handle AnalysisStrategy messages correctly', async () => {
+      const context = { llmClient: mockLlmClient };
+      const strategy = await createAnalysisStrategy(context);
       const task = createTask('Analysis task', null, strategy);
       
       // Mock required methods
@@ -225,8 +238,9 @@ describe('Message Passing System', () => {
       }).not.toThrow();
     });
 
-    it('should handle ExecutionStrategy messages correctly', () => {
-      const strategy = createExecutionStrategy();
+    it('should handle ExecutionStrategy messages correctly', async () => {
+      const context = {};
+      const strategy = await createExecutionStrategy(context);
       const task = createTask('Execution task', null, strategy);
       
       // Mock required methods
@@ -254,8 +268,9 @@ describe('Message Passing System', () => {
   });
 
   describe('Message Flow and Asynchronous Operations', () => {
-    it('should initiate async operations without blocking message handler', () => {
-      const strategy = createAnalysisStrategy(mockLlmClient);
+    it('should initiate async operations without blocking message handler', async () => {
+      const context = { llmClient: mockLlmClient };
+      const strategy = await createAnalysisStrategy(context);
       const task = createTask('Analysis task', null, strategy);
       
       // Mock methods that might be called asynchronously
@@ -279,8 +294,9 @@ describe('Message Passing System', () => {
       // (The actual async work happens in the background)
     });
 
-    it('should not block on async operations in message handlers', () => {
-      const strategy = createExecutionStrategy();
+    it('should not block on async operations in message handlers', async () => {
+      const context = {};
+      const strategy = await createExecutionStrategy(context);
       const task = createTask('Execution task', null, strategy);
       
       // Mock methods
@@ -298,8 +314,9 @@ describe('Message Passing System', () => {
   });
 
   describe('Error Handling in Message Passing', () => {
-    it('should handle errors in message processing gracefully', () => {
-      const strategy = createAnalysisStrategy(mockLlmClient);
+    it('should handle errors in message processing gracefully', async () => {
+      const context = { llmClient: mockLlmClient };
+      const strategy = await createAnalysisStrategy(context);
       const task = createTask('Analysis task', null, strategy);
       
       // Mock methods to throw errors
@@ -316,8 +333,9 @@ describe('Message Passing System', () => {
       }).not.toThrow();
     });
 
-    it('should handle malformed messages gracefully', () => {
-      const strategy = createRecursiveDecompositionStrategy(mockLlmClient, mockToolRegistry);
+    it('should handle malformed messages gracefully', async () => {
+      const context = { llmClient: mockLlmClient, toolRegistry: mockToolRegistry };
+      const strategy = await createRecursiveDecompositionStrategy(context);
       const task = createTask('Test task', null, strategy);
       
       // Mock methods

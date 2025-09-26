@@ -27,7 +27,9 @@
     "@legion/llm-client": "file:../../prompting/llm-client",
     "@legion/schema": "file:../../schema",
     "@legion/tools": "file:../../tools",
-    "@legion/tasks": "file:../../tasks"
+    "@legion/tasks": "file:../../tasks",
+    "@legion/handle": "file:../../shared/data/handle",
+    "@legion/handle-dsl": "file:../../shared/data/handle-dsl"
   },
   "devDependencies": {
     "jest": "^29.7.0"

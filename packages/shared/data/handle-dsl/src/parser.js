@@ -603,4 +603,91 @@ export class DSLParser {
     
     return complexity;
   }
+
+  /**
+   * Parse multi-line schema text into DataScript format
+   * @param {string} schemaText - Multi-line schema DSL text
+   * @returns {Object} DataScript schema object
+   */
+  static parseSchema(schemaText) {
+    if (!schemaText || typeof schemaText !== 'string') {
+      return {};
+    }
+
+    const schema = {};
+    const duplicateAttributes = new Set();
+    
+    // Split into lines and process each line
+    const lines = schemaText
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line && !line.startsWith('//'));
+
+    for (const line of lines) {
+      try {
+        // Use the schema processing methods that are added to DSLParser
+        const parsed = this.parseSchemaLine(line);
+        const fullAttribute = `:${parsed.entity}/${parsed.attribute}`;
+        
+        // Check for duplicates
+        if (schema[fullAttribute]) {
+          if (!duplicateAttributes.has(fullAttribute)) {
+            duplicateAttributes.add(fullAttribute);
+          }
+        }
+        
+        const dataScriptDef = this.toDataScriptSchema(parsed);
+        Object.assign(schema, dataScriptDef);
+      } catch (error) {
+        // Continue processing other lines, but collect errors
+        console.warn(`Skipping invalid schema line: ${line} - ${error.message}`);
+      }
+    }
+
+    // Throw error if duplicates found
+    if (duplicateAttributes.size > 0) {
+      throw new Error(`Duplicate attribute definitions found: ${Array.from(duplicateAttributes).join(', ')}`);
+    }
+
+    return schema;
+  }
+
+  /**
+   * Substitute expression placeholders with actual values
+   * @param {string} text - Text with placeholders
+   * @param {Array} expressions - Expression values
+   * @returns {string} Text with substituted values
+   */
+  static _substituteExpressions(text, expressions) {
+    if (!expressions || expressions.length === 0) {
+      return text;
+    }
+
+    let result = text;
+    expressions.forEach((expr, index) => {
+      const placeholder = `\${${index}}`;
+      let substitution;
+
+      if (typeof expr === 'string') {
+        // Don't add quotes - template literal should already have them
+        substitution = expr;
+      } else if (typeof expr === 'number') {
+        substitution = String(expr);
+      } else if (typeof expr === 'boolean') {
+        substitution = String(expr);
+      } else if (expr === null || expr === undefined) {
+        substitution = 'null';
+      } else if (expr instanceof Date) {
+        // Preserve Date objects as-is by using a special marker
+        substitution = `__DATE_OBJECT_${index}__`;
+      } else {
+        // For other objects and arrays, convert to string representation
+        substitution = JSON.stringify(expr);
+      }
+
+      result = result.replace(placeholder, substitution);
+    });
+
+    return result;
+  }
 }

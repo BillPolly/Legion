@@ -95,12 +95,36 @@ Object.assign(DSLParser, {
    */
   handleQueryToDataScript(handleQuery) {
     const dataScriptQuery = {
-      find: handleQuery.find,
+      find: this._processFindClause(handleQuery.find),
       where: handleQuery.where || []
     };
 
-    // Add namespace prefixes to attributes
+    // Process where clauses
     dataScriptQuery.where = dataScriptQuery.where.map(clause => {
+      // Handle comparison clauses (single element array with comparison string)
+      if (clause.length === 1 && typeof clause[0] === 'string' && clause[0].startsWith('(')) {
+        // This is a comparison clause like "(>= ?age 30)"
+        // DataScript expects these as built-in predicates
+        const comparisonText = clause[0];
+        
+        // Parse the comparison string: "(>= ?age 30)"
+        const match = comparisonText.match(/^\((\S+)\s+(\?\w+)\s+(\S+)\)$/);
+        if (match) {
+          const [, operator, variable, value] = match;
+          
+          // Convert to DataScript built-in predicate format
+          // DataScript uses [(built-in-name ?var value)]
+          const builtInName = this._getDataScriptBuiltIn(operator);
+          if (builtInName) {
+            return [builtInName, variable, parseFloat(value) || value];
+          }
+        }
+        
+        // Return as-is if we can't parse it
+        return clause;
+      }
+      
+      // Handle regular DataScript clauses [entity attribute value]
       return clause.map(term => {
         if (typeof term === 'string' && term.includes('/') && !term.startsWith(':')) {
           return ':' + term;
@@ -110,6 +134,64 @@ Object.assign(DSLParser, {
     });
 
     return dataScriptQuery;
+  },
+
+  /**
+   * Process find clause to extract and convert aggregation expressions
+   * @private
+   * @param {Array} findClause - Find clause from Handle query
+   * @returns {Array} Processed find clause for DataScript
+   */
+  _processFindClause(findClause) {
+    return findClause.map(item => {
+      // If item is an array with aggregation expression, extract it
+      if (Array.isArray(item) && item.length === 1 && 
+          typeof item[0] === 'string' && item[0].startsWith('(')) {
+        const aggString = item[0]; // e.g. "(count ?friend)"
+        return this._parseAggregationString(aggString);
+      }
+      return item; // Return regular variables as-is
+    });
+  },
+
+  /**
+   * Parse aggregation string into DataScript array format
+   * @private
+   * @param {string} aggString - Aggregation string like "(count ?friend)" or "(count-distinct ?post)"
+   * @returns {Array} DataScript aggregation array like ['count', '?friend'] or ['count-distinct', '?post']
+   */
+  _parseAggregationString(aggString) {
+    // Parse "(count ?friend)" to ['count', '?friend']
+    // Parse "(count-distinct ?post)" to ['count-distinct', '?post']
+    const match = aggString.match(/^\((\w+(?:-\w+)*)\s+(.*?)\)$/);
+    if (match) {
+      const [, funcName, args] = match;
+      
+      // Split args on spaces to handle multiple variables
+      const argTokens = args.trim().split(/\s+/);
+      
+      return [funcName, ...argTokens];
+    }
+    
+    // If parsing fails, return as-is (will be handled as literal)
+    return aggString;
+  },
+
+  /**
+   * Convert DSL comparison operators to DataScript built-in names
+   * @private
+   */
+  _getDataScriptBuiltIn(operator) {
+    const operatorMap = {
+      '>=': '>=',
+      '<=': '<=',
+      '>': '>',
+      '<': '<',
+      '=': '=',
+      '!=': 'not='
+    };
+    
+    return operatorMap[operator];
   },
 
   /**
@@ -180,11 +262,21 @@ Object.assign(DSLParser, {
     let i = 0;
     
     while (i < whereTokens.length) {
+      // Skip opening bracket
+      if (whereTokens[i] && whereTokens[i].type === 'punctuation' && whereTokens[i].value === '[') {
+        i++;
+      }
+      
       // Parse datom pattern: entity attribute value
       const clause = this._parseWherePattern(whereTokens, i);
       if (clause) {
         whereClauses.push(clause.pattern);
         i = clause.endIndex;
+        
+        // Skip closing bracket
+        if (whereTokens[i] && whereTokens[i].type === 'punctuation' && whereTokens[i].value === ']') {
+          i++;
+        }
       } else {
         i++; // Skip unrecognized tokens
       }
@@ -194,7 +286,7 @@ Object.assign(DSLParser, {
   },
 
   /**
-   * Parse individual where pattern (entity attribute value)
+   * Parse individual where pattern (entity attribute value) or comparison
    * @private
    */
   _parseWherePattern(tokens, startIndex) {
@@ -202,18 +294,68 @@ Object.assign(DSLParser, {
       return null; // Not enough tokens for a complete pattern
     }
 
-    const entity = tokens[startIndex];
-    const attribute = tokens[startIndex + 1];
-    const value = tokens[startIndex + 2];
+    let nextIndex = startIndex;
+    const firstToken = tokens[nextIndex++];
+    
+    // Check if this is a comparison pattern: ?var operator value
+    if (firstToken.type === 'variable' && 
+        nextIndex < tokens.length && 
+        tokens[nextIndex].type === 'operator') {
+      
+      const variable = firstToken.value;
+      const operator = tokens[nextIndex++].value;
+      
+      if (nextIndex >= tokens.length) {
+        return null;
+      }
+      
+      const valueToken = tokens[nextIndex++];
+      let value = valueToken.value;
+      
+      // Convert comparison to DataScript constraint format
+      // DataScript uses built-in comparison predicates
+      return {
+        pattern: [`(${operator} ${variable} ${typeof value === 'string' ? '"' + value + '"' : value})`],
+        endIndex: nextIndex
+      };
+    }
 
-    // Validate pattern structure
+    // Standard DataScript pattern: entity attribute value
+    nextIndex = startIndex; // Reset
+    let entity, attribute, value;
+
+    // Parse entity
+    entity = tokens[nextIndex++];
     if (entity.type !== 'variable' && entity.type !== 'identifier') {
       return null;
     }
-    
-    if (attribute.type !== 'attribute' && attribute.type !== 'identifier') {
+
+    // Parse attribute - handle :attribute format
+    if (nextIndex < tokens.length && 
+        tokens[nextIndex].type === 'punctuation' && 
+        tokens[nextIndex].value === ':' &&
+        nextIndex + 1 < tokens.length &&
+        (tokens[nextIndex + 1].type === 'identifier' || tokens[nextIndex + 1].type === 'attribute')) {
+      // Handle :attribute format (both :identifier and :entity/attribute)
+      attribute = {
+        type: 'attribute',
+        value: ':' + tokens[nextIndex + 1].value
+      };
+      nextIndex += 2;
+    } else {
+      // Handle simple attribute
+      attribute = tokens[nextIndex++];
+      if (attribute.type !== 'attribute' && attribute.type !== 'identifier') {
+        return null;
+      }
+    }
+
+    if (nextIndex >= tokens.length) {
       return null;
     }
+
+    // Parse value
+    value = tokens[nextIndex++];
 
     // Convert tokens to pattern values
     const entityValue = entity.value;
@@ -233,7 +375,7 @@ Object.assign(DSLParser, {
 
     return {
       pattern: [entityValue, attributeValue, valueValue],
-      endIndex: startIndex + 3
+      endIndex: nextIndex
     };
   },
 

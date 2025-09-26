@@ -11,14 +11,23 @@ import { DSLParser } from './parser.js';
  * Tagged template literal function for schema definition
  * @param {TemplateStringsArray} strings - Template literal strings
  * @param {...any} expressions - Template literal expressions
- * @returns {Object} Generic schema object for Handle.defineSchema()
+ * @returns {Object} DataScript-compatible schema object
  */
 export function defineSchema(strings, ...expressions) {
   // Process template literal
   const templateResult = DSLParser.processTemplateLiteral(strings, expressions);
   
-  // Parse schema to generic format that Handles can interpret
-  return DSLParser.schemaToHandleFormat(templateResult.text, templateResult.expressions);
+  // Substitute expressions to get final text
+  const finalText = DSLParser._substituteExpressions(templateResult.text, templateResult.expressions);
+  
+  // Check if this is modern syntax (entity Person { ... }) or simple syntax (user/name: string)
+  if (finalText.includes('entity ') && finalText.includes('{')) {
+    // Modern syntax - return generic Handle schema format (for SimpleObjectDataSource)
+    return DSLParser.schemaToHandleFormat(finalText, templateResult.expressions);
+  } else {
+    // Simple syntax - parse directly to DataScript format (for DataStore)
+    return DSLParser.parseSchema(finalText);
+  }
 }
 
 // Extend DSLParser with schema-specific methods
@@ -30,48 +39,201 @@ Object.assign(DSLParser, {
    * @returns {Object} Parsed schema structure
    */
   parseSchemaStructure(dslText, expressions = []) {
-    // Split into lines and filter out empty/comment lines
-    const lines = dslText
+    // Substitute expressions first
+    const processedText = this._substituteExpressions(dslText, expressions);
+    
+    // Parse modern syntax: entity EntityName { ... }
+    return this._parseModernSyntax(processedText);
+  },
+
+  /**
+   * Parse modern entity syntax: entity Person { name: string required }
+   * @private
+   */
+  _parseModernSyntax(dslText) {
+    const entities = {};
+    const relationships = {};
+    
+    // Match entity definitions
+    const entityRegex = /entity\s+(\w+)\s*\{([^}]+)\}/gi;
+    let entityMatch;
+    
+    while ((entityMatch = entityRegex.exec(dslText)) !== null) {
+      const entityName = entityMatch[1];
+      const entityBody = entityMatch[2].trim();
+      
+      // Parse attributes within the entity
+      const attributes = this._parseEntityAttributes(entityName, entityBody);
+      entities[entityName] = { attributes };
+    }
+    
+    // Match relationship definitions
+    const relationshipRegex = /relationship\s+(\w+)\s*\{([^}]+)\}/gi;
+    let relMatch;
+    
+    while ((relMatch = relationshipRegex.exec(dslText)) !== null) {
+      const relationshipName = relMatch[1];
+      const relationshipBody = relMatch[2].trim();
+      
+      // Parse relationship definition
+      const relationship = this._parseRelationshipDefinition(relationshipName, relationshipBody);
+      relationships[relationshipName] = relationship;
+    }
+    
+    return { 
+      entities, 
+      relationships,
+      definitions: this._convertToDefinitionsFormat(entities, relationships)
+    };
+  },
+
+  /**
+   * Parse attributes within an entity definition
+   * @private
+   */
+  _parseEntityAttributes(entityName, entityBody) {
+    const attributes = {};
+    
+    // Split by lines and parse each attribute
+    const lines = entityBody
       .split('\n')
       .map(line => line.trim())
       .filter(line => line && !line.startsWith('//'));
     
-    const definitions = [];
-    const seenAttributes = new Set();
-    
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      
+    for (const line of lines) {
       try {
-        // Substitute expressions if any
-        const processedLine = this._substituteExpressions(line, expressions);
-        
-        // Parse the schema line
-        const parsed = this.parseSchemaLine(processedLine);
-        
-        // Check for duplicates
-        const fullAttribute = `${parsed.entity}/${parsed.attribute}`;
-        if (seenAttributes.has(fullAttribute)) {
-          throw new Error(`Duplicate attribute definition: ${parsed.entity}/${parsed.attribute}`);
+        const attribute = this._parseAttributeLine(entityName, line);
+        if (attribute) {
+          attributes[attribute.name] = {
+            type: attribute.type,
+            required: attribute.required || false,
+            unique: attribute.unique || false,
+            multiple: attribute.multiple || false,
+            component: attribute.component || false,
+            referenceTarget: attribute.referenceTarget
+          };
         }
-        seenAttributes.add(fullAttribute);
-        
-        definitions.push(parsed);
-        
       } catch (error) {
-        // Enhance error with line information
-        const enhancedError = this.createError(
-          error.message,
-          dslText,
-          dslText.indexOf(line),
-          dslText.indexOf(line) + line.length
-        );
-        enhancedError.line = i + 1;
-        throw enhancedError;
+        throw new Error(`Error parsing attribute in entity ${entityName}: ${error.message}`);
       }
     }
     
-    return { definitions };
+    return attributes;
+  },
+
+  /**
+   * Parse single attribute line: name: string required
+   * @private
+   */
+  _parseAttributeLine(entityName, line) {
+    // Match pattern: attributeName: type [modifiers]
+    const colonIndex = line.indexOf(':');
+    if (colonIndex === -1) {
+      return null; // Skip lines without colons
+    }
+    
+    const attributeName = line.slice(0, colonIndex).trim();
+    const definitionPart = line.slice(colonIndex + 1).trim();
+    
+    if (!attributeName) {
+      throw new Error(`Missing attribute name in: ${line}`);
+    }
+    
+    // Parse type and modifiers
+    const tokens = definitionPart.split(/\s+/).filter(t => t);
+    if (tokens.length === 0) {
+      throw new Error(`Missing type for attribute ${attributeName}`);
+    }
+    
+    let type = tokens[0];
+    const modifiers = tokens.slice(1);
+    let referenceTarget = null;
+    
+    // Handle optional syntax: string?
+    if (type.endsWith('?')) {
+      type = type.slice(0, -1);
+      // Optional is the default, so we don't need to track this
+    }
+    
+    // Handle reference types
+    if (type === 'ref' || type.startsWith('ref<') || type.includes('->')) {
+      // Handle ref -> Target or ref<Target> syntax
+      if (type.includes('->')) {
+        const parts = definitionPart.split('->');
+        type = 'ref';
+        referenceTarget = parts[1].trim();
+      } else if (type.startsWith('ref<') && type.endsWith('>')) {
+        referenceTarget = type.slice(4, -1);
+        type = 'ref';
+      }
+    }
+    
+    return {
+      name: attributeName,
+      type: type,
+      required: modifiers.includes('required'),
+      unique: modifiers.includes('unique'),
+      multiple: modifiers.includes('multiple') || modifiers.includes('many'),
+      component: modifiers.includes('component'),
+      referenceTarget: referenceTarget
+    };
+  },
+
+  /**
+   * Parse relationship definition
+   * @private
+   */
+  _parseRelationshipDefinition(relationshipName, relationshipBody) {
+    const lines = relationshipBody
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line && !line.startsWith('//'));
+    
+    const relationship = { name: relationshipName };
+    
+    for (const line of lines) {
+      const colonIndex = line.indexOf(':');
+      if (colonIndex === -1) continue;
+      
+      const key = line.slice(0, colonIndex).trim();
+      const value = line.slice(colonIndex + 1).trim();
+      
+      if (key === 'from' || key === 'to') {
+        relationship[key] = value;
+      }
+    }
+    
+    return relationship;
+  },
+
+  /**
+   * Convert modern syntax to old definitions format for compatibility
+   * @private
+   */
+  _convertToDefinitionsFormat(entities, relationships) {
+    const definitions = [];
+    
+    // Convert entities to definitions
+    for (const [entityName, entityDef] of Object.entries(entities)) {
+      for (const [attributeName, attributeDef] of Object.entries(entityDef.attributes)) {
+        const constraints = [];
+        
+        if (attributeDef.required) constraints.push('required');
+        if (attributeDef.unique) constraints.push('unique', 'value');
+        if (attributeDef.multiple) constraints.push('many');
+        if (attributeDef.component) constraints.push('component');
+        
+        definitions.push({
+          entity: entityName,
+          attribute: attributeName,
+          type: attributeDef.type,
+          constraints: constraints,
+          referenceTarget: attributeDef.referenceTarget
+        });
+      }
+    }
+    
+    return definitions;
   },
 
   /**
@@ -90,7 +252,9 @@ Object.assign(DSLParser, {
     // Return generic format - Handles will translate as needed
     return {
       type: 'schema',
-      definitions: parsed.definitions,
+      entities: parsed.entities || {},
+      relationships: parsed.relationships || {},
+      definitions: parsed.definitions || [],
       // Original text for Handles that want to do their own parsing
       originalDSL: processedText
     };
@@ -343,7 +507,24 @@ Object.assign(DSLParser, {
     let substituted = text;
     expressions.forEach((expr, index) => {
       const placeholder = `\${${index}}`;
-      const value = typeof expr === 'string' ? expr : String(expr);
+      let value;
+      
+      if (typeof expr === 'string') {
+        value = expr;
+      } else if (typeof expr === 'number') {
+        value = String(expr);
+      } else if (typeof expr === 'boolean') {
+        value = String(expr);
+      } else if (expr === null || expr === undefined) {
+        value = 'null';
+      } else if (expr instanceof Date) {
+        // Preserve Date objects as-is by using a special marker
+        value = `__DATE_OBJECT_${index}__`;
+      } else {
+        // For other objects and arrays, convert to string representation
+        value = JSON.stringify(expr);
+      }
+      
       substituted = substituted.replace(placeholder, value);
     });
     

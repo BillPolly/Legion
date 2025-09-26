@@ -1,7 +1,7 @@
 {
   "name": "@legion/handle-dsl",
   "version": "1.0.0",
-  "description": "Universal template literal DSL for Handle operations",
+  "description": "Template literal DSL for Handle-based reactive data management",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -13,11 +13,13 @@
   },
   "keywords": [
     "dsl",
-    "handle",
-    "template-literals",
+    "template-literals", 
+    "datalog",
+    "reactive",
+    "datascript",
     "query",
-    "update",
-    "universal"
+    "schema"
   ],
+  "author": "DataScript JS Contributors",
   "license": "MIT"
 }

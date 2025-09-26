@@ -1,5 +1,5 @@
 /**
- * Jest configuration for @legion/data-store-dsl package
+ * Jest configuration for @legion/handle-dsl package
  */
 
 export default {
@@ -22,7 +22,7 @@ export default {
   
   // Module name mapping for workspace dependencies
   moduleNameMapper: {
-    '^@legion/data-store$': '<rootDir>/../data-store/src/store.js'
+    '^@legion/handle$': '<rootDir>/../handle/src/index.js'
   },
   
   // Test file patterns

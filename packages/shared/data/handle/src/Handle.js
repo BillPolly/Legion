@@ -19,17 +19,17 @@
  */
 
 import { Actor } from '@legion/actors';
-import { validateResourceManagerInterface } from './ResourceManager.js';
+import { validateDataSourceInterface } from './DataSource.js';
 
 export class Handle extends Actor {
-  constructor(resourceManager) {
+  constructor(dataSource) {
     super();
     
-    // Validate resource manager using standard validation function
-    validateResourceManagerInterface(resourceManager, 'ResourceManager');
+    // Validate data source using standard validation function
+    validateDataSourceInterface(dataSource, 'DataSource');
     
-    // Store reference to resource manager (conceptual placeholder delegates to this)
-    this.resourceManager = resourceManager;
+    // Store reference to data source (conceptual placeholder delegates to this)
+    this.dataSource = dataSource;
     
     // Track subscriptions for cleanup (synchronous tracking)
     this._subscriptions = new Set();
@@ -40,13 +40,13 @@ export class Handle extends Actor {
     // Initialize prototype factory for introspection if schema available
     this._prototypeFactory = null;
     try {
-      const schema = this.resourceManager.getSchema();
+      const schema = this.dataSource.getSchema();
       if (schema) {
         // Will be set by subclasses that need prototype manufacturing
         this._enablePrototypeFactory(schema);
       }
     } catch (error) {
-      // Schema not available or resource manager doesn't support it - continue without prototypes
+      // Schema not available or data source doesn't support it - continue without prototypes
     }
   }
   
@@ -116,8 +116,8 @@ export class Handle extends Actor {
       throw new Error('Callback function is required');
     }
     
-    // Create subscription through resource manager (synchronous dispatch)
-    const resourceSubscription = this.resourceManager.subscribe(querySpec, callback);
+    // Create subscription through data source (synchronous dispatch)
+    const resourceSubscription = this.dataSource.subscribe(querySpec, callback);
     
     // Create tracking wrapper for cleanup (synchronous wrapper creation)
     const trackingWrapper = {
@@ -168,7 +168,7 @@ export class Handle extends Actor {
     if (this._prototypeFactory && this.entityId !== undefined) {
       try {
         // Try to get entity type and introspection info
-        const entityData = this.resourceManager.query({
+        const entityData = this.dataSource.query({
           find: ['?attr', '?value'],
           where: [[this.entityId, '?attr', '?value']]
         });
@@ -182,7 +182,7 @@ export class Handle extends Actor {
           const detectedType = this._prototypeFactory.detectEntityType(entity);
           if (detectedType) {
             const prototype = this._prototypeFactory.getEntityPrototype(detectedType);
-            const instance = new prototype(this.resourceManager, this.entityId);
+            const instance = new prototype(this.dataSource, this.entityId);
             
             info.entityType = detectedType;
             info.availableAttributes = instance.getAvailableAttributes ? instance.getAvailableAttributes() : [];
@@ -270,11 +270,7 @@ export class Handle extends Actor {
    * @protected
    */
   _validateQuerySpec(querySpec, context = 'Query specification') {
-    if (!querySpec) {
-      throw new Error(`${context} is required`);
-    }
-    
-    if (typeof querySpec !== 'object') {
+    if (!querySpec || typeof querySpec !== 'object') {
       throw new Error(`${context} must be an object`);
     }
     
@@ -309,8 +305,8 @@ export class Handle extends Actor {
       throw new Error('Where predicate function is required');
     }
     
-    // Delegate to ResourceManager's query builder for universal handling
-    return this.resourceManager.queryBuilder(this).where(predicate);
+    // Delegate to DataSource's query builder for universal handling
+    return this.dataSource.queryBuilder(this).where(predicate);
   }
   
   /**
@@ -326,8 +322,8 @@ export class Handle extends Actor {
       throw new Error('Select mapper function is required');
     }
     
-    // Delegate to ResourceManager's query builder for universal handling
-    return this.resourceManager.queryBuilder(this).select(mapper);
+    // Delegate to DataSource's query builder for universal handling
+    return this.dataSource.queryBuilder(this).select(mapper);
   }
   
   /**
@@ -348,8 +344,8 @@ export class Handle extends Actor {
       throw new Error('Join condition is required');
     }
     
-    // Delegate to ResourceManager's query builder for universal handling
-    return this.resourceManager.queryBuilder(this).join(otherHandle, joinCondition);
+    // Delegate to DataSource's query builder for universal handling
+    return this.dataSource.queryBuilder(this).join(otherHandle, joinCondition);
   }
   
   /**
@@ -370,8 +366,8 @@ export class Handle extends Actor {
       throw new Error('OrderBy direction must be "asc" or "desc"');
     }
     
-    // Delegate to ResourceManager's query builder for universal handling
-    return this.resourceManager.queryBuilder(this).orderBy(orderBy, direction);
+    // Delegate to DataSource's query builder for universal handling
+    return this.dataSource.queryBuilder(this).orderBy(orderBy, direction);
   }
   
   /**
@@ -387,8 +383,8 @@ export class Handle extends Actor {
       throw new Error('Limit count must be a positive number');
     }
     
-    // Delegate to ResourceManager's query builder for universal handling
-    return this.resourceManager.queryBuilder(this).limit(count);
+    // Delegate to DataSource's query builder for universal handling
+    return this.dataSource.queryBuilder(this).limit(count);
   }
   
   /**
@@ -404,8 +400,8 @@ export class Handle extends Actor {
       throw new Error('Skip count must be a non-negative number');
     }
     
-    // Delegate to ResourceManager's query builder for universal handling
-    return this.resourceManager.queryBuilder(this).skip(count);
+    // Delegate to DataSource's query builder for universal handling
+    return this.dataSource.queryBuilder(this).skip(count);
   }
   
   /**
@@ -421,8 +417,8 @@ export class Handle extends Actor {
       throw new Error('GroupBy field or function is required');
     }
     
-    // Delegate to ResourceManager's query builder for universal handling
-    return this.resourceManager.queryBuilder(this).groupBy(groupBy);
+    // Delegate to DataSource's query builder for universal handling
+    return this.dataSource.queryBuilder(this).groupBy(groupBy);
   }
   
   /**
@@ -439,8 +435,8 @@ export class Handle extends Actor {
       throw new Error('Aggregate function is required');
     }
     
-    // Delegate to ResourceManager's query builder for universal handling
-    return this.resourceManager.queryBuilder(this).aggregate(aggregateFunction, field);
+    // Delegate to DataSource's query builder for universal handling
+    return this.dataSource.queryBuilder(this).aggregate(aggregateFunction, field);
   }
   
   /**
@@ -461,8 +457,8 @@ export class Handle extends Actor {
   first() {
     this._validateNotDestroyed();
     
-    // Delegate to ResourceManager's query builder for terminal operation
-    return this.resourceManager.queryBuilder(this).first();
+    // Delegate to DataSource's query builder for terminal operation
+    return this.dataSource.queryBuilder(this).first();
   }
   
   /**
@@ -473,8 +469,8 @@ export class Handle extends Actor {
   last() {
     this._validateNotDestroyed();
     
-    // Delegate to ResourceManager's query builder for terminal operation
-    return this.resourceManager.queryBuilder(this).last();
+    // Delegate to DataSource's query builder for terminal operation
+    return this.dataSource.queryBuilder(this).last();
   }
   
   /**
@@ -485,8 +481,8 @@ export class Handle extends Actor {
   count() {
     this._validateNotDestroyed();
     
-    // Delegate to ResourceManager's query builder for terminal operation
-    return this.resourceManager.queryBuilder(this).count();
+    // Delegate to DataSource's query builder for terminal operation
+    return this.dataSource.queryBuilder(this).count();
   }
   
   /**
@@ -497,7 +493,7 @@ export class Handle extends Actor {
   toArray() {
     this._validateNotDestroyed();
     
-    // Delegate to ResourceManager's query builder for terminal operation
-    return this.resourceManager.queryBuilder(this).toArray();
+    // Delegate to DataSource's query builder for terminal operation
+    return this.dataSource.queryBuilder(this).toArray();
   }
 }

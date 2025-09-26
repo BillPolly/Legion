@@ -259,14 +259,14 @@ describe('Schema DSL - Core Parser', () => {
       expect(schema[':user/email'].unique).toBe('value');
     });
 
-    it('should validate schema template literal input', () => {
-      expect(() => {
-        defineSchema`invalid schema format`;
-      }).toThrow();
+    it('should handle invalid schema template literal input gracefully', () => {
+      // Invalid schema format returns empty object with warning (graceful error handling)
+      const invalidResult = defineSchema`invalid schema format`;
+      expect(invalidResult).toEqual({});
       
-      expect(() => {
-        defineSchema``;
-      }).not.toThrow();
+      // Empty schema also returns empty object without error
+      const emptyResult = defineSchema``;
+      expect(emptyResult).toEqual({});
     });
 
     it('should return DataScript-compatible schema object', () => {

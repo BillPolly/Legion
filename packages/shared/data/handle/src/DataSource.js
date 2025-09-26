@@ -110,15 +110,15 @@ export const DataSourceInterface = {
 };
 
 /**
- * Validate that an object implements the ResourceManager interface
- * Used by Handle constructor to ensure ResourceManager contract compliance
+ * Validate that an object implements the DataSource interface
+ * Used by Handle constructor to ensure DataSource contract compliance
  * 
- * @param {Object} resourceManager - Object to validate
+ * @param {Object} dataSource - Object to validate
  * @param {string} context - Context for error messages (optional)
- * @throws {Error} If resourceManager doesn't implement required methods
+ * @throws {Error} If dataSource doesn't implement required methods
  */
-export function validateResourceManagerInterface(resourceManager, context = 'ResourceManager') {
-  if (!resourceManager || typeof resourceManager !== 'object') {
+export function validateDataSourceInterface(dataSource, context = 'DataSource') {
+  if (!dataSource || typeof dataSource !== 'object') {
     throw new Error(`${context} must be a non-null object`);
   }
   
@@ -126,7 +126,7 @@ export function validateResourceManagerInterface(resourceManager, context = 'Res
   const requiredMethods = ['query', 'subscribe', 'getSchema', 'queryBuilder'];
   
   for (const method of requiredMethods) {
-    if (typeof resourceManager[method] !== 'function') {
+    if (typeof dataSource[method] !== 'function') {
       throw new Error(`${context} must implement ${method}() method`);
     }
   }
@@ -137,14 +137,14 @@ export function validateResourceManagerInterface(resourceManager, context = 'Res
 }
 
 /**
- * Base ResourceManager implementation template
+ * Base DataSource implementation template
  * 
- * This is a template/example showing the structure of a ResourceManager implementation.
+ * This is a template/example showing the structure of a DataSource implementation.
  * Real implementations should follow this pattern but adapt to their specific data sources.
  * 
  * NOTE: This is NOT meant to be inherited from - copy and adapt the pattern.
  */
-export class ResourceManagerTemplate {
+export class DataSourceTemplate {
   constructor(dataSource, options = {}) {
     this.dataSource = dataSource;
     this.options = options;
@@ -282,25 +282,25 @@ export class ResourceManagerTemplate {
   _executeQuery(querySpec) {
     // Implement based on your data source
     // Examples: DataScript query, SQL query, API call, etc.
-    throw new Error('_executeQuery must be implemented by ResourceManager');
+    throw new Error('_executeQuery must be implemented by DataSource');
   }
   
   _registerSubscription(subscription) {
     // Register with data source for change notifications
     // Implementation depends on your data source
-    throw new Error('_registerSubscription must be implemented by ResourceManager');
+    throw new Error('_registerSubscription must be implemented by DataSource');
   }
   
   _unregisterSubscription(subscriptionId) {
     // Clean up subscription registration
     // Implementation depends on your data source
-    throw new Error('_unregisterSubscription must be implemented by ResourceManager');
+    throw new Error('_unregisterSubscription must be implemented by DataSource');
   }
   
   _executeUpdate(updateSpec) {
     // Execute update against data source
     // Return { success: boolean, changes: Array, metadata: Object }
-    throw new Error('_executeUpdate must be implemented by ResourceManager');
+    throw new Error('_executeUpdate must be implemented by DataSource');
   }
   
   _notifySubscribers(changes) {
@@ -386,22 +386,22 @@ export class ResourceManagerTemplate {
       // Terminal methods that execute the query
       first() {
         // Execute operations and return first result as appropriate Handle type
-        throw new Error('_createQueryBuilder first() must be implemented by ResourceManager');
+        throw new Error('_createQueryBuilder first() must be implemented by DataSource');
       },
       
       last() {
         // Execute operations and return last result as appropriate Handle type
-        throw new Error('_createQueryBuilder last() must be implemented by ResourceManager');
+        throw new Error('_createQueryBuilder last() must be implemented by DataSource');
       },
       
       count() {
         // Execute operations and return count
-        throw new Error('_createQueryBuilder count() must be implemented by ResourceManager');
+        throw new Error('_createQueryBuilder count() must be implemented by DataSource');
       },
       
       toArray() {
         // Execute operations and return array of results
-        throw new Error('_createQueryBuilder toArray() must be implemented by ResourceManager');
+        throw new Error('_createQueryBuilder toArray() must be implemented by DataSource');
       }
     };
     
@@ -410,9 +410,9 @@ export class ResourceManagerTemplate {
 }
 
 /**
- * Utility functions for ResourceManager implementations
+ * Utility functions for DataSource implementations
  */
-export const ResourceManagerUtils = {
+export const DataSourceUtils = {
   /**
    * Create a standardized subscription object
    */

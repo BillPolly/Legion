@@ -513,3 +513,12 @@ export const validateStandardResourceManagerInterface = (resourceManager, contex
     'query', 'subscribe', 'getSchema'
   ]);
 };
+
+/**
+ * Standard DataSource interface validation
+ */
+export const validateStandardDataSourceInterface = (dataSource, context = 'DataSource') => {
+  ValidationUtils.validateResourceManagerInterface(dataSource, context, [
+    'query', 'subscribe', 'getSchema', 'queryBuilder'
+  ]);
+};

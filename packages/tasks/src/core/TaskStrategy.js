@@ -518,9 +518,9 @@ const TaskStrategy = {
       status: this.status,
       result: this.result,
       metadata: this.metadata,
-      artifacts: Array.from(this.artifacts),
-      conversation: this.conversation,
-      children: this.children.map(c => c.toJSON())
+      artifacts: this.artifacts ? Array.from(this.artifacts) : [],
+      conversation: this.conversation || [],
+      children: (this.children || []).map(c => c.toJSON())
     };
   },
 

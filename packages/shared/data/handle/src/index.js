@@ -8,13 +8,17 @@
 // Core Handle class - universal base for all proxy types
 export { Handle } from './Handle.js';
 
-// ResourceManager interface and utilities
+// DataSource interface and utilities
 export { 
-  ResourceManagerInterface, 
-  validateResourceManagerInterface, 
-  ResourceManagerTemplate,
-  ResourceManagerUtils 
-} from './ResourceManager.js';
+  DataSourceInterface, 
+  validateDataSourceInterface, 
+  DataSourceTemplate,
+  DataSourceUtils 
+} from './DataSource.js';
+
+// Simple Object DataSource for testing and plain JS objects
+export { SimpleObjectDataSource } from './SimpleObjectDataSource.js';
+export { SimpleObjectHandle } from './SimpleObjectHandle.js';
 
 // Caching utilities with multi-level cache support
 export { CachedHandle } from './CachedHandle.js';
@@ -29,5 +33,5 @@ export {
   validateDataScriptQuery,
   validateDataScriptUpdateData,
   validateDataScriptAttributeName,
-  validateStandardResourceManagerInterface
+  validateStandardDataSourceInterface
 } from './ValidationUtils.js';
