@@ -259,6 +259,7 @@ class PathHandle extends Handle {
 
 /**
  * ResourceHandle - Handle for context resources
+ * This is a thin wrapper that delegates to the underlying resource handle
  */
 class ResourceHandle extends Handle {
   constructor(contextResourceManager, resourceName, resource) {
@@ -269,6 +270,8 @@ class ResourceHandle extends Handle {
   }
   
   value() {
+    // Return the resource handle itself, not its value
+    // The test can then call .value() on the resource if needed
     return this.resource;
   }
   

@@ -11,6 +11,9 @@
   },
   "dependencies": {
     "@legion/resource-manager": "file:../resource-manager",
+    "@legion/handle": "file:../shared/data/handle",
+    "@legion/mongodb-datasource": "file:../data-sources/mongodb",
+    "mongodb": "^6.3.0",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
@@ -19,14 +22,8 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "globals": {
-      "jest": {
-        "useESM": true
-      }
-    },
     "moduleNameMapper": {
-      "^(\\.{1,2}/.*)\\.js$": "$1",
-      "^@legion/tasks$": "<rootDir>/src/index.js"
+      "^(\\.{1,2}/.*)\\.js$": "$1"
     },
     "transform": {},
     "testMatch": [

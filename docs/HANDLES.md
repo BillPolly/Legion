@@ -302,6 +302,173 @@ const handle = new TestHandle(mockRM);
 expect(handle.query({})).toEqual([{ foo: 'bar' }]);
 ```
 
+## Context Handle Delegation Pattern
+
+The Handle pattern supports automatic delegation when handles are stored within other handles, enabling agents to use single expressions to query and update through multiple layers of handles. This is particularly powerful in ExecutionContext where heterogeneous handle types (MongoDB, files, directories, etc.) can be stored and accessed uniformly.
+
+### How Delegation Works
+
+When a handle contains another handle as a value or resource, query and update operations are automatically delegated to the nested handle's own methods:
+
+```javascript
+// PathHandle delegation (ContextHandle.js)
+query(querySpec) {
+  const value = this.value();
+  // If value is queryable (has a query method), delegate to it
+  if (value && typeof value.query === 'function') {
+    return value.query(querySpec);
+  }
+  // Otherwise apply query to value as data
+  // ...
+}
+
+// ResourceHandle delegation (ContextHandle.js)
+query(querySpec) {
+  // If resource is queryable, delegate to it
+  if (this.resource && typeof this.resource.query === 'function') {
+    return this.resource.query(querySpec);
+  }
+  // Similar for update operations
+}
+```
+
+### Single Expression Pattern
+
+Agents can drill through multiple handle layers with a single expression:
+
+```javascript
+// Store MongoDB handle in context
+const mongoDS = new MongoDBDataSource('mongodb://localhost:27017');
+context.set('resources.db', mongoDS.database('myapp'));
+
+// Later, query through multiple layers in one expression
+const activeUsers = context
+  .resource('db')                    // Get database handle
+  .collection('users')                // Get collection handle
+  .find({ active: true })            // Query through delegation
+  .toArray();                         // Execute query
+
+// Or update deep within a document
+context
+  .resource('db')
+  .collection('users')
+  .document(userId)
+  .update({ 
+    $set: { 'profile.lastLogin': new Date() } 
+  });
+```
+
+### Heterogeneous Handle Storage
+
+ExecutionContext can store and uniformly access different handle types:
+
+```javascript
+// Store various handle types
+context.set('resources.database', mongoDS.database('myapp'));
+context.set('resources.files', fileSystem.directory('/project'));
+context.set('resources.git', gitRepo.handle('/repo'));
+context.set('resources.cache', redisHandle);
+
+// Query any resource uniformly
+const dbData = context.resource('database').query({ ... });
+const files = context.resource('files').query({ pattern: '*.js' });
+const branches = context.resource('git').query({ type: 'branches' });
+
+// Delegation works regardless of handle type
+context.path('resources.database.users').query({ active: true });
+context.path('resources.files.src').query({ extension: '.ts' });
+```
+
+### Complex Delegation Chains
+
+The pattern supports arbitrary nesting depth:
+
+```javascript
+// Set up nested structure with handles at various levels
+context.set('resources.services.userDB', mongoDS.database('users'));
+context.set('resources.services.orderDB', mongoDS.database('orders'));
+
+// Query through multiple delegation levels
+const userOrders = context
+  .path('resources.services')        // Navigate to services
+  .resource('orderDB')               // Get order database handle
+  .collection('orders')               // Get collection handle
+  .find({ userId: currentUserId })   // Query delegated to MongoDB
+  .toArray();
+
+// Update through delegation chain
+context
+  .path('resources.services.userDB.users')
+  .document(userId)
+  .update({ $inc: { loginCount: 1 } });
+```
+
+### Implementation in ContextResourceManager
+
+The ContextResourceManager wraps ExecutionContext to enable this delegation:
+
+```javascript
+_queryResource(resourceName, resourceQuery) {
+  const resource = this._queryPath(resourceName);
+  
+  // Check if it's a queryable resource (has query method)
+  if (typeof resource.query === 'function') {
+    return resource.query(resourceQuery);
+  }
+  
+  // If it's a Handle, use its query method
+  if (resource.handleType && typeof resource.query === 'function') {
+    return resource.query(resourceQuery);
+  }
+  
+  throw new Error(`Resource ${resourceName} is not queryable`);
+}
+```
+
+### Benefits for Agents
+
+1. **Uniform Interface**: Agents don't need to know the specific handle type
+2. **Composability**: Complex queries can be built from simple parts
+3. **Flexibility**: New handle types automatically work with delegation
+4. **Clean Code**: Single expressions replace multi-step operations
+
+### Example: Agent Task Execution
+
+```javascript
+class Agent {
+  async executeTask(task, context) {
+    // Agent can access any resource through uniform interface
+    
+    // Get user from database
+    const user = context
+      .resource('userDB')
+      .collection('users')
+      .findOne({ email: task.userEmail });
+    
+    // Read configuration file
+    const config = context
+      .resource('files')
+      .file('config.json')
+      .read();
+    
+    // Update task status in database
+    context
+      .resource('taskDB')
+      .collection('tasks')
+      .document(task.id)
+      .update({ 
+        $set: { 
+          status: 'completed',
+          completedBy: user.id,
+          completedAt: new Date()
+        }
+      });
+    
+    // All operations use the same delegation pattern
+  }
+}
+```
+
 ## Migration Notes
 
 When migrating from old handle patterns:

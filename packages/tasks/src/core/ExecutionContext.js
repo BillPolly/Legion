@@ -36,6 +36,18 @@ export default class ExecutionContext {
         this.additionalServices[key] = value;
       }
     }
+    
+    // Data store for nested data (handles, resources, etc.)
+    this.data = services.data || {};
+    
+    // Resources store for Handle-based resources
+    this.resources = services.resources || {};
+    
+    // Artifacts store
+    this.artifacts = services.artifacts || {};
+    
+    // Metadata store
+    this.metadata = services.metadata || {};
   }
 
   /**
@@ -87,6 +99,43 @@ export default class ExecutionContext {
       this.additionalServices[name] = service;
     }
   }
+  
+  /**
+   * Set data at a nested path
+   * Supports dot notation: "resources.db", "resources.files.config"
+   */
+  set(path, value) {
+    const parts = path.split('.');
+    const lastPart = parts.pop();
+    
+    let current = this;
+    for (const part of parts) {
+      if (!current[part] || typeof current[part] !== 'object') {
+        current[part] = {};
+      }
+      current = current[part];
+    }
+    
+    current[lastPart] = value;
+  }
+  
+  /**
+   * Get data at a nested path
+   * Supports dot notation: "resources.db", "resources.files.config"
+   */
+  get(path) {
+    const parts = path.split('.');
+    let current = this;
+    
+    for (const part of parts) {
+      if (current === null || current === undefined) {
+        return undefined;
+      }
+      current = current[part];
+    }
+    
+    return current;
+  }
 
   /**
    * Create a child context with additional or overridden services
@@ -105,6 +154,10 @@ export default class ExecutionContext {
       executionTimeout: this.executionTimeout,
       agent: this.agent,
       taskManager: this.taskManager,
+      data: { ...this.data },
+      resources: { ...this.resources },
+      artifacts: { ...this.artifacts },
+      metadata: { ...this.metadata },
       ...this.additionalServices,
       // Override with new services
       ...overrides,
