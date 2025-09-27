@@ -1,0 +1,40 @@
+{
+  "name": "@legion/mongodb-datasource",
+  "version": "1.0.0",
+  "description": "MongoDB DataSource implementation for Legion framework",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./handles": "./src/handles/index.js"
+  },
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/unit",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/integration",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch"
+  },
+  "dependencies": {
+    "mongodb": "^6.0.0",
+    "deasync": "^0.1.29"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "jest": "^29.7.0",
+    "mongodb-memory-server": "^9.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.js"
+    ],
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/__tests__/"
+    ]
+  }
+}
