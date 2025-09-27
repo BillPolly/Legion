@@ -1,0 +1,74 @@
+{
+  "title": "Send notification to user",
+  "intent": "User wants to deliver a notification through appropriate channel",
+  "description": "Multi-channel notification delivery workflow",
+  "prerequisites": [
+    "User contact information available",
+    "Notification service configured"
+  ],
+  "inputs": {
+    "userId": {
+      "description": "Target user identifier",
+      "type": "string",
+      "required": true
+    },
+    "message": {
+      "description": "Notification message",
+      "type": "string",
+      "required": true
+    },
+    "channel": {
+      "description": "Delivery channel (email, sms, push)",
+      "type": "string",
+      "required": false
+    }
+  },
+  "outputs": {
+    "delivered": {
+      "description": "Delivery success flag",
+      "type": "boolean"
+    },
+    "deliveryId": {
+      "description": "Delivery tracking ID",
+      "type": "string"
+    }
+  },
+  "steps": [
+    {
+      "gloss": "Retrieve user preferences",
+      "suggestedTools": ["user-service"],
+      "doneWhen": "Preferences loaded"
+    },
+    {
+      "gloss": "Select delivery channel",
+      "doneWhen": "Channel determined"
+    },
+    {
+      "gloss": "Format message for channel",
+      "suggestedTools": ["message-formatter"],
+      "doneWhen": "Message formatted"
+    },
+    {
+      "gloss": "Send via notification service",
+      "suggestedTools": ["notification-api"],
+      "doneWhen": "Notification sent"
+    },
+    {
+      "gloss": "Log delivery status",
+      "suggestedTools": ["logger"],
+      "doneWhen": "Status recorded"
+    }
+  ],
+  "toolsMentioned": [
+    "user-service",
+    "message-formatter",
+    "notification-api",
+    "logger"
+  ],
+  "tags": ["notification", "messaging", "communication"],
+  "quality": {
+    "source": "curated",
+    "rating": 86,
+    "updated": "2025-09-27"
+  }
+}

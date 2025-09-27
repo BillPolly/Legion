@@ -1,0 +1,25 @@
+{
+  "name": "@legion/sop-registry",
+  "version": "1.0.0",
+  "description": "MongoDB-backed semantic knowledge base for Standard Operating Procedures",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand",
+    "status": "node scripts/status.js",
+    "status:verbose": "node scripts/status.js --verbose",
+    "load": "node scripts/load-sops.js",
+    "perspectives": "node scripts/generate-perspectives.js",
+    "perspectives:force": "node scripts/generate-perspectives.js --force",
+    "search": "node scripts/search-sops.js"
+  },
+  "dependencies": {
+    "@legion/resource-manager": "workspace:*",
+    "@legion/nomic": "workspace:*",
+    "@legion/llm-client": "workspace:*",
+    "mongodb": "^6.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  }
+}

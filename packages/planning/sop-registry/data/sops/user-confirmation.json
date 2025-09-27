@@ -1,0 +1,53 @@
+{
+  "title": "Get user confirmation for action",
+  "intent": "User needs to explicitly approve before proceeding with action",
+  "description": "Interactive confirmation workflow ensuring user consent",
+  "prerequisites": [
+    "User is available to respond",
+    "Action details are clear"
+  ],
+  "inputs": {
+    "action": {
+      "description": "Action requiring confirmation",
+      "type": "string",
+      "required": true
+    },
+    "consequences": {
+      "description": "Impact of the action",
+      "type": "string",
+      "required": false
+    }
+  },
+  "outputs": {
+    "confirmed": {
+      "description": "User confirmation result",
+      "type": "boolean"
+    }
+  },
+  "steps": [
+    {
+      "gloss": "Present action details to user",
+      "suggestedTools": ["ui-display"],
+      "doneWhen": "Details presented"
+    },
+    {
+      "gloss": "Wait for user response",
+      "suggestedTools": ["user-input"],
+      "doneWhen": "Response received"
+    },
+    {
+      "gloss": "Validate and return confirmation",
+      "doneWhen": "Confirmation processed"
+    }
+  ],
+  "toolsMentioned": [
+    "ui-display",
+    "user-input"
+  ],
+  "tags": ["user-interaction", "confirmation", "ux"],
+  "quality": {
+    "source": "curated",
+    "rating": 90,
+    "updated": "2025-09-27"
+  }
+}

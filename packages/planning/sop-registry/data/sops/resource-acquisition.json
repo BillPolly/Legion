@@ -1,0 +1,63 @@
+{
+  "title": "Acquire and release external resource",
+  "intent": "User wants to safely acquire, use, and release an external resource",
+  "description": "Resource management pattern with proper cleanup",
+  "prerequisites": [
+    "Resource is available",
+    "Access credentials configured"
+  ],
+  "inputs": {
+    "resourceId": {
+      "description": "Resource identifier",
+      "type": "string",
+      "required": true
+    },
+    "timeout": {
+      "description": "Acquisition timeout",
+      "type": "number",
+      "required": false
+    }
+  },
+  "outputs": {
+    "resource": {
+      "description": "Acquired resource handle",
+      "type": "object"
+    }
+  },
+  "steps": [
+    {
+      "gloss": "Check resource availability",
+      "suggestedTools": ["resource-manager"],
+      "doneWhen": "Availability confirmed"
+    },
+    {
+      "gloss": "Acquire resource lock",
+      "suggestedTools": ["lock-service"],
+      "doneWhen": "Lock obtained"
+    },
+    {
+      "gloss": "Initialize resource",
+      "suggestedTools": ["resource-manager"],
+      "doneWhen": "Resource ready"
+    },
+    {
+      "gloss": "Use resource",
+      "doneWhen": "Operations complete"
+    },
+    {
+      "gloss": "Release resource and cleanup",
+      "suggestedTools": ["resource-manager"],
+      "doneWhen": "Resource released"
+    }
+  ],
+  "toolsMentioned": [
+    "resource-manager",
+    "lock-service"
+  ],
+  "tags": ["resource-management", "lifecycle", "cleanup"],
+  "quality": {
+    "source": "curated",
+    "rating": 89,
+    "updated": "2025-09-27"
+  }
+}

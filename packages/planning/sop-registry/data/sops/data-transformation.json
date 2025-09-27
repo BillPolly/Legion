@@ -1,0 +1,59 @@
+{
+  "title": "Transform JSON to CSV format",
+  "intent": "User wants to convert JSON data to CSV spreadsheet format",
+  "description": "Data transformation workflow for JSON to CSV conversion",
+  "prerequisites": [
+    "JSON data is well-formed",
+    "Output format specified"
+  ],
+  "inputs": {
+    "jsonData": {
+      "description": "Input JSON array of objects",
+      "type": "array",
+      "required": true
+    },
+    "columns": {
+      "description": "Column mapping specification",
+      "type": "array",
+      "required": false
+    }
+  },
+  "outputs": {
+    "csvData": {
+      "description": "Formatted CSV string",
+      "type": "string"
+    }
+  },
+  "steps": [
+    {
+      "gloss": "Validate JSON structure",
+      "suggestedTools": ["json-validator"],
+      "doneWhen": "JSON validated"
+    },
+    {
+      "gloss": "Extract column headers",
+      "doneWhen": "Headers identified"
+    },
+    {
+      "gloss": "Map JSON fields to CSV columns",
+      "suggestedTools": ["data-mapper"],
+      "doneWhen": "Mapping complete"
+    },
+    {
+      "gloss": "Generate CSV output",
+      "suggestedTools": ["csv-generator"],
+      "doneWhen": "CSV formatted"
+    }
+  ],
+  "toolsMentioned": [
+    "json-validator",
+    "data-mapper",
+    "csv-generator"
+  ],
+  "tags": ["data", "transformation", "format-conversion"],
+  "quality": {
+    "source": "curated",
+    "rating": 85,
+    "updated": "2025-09-27"
+  }
+}

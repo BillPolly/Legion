@@ -1,0 +1,56 @@
+{
+  "title": "Execute conditional branch based on data",
+  "intent": "User wants to choose execution path based on runtime conditions",
+  "description": "Conditional execution pattern with multiple branches",
+  "prerequisites": [
+    "Condition data available",
+    "Branch handlers defined"
+  ],
+  "inputs": {
+    "condition": {
+      "description": "Boolean or enumerated condition",
+      "type": "any",
+      "required": true
+    },
+    "branches": {
+      "description": "Map of condition values to handlers",
+      "type": "object",
+      "required": true
+    }
+  },
+  "outputs": {
+    "result": {
+      "description": "Result from executed branch",
+      "type": "any"
+    },
+    "branchTaken": {
+      "description": "Which branch was executed",
+      "type": "string"
+    }
+  },
+  "steps": [
+    {
+      "gloss": "Evaluate condition",
+      "doneWhen": "Condition value determined"
+    },
+    {
+      "gloss": "Select matching branch",
+      "doneWhen": "Branch handler identified"
+    },
+    {
+      "gloss": "Execute branch logic",
+      "doneWhen": "Branch completed"
+    },
+    {
+      "gloss": "Return branch result",
+      "doneWhen": "Result returned"
+    }
+  ],
+  "toolsMentioned": [],
+  "tags": ["control-flow", "conditional", "branching"],
+  "quality": {
+    "source": "curated",
+    "rating": 80,
+    "updated": "2025-09-27"
+  }
+}

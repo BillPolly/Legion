@@ -1,0 +1,68 @@
+{
+  "title": "Write data to file",
+  "intent": "User wants to persist data to a file on disk",
+  "description": "Workflow for writing structured data to a file with error handling",
+  "prerequisites": [
+    "Write permissions for target directory",
+    "Data is properly formatted"
+  ],
+  "inputs": {
+    "filePath": {
+      "description": "Target file path",
+      "type": "string",
+      "required": true
+    },
+    "data": {
+      "description": "Data to write",
+      "type": "any",
+      "required": true
+    },
+    "format": {
+      "description": "Output format (json, text, csv)",
+      "type": "string",
+      "required": false
+    }
+  },
+  "outputs": {
+    "success": {
+      "description": "Write operation success flag",
+      "type": "boolean"
+    },
+    "bytesWritten": {
+      "description": "Number of bytes written",
+      "type": "number"
+    }
+  },
+  "steps": [
+    {
+      "gloss": "Validate file path and permissions",
+      "suggestedTools": ["path-validator"],
+      "doneWhen": "Path validated and writable"
+    },
+    {
+      "gloss": "Format data for output",
+      "suggestedTools": ["data-formatter"],
+      "doneWhen": "Data formatted correctly"
+    },
+    {
+      "gloss": "Write to file",
+      "suggestedTools": ["file-write"],
+      "doneWhen": "Data written successfully"
+    },
+    {
+      "gloss": "Verify write completion",
+      "doneWhen": "File exists and size correct"
+    }
+  ],
+  "toolsMentioned": [
+    "path-validator",
+    "data-formatter",
+    "file-write"
+  ],
+  "tags": ["files", "io", "persistence"],
+  "quality": {
+    "source": "curated",
+    "rating": 88,
+    "updated": "2025-09-27"
+  }
+}

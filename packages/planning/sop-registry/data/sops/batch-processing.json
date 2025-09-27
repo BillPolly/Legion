@@ -1,0 +1,61 @@
+{
+  "title": "Process array of items in batches",
+  "intent": "User wants to process large array efficiently in smaller batches",
+  "description": "Batch processing pattern for handling large datasets",
+  "prerequisites": [
+    "Array of items available",
+    "Processing function defined"
+  ],
+  "inputs": {
+    "items": {
+      "description": "Array of items to process",
+      "type": "array",
+      "required": true
+    },
+    "batchSize": {
+      "description": "Items per batch",
+      "type": "number",
+      "required": true
+    },
+    "processor": {
+      "description": "Function to process each batch",
+      "type": "function",
+      "required": true
+    }
+  },
+  "outputs": {
+    "results": {
+      "description": "Aggregated results from all batches",
+      "type": "array"
+    },
+    "successCount": {
+      "description": "Number of successful items",
+      "type": "number"
+    }
+  },
+  "steps": [
+    {
+      "gloss": "Split array into batches",
+      "doneWhen": "Batches created"
+    },
+    {
+      "gloss": "Process each batch",
+      "doneWhen": "All batches processed"
+    },
+    {
+      "gloss": "Aggregate results",
+      "doneWhen": "Results combined"
+    },
+    {
+      "gloss": "Handle any errors",
+      "doneWhen": "Errors reported"
+    }
+  ],
+  "toolsMentioned": [],
+  "tags": ["batch", "iteration", "performance"],
+  "quality": {
+    "source": "curated",
+    "rating": 83,
+    "updated": "2025-09-27"
+  }
+}

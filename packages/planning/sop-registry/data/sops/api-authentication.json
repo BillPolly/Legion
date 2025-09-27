@@ -1,0 +1,69 @@
+{
+  "title": "Authenticate with OAuth2 service",
+  "intent": "User wants to obtain OAuth2 access token for API access",
+  "description": "OAuth2 authentication flow for service-to-service communication",
+  "prerequisites": [
+    "Client ID and secret configured",
+    "Token endpoint accessible",
+    "Valid credentials"
+  ],
+  "inputs": {
+    "clientId": {
+      "description": "OAuth2 client identifier",
+      "type": "string",
+      "required": true
+    },
+    "clientSecret": {
+      "description": "OAuth2 client secret",
+      "type": "string",
+      "required": true
+    },
+    "scope": {
+      "description": "Requested scopes",
+      "type": "array",
+      "required": false
+    }
+  },
+  "outputs": {
+    "accessToken": {
+      "description": "OAuth2 access token",
+      "type": "string"
+    },
+    "expiresIn": {
+      "description": "Token lifetime in seconds",
+      "type": "number"
+    }
+  },
+  "steps": [
+    {
+      "gloss": "Retrieve client credentials from secure storage",
+      "suggestedTools": ["credential-vault"],
+      "doneWhen": "Credentials retrieved"
+    },
+    {
+      "gloss": "Build token request",
+      "doneWhen": "Request payload assembled"
+    },
+    {
+      "gloss": "Call token endpoint",
+      "suggestedTools": ["http-client"],
+      "doneWhen": "Token response received"
+    },
+    {
+      "gloss": "Validate and store token",
+      "suggestedTools": ["token-validator"],
+      "doneWhen": "Token validated and cached"
+    }
+  ],
+  "toolsMentioned": [
+    "credential-vault",
+    "http-client",
+    "token-validator"
+  ],
+  "tags": ["authentication", "oauth2", "api", "security"],
+  "quality": {
+    "source": "curated",
+    "rating": 92,
+    "updated": "2025-09-27"
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "title": "Call external API with authentication",
+  "intent": "User wants to call an external API with proper authentication",
+  "description": "Workflow for authenticating and calling external REST APIs",
+  "prerequisites": [
+    "API credentials are available",
+    "API endpoint is accessible",
+    "Network connectivity exists"
+  ],
+  "inputs": {
+    "apiUrl": {
+      "description": "API endpoint URL",
+      "type": "string",
+      "required": true
+    },
+    "credentials": {
+      "description": "Authentication credentials",
+      "type": "object",
+      "required": true
+    },
+    "payload": {
+      "description": "Request payload",
+      "type": "object",
+      "required": false
+    }
+  },
+  "outputs": {
+    "response": {
+      "description": "API response data",
+      "type": "object"
+    },
+    "status": {
+      "description": "HTTP status code",
+      "type": "number"
+    }
+  },
+  "steps": [
+    {
+      "gloss": "Retrieve API credentials",
+      "suggestedTools": ["credential-manager"],
+      "doneWhen": "Credentials obtained"
+    },
+    {
+      "gloss": "Generate authentication token",
+      "suggestedTools": ["auth-service"],
+      "doneWhen": "Token generated"
+    },
+    {
+      "gloss": "Make API request",
+      "suggestedTools": ["http-client"],
+      "doneWhen": "Request sent"
+    },
+    {
+      "gloss": "Validate response",
+      "doneWhen": "Response validated"
+    },
+    {
+      "gloss": "Return formatted data",
+      "doneWhen": "Data formatted and returned"
+    }
+  ],
+  "toolsMentioned": [
+    "credential-manager",
+    "auth-service",
+    "http-client"
+  ],
+  "tags": ["api", "integration", "authentication"],
+  "quality": {
+    "source": "curated",
+    "rating": 90,
+    "updated": "2025-09-27"
+  }
+}
