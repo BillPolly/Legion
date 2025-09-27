@@ -29,7 +29,12 @@
     "@legion/tools": "file:../../tools",
     "@legion/tasks": "file:../../tasks",
     "@legion/handle": "file:../../shared/data/handle",
-    "@legion/handle-dsl": "file:../../shared/data/handle-dsl"
+    "@legion/handle-dsl": "file:../../shared/data/handle-dsl",
+    "@legion/sop-registry": "file:../../planning/sop-registry",
+    "@legion/goal-planner": "file:../../planning/goal-planner",
+    "@legion/prompt-manager": "file:../../prompting/prompt-manager",
+    "@legion/tools-registry": "file:../../tools-registry",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "jest": "^29.7.0"
