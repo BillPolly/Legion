@@ -1,0 +1,63 @@
+{
+  "title": "Retry failed operation with exponential backoff",
+  "intent": "User wants to retry a failed operation with increasing delays",
+  "description": "Error recovery pattern using exponential backoff strategy",
+  "prerequisites": [
+    "Operation can be retried safely",
+    "Maximum retry count defined"
+  ],
+  "inputs": {
+    "operation": {
+      "description": "Function to retry",
+      "type": "function",
+      "required": true
+    },
+    "maxRetries": {
+      "description": "Maximum retry attempts",
+      "type": "number",
+      "required": true
+    }
+  },
+  "outputs": {
+    "result": {
+      "description": "Operation result if successful",
+      "type": "any"
+    },
+    "attempts": {
+      "description": "Number of attempts made",
+      "type": "number"
+    }
+  },
+  "steps": [
+    {
+      "gloss": "Attempt operation",
+      "doneWhen": "Operation executed"
+    },
+    {
+      "gloss": "Check for errors",
+      "doneWhen": "Error status determined"
+    },
+    {
+      "gloss": "Calculate backoff delay",
+      "doneWhen": "Delay computed"
+    },
+    {
+      "gloss": "Wait before retry",
+      "suggestedTools": ["delay-service"],
+      "doneWhen": "Delay elapsed"
+    },
+    {
+      "gloss": "Retry operation or fail",
+      "doneWhen": "Success or max retries reached"
+    }
+  ],
+  "toolsMentioned": [
+    "delay-service"
+  ],
+  "tags": ["error-handling", "retry", "resilience"],
+  "quality": {
+    "source": "curated",
+    "rating": 87,
+    "updated": "2025-09-27"
+  }
+}

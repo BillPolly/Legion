@@ -1,0 +1,52 @@
+{
+  "title": "Read and process file",
+  "intent": "User wants to read file contents and process the data",
+  "description": "Simple workflow for reading a file and extracting information",
+  "prerequisites": [
+    "File path is known",
+    "File exists and is readable"
+  ],
+  "inputs": {
+    "filePath": {
+      "description": "Path to the file",
+      "type": "string",
+      "required": true
+    }
+  },
+  "outputs": {
+    "content": {
+      "description": "File contents",
+      "type": "string"
+    },
+    "metadata": {
+      "description": "File metadata",
+      "type": "object"
+    }
+  },
+  "steps": [
+    {
+      "gloss": "Verify file exists",
+      "suggestedTools": ["file-exists-check"],
+      "doneWhen": "File existence confirmed"
+    },
+    {
+      "gloss": "Read file contents",
+      "suggestedTools": ["file-read"],
+      "doneWhen": "Contents retrieved"
+    },
+    {
+      "gloss": "Process and return data",
+      "doneWhen": "Data processed and formatted"
+    }
+  ],
+  "toolsMentioned": [
+    "file-exists-check",
+    "file-read"
+  ],
+  "tags": ["files", "io"],
+  "quality": {
+    "source": "curated",
+    "rating": 85,
+    "updated": "2025-09-27"
+  }
+}

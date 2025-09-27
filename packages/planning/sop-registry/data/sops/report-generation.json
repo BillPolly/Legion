@@ -1,0 +1,73 @@
+{
+  "title": "Generate formatted report from data",
+  "intent": "User wants to create a formatted report document from raw data",
+  "description": "Report generation workflow with templating and formatting",
+  "prerequisites": [
+    "Data is collected and validated",
+    "Report template exists"
+  ],
+  "inputs": {
+    "data": {
+      "description": "Report data",
+      "type": "object",
+      "required": true
+    },
+    "template": {
+      "description": "Report template name",
+      "type": "string",
+      "required": true
+    },
+    "format": {
+      "description": "Output format (pdf, html, markdown)",
+      "type": "string",
+      "required": false
+    }
+  },
+  "outputs": {
+    "report": {
+      "description": "Generated report document",
+      "type": "string"
+    },
+    "metadata": {
+      "description": "Report metadata",
+      "type": "object"
+    }
+  },
+  "steps": [
+    {
+      "gloss": "Load report template",
+      "suggestedTools": ["template-engine"],
+      "doneWhen": "Template loaded"
+    },
+    {
+      "gloss": "Populate template with data",
+      "suggestedTools": ["template-engine"],
+      "doneWhen": "Data merged"
+    },
+    {
+      "gloss": "Apply formatting rules",
+      "suggestedTools": ["formatter"],
+      "doneWhen": "Format applied"
+    },
+    {
+      "gloss": "Generate output document",
+      "suggestedTools": ["document-generator"],
+      "doneWhen": "Document created"
+    },
+    {
+      "gloss": "Add metadata and finalize",
+      "doneWhen": "Report complete"
+    }
+  ],
+  "toolsMentioned": [
+    "template-engine",
+    "formatter",
+    "document-generator"
+  ],
+  "tags": ["reporting", "document-generation", "formatting"],
+  "quality": {
+    "source": "curated",
+    "rating": 84,
+    "updated": "2025-09-27"
+  }
+}

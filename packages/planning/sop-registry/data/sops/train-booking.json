@@ -1,0 +1,72 @@
+{
+  "title": "Book a train ticket",
+  "intent": "User wants to find and purchase a train ticket for travel",
+  "description": "Complete workflow for searching, selecting, and booking train tickets",
+  "prerequisites": [
+    "User has payment method configured",
+    "Train booking API access is available",
+    "User knows origin and destination"
+  ],
+  "inputs": {
+    "origin": {
+      "description": "Starting location",
+      "type": "location",
+      "required": true
+    },
+    "destination": {
+      "description": "Ending location",
+      "type": "location",
+      "required": true
+    },
+    "travelDate": {
+      "description": "Date of travel",
+      "type": "date",
+      "required": true
+    }
+  },
+  "outputs": {
+    "booking": {
+      "description": "Confirmed train booking",
+      "type": "object"
+    },
+    "confirmation": {
+      "description": "Booking confirmation code",
+      "type": "string"
+    }
+  },
+  "steps": [
+    {
+      "gloss": "Gather travel date from user",
+      "doneWhen": "User has provided valid date"
+    },
+    {
+      "gloss": "Search for available trains",
+      "suggestedTools": ["train-search-api"],
+      "doneWhen": "Train options retrieved and presented"
+    },
+    {
+      "gloss": "Present train options to user",
+      "doneWhen": "User has reviewed options"
+    },
+    {
+      "gloss": "Confirm user selection",
+      "doneWhen": "User has selected a train"
+    },
+    {
+      "gloss": "Execute booking",
+      "suggestedTools": ["train-booking-api", "payment-service"],
+      "doneWhen": "Booking confirmed and confirmation code received"
+    }
+  ],
+  "toolsMentioned": [
+    "train-search-api",
+    "train-booking-api",
+    "payment-service"
+  ],
+  "tags": ["travel", "booking", "commerce"],
+  "quality": {
+    "source": "curated",
+    "rating": 95,
+    "updated": "2025-09-27"
+  }
+}
