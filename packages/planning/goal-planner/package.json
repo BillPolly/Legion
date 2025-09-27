@@ -1,0 +1,20 @@
+{
+  "name": "@legion/goal-planner",
+  "version": "1.0.0",
+  "description": "Goal to subgoal planning with SOP-based and vanilla decomposition",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand"
+  },
+  "dependencies": {
+    "@legion/resource-manager": "workspace:*",
+    "@legion/sop-registry": "workspace:*",
+    "@legion/tools-registry": "workspace:*",
+    "@legion/llm-client": "workspace:*",
+    "@legion/prompt-manager": "workspace:*"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  }
+}
