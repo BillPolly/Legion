@@ -3,7 +3,7 @@
  * 
  * Extracted from data-proxy implementations to provide consistent validation
  * patterns across all Handle types. These utilities are resource-agnostic and 
- * work with any ResourceManager implementation.
+ * work with any DataSource implementation.
  * 
  * CRITICAL: All validation is synchronous - NO await, NO promises!
  */
@@ -235,26 +235,26 @@ export class ValidationUtils {
   }
   
   /**
-   * Validate ResourceManager interface compliance
+   * Validate DataSource interface compliance
    * CRITICAL: Must be synchronous - no await!
    * 
-   * @param {Object} resourceManager - ResourceManager to validate
+   * @param {Object} dataSource - DataSource to validate
    * @param {string} context - Context for error messages
    * @param {Array} requiredMethods - Required methods to check
-   * @throws {Error} If ResourceManager is invalid
+   * @throws {Error} If DataSource is invalid
    */
-  static validateResourceManagerInterface(resourceManager, context = 'ResourceManager', requiredMethods = ['query', 'subscribe']) {
-    if (!resourceManager) {
-      throw new Error(`${context} is required`);
+  static validateDataSourceInterface(dataSource, context = 'DataSource', requiredMethods = ['query', 'subscribe']) {
+    if (!dataSource) {
+      throw new Error(`${context} must be a non-null object`);
     }
     
-    if (typeof resourceManager !== 'object') {
-      throw new Error(`${context} must be an object`);
+    if (typeof dataSource !== 'object') {
+      throw new Error(`${context} must be a non-null object`);
     }
     
     // Check required methods
     for (const method of requiredMethods) {
-      if (typeof resourceManager[method] !== 'function') {
+      if (typeof dataSource[method] !== 'function') {
         throw new Error(`${context} must implement ${method}() method`);
       }
     }
@@ -506,10 +506,11 @@ export const validateDataScriptAttributeName = (attributeName, context = 'Attrib
 };
 
 /**
- * Standard ResourceManager interface validation
+ * Standard DataSource interface validation (legacy name for backward compatibility)
+ * @deprecated Use validateDataSourceInterface instead
  */
-export const validateStandardResourceManagerInterface = (resourceManager, context = 'ResourceManager') => {
-  ValidationUtils.validateResourceManagerInterface(resourceManager, context, [
+export const validateStandardResourceManagerInterface = (dataSource, context = 'DataSource') => {
+  ValidationUtils.validateDataSourceInterface(dataSource, context, [
     'query', 'subscribe', 'getSchema'
   ]);
 };
@@ -518,7 +519,16 @@ export const validateStandardResourceManagerInterface = (resourceManager, contex
  * Standard DataSource interface validation
  */
 export const validateStandardDataSourceInterface = (dataSource, context = 'DataSource') => {
-  ValidationUtils.validateResourceManagerInterface(dataSource, context, [
+  ValidationUtils.validateDataSourceInterface(dataSource, context, [
+    'query', 'subscribe', 'getSchema', 'queryBuilder'
+  ]);
+};
+
+/**
+ * Export validateDataSourceInterface as a standalone function for backward compatibility
+ */
+export const validateDataSourceInterface = (dataSource, context = 'DataSource') => {
+  ValidationUtils.validateDataSourceInterface(dataSource, context, [
     'query', 'subscribe', 'getSchema', 'queryBuilder'
   ]);
 };

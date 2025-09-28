@@ -9,17 +9,17 @@
  */
 
 export class ProxyTypeDetector {
-  constructor(resourceManager) {
-    // Validate ResourceManager parameter
-    if (!resourceManager || typeof resourceManager.query !== 'function') {
-      throw new Error('ResourceManager is required');
+  constructor(dataSource) {
+    // Validate DataSource parameter
+    if (!dataSource || typeof dataSource.query !== 'function') {
+      throw new Error('DataSource is required');
     }
     
-    this.resourceManager = resourceManager;
+    this.dataSource = dataSource;
     
-    // Backward compatibility - expose store if resourceManager has it
-    if (resourceManager.dataStore) {
-      this.store = resourceManager.dataStore;
+    // Backward compatibility - expose store if dataSource has it
+    if (dataSource.dataStore) {
+      this.store = dataSource.dataStore;
     }
   }
   

@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
-import { DataStoreQueryBuilder, DataStoreResourceManager } from '../../examples/DataStoreQueryBuilder.js';
+import { DataStoreQueryBuilder, DataStoreDataSource } from '../../examples/DataStoreQueryBuilder.js';
 import { CollectionProxy } from '../../src/CollectionProxy.js';
 import { StreamProxy } from '../../src/StreamProxy.js';
 import { EntityProxy } from '../../src/EntityProxy.js';
@@ -101,7 +101,7 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
       ':project/priority': { ':db/valueType': ':db.type/string' }
     };
     
-    resourceManager = new DataStoreResourceManager(dataStore, schema);
+    resourceManager = new DataStoreDataSource(dataStore, schema);
   });
 
   describe('Query Builder Creation', () => {

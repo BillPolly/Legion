@@ -104,8 +104,8 @@ export class PrototypeFactory {
     
     // Create new prototype class that extends the Handle class
     class TypedHandle extends HandleClass {
-      constructor(resourceManager, entityId, options = {}) {
-        super(resourceManager, options);
+      constructor(dataSource, entityId, options = {}) {
+        super(dataSource, options);
         
         // Add type-specific information
         this.entityId = entityId;
@@ -277,9 +277,9 @@ export class PrototypeFactory {
       // Define getter and setter on the prototype
       Object.defineProperty(TypedHandle.prototype, propertyName, {
         get() {
-          // Query for specific attribute through ResourceManager
+          // Query for specific attribute through DataSource
           if (this.entityId !== undefined) {
-            const results = this.resourceManager.query({
+            const results = this.dataSource.query({
               find: ['?value'],
               where: [[this.entityId, attrInfo.fullName, '?value']]
             });
@@ -294,22 +294,22 @@ export class PrototypeFactory {
           return undefined;
         },
         set(value) {
-          // Update attribute through ResourceManager if it supports updates
-          if (this.entityId !== undefined && typeof this.resourceManager.update === 'function') {
+          // Update attribute through DataSource if it supports updates
+          if (this.entityId !== undefined && typeof this.dataSource.update === 'function') {
             // Validate attribute before setting
             const validation = this.validateAttribute(attrLocalName, value);
             if (!validation.valid) {
               throw new Error(`Attribute validation failed: ${validation.error}`);
             }
             
-            return this.resourceManager.update({
+            return this.dataSource.update({
               entityId: this.entityId,
               attribute: attrInfo.fullName,
               value: value
             });
           }
           
-          throw new Error('ResourceManager does not support updates or entityId not set');
+          throw new Error('DataSource does not support updates or entityId not set');
         },
         enumerable: true,
         configurable: true
@@ -452,7 +452,7 @@ export class PrototypeFactory {
     this.registerSchemaAdapter('datascript', {
       analyze: (schema) => {
         const types = new Map();
-        const relationships = new Map(); // Keep for backward compatibility but don't use
+        const relationships = new Map();
         const capabilities = new Map();
         
         // Parse DataScript schema format
@@ -473,16 +473,34 @@ export class PrototypeFactory {
             });
           }
           
+          // Check if this is a ref attribute (relationship)
+          const isRef = attrDef[':db/valueType'] === ':db.type/ref';
+          const cardinality = attrDef[':db/cardinality']?.replace(':db.cardinality/', '') || 'one';
+          
           // Add ALL attributes (including refs) to attributes map with unified handling
           types.get(typeName).attributes.set(attrLocalName, {
             fullName: attrName,
             type: attrDef[':db/valueType']?.replace(':db.type/', '') || 'string',
-            valueType: attrDef[':db/valueType'] === ':db.type/ref' ? 'ref' : 'scalar',
-            cardinality: attrDef[':db/cardinality']?.replace(':db.cardinality/', '') || 'one',
+            valueType: isRef ? 'ref' : 'scalar',
+            cardinality: cardinality,
             required: attrDef[':db/required'] || false,
             unique: attrDef[':db/unique'] || false,
             definition: attrDef
           });
+          
+          // If this is a ref attribute, also add to relationships map
+          if (isRef) {
+            if (!relationships.has(typeName)) {
+              relationships.set(typeName, new Map());
+            }
+            
+            relationships.get(typeName).set(attrLocalName, {
+              fullName: attrName,
+              type: 'ref',
+              targetType: attrLocalName, // In DataScript, the attribute name often indicates the target type
+              cardinality: cardinality
+            });
+          }
         }
         
         return { types, relationships, capabilities };
@@ -615,7 +633,7 @@ export class PrototypeFactory {
     const reserved = [
       'constructor', 'value', 'query', 'update', 'get', 'set',
       'subscribe', 'destroy', 'isDestroyed', 'receive', 'call',
-      'resourceManager', 'entityId', 'typeName', 'getIntrospectionInfo',
+      'dataSource', 'entityId', 'typeName', 'getIntrospectionInfo',
       'getAvailableAttributes', 'getRelationships', 'getCapabilities',
       'validateAttribute', 'getAttributeInfo', '_validateNotDestroyed'
     ];

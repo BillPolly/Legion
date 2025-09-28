@@ -5,7 +5,7 @@
 
 import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { DataStore } from '@legion/data-store';
-import { DataStoreResourceManager } from '../../src/DataStoreResourceManager.js';
+import { DataStoreDataSource } from '../../src/DataStoreDataSource.js';
 import { StreamProxy } from '../../src/StreamProxy.js';
 
 describe('StreamProxy Integration Tests', () => {
@@ -17,7 +17,7 @@ describe('StreamProxy Integration Tests', () => {
     dataStore = new DataStore();
     
     // Create ResourceManager adapter
-    resourceManager = new DataStoreResourceManager(dataStore);
+    resourceManager = new DataStoreDataSource(dataStore);
   });
 
   afterEach(() => {

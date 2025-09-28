@@ -2,8 +2,8 @@
  * Unit tests for Handle query combinator methods
  * 
  * Tests the universal Handle query combinator interface that delegates
- * to ResourceManager.queryBuilder(). These tests verify:
- * - Proper delegation to ResourceManager
+ * to DataSource.queryBuilder(). These tests verify:
+ * - Proper delegation to DataSource
  * - Input validation and error handling
  * - Method chaining behavior
  * - Terminal method execution
@@ -14,7 +14,7 @@ import { Handle } from '../../src/Handle.js';
 
 describe('Handle Query Combinator Methods', () => {
   let handle;
-  let mockResourceManager;
+  let mockDataSource;
   let mockQueryBuilder;
 
   beforeEach(() => {
@@ -49,8 +49,8 @@ describe('Handle Query Combinator Methods', () => {
       }
     });
 
-    // Create mock ResourceManager
-    mockResourceManager = {
+    // Create mock DataSource (correct terminology, not ResourceManager!)
+    mockDataSource = {
       query: jest.fn().mockReturnValue([]),
       subscribe: jest.fn().mockReturnValue({ 
         unsubscribe: jest.fn(),
@@ -63,17 +63,17 @@ describe('Handle Query Combinator Methods', () => {
       getMetadata: jest.fn().mockReturnValue({})
     };
 
-    // Create Handle instance
-    handle = new Handle(mockResourceManager);
+    // Create Handle instance with DataSource
+    handle = new Handle(mockDataSource);
   });
 
   describe('where() method', () => {
-    it('should delegate to ResourceManager.queryBuilder with predicate', () => {
+    it('should delegate to DataSource.queryBuilder with predicate', () => {
       const predicate = user => user.active === true;
       
       const result = handle.where(predicate);
 
-      expect(mockResourceManager.queryBuilder).toHaveBeenCalledWith(handle);
+      expect(mockDataSource.queryBuilder).toHaveBeenCalledWith(handle);
       expect(mockQueryBuilder.where).toHaveBeenCalledWith(predicate);
       expect(result).toBe(mockQueryBuilder);
     });
@@ -103,12 +103,12 @@ describe('Handle Query Combinator Methods', () => {
   });
 
   describe('select() method', () => {
-    it('should delegate to ResourceManager.queryBuilder with mapper', () => {
+    it('should delegate to DataSource.queryBuilder with mapper', () => {
       const mapper = user => user.name;
       
       const result = handle.select(mapper);
 
-      expect(mockResourceManager.queryBuilder).toHaveBeenCalledWith(handle);
+      expect(mockDataSource.queryBuilder).toHaveBeenCalledWith(handle);
       expect(mockQueryBuilder.select).toHaveBeenCalledWith(mapper);
       expect(result).toBe(mockQueryBuilder);
     });
@@ -126,19 +126,19 @@ describe('Handle Query Combinator Methods', () => {
   });
 
   describe('join() method', () => {
-    it('should delegate to ResourceManager.queryBuilder with otherHandle and condition', () => {
-      const otherHandle = new Handle(mockResourceManager);
+    it('should delegate to DataSource.queryBuilder with otherHandle and condition', () => {
+      const otherHandle = new Handle(mockDataSource);
       const joinCondition = 'userId';
       
       const result = handle.join(otherHandle, joinCondition);
 
-      expect(mockResourceManager.queryBuilder).toHaveBeenCalledWith(handle);
+      expect(mockDataSource.queryBuilder).toHaveBeenCalledWith(handle);
       expect(mockQueryBuilder.join).toHaveBeenCalledWith(otherHandle, joinCondition);
       expect(result).toBe(mockQueryBuilder);
     });
 
     it('should accept function as join condition', () => {
-      const otherHandle = new Handle(mockResourceManager);
+      const otherHandle = new Handle(mockDataSource);
       const joinCondition = (a, b) => a.id === b.userId;
       
       const result = handle.join(otherHandle, joinCondition);
@@ -153,22 +153,22 @@ describe('Handle Query Combinator Methods', () => {
     });
 
     it('should throw error if join condition is missing', () => {
-      const otherHandle = new Handle(mockResourceManager);
+      const otherHandle = new Handle(mockDataSource);
       expect(() => handle.join(otherHandle)).toThrow('Join condition is required');
     });
 
     it('should throw error if Handle is destroyed', () => {
       handle.destroy();
-      const otherHandle = new Handle(mockResourceManager);
+      const otherHandle = new Handle(mockDataSource);
       expect(() => handle.join(otherHandle, 'userId')).toThrow('Handle has been destroyed');
     });
   });
 
   describe('orderBy() method', () => {
-    it('should delegate to ResourceManager.queryBuilder with field and direction', () => {
+    it('should delegate to DataSource.queryBuilder with field and direction', () => {
       const result = handle.orderBy('name', 'desc');
 
-      expect(mockResourceManager.queryBuilder).toHaveBeenCalledWith(handle);
+      expect(mockDataSource.queryBuilder).toHaveBeenCalledWith(handle);
       expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith('name', 'desc');
       expect(result).toBe(mockQueryBuilder);
     });
@@ -203,10 +203,10 @@ describe('Handle Query Combinator Methods', () => {
   });
 
   describe('limit() method', () => {
-    it('should delegate to ResourceManager.queryBuilder with count', () => {
+    it('should delegate to DataSource.queryBuilder with count', () => {
       const result = handle.limit(10);
 
-      expect(mockResourceManager.queryBuilder).toHaveBeenCalledWith(handle);
+      expect(mockDataSource.queryBuilder).toHaveBeenCalledWith(handle);
       expect(mockQueryBuilder.limit).toHaveBeenCalledWith(10);
       expect(result).toBe(mockQueryBuilder);
     });
@@ -226,10 +226,10 @@ describe('Handle Query Combinator Methods', () => {
   });
 
   describe('skip() method', () => {
-    it('should delegate to ResourceManager.queryBuilder with count', () => {
+    it('should delegate to DataSource.queryBuilder with count', () => {
       const result = handle.skip(5);
 
-      expect(mockResourceManager.queryBuilder).toHaveBeenCalledWith(handle);
+      expect(mockDataSource.queryBuilder).toHaveBeenCalledWith(handle);
       expect(mockQueryBuilder.skip).toHaveBeenCalledWith(5);
       expect(result).toBe(mockQueryBuilder);
     });
@@ -253,10 +253,10 @@ describe('Handle Query Combinator Methods', () => {
   });
 
   describe('groupBy() method', () => {
-    it('should delegate to ResourceManager.queryBuilder with field', () => {
+    it('should delegate to DataSource.queryBuilder with field', () => {
       const result = handle.groupBy('department');
 
-      expect(mockResourceManager.queryBuilder).toHaveBeenCalledWith(handle);
+      expect(mockDataSource.queryBuilder).toHaveBeenCalledWith(handle);
       expect(mockQueryBuilder.groupBy).toHaveBeenCalledWith('department');
       expect(result).toBe(mockQueryBuilder);
     });
@@ -280,10 +280,10 @@ describe('Handle Query Combinator Methods', () => {
   });
 
   describe('aggregate() method', () => {
-    it('should delegate to ResourceManager.queryBuilder with function and field', () => {
+    it('should delegate to DataSource.queryBuilder with function and field', () => {
       const result = handle.aggregate('sum', 'amount');
 
-      expect(mockResourceManager.queryBuilder).toHaveBeenCalledWith(handle);
+      expect(mockDataSource.queryBuilder).toHaveBeenCalledWith(handle);
       expect(mockQueryBuilder.aggregate).toHaveBeenCalledWith('sum', 'amount');
       expect(result).toBe(mockQueryBuilder);
     });
@@ -313,12 +313,12 @@ describe('Handle Query Combinator Methods', () => {
 
   describe('Terminal Methods', () => {
     describe('first() method', () => {
-      it('should delegate to ResourceManager.queryBuilder and call first()', () => {
+      it('should delegate to DataSource.queryBuilder and call first()', () => {
         mockQueryBuilder.first.mockReturnValue({ id: 1, name: 'First' });
         
         const result = handle.first();
 
-        expect(mockResourceManager.queryBuilder).toHaveBeenCalledWith(handle);
+        expect(mockDataSource.queryBuilder).toHaveBeenCalledWith(handle);
         expect(mockQueryBuilder.first).toHaveBeenCalled();
         expect(result).toEqual({ id: 1, name: 'First' });
       });
@@ -337,12 +337,12 @@ describe('Handle Query Combinator Methods', () => {
     });
 
     describe('last() method', () => {
-      it('should delegate to ResourceManager.queryBuilder and call last()', () => {
+      it('should delegate to DataSource.queryBuilder and call last()', () => {
         mockQueryBuilder.last.mockReturnValue({ id: 99, name: 'Last' });
         
         const result = handle.last();
 
-        expect(mockResourceManager.queryBuilder).toHaveBeenCalledWith(handle);
+        expect(mockDataSource.queryBuilder).toHaveBeenCalledWith(handle);
         expect(mockQueryBuilder.last).toHaveBeenCalled();
         expect(result).toEqual({ id: 99, name: 'Last' });
       });
@@ -361,12 +361,12 @@ describe('Handle Query Combinator Methods', () => {
     });
 
     describe('count() method', () => {
-      it('should delegate to ResourceManager.queryBuilder and call count()', () => {
+      it('should delegate to DataSource.queryBuilder and call count()', () => {
         mockQueryBuilder.count.mockReturnValue(42);
         
         const result = handle.count();
 
-        expect(mockResourceManager.queryBuilder).toHaveBeenCalledWith(handle);
+        expect(mockDataSource.queryBuilder).toHaveBeenCalledWith(handle);
         expect(mockQueryBuilder.count).toHaveBeenCalled();
         expect(result).toBe(42);
       });
@@ -385,7 +385,7 @@ describe('Handle Query Combinator Methods', () => {
     });
 
     describe('toArray() method', () => {
-      it('should delegate to ResourceManager.queryBuilder and call toArray()', () => {
+      it('should delegate to DataSource.queryBuilder and call toArray()', () => {
         const mockData = [
           { id: 1, name: 'Item 1' },
           { id: 2, name: 'Item 2' }
@@ -394,7 +394,7 @@ describe('Handle Query Combinator Methods', () => {
         
         const result = handle.toArray();
 
-        expect(mockResourceManager.queryBuilder).toHaveBeenCalledWith(handle);
+        expect(mockDataSource.queryBuilder).toHaveBeenCalledWith(handle);
         expect(mockQueryBuilder.toArray).toHaveBeenCalled();
         expect(result).toEqual(mockData);
       });
@@ -470,8 +470,8 @@ describe('Handle Query Combinator Methods', () => {
   });
 
   describe('Error Conditions', () => {
-    it('should throw error if ResourceManager does not implement queryBuilder', () => {
-      const invalidResourceManager = {
+    it('should throw error if DataSource does not implement queryBuilder', () => {
+      const invalidDataSource = {
         query: jest.fn(),
         subscribe: jest.fn(),
         getSchema: jest.fn()
@@ -479,11 +479,11 @@ describe('Handle Query Combinator Methods', () => {
       };
 
       // The error should be thrown when creating the Handle
-      expect(() => new Handle(invalidResourceManager)).toThrow('ResourceManager must implement queryBuilder() method');
+      expect(() => new Handle(invalidDataSource)).toThrow('DataSource must implement queryBuilder() method');
     });
 
     it('should throw error if queryBuilder returns invalid object', () => {
-      mockResourceManager.queryBuilder.mockReturnValue(null);
+      mockDataSource.queryBuilder.mockReturnValue(null);
       
       expect(() => handle.where(x => x.active)).toThrow();
     });

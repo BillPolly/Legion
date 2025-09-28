@@ -22,7 +22,7 @@ export default {
   
   // Module name mapping for workspace dependencies
   moduleNameMapper: {
-    '^@legion/actors$': '<rootDir>/../../../actors/src/index.js'
+    '^@legion/actors$': '<rootDir>/../../actors/src/index.js'
   },
   
   // Test file patterns

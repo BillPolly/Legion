@@ -28,7 +28,7 @@ The Handle package implements a three-layer architecture that provides universal
 │ • Subscription tracking & cleanup      │
 │ • Lifecycle management                 │
 │ • Input validation                     │
-│ • ResourceManager delegation           │
+│ • DataSource delegation                │
 └─────────────────────────────────────────┘
                     ↓
 ```
@@ -55,7 +55,7 @@ The Handle package implements a three-layer architecture that provides universal
 │            (extends Actor)              │
 ├─────────────────────────────────────────┤
 │ Fields:                                 │
-│ • resourceManager: ResourceManager     │
+│ • dataSource: DataSource               │
 │ • _subscriptions: Set<Subscription>    │
 │ • _destroyed: boolean                   │
 │ • _prototypeFactory: PrototypeFactory  │
@@ -79,11 +79,11 @@ The Handle package implements a three-layer architecture that provides universal
 └─────────────────────────────────────────┘
 ```
 
-### ResourceManager Interface
+### DataSource Interface
 
 ```javascript
 ┌─────────────────────────────────────────┐
-│          ResourceManager                │
+│          DataSource                     │
 │         (Interface Contract)            │
 ├─────────────────────────────────────────┤
 │ Required Methods:                       │
@@ -106,7 +106,7 @@ Client Code
     ↓
 Handle.query()
     ↓ (validate)
-ResourceManager.query()
+DataSource.query()
     ↓ (execute)
 Return Results
     ↓
@@ -121,7 +121,7 @@ Handle.receive()
     ↓ (route message)
 Handle.query()
     ↓ (validate)
-ResourceManager.query()
+DataSource.query()
     ↓ (execute)
 Return Results
     ↓ (Actor response)
@@ -134,7 +134,7 @@ Client Code
     ↓
 Handle.subscribe()
     ↓ (validate & track)
-ResourceManager.subscribe()
+DataSource.subscribe()
     ↓ (register callback)
 Resource Changes
     ↓ (callback invoked)
@@ -157,8 +157,8 @@ subscribe(querySpec, callback) {
   this._validateQuerySpec(querySpec);
   this._validateCallback(callback);
   
-  // 2. Synchronous ResourceManager delegation (no await)
-  const resourceSubscription = this.resourceManager.subscribe(querySpec, callback);
+  // 2. Synchronous DataSource delegation (no await)
+  const resourceSubscription = this.dataSource.subscribe(querySpec, callback);
   
   // 3. Synchronous wrapper creation (no await)  
   const trackingWrapper = {
@@ -188,7 +188,7 @@ dataHandle.subscribe(query, (results) => {
 });
 
 // INTERNAL VIEW: All operations are synchronous
-class ResourceManager {
+class DataSource {
   subscribe(querySpec, callback) {
     // Synchronous subscription setup
     const subscription = this.database.subscribe(querySpec, (data) => {
@@ -229,7 +229,7 @@ The introspection system provides universal discovery capabilities across all re
 ### Introspection Flow
 
 ```
-1. ResourceManager.getSchema()
+1. DataSource.getSchema()
    ↓
 2. PrototypeFactory.analyzeSchema()
    ↓
@@ -321,7 +321,7 @@ receive(message) {
 
 ```javascript
 // Frontend usage (same API)
-const handle = new DataStoreHandle(resourceManager);
+const handle = new DataStoreHandle(dataSource);
 const results = handle.query(querySpec);
 
 // Backend usage through Actor system (same API)
@@ -427,8 +427,8 @@ All Handle operations follow fail-fast principle with immediate error throwing:
 
 ```javascript
 // Validation errors
-if (!resourceManager) {
-  throw new Error('ResourceManager is required'); // Immediate failure
+if (!dataSource) {
+  throw new Error('DataSource is required'); // Immediate failure
 }
 
 // State errors  

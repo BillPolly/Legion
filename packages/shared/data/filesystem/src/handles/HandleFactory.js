@@ -17,17 +17,17 @@ export class HandleFactory {
     FileHandleClass = FileHandle;
   }
   
-  static createDirectoryHandle(resourceManager, path) {
+  static createDirectoryHandle(dataSource, path) {
     if (!DirectoryHandleClass) {
       throw new Error('DirectoryHandle class not registered with HandleFactory');
     }
-    return new DirectoryHandleClass(resourceManager, path);
+    return new DirectoryHandleClass(dataSource, path);
   }
   
-  static createFileHandle(resourceManager, path) {
+  static createFileHandle(dataSource, path) {
     if (!FileHandleClass) {
       throw new Error('FileHandle class not registered with HandleFactory');
     }
-    return new FileHandleClass(resourceManager, path);
+    return new FileHandleClass(dataSource, path);
   }
 }

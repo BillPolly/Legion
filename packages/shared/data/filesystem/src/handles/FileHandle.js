@@ -2,7 +2,7 @@
  * FileHandle - Handle abstraction for filesystem files
  * 
  * Provides a consistent interface for file operations regardless of 
- * whether the ResourceManager is local (Node.js fs), remote (browser API), 
+ * whether the DataSource is local (Node.js fs), remote (browser API), 
  * or indexed (search-enabled).
  * 
  * Key features:
@@ -10,15 +10,15 @@
  * - Get/set file metadata (size, modified time, permissions, etc.)
  * - Watch for file changes
  * - Navigate to parent DirectoryHandle
- * - Works with any filesystem ResourceManager implementation
+ * - Works with any filesystem DataSource implementation
  */
 
 import { Handle } from '@legion/handle';
 import { HandleFactory } from './HandleFactory.js';
 
 export class FileHandle extends Handle {
-  constructor(resourceManager, path) {
-    super(resourceManager);
+  constructor(dataSource, path) {
+    super(dataSource);
     
     // Validate and store path
     if (!path || typeof path !== 'string') {
@@ -46,13 +46,13 @@ export class FileHandle extends Handle {
       return this._metadataCache;
     }
     
-    // Query ResourceManager for file metadata
+    // Query DataSource for file metadata
     const querySpec = {
       find: ['metadata'],
       where: [['file', this.path, 'metadata']]
     };
     
-    const results = this.resourceManager.query(querySpec);
+    const results = this.dataSource.query(querySpec);
     const metadata = Array.isArray(results) && results.length > 0 ? results[0] : {
       path: this.path,
       type: 'file',
@@ -118,7 +118,7 @@ export class FileHandle extends Handle {
       }
     };
     
-    const results = this.resourceManager.query(querySpec);
+    const results = this.dataSource.query(querySpec);
     
     if (!Array.isArray(results) || results.length === 0) {
       throw new Error(`File not found: ${this.path}`);
@@ -176,7 +176,7 @@ export class FileHandle extends Handle {
       throw new Error('Content to write cannot be null or undefined');
     }
     
-    const result = this.resourceManager.update(this.path, {
+    const result = this.dataSource.update(this.path, {
       operation: 'write',
       content: content,
       options: {
@@ -222,7 +222,7 @@ export class FileHandle extends Handle {
       throw new Error('Target path must be a non-empty string');
     }
     
-    const result = this.resourceManager.update(null, {
+    const result = this.dataSource.update(null, {
       operation: 'copy',
       source: this.path,
       target: targetPath,
@@ -238,7 +238,7 @@ export class FileHandle extends Handle {
     }
     
     // Return FileHandle for the copied file
-    return new FileHandle(this.resourceManager, targetPath);
+    return new FileHandle(this.dataSource, targetPath);
   }
   
   /**
@@ -254,7 +254,7 @@ export class FileHandle extends Handle {
       throw new Error('Target path must be a non-empty string');
     }
     
-    const result = this.resourceManager.update(this.path, {
+    const result = this.dataSource.update(this.path, {
       operation: 'move',
       target: targetPath,
       options: {
@@ -283,7 +283,7 @@ export class FileHandle extends Handle {
   delete(options = {}) {
     this._validateNotDestroyed();
     
-    const result = this.resourceManager.update(this.path, {
+    const result = this.dataSource.update(this.path, {
       operation: 'delete',
       options: options
     });
@@ -323,7 +323,7 @@ export class FileHandle extends Handle {
     if (options.content !== false) querySpec.watchContent = true;
     if (options.metadata !== false) querySpec.watchMetadata = true;
     
-    return this.resourceManager.subscribe(querySpec, (results) => {
+    return this.dataSource.subscribe(querySpec, (results) => {
       // Invalidate cache when file changes
       this._metadataCache = null;
       this._metadataCacheExpiry = 0;
@@ -342,7 +342,7 @@ export class FileHandle extends Handle {
     const parentPath = this._getParentPath(this.path);
     
     // Use factory to avoid circular dependency
-    return HandleFactory.createDirectoryHandle(this.resourceManager, parentPath);
+    return HandleFactory.createDirectoryHandle(this.dataSource, parentPath);
   }
   
   /**
@@ -388,7 +388,7 @@ export class FileHandle extends Handle {
   createReadStream(options = {}) {
     this._validateNotDestroyed();
     
-    // This would be implemented by the specific ResourceManager
+    // This would be implemented by the specific DataSource
     // Here we provide a fallback that reads the entire file
     const querySpec = {
       find: ['stream'],
@@ -396,7 +396,7 @@ export class FileHandle extends Handle {
       options: options
     };
     
-    const results = this.resourceManager.query(querySpec);
+    const results = this.dataSource.query(querySpec);
     
     if (!Array.isArray(results) || results.length === 0) {
       throw new Error(`Cannot create read stream for: ${this.path}`);
@@ -413,14 +413,14 @@ export class FileHandle extends Handle {
   createWriteStream(options = {}) {
     this._validateNotDestroyed();
     
-    // This would be implemented by the specific ResourceManager
+    // This would be implemented by the specific DataSource
     const querySpec = {
       find: ['stream'],
       where: [['file', this.path, 'writeStream']],
       options: options
     };
     
-    const results = this.resourceManager.query(querySpec);
+    const results = this.dataSource.query(querySpec);
     
     if (!Array.isArray(results) || results.length === 0) {
       throw new Error(`Cannot create write stream for: ${this.path}`);

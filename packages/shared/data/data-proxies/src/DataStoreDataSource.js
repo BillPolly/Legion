@@ -1,8 +1,8 @@
 /**
- * DataStoreResourceManager
+ * DataStoreDataSource
  * 
- * Adapter that bridges DataStore to the Handle ResourceManager interface.
- * Implements the ResourceManager interface contract required by Handle.
+ * Adapter that bridges DataStore to the Handle DataSource interface.
+ * Implements the DataSource interface contract required by Handle.
  * 
  * CRITICAL: Implements both sync and async methods to meet Handle requirements.
  * Handle validation expects specific method signatures.
@@ -10,7 +10,7 @@
 
 import { DefaultQueryBuilder } from './DefaultQueryBuilder.js';
 
-export class DataStoreResourceManager {
+export class DataStoreDataSource {
   constructor(dataStore) {
     
     if (!dataStore) {
@@ -304,7 +304,7 @@ export class DataStoreResourceManager {
     }
   }
   
-  // ===== HANDLE RESOURCEMANAGER INTERFACE METHODS =====
+  // ===== HANDLE DATASOURCE INTERFACE METHODS =====
   
   /**
    * REQUIRED: Execute transaction operations (required by CollectionProxy integration tests)

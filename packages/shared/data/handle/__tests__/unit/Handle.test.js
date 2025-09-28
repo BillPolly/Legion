@@ -6,19 +6,19 @@
  */
 
 import { Handle } from '../../src/Handle.js';
-import { ResourceManagerInterface, validateResourceManagerInterface } from '../../src/ResourceManager.js';
-import { createMockResourceManager, createMockFunction } from '../testUtils.js';
+import { ValidationUtils } from '../../src/ValidationUtils.js';
+import { createMockDataSource, createMockFunction } from '../testUtils.js';
 
 describe('Handle', () => {
-  let mockResourceManager;
+  let mockDataSource;
   let handle;
 
   beforeEach(() => {
     // Create mock ResourceManager that implements interface
-    mockResourceManager = createMockResourceManager();
+    mockDataSource = createMockDataSource();
     
     // Create test handle instance
-    handle = new TestHandle(mockResourceManager);
+    handle = new TestHandle(mockDataSource);
   });
 
   afterEach(() => {
@@ -28,18 +28,18 @@ describe('Handle', () => {
   });
 
   describe('Constructor', () => {
-    test('should create handle with valid ResourceManager', () => {
+    test('should create handle with valid DataSource', () => {
       expect(handle).toBeInstanceOf(Handle);
-      expect(handle.resourceManager).toBe(mockResourceManager);
+      expect(handle.dataSource).toBe(mockDataSource);
       expect(handle.isDestroyed()).toBe(false);
       expect(handle._subscriptions).toBeInstanceOf(Set);
       expect(handle._subscriptions.size).toBe(0);
     });
 
-    test('should reject invalid ResourceManager', () => {
-      expect(() => new TestHandle(null)).toThrow('ResourceManager must be a non-null object');
-      expect(() => new TestHandle({})).toThrow('ResourceManager must implement query() method');
-      expect(() => new TestHandle({ query: 'not-function' })).toThrow('ResourceManager must implement query() method');
+    test('should reject invalid DataSource', () => {
+      expect(() => new TestHandle(null)).toThrow('DataSource must be a non-null object');
+      expect(() => new TestHandle({})).toThrow('DataSource must implement query() method');
+      expect(() => new TestHandle({ query: 'not-function' })).toThrow('DataSource must implement query() method');
     });
 
     test('should handle schema availability gracefully', () => {
@@ -47,12 +47,12 @@ describe('Handle', () => {
       getSchemaFn.mockReturnValue({ ':user/name': {} });
       
       const rmWithSchema = {
-        ...mockResourceManager,
+        ...mockDataSource,
         getSchema: getSchemaFn
       };
       
       const handleWithSchema = new TestHandle(rmWithSchema);
-      expect(handleWithSchema.resourceManager).toBe(rmWithSchema);
+      expect(handleWithSchema.dataSource).toBe(rmWithSchema);
       
       handleWithSchema.destroy();
     });
@@ -64,12 +64,12 @@ describe('Handle', () => {
       });
       
       const rmWithoutSchema = {
-        ...mockResourceManager,
+        ...mockDataSource,
         getSchema: getSchemaFn
       };
       
       const handleWithoutSchema = new TestHandle(rmWithoutSchema);
-      expect(handleWithoutSchema.resourceManager).toBe(rmWithoutSchema);
+      expect(handleWithoutSchema.dataSource).toBe(rmWithoutSchema);
       
       handleWithoutSchema.destroy();
     });
@@ -77,14 +77,14 @@ describe('Handle', () => {
 
   describe('Abstract Methods', () => {
     test('should throw error for unimplemented value()', () => {
-      const baseHandle = new Handle(mockResourceManager);
+      const baseHandle = new Handle(mockDataSource);
       expect(() => baseHandle.value()).toThrow('value() must be implemented by subclass');
       
       baseHandle.destroy();
     });
 
     test('should throw error for unimplemented query()', () => {
-      const baseHandle = new Handle(mockResourceManager);
+      const baseHandle = new Handle(mockDataSource);
       expect(() => baseHandle.query({})).toThrow('query() must be implemented by subclass');
       
       baseHandle.destroy();
@@ -103,8 +103,8 @@ describe('Handle', () => {
       expect(typeof subscription.unsubscribe).toBe('function');
       expect(handle._subscriptions.size).toBe(1);
       // Can't use toHaveBeenCalledWith on custom mock, check the calls array
-      expect(mockResourceManager.subscribe.calls.length).toBeGreaterThan(0);
-      expect(mockResourceManager.subscribe.calls[0]).toEqual([querySpec, callback]);
+      expect(mockDataSource.subscribe.calls.length).toBeGreaterThan(0);
+      expect(mockDataSource.subscribe.calls[0]).toEqual([querySpec, callback]);
     });
 
     test('should validate subscription parameters', () => {
@@ -134,10 +134,10 @@ describe('Handle', () => {
       expect(handle._subscriptions.size).toBe(1);
       
       // Store reference to the unsubscribe mock before calling it
-      const resourceManagerCalls = mockResourceManager.subscribe.calls;
-      expect(resourceManagerCalls.length).toBeGreaterThan(0);
+      const dataSourceCalls = mockDataSource.subscribe.calls;
+      expect(dataSourceCalls.length).toBeGreaterThan(0);
       
-      // The subscription.unsubscribe() should call the ResourceManager's subscription.unsubscribe()
+      // The subscription.unsubscribe() should call the DataSource's subscription.unsubscribe()
       subscription.unsubscribe();
       expect(handle._subscriptions.size).toBe(0);
       
@@ -166,8 +166,8 @@ describe('Handle', () => {
       const result = handle.receive({ type: 'query', querySpec });
       
       expect(result).toEqual(['test-query-result']);
-      expect(mockResourceManager.query.calls.length).toBeGreaterThan(0);
-      expect(mockResourceManager.query.calls[0]).toEqual([querySpec]);
+      expect(mockDataSource.query.calls.length).toBeGreaterThan(0);
+      expect(mockDataSource.query.calls[0]).toEqual([querySpec]);
     });
 
     test('should handle Actor messages for subscribe', () => {
@@ -322,6 +322,14 @@ describe('Handle', () => {
         subscribe: createMockFunction({
           id: 'failing-sub',
           unsubscribe: failingUnsubscribe
+        }),
+        queryBuilder: createMockFunction({
+          where: createMockFunction(),
+          select: createMockFunction(),
+          first: createMockFunction(),
+          last: createMockFunction(),
+          count: createMockFunction(),
+          toArray: createMockFunction([])
         })
       };
       
@@ -360,7 +368,7 @@ describe('Handle', () => {
 
   describe('Query Validation', () => {
     test('should validate query specifications', () => {
-      expect(() => handle._validateQuerySpec(null)).toThrow('Query specification is required');
+      expect(() => handle._validateQuerySpec(null)).toThrow('Query specification must be an object');
       expect(() => handle._validateQuerySpec('string')).toThrow('Query specification must be an object');
       expect(() => handle._validateQuerySpec({})).toThrow('Query specification must have find or where clause');
     });
@@ -395,7 +403,7 @@ class TestHandle extends Handle {
   
   query(querySpec) {
     this._validateNotDestroyed();
-    this.resourceManager.query(querySpec);
+    this.dataSource.query(querySpec);
     return ['test-query-result'];
   }
 }

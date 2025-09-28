@@ -5,7 +5,7 @@
 
 import { StreamProxy } from '../src/StreamProxy.js';
 import { Handle } from '@legion/handle';
-import { DataStoreResourceManager } from '../src/DataStoreResourceManager.js';
+import { DataStoreDataSource } from '../src/DataStoreDataSource.js';
 import { createTestStore, createSampleData, assertions, validators, errorHelpers } from './setup.js';
 
 describe('StreamProxy', () => {
@@ -15,7 +15,7 @@ describe('StreamProxy', () => {
   
   beforeEach(() => {
     store = createTestStore();
-    resourceManager = new DataStoreResourceManager(store);
+    resourceManager = new DataStoreDataSource(store);
     sampleData = createSampleData(store);
   });
   

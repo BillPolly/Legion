@@ -1,11 +1,11 @@
 /**
- * Unit Tests for ActorRemoteFileSystemResourceManager
+ * Unit Tests for ActorRemoteFileSystemDataSource
  * 
- * Tests the ActorRemoteFileSystemResourceManager class that provides
+ * Tests the ActorRemoteFileSystemDataSource class that provides
  * browser-side filesystem access via Actor communication.
  */
 
-import { ActorRemoteFileSystemResourceManager } from '../../src/resourcemanagers/ActorRemoteFileSystemResourceManager.js';
+import { ActorRemoteFileSystemDataSource } from '../../src/datasources/ActorRemoteFileSystemDataSource.js';
 import { jest } from '@jest/globals';
 
 // Mock WebSocket
@@ -125,13 +125,13 @@ jest.mock('../../src/protocol/FileSystemProtocol.js', () => ({
   FileSystemProtocol: MockFileSystemProtocol
 }));
 
-describe('ActorRemoteFileSystemResourceManager', () => {
-  let resourceManager;
+describe('ActorRemoteFileSystemDataSource', () => {
+  let dataSource;
   let mockActorSpace;
   
   beforeEach(() => {
     mockActorSpace = new Map();
-    // Add registerActor and unregisterActor methods that the ResourceManager expects
+    // Add registerActor and unregisterActor methods that the DataSource expects
     mockActorSpace.registerActor = jest.fn((name, actor) => {
       mockActorSpace.set(name, actor);
     });
@@ -139,7 +139,7 @@ describe('ActorRemoteFileSystemResourceManager', () => {
       mockActorSpace.delete(name);
     });
     
-    resourceManager = new ActorRemoteFileSystemResourceManager({
+    dataSource = new ActorRemoteFileSystemDataSource({
       wsUrl: 'ws://localhost:3000/filesystem',
       actorSpace: mockActorSpace,
       verbose: false
@@ -147,15 +147,15 @@ describe('ActorRemoteFileSystemResourceManager', () => {
   });
   
   afterEach(() => {
-    if (resourceManager) {
-      resourceManager.destroy();
+    if (dataSource) {
+      dataSource.destroy();
     }
     jest.clearAllMocks();
   });
   
   describe('Constructor', () => {
     test('should initialize with default options', () => {
-      const rm = new ActorRemoteFileSystemResourceManager();
+      const rm = new ActorRemoteFileSystemDataSource();
       
       expect(rm.options.wsUrl).toBe('ws://localhost:3000/filesystem');
       expect(rm.options.requestTimeout).toBe(30000);
@@ -164,7 +164,7 @@ describe('ActorRemoteFileSystemResourceManager', () => {
     });
     
     test('should accept custom options', () => {
-      const rm = new ActorRemoteFileSystemResourceManager({
+      const rm = new ActorRemoteFileSystemDataSource({
         wsUrl: 'ws://custom:8080/fs',
         requestTimeout: 10000,
         enableCache: false,
@@ -178,58 +178,58 @@ describe('ActorRemoteFileSystemResourceManager', () => {
     });
     
     test('should initialize internal collections', () => {
-      expect(resourceManager.pendingRequests).toBeInstanceOf(Map);
-      expect(resourceManager.subscriptions).toBeInstanceOf(Map);
-      expect(resourceManager.metadataCache).toBeInstanceOf(Map);
-      expect(resourceManager.isConnected).toBe(false);
-      expect(resourceManager.isAuthenticated).toBe(false);
+      expect(dataSource.pendingRequests).toBeInstanceOf(Map);
+      expect(dataSource.subscriptions).toBeInstanceOf(Map);
+      expect(dataSource.metadataCache).toBeInstanceOf(Map);
+      expect(dataSource.isConnected).toBe(false);
+      expect(dataSource.isAuthenticated).toBe(false);
     });
     
     test('should create WebSocket connection', () => {
-      expect(resourceManager.websocket).toBeInstanceOf(MockWebSocket);
-      expect(resourceManager.websocket.url).toBe('ws://localhost:3000/filesystem');
+      expect(dataSource.websocket).toBeInstanceOf(MockWebSocket);
+      expect(dataSource.websocket.url).toBe('ws://localhost:3000/filesystem');
     });
     
     test('should create bridge actor', () => {
-      expect(resourceManager.bridgeActor).toBeDefined();
-      expect(resourceManager.bridgeActor.websocket).toBe(resourceManager.websocket);
-      expect(resourceManager.bridgeActor.name).toBe('FileSystemBridge');
+      expect(dataSource.bridgeActor).toBeDefined();
+      expect(dataSource.bridgeActor.websocket).toBe(dataSource.websocket);
+      expect(dataSource.bridgeActor.name).toBe('FileSystemBridge');
     });
   });
   
   describe('Connection Handling', () => {
     test('should handle WebSocket connection', async () => {
       const connectPromise = new Promise(resolve => {
-        resourceManager.once('connected', resolve);
+        dataSource.once('connected', resolve);
       });
       
       // Wait for connection event
       await connectPromise;
       
-      expect(resourceManager.isConnected).toBe(true);
+      expect(dataSource.isConnected).toBe(true);
     });
     
     test('should handle WebSocket disconnection', async () => {
       // First connect
       await new Promise(resolve => {
-        resourceManager.once('connected', resolve);
+        dataSource.once('connected', resolve);
       });
       
       const disconnectPromise = new Promise(resolve => {
-        resourceManager.once('disconnected', resolve);
+        dataSource.once('disconnected', resolve);
       });
       
       // Simulate disconnection
-      resourceManager.websocket.close();
+      dataSource.websocket.close();
       
       await disconnectPromise;
       
-      expect(resourceManager.isConnected).toBe(false);
-      expect(resourceManager.isAuthenticated).toBe(false);
+      expect(dataSource.isConnected).toBe(false);
+      expect(dataSource.isAuthenticated).toBe(false);
     });
     
     test('should authenticate when token provided', async () => {
-      const rmWithAuth = new ActorRemoteFileSystemResourceManager({
+      const rmWithAuth = new ActorRemoteFileSystemDataSource({
         wsUrl: 'ws://localhost:3000/filesystem',
         authToken: 'test-token',
         actorSpace: mockActorSpace
@@ -253,12 +253,12 @@ describe('ActorRemoteFileSystemResourceManager', () => {
     beforeEach(async () => {
       // Wait for connection
       await new Promise(resolve => {
-        resourceManager.once('connected', resolve);
+        dataSource.once('connected', resolve);
       });
     });
     
     test('should implement queryBuilder method', () => {
-      const builder = resourceManager.queryBuilder(null);
+      const builder = dataSource.queryBuilder(null);
       
       expect(builder).toBeDefined();
       expect(typeof builder.query).toBe('function');
@@ -273,13 +273,13 @@ describe('ActorRemoteFileSystemResourceManager', () => {
       // Mock the async response to resolve immediately
       const mockResponse = jest.fn(() => {
         // Clear pending requests immediately to avoid busy wait
-        resourceManager.pendingRequests.clear();
+        dataSource.pendingRequests.clear();
         return Promise.resolve({ results: [{ path: '/test.txt', type: 'file' }] });
       });
       
-      resourceManager._sendActorMessage = mockResponse;
+      dataSource._sendActorMessage = mockResponse;
       
-      const result = resourceManager.query(querySpec);
+      const result = dataSource.query(querySpec);
       
       expect(mockResponse).toHaveBeenCalledWith({
         type: 'filesystemQuery',
@@ -289,16 +289,16 @@ describe('ActorRemoteFileSystemResourceManager', () => {
     
     test('should validate query specification', () => {
       expect(() => {
-        resourceManager.query(null);
+        dataSource.query(null);
       }).toThrow('Query specification is required');
       
       expect(() => {
-        resourceManager.query('invalid');
+        dataSource.query('invalid');
       }).toThrow('Query specification is required');
     });
     
     test('should handle query timeout', () => {
-      const slowResourceManager = new ActorRemoteFileSystemResourceManager({
+      const slowDataSource = new ActorRemoteFileSystemDataSource({
         wsUrl: 'ws://localhost:3000/filesystem',
         requestTimeout: 10, // Very short timeout
         actorSpace: mockActorSpace
@@ -307,10 +307,10 @@ describe('ActorRemoteFileSystemResourceManager', () => {
       const querySpec = { find: [], where: [] };
       
       expect(() => {
-        slowResourceManager.query(querySpec);
+        slowDataSource.query(querySpec);
       }).toThrow('Query timeout');
       
-      slowResourceManager.destroy();
+      slowDataSource.destroy();
     });
   });
   
@@ -318,21 +318,21 @@ describe('ActorRemoteFileSystemResourceManager', () => {
     beforeEach(async () => {
       // Wait for connection
       await new Promise(resolve => {
-        resourceManager.once('connected', resolve);
+        dataSource.once('connected', resolve);
       });
     });
     
     test('should execute synchronous updates', () => {
       const mockResponse = jest.fn(() => {
         setTimeout(() => {
-          resourceManager.pendingRequests.clear();
+          dataSource.pendingRequests.clear();
         }, 1);
         return Promise.resolve({ success: true, path: '/test.txt' });
       });
       
-      resourceManager._sendActorMessage = mockResponse;
+      dataSource._sendActorMessage = mockResponse;
       
-      const result = resourceManager.update('/test.txt', {
+      const result = dataSource.update('/test.txt', {
         content: 'Hello World',
         operation: 'write'
       });
@@ -355,14 +355,14 @@ describe('ActorRemoteFileSystemResourceManager', () => {
       
       const mockResponse = jest.fn(() => {
         setTimeout(() => {
-          resourceManager.pendingRequests.clear();
+          dataSource.pendingRequests.clear();
         }, 1);
         return Promise.resolve({ success: true });
       });
       
-      resourceManager._sendActorMessage = mockResponse;
+      dataSource._sendActorMessage = mockResponse;
       
-      const result = resourceManager.update('/binary.dat', {
+      const result = dataSource.update('/binary.dat', {
         content: binaryData,
         operation: 'write'
       });
@@ -374,22 +374,22 @@ describe('ActorRemoteFileSystemResourceManager', () => {
     
     test('should validate update data', () => {
       expect(() => {
-        resourceManager.update('/test.txt', null);
+        dataSource.update('/test.txt', null);
       }).toThrow('Update data is required');
       
       expect(() => {
-        resourceManager.update('/test.txt', 'invalid');
+        dataSource.update('/test.txt', 'invalid');
       }).toThrow('Update data is required');
     });
     
     test('should handle update timeout', () => {
-      const slowResourceManager = new ActorRemoteFileSystemResourceManager({
+      const slowDataSource = new ActorRemoteFileSystemDataSource({
         wsUrl: 'ws://localhost:3000/filesystem',
         requestTimeout: 10, // Very short timeout
         actorSpace: mockActorSpace
       });
       
-      const result = slowResourceManager.update('/test.txt', {
+      const result = slowDataSource.update('/test.txt', {
         content: 'content',
         operation: 'write'
       });
@@ -397,7 +397,7 @@ describe('ActorRemoteFileSystemResourceManager', () => {
       expect(result.success).toBe(false);
       expect(result.error).toBe('Update timeout');
       
-      slowResourceManager.destroy();
+      slowDataSource.destroy();
     });
   });
   
@@ -405,7 +405,7 @@ describe('ActorRemoteFileSystemResourceManager', () => {
     beforeEach(async () => {
       // Wait for connection
       await new Promise(resolve => {
-        resourceManager.once('connected', resolve);
+        dataSource.once('connected', resolve);
       });
     });
     
@@ -418,9 +418,9 @@ describe('ActorRemoteFileSystemResourceManager', () => {
       const callback = jest.fn();
       
       const mockResponse = jest.fn(() => Promise.resolve({ success: true }));
-      resourceManager._sendActorMessage = mockResponse;
+      dataSource._sendActorMessage = mockResponse;
       
-      const subscription = resourceManager.subscribe(querySpec, callback);
+      const subscription = dataSource.subscribe(querySpec, callback);
       
       expect(subscription).toEqual(expect.objectContaining({
         id: expect.stringMatching(/^sub_\d+$/),
@@ -429,7 +429,7 @@ describe('ActorRemoteFileSystemResourceManager', () => {
         unsubscribe: expect.any(Function)
       }));
       
-      expect(resourceManager.subscriptions.size).toBe(1);
+      expect(dataSource.subscriptions.size).toBe(1);
       expect(mockResponse).toHaveBeenCalledWith({
         type: 'filesystemSubscribe',
         payload: { querySpec, subscriptionId: subscription.id }
@@ -441,14 +441,14 @@ describe('ActorRemoteFileSystemResourceManager', () => {
       const callback = jest.fn();
       
       const mockResponse = jest.fn(() => Promise.resolve({ success: true }));
-      resourceManager._sendActorMessage = mockResponse;
+      dataSource._sendActorMessage = mockResponse;
       
-      const subscription = resourceManager.subscribe(querySpec, callback);
+      const subscription = dataSource.subscribe(querySpec, callback);
       const subscriptionId = subscription.id;
       
       subscription.unsubscribe();
       
-      expect(resourceManager.subscriptions.has(subscriptionId)).toBe(false);
+      expect(dataSource.subscriptions.has(subscriptionId)).toBe(false);
       expect(mockResponse).toHaveBeenCalledWith({
         type: 'filesystemUnsubscribe',
         payload: { subscriptionId }
@@ -457,11 +457,11 @@ describe('ActorRemoteFileSystemResourceManager', () => {
     
     test('should validate subscription parameters', () => {
       expect(() => {
-        resourceManager.subscribe(null, jest.fn());
+        dataSource.subscribe(null, jest.fn());
       }).toThrow('Query specification is required');
       
       expect(() => {
-        resourceManager.subscribe({ find: [], where: [] }, null);
+        dataSource.subscribe({ find: [], where: [] }, null);
       }).toThrow('Callback function is required');
     });
     
@@ -469,12 +469,12 @@ describe('ActorRemoteFileSystemResourceManager', () => {
       const callback = jest.fn();
       const querySpec = { find: [], where: [] };
       
-      resourceManager._sendActorMessage = jest.fn(() => Promise.resolve({ success: true }));
+      dataSource._sendActorMessage = jest.fn(() => Promise.resolve({ success: true }));
       
-      const subscription = resourceManager.subscribe(querySpec, callback);
+      const subscription = dataSource.subscribe(querySpec, callback);
       
       // Simulate file change notification
-      resourceManager._handleFileChange({
+      dataSource._handleFileChange({
         subscriptionId: subscription.id,
         changes: {
           path: '/test.txt',
@@ -493,12 +493,12 @@ describe('ActorRemoteFileSystemResourceManager', () => {
   
   describe('Schema Interface', () => {
     test('should return schema information', () => {
-      const schema = resourceManager.getSchema();
+      const schema = dataSource.getSchema();
       
       expect(schema).toEqual(expect.objectContaining({
         version: '1.0.0',
         type: 'actor-remote-filesystem',
-        provider: 'ActorRemoteFileSystemResourceManager',
+        provider: 'ActorRemoteFileSystemDataSource',
         capabilities: expect.objectContaining({
           read: true,
           write: true,
@@ -519,7 +519,7 @@ describe('ActorRemoteFileSystemResourceManager', () => {
     beforeEach(async () => {
       // Wait for connection
       await new Promise(resolve => {
-        resourceManager.once('connected', resolve);
+        dataSource.once('connected', resolve);
       });
     });
     
@@ -527,9 +527,9 @@ describe('ActorRemoteFileSystemResourceManager', () => {
       const testPath = '/test.txt';
       const testData = [{ path: testPath, type: 'file' }];
       
-      resourceManager._setCachedMetadata(testPath, testData);
+      dataSource._setCachedMetadata(testPath, testData);
       
-      const cached = resourceManager._getCachedMetadata({
+      const cached = dataSource._getCachedMetadata({
         where: [['file', testPath, 'metadata']]
       });
       
@@ -537,7 +537,7 @@ describe('ActorRemoteFileSystemResourceManager', () => {
     });
     
     test('should respect cache TTL', async () => {
-      const shortTTLResourceManager = new ActorRemoteFileSystemResourceManager({
+      const shortTTLDataSource = new ActorRemoteFileSystemDataSource({
         wsUrl: 'ws://localhost:3000/filesystem',
         cacheTTL: 10, // Very short TTL
         actorSpace: mockActorSpace
@@ -546,28 +546,28 @@ describe('ActorRemoteFileSystemResourceManager', () => {
       const testPath = '/test.txt';
       const testData = [{ path: testPath, type: 'file' }];
       
-      shortTTLResourceManager._setCachedMetadata(testPath, testData);
+      shortTTLDataSource._setCachedMetadata(testPath, testData);
       
       // Wait for TTL to expire
       await new Promise(resolve => setTimeout(resolve, 20));
       
-      const cached = shortTTLResourceManager._getCachedMetadata({
+      const cached = shortTTLDataSource._getCachedMetadata({
         where: [['file', testPath, 'metadata']]
       });
       
       expect(cached).toBeNull();
       
-      shortTTLResourceManager.destroy();
+      shortTTLDataSource.destroy();
     });
     
     test('should invalidate cache on updates', () => {
       const testPath = '/test.txt';
       const testData = [{ path: testPath, type: 'file' }];
       
-      resourceManager._setCachedMetadata(testPath, testData);
-      resourceManager._invalidateCache(testPath);
+      dataSource._setCachedMetadata(testPath, testData);
+      dataSource._invalidateCache(testPath);
       
-      const cached = resourceManager._getCachedMetadata({
+      const cached = dataSource._getCachedMetadata({
         where: [['file', testPath, 'metadata']]
       });
       
@@ -577,7 +577,7 @@ describe('ActorRemoteFileSystemResourceManager', () => {
   
   describe('Actor Message Handling', () => {
     test('should implement receive method', () => {
-      expect(typeof resourceManager.receive).toBe('function');
+      expect(typeof dataSource.receive).toBe('function');
     });
     
     test('should handle response messages', () => {
@@ -587,16 +587,16 @@ describe('ActorRemoteFileSystemResourceManager', () => {
         reject: jest.fn()
       };
       
-      resourceManager.pendingRequests.set(requestId, mockRequest);
+      dataSource.pendingRequests.set(requestId, mockRequest);
       
-      resourceManager.receive({
+      dataSource.receive({
         type: 'filesystemQueryResult',
         payload: { success: true, results: [] },
         requestId: requestId
       });
       
       expect(mockRequest.resolve).toHaveBeenCalledWith({ success: true, results: [] });
-      expect(resourceManager.pendingRequests.has(requestId)).toBe(false);
+      expect(dataSource.pendingRequests.has(requestId)).toBe(false);
     });
     
     test('should handle error messages', () => {
@@ -606,28 +606,28 @@ describe('ActorRemoteFileSystemResourceManager', () => {
         reject: jest.fn()
       };
       
-      resourceManager.pendingRequests.set(requestId, mockRequest);
+      dataSource.pendingRequests.set(requestId, mockRequest);
       
-      resourceManager.receive({
+      dataSource.receive({
         type: 'filesystemError',
         payload: { error: { message: 'Test error' } },
         requestId: requestId
       });
       
       expect(mockRequest.reject).toHaveBeenCalledWith(new Error('Test error'));
-      expect(resourceManager.pendingRequests.has(requestId)).toBe(false);
+      expect(dataSource.pendingRequests.has(requestId)).toBe(false);
     });
     
     test('should handle subscription notifications', () => {
       const subscriptionId = 'sub_123';
       const mockCallback = jest.fn();
       
-      resourceManager.subscriptions.set(subscriptionId, {
+      dataSource.subscriptions.set(subscriptionId, {
         id: subscriptionId,
         callback: mockCallback
       });
       
-      resourceManager.receive({
+      dataSource.receive({
         type: 'filesystemFileChange',
         payload: {
           subscriptionId: subscriptionId,
@@ -641,17 +641,17 @@ describe('ActorRemoteFileSystemResourceManager', () => {
   
   describe('Cleanup', () => {
     test('should clean up resources on destroy', () => {
-      const wsCloseSpy = jest.spyOn(resourceManager.websocket, 'close');
-      const bridgeDestroySpy = jest.spyOn(resourceManager.bridgeActor, 'destroy');
+      const wsCloseSpy = jest.spyOn(dataSource.websocket, 'close');
+      const bridgeDestroySpy = jest.spyOn(dataSource.bridgeActor, 'destroy');
       
-      resourceManager.destroy();
+      dataSource.destroy();
       
       expect(wsCloseSpy).toHaveBeenCalled();
       expect(bridgeDestroySpy).toHaveBeenCalled();
-      expect(resourceManager.isConnected).toBe(false);
-      expect(resourceManager.subscriptions.size).toBe(0);
-      expect(resourceManager.pendingRequests.size).toBe(0);
-      expect(resourceManager.metadataCache.size).toBe(0);
+      expect(dataSource.isConnected).toBe(false);
+      expect(dataSource.subscriptions.size).toBe(0);
+      expect(dataSource.pendingRequests.size).toBe(0);
+      expect(dataSource.metadataCache.size).toBe(0);
     });
   });
   
@@ -661,13 +661,13 @@ describe('ActorRemoteFileSystemResourceManager', () => {
       const view = new Uint8Array(buffer);
       view.set([72, 101, 108, 108, 111]); // "Hello"
       
-      const base64 = resourceManager._arrayBufferToBase64(buffer);
+      const base64 = dataSource._arrayBufferToBase64(buffer);
       expect(base64).toBe('SGVsbG8=');
     });
     
     test('should convert base64 to ArrayBuffer', () => {
       const base64 = 'SGVsbG8=';
-      const buffer = resourceManager._base64ToArrayBuffer(base64);
+      const buffer = dataSource._base64ToArrayBuffer(base64);
       const view = new Uint8Array(buffer);
       
       expect(Array.from(view)).toEqual([72, 101, 108, 108, 111]);
@@ -678,7 +678,7 @@ describe('ActorRemoteFileSystemResourceManager', () => {
         where: [['file', '/test.txt', 'metadata']]
       };
       
-      const path = resourceManager._extractPathFromQuery(querySpec);
+      const path = dataSource._extractPathFromQuery(querySpec);
       expect(path).toBe('/test.txt');
     });
     
@@ -691,8 +691,8 @@ describe('ActorRemoteFileSystemResourceManager', () => {
         where: [['file', '/test.txt', 'content']]
       };
       
-      expect(resourceManager._isMetadataQuery(metadataQuery)).toBe(true);
-      expect(resourceManager._isMetadataQuery(contentQuery)).toBe(false);
+      expect(dataSource._isMetadataQuery(metadataQuery)).toBe(true);
+      expect(dataSource._isMetadataQuery(contentQuery)).toBe(false);
     });
   });
 });

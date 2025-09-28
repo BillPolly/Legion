@@ -1,7 +1,7 @@
 /**
- * PlainObjectResourceManager - Example ResourceManager backed by plain JavaScript objects
+ * PlainObjectDataSource - Example DataSource backed by plain JavaScript objects
  * 
- * Demonstrates how a simple ResourceManager with in-memory JavaScript objects/arrays
+ * Demonstrates how a simple DataSource with in-memory JavaScript objects/arrays
  * can use the DefaultQueryBuilder for query operations. This is perfect for:
  * - Mock/test scenarios
  * - Simple in-memory data stores
@@ -13,7 +13,7 @@ import { DefaultQueryBuilder } from '../src/DefaultQueryBuilder.js';
 import { CollectionProxy } from '../src/CollectionProxy.js';
 import { EntityProxy } from '../src/EntityProxy.js';
 
-export class PlainObjectResourceManager {
+export class PlainObjectDataSource {
   constructor(data = {}) {
     // Store data as plain JavaScript objects
     // Could be arrays, objects, or any structure
@@ -21,7 +21,7 @@ export class PlainObjectResourceManager {
     this._subscriptions = new Map();
   }
   
-  // Required ResourceManager interface methods
+  // Required DataSource interface methods
   
   query(querySpec) {
     // Simple query implementation for plain objects
@@ -151,8 +151,8 @@ export class PlainObjectResourceManager {
  * Example usage demonstrating query combinators with plain objects
  */
 export function exampleUsage() {
-  // Create a ResourceManager with plain JavaScript data
-  const resourceManager = new PlainObjectResourceManager({
+  // Create a DataSource with plain JavaScript data
+  const dataSource = new PlainObjectDataSource({
     users: [
       { id: 1, name: 'Alice', age: 30, active: true, department: 'Engineering' },
       { id: 2, name: 'Bob', age: 25, active: true, department: 'Design' },
@@ -168,12 +168,12 @@ export function exampleUsage() {
   });
   
   // Create a CollectionProxy for users
-  const users = new CollectionProxy(resourceManager, {
+  const users = new CollectionProxy(dataSource, {
     collection: 'users'
   });
   
   // Now we can use query combinators!
-  // The Handle delegates to ResourceManager.queryBuilder()
+  // The Handle delegates to DataSource.queryBuilder()
   // which returns our DefaultQueryBuilder
   
   // Example 1: Filter and transform

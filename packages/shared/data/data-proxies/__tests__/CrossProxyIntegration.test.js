@@ -7,7 +7,7 @@ import { EntityProxy } from '../src/EntityProxy.js';
 import { CollectionProxy } from '../src/CollectionProxy.js';
 import { StreamProxy } from '../src/StreamProxy.js';
 import { Handle } from '@legion/handle';
-import { DataStoreResourceManager } from '../src/DataStoreResourceManager.js';
+import { DataStoreDataSource } from '../src/DataStoreDataSource.js';
 import { createTestStore, createSampleData } from './setup.js';
 
 describe('Cross-Proxy Integration', () => {
@@ -17,7 +17,7 @@ describe('Cross-Proxy Integration', () => {
   
   beforeEach(() => {
     store = createTestStore();
-    resourceManager = new DataStoreResourceManager(store);
+    resourceManager = new DataStoreDataSource(store);
     sampleData = createSampleData(store);
   });
   

@@ -6,16 +6,16 @@
  */
 
 import { DirectoryHandle, FileHandle } from '../src/handles/index.js';
-import { LocalFileSystemResourceManager } from '../src/resourcemanagers/LocalFileSystemResourceManager.js';
+import { LocalFileSystemDataSource } from '../src/datasources/LocalFileSystemDataSource.js';
 
-// Create a ResourceManager instance
-const resourceManager = new LocalFileSystemResourceManager({
+// Create a DataSource instance
+const dataSource = new LocalFileSystemDataSource({
   rootPath: '/home/user/documents',
   enableWatching: true
 });
 
 // Create a DirectoryHandle for the root
-const rootDir = new DirectoryHandle(resourceManager, '/home/user/documents');
+const rootDir = new DirectoryHandle(dataSource, '/home/user/documents');
 
 console.log('=== FILESYSTEM QUERY COMBINATOR EXAMPLES ===\n');
 
@@ -296,7 +296,7 @@ console.log('Aggregation query:', aggregateQuery);
 console.log('\n8. HANDLE METHOD QUERY COMBINATORS\n');
 
 // The Handle base class provides query combinator methods
-const fileHandle = new FileHandle(resourceManager, '/home/user/documents/data.json');
+const fileHandle = new FileHandle(dataSource, '/home/user/documents/data.json');
 
 // Using Handle's query() method directly
 const directQuery = fileHandle.query({
@@ -324,7 +324,7 @@ console.log('Select combinator query:', selectQuery);
 console.log('\n9. REACTIVE QUERIES WITH SUBSCRIPTIONS\n');
 
 // Subscribe to query results that update automatically
-const subscription = resourceManager.subscribe(
+const subscription = dataSource.subscribe(
   {
     find: ['name', 'size'],
     where: [
@@ -421,4 +421,4 @@ const configWatcher = {
 console.log('Config file watcher:', configWatcher);
 
 // Clean up
-resourceManager.destroy();
+dataSource.destroy();

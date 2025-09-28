@@ -1,18 +1,18 @@
 /**
- * DataStoreResourceManager Unit Tests
+ * DataStoreDataSource Unit Tests
  * 
- * Tests the adapter that bridges DataStore to the universal ResourceManager interface.
+ * Tests the adapter that bridges DataStore to the universal DataSource interface.
  * NO MOCKS - uses real DataStore instance for all tests.
  */
 
 import { jest } from '@jest/globals';
-import { DataStoreResourceManager } from '../src/DataStoreResourceManager.js';
+import { DataStoreDataSource } from '../src/DataStoreDataSource.js';
 import { DataStore } from '@legion/data-store';
 import * as d from '@legion/datascript';
 
-describe('DataStoreResourceManager', () => {
+describe('DataStoreDataSource', () => {
   let dataStore;
-  let resourceManager;
+  let dataSource;
   
   beforeEach(() => {
     // Create real DataStore with schema
@@ -38,19 +38,19 @@ describe('DataStoreResourceManager', () => {
       { ':db/id': -3, ':post/title': 'Test Post', ':post/content': 'Content', ':post/author': -1 }
     ]);
     
-    resourceManager = new DataStoreResourceManager(dataStore);
+    dataSource = new DataStoreDataSource(dataStore);
   });
   
   describe('constructor', () => {
     it('should create instance with DataStore', () => {
-      expect(resourceManager).toBeDefined();
-      expect(resourceManager).toBeInstanceOf(DataStoreResourceManager);
+      expect(dataSource).toBeDefined();
+      expect(dataSource).toBeInstanceOf(DataStoreDataSource);
     });
     
     it('should fail without DataStore', () => {
-      expect(() => new DataStoreResourceManager()).toThrow('DataStore is required');
-      expect(() => new DataStoreResourceManager(null)).toThrow('DataStore is required');
-      expect(() => new DataStoreResourceManager({})).toThrow('DataStore must have query method');
+      expect(() => new DataStoreDataSource()).toThrow('DataStore is required');
+      expect(() => new DataStoreDataSource(null)).toThrow('DataStore is required');
+      expect(() => new DataStoreDataSource({})).toThrow('DataStore must have query method');
     });
   });
   
@@ -61,7 +61,7 @@ describe('DataStoreResourceManager', () => {
         where: [['?e', ':user/name', '?name']]
       };
       
-      const results = resourceManager.query(spec);
+      const results = dataSource.query(spec);
       
       expect(results).toBeDefined();
       expect(Array.isArray(results)).toBe(true);
@@ -78,7 +78,7 @@ describe('DataStoreResourceManager', () => {
         where: [['?e', ':user/name', 'NonExistent']]
       };
       
-      const results = resourceManager.query(spec);
+      const results = dataSource.query(spec);
       
       expect(results).toBeDefined();
       expect(Array.isArray(results)).toBe(true);
@@ -86,23 +86,23 @@ describe('DataStoreResourceManager', () => {
     });
     
     it('should fail with invalid query spec', () => {
-      expect(() => resourceManager.query(null)).toThrow('Query specification is required');
-      expect(() => resourceManager.query({})).toThrow('Query must have find clause');
-      expect(() => resourceManager.query({ find: [] })).toThrow('Query must have where clause');
+      expect(() => dataSource.query(null)).toThrow('Query specification is required');
+      expect(() => dataSource.query({})).toThrow('Query must have find clause');
+      expect(() => dataSource.query({ find: [] })).toThrow('Query must have where clause');
     });
   });
   
   describe('update', () => {
     it('should update entity through DataStore', () => {
       // Get an entity ID first
-      const queryResult = resourceManager.query({
+      const queryResult = dataSource.query({
         find: ['?e'],
         where: [['?e', ':user/name', 'Alice']]
       });
       const entityId = queryResult[0][0];
       
       // Update the entity
-      const updateResult = resourceManager.update(entityId, {
+      const updateResult = dataSource.update(entityId, {
         ':user/age': 31,
         ':user/email': 'alice.new@test.com'
       });
@@ -112,7 +112,7 @@ describe('DataStoreResourceManager', () => {
       expect(updateResult.entityId).toBe(entityId);
       
       // Verify the update
-      const verifyResult = resourceManager.query({
+      const verifyResult = dataSource.query({
         find: ['?age', '?email'],
         where: [
           [entityId, ':user/age', '?age'],
@@ -125,15 +125,15 @@ describe('DataStoreResourceManager', () => {
     });
     
     it('should fail with invalid entity ID', () => {
-      expect(() => resourceManager.update(null, {})).toThrow('Update data cannot be empty');
-      expect(() => resourceManager.update(undefined, {})).toThrow('Update data cannot be empty');
-      expect(() => resourceManager.update('invalid', {})).toThrow('Entity ID must be a number');
+      expect(() => dataSource.update(null, {})).toThrow('Update data cannot be empty');
+      expect(() => dataSource.update(undefined, {})).toThrow('Update data cannot be empty');
+      expect(() => dataSource.update('invalid', {})).toThrow('Entity ID must be a number');
     });
     
     it('should fail with invalid update data', () => {
-      expect(() => resourceManager.update(1, null)).toThrow('Update data is required');
-      expect(() => resourceManager.update(1, 'invalid')).toThrow('Update data must be an object');
-      expect(() => resourceManager.update(1, {})).toThrow('Update data cannot be empty');
+      expect(() => dataSource.update(1, null)).toThrow('Update data is required');
+      expect(() => dataSource.update(1, 'invalid')).toThrow('Update data must be an object');
+      expect(() => dataSource.update(1, {})).toThrow('Update data cannot be empty');
     });
   });
   
@@ -145,7 +145,7 @@ describe('DataStoreResourceManager', () => {
       };
       
       const callback = jest.fn();
-      const subscription = resourceManager.subscribe(spec, callback);
+      const subscription = dataSource.subscribe(spec, callback);
       
       expect(subscription).toBeDefined();
       expect(subscription.unsubscribe).toBeDefined();
@@ -172,7 +172,7 @@ describe('DataStoreResourceManager', () => {
         done();
       });
       
-      const subscription = resourceManager.subscribe(spec, callback);
+      const subscription = dataSource.subscribe(spec, callback);
     });
     
     it('should fail without callback', () => {
@@ -181,21 +181,21 @@ describe('DataStoreResourceManager', () => {
         where: [['?e', ':user/name', '?name']]
       };
       
-      expect(() => resourceManager.subscribe(spec, null)).toThrow('Callback must be a function');
-      expect(() => resourceManager.subscribe(spec, 'invalid')).toThrow('Callback must be a function');
+      expect(() => dataSource.subscribe(spec, null)).toThrow('Callback must be a function');
+      expect(() => dataSource.subscribe(spec, 'invalid')).toThrow('Callback must be a function');
     });
   });
   
   describe('getEntity', () => {
     it('should retrieve complete entity by ID', async () => {
       // Get an entity ID first
-      const queryResult = await resourceManager.query({
+      const queryResult = await dataSource.query({
         find: ['?e'],
         where: [['?e', ':user/name', 'Alice']]
       });
       const entityId = queryResult[0][0];
       
-      const entity = await resourceManager.getEntity(entityId);
+      const entity = await dataSource.getEntity(entityId);
       
       expect(entity).toBeDefined();
       expect(entity[':db/id']).toBe(entityId);
@@ -205,12 +205,12 @@ describe('DataStoreResourceManager', () => {
     });
     
     it('should throw error for non-existent entity', async () => {
-      await expect(resourceManager.getEntity(999999)).rejects.toThrow('Entity not found');
+      await expect(dataSource.getEntity(999999)).rejects.toThrow('Entity not found');
     });
     
     it('should fail with invalid entity ID', async () => {
-      await expect(resourceManager.getEntity(null)).rejects.toThrow('Entity ID is required');
-      await expect(resourceManager.getEntity('invalid')).rejects.toThrow('Entity ID must be a number');
+      await expect(dataSource.getEntity(null)).rejects.toThrow('Entity ID is required');
+      await expect(dataSource.getEntity('invalid')).rejects.toThrow('Entity ID must be a number');
     });
   });
   
@@ -222,21 +222,21 @@ describe('DataStoreResourceManager', () => {
       );
       const entityId = result.tempids.get(-1);
       
-      const entity = await resourceManager.getEntity(entityId);
-      const type = await resourceManager.detectEntityType(entity);
+      const entity = await dataSource.getEntity(entityId);
+      const type = await dataSource.detectEntityType(entity);
       
       expect(type).toBe('User');
     });
     
     it('should detect entity type from schema attributes', async () => {
-      const queryResult = await resourceManager.query({
+      const queryResult = await dataSource.query({
         find: ['?e'],
         where: [['?e', ':user/name', 'Alice']]
       });
       const entityId = queryResult[0][0];
       
-      const entity = await resourceManager.getEntity(entityId);
-      const type = await resourceManager.detectEntityType(entity);
+      const entity = await dataSource.getEntity(entityId);
+      const type = await dataSource.detectEntityType(entity);
       
       expect(type).toBe('user'); // Inferred from :user/* attributes
     });
@@ -247,8 +247,8 @@ describe('DataStoreResourceManager', () => {
       );
       const entityId = result.tempids.get(-1);
       
-      const entity = await resourceManager.getEntity(entityId);
-      const type = await resourceManager.detectEntityType(entity);
+      const entity = await dataSource.getEntity(entityId);
+      const type = await dataSource.detectEntityType(entity);
       
       expect(type).toBeNull();
     });
@@ -264,7 +264,7 @@ describe('DataStoreResourceManager', () => {
         ]
       };
       
-      const results = await resourceManager.executeQueryWithUpdate(spec);
+      const results = await dataSource.executeQueryWithUpdate(spec);
       
       expect(results).toBeDefined();
       expect(Array.isArray(results)).toBe(true);
@@ -287,7 +287,7 @@ describe('DataStoreResourceManager', () => {
         ]
       };
       
-      const results = await resourceManager.executeQueryWithUpdate(spec);
+      const results = await dataSource.executeQueryWithUpdate(spec);
       
       expect(results).toBeDefined();
       expect(results.length).toBe(1);
@@ -300,26 +300,26 @@ describe('DataStoreResourceManager', () => {
         where: [['?e', ':user/name', '?name']]
       };
       
-      const results = await resourceManager.executeQueryWithUpdate(spec);
+      const results = await dataSource.executeQueryWithUpdate(spec);
       
       expect(results).toBeDefined();
       expect(results.length).toBe(2);
     });
   });
   
-  describe('ResourceManager abstract methods', () => {
-    it('should implement all required ResourceManager methods', () => {
+  describe('DataSource abstract methods', () => {
+    it('should implement all required DataSource methods', () => {
       // Check that all abstract methods are implemented
-      expect(typeof resourceManager.query).toBe('function');
-      expect(typeof resourceManager.update).toBe('function');
-      expect(typeof resourceManager.subscribe).toBe('function');
-      expect(typeof resourceManager.getEntity).toBe('function');
-      expect(typeof resourceManager.detectEntityType).toBe('function');
+      expect(typeof dataSource.query).toBe('function');
+      expect(typeof dataSource.update).toBe('function');
+      expect(typeof dataSource.subscribe).toBe('function');
+      expect(typeof dataSource.getEntity).toBe('function');
+      expect(typeof dataSource.detectEntityType).toBe('function');
     });
     
     it('should maintain mixed sync/async interface as designed', () => {
       // query() is synchronous for Handle interface requirements
-      const queryResult = resourceManager.query({
+      const queryResult = dataSource.query({
         find: ['?e'],
         where: [['?e', ':user/name', 'Alice']]
       });
@@ -329,7 +329,7 @@ describe('DataStoreResourceManager', () => {
       expect(queryResult.length).toBe(1);
       
       // getEntity() is async for complex operations
-      const entityPromise = resourceManager.getEntity(queryResult[0][0]);
+      const entityPromise = dataSource.getEntity(queryResult[0][0]);
       expect(entityPromise).toBeInstanceOf(Promise);
     });
   });

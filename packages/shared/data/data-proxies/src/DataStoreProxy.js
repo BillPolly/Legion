@@ -14,7 +14,7 @@ import { EntityProxy } from './EntityProxy.js';
 import { StreamProxy } from './StreamProxy.js';
 import { CollectionProxy } from './CollectionProxy.js';
 import { ProxyTypeDetector } from './ProxyTypeDetector.js';
-import { DataStoreResourceManager } from './DataStoreResourceManager.js';
+import { DataStoreDataSource } from './DataStoreDataSource.js';
 
 export class DataStoreProxy extends Handle {
   constructor(store, options = {}) {
@@ -27,16 +27,16 @@ export class DataStoreProxy extends Handle {
       throw new Error('DataStore is required');
     }
     
-    // Create DataStoreResourceManager to wrap the store
-    const resourceManager = new DataStoreResourceManager(store);
-    super(resourceManager);
+    // Create DataStoreDataSource to wrap the store
+    const dataSource = new DataStoreDataSource(store);
+    super(dataSource);
     
     // Keep reference to store for backward compatibility
     this.store = store;
     this.options = options;
     
-    // Initialize proxy type detector with ResourceManager
-    this.detector = new ProxyTypeDetector(resourceManager);
+    // Initialize proxy type detector with DataSource
+    this.detector = new ProxyTypeDetector(dataSource);
     
     // Cache for entity proxies (singleton pattern)
     this._entityProxies = new Map();
@@ -69,7 +69,7 @@ export class DataStoreProxy extends Handle {
     }
     
     // Create new entity proxy
-    const entityProxy = new EntityProxy(this.resourceManager, entityId, this.options);
+    const entityProxy = new EntityProxy(this.dataSource, entityId, this.options);
     this._entityProxies.set(entityId, entityProxy);
     
     return entityProxy;
@@ -86,7 +86,7 @@ export class DataStoreProxy extends Handle {
     // Use inherited validation method with "Query" context for stream error messages
     this._validateQuerySpec(querySpec, 'Query');
     
-    return new StreamProxy(this.resourceManager, querySpec);
+    return new StreamProxy(this.dataSource, querySpec);
   }
   
   /**
@@ -105,7 +105,7 @@ export class DataStoreProxy extends Handle {
     }
     
     // Create CollectionProxy with options
-    return new CollectionProxy(this.resourceManager, collectionSpec, this.options);
+    return new CollectionProxy(this.dataSource, collectionSpec, this.options);
   }
   
   /**
@@ -278,8 +278,8 @@ export class DataStoreProxy extends Handle {
       throw new Error('Callback function is required');
     }
     
-    // Create subscription through resourceManager
-    const resourceSubscription = this.resourceManager.subscribe(querySpec, callback);
+    // Create subscription through dataSource
+    const resourceSubscription = this.dataSource.subscribe(querySpec, callback);
     
     // Create wrapper subscription that integrates with Handle's subscription tracking
     const wrapperSubscription = {

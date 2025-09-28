@@ -2,14 +2,14 @@
  * Integration Tests for EntityProxy with real DataStore
  * 
  * Tests the new EntityProxy implementation that extends Handle from @legion/handle
- * with real DataStore and DataStoreResourceManager components.
+ * with real DataStore and DataStoreDataSource components.
  * 
- * NO MOCKS - Uses real DataStore, DataStoreResourceManager, and Handle
+ * NO MOCKS - Uses real DataStore, DataStoreDataSource, and Handle
  */
 
 import { jest } from '@jest/globals';
 import { EntityProxy } from '../../src/EntityProxy.js';
-import { DataStoreResourceManager } from '../../src/DataStoreResourceManager.js';
+import { DataStoreDataSource } from '../../src/DataStoreDataSource.js';
 import { DataStore } from '@legion/data-store';
 import { Handle } from '../../../handle/src/index.js';
 import * as d from '@legion/datascript';
@@ -33,8 +33,8 @@ describe('EntityProxy Integration with Real DataStore', () => {
     
     dataStore = new DataStore(schema);
     
-    // Create DataStoreResourceManager adapter
-    resourceManager = new DataStoreResourceManager(dataStore);
+    // Create DataStoreDataSource adapter
+    resourceManager = new DataStoreDataSource(dataStore);
     
     // Create test entity in DataStore
     const transactionResult = dataStore.createEntities([

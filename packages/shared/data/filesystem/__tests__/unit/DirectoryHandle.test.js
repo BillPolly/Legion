@@ -1,15 +1,15 @@
 /**
  * Unit Tests for DirectoryHandle
  * 
- * Tests the DirectoryHandle class functionality with mock ResourceManager
+ * Tests the DirectoryHandle class functionality with mock DataSource
  */
 
 import { DirectoryHandle } from '../../src/handles/index.js';
 import { Handle } from '@legion/handle';
 import { jest } from '@jest/globals';
 
-// Mock ResourceManager for testing
-class MockResourceManager {
+// Mock DataSource for testing
+class MockDataSource {
   constructor() {
     this.data = new Map();
     this.subscribers = [];
@@ -145,12 +145,12 @@ class MockResourceManager {
 }
 
 describe('DirectoryHandle', () => {
-  let mockResourceManager;
+  let mockDataSource;
   let directoryHandle;
   
   beforeEach(() => {
-    mockResourceManager = new MockResourceManager();
-    directoryHandle = new DirectoryHandle(mockResourceManager, '/test');
+    mockDataSource = new MockDataSource();
+    directoryHandle = new DirectoryHandle(mockDataSource, '/test');
   });
   
   afterEach(() => {
@@ -164,8 +164,8 @@ describe('DirectoryHandle', () => {
       expect(directoryHandle).toBeInstanceOf(Handle);
     });
     
-    test('should initialize with resourceManager and path', () => {
-      expect(directoryHandle.resourceManager).toBe(mockResourceManager);
+    test('should initialize with dataSource and path', () => {
+      expect(directoryHandle.dataSource).toBe(mockDataSource);
       expect(directoryHandle.path).toBe('/test');
     });
     
@@ -174,13 +174,13 @@ describe('DirectoryHandle', () => {
     });
     
     test('should normalize path correctly', () => {
-      const dir1 = new DirectoryHandle(mockResourceManager, 'test');
+      const dir1 = new DirectoryHandle(mockDataSource, 'test');
       expect(dir1.path).toBe('/test');
       
-      const dir2 = new DirectoryHandle(mockResourceManager, '/test/');
+      const dir2 = new DirectoryHandle(mockDataSource, '/test/');
       expect(dir2.path).toBe('/test');
       
-      const dir3 = new DirectoryHandle(mockResourceManager, '');
+      const dir3 = new DirectoryHandle(mockDataSource, '');
       expect(dir3.path).toBe('/');
       
       dir1.destroy();
@@ -188,10 +188,10 @@ describe('DirectoryHandle', () => {
       dir3.destroy();
     });
     
-    test('should throw error for missing resourceManager', () => {
+    test('should throw error for missing dataSource', () => {
       expect(() => {
         new DirectoryHandle(null, '/test');
-      }).toThrow('ResourceManager must be a non-null object');
+      }).toThrow('DataSource must be a non-null object');
     });
   });
   
@@ -402,7 +402,7 @@ describe('DirectoryHandle', () => {
       });
       
       test('should return null for root directory', () => {
-        const rootHandle = new DirectoryHandle(mockResourceManager, '/');
+        const rootHandle = new DirectoryHandle(mockDataSource, '/');
         const parentHandle = rootHandle.parent();
         
         expect(parentHandle).toBeNull();
@@ -413,8 +413,8 @@ describe('DirectoryHandle', () => {
   });
   
   describe('Error Handling', () => {
-    test('should handle resource manager errors gracefully', () => {
-      const errorResourceManager = {
+    test('should handle DataSource errors gracefully', () => {
+      const errorDataSource = {
         query() {
           throw new Error('Query failed');
         },
@@ -432,7 +432,7 @@ describe('DirectoryHandle', () => {
         }
       };
       
-      const errorDir = new DirectoryHandle(errorResourceManager, '/test');
+      const errorDir = new DirectoryHandle(errorDataSource, '/test');
       
       expect(() => errorDir.value()).toThrow('Query failed');
       expect(() => errorDir.list()).toThrow('Query failed');

@@ -65,7 +65,7 @@ describe('FileSystemActor', () => {
       expect(customActor.options.maxFileSize).toBe(50 * 1024 * 1024);
     });
     
-    test('should create LocalFileSystemResourceManager', () => {
+    test('should create LocalFileSystemDataSource', () => {
       expect(actor.fsManager).toBeDefined();
       expect(actor.fsManager.rootPath).toBe(testDir);
     });

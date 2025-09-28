@@ -1,7 +1,7 @@
 /**
- * RemoteFileSystemResourceManager - Browser-side ResourceManager for remote filesystem access
+ * RemoteFileSystemDataSource - Browser-side DataSource for remote filesystem access
  * 
- * Implements the ResourceManager interface for browser environments to access files
+ * Implements the DataSource interface for browser environments to access files
  * on a remote server via WebSocket or HTTP API. This enables web applications to use
  * FileHandle and DirectoryHandle to work with server-side files as if they were local.
  * 
@@ -17,7 +17,7 @@
 
 import { EventEmitter } from 'events';
 
-export class RemoteFileSystemResourceManager extends EventEmitter {
+export class RemoteFileSystemDataSource extends EventEmitter {
   constructor(options = {}) {
     super();
     
@@ -238,7 +238,7 @@ export class RemoteFileSystemResourceManager extends EventEmitter {
     return {
       version: '1.0.0',
       type: 'remote-filesystem',
-      provider: 'RemoteFileSystemResourceManager',
+      provider: 'RemoteFileSystemDataSource',
       capabilities: {
         read: true,
         write: true,

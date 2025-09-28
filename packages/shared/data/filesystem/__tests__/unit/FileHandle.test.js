@@ -1,15 +1,15 @@
 /**
  * Unit Tests for FileHandle
  * 
- * Tests the FileHandle class functionality with mock ResourceManager
+ * Tests the FileHandle class functionality with mock DataSource
  */
 
 import { FileHandle } from '../../src/handles/index.js';
 import { Handle } from '@legion/handle';
 import { jest } from '@jest/globals';
 
-// Mock ResourceManager for testing
-class MockResourceManager {
+// Mock DataSource for testing
+class MockDataSource {
   constructor() {
     this.data = new Map();
     this.subscribers = [];
@@ -177,12 +177,12 @@ class MockResourceManager {
 }
 
 describe('FileHandle', () => {
-  let mockResourceManager;
+  let mockDataSource;
   let fileHandle;
   
   beforeEach(() => {
-    mockResourceManager = new MockResourceManager();
-    fileHandle = new FileHandle(mockResourceManager, '/test/file.txt');
+    mockDataSource = new MockDataSource();
+    fileHandle = new FileHandle(mockDataSource, '/test/file.txt');
   });
   
   afterEach(() => {
@@ -196,8 +196,8 @@ describe('FileHandle', () => {
       expect(fileHandle).toBeInstanceOf(Handle);
     });
     
-    test('should initialize with resourceManager and path', () => {
-      expect(fileHandle.resourceManager).toBe(mockResourceManager);
+    test('should initialize with dataSource and path', () => {
+      expect(fileHandle.dataSource).toBe(mockDataSource);
       expect(fileHandle.path).toBe('/test/file.txt');
     });
     
@@ -206,10 +206,10 @@ describe('FileHandle', () => {
     });
     
     test('should normalize path correctly', () => {
-      const file1 = new FileHandle(mockResourceManager, 'test.txt');
+      const file1 = new FileHandle(mockDataSource, 'test.txt');
       expect(file1.path).toBe('/test.txt');
       
-      const file2 = new FileHandle(mockResourceManager, '\\test\\file.txt');
+      const file2 = new FileHandle(mockDataSource, '\\test\\file.txt');
       expect(file2.path).toBe('/test/file.txt');
       
       file1.destroy();
@@ -218,18 +218,18 @@ describe('FileHandle', () => {
     
     test('should throw error for missing path', () => {
       expect(() => {
-        new FileHandle(mockResourceManager, '');
+        new FileHandle(mockDataSource, '');
       }).toThrow('File path is required and must be a string');
       
       expect(() => {
-        new FileHandle(mockResourceManager, null);
+        new FileHandle(mockDataSource, null);
       }).toThrow('File path is required and must be a string');
     });
     
-    test('should throw error for missing resourceManager', () => {
+    test('should throw error for missing dataSource', () => {
       expect(() => {
         new FileHandle(null, '/test.txt');
-      }).toThrow('ResourceManager must be a non-null object');
+      }).toThrow('DataSource must be a non-null object');
     });
   });
   
@@ -267,7 +267,7 @@ describe('FileHandle', () => {
       });
       
       test('should cache metadata by default', () => {
-        const spy = jest.spyOn(mockResourceManager, 'query');
+        const spy = jest.spyOn(mockDataSource, 'query');
         
         fileHandle.value(); // First call
         fileHandle.value(); // Second call (should use cache)
@@ -276,7 +276,7 @@ describe('FileHandle', () => {
       });
       
       test('should bypass cache when fresh=true', () => {
-        const spy = jest.spyOn(mockResourceManager, 'query');
+        const spy = jest.spyOn(mockDataSource, 'query');
         
         fileHandle.value(); // First call
         fileHandle.value(true); // Second call with fresh=true
@@ -325,7 +325,7 @@ describe('FileHandle', () => {
       });
       
       test('should support read options', () => {
-        const spy = jest.spyOn(mockResourceManager, 'query');
+        const spy = jest.spyOn(mockDataSource, 'query');
         
         fileHandle.read({ offset: 10, length: 5 });
         
@@ -338,7 +338,7 @@ describe('FileHandle', () => {
       });
       
       test('should throw error for missing file', () => {
-        const errorResourceManager = {
+        const errorDataSource = {
           query: () => [],
           getSchema: () => ({ version: '1.0.0' }),
           update: () => ({ success: true }),
@@ -346,7 +346,7 @@ describe('FileHandle', () => {
           queryBuilder: () => ({ query: (querySpec) => [] })
         };
         
-        const errorFile = new FileHandle(errorResourceManager, '/missing.txt');
+        const errorFile = new FileHandle(errorDataSource, '/missing.txt');
         
         expect(() => errorFile.read()).toThrow('File not found: /missing.txt');
         
@@ -381,7 +381,7 @@ describe('FileHandle', () => {
     describe('json()', () => {
       test('should parse JSON content', () => {
         // Mock JSON content
-        const jsonResourceManager = {
+        const jsonDataSource = {
           query: () => ['{"name": "test", "value": 42}'],
           getSchema: () => ({ version: '1.0.0' }),
           update: () => ({ success: true }),
@@ -389,7 +389,7 @@ describe('FileHandle', () => {
           queryBuilder: () => ({ query: (querySpec) => ['{"name": "test", "value": 42}'] })
         };
         
-        const jsonFile = new FileHandle(jsonResourceManager, '/data.json');
+        const jsonFile = new FileHandle(jsonDataSource, '/data.json');
         const data = jsonFile.json();
         
         expect(data).toEqual({ name: 'test', value: 42 });
@@ -399,7 +399,7 @@ describe('FileHandle', () => {
       
       test('should throw error for invalid JSON', () => {
         // Mock invalid JSON content
-        const invalidJsonResourceManager = {
+        const invalidJsonDataSource = {
           query: () => ['{ invalid json }'],
           getSchema: () => ({ version: '1.0.0' }),
           update: () => ({ success: true }),
@@ -407,7 +407,7 @@ describe('FileHandle', () => {
           queryBuilder: () => ({ query: (querySpec) => ['{ invalid json }'] })
         };
         
-        const invalidJsonFile = new FileHandle(invalidJsonResourceManager, '/invalid.json');
+        const invalidJsonFile = new FileHandle(invalidJsonDataSource, '/invalid.json');
         
         expect(() => invalidJsonFile.json()).toThrow('Failed to parse JSON from /invalid.json');
         
@@ -428,7 +428,7 @@ describe('FileHandle', () => {
       });
       
       test('should write with options', () => {
-        const spy = jest.spyOn(mockResourceManager, 'update');
+        const spy = jest.spyOn(mockDataSource, 'update');
         
         fileHandle.write('Content', { encoding: 'utf8', append: true });
         
@@ -483,7 +483,7 @@ describe('FileHandle', () => {
       });
       
       test('should copy with options', () => {
-        const spy = jest.spyOn(mockResourceManager, 'update');
+        const spy = jest.spyOn(mockDataSource, 'update');
         
         fileHandle.copy('/backup/file.txt', { overwrite: true });
         
@@ -503,7 +503,7 @@ describe('FileHandle', () => {
       });
       
       test('should throw error when copy fails', () => {
-        const errorResourceManager = {
+        const errorDataSource = {
           update: () => ({ success: false, error: 'Copy failed' }),
           getSchema: () => ({ version: '1.0.0' }),
           query: () => [],
@@ -511,7 +511,7 @@ describe('FileHandle', () => {
           queryBuilder: () => ({ query: (querySpec) => [] })
         };
         
-        const errorFile = new FileHandle(errorResourceManager, '/test.txt');
+        const errorFile = new FileHandle(errorDataSource, '/test.txt');
         
         expect(() => errorFile.copy('/backup.txt')).toThrow('Failed to copy file: Copy failed');
         
@@ -551,7 +551,7 @@ describe('FileHandle', () => {
       });
       
       test('should delete with options', () => {
-        const spy = jest.spyOn(mockResourceManager, 'update');
+        const spy = jest.spyOn(mockDataSource, 'update');
         
         fileHandle.delete({ force: true });
         
@@ -575,7 +575,7 @@ describe('FileHandle', () => {
       });
       
       test('should return root for file in root', () => {
-        const rootFile = new FileHandle(mockResourceManager, '/root.txt');
+        const rootFile = new FileHandle(mockDataSource, '/root.txt');
         const parentHandle = rootFile.parent();
         
         expect(parentHandle.path).toBe('/');
@@ -591,7 +591,7 @@ describe('FileHandle', () => {
       });
       
       test('should handle file in root', () => {
-        const rootFile = new FileHandle(mockResourceManager, '/root.txt');
+        const rootFile = new FileHandle(mockDataSource, '/root.txt');
         expect(rootFile.name()).toBe('root.txt');
         rootFile.destroy();
       });
@@ -603,13 +603,13 @@ describe('FileHandle', () => {
       });
       
       test('should return empty string for no extension', () => {
-        const noExtFile = new FileHandle(mockResourceManager, '/test/README');
+        const noExtFile = new FileHandle(mockDataSource, '/test/README');
         expect(noExtFile.extension()).toBe('');
         noExtFile.destroy();
       });
       
       test('should handle multiple dots', () => {
-        const multiDotFile = new FileHandle(mockResourceManager, '/test/file.tar.gz');
+        const multiDotFile = new FileHandle(mockDataSource, '/test/file.tar.gz');
         expect(multiDotFile.extension()).toBe('.gz');
         multiDotFile.destroy();
       });
@@ -621,7 +621,7 @@ describe('FileHandle', () => {
       });
       
       test('should return full name if no extension', () => {
-        const noExtFile = new FileHandle(mockResourceManager, '/test/README');
+        const noExtFile = new FileHandle(mockDataSource, '/test/README');
         expect(noExtFile.basename()).toBe('README');
         noExtFile.destroy();
       });
@@ -641,7 +641,7 @@ describe('FileHandle', () => {
       });
       
       test('should create stream with options', () => {
-        const spy = jest.spyOn(mockResourceManager, 'query');
+        const spy = jest.spyOn(mockDataSource, 'query');
         
         fileHandle.createReadStream({ encoding: 'utf8', start: 10, end: 100 });
         
@@ -683,7 +683,7 @@ describe('FileHandle', () => {
       });
       
       test('should watch with options', () => {
-        const spy = jest.spyOn(mockResourceManager, 'subscribe');
+        const spy = jest.spyOn(mockDataSource, 'subscribe');
         const callback = jest.fn();
         
         fileHandle.watch(callback, { content: true, metadata: false });
@@ -711,7 +711,7 @@ describe('FileHandle', () => {
         const subscription = fileHandle.watch(callback);
         
         // Simulate file change by calling the callback
-        const watchCallback = mockResourceManager.subscribers[0].callback;
+        const watchCallback = mockDataSource.subscribers[0].callback;
         watchCallback([{ event: 'change', path: '/test/file.txt' }]);
         
         // Cache should be invalidated
@@ -728,8 +728,8 @@ describe('FileHandle', () => {
   });
   
   describe('Error Handling', () => {
-    test('should handle resource manager errors gracefully', () => {
-      const errorResourceManager = {
+    test('should handle data source errors gracefully', () => {
+      const errorDataSource = {
         query() {
           throw new Error('Query failed');
         },
@@ -747,7 +747,7 @@ describe('FileHandle', () => {
         }
       };
       
-      const errorFile = new FileHandle(errorResourceManager, '/test.txt');
+      const errorFile = new FileHandle(errorDataSource, '/test.txt');
       
       expect(() => errorFile.value()).toThrow('Query failed');
       expect(() => errorFile.read()).toThrow('Query failed');

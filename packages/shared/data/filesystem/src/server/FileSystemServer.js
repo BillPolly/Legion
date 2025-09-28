@@ -1,8 +1,8 @@
 /**
- * FileSystemServer - Server-side endpoint for RemoteFileSystemResourceManager
+ * FileSystemServer - Server-side endpoint for RemoteFileSystemDataSource
  * 
  * Provides HTTP and WebSocket endpoints for remote filesystem access.
- * This server wraps a LocalFileSystemResourceManager to expose it over the network,
+ * This server wraps a LocalFileSystemDataSource to expose it over the network,
  * allowing browser clients to access server-side files through Handle abstractions.
  * 
  * Features:
@@ -17,7 +17,7 @@
 import express from 'express';
 import { WebSocketServer } from 'ws';
 import cors from 'cors';
-import { LocalFileSystemResourceManager } from '../resourcemanagers/LocalFileSystemResourceManager.js';
+import { LocalFileSystemDataSource } from '../datasources/LocalFileSystemDataSource.js';
 import path from 'path';
 import fs from 'fs';
 
@@ -49,8 +49,8 @@ export class FileSystemServer {
     this.server = null;
     this.wss = null;
     
-    // Create local filesystem resource manager
-    this.fsManager = new LocalFileSystemResourceManager({
+    // Create local filesystem DataSource
+    this.fsManager = new LocalFileSystemDataSource({
       rootPath: this.options.rootPath,
       enableWatching: this.options.enableWebSocket
     });

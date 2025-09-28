@@ -10,20 +10,20 @@
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { DefaultQueryBuilder } from '../../src/DefaultQueryBuilder.js';
-import { PlainObjectResourceManager, exampleUsage } from '../../examples/PlainObjectResourceManager.js';
-import { APIResourceManager, exampleAPIUsage } from '../../examples/APIResourceManager.js';
+import { PlainObjectDataSource, exampleUsage } from '../../examples/PlainObjectDataSource.js';
+import { APIDataSource, exampleAPIUsage } from '../../examples/APIDataSource.js';
 import { CollectionProxy } from '../../src/CollectionProxy.js';
 import { EntityProxy } from '../../src/EntityProxy.js';
 
 describe('DefaultQueryBuilder Integration Tests', () => {
-  describe('PlainObjectResourceManager', () => {
-    let resourceManager;
+  describe('PlainObjectDataSource', () => {
+    let dataSource;
     let users;
     let projects;
 
     beforeEach(() => {
-      // Create ResourceManager with plain JavaScript data
-      resourceManager = new PlainObjectResourceManager({
+      // Create DataSource with plain JavaScript data
+      dataSource = new PlainObjectDataSource({
         users: [
           { id: 1, name: 'Alice', age: 30, active: true, department: 'Engineering' },
           { id: 2, name: 'Bob', age: 25, active: true, department: 'Design' },
@@ -39,21 +39,21 @@ describe('DefaultQueryBuilder Integration Tests', () => {
       });
 
       // Create CollectionProxy handles
-      users = new CollectionProxy(resourceManager, { collection: 'users' });
-      projects = new CollectionProxy(resourceManager, { collection: 'projects' });
+      users = new CollectionProxy(dataSource, { collection: 'users' });
+      projects = new CollectionProxy(dataSource, { collection: 'projects' });
     });
 
     describe('Query Builder Creation', () => {
       it('should create DefaultQueryBuilder from queryBuilder method', () => {
-        const builder = resourceManager.queryBuilder(users);
+        const builder = dataSource.queryBuilder(users);
         
         expect(builder).toBeInstanceOf(DefaultQueryBuilder);
-        expect(builder.resourceManager).toBe(resourceManager);
+        expect(builder.dataSource).toBe(dataSource);
         expect(builder.sourceHandle).toBe(users);
       });
 
       it('should work with Handle hierarchy - queries flow up', () => {
-        // Test that queries flow through Handle.where() -> ResourceManager.queryBuilder()
+        // Test that queries flow through Handle.where() -> DataSource.queryBuilder()
         const filtered = users.where(user => user.active === true);
         
         expect(filtered).toBeInstanceOf(DefaultQueryBuilder);
@@ -346,7 +346,7 @@ describe('DefaultQueryBuilder Integration Tests', () => {
       });
 
       it('should maintain immutability', () => {
-        const builder1 = resourceManager.queryBuilder(users);
+        const builder1 = dataSource.queryBuilder(users);
         const builder2 = builder1.where(user => user.active);
         const builder3 = builder2.select(user => user.name);
         
@@ -359,12 +359,12 @@ describe('DefaultQueryBuilder Integration Tests', () => {
     });
 
     describe('Entity Proxy Wrapping', () => {
-      it('should wrap results when ResourceManager provides wrapQueryResult', () => {
+      it('should wrap results when DataSource provides wrapQueryResult', () => {
         // Add wrapQueryResult method to test custom wrapping
         const wrapQueryResultSpy = jest.fn((result) => {
-          return new EntityProxy(resourceManager, result.id);
+          return new EntityProxy(dataSource, result.id);
         });
-        resourceManager.wrapQueryResult = wrapQueryResultSpy;
+        dataSource.wrapQueryResult = wrapQueryResultSpy;
 
         const first = users.first();
         
@@ -379,12 +379,12 @@ describe('DefaultQueryBuilder Integration Tests', () => {
         expect(first).toBeInstanceOf(EntityProxy);
         
         // Clean up
-        delete resourceManager.wrapQueryResult;
+        delete dataSource.wrapQueryResult;
       });
 
       it('should return plain objects when no custom wrapping', () => {
         // Ensure no wrapQueryResult method
-        delete resourceManager.wrapQueryResult;
+        delete dataSource.wrapQueryResult;
         
         const first = users.first();
         
@@ -399,22 +399,22 @@ describe('DefaultQueryBuilder Integration Tests', () => {
     });
   });
 
-  describe('APIResourceManager', () => {
-    let apiManager;
+  describe('APIDataSource', () => {
+    let apiDataSource;
     let users;
     let projects;
     let tasks;
 
     beforeEach(() => {
-      // Create API-backed ResourceManager
-      apiManager = new APIResourceManager('https://api.example.com', {
+      // Create API-backed DataSource
+      apiDataSource = new APIDataSource('https://api.example.com', {
         cacheTimeout: 30000
       });
       
       // Create CollectionProxy handles for API endpoints
-      users = new CollectionProxy(apiManager, { collection: 'users' });
-      projects = new CollectionProxy(apiManager, { collection: 'projects' });
-      tasks = new CollectionProxy(apiManager, { collection: 'tasks' });
+      users = new CollectionProxy(apiDataSource, { collection: 'users' });
+      projects = new CollectionProxy(apiDataSource, { collection: 'projects' });
+      tasks = new CollectionProxy(apiDataSource, { collection: 'tasks' });
     });
 
     describe('API Data Querying', () => {
@@ -476,7 +476,7 @@ describe('DefaultQueryBuilder Integration Tests', () => {
         const results1 = users.toArray();
         
         // Check cache is populated
-        expect(apiManager.cache.size).toBeGreaterThan(0);
+        expect(apiDataSource.cache.size).toBeGreaterThan(0);
         
         // Second query uses cache
         const results2 = users.toArray();
@@ -523,7 +523,7 @@ describe('DefaultQueryBuilder Integration Tests', () => {
 
   describe('Handle Hierarchy Integration', () => {
     it('should flow queries up through Handle tree', () => {
-      const resourceManager = new PlainObjectResourceManager({
+      const dataSource = new PlainObjectDataSource({
         items: [
           { id: 1, value: 10 },
           { id: 2, value: 20 },
@@ -531,22 +531,22 @@ describe('DefaultQueryBuilder Integration Tests', () => {
         ]
       });
       
-      const collection = new CollectionProxy(resourceManager, { collection: 'items' });
+      const collection = new CollectionProxy(dataSource, { collection: 'items' });
       
-      // Query starts at Handle, flows to ResourceManager.queryBuilder()
+      // Query starts at Handle, flows to DataSource.queryBuilder()
       const filtered = collection.where(item => item.value > 15);
       
       expect(filtered).toBeInstanceOf(DefaultQueryBuilder);
-      expect(filtered.resourceManager).toBe(resourceManager);
+      expect(filtered.dataSource).toBe(dataSource);
       expect(filtered.sourceHandle).toBe(collection);
     });
 
     it('should maintain Handle references through query chain', () => {
-      const resourceManager = new PlainObjectResourceManager({
+      const dataSource = new PlainObjectDataSource({
         items: [{ id: 1 }, { id: 2 }]
       });
       
-      const collection = new CollectionProxy(resourceManager, { collection: 'items' });
+      const collection = new CollectionProxy(dataSource, { collection: 'items' });
       
       const builder1 = collection.where(item => item.id > 0);
       const builder2 = builder1.select(item => item.id);
@@ -560,7 +560,7 @@ describe('DefaultQueryBuilder Integration Tests', () => {
   });
 
   describe('Example Functions', () => {
-    it('should run PlainObjectResourceManager example', () => {
+    it('should run PlainObjectDataSource example', () => {
       // Capture console output
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
       
@@ -572,14 +572,14 @@ describe('DefaultQueryBuilder Integration Tests', () => {
       consoleSpy.mockRestore();
     });
 
-    it('should run APIResourceManager example', () => {
+    it('should run APIDataSource example', () => {
       // Capture console output
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
       
-      const apiManager = exampleAPIUsage();
+      const apiDataSource = exampleAPIUsage();
       
-      // Verify example ran and returned manager
-      expect(apiManager).toBeInstanceOf(APIResourceManager);
+      // Verify example ran and returned data source
+      expect(apiDataSource).toBeInstanceOf(APIDataSource);
       expect(consoleSpy).toHaveBeenCalled();
       
       consoleSpy.mockRestore();

@@ -13,7 +13,7 @@
  * - Security validation and path sandboxing
  */
 
-import { LocalFileSystemResourceManager } from '../resourcemanagers/LocalFileSystemResourceManager.js';
+import { LocalFileSystemDataSource } from '../datasources/LocalFileSystemDataSource.js';
 import path from 'path';
 import fs from 'fs';
 
@@ -36,8 +36,8 @@ export class FileSystemActor {
       ...config
     };
     
-    // Create local filesystem resource manager
-    this.fsManager = new LocalFileSystemResourceManager({
+    // Create local filesystem DataSource
+    this.fsManager = new LocalFileSystemDataSource({
       rootPath: this.options.rootPath,
       enableWatching: true
     });
@@ -54,6 +54,19 @@ export class FileSystemActor {
     if (this.options.verbose) {
       console.log(`FileSystemActor initialized with root: ${this.options.rootPath}`);
     }
+  }
+  
+  /**
+   * Get actor metadata (implements Actor interface)
+   */
+  getMetadata() {
+    return {
+      type: 'filesystem',
+      name: this.name,
+      capabilities: this.fsManager.getSchema().capabilities,
+      rootPath: this.options.rootPath,
+      version: '1.0.0'
+    };
   }
   
   /**
@@ -90,11 +103,11 @@ export class FileSystemActor {
           return await this._handleStreamWrite(payload, requestId);
           
         default:
-          throw new Error(`Unknown filesystem operation: ${type}`);
+          throw new Error(`Unknown message type: ${type}`);
       }
     } catch (error) {
-      // Send error response
-      this._sendResponse({
+      // Create error response message
+      const errorResponse = {
         type: 'filesystemError',
         payload: {
           error: {
@@ -103,12 +116,13 @@ export class FileSystemActor {
           }
         },
         requestId
-      });
-      
-      return {
-        success: false,
-        error: error.message
       };
+      
+      // Send to actor space
+      this._sendResponse(errorResponse);
+      
+      // Return for direct testing
+      return errorResponse;
     }
   }
   
@@ -135,8 +149,8 @@ export class FileSystemActor {
       createdAt: new Date()
     });
     
-    // Send success response
-    this._sendResponse({
+    // Create response message
+    const response = {
       type: 'filesystemConnected',
       payload: {
         sessionId,
@@ -144,12 +158,13 @@ export class FileSystemActor {
         capabilities: this.fsManager.getSchema().capabilities
       },
       requestId
-    });
-    
-    return {
-      success: true,
-      sessionId
     };
+    
+    // Send to actor space
+    this._sendResponse(response);
+    
+    // Return for direct testing
+    return response;
   }
   
   /**
@@ -158,6 +173,11 @@ export class FileSystemActor {
   async _handleQuery(payload, requestId) {
     const { querySpec } = payload;
     
+    // Request ID is required for queries
+    if (!requestId) {
+      throw new Error('Request ID is required');
+    }
+    
     if (!querySpec || typeof querySpec !== 'object') {
       throw new Error('Invalid query specification');
     }
@@ -165,28 +185,68 @@ export class FileSystemActor {
     // Validate and sanitize paths in query
     this._validateQuery(querySpec);
     
+    // Transform relative paths to absolute paths for LocalFileSystemDataSource
+    const transformedSpec = this._transformQueryPaths(querySpec);
+    
     // Execute query
-    const results = this.fsManager.query(querySpec);
+    const results = this.fsManager.query(transformedSpec);
+    
+    // Check if this is a content query (where clause has 'content' as third element)
+    const isContentQuery = querySpec.where && 
+      Array.isArray(querySpec.where) &&
+      querySpec.where.some(clause => 
+        Array.isArray(clause) && clause.length === 3 && clause[2] === 'content'
+      );
+    
+    // If content query, wrap result with path
+    let processedResults = results;
+    if (isContentQuery) {
+      // Extract the file path from the query
+      const contentClause = querySpec.where.find(clause => 
+        Array.isArray(clause) && clause.length === 3 && clause[2] === 'content'
+      );
+      const filePath = contentClause ? contentClause[1] : null;
+      
+      // LocalFileSystemDataSource returns content as [content] - an array with a single element
+      if (Array.isArray(results) && results.length > 0) {
+        const content = results[0];
+        processedResults = [{
+          path: filePath,
+          content: content
+        }];
+      } else if (typeof results === 'string' || results instanceof Buffer) {
+        // Fallback for direct string/buffer results
+        processedResults = [{
+          path: filePath,
+          content: results
+        }];
+      }
+    }
     
     // Limit results
-    const limited = Array.isArray(results) 
-      ? results.slice(0, this.options.maxQueryResults)
-      : results;
+    const limited = Array.isArray(processedResults) 
+      ? processedResults.slice(0, this.options.maxQueryResults)
+      : processedResults;
     
-    // Send response
-    this._sendResponse({
+    // Transform absolute paths back to relative paths in results
+    const transformedResults = this._transformResultPaths(limited);
+    
+    // Create response message
+    const response = {
       type: 'filesystemQueryResult',
       payload: {
-        results: limited,
+        success: true,
+        results: transformedResults,
         truncated: Array.isArray(results) && results.length > this.options.maxQueryResults
       },
       requestId
-    });
-    
-    return {
-      success: true,
-      results: limited
     };
+    
+    // Send to actor space
+    this._sendResponse(response);
+    
+    // Return for direct testing
+    return response;
   }
   
   /**
@@ -220,8 +280,52 @@ export class FileSystemActor {
       throw new Error('File size exceeds limit');
     }
     
+    // For write operations without explicit createParents option, set it to false
+    // This ensures operations fail if parent directories don't exist (security)
+    if (data.operation === 'write' && !data.options) {
+      data.options = { createParents: false };
+    } else if (data.operation === 'write' && data.options && data.options.createParents === undefined) {
+      data.options.createParents = false;
+    }
+    
+    // Transform relative path to absolute path for LocalFileSystemDataSource
+    let absoluteFilePath = filePath;
+    if (filePath && filePath.startsWith('/')) {
+      const pathToResolve = filePath.substring(1);
+      absoluteFilePath = path.resolve(this.options.rootPath, pathToResolve);
+    }
+    
+    // Transform paths in data object
+    const transformedData = { ...data };
+    if (data.path && data.path.startsWith('/')) {
+      const pathToResolve = data.path.substring(1);
+      transformedData.path = path.resolve(this.options.rootPath, pathToResolve);
+    }
+    // If no data.path but we have a main filePath, and this is a directory/file creation, add it to data
+    else if (!data.path && absoluteFilePath && (data.type === 'directory' || data.type === 'file')) {
+      transformedData.path = absoluteFilePath;
+    }
+    
+    if (data.source && data.source.startsWith('/')) {
+      const pathToResolve = data.source.substring(1);
+      transformedData.source = path.resolve(this.options.rootPath, pathToResolve);
+    }
+    if (data.target && data.target.startsWith('/')) {
+      const pathToResolve = data.target.substring(1);
+      transformedData.target = path.resolve(this.options.rootPath, pathToResolve);
+    }
+    
+    // Remove 'operation' field when type is directory or file
+    // LocalFileSystemDataSource infers the operation from the presence of 'type' field
+    if (transformedData.type === 'directory' || transformedData.type === 'file') {
+      delete transformedData.operation;
+    }
+    
+    // For directory/file creation operations, pass null as first param to LocalFileSystemDataSource
+    const updatePath = (data.type === 'directory' || data.type === 'file') ? null : absoluteFilePath;
+    
     // Execute update
-    const result = this.fsManager.update(filePath, data);
+    const result = this.fsManager.update(updatePath, transformedData);
     
     if (!result.success) {
       throw new Error(result.error || 'Update operation failed');
@@ -233,17 +337,21 @@ export class FileSystemActor {
       this._notifyFileChange(affectedPath, data.operation || data.type || 'change');
     }
     
-    // Send response
-    this._sendResponse({
+    // Create response message
+    const response = {
       type: 'filesystemUpdateResult',
       payload: {
         success: true,
         path: affectedPath
       },
       requestId
-    });
+    };
     
-    return result;
+    // Send to actor space
+    this._sendResponse(response);
+    
+    // Return for direct testing
+    return response;
   }
   
   /**
@@ -259,18 +367,38 @@ export class FileSystemActor {
     // Validate query
     this._validateQuery(querySpec);
     
+    // Transform relative paths to absolute paths for LocalFileSystemDataSource
+    const transformedSpec = this._transformQueryPaths(querySpec);
+    
     // Create subscription with the local filesystem manager
-    const subscription = this.fsManager.subscribe(querySpec, (changes) => {
-      // Notify the subscriber via actor message
-      this._sendResponse({
-        type: 'filesystemFileChange',
-        payload: {
-          subscriptionId,
-          changes,
-          timestamp: new Date().toISOString()
-        }
+    // Note: May fail if file doesn't exist, but we still track the subscription
+    let subscription = null;
+    try {
+      subscription = this.fsManager.subscribe(transformedSpec, (changes) => {
+        // Notify the subscriber via actor message
+        this._sendResponse({
+          type: 'filesystemFileChange',
+          payload: {
+            subscriptionId,
+            changes,
+            timestamp: new Date().toISOString()
+          }
+        });
       });
-    });
+    } catch (error) {
+      // File watcher creation failed (e.g., file doesn't exist)
+      // Still track the subscription for API consistency
+      subscription = {
+        id: subscriptionId,
+        querySpec: transformedSpec,
+        callback: () => {},
+        unsubscribe: () => {} // No-op unsubscribe
+      };
+      
+      if (this.options.verbose) {
+        console.log(`Warning: File watcher creation failed: ${error.message}`);
+      }
+    }
     
     // Store subscription
     this.subscriptions.set(subscriptionId, {
@@ -280,20 +408,21 @@ export class FileSystemActor {
       requestId
     });
     
-    // Send confirmation
-    this._sendResponse({
+    // Create response message
+    const response = {
       type: 'filesystemSubscribed',
       payload: {
         subscriptionId,
         success: true
       },
       requestId
-    });
-    
-    return {
-      success: true,
-      subscriptionId
     };
+    
+    // Send to actor space
+    this._sendResponse(response);
+    
+    // Return for direct testing
+    return response;
   }
   
   /**
@@ -313,20 +442,21 @@ export class FileSystemActor {
     // Remove from our tracking
     this.subscriptions.delete(subscriptionId);
     
-    // Send confirmation
-    this._sendResponse({
+    // Create response message
+    const response = {
       type: 'filesystemUnsubscribed',
       payload: {
         subscriptionId,
         success: true
       },
       requestId
-    });
-    
-    return {
-      success: true,
-      subscriptionId
     };
+    
+    // Send to actor space
+    this._sendResponse(response);
+    
+    // Return for direct testing
+    return response;
   }
   
   /**
@@ -363,20 +493,21 @@ export class FileSystemActor {
       requestId
     });
     
-    // Send stream end
-    this._sendResponse({
+    // Create stream end response message
+    const response = {
       type: 'filesystemStreamEnd',
       payload: {
         success: true,
         totalBytes: stats.size
       },
       requestId
-    });
-    
-    return {
-      success: true,
-      totalBytes: stats.size
     };
+    
+    // Send to actor space
+    this._sendResponse(response);
+    
+    // Return for direct testing
+    return response;
   }
   
   /**
@@ -405,17 +536,21 @@ export class FileSystemActor {
     // Notify subscribers
     this._notifyFileChange(filePath, 'write');
     
-    // Send stream end
-    this._sendResponse({
+    // Create stream end response message
+    const response = {
       type: 'filesystemStreamEnd',
       payload: {
         success: true,
         totalBytes: data ? data.length : 0
       },
       requestId
-    });
+    };
     
-    return result;
+    // Send to actor space
+    this._sendResponse(response);
+    
+    // Return for direct testing
+    return response;
   }
   
   /**
@@ -424,7 +559,8 @@ export class FileSystemActor {
   _sendResponse(message) {
     if (this.actorSpace) {
       // Broadcast the response to all actors (the WebSocketBridgeActor will route it)
-      this.actorSpace.actors.forEach((actor, key) => {
+      // actorSpace is a Map, so we iterate directly
+      this.actorSpace.forEach((actor, key) => {
         if (key !== this._key && actor.receive) {
           try {
             actor.receive(message);
@@ -445,6 +581,85 @@ export class FileSystemActor {
     if (this.options.verbose) {
       console.log(`File changed: ${filePath} (${operation})`);
     }
+  }
+  
+  /**
+   * Transform absolute paths in results back to relative paths (starting with /)
+   */
+  _transformResultPaths(results) {
+    const rootPath = path.resolve(this.options.rootPath);
+    
+    const transformPath = (absPath) => {
+      if (typeof absPath !== 'string') {
+        return absPath;
+      }
+      
+      // If the path starts with rootPath, make it relative
+      if (absPath.startsWith(rootPath)) {
+        const relativePath = absPath.substring(rootPath.length);
+        // Ensure it starts with /
+        return relativePath.startsWith('/') ? relativePath : '/' + relativePath;
+      }
+      
+      return absPath;
+    };
+    
+    if (!results) {
+      return results;
+    }
+    
+    if (Array.isArray(results)) {
+      return results.map(result => {
+        if (typeof result === 'object' && result !== null) {
+          const transformed = { ...result };
+          if (transformed.path) {
+            transformed.path = transformPath(transformed.path);
+          }
+          return transformed;
+        }
+        return result;
+      });
+    }
+    
+    if (typeof results === 'object' && results !== null) {
+      const transformed = { ...results };
+      if (transformed.path) {
+        transformed.path = transformPath(transformed.path);
+      }
+      return transformed;
+    }
+    
+    return results;
+  }
+  
+  /**
+   * Transform query paths from relative (starting with /) to absolute paths
+   */
+  _transformQueryPaths(querySpec) {
+    if (!querySpec.where || !Array.isArray(querySpec.where)) {
+      return querySpec;
+    }
+    
+    const transformedWhere = querySpec.where.map(clause => {
+      if (!Array.isArray(clause)) {
+        return clause;
+      }
+      
+      // Transform paths in clauses
+      return clause.map(item => {
+        if (typeof item === 'string' && item.startsWith('/')) {
+          // Convert relative path to absolute path
+          const pathToResolve = item.substring(1); // Remove leading /
+          return path.resolve(this.options.rootPath, pathToResolve);
+        }
+        return item;
+      });
+    });
+    
+    return {
+      ...querySpec,
+      where: transformedWhere
+    };
   }
   
   /**

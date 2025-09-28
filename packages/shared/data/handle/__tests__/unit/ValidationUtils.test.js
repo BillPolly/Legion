@@ -10,7 +10,7 @@ import {
   validateDataScriptQuery,
   validateDataScriptUpdateData,
   validateDataScriptAttributeName,
-  validateStandardResourceManagerInterface
+  validateStandardDataSourceInterface
 } from '../../src/ValidationUtils.js';
 import { createMockFunction } from '../testUtils.js';
 
@@ -268,46 +268,46 @@ describe('ValidationUtils', () => {
     });
   });
 
-  describe('validateResourceManagerInterface', () => {
-    test('should reject null/undefined ResourceManager', () => {
-      expect(() => ValidationUtils.validateResourceManagerInterface(null)).toThrow('ResourceManager is required');
-      expect(() => ValidationUtils.validateResourceManagerInterface(undefined)).toThrow('ResourceManager is required');
+  describe('validateDataSourceInterface', () => {
+    test('should reject null/undefined DataSource', () => {
+      expect(() => ValidationUtils.validateDataSourceInterface(null)).toThrow('DataSource must be a non-null object');
+      expect(() => ValidationUtils.validateDataSourceInterface(undefined)).toThrow('DataSource must be a non-null object');
     });
 
-    test('should reject non-object ResourceManager', () => {
-      expect(() => ValidationUtils.validateResourceManagerInterface('string')).toThrow('ResourceManager must be an object');
+    test('should reject non-object DataSource', () => {
+      expect(() => ValidationUtils.validateDataSourceInterface('string')).toThrow('DataSource must be a non-null object');
     });
 
     test('should validate required methods', () => {
-      expect(() => ValidationUtils.validateResourceManagerInterface({})).toThrow('ResourceManager must implement query() method');
+      expect(() => ValidationUtils.validateDataSourceInterface({})).toThrow('DataSource must implement query() method');
       
-      expect(() => ValidationUtils.validateResourceManagerInterface({
+      expect(() => ValidationUtils.validateDataSourceInterface({
         query: 'not-function'
-      })).toThrow('ResourceManager must implement query() method');
+      })).toThrow('DataSource must implement query() method');
       
-      expect(() => ValidationUtils.validateResourceManagerInterface({
+      expect(() => ValidationUtils.validateDataSourceInterface({
         query: createMockFunction()
-      })).toThrow('ResourceManager must implement subscribe() method');
+      })).toThrow('DataSource must implement subscribe() method');
     });
 
-    test('should accept valid ResourceManager', () => {
-      const validRM = {
+    test('should accept valid DataSource', () => {
+      const validDS = {
         query: createMockFunction(),
         subscribe: createMockFunction()
       };
       
-      expect(() => ValidationUtils.validateResourceManagerInterface(validRM)).not.toThrow();
+      expect(() => ValidationUtils.validateDataSourceInterface(validDS)).not.toThrow();
     });
 
     test('should validate custom required methods', () => {
-      const rm = {
+      const ds = {
         query: createMockFunction(),
         subscribe: createMockFunction()
       };
       
-      expect(() => ValidationUtils.validateResourceManagerInterface(
-        rm, 'ResourceManager', ['query', 'subscribe', 'update']
-      )).toThrow('ResourceManager must implement update() method');
+      expect(() => ValidationUtils.validateDataSourceInterface(
+        ds, 'DataSource', ['query', 'subscribe', 'update']
+      )).toThrow('DataSource must implement update() method');
     });
   });
 
@@ -489,23 +489,24 @@ describe('Convenience Validation Functions', () => {
     });
   });
 
-  describe('validateStandardResourceManagerInterface', () => {
+  describe('validateStandardDataSourceInterface', () => {
     test('should validate standard interface', () => {
-      const validRM = {
+      const validDS = {
         query: createMockFunction(),
         subscribe: createMockFunction(),
-        getSchema: createMockFunction()
+        getSchema: createMockFunction(),
+        queryBuilder: createMockFunction()
       };
       
-      expect(() => validateStandardResourceManagerInterface(validRM)).not.toThrow();
+      expect(() => validateStandardDataSourceInterface(validDS)).not.toThrow();
       
-      const invalidRM = {
+      const invalidDS = {
         query: createMockFunction(),
         subscribe: createMockFunction()
-        // missing getSchema
+        // missing getSchema and queryBuilder
       };
       
-      expect(() => validateStandardResourceManagerInterface(invalidRM)).toThrow('ResourceManager must implement getSchema() method');
+      expect(() => validateStandardDataSourceInterface(invalidDS)).toThrow('DataSource must implement getSchema() method');
     });
   });
 });

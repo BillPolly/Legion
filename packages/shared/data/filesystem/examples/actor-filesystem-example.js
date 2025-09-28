@@ -2,13 +2,13 @@
  * Actor-based Filesystem Example
  * 
  * Demonstrates how to use the Actor-based filesystem architecture with
- * FileSystemActor on the server and ActorRemoteFileSystemResourceManager
+ * FileSystemActor on the server and ActorRemoteFileSystemDataSource
  * on the client, connected via WebSocketBridgeActor and FileSystemProtocol.
  */
 
 import { FileSystemActor, FileSystemProtocol } from '@legion/filesystem';
 import { WebSocketBridgeActor, createWebSocketBridge, ProtocolTypes } from '@legion/websocket-actor-protocol';
-import { DirectoryHandle, ActorRemoteFileSystemResourceManager } from '@legion/filesystem';
+import { DirectoryHandle, ActorRemoteFileSystemDataSource } from '@legion/filesystem';
 import express from 'express';
 import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
@@ -108,20 +108,20 @@ class FileSystemActorServer {
 }
 
 /**
- * Client setup with ActorRemoteFileSystemResourceManager
+ * Client setup with ActorRemoteFileSystemDataSource
  */
 class FileSystemClient {
   constructor(wsUrl, options = {}) {
     this.wsUrl = wsUrl;
     this.options = options;
     this.actorSpace = new Map(); // Simple actor space implementation
-    this.resourceManager = null;
+    this.dataSource = null;
     this.rootDirectory = null;
   }
   
   async connect() {
-    // Create actor-based resource manager
-    this.resourceManager = new ActorRemoteFileSystemResourceManager({
+    // Create actor-based data source
+    this.dataSource = new ActorRemoteFileSystemDataSource({
       wsUrl: this.wsUrl,
       actorSpace: this.actorSpace,
       verbose: true,
@@ -132,27 +132,27 @@ class FileSystemClient {
     await new Promise((resolve, reject) => {
       const timeout = setTimeout(() => reject(new Error('Connection timeout')), 5000);
       
-      this.resourceManager.once('connected', () => {
+      this.dataSource.once('connected', () => {
         clearTimeout(timeout);
         resolve();
       });
       
-      this.resourceManager.once('error', (error) => {
+      this.dataSource.once('error', (error) => {
         clearTimeout(timeout);
         reject(error);
       });
     });
     
     // Create root directory handle
-    this.rootDirectory = new DirectoryHandle(this.resourceManager, '/');
+    this.rootDirectory = new DirectoryHandle(this.dataSource, '/');
     
     console.log('Client connected to filesystem server');
     return this.rootDirectory;
   }
   
   disconnect() {
-    if (this.resourceManager) {
-      this.resourceManager.destroy();
+    if (this.dataSource) {
+      this.dataSource.destroy();
     }
   }
 }
@@ -178,7 +178,7 @@ async function demonstrateActorFilesystem() {
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     // 2. Connect client
-    console.log('2. Connecting client with ActorRemoteFileSystemResourceManager...');
+    console.log('2. Connecting client with ActorRemoteFileSystemDataSource...');
     const client = new FileSystemClient(serverInfo.wsUrl);
     const rootDir = await client.connect();
     console.log('   Client connected\n');
@@ -254,8 +254,8 @@ The Actor-based approach provides several benefits over custom WebSocket handlin
 6. **Testing**: Easier to mock and test individual actors
 
 Architecture Flow:
-Browser Handle → ActorRemoteFileSystemResourceManager → WebSocketBridgeActor → 
-FileSystemProtocol → WebSocket → FileSystemProtocol → FileSystemActor → LocalFileSystemResourceManager
+Browser Handle → ActorRemoteFileSystemDataSource → WebSocketBridgeActor → 
+FileSystemProtocol → WebSocket → FileSystemProtocol → FileSystemActor → LocalFileSystemDataSource
 
 This replaces the custom WebSocket handling with a clean, reusable Actor pattern.
 `);

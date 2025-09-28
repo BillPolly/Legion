@@ -12,7 +12,7 @@
 import { Handle } from '@legion/handle';
 
 export class EntityProxy extends Handle {
-  constructor(resourceManager, entityId, options = {}) {
+  constructor(dataSource, entityId, options = {}) {
     // Validate entity ID first (before calling super)
     if (entityId === null || entityId === undefined) {
       throw new Error('Entity ID is required');
@@ -22,8 +22,8 @@ export class EntityProxy extends Handle {
       throw new Error('Entity ID must be a number');
     }
     
-    // Call Handle constructor (which validates resourceManager)
-    super(resourceManager);
+    // Call Handle constructor (which validates dataSource)
+    super(dataSource);
     
     // Handle type is automatically set via getter (returns constructor.name)
     
@@ -31,9 +31,9 @@ export class EntityProxy extends Handle {
     this.entityId = entityId;
     this.options = options || {};
     
-    // Backward compatibility - expose store if resourceManager has it
-    if (resourceManager.dataStore) {
-      this.store = resourceManager.dataStore;
+    // Backward compatibility - expose store if dataSource has it
+    if (dataSource.dataStore) {
+      this.store = dataSource.dataStore;
     }
     
     // Setup entity-specific cache invalidation
@@ -58,13 +58,13 @@ export class EntityProxy extends Handle {
       }
     }
     
-    // Get entity through ResourceManager (synchronous)
+    // Get entity through DataSource (synchronous)
     const querySpec = {
       find: ['?attr', '?value'],
       where: [[this.entityId, '?attr', '?value']]
     };
     
-    const results = this.resourceManager.query(querySpec);
+    const results = this.dataSource.query(querySpec);
     
     // Convert results to entity object
     const entity = { ':db/id': this.entityId };
@@ -109,7 +109,7 @@ export class EntityProxy extends Handle {
       })
     };
     
-    return this.resourceManager.query(entityScopedQuery);
+    return this.dataSource.query(entityScopedQuery);
   }
   
   /**
@@ -124,8 +124,8 @@ export class EntityProxy extends Handle {
     
     this._validateUpdateData(updateData);
     
-    // Update through resourceManager (which wraps DataStore.updateEntity)
-    const result = this.resourceManager.update(this.entityId, updateData);
+    // Update through dataSource (which wraps DataStore.updateEntity)
+    const result = this.dataSource.update(this.entityId, updateData);
     
     // Invalidate cache after successful update
     if (this.cacheManager) {
@@ -162,7 +162,7 @@ export class EntityProxy extends Handle {
     }
     
     // Query for specific attribute (synchronous)
-    const results = this.resourceManager.query({
+    const results = this.dataSource.query({
       find: ['?value'],
       where: [
         [this.entityId, attributeName, '?value']
@@ -203,7 +203,7 @@ export class EntityProxy extends Handle {
     
     try {
       // Query for any attribute of this entity to check existence
-      const results = this.resourceManager.query({
+      const results = this.dataSource.query({
         find: ['?attr'],
         where: [
           [this.entityId, '?attr', '?value']
@@ -343,13 +343,13 @@ export class EntityProxy extends Handle {
   _setupEntityCacheInvalidation() {
     // Subscribe to changes for this specific entity to auto-invalidate cache
     try {
-      if (this.resourceManager.subscribe) {
+      if (this.dataSource.subscribe) {
         const entityChangeQuery = {
           find: ['?attr', '?value'],
           where: [[this.entityId, '?attr', '?value']]
         };
         
-        const subscription = this.resourceManager.subscribe(entityChangeQuery, () => {
+        const subscription = this.dataSource.subscribe(entityChangeQuery, () => {
           // Invalidate cache when this entity changes
           if (this.cacheManager) {
             const cacheKey = `entity:${this.entityId}`;

@@ -53,7 +53,7 @@ describe('FileSystemServer', () => {
       expect(typeof server.app.post).toBe('function');
     });
     
-    test('should create LocalFileSystemResourceManager', () => {
+    test('should create LocalFileSystemDataSource', () => {
       server = new FileSystemServer({
         rootPath: '/test/path'
       });

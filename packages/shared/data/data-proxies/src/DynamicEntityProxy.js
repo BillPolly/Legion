@@ -11,8 +11,8 @@
 import { EntityProxy } from './EntityProxy.js';
 
 export class DynamicEntityProxy extends EntityProxy {
-  constructor(resourceManager, entityId, options = {}) {
-    super(resourceManager, entityId, options);
+  constructor(dataSource, entityId, options = {}) {
+    super(dataSource, entityId, options);
     
     // Subscribe to schema changes if available
     this._setupSchemaChangeListener();
@@ -32,11 +32,11 @@ export class DynamicEntityProxy extends EntityProxy {
    * @private
    */
   _setupSchemaChangeListener() {
-    // Check if resourceManager has a dataStore with schema change support
-    if (this.resourceManager.dataStore && 
-        typeof this.resourceManager.dataStore.subscribeToSchemaChanges === 'function') {
+    // Check if dataSource has a dataStore with schema change support
+    if (this.dataSource.dataStore && 
+        typeof this.dataSource.dataStore.subscribeToSchemaChanges === 'function') {
       
-      this._schemaUnsubscribe = this.resourceManager.dataStore.subscribeToSchemaChanges((change) => {
+      this._schemaUnsubscribe = this.dataSource.dataStore.subscribeToSchemaChanges((change) => {
         this._handleSchemaChange(change);
       });
     }
@@ -265,11 +265,11 @@ export class DynamicEntityProxy extends EntityProxy {
    */
   getSchema() {
     const entityType = this._getEntityType();
-    if (!entityType || !this.resourceManager.dataStore) {
+    if (!entityType || !this.dataSource.dataStore) {
       return {};
     }
     
-    const fullSchema = this.resourceManager.dataStore.schema || {};
+    const fullSchema = this.dataSource.dataStore.schema || {};
     const entitySchema = {};
     const prefix = `:${entityType}/`;
     
@@ -303,11 +303,11 @@ export class DynamicEntityProxy extends EntityProxy {
 
 /**
  * Factory function to create a DynamicEntityProxy
- * @param {Object} resourceManager - ResourceManager or DataStore instance
+ * @param {Object} dataSource - DataSource or DataStore instance
  * @param {number} entityId - Entity ID
  * @param {Object} options - Additional options
  * @returns {DynamicEntityProxy} Proxied entity handle
  */
-export function createDynamicEntityProxy(resourceManager, entityId, options = {}) {
-  return new DynamicEntityProxy(resourceManager, entityId, options);
+export function createDynamicEntityProxy(dataSource, entityId, options = {}) {
+  return new DynamicEntityProxy(dataSource, entityId, options);
 }

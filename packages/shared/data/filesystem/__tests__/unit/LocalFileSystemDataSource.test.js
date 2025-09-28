@@ -1,10 +1,10 @@
 /**
- * Unit Tests for LocalFileSystemResourceManager
+ * Unit Tests for LocalFileSystemDataSource
  * 
- * Tests the LocalFileSystemResourceManager implementation with Node.js fs operations
+ * Tests the LocalFileSystemDataSource implementation with Node.js fs operations
  */
 
-import { LocalFileSystemResourceManager } from '../../src/resourcemanagers/LocalFileSystemResourceManager.js';
+import { LocalFileSystemDataSource } from '../../src/datasources/LocalFileSystemDataSource.js';
 import { jest } from '@jest/globals';
 import fs from 'fs/promises';
 import path from 'path';
@@ -13,12 +13,12 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-describe('LocalFileSystemResourceManager', () => {
-  let resourceManager;
+describe('LocalFileSystemDataSource', () => {
+  let dataSource;
   let testDir;
   
   beforeEach(async () => {
-    resourceManager = new LocalFileSystemResourceManager();
+    dataSource = new LocalFileSystemDataSource();
     
     // Create test directory for each test
     testDir = path.join(__dirname, '../tmp/localfs-test-' + Date.now());
@@ -26,8 +26,8 @@ describe('LocalFileSystemResourceManager', () => {
   });
   
   afterEach(async () => {
-    if (resourceManager) {
-      resourceManager.removeAllListeners();
+    if (dataSource) {
+      dataSource.removeAllListeners();
     }
     
     // Clean up test directory
@@ -40,26 +40,26 @@ describe('LocalFileSystemResourceManager', () => {
   
   describe('Constructor and Initialization', () => {
     test('should create instance successfully', () => {
-      expect(resourceManager).toBeInstanceOf(LocalFileSystemResourceManager);
+      expect(dataSource).toBeInstanceOf(LocalFileSystemDataSource);
     });
     
     test('should be an EventEmitter', () => {
-      expect(typeof resourceManager.on).toBe('function');
-      expect(typeof resourceManager.emit).toBe('function');
-      expect(typeof resourceManager.removeAllListeners).toBe('function');
+      expect(typeof dataSource.on).toBe('function');
+      expect(typeof dataSource.emit).toBe('function');
+      expect(typeof dataSource.removeAllListeners).toBe('function');
     });
     
-    test('should implement required ResourceManager interface', () => {
-      expect(typeof resourceManager.query).toBe('function');
-      expect(typeof resourceManager.update).toBe('function');
-      expect(typeof resourceManager.subscribe).toBe('function');
-      expect(typeof resourceManager.getSchema).toBe('function');
+    test('should implement required DataSource interface', () => {
+      expect(typeof dataSource.query).toBe('function');
+      expect(typeof dataSource.update).toBe('function');
+      expect(typeof dataSource.subscribe).toBe('function');
+      expect(typeof dataSource.getSchema).toBe('function');
     });
   });
   
   describe('Schema Support', () => {
     test('should return valid schema', () => {
-      const schema = resourceManager.getSchema();
+      const schema = dataSource.getSchema();
       
       expect(schema).toEqual(expect.objectContaining({
         version: expect.any(String),
@@ -82,7 +82,7 @@ describe('LocalFileSystemResourceManager', () => {
         where: [['directory', testDir, 'metadata']]
       };
       
-      const results = resourceManager.query(querySpec);
+      const results = dataSource.query(querySpec);
       expect(results).toHaveLength(1);
       
       const metadata = results[0];
@@ -102,7 +102,7 @@ describe('LocalFileSystemResourceManager', () => {
         where: [['directory', nonExistentDir, 'metadata']]
       };
       
-      const results = resourceManager.query(querySpec);
+      const results = dataSource.query(querySpec);
       expect(results).toHaveLength(1);
       
       const metadata = results[0];
@@ -124,7 +124,7 @@ describe('LocalFileSystemResourceManager', () => {
         where: [['file', testFile, 'metadata']]
       };
       
-      const results = resourceManager.query(querySpec);
+      const results = dataSource.query(querySpec);
       expect(results).toHaveLength(1);
       
       const metadata = results[0];
@@ -145,7 +145,7 @@ describe('LocalFileSystemResourceManager', () => {
         where: [['file', nonExistentFile, 'metadata']]
       };
       
-      const results = resourceManager.query(querySpec);
+      const results = dataSource.query(querySpec);
       expect(results).toHaveLength(1);
       
       const metadata = results[0];
@@ -169,7 +169,7 @@ describe('LocalFileSystemResourceManager', () => {
         options: { encoding: 'utf8' }
       };
       
-      const results = resourceManager.query(querySpec);
+      const results = dataSource.query(querySpec);
       expect(results).toHaveLength(1);
       expect(results[0]).toBe(testContent);
     });
@@ -181,7 +181,7 @@ describe('LocalFileSystemResourceManager', () => {
         options: { encoding: null }
       };
       
-      const results = resourceManager.query(querySpec);
+      const results = dataSource.query(querySpec);
       expect(results).toHaveLength(1);
       expect(results[0]).toBeInstanceOf(Buffer);
     });
@@ -193,7 +193,7 @@ describe('LocalFileSystemResourceManager', () => {
         options: { encoding: 'utf8', offset: 6, length: 5 }
       };
       
-      const results = resourceManager.query(querySpec);
+      const results = dataSource.query(querySpec);
       expect(results).toHaveLength(1);
       expect(results[0]).toBe('World');
     });
@@ -205,7 +205,7 @@ describe('LocalFileSystemResourceManager', () => {
         where: [['file', nonExistentFile, 'content']]
       };
       
-      expect(() => resourceManager.query(querySpec)).toThrow();
+      expect(() => dataSource.query(querySpec)).toThrow();
     });
   });
   
@@ -229,7 +229,7 @@ describe('LocalFileSystemResourceManager', () => {
         ]
       };
       
-      const results = resourceManager.query(querySpec);
+      const results = dataSource.query(querySpec);
       expect(results).toHaveLength(3);
       
       const names = results.map(r => r.name).sort();
@@ -249,7 +249,7 @@ describe('LocalFileSystemResourceManager', () => {
         recursive: true
       };
       
-      const results = resourceManager.query(querySpec);
+      const results = dataSource.query(querySpec);
       expect(results.length).toBeGreaterThan(3); // Should include nested files
       
       const nestedFile = results.find(r => r.name === 'nested.txt');
@@ -263,7 +263,7 @@ describe('LocalFileSystemResourceManager', () => {
         filter: (item) => item.type === 'file'
       };
       
-      const results = resourceManager.query(querySpec);
+      const results = dataSource.query(querySpec);
       expect(results).toHaveLength(2); // Only files, not directory
       expect(results.every(r => r.type === 'file')).toBe(true);
     });
@@ -274,7 +274,7 @@ describe('LocalFileSystemResourceManager', () => {
       const filePath = path.join(testDir, 'new.txt');
       const content = 'New file content';
       
-      const result = resourceManager.update(filePath, {
+      const result = dataSource.update(filePath, {
         operation: 'write',
         content: content,
         options: { encoding: 'utf8' }
@@ -292,7 +292,7 @@ describe('LocalFileSystemResourceManager', () => {
       const filePath = path.join(testDir, 'append.txt');
       await fs.writeFile(filePath, 'Initial content', 'utf8');
       
-      const result = resourceManager.update(filePath, {
+      const result = dataSource.update(filePath, {
         operation: 'write',
         content: '\nAppended content',
         options: { append: true }
@@ -308,7 +308,7 @@ describe('LocalFileSystemResourceManager', () => {
     test('should create parent directories when needed', () => {
       const filePath = path.join(testDir, 'deep', 'nested', 'file.txt');
       
-      const result = resourceManager.update(filePath, {
+      const result = dataSource.update(filePath, {
         operation: 'write',
         content: 'Deep file',
         options: { createParents: true }
@@ -322,7 +322,7 @@ describe('LocalFileSystemResourceManager', () => {
     test('should create new file with content', () => {
       const filePath = path.join(testDir, 'created.txt');
       
-      const result = resourceManager.update(null, {
+      const result = dataSource.update(null, {
         type: 'file',
         path: filePath,
         content: 'Created content'
@@ -335,7 +335,7 @@ describe('LocalFileSystemResourceManager', () => {
     test('should create new directory', () => {
       const dirPath = path.join(testDir, 'newdir');
       
-      const result = resourceManager.update(null, {
+      const result = dataSource.update(null, {
         type: 'directory',
         path: dirPath
       });
@@ -347,7 +347,7 @@ describe('LocalFileSystemResourceManager', () => {
     test('should create nested directories recursively', () => {
       const dirPath = path.join(testDir, 'deep', 'nested', 'dirs');
       
-      const result = resourceManager.update(null, {
+      const result = dataSource.update(null, {
         type: 'directory',
         path: dirPath,
         options: { recursive: true }
@@ -368,7 +368,7 @@ describe('LocalFileSystemResourceManager', () => {
     test('should copy file', async () => {
       const targetFile = path.join(testDir, 'copied.txt');
       
-      const result = resourceManager.update(null, {
+      const result = dataSource.update(null, {
         operation: 'copy',
         source: sourceFile,
         target: targetFile
@@ -385,7 +385,7 @@ describe('LocalFileSystemResourceManager', () => {
     test('should move file', async () => {
       const targetFile = path.join(testDir, 'moved.txt');
       
-      const result = resourceManager.update(sourceFile, {
+      const result = dataSource.update(sourceFile, {
         operation: 'move',
         target: targetFile
       });
@@ -399,7 +399,7 @@ describe('LocalFileSystemResourceManager', () => {
     });
     
     test('should delete file', async () => {
-      const result = resourceManager.update(sourceFile, {
+      const result = dataSource.update(sourceFile, {
         operation: 'delete'
       });
       
@@ -418,7 +418,7 @@ describe('LocalFileSystemResourceManager', () => {
         where: [['file', testDir, 'change']]
       };
       
-      const subscription = resourceManager.subscribe(querySpec, callback);
+      const subscription = dataSource.subscribe(querySpec, callback);
       
       expect(subscription).toEqual(expect.objectContaining({
         id: expect.any(Number),
@@ -437,12 +437,12 @@ describe('LocalFileSystemResourceManager', () => {
         where: [['file', testDir, 'change']]
       };
       
-      const subscription = resourceManager.subscribe(querySpec, callback);
-      const initialWatchers = resourceManager._watchers.size;
+      const subscription = dataSource.subscribe(querySpec, callback);
+      const initialWatchers = dataSource._watchers.size;
       
       subscription.unsubscribe();
       
-      expect(resourceManager._watchers.size).toBeLessThan(initialWatchers);
+      expect(dataSource._watchers.size).toBeLessThan(initialWatchers);
     });
   });
   
@@ -461,7 +461,7 @@ describe('LocalFileSystemResourceManager', () => {
         options: { encoding: 'utf8' }
       };
       
-      const results = resourceManager.query(querySpec);
+      const results = dataSource.query(querySpec);
       expect(results).toHaveLength(1);
       
       const stream = results[0];
@@ -480,7 +480,7 @@ describe('LocalFileSystemResourceManager', () => {
         options: { encoding: 'utf8' }
       };
       
-      const results = resourceManager.query(querySpec);
+      const results = dataSource.query(querySpec);
       expect(results).toHaveLength(1);
       
       const stream = results[0];
@@ -500,13 +500,13 @@ describe('LocalFileSystemResourceManager', () => {
         where: [['file', nonExistentFile, 'content']]
       };
       
-      expect(() => resourceManager.query(querySpec)).toThrow();
+      expect(() => dataSource.query(querySpec)).toThrow();
     });
     
     test('should handle write errors gracefully', () => {
       const invalidPath = '/root/invalid/path/file.txt'; // Should fail on most systems
       
-      const result = resourceManager.update(invalidPath, {
+      const result = dataSource.update(invalidPath, {
         operation: 'write',
         content: 'test'
       });
@@ -516,7 +516,7 @@ describe('LocalFileSystemResourceManager', () => {
     });
     
     test('should handle unknown operations', () => {
-      const result = resourceManager.update('/test.txt', {
+      const result = dataSource.update('/test.txt', {
         operation: 'unknown'
       });
       
@@ -530,7 +530,7 @@ describe('LocalFileSystemResourceManager', () => {
         where: [['malformed', 'query']]
       };
       
-      expect(() => resourceManager.query(querySpec)).toThrow();
+      expect(() => dataSource.query(querySpec)).toThrow();
     });
   });
   
@@ -542,7 +542,7 @@ describe('LocalFileSystemResourceManager', () => {
       for (let i = 0; i < 10; i++) {
         const filePath = path.join(testDir, `concurrent-${i}.txt`);
         operations.push(
-          Promise.resolve(resourceManager.update(filePath, {
+          Promise.resolve(dataSource.update(filePath, {
             operation: 'write',
             content: `Content ${i}`
           }))
@@ -556,13 +556,13 @@ describe('LocalFileSystemResourceManager', () => {
     });
     
     test('should clean up resources properly', () => {
-      const initialWatchers = resourceManager._watchers.size;
-      const initialSubscriptions = resourceManager._subscriptions.length;
+      const initialWatchers = dataSource._watchers.size;
+      const initialSubscriptions = dataSource._subscriptions.length;
       
       // Create and remove multiple subscriptions
       const subscriptions = [];
       for (let i = 0; i < 5; i++) {
-        const sub = resourceManager.subscribe(
+        const sub = dataSource.subscribe(
           { find: ['event'], where: [['file', testDir, 'change']] },
           jest.fn()
         );
@@ -573,7 +573,7 @@ describe('LocalFileSystemResourceManager', () => {
       subscriptions.forEach(sub => sub.unsubscribe());
       
       // Resources should be cleaned up
-      expect(resourceManager._subscriptions.length).toBe(initialSubscriptions);
+      expect(dataSource._subscriptions.length).toBe(initialSubscriptions);
     });
   });
 });

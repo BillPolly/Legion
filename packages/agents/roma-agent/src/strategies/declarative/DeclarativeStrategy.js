@@ -36,7 +36,8 @@ async function doWork() {
     );
   }
   
-  // Wrap context as ResourceManager and DataSource for Handle/DSL support
+  // Wrap context as DataSource for Handle/DSL support
+  // NOTE: ContextResourceManager implements DataSource interface despite its name
   const contextRM = new ContextResourceManager(this.context);
   const contextDataSource = new ContextDataSource(this.context);
   const contextHandle = new ContextHandle(contextRM);
@@ -89,7 +90,8 @@ async function doWork() {
 };
 
 /**
- * Execute a query spec against the context ResourceManager or Handle
+ * Execute a query spec against the context DataSource (contextRM) or Handle
+ * NOTE: contextRM is a ContextResourceManager which implements DataSource interface
  */
 async function executeQuery(contextRM, contextHandle, querySpec) {
   if (!querySpec) {

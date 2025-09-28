@@ -1,16 +1,16 @@
 /**
- * DataStoreResourceManager Integration Tests
+ * DataStoreDataSource Integration Tests
  * 
- * Tests the complete integration of DataStoreResourceManager with real DataStore.
+ * Tests the complete integration of DataStoreDataSource with real DataStore.
  * NO MOCKS - uses real components throughout.
  */
 
 import { jest } from '@jest/globals';
-import { DataStoreResourceManager } from '../src/DataStoreResourceManager.js';
+import { DataStoreDataSource } from '../src/DataStoreDataSource.js';
 import { DataStore } from '@legion/data-store';
 import * as d from '@legion/datascript';
 
-describe('DataStoreResourceManager Integration', () => {
+describe('DataStoreDataSource Integration', () => {
   let dataStore;
   let resourceManager;
   
@@ -48,7 +48,7 @@ describe('DataStoreResourceManager Integration', () => {
     };
     
     dataStore = new DataStore(schema);
-    resourceManager = new DataStoreResourceManager(dataStore);
+    resourceManager = new DataStoreDataSource(dataStore);
     
     // Add comprehensive test data
     const result = dataStore.createEntities([

@@ -1,7 +1,7 @@
 /**
- * DataStoreQueryBuilder - Concrete implementation of query builder for DataStore ResourceManager
+ * DataStoreQueryBuilder - Concrete implementation of query builder for DataStore DataSource
  * 
- * Demonstrates how to implement the ResourceManager.queryBuilder() method
+ * Demonstrates how to implement the DataSource.queryBuilder() method
  * for a specific resource type (DataScript/DataStore). This is the "Layer 2"
  * implementation that provides resource-specific query building logic.
  * 
@@ -25,8 +25,8 @@ import { PrototypeFactory } from '../../handle/src/PrototypeFactory.js';
  * appropriate Handle projections based on the source Handle type and operations.
  */
 class DataStoreQueryBuilder {
-  constructor(resourceManager, sourceHandle) {
-    this.resourceManager = resourceManager;
+  constructor(dataSource, sourceHandle) {
+    this.dataSource = dataSource;
     this.sourceHandle = sourceHandle;
     this.operations = [];
     
@@ -121,7 +121,7 @@ class DataStoreQueryBuilder {
    */
   first() {
     const querySpec = this._buildQuerySpec();
-    const results = this.resourceManager.query(querySpec);
+    const results = this.dataSource.query(querySpec);
     
     if (!results || results.length === 0) {
       return null;
@@ -137,7 +137,7 @@ class DataStoreQueryBuilder {
    */
   last() {
     const querySpec = this._buildQuerySpec();
-    const results = this.resourceManager.query(querySpec);
+    const results = this.dataSource.query(querySpec);
     
     if (!results || results.length === 0) {
       return null;
@@ -158,12 +158,12 @@ class DataStoreQueryBuilder {
     // Check if this is already an aggregation operation
     const hasAggregation = this.operations.some(op => op.type === 'aggregate');
     if (hasAggregation) {
-      const results = this.resourceManager.query(querySpec);
+      const results = this.dataSource.query(querySpec);
       return Array.isArray(results) ? results.length : (typeof results === 'number' ? results : 0);
     }
     
     // For regular queries, just count results
-    const results = this.resourceManager.query(querySpec);
+    const results = this.dataSource.query(querySpec);
     return Array.isArray(results) ? results.length : 0;
   }
   
@@ -173,7 +173,7 @@ class DataStoreQueryBuilder {
    */
   toArray() {
     const querySpec = this._buildQuerySpec();
-    const results = this.resourceManager.query(querySpec);
+    const results = this.dataSource.query(querySpec);
     
     // Apply post-query operations that can't be done in DataScript
     return this._applyPostQueryOperations(results);
@@ -186,7 +186,7 @@ class DataStoreQueryBuilder {
    * @private
    */
   _addOperation(type, ...args) {
-    const newBuilder = new DataStoreQueryBuilder(this.resourceManager, this.sourceHandle);
+    const newBuilder = new DataStoreQueryBuilder(this.dataSource, this.sourceHandle);
     newBuilder.operations = [...this.operations, { type, args }];
     newBuilder.sourceType = this.sourceType;
     newBuilder.sourceSchema = this.sourceSchema;
@@ -262,7 +262,7 @@ class DataStoreQueryBuilder {
    */
   _extractSourceSchema(handle) {
     try {
-      return this.resourceManager.getSchema();
+      return this.dataSource.getSchema();
     } catch (error) {
       return null;
     }
@@ -606,7 +606,7 @@ class DataStoreQueryBuilder {
       }
       
       if (entityId !== null) {
-        return new EntityProxy(this.resourceManager, entityId);
+        return new EntityProxy(this.dataSource, entityId);
       }
     }
     
@@ -616,16 +616,16 @@ class DataStoreQueryBuilder {
 }
 
 /**
- * Example ResourceManager implementation that uses DataStoreQueryBuilder
+ * Example DataSource implementation that uses DataStoreQueryBuilder
  */
-class DataStoreResourceManager {
+class DataStoreDataSource {
   constructor(dataStore, schema) {
     this.dataStore = dataStore;
     this.schema = schema;
     this._subscriptions = new Map();
   }
   
-  // Required ResourceManager methods
+  // Required DataSource methods
   
   query(querySpec) {
     // Execute DataScript query
@@ -684,4 +684,4 @@ class DataStoreResourceManager {
   }
 }
 
-export { DataStoreQueryBuilder, DataStoreResourceManager };
+export { DataStoreQueryBuilder, DataStoreDataSource };

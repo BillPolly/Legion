@@ -11,8 +11,8 @@ import { Handle } from './Handle.js';
 import { ValidationUtils } from './ValidationUtils.js';
 
 export class CachedHandle extends Handle {
-  constructor(resourceManager, options = {}) {
-    super(resourceManager);
+  constructor(dataSource, options = {}) {
+    super(dataSource);
     
     // Cache configuration
     this._cacheTTL = options.cacheTTL || 5000; // 5 seconds default local cache
@@ -110,8 +110,8 @@ export class CachedHandle extends Handle {
     });
     
     try {
-      // Create subscription through ResourceManager (synchronous)
-      const subscription = this.resourceManager.subscribe(querySpec, invalidationCallback);
+      // Create subscription through DataSource (synchronous)
+      const subscription = this.dataSource.subscribe(querySpec, invalidationCallback);
       
       // Track subscription for cleanup
       this._cacheInvalidationSubs.add(subscription);

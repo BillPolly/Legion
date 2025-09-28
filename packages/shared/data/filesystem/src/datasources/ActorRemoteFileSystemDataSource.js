@@ -1,7 +1,7 @@
 /**
- * ActorRemoteFileSystemResourceManager - Actor-based browser ResourceManager for remote filesystem access
+ * ActorRemoteFileSystemDataSource - Actor-based browser DataSource for remote filesystem access
  * 
- * Implements the ResourceManager interface for browser environments to access files
+ * Implements the DataSource interface for browser environments to access files
  * on a remote server via the Actor system and WebSocketBridgeActor. This replaces
  * the custom WebSocket handling with proper Actor-based communication.
  * 
@@ -18,7 +18,7 @@ import { EventEmitter } from 'events';
 import { WebSocketBridgeActor } from '@legion/websocket-actor-protocol';
 import { FileSystemProtocol } from '../protocol/FileSystemProtocol.js';
 
-export class ActorRemoteFileSystemResourceManager extends EventEmitter {
+export class ActorRemoteFileSystemDataSource extends EventEmitter {
   constructor(options = {}) {
     super();
     
@@ -83,7 +83,7 @@ export class ActorRemoteFileSystemResourceManager extends EventEmitter {
       name: 'FileSystemBridge'
     });
     
-    // Register this resource manager as an actor to receive responses
+    // Register this data source as an actor to receive responses
     if (this.options.actorSpace) {
       this.options.actorSpace.registerActor('filesystem-client', this);
     }
@@ -464,7 +464,7 @@ export class ActorRemoteFileSystemResourceManager extends EventEmitter {
     return {
       version: '1.0.0',
       type: 'actor-remote-filesystem',
-      provider: 'ActorRemoteFileSystemResourceManager',
+      provider: 'ActorRemoteFileSystemDataSource',
       capabilities: {
         read: true,
         write: true,

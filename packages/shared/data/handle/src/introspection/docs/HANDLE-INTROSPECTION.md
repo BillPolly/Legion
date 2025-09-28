@@ -50,7 +50,7 @@ A Handle whose value IS a prototype/class, making prototypes queryable and intro
 
 ```javascript
 class MetaHandle extends Handle {
-  constructor(resourceManager, PrototypeClass)
+  constructor(dataSource, PrototypeClass)
   
   // Core Handle methods
   query(querySpec)     // Query prototype members, inheritance chain
@@ -76,7 +76,7 @@ Factory that creates MetaHandles for prototypes and is itself a Handle.
 
 ```javascript
 class SelfDescribingPrototypeFactory {
-  constructor(resourceManager)
+  constructor(options = {})
   
   createPrototype(typeName, baseClass)  // Returns MetaHandle
   getPrototypeHandle(typeName)          // Get existing MetaHandle
@@ -95,7 +95,7 @@ Makes schemas themselves queryable and updatable Handles.
 
 ```javascript
 class SchemaHandle extends Handle {
-  constructor(resourceManager, schema)
+  constructor(dataSource, schema)
   
   query(querySpec)    // Query schema structure, types, constraints
   update(updateSpec)  // Modify schema definitions
@@ -287,7 +287,7 @@ The system provides a unified format for LLM consumption:
 
 ```javascript
 // Initialize the system
-const factory = new SelfDescribingPrototypeFactory(resourceManager);
+const factory = new SelfDescribingPrototypeFactory();
 const factoryHandle = factory.asHandle();
 
 // Create a prototype - returns a MetaHandle
@@ -298,9 +298,10 @@ const userPrototypeHandle = factoryHandle.update({
 });
 
 // Create an instance from the prototype handle
+// Note: Handle instances need a dataSource as first parameter
+const userDataSource = new SimpleObjectDataSource({ id: 1 });
 const userInstance = userPrototypeHandle.createInstance(
-  resourceManager, 
-  { id: 1 }
+  userDataSource
 );
 
 // Query the prototype through the instance
@@ -354,17 +355,24 @@ class MetaHandle extends Handle {
 }
 ```
 
-### With ResourceManager
+### With DataSource
 
-ResourceManagers provide schemas that are automatically wrapped as SchemaHandles:
+DataSources provide schemas that can be wrapped as SchemaHandles for introspection:
 
 ```javascript
-class ResourceManager {
+class MyDataSource {
   getSchema() {
     const rawSchema = this.loadSchema();
-    return new SchemaHandle(this, rawSchema);
+    // Return raw schema - caller can wrap it in SchemaHandle
+    return rawSchema;
   }
 }
+
+// Usage:
+const dataSource = new MyDataSource();
+const rawSchema = dataSource.getSchema();
+const schemaDataSource = new SchemaDataSource(rawSchema);
+const schemaHandle = new SchemaHandle(schemaDataSource);
 ```
 
 ### With PrototypeFactory
@@ -375,7 +383,9 @@ The existing PrototypeFactory is enhanced to return MetaHandles:
 class PrototypeFactory {
   getEntityPrototype(typeName, baseClass) {
     const TypedPrototype = this.createPrototype(...);
-    return new MetaHandle(this.resourceManager, TypedPrototype);
+    // Create MetaDataSource for the prototype
+    const metaDataSource = new MetaDataSource(TypedPrototype);
+    return new MetaHandle(metaDataSource, TypedPrototype);
   }
 }
 ```
@@ -427,7 +437,7 @@ The factory that creates prototypes is itself a Handle.
 
 ```typescript
 class MetaHandle extends Handle {
-  constructor(resourceManager: ResourceManager, PrototypeClass: Function)
+  constructor(dataSource: DataSource, PrototypeClass: Function)
   
   // Query prototype information
   query(querySpec: {
@@ -457,7 +467,7 @@ class MetaHandle extends Handle {
 
 ```typescript
 class SchemaHandle extends Handle {
-  constructor(resourceManager: ResourceManager, schema: object)
+  constructor(dataSource: DataSource, schema: object)
   
   // Query schema information
   query(querySpec: {
@@ -480,7 +490,7 @@ class SchemaHandle extends Handle {
 
 ```typescript
 class SelfDescribingPrototypeFactory {
-  constructor(resourceManager: ResourceManager)
+  constructor(options = {})
   
   // Create prototype wrapped as MetaHandle
   createPrototype(typeName: string, baseClass?: Function): MetaHandle

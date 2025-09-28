@@ -2,7 +2,7 @@
  * Unit Tests for EntityProxy extending Handle from @legion/km-data-handle
  * 
  * Tests the new EntityProxy implementation that extends Handle instead of local CachedHandle
- * and uses DataStoreResourceManager for data access.
+ * and uses DataStoreDataSource for data access.
  */
 
 import { EntityProxy } from '../src/EntityProxy.js';

@@ -2,8 +2,8 @@
  * Query Combinator Test - Demonstrates the complete query combinator system
  * 
  * This test shows the full flow of the universal Handle projection pattern:
- * 1. Handle.where() calls resourceManager.queryBuilder(this).where()
- * 2. ResourceManager creates resource-specific query builder 
+ * 1. Handle.where() calls dataSource.queryBuilder(this).where()
+ * 2. DataSource creates resource-specific query builder 
  * 3. Query builder analyzes Handle type and creates appropriate projections
  * 4. Terminal methods execute queries and return appropriate Handle types
  * 
@@ -118,10 +118,10 @@ export function testQueryCombinators() {
     ':project/status': { ':db/valueType': ':db.type/string' }
   };
   
-  const resourceManager = new DataStoreResourceManager(dataStore, schema);
+  const dataSource = new DataStoreDataSource(dataStore, schema);
   
   // 2. Create collection proxy for users
-  const users = new CollectionProxy(resourceManager, {
+  const users = new CollectionProxy(dataSource, {
     find: ['?e'],
     where: [['?e', ':entity/type', 'user']]
   });
@@ -132,7 +132,7 @@ export function testQueryCombinators() {
   console.log('\n📋 Testing Basic Query Combinators:');
   
   try {
-    // Test where() method - should delegate to resourceManager.queryBuilder()
+    // Test where() method - should delegate to dataSource.queryBuilder()
     const activeUsers = users.where(user => user.active === true);
     console.log('✅ users.where() - Creates new Handle through projection');
     
@@ -182,12 +182,12 @@ export function testQueryCombinators() {
   console.log('\n🔧 Testing Query Builder Delegation:');
   
   try {
-    // Verify resourceManager has queryBuilder method
-    console.log('✅ ResourceManager implements queryBuilder method');
+    // Verify dataSource has queryBuilder method
+    console.log('✅ DataSource implements queryBuilder method');
     
     // Test that Handle methods delegate to query builder
-    const queryBuilder = resourceManager.queryBuilder(users);
-    console.log('✅ ResourceManager.queryBuilder() creates DataStoreQueryBuilder');
+    const queryBuilder = dataSource.queryBuilder(users);
+    console.log('✅ DataSource.queryBuilder() creates DataStoreQueryBuilder');
     
     // Test query builder methods
     const filteredBuilder = queryBuilder.where(user => user.active);
@@ -251,7 +251,7 @@ export function testQueryCombinators() {
     message: 'All query combinator tests passed',
     features: [
       'Universal Handle query combinator methods',
-      'ResourceManager query builder delegation', 
+      'DataSource query builder delegation', 
       'Resource-specific query builder implementation',
       'Type-aware Handle projections',
       'Method chaining with new proxy creation',
@@ -305,8 +305,8 @@ export function demonstrateProjectionPattern() {
   }
   
   console.log('\n🔄 Pattern Flow:');
-  console.log('1. Handle.method() validates input and delegates to resourceManager.queryBuilder(this)');
-  console.log('2. ResourceManager analyzes source Handle type and creates appropriate query builder');
+  console.log('1. Handle.method() validates input and delegates to dataSource.queryBuilder(this)');
+  console.log('2. DataSource analyzes source Handle type and creates appropriate query builder');
   console.log('3. Query builder chains operations and creates new Handle projections');
   console.log('4. Terminal methods execute queries and return appropriate Handle types');
   console.log('5. All operations maintain synchronous dispatcher pattern');

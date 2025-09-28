@@ -2,23 +2,23 @@
  * DirectoryHandle - Handle abstraction for filesystem directories
  * 
  * Provides a consistent interface for directory operations regardless of 
- * whether the ResourceManager is local (Node.js fs), remote (browser API), 
+ * whether the DataSource is local (Node.js fs), remote (browser API), 
  * or indexed (search-enabled).
  * 
  * Key features:
  * - List directory contents (files and subdirectories)
  * - Create/delete files and subdirectories
- * - Search for files by name/metadata (if ResourceManager supports it)
+ * - Search for files by name/metadata (if DataSource supports it)
  * - Navigate to child DirectoryHandle or FileHandle instances
- * - Works with any filesystem ResourceManager implementation
+ * - Works with any filesystem DataSource implementation
  */
 
 import { Handle } from '@legion/handle';
 import { HandleFactory } from './HandleFactory.js';
 
 export class DirectoryHandle extends Handle {
-  constructor(resourceManager, path = '/') {
-    super(resourceManager);
+  constructor(dataSource, path = '/') {
+    super(dataSource);
     
     // Validate and normalize path
     this.path = this._normalizePath(path);
@@ -34,13 +34,13 @@ export class DirectoryHandle extends Handle {
   value() {
     this._validateNotDestroyed();
     
-    // Query ResourceManager for directory metadata
+    // Query DataSource for directory metadata
     const querySpec = {
       find: ['metadata'],
       where: [['directory', this.path, 'metadata']]
     };
     
-    const results = this.resourceManager.query(querySpec);
+    const results = this.dataSource.query(querySpec);
     return Array.isArray(results) && results.length > 0 ? results[0] : {
       path: this.path,
       type: 'directory',
@@ -76,7 +76,7 @@ export class DirectoryHandle extends Handle {
       querySpec.filter = options.filter;
     }
     
-    return this.resourceManager.query(querySpec);
+    return this.dataSource.query(querySpec);
   }
   
   /**
@@ -97,7 +97,7 @@ export class DirectoryHandle extends Handle {
     }
     
     // Create new FileHandle using factory to avoid circular dependency
-    const fileHandle = HandleFactory.createFileHandle(this.resourceManager, childPath);
+    const fileHandle = HandleFactory.createFileHandle(this.dataSource, childPath);
     
     // Cache the handle
     this._childHandles.set(cacheKey, fileHandle);
@@ -123,7 +123,7 @@ export class DirectoryHandle extends Handle {
     }
     
     // Create new DirectoryHandle
-    const dirHandle = new DirectoryHandle(this.resourceManager, childPath);
+    const dirHandle = new DirectoryHandle(this.dataSource, childPath);
     
     // Cache the handle
     this._childHandles.set(cacheKey, dirHandle);
@@ -144,8 +144,8 @@ export class DirectoryHandle extends Handle {
     
     const filePath = this._joinPath(this.path, filename);
     
-    // Use ResourceManager to create the file
-    const result = this.resourceManager.update(null, {
+    // Use DataSource to create the file
+    const result = this.dataSource.update(null, {
       type: 'file',
       path: filePath,
       content: content,
@@ -172,8 +172,8 @@ export class DirectoryHandle extends Handle {
     
     const dirPath = this._joinPath(this.path, dirname);
     
-    // Use ResourceManager to create the directory
-    const result = this.resourceManager.update(null, {
+    // Use DataSource to create the directory
+    const result = this.dataSource.update(null, {
       type: 'directory',
       path: dirPath,
       options: options
@@ -203,8 +203,8 @@ export class DirectoryHandle extends Handle {
     this._childHandles.delete(`file:${targetPath}`);
     this._childHandles.delete(`dir:${targetPath}`);
     
-    // Use ResourceManager to perform deletion
-    const result = this.resourceManager.update(targetPath, {
+    // Use DataSource to perform deletion
+    const result = this.dataSource.update(targetPath, {
       operation: 'delete',
       options: options
     });
@@ -257,7 +257,7 @@ export class DirectoryHandle extends Handle {
       querySpec.limit = options.limit;
     }
     
-    return this.resourceManager.query(querySpec);
+    return this.dataSource.query(querySpec);
   }
   
   /**
@@ -287,7 +287,7 @@ export class DirectoryHandle extends Handle {
       querySpec.recursive = true;
     }
     
-    return this.resourceManager.subscribe(querySpec, callback);
+    return this.dataSource.subscribe(querySpec, callback);
   }
   
   /**
@@ -302,7 +302,7 @@ export class DirectoryHandle extends Handle {
     }
     
     const parentPath = this._getParentPath(this.path);
-    return new DirectoryHandle(this.resourceManager, parentPath);
+    return new DirectoryHandle(this.dataSource, parentPath);
   }
   
   /**

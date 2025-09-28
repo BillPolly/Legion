@@ -6,17 +6,17 @@
 
 import { PrototypeFactory } from '../../src/PrototypeFactory.js';
 import { Handle } from '../../src/Handle.js';
-import { createMockResourceManager, createMockFunction } from '../testUtils.js';
+import { createMockDataSource, createMockFunction } from '../testUtils.js';
 
 describe('PrototypeFactory', () => {
   let factory;
-  let mockResourceManager;
+  let mockDataSource;
 
   beforeEach(() => {
     factory = new PrototypeFactory();
     
     // Mock ResourceManager for prototype testing
-    mockResourceManager = createMockResourceManager();
+    mockDataSource = createMockDataSource();
   });
 
   describe('Constructor', () => {
@@ -237,7 +237,7 @@ describe('PrototypeFactory', () => {
 
     test('should create typed instances with correct methods', () => {
       const UserPrototype = factory.getEntityPrototype('user');
-      const userInstance = new UserPrototype(mockResourceManager, 123);
+      const userInstance = new UserPrototype(mockDataSource, 123);
       
       expect(userInstance).toBeInstanceOf(Handle);
       expect(userInstance.entityId).toBe(123);
@@ -249,7 +249,7 @@ describe('PrototypeFactory', () => {
 
     test('should provide available attributes', () => {
       const UserPrototype = factory.getEntityPrototype('user');
-      const userInstance = new UserPrototype(mockResourceManager, 123);
+      const userInstance = new UserPrototype(mockDataSource, 123);
       
       const attributes = userInstance.getAvailableAttributes();
       expect(attributes).toContain('name');
@@ -260,7 +260,7 @@ describe('PrototypeFactory', () => {
 
     test('should provide capabilities', () => {
       const UserPrototype = factory.getEntityPrototype('user');
-      const userInstance = new UserPrototype(mockResourceManager, 123);
+      const userInstance = new UserPrototype(mockDataSource, 123);
       
       const capabilities = userInstance.getCapabilities();
       expect(capabilities).toContain('query');
@@ -271,15 +271,15 @@ describe('PrototypeFactory', () => {
 
     test('should create dynamic property accessors', () => {
       const UserPrototype = factory.getEntityPrototype('user');
-      const userInstance = new UserPrototype(mockResourceManager, 123);
+      const userInstance = new UserPrototype(mockDataSource, 123);
       
       // Mock query response for getting name
-      mockResourceManager.query.mockReturnValue([['John Doe']]);
+      mockDataSource.query.mockReturnValue([['John Doe']]);
       
       // Test getter
       const name = userInstance.name;
       expect(name).toBe('John Doe');
-      expect(mockResourceManager.query).toHaveBeenCalledWith({
+      expect(mockDataSource.query).toHaveBeenCalledWith({
         find: ['?value'],
         where: [[123, ':user/name', '?value']]
       });
@@ -287,10 +287,10 @@ describe('PrototypeFactory', () => {
 
     test('should handle cardinality many attributes', () => {
       const UserPrototype = factory.getEntityPrototype('user');
-      const userInstance = new UserPrototype(mockResourceManager, 123);
+      const userInstance = new UserPrototype(mockDataSource, 123);
       
       // Mock query response for getting tags (many)
-      mockResourceManager.query.mockReturnValue([['tag1'], ['tag2'], ['tag3']]);
+      mockDataSource.query.mockReturnValue([['tag1'], ['tag2'], ['tag3']]);
       
       const tags = userInstance.tags;
       expect(tags).toEqual(['tag1', 'tag2', 'tag3']);
@@ -298,11 +298,11 @@ describe('PrototypeFactory', () => {
 
     test('should create dynamic property setters', () => {
       const UserPrototype = factory.getEntityPrototype('user');
-      const userInstance = new UserPrototype(mockResourceManager, 123);
+      const userInstance = new UserPrototype(mockDataSource, 123);
       
       userInstance.name = 'Jane Doe';
       
-      expect(mockResourceManager.update).toHaveBeenCalledWith({
+      expect(mockDataSource.update).toHaveBeenCalledWith({
         entityId: 123,
         attribute: ':user/name',
         value: 'Jane Doe'
@@ -311,7 +311,7 @@ describe('PrototypeFactory', () => {
 
     test('should validate attribute types on set', () => {
       const UserPrototype = factory.getEntityPrototype('user');
-      const userInstance = new UserPrototype(mockResourceManager, 123);
+      const userInstance = new UserPrototype(mockDataSource, 123);
       
       // Should reject wrong type
       expect(() => {
@@ -321,7 +321,7 @@ describe('PrototypeFactory', () => {
 
     test('should provide attribute validation', () => {
       const UserPrototype = factory.getEntityPrototype('user');
-      const userInstance = new UserPrototype(mockResourceManager, 123);
+      const userInstance = new UserPrototype(mockDataSource, 123);
       
       const validResult = userInstance.validateAttribute('name', 'John Doe');
       expect(validResult.valid).toBe(true);
@@ -337,7 +337,7 @@ describe('PrototypeFactory', () => {
 
     test('should provide attribute information', () => {
       const UserPrototype = factory.getEntityPrototype('user');
-      const userInstance = new UserPrototype(mockResourceManager, 123);
+      const userInstance = new UserPrototype(mockDataSource, 123);
       
       const nameInfo = userInstance.getAttributeInfo('name');
       expect(nameInfo).toEqual({
@@ -354,7 +354,7 @@ describe('PrototypeFactory', () => {
 
     test('should enhance introspection with type info', () => {
       const UserPrototype = factory.getEntityPrototype('user');
-      const userInstance = new UserPrototype(mockResourceManager, 123);
+      const userInstance = new UserPrototype(mockDataSource, 123);
       
       const info = userInstance.getIntrospectionInfo();
       
@@ -377,7 +377,7 @@ describe('PrototypeFactory', () => {
       factory.analyzeSchema(conflictSchema, 'datascript');
       
       const TestPrototype = factory.getEntityPrototype('test');
-      const testInstance = new TestPrototype(mockResourceManager, 123);
+      const testInstance = new TestPrototype(mockDataSource, 123);
       
       // Should not create properties that conflict with Handle methods
       expect(testInstance.hasOwnProperty('query')).toBe(false);
@@ -397,7 +397,7 @@ describe('PrototypeFactory', () => {
       }
       
       const CustomPrototype = factory.getEntityPrototype('user', CustomHandle);
-      const customInstance = new CustomPrototype(mockResourceManager, 123);
+      const customInstance = new CustomPrototype(mockDataSource, 123);
       
       expect(customInstance).toBeInstanceOf(CustomHandle);
       expect(customInstance.customMethod()).toBe('custom');
@@ -507,6 +507,6 @@ class MockHandle extends Handle {
   }
   
   query(querySpec) {
-    return this.resourceManager.query(querySpec);
+    return this.dataSource.query(querySpec);
   }
 }

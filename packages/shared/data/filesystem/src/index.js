@@ -1,25 +1,25 @@
 /**
- * @legion/filesystem - Filesystem Handle abstractions with pluggable ResourceManagers
+ * @legion/filesystem - Filesystem Handle abstractions with pluggable DataSources
  * 
  * This package provides a unified filesystem API that works across different environments:
  * 
  * Key Concepts:
  * - DirectoryHandle & FileHandle: Universal filesystem abstractions extending @legion/handle
- * - ResourceManager implementations: Pluggable backends (Local, Remote, Indexed)
+ * - DataSource implementations: Pluggable backends (Local, Remote, Indexed)
  * - Same API regardless of environment: Node.js, Browser, or specialized storage
  * 
  * Example usage:
  * 
  * ```javascript
- * import { DirectoryHandle, LocalFileSystemResourceManager } from '@legion/filesystem';
+ * import { DirectoryHandle, LocalFileSystemDataSource } from '@legion/filesystem';
  * 
- * // Create a ResourceManager for your environment
- * const resourceManager = new LocalFileSystemResourceManager({ 
+ * // Create a DataSource for your environment
+ * const dataSource = new LocalFileSystemDataSource({ 
  *   rootPath: '/home/user/project' 
  * });
  * 
  * // Create a DirectoryHandle for the root
- * const rootDir = new DirectoryHandle(resourceManager, '/');
+ * const rootDir = new DirectoryHandle(dataSource, '/');
  * 
  * // Navigate and manipulate files using the same API
  * const srcDir = rootDir.directory('src');
@@ -43,21 +43,21 @@
  * });
  * ```
  * 
- * The same Handle abstractions work with different ResourceManager implementations:
- * - LocalFileSystemResourceManager: Direct Node.js filesystem access
- * - RemoteFileSystemResourceManager: Browser File API or HTTP-based filesystem
- * - IndexedFileSystemResourceManager: Search-enabled filesystem with full-text indexing
+ * The same Handle abstractions work with different DataSource implementations:
+ * - LocalFileSystemDataSource: Direct Node.js filesystem access
+ * - RemoteFileSystemDataSource: Browser File API or HTTP-based filesystem
+ * - IndexedFileSystemDataSource: Search-enabled filesystem with full-text indexing
  */
 
 // Handle abstractions - universal filesystem API
 export { DirectoryHandle, FileHandle } from './handles/index.js';
 
-// ResourceManager implementations - pluggable backends
+// DataSource implementations - pluggable backends
 export { 
-  LocalFileSystemResourceManager,
-  RemoteFileSystemResourceManager,
-  ActorRemoteFileSystemResourceManager 
-} from './resourcemanagers/index.js';
+  LocalFileSystemDataSource,
+  RemoteFileSystemDataSource,
+  ActorRemoteFileSystemDataSource 
+} from './datasources/index.js';
 
 // Server components for Actor-based filesystem
 export { FileSystemActor } from './server/FileSystemActor.js';
@@ -65,9 +65,9 @@ export { FileSystemProtocol } from './protocol/FileSystemProtocol.js';
 
 // Convenience factory functions
 export function createLocalFileSystem(options = {}) {
-  const resourceManager = new LocalFileSystemResourceManager(options);
+  const dataSource = new LocalFileSystemDataSource(options);
   const rootPath = options.startPath || '/';
-  return new DirectoryHandle(resourceManager, rootPath);
+  return new DirectoryHandle(dataSource, rootPath);
 }
 
 // Future convenience factories:

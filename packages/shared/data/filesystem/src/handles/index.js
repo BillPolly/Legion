@@ -2,7 +2,7 @@
  * Filesystem Handle abstractions
  * 
  * Export both DirectoryHandle and FileHandle classes.
- * These provide the universal filesystem API that works with any ResourceManager implementation.
+ * These provide the universal filesystem API that works with any DataSource implementation.
  */
 
 import { HandleFactory } from './HandleFactory.js';

@@ -2,7 +2,7 @@
  * End-to-End tests for Query Combinator System
  * 
  * Tests the complete query combinator workflow from Handle through
- * ResourceManager to DataStore with real data. Verifies:
+ * DataSource to DataStore with real data. Verifies:
  * - Full query execution pipeline
  * - Complex multi-operation queries
  * - Different Handle type interactions
@@ -15,11 +15,11 @@ import { Handle } from '../../src/Handle.js';
 import { CollectionProxy } from '../../../data-proxies/src/CollectionProxy.js';
 import { StreamProxy } from '../../../data-proxies/src/StreamProxy.js';
 import { EntityProxy } from '../../../data-proxies/src/EntityProxy.js';
-import { DataStoreQueryBuilder, DataStoreResourceManager } from '../../../data-proxies/examples/DataStoreQueryBuilder.js';
+import { DataStoreQueryBuilder, DataStoreDataSource } from '../../../data-proxies/examples/DataStoreQueryBuilder.js';
 
 describe('Query Combinators End-to-End Tests', () => {
   let dataStore;
-  let resourceManager;
+  let dataSource;
   let testData;
 
   beforeEach(() => {
@@ -262,7 +262,7 @@ describe('Query Combinators End-to-End Tests', () => {
       }
     };
     
-    resourceManager = new DataStoreResourceManager(dataStore, schema);
+    dataSource = new DataStoreDataSource(dataStore, schema);
   });
 
   afterEach(() => {
@@ -273,7 +273,7 @@ describe('Query Combinators End-to-End Tests', () => {
 
   describe('Complete Query Pipeline', () => {
     it('should execute complex filter-transform-aggregate query', () => {
-      const users = new CollectionProxy(resourceManager, {
+      const users = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
@@ -292,7 +292,7 @@ describe('Query Combinators End-to-End Tests', () => {
         .toArray();
 
       // Manual verification of expected results
-      const allUsers = resourceManager.query(users.collectionSpec);
+      const allUsers = dataSource.query(users.collectionSpec);
       const engineeringUsers = allUsers
         .map(([id]) => dataStore.db.get(id))
         .filter(user => user.active === true && user.department === 'Engineering');
@@ -301,7 +301,7 @@ describe('Query Combinators End-to-End Tests', () => {
     });
 
     it('should handle pagination correctly', () => {
-      const users = new CollectionProxy(resourceManager, {
+      const users = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
@@ -313,7 +313,7 @@ describe('Query Combinators End-to-End Tests', () => {
         .limit(2)
         .toArray();
 
-      const allUsers = resourceManager.query(users.collectionSpec);
+      const allUsers = dataSource.query(users.collectionSpec);
       expect(allUsers.length).toBeGreaterThanOrEqual(4);
       
       // Verify pagination window
@@ -326,7 +326,7 @@ describe('Query Combinators End-to-End Tests', () => {
     });
 
     it('should aggregate data with groupBy and custom functions', () => {
-      const users = new CollectionProxy(resourceManager, {
+      const users = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
@@ -338,7 +338,7 @@ describe('Query Combinators End-to-End Tests', () => {
 
       // Manual calculation
       const usersByDept = {};
-      const allUsers = resourceManager.query(users.collectionSpec);
+      const allUsers = dataSource.query(users.collectionSpec);
       
       allUsers.forEach(([id]) => {
         const user = dataStore.db.get(id);
@@ -356,12 +356,12 @@ describe('Query Combinators End-to-End Tests', () => {
 
   describe('Cross-Handle Type Queries', () => {
     it('should join users and projects through query combinators', () => {
-      const users = new CollectionProxy(resourceManager, {
+      const users = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
 
-      const projects = new CollectionProxy(resourceManager, {
+      const projects = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'project']]
       });
@@ -378,10 +378,10 @@ describe('Query Combinators End-to-End Tests', () => {
 
     it('should navigate from EntityProxy to related collections', () => {
       // Start with a specific user
-      const aliceEntity = new EntityProxy(resourceManager, testData.users[0]);
+      const aliceEntity = new EntityProxy(dataSource, testData.users[0]);
       
       // Get all projects owned by this user
-      const projects = new CollectionProxy(resourceManager, {
+      const projects = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'project']]
       });
@@ -391,7 +391,7 @@ describe('Query Combinators End-to-End Tests', () => {
         .toArray();
 
       // Manual verification
-      const allProjects = resourceManager.query(projects.collectionSpec);
+      const allProjects = dataSource.query(projects.collectionSpec);
       const aliceProjectsManual = allProjects
         .map(([id]) => dataStore.db.get(id))
         .filter(project => project.ownerId === testData.users[0]);
@@ -401,7 +401,7 @@ describe('Query Combinators End-to-End Tests', () => {
 
     it('should handle StreamProxy with temporal queries', () => {
       // Create event stream
-      const events = new StreamProxy(resourceManager, {
+      const events = new StreamProxy(dataSource, {
         find: ['?e', '?attr', '?value'],
         where: [['?e', ':entity/type', 'event']]
       });
@@ -445,7 +445,7 @@ describe('Query Combinators End-to-End Tests', () => {
 
   describe('Terminal Method Behaviors', () => {
     it('should return appropriate Handle types from first() and last()', () => {
-      const users = new CollectionProxy(resourceManager, {
+      const users = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
@@ -462,7 +462,7 @@ describe('Query Combinators End-to-End Tests', () => {
     });
 
     it('should return scalar from count()', () => {
-      const users = new CollectionProxy(resourceManager, {
+      const users = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
@@ -476,7 +476,7 @@ describe('Query Combinators End-to-End Tests', () => {
     });
 
     it('should return aggregated scalar values', () => {
-      const users = new CollectionProxy(resourceManager, {
+      const users = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
@@ -511,7 +511,7 @@ describe('Query Combinators End-to-End Tests', () => {
         });
       }
 
-      const entities = new CollectionProxy(resourceManager, {
+      const entities = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'testEntity']]
       });
@@ -533,7 +533,7 @@ describe('Query Combinators End-to-End Tests', () => {
     });
 
     it('should create new builders without affecting original', () => {
-      const users = new CollectionProxy(resourceManager, {
+      const users = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
@@ -559,7 +559,7 @@ describe('Query Combinators End-to-End Tests', () => {
 
   describe('Error Handling', () => {
     it('should handle empty results gracefully', () => {
-      const empty = new CollectionProxy(resourceManager, {
+      const empty = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'nonexistent']]
       });
@@ -571,7 +571,7 @@ describe('Query Combinators End-to-End Tests', () => {
     });
 
     it('should validate operations on destroyed handles', () => {
-      const users = new CollectionProxy(resourceManager, {
+      const users = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
@@ -583,7 +583,7 @@ describe('Query Combinators End-to-End Tests', () => {
     });
 
     it('should handle invalid query operations', () => {
-      const users = new CollectionProxy(resourceManager, {
+      const users = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
@@ -597,7 +597,7 @@ describe('Query Combinators End-to-End Tests', () => {
 
   describe('Real-World Use Cases', () => {
     it('should implement user search with filters and pagination', () => {
-      const users = new CollectionProxy(resourceManager, {
+      const users = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
@@ -631,12 +631,12 @@ describe('Query Combinators End-to-End Tests', () => {
     });
 
     it('should generate dashboard statistics', () => {
-      const users = new CollectionProxy(resourceManager, {
+      const users = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
 
-      const projects = new CollectionProxy(resourceManager, {
+      const projects = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'project']]
       });
@@ -663,7 +663,7 @@ describe('Query Combinators End-to-End Tests', () => {
       const currentUserId = testData.users[0]; // Alice
       const currentUserDept = 'Engineering';
 
-      const users = new CollectionProxy(resourceManager, {
+      const users = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
@@ -682,7 +682,7 @@ describe('Query Combinators End-to-End Tests', () => {
         .toArray();
 
       // Verify filtered data
-      const allUsers = resourceManager.query(users.collectionSpec);
+      const allUsers = dataSource.query(users.collectionSpec);
       const deptUsers = allUsers
         .map(([id]) => dataStore.db.get(id))
         .filter(u => u.department === currentUserDept);

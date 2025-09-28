@@ -14,9 +14,9 @@ import { Handle } from '@legion/handle';
 import { EntityProxy } from './EntityProxy.js';
 
 export class CollectionProxy extends Handle {
-  constructor(resourceManager, collectionSpec, options = {}) {
-    // Call Handle constructor first (which validates resourceManager)
-    super(resourceManager);
+  constructor(dataSource, collectionSpec, options = {}) {
+    // Call Handle constructor first (which validates dataSource)
+    super(dataSource);
     
     // Validate collection specification after super call
     if (!collectionSpec) {
@@ -33,9 +33,9 @@ export class CollectionProxy extends Handle {
     // For backward compatibility with tests
     this.entityKey = collectionSpec.entityKey || this._detectEntityKey(collectionSpec);
     
-    // Backward compatibility - expose store if resourceManager has it
-    if (resourceManager.dataStore) {
-      this.store = resourceManager.dataStore;
+    // Backward compatibility - expose store if dataSource has it
+    if (dataSource.dataStore) {
+      this.store = dataSource.dataStore;
     }
     
     // Cache for entity proxies
@@ -75,7 +75,7 @@ export class CollectionProxy extends Handle {
       find: ['?attr', '?value'],
       where: [[entityIds[0], '?attr', '?value']]
     };
-    const results = this.resourceManager.query(querySpec);
+    const results = this.dataSource.query(querySpec);
     
     // Convert to entity object
     const entity = { ':db/id': entityIds[0] };
@@ -100,7 +100,7 @@ export class CollectionProxy extends Handle {
       find: ['?attr', '?value'],
       where: [[entityIds[entityIds.length - 1], '?attr', '?value']]
     };
-    const results = this.resourceManager.query(querySpec);
+    const results = this.dataSource.query(querySpec);
     
     // Convert to entity object
     const entity = { ':db/id': entityIds[entityIds.length - 1] };
@@ -126,7 +126,7 @@ export class CollectionProxy extends Handle {
    * @returns {Object|null} First entity or null if empty
    */
   first() {
-    // Check if we're using a collection-based ResourceManager (like PlainObjectResourceManager)
+    // Check if we're using a collection-based DataSource (like PlainObjectDataSource)
     // vs a DataStore-based one. Collection-based should use Handle's query combinator methods.
     if (this.collectionSpec && this.collectionSpec.collection) {
       // Collection-based - delegate to Handle's first() method which uses query builders
@@ -142,7 +142,7 @@ export class CollectionProxy extends Handle {
    * @returns {Object|null} Last entity or null if empty
    */
   last() {
-    // Check if we're using a collection-based ResourceManager (like PlainObjectResourceManager)
+    // Check if we're using a collection-based DataSource (like PlainObjectDataSource)
     // vs a DataStore-based one. Collection-based should use Handle's query combinator methods.
     if (this.collectionSpec && this.collectionSpec.collection) {
       // Collection-based - delegate to Handle's last() method which uses query builders
@@ -260,8 +260,8 @@ export class CollectionProxy extends Handle {
     
     this._validateQuerySpec(querySpec);
     
-    // Execute query in collection context - delegate to resourceManager
-    return this.resourceManager.query(querySpec);
+    // Execute query in collection context - delegate to dataSource
+    return this.dataSource.query(querySpec);
   }
   
   /**
@@ -274,15 +274,15 @@ export class CollectionProxy extends Handle {
     }
     
     // Check if this is being called from Handle's query combinator toArray()
-    // If so, delegate to ResourceManager's query builder
+    // If so, delegate to DataSource's query builder
     if (this._isQueryCombinatorCall) {
       return super.toArray();
     }
     
     // Handle collection-based specs (e.g., { collection: 'users' })
-    // These should return data directly from the ResourceManager
+    // These should return data directly from the DataSource
     if (this.collectionSpec && this.collectionSpec.collection) {
-      const results = this.resourceManager.query(this.collectionSpec);
+      const results = this.dataSource.query(this.collectionSpec);
       return Array.isArray(results) ? results : [];
     }
     
@@ -297,7 +297,7 @@ export class CollectionProxy extends Handle {
         find: ['?attr', '?value'],
         where: [[entityId, '?attr', '?value']]
       };
-      const results = this.resourceManager.query(querySpec);
+      const results = this.dataSource.query(querySpec);
       
       // Convert results to entity object
       const entity = { ':db/id': entityId };
@@ -348,7 +348,7 @@ export class CollectionProxy extends Handle {
    * @private
    */
   _getEntityIds() {
-    const results = this.resourceManager.query(this.collectionSpec);
+    const results = this.dataSource.query(this.collectionSpec);
     
     // Handle different query result formats
     if (Array.isArray(results)) {
@@ -395,7 +395,7 @@ export class CollectionProxy extends Handle {
     }
     
     // Create new entity proxy
-    const entityProxy = new EntityProxy(this.resourceManager, entityId);
+    const entityProxy = new EntityProxy(this.dataSource, entityId);
     this._entityProxies.set(entityId, entityProxy);
     
     return entityProxy;
@@ -430,8 +430,8 @@ export class CollectionProxy extends Handle {
     
     for (const entityId of entityIds) {
       try {
-        // Use synchronous update method from resourceManager
-        this.resourceManager.update(entityId, updateData);
+        // Use synchronous update method from dataSource
+        this.dataSource.update(entityId, updateData);
         updateCount++;
       } catch (error) {
         errors.push({ entityId, error: error.message });
@@ -477,8 +477,8 @@ export class CollectionProxy extends Handle {
           throw new Error('Entity missing :db/id attribute');
         }
         
-        // Use synchronous update method from resourceManager
-        this.resourceManager.update(entityId, updateData);
+        // Use synchronous update method from dataSource
+        this.dataSource.update(entityId, updateData);
         updateCount++;
       } catch (error) {
         const entityId = entity[':db/id'] || 'unknown';
@@ -526,7 +526,7 @@ export class CollectionProxy extends Handle {
     
     // Support both DataStore-style queries and simple collection names
     if (collectionSpec.collection) {
-      // Simple collection-based specification (for plain object/API ResourceManagers)
+      // Simple collection-based specification (for plain object/API DataSources)
       if (typeof collectionSpec.collection !== 'string') {
         throw new Error('Collection name must be a string');
       }

@@ -12,18 +12,18 @@
 import { Handle } from '@legion/handle';
 
 export class StreamProxy extends Handle {
-  constructor(resourceManager, querySpec) {
-    // Call Handle constructor (which validates resourceManager)
-    super(resourceManager);
+  constructor(dataSource, querySpec) {
+    // Call Handle constructor (which validates dataSource)
+    super(dataSource);
     
     // Validate query specification
     this._validateQuerySpec(querySpec);
     
     this.querySpec = querySpec;
     
-    // Backward compatibility - expose store if resourceManager has it
-    if (resourceManager.dataStore) {
-      this.store = resourceManager.dataStore;
+    // Backward compatibility - expose store if dataSource has it
+    if (dataSource.dataStore) {
+      this.store = dataSource.dataStore;
     }
   }
   
@@ -75,7 +75,7 @@ export class StreamProxy extends Handle {
   value() {
     this._validateNotDestroyed();
     
-    return this.resourceManager.query(this.querySpec);
+    return this.dataSource.query(this.querySpec);
   }
   
   /**
@@ -89,7 +89,7 @@ export class StreamProxy extends Handle {
     // Validate query specification
     this._validateQuerySpec(querySpec);
     
-    return this.resourceManager.query(querySpec);
+    return this.dataSource.query(querySpec);
   }
   
   /**
@@ -105,7 +105,7 @@ export class StreamProxy extends Handle {
     }
     
     // Create new StreamProxy that applies the filter
-    const filteredProxy = new FilteredStreamProxy(this.resourceManager, this.querySpec, predicate);
+    const filteredProxy = new FilteredStreamProxy(this.dataSource, this.querySpec, predicate);
     return filteredProxy;
   }
   
@@ -140,8 +140,8 @@ export class StreamProxy extends Handle {
     this._validateQuerySpec(querySpec);
     this._validateCallback(callbackFn);
     
-    // Create subscription through resourceManager
-    const resourceSubscription = this.resourceManager.subscribe(querySpec, callbackFn);
+    // Create subscription through dataSource
+    const resourceSubscription = this.dataSource.subscribe(querySpec, callbackFn);
     
     // Create wrapper subscription that integrates with Handle's subscription tracking
     const wrapperSubscription = {
@@ -164,8 +164,8 @@ export class StreamProxy extends Handle {
  * Extends StreamProxy to add filtering capability
  */
 class FilteredStreamProxy extends StreamProxy {
-  constructor(resourceManager, querySpec, predicate) {
-    super(resourceManager, querySpec);
+  constructor(dataSource, querySpec, predicate) {
+    super(dataSource, querySpec);
     this.predicate = predicate;
   }
   
@@ -176,7 +176,7 @@ class FilteredStreamProxy extends StreamProxy {
   value() {
     this._validateNotDestroyed();
     
-    const results = this.resourceManager.query(this.querySpec);
+    const results = this.dataSource.query(this.querySpec);
     
     if (!Array.isArray(results)) {
       return results;
@@ -239,8 +239,8 @@ class FilteredStreamProxy extends StreamProxy {
       }
     };
     
-    // Create subscription through resourceManager with filtered callback
-    const resourceSubscription = this.resourceManager.subscribe(querySpec, filteredCallback);
+    // Create subscription through dataSource with filtered callback
+    const resourceSubscription = this.dataSource.subscribe(querySpec, filteredCallback);
     
     // Create wrapper subscription that integrates with Handle's subscription tracking
     const wrapperSubscription = {

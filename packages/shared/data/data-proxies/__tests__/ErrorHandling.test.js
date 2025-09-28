@@ -8,7 +8,7 @@ import { DataStoreProxy } from '../src/DataStoreProxy.js';
 import { EntityProxy } from '../src/EntityProxy.js';
 import { StreamProxy } from '../src/StreamProxy.js';
 import { CollectionProxy } from '../src/CollectionProxy.js';
-import { DataStoreResourceManager } from '../src/DataStoreResourceManager.js';
+import { DataStoreDataSource } from '../src/DataStoreDataSource.js';
 import { createTestStore, createSampleData, assertions, validators, errorHelpers } from './setup.js';
 
 describe('Error Handling and Recovery', () => {
@@ -187,7 +187,7 @@ describe('Error Handling and Recovery', () => {
   
   describe('StreamProxy Error Handling', () => {
     test('should handle invalid query specifications gracefully', () => {
-      const resourceManager = new DataStoreResourceManager(mockStore);
+      const resourceManager = new DataStoreDataSource(mockStore);
       expect(() => new StreamProxy(resourceManager, null)).toThrow('Query specification is required');
       expect(() => new StreamProxy(resourceManager, 'not-object')).toThrow('Query specification must be an object');
       expect(() => new StreamProxy(resourceManager, {})).toThrow('Query specification must have find clause');
@@ -210,7 +210,7 @@ describe('Error Handling and Recovery', () => {
         subscribe: mockStore.subscribe
       };
       
-      const errorResourceManager = new DataStoreResourceManager(errorStore);
+      const errorResourceManager = new DataStoreDataSource(errorStore);
       const streamProxy = new StreamProxy(errorResourceManager, querySpec);
       
       // Should handle errors gracefully during value access
@@ -230,7 +230,7 @@ describe('Error Handling and Recovery', () => {
         subscribe: null // No subscription support
       };
       
-      const noSubResourceManager = new DataStoreResourceManager(noSubStore);
+      const noSubResourceManager = new DataStoreDataSource(noSubStore);
       const streamProxy = new StreamProxy(noSubResourceManager, querySpec);
       
       try {
@@ -258,7 +258,7 @@ describe('Error Handling and Recovery', () => {
   
   describe('CollectionProxy Error Handling', () => {
     test('should handle invalid collection specifications gracefully', () => {
-      const resourceManager = new DataStoreResourceManager(mockStore);
+      const resourceManager = new DataStoreDataSource(mockStore);
       expect(() => new CollectionProxy(resourceManager, null)).toThrow('Collection specification is required');
       expect(() => new CollectionProxy(resourceManager, 'not-object')).toThrow('Collection specification must be an object');
       expect(() => new CollectionProxy(resourceManager, {})).toThrow('Collection specification must have find clause');

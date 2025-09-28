@@ -1,7 +1,7 @@
 /**
- * APIResourceManager - Example ResourceManager backed by API calls
+ * APIDataSource - Example DataSource backed by API calls
  * 
- * Demonstrates how a ResourceManager that fetches data from a remote API
+ * Demonstrates how a DataSource that fetches data from a remote API
  * can use the DefaultQueryBuilder for client-side query operations.
  * 
  * The API returns JSON data which is then processed locally using
@@ -12,7 +12,7 @@ import { DefaultQueryBuilder } from '../src/DefaultQueryBuilder.js';
 import { CollectionProxy } from '../src/CollectionProxy.js';
 import { EntityProxy } from '../src/EntityProxy.js';
 
-export class APIResourceManager {
+export class APIDataSource {
   constructor(baseUrl, options = {}) {
     this.baseUrl = baseUrl;
     this.cache = new Map(); // Cache API responses
@@ -20,7 +20,7 @@ export class APIResourceManager {
     this._subscriptions = new Map();
   }
   
-  // Required ResourceManager interface methods
+  // Required DataSource interface methods
   
   query(querySpec) {
     // Fetch data from API based on query spec
@@ -187,20 +187,20 @@ export class APIResourceManager {
  * Example usage showing how API data can be queried locally
  */
 export function exampleAPIUsage() {
-  // Create an API-backed ResourceManager
-  const apiManager = new APIResourceManager('https://api.example.com', {
+  // Create an API-backed DataSource
+  const apiDataSource = new APIDataSource('https://api.example.com', {
     cacheTimeout: 30000 // 30 second cache
   });
   
   // Create CollectionProxy for users from API
-  const users = new CollectionProxy(apiManager, {
+  const users = new CollectionProxy(apiDataSource, {
     collection: 'users'
   });
   
   // The API returns all users, but we can filter/sort locally
   // This reduces API calls and provides rich query capabilities
   
-  console.log('\n=== API ResourceManager Examples ===\n');
+  console.log('\n=== API DataSource Examples ===\n');
   
   // Example 1: Filter API data locally
   const activeAdmins = users
@@ -213,7 +213,7 @@ export function exampleAPIUsage() {
   // Output: [{ name: 'Alice', email: 'alice@example.com' }, { name: 'Eve', email: 'eve@example.com' }]
   
   // Example 2: Complex query on cached API data
-  const projects = new CollectionProxy(apiManager, {
+  const projects = new CollectionProxy(apiDataSource, {
     collection: 'projects'
   });
   
@@ -226,7 +226,7 @@ export function exampleAPIUsage() {
   console.log('High priority in-progress projects:', highPriorityProjects);
   
   // Example 3: Join data from multiple API endpoints locally
-  const tasks = new CollectionProxy(apiManager, {
+  const tasks = new CollectionProxy(apiDataSource, {
     collection: 'tasks'
   });
   
@@ -258,5 +258,5 @@ export function exampleAPIUsage() {
   
   console.log('First active user:', firstActiveUser);
   
-  return apiManager;
+  return apiDataSource;
 }

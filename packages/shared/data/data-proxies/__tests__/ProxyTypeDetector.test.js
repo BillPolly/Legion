@@ -4,7 +4,7 @@
  */
 
 import { ProxyTypeDetector } from '../src/ProxyTypeDetector.js';
-import { DataStoreResourceManager } from '../src/DataStoreResourceManager.js';
+import { DataStoreDataSource } from '../src/DataStoreDataSource.js';
 import { createTestStore, createSampleData, assertions, validators, errorHelpers } from './setup.js';
 
 describe('ProxyTypeDetector', () => {
@@ -15,7 +15,7 @@ describe('ProxyTypeDetector', () => {
   
   beforeEach(() => {
     store = createTestStore();
-    resourceManager = new DataStoreResourceManager(store);
+    resourceManager = new DataStoreDataSource(store);
     sampleData = createSampleData(store);
     detector = new ProxyTypeDetector(resourceManager);
   });

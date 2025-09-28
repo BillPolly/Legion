@@ -83,9 +83,12 @@ export function toHaveBeenCalledWith(mockFn, ...expectedArgs) {
 }
 
 /**
- * Create a mock ResourceManager for testing
+ * Create a mock DataSource for testing
+ * 
+ * CRITICAL: The correct terminology is DataSource, not ResourceManager!
+ * Handle constructor takes a DataSource parameter.
  */
-export function createMockResourceManager() {
+export function createMockDataSource() {
   let subscriptionCounter = 0;
   
   const subscribeFn = createMockFunction();
@@ -101,6 +104,22 @@ export function createMockResourceManager() {
     query: createMockFunction([]),
     subscribe: subscribeFn,
     getSchema: createMockFunction(null),
-    update: createMockFunction(true)
+    update: createMockFunction(true),
+    queryBuilder: createMockFunction({
+      where: createMockFunction(),
+      select: createMockFunction(),
+      first: createMockFunction(),
+      last: createMockFunction(),
+      count: createMockFunction(),
+      toArray: createMockFunction([])
+    })
   };
+}
+
+/**
+ * Legacy alias for backward compatibility with existing tests
+ * @deprecated Use createMockDataSource() instead
+ */
+export function createMockResourceManager() {
+  return createMockDataSource();
 }

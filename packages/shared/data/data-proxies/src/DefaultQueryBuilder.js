@@ -2,23 +2,23 @@
  * DefaultQueryBuilder - Default query builder for Handle-based resources backed by plain JavaScript objects
  * 
  * This is the default/fallback query builder that works within the Handle hierarchy.
- * Queries always flow up through parent Handles, and the underlying ResourceManager
+ * Queries always flow up through parent Handles, and the underlying DataSource
  * might just have plain JavaScript objects/arrays as its data store.
  * 
- * Used when a ResourceManager doesn't provide a specialized query builder implementation.
- * The ResourceManager's query() method returns plain JavaScript objects/arrays which
+ * Used when a DataSource doesn't provide a specialized query builder implementation.
+ * The DataSource's query() method returns plain JavaScript objects/arrays which
  * this builder then processes with standard array operations.
  * 
  * Perfect for:
- * - ResourceManagers backed by in-memory objects/arrays
- * - Mock/test ResourceManagers with plain data
- * - API-based ResourceManagers that return JSON
- * - Any ResourceManager without a specialized query backend (like DataScript)
+ * - DataSources backed by in-memory objects/arrays
+ * - Mock/test DataSources with plain data
+ * - API-based DataSources that return JSON
+ * - Any DataSource without a specialized query backend (like DataScript)
  */
 
 export class DefaultQueryBuilder {
-  constructor(resourceManager, sourceHandle) {
-    this.resourceManager = resourceManager;
+  constructor(dataSource, sourceHandle) {
+    this.dataSource = dataSource;
     this.sourceHandle = sourceHandle;
     this.operations = [];
   }
@@ -93,13 +93,13 @@ export class DefaultQueryBuilder {
   // Private implementation methods
   
   _addOperation(type, ...args) {
-    const newBuilder = new DefaultQueryBuilder(this.resourceManager, this.sourceHandle);
+    const newBuilder = new DefaultQueryBuilder(this.dataSource, this.sourceHandle);
     newBuilder.operations = [...this.operations, { type, args }];
     return newBuilder;
   }
   
   _executeQuery() {
-    // Get data from source Handle through ResourceManager
+    // Get data from source Handle through DataSource
     let results = this._getSourceData();
     
     // Apply each operation in sequence
@@ -112,18 +112,18 @@ export class DefaultQueryBuilder {
   
   _getSourceData() {
     // Query the source Handle to get the underlying data
-    // The ResourceManager returns plain JavaScript objects/arrays
+    // The DataSource returns plain JavaScript objects/arrays
     if (this.sourceHandle.collectionSpec) {
       // CollectionProxy - query returns array of results
-      const data = this.resourceManager.query(this.sourceHandle.collectionSpec);
+      const data = this.dataSource.query(this.sourceHandle.collectionSpec);
       return this._ensureArray(data);
     } else if (this.sourceHandle.querySpec) {
       // StreamProxy or other queryable Handle
-      const data = this.resourceManager.query(this.sourceHandle.querySpec);
+      const data = this.dataSource.query(this.sourceHandle.querySpec);
       return this._ensureArray(data);
     } else if (this.sourceHandle.entityId !== undefined) {
       // EntityProxy - query for entity data
-      const entityData = this.resourceManager.query({
+      const entityData = this.dataSource.query({
         find: ['*'],
         where: [['?e', ':db/id', this.sourceHandle.entityId]]
       });
@@ -401,20 +401,20 @@ export class DefaultQueryBuilder {
   }
   
   _wrapResult(result) {
-    // DefaultQueryBuilder returns results based on ResourceManager's design
-    // Different ResourceManagers may have different result strategies:
+    // DefaultQueryBuilder returns results based on DataSource's design
+    // Different DataSources may have different result strategies:
     // - DataStore returns EntityProxy handles
-    // - PlainObject/API ResourceManagers return plain objects
-    // - Other ResourceManagers might return other Handle types
+    // - PlainObject/API DataSources return plain objects
+    // - Other DataSources might return other Handle types
     
-    // Let the ResourceManager decide how to wrap results
-    if (typeof this.resourceManager.wrapQueryResult === 'function') {
-      return this.resourceManager.wrapQueryResult(result);
+    // Let the DataSource decide how to wrap results
+    if (typeof this.dataSource.wrapQueryResult === 'function') {
+      return this.dataSource.wrapQueryResult(result);
     }
     
     // Default: return the result as-is
-    // Plain objects for PlainObjectResourceManager
-    // API responses for APIResourceManager
+    // Plain objects for PlainObjectDataSource
+    // API responses for APIDataSource
     return result;
   }
 }

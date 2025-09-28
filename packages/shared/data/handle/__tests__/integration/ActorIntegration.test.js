@@ -7,14 +7,14 @@
 
 import { Handle } from '../../src/Handle.js';
 import { Actor } from '@legion/actors';
-import { createMockResourceManager } from '../testUtils.js';
+import { createMockDataSource } from '../testUtils.js';
 
 describe('Handle Actor Integration', () => {
-  let mockResourceManager;
+  let mockDataSource;
   let handle;
 
   beforeEach(() => {
-    mockResourceManager = createMockResourceManager();
+    mockDataSource = createMockDataSource();
   });
 
   afterEach(() => {
@@ -32,11 +32,11 @@ describe('Handle Actor Integration', () => {
         }
         
         query(querySpec) {
-          return this.resourceManager.query(querySpec);
+          return this.dataSource.query(querySpec);
         }
       }
       
-      handle = new TestHandle(mockResourceManager);
+      handle = new TestHandle(mockDataSource);
       
       // Verify it's an instance of Actor
       expect(handle).toBeInstanceOf(Actor);
@@ -50,11 +50,11 @@ describe('Handle Actor Integration', () => {
         }
         
         query(querySpec) {
-          return this.resourceManager.query(querySpec);
+          return this.dataSource.query(querySpec);
         }
       }
       
-      handle = new TestHandle(mockResourceManager);
+      handle = new TestHandle(mockDataSource);
       
       // Check for Actor methods
       expect(typeof handle.receive).toBe('function');
@@ -75,7 +75,7 @@ describe('Handle Actor Integration', () => {
         }
       }
       
-      handle = new TestHandle(mockResourceManager);
+      handle = new TestHandle(mockDataSource);
       
       // Test message passing via receive
       const valueResult = handle.receive({ type: 'value' });
@@ -103,7 +103,7 @@ describe('Handle Actor Integration', () => {
         }
       }
       
-      handle = new TestHandle(mockResourceManager);
+      handle = new TestHandle(mockDataSource);
       
       // Simulate remote-style message (could come from frontend/backend)
       const message = {
@@ -128,7 +128,7 @@ describe('Handle Actor Integration', () => {
         }
       }
       
-      handle = new TestHandle(mockResourceManager);
+      handle = new TestHandle(mockDataSource);
       
       // Remote subscription setup
       const remoteCallback = () => {}; // Simple callback function for testing
@@ -161,7 +161,7 @@ describe('Handle Actor Integration', () => {
         }
       }
       
-      handle = new TestHandle(mockResourceManager);
+      handle = new TestHandle(mockDataSource);
       
       // Remote destroy message
       const destroyMessage = { type: 'destroy' };
@@ -197,7 +197,7 @@ describe('Handle Actor Integration', () => {
         }
       }
       
-      handle = new TestHandle(mockResourceManager);
+      handle = new TestHandle(mockDataSource);
       
       // Message passing appears async but is sync internally
       const startTime = Date.now();
@@ -220,7 +220,7 @@ describe('Handle Actor Integration', () => {
         }
       }
       
-      handle = new TestHandle(mockResourceManager);
+      handle = new TestHandle(mockDataSource);
       
       // Actor pattern - errors thrown synchronously
       expect(() => handle.receive({ type: 'value' })).toThrow('Value computation failed');

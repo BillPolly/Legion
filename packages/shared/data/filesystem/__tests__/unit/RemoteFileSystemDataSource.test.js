@@ -1,10 +1,10 @@
 /**
- * Unit Tests for RemoteFileSystemResourceManager
+ * Unit Tests for RemoteFileSystemDataSource
  * 
- * Tests the RemoteFileSystemResourceManager class functionality with mock server
+ * Tests the RemoteFileSystemDataSource class functionality with mock server
  */
 
-import { RemoteFileSystemResourceManager } from '../../src/resourcemanagers/index.js';
+import { RemoteFileSystemDataSource } from '../../src/datasources/index.js';
 import { jest } from '@jest/globals';
 
 // Mock WebSocket
@@ -74,11 +74,11 @@ global.XMLHttpRequest = class MockXMLHttpRequest {
   }
 };
 
-describe('RemoteFileSystemResourceManager', () => {
-  let resourceManager;
+describe('RemoteFileSystemDataSource', () => {
+  let dataSource;
   
   beforeEach(() => {
-    resourceManager = new RemoteFileSystemResourceManager({
+    dataSource = new RemoteFileSystemDataSource({
       serverUrl: 'http://localhost:3000',
       wsUrl: 'ws://localhost:3000/filesystem',
       enableWebSocket: false, // Disable for synchronous testing
@@ -87,14 +87,14 @@ describe('RemoteFileSystemResourceManager', () => {
   });
   
   afterEach(() => {
-    if (resourceManager) {
-      resourceManager.destroy();
+    if (dataSource) {
+      dataSource.destroy();
     }
   });
   
   describe('Constructor', () => {
     test('should initialize with default options', () => {
-      const rm = new RemoteFileSystemResourceManager();
+      const rm = new RemoteFileSystemDataSource();
       expect(rm.options.serverUrl).toBe('http://localhost:3000');
       expect(rm.options.wsUrl).toBe('ws://localhost:3000/filesystem');
       expect(rm.options.enableWebSocket).toBe(true);
@@ -102,7 +102,7 @@ describe('RemoteFileSystemResourceManager', () => {
     });
     
     test('should accept custom options', () => {
-      const rm = new RemoteFileSystemResourceManager({
+      const rm = new RemoteFileSystemDataSource({
         serverUrl: 'http://example.com:8080',
         authToken: 'test-token',
         cacheTTL: 10000
@@ -121,7 +121,7 @@ describe('RemoteFileSystemResourceManager', () => {
         where: [['directory', '/test', 'metadata']]
       };
       
-      const results = resourceManager.query(querySpec);
+      const results = dataSource.query(querySpec);
       
       expect(Array.isArray(results)).toBe(true);
       expect(results).toHaveLength(1);
@@ -134,16 +134,16 @@ describe('RemoteFileSystemResourceManager', () => {
     
     test('should throw error for invalid query', () => {
       expect(() => {
-        resourceManager.query(null);
+        dataSource.query(null);
       }).toThrow('Query specification is required');
       
       expect(() => {
-        resourceManager.query('invalid');
+        dataSource.query('invalid');
       }).toThrow('Query specification is required');
     });
     
     test('should include auth token in headers', () => {
-      const rm = new RemoteFileSystemResourceManager({
+      const rm = new RemoteFileSystemDataSource({
         authToken: 'test-token',
         enableWebSocket: false
       });
@@ -160,7 +160,7 @@ describe('RemoteFileSystemResourceManager', () => {
   
   describe('update()', () => {
     test('should execute update via HTTP', () => {
-      const result = resourceManager.update('/test/file.txt', {
+      const result = dataSource.update('/test/file.txt', {
         operation: 'write',
         content: 'Hello World'
       });
@@ -176,7 +176,7 @@ describe('RemoteFileSystemResourceManager', () => {
       
       const spy = jest.spyOn(XMLHttpRequest.prototype, 'send');
       
-      resourceManager.update('/test/binary.bin', {
+      dataSource.update('/test/binary.bin', {
         operation: 'write',
         content: binaryData
       });
@@ -189,22 +189,22 @@ describe('RemoteFileSystemResourceManager', () => {
     
     test('should invalidate cache after update', () => {
       // Set cached metadata
-      resourceManager._setCachedMetadata('/test/file.txt', { exists: true });
-      expect(resourceManager.metadataCache.has('/test/file.txt')).toBe(true);
+      dataSource._setCachedMetadata('/test/file.txt', { exists: true });
+      expect(dataSource.metadataCache.has('/test/file.txt')).toBe(true);
       
       // Update file
-      resourceManager.update('/test/file.txt', {
+      dataSource.update('/test/file.txt', {
         operation: 'write',
         content: 'New content'
       });
       
       // Cache should be invalidated
-      expect(resourceManager.metadataCache.has('/test/file.txt')).toBe(false);
+      expect(dataSource.metadataCache.has('/test/file.txt')).toBe(false);
     });
     
     test('should throw error for invalid update data', () => {
       expect(() => {
-        resourceManager.update('/test', null);
+        dataSource.update('/test', null);
       }).toThrow('Update data is required');
     });
   });
@@ -212,12 +212,12 @@ describe('RemoteFileSystemResourceManager', () => {
   describe('subscribe()', () => {
     test('should throw error when WebSocket is disabled', () => {
       expect(() => {
-        resourceManager.subscribe({}, () => {});
+        dataSource.subscribe({}, () => {});
       }).toThrow('WebSocket is disabled - cannot create subscriptions');
     });
     
     test('should create subscription with WebSocket enabled', async () => {
-      const rm = new RemoteFileSystemResourceManager({
+      const rm = new RemoteFileSystemDataSource({
         enableWebSocket: true,
         verbose: false
       });
@@ -240,7 +240,7 @@ describe('RemoteFileSystemResourceManager', () => {
     });
     
     test('should validate query and callback', () => {
-      const rm = new RemoteFileSystemResourceManager({
+      const rm = new RemoteFileSystemDataSource({
         enableWebSocket: true,
         verbose: false
       });
@@ -259,7 +259,7 @@ describe('RemoteFileSystemResourceManager', () => {
   
   describe('queryBuilder()', () => {
     test('should return query builder that forwards to query method', () => {
-      const builder = resourceManager.queryBuilder();
+      const builder = dataSource.queryBuilder();
       
       expect(builder).toEqual(expect.objectContaining({
         query: expect.any(Function)
@@ -276,12 +276,12 @@ describe('RemoteFileSystemResourceManager', () => {
   
   describe('getSchema()', () => {
     test('should return schema information', () => {
-      const schema = resourceManager.getSchema();
+      const schema = dataSource.getSchema();
       
       expect(schema).toEqual(expect.objectContaining({
         version: '1.0.0',
         type: 'remote-filesystem',
-        provider: 'RemoteFileSystemResourceManager',
+        provider: 'RemoteFileSystemDataSource',
         capabilities: expect.objectContaining({
           read: true,
           write: true,
@@ -292,7 +292,7 @@ describe('RemoteFileSystemResourceManager', () => {
     });
     
     test('should reflect WebSocket status in schema', () => {
-      const schema = resourceManager.getSchema();
+      const schema = dataSource.getSchema();
       expect(schema.capabilities.watch).toBe(false);
       expect(schema.connection.wsConnected).toBe(false);
     });
@@ -300,7 +300,7 @@ describe('RemoteFileSystemResourceManager', () => {
   
   describe('WebSocket Management', () => {
     test('should connect WebSocket when enabled', async () => {
-      const rm = new RemoteFileSystemResourceManager({
+      const rm = new RemoteFileSystemDataSource({
         enableWebSocket: true,
         verbose: false
       });
@@ -314,7 +314,7 @@ describe('RemoteFileSystemResourceManager', () => {
     });
     
     test('should handle WebSocket reconnection', async () => {
-      const rm = new RemoteFileSystemResourceManager({
+      const rm = new RemoteFileSystemDataSource({
         enableWebSocket: true,
         reconnectInterval: 10,
         maxReconnectAttempts: 2
@@ -344,33 +344,33 @@ describe('RemoteFileSystemResourceManager', () => {
       };
       
       // First query
-      resourceManager.query(querySpec);
-      expect(resourceManager.metadataCache.size).toBe(0); // Cache set happens internally
+      dataSource.query(querySpec);
+      expect(dataSource.metadataCache.size).toBe(0); // Cache set happens internally
       
       // Manually set cache to test retrieval
-      resourceManager._setCachedMetadata('/test.txt', { exists: true });
-      expect(resourceManager.metadataCache.size).toBe(1);
+      dataSource._setCachedMetadata('/test.txt', { exists: true });
+      expect(dataSource.metadataCache.size).toBe(1);
     });
     
     test('should invalidate parent and child caches', () => {
       // Set multiple cached paths
-      resourceManager._setCachedMetadata('/parent', { type: 'directory' });
-      resourceManager._setCachedMetadata('/parent/child', { type: 'directory' });
-      resourceManager._setCachedMetadata('/parent/child/file.txt', { type: 'file' });
+      dataSource._setCachedMetadata('/parent', { type: 'directory' });
+      dataSource._setCachedMetadata('/parent/child', { type: 'directory' });
+      dataSource._setCachedMetadata('/parent/child/file.txt', { type: 'file' });
       
-      expect(resourceManager.metadataCache.size).toBe(3);
+      expect(dataSource.metadataCache.size).toBe(3);
       
       // Invalidate middle path
-      resourceManager._invalidateCache('/parent/child');
+      dataSource._invalidateCache('/parent/child');
       
       // Parent should remain, but child and its children should be cleared
-      expect(resourceManager.metadataCache.has('/parent')).toBe(true);
-      expect(resourceManager.metadataCache.has('/parent/child')).toBe(false);
-      expect(resourceManager.metadataCache.has('/parent/child/file.txt')).toBe(false);
+      expect(dataSource.metadataCache.has('/parent')).toBe(true);
+      expect(dataSource.metadataCache.has('/parent/child')).toBe(false);
+      expect(dataSource.metadataCache.has('/parent/child/file.txt')).toBe(false);
     });
     
     test('should respect cache TTL', () => {
-      const rm = new RemoteFileSystemResourceManager({
+      const rm = new RemoteFileSystemDataSource({
         enableWebSocket: false,
         cacheTTL: 100 // 100ms TTL
       });
@@ -400,7 +400,7 @@ describe('RemoteFileSystemResourceManager', () => {
   
   describe('Cleanup', () => {
     test('should clean up resources on destroy', () => {
-      const rm = new RemoteFileSystemResourceManager({
+      const rm = new RemoteFileSystemDataSource({
         enableWebSocket: true
       });
       

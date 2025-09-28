@@ -10,15 +10,15 @@ import {
   PrototypeFactory, 
   ValidationUtils
 } from '../../src/index.js';
-import { validateResourceManagerInterface } from '../../src/ResourceManager.js';
+import { validateDataSourceInterface } from '../../src/ValidationUtils.js';
 import { createMockFunction } from '../testUtils.js';
 
 describe('Handle Package Integration', () => {
-  let mockResourceManager;
+  let mockDataSource;
   let mockCacheManager;
 
   beforeEach(() => {
-    // Create comprehensive mock ResourceManager
+    // Create comprehensive mock DataSource
     const queryFn = createMockFunction();
     queryFn.mockImplementation((querySpec) => {
       // Mock different query responses based on query type
@@ -68,11 +68,23 @@ describe('Handle Package Integration', () => {
     const updateFn = createMockFunction();
     updateFn.mockReturnValue(true);
     
-    mockResourceManager = {
+    // Create mock query builder
+    const queryBuilderFn = createMockFunction();
+    queryBuilderFn.mockReturnValue({
+      where: createMockFunction(),
+      select: createMockFunction(),
+      first: createMockFunction(),
+      last: createMockFunction(),
+      count: createMockFunction(),
+      toArray: createMockFunction([])
+    });
+    
+    mockDataSource = {
       query: queryFn,
       subscribe: subscribeFn,
       getSchema: getSchemaFn,
-      update: updateFn
+      update: updateFn,
+      queryBuilder: queryBuilderFn
     };
 
     // Mock cache manager for CachedHandle testing
@@ -85,20 +97,20 @@ describe('Handle Package Integration', () => {
     };
   });
 
-  describe('ResourceManager Validation Integration', () => {
-    test('should validate ResourceManager interface across components', () => {
-      // All components should accept valid ResourceManager
-      expect(() => new TestHandle(mockResourceManager)).not.toThrow();
-      expect(() => new TestCachedHandle(mockResourceManager)).not.toThrow();
-      expect(() => validateResourceManagerInterface(mockResourceManager)).not.toThrow();
+  describe('DataSource Validation Integration', () => {
+    test('should validate DataSource interface across components', () => {
+      // All components should accept valid DataSource
+      expect(() => new TestHandle(mockDataSource)).not.toThrow();
+      expect(() => new TestCachedHandle(mockDataSource)).not.toThrow();
+      expect(() => validateDataSourceInterface(mockDataSource)).not.toThrow();
     });
 
-    test('should reject invalid ResourceManager consistently', () => {
-      const invalidRM = { query: 'not-function' };
+    test('should reject invalid DataSource consistently', () => {
+      const invalidDS = { query: 'not-function' };
       
-      expect(() => new TestHandle(invalidRM)).toThrow('ResourceManager must implement query() method');
-      expect(() => new TestCachedHandle(invalidRM)).toThrow('ResourceManager must implement query() method');
-      expect(() => validateResourceManagerInterface(invalidRM)).toThrow('ResourceManager must implement query() method');
+      expect(() => new TestHandle(invalidDS)).toThrow('DataSource must implement query() method');
+      expect(() => new TestCachedHandle(invalidDS)).toThrow('DataSource must implement query() method');
+      expect(() => validateDataSourceInterface(invalidDS)).toThrow('DataSource must implement query() method');
     });
   });
 
@@ -107,12 +119,12 @@ describe('Handle Package Integration', () => {
       const factory = new PrototypeFactory(TestHandle);
       
       // Analyze schema
-      const schema = mockResourceManager.getSchema();
+      const schema = mockDataSource.getSchema();
       factory.analyzeSchema(schema, 'datascript');
       
       // Create prototype
       const UserHandlePrototype = factory.getEntityPrototype('user');
-      const userHandle = new UserHandlePrototype(mockResourceManager, 123);
+      const userHandle = new UserHandlePrototype(mockDataSource, 123);
       
       // Should have both Handle functionality and prototype enhancements
       expect(userHandle).toBeInstanceOf(TestHandle);
@@ -131,22 +143,22 @@ describe('Handle Package Integration', () => {
 
     test('should provide dynamic property access', () => {
       const factory = new PrototypeFactory(TestHandle);
-      factory.analyzeSchema(mockResourceManager.getSchema(), 'datascript');
+      factory.analyzeSchema(mockDataSource.getSchema(), 'datascript');
       
       const UserHandlePrototype = factory.getEntityPrototype('user');
-      const userHandle = new UserHandlePrototype(mockResourceManager, 123);
+      const userHandle = new UserHandlePrototype(mockDataSource, 123);
       
       // Test dynamic getter
       const name = userHandle.name;
       expect(name).toBe('John Doe');
-      expect(mockResourceManager.query).toHaveBeenCalledWith({
+      expect(mockDataSource.query).toHaveBeenCalledWith({
         find: ['?value'],
         where: [[123, ':user/name', '?value']]
       });
       
       // Test dynamic setter
       userHandle.name = 'Jane Doe';
-      expect(mockResourceManager.update).toHaveBeenCalledWith({
+      expect(mockDataSource.update).toHaveBeenCalledWith({
         entityId: 123,
         attribute: ':user/name',
         value: 'Jane Doe'
@@ -157,10 +169,10 @@ describe('Handle Package Integration', () => {
 
     test('should handle cardinality many attributes', () => {
       const factory = new PrototypeFactory(TestHandle);
-      factory.analyzeSchema(mockResourceManager.getSchema(), 'datascript');
+      factory.analyzeSchema(mockDataSource.getSchema(), 'datascript');
       
       const UserHandlePrototype = factory.getEntityPrototype('user');
-      const userHandle = new UserHandlePrototype(mockResourceManager, 123);
+      const userHandle = new UserHandlePrototype(mockDataSource, 123);
       
       const tags = userHandle.tags;
       expect(tags).toEqual(['javascript', 'nodejs', 'react']);
@@ -171,20 +183,20 @@ describe('Handle Package Integration', () => {
 
   describe('CachedHandle + ValidationUtils Integration', () => {
     test('should use ValidationUtils for parameter validation', () => {
-      const cachedHandle = new TestCachedHandle(mockResourceManager, { cacheTTL: 1000 });
+      const cachedHandle = new TestCachedHandle(mockDataSource, { cacheTTL: 1000 });
       
       // Should validate subscription parameters using ValidationUtils
       expect(() => cachedHandle.subscribe(null, createMockFunction())).toThrow('Query specification is required');
       expect(() => cachedHandle.subscribe({}, null)).toThrow('Callback function is required');
       
       // Should validate query specifications
-      expect(() => cachedHandle._validateQuerySpec(null)).toThrow('Query specification is required');
+      expect(() => cachedHandle._validateQuerySpec(null)).toThrow('Query specification must be an object');
       
       cachedHandle.destroy();
     });
 
     test('should provide enhanced caching with validation', () => {
-      const cachedHandle = new TestCachedHandle(mockResourceManager, { 
+      const cachedHandle = new TestCachedHandle(mockDataSource, { 
         cacheTTL: 1000,
         cacheManager: mockCacheManager 
       });
@@ -207,7 +219,7 @@ describe('Handle Package Integration', () => {
     });
 
     test('should handle cache invalidation subscriptions', () => {
-      const cachedHandle = new TestCachedHandle(mockResourceManager, { 
+      const cachedHandle = new TestCachedHandle(mockDataSource, { 
         cacheManager: mockCacheManager 
       });
       
@@ -219,7 +231,7 @@ describe('Handle Package Integration', () => {
       // Should validate and create cache invalidation subscription
       const subscription = cachedHandle._setupCacheInvalidation(querySpec);
       expect(subscription).toBeDefined();
-      expect(mockResourceManager.subscribe).toHaveBeenCalledWith(querySpec, expect.any(Function));
+      expect(mockDataSource.subscribe).toHaveBeenCalledWith(querySpec, expect.any(Function));
       
       cachedHandle.destroy();
     });
@@ -227,8 +239,8 @@ describe('Handle Package Integration', () => {
 
   describe('Actor System Integration', () => {
     test('should handle Actor messages across Handle types', () => {
-      const basicHandle = new TestHandle(mockResourceManager);
-      const cachedHandle = new TestCachedHandle(mockResourceManager);
+      const basicHandle = new TestHandle(mockDataSource);
+      const cachedHandle = new TestCachedHandle(mockDataSource);
       
       // Both should handle Actor messages
       expect(basicHandle.receive({ type: 'value' })).toBe('test-value');
@@ -255,19 +267,19 @@ describe('Handle Package Integration', () => {
 
     test('should support remote Handle creation via Actor system', () => {
       const factory = new PrototypeFactory(TestHandle);
-      factory.analyzeSchema(mockResourceManager.getSchema(), 'datascript');
+      factory.analyzeSchema(mockDataSource.getSchema(), 'datascript');
       
       const UserHandlePrototype = factory.getEntityPrototype('user');
       
       // Simulate remote Handle creation
       const remoteHandleConfig = {
-        resourceManager: mockResourceManager,
+        dataSource: mockDataSource,
         entityId: 456,
         options: { remoteable: true }
       };
       
       const remoteHandle = new UserHandlePrototype(
-        remoteHandleConfig.resourceManager, 
+        remoteHandleConfig.dataSource, 
         remoteHandleConfig.entityId,
         remoteHandleConfig.options
       );
@@ -288,7 +300,7 @@ describe('Handle Package Integration', () => {
   describe('Error Handling and Edge Cases', () => {
     test('should handle missing schema gracefully', () => {
       const rmWithoutSchema = {
-        ...mockResourceManager,
+        ...mockDataSource,
         getSchema: createMockFunction(null)
       };
       
@@ -304,7 +316,7 @@ describe('Handle Package Integration', () => {
 
     test('should handle subscription failures gracefully', () => {
       const failingRM = {
-        ...mockResourceManager,
+        ...mockDataSource,
         subscribe: createMockFunction().mockImplementation(() => {
           throw new Error('Subscription failed');
         })
@@ -332,7 +344,7 @@ describe('Handle Package Integration', () => {
     });
 
     test('should handle bulk operations with mixed success/failure', () => {
-      const cachedHandle = new TestCachedHandle(mockResourceManager);
+      const cachedHandle = new TestCachedHandle(mockDataSource);
       
       const items = [1, 2, 3, 4];
       const operation = createMockFunction();
@@ -368,10 +380,10 @@ describe('Handle Package Integration', () => {
   describe('Memory and Resource Management', () => {
     test('should clean up all resources on destroy', () => {
       const factory = new PrototypeFactory(TestCachedHandle);
-      factory.analyzeSchema(mockResourceManager.getSchema(), 'datascript');
+      factory.analyzeSchema(mockDataSource.getSchema(), 'datascript');
       
       const UserHandlePrototype = factory.getEntityPrototype('user');
-      const userHandle = new UserHandlePrototype(mockResourceManager, 123, {
+      const userHandle = new UserHandlePrototype(mockDataSource, 123, {
         cacheTTL: 1000,
         cacheManager: mockCacheManager
       });
@@ -395,7 +407,7 @@ describe('Handle Package Integration', () => {
     });
 
     test('should prevent operations after destruction', () => {
-      const handle = new TestHandle(mockResourceManager);
+      const handle = new TestHandle(mockDataSource);
       handle.destroy();
       
       expect(() => handle.subscribe({}, createMockFunction())).toThrow('Handle has been destroyed');
@@ -407,7 +419,7 @@ describe('Handle Package Integration', () => {
 
   describe('Performance and Caching Behavior', () => {
     test('should demonstrate caching performance benefits', () => {
-      const cachedHandle = new TestCachedHandle(mockResourceManager, { cacheTTL: 5000 });
+      const cachedHandle = new TestCachedHandle(mockDataSource, { cacheTTL: 5000 });
       
       // First call - should fetch fresh data
       const start1 = Date.now();
@@ -426,7 +438,7 @@ describe('Handle Package Integration', () => {
     });
 
     test('should handle cache expiration correctly', (done) => {
-      const cachedHandle = new TestCachedHandle(mockResourceManager, { cacheTTL: 10 }); // 10ms TTL
+      const cachedHandle = new TestCachedHandle(mockDataSource, { cacheTTL: 10 }); // 10ms TTL
       
       // First call
       const data1 = cachedHandle.getCachedTestData();
@@ -454,7 +466,7 @@ class TestHandle extends Handle {
   
   query(querySpec) {
     this._validateNotDestroyed();
-    this.resourceManager.query(querySpec);
+    this.dataSource.query(querySpec);
     return ['test-query-result'];
   }
 }
@@ -467,7 +479,7 @@ class TestCachedHandle extends CachedHandle {
   
   query(querySpec) {
     this._validateNotDestroyed();
-    this.resourceManager.query(querySpec);
+    this.dataSource.query(querySpec);
     return ['cached-test-query-result'];
   }
   

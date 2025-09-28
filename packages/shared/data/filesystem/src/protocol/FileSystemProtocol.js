@@ -36,8 +36,11 @@ export class FileSystemProtocol extends Protocol {
       // Server -> Client
       'fs_welcome': true,
       'fs_connected': true,
+      'fs_connect_response': true,
       'fs_query_result': true,
+      'fs_query_response': true,
       'fs_update_result': true,
+      'fs_update_response': true,
       'fs_subscribed': true,
       'fs_unsubscribed': true,
       'fs_file_change': true,
@@ -130,15 +133,13 @@ export class FileSystemProtocol extends Protocol {
         return {
           type: this.MESSAGE_TYPES.FS_SUBSCRIBE,
           query: payload.querySpec,
-          subscriptionId: payload.subscriptionId,
-          requestId: requestId || `req_${Date.now()}`
+          subscriptionId: payload.subscriptionId
         };
         
       case 'filesystemUnsubscribe':
         return {
           type: this.MESSAGE_TYPES.FS_UNSUBSCRIBE,
-          subscriptionId: payload.subscriptionId,
-          requestId: requestId || `req_${Date.now()}`
+          subscriptionId: payload.subscriptionId
         };
         
       case 'filesystemStreamRead':
@@ -182,17 +183,20 @@ export class FileSystemProtocol extends Protocol {
         };
         
       case 'fs_connected':
+      case 'fs_connect_response':
         this.sessionId = protocolMessage.sessionId;
         return {
           type: 'filesystemConnected',
           payload: {
+            success: protocolMessage.success,
             sessionId: protocolMessage.sessionId,
-            success: protocolMessage.success
+            capabilities: protocolMessage.capabilities
           },
           requestId: protocolMessage.requestId
         };
         
       case 'fs_query_result':
+      case 'fs_query_response':
         if (protocolMessage.error) {
           return {
             type: 'filesystemQueryError',
@@ -206,12 +210,14 @@ export class FileSystemProtocol extends Protocol {
         return {
           type: 'filesystemQueryResult',
           payload: {
+            success: protocolMessage.success,
             results: protocolMessage.results || []
           },
           requestId: protocolMessage.requestId
         };
         
       case 'fs_update_result':
+      case 'fs_update_response':
         if (protocolMessage.error) {
           return {
             type: 'filesystemUpdateError',
@@ -255,11 +261,13 @@ export class FileSystemProtocol extends Protocol {
         return {
           type: 'filesystemFileChange',
           payload: {
-            event: protocolMessage.event,
-            path: protocolMessage.path,
-            timestamp: protocolMessage.timestamp,
-            data: protocolMessage.data,
-            subscriptionId: protocolMessage.subscriptionId
+            subscriptionId: protocolMessage.subscriptionId,
+            changes: protocolMessage.changes || {
+              path: protocolMessage.path,
+              event: protocolMessage.event,
+              timestamp: protocolMessage.timestamp,
+              data: protocolMessage.data
+            }
           }
         };
         
@@ -294,11 +302,89 @@ export class FileSystemProtocol extends Protocol {
         };
         
       default:
-        return {
-          type: 'filesystemUnknown',
-          payload: protocolMessage
-        };
+        throw new Error(`Unknown protocol message type: ${type}`);
     }
+  }
+
+  /**
+   * Validate a message against the protocol schema
+   * Overrides base Protocol.validate() to throw errors instead of returning boolean
+   */
+  validate(message) {
+    if (!message || typeof message !== 'object') {
+      throw new Error('Message must be an object');
+    }
+    
+    if (!message.type) {
+      throw new Error('Message type is required');
+    }
+    
+    // Check if message type is known
+    if (!this.messageTypes[message.type]) {
+      throw new Error(`Invalid message type: ${message.type}`);
+    }
+    
+    // Validate specific message types
+    switch (message.type) {
+      case 'fs_query':
+        if (!message.query || typeof message.query !== 'object') {
+          throw new Error('Query must be an object');
+        }
+        if (!message.requestId) {
+          throw new Error('Request ID is required');
+        }
+        break;
+        
+      case 'fs_update':
+        if (!message.requestId) {
+          throw new Error('Request ID is required');
+        }
+        if (!message.path && !message.data) {
+          throw new Error('Path and data are required');
+        }
+        break;
+        
+      case 'fs_subscribe':
+        if (!message.query || typeof message.query !== 'object') {
+          throw new Error('Query must be an object');
+        }
+        if (!message.subscriptionId) {
+          throw new Error('Subscription ID is required');
+        }
+        break;
+        
+      case 'fs_connect':
+        if (!message.requestId) {
+          throw new Error('Request ID is required');
+        }
+        break;
+        
+      case 'fs_unsubscribe':
+        if (!message.subscriptionId) {
+          throw new Error('Subscription ID is required');
+        }
+        break;
+        
+      default:
+        // For response types, validation is less strict
+        if (message.type.startsWith('fs_') && 
+            !message.type.endsWith('_response') &&
+            !message.type.endsWith('_result') &&
+            message.type !== 'fs_welcome' &&
+            message.type !== 'fs_connected' &&
+            message.type !== 'fs_subscribed' &&
+            message.type !== 'fs_unsubscribed' &&
+            message.type !== 'fs_file_change' &&
+            message.type !== 'fs_stream_data' &&
+            message.type !== 'fs_stream_end' &&
+            message.type !== 'fs_error') {
+          if (!message.requestId) {
+            throw new Error('Request ID is required');
+          }
+        }
+    }
+    
+    return true;
   }
 
   /**

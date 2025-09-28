@@ -1,7 +1,10 @@
 /**
- * ContextResourceManager - Wraps ExecutionContext to implement ResourceManager interface
+ * ContextResourceManager - Wraps ExecutionContext to implement DataSource interface
  * 
- * This allows parent contexts to be treated as ResourceManagers, enabling:
+ * NOTE: Despite its name, this class implements the DataSource interface, not ResourceManager.
+ * The name is kept for backward compatibility. Use ContextDataSource for new code.
+ * 
+ * This allows parent contexts to be treated as DataSources, enabling:
  * - Synchronous queries against context data
  * - Updates to context state
  * - Subscriptions to context changes
@@ -444,8 +447,8 @@ export class ContextResourceManager {
  * Context-aware query builder
  */
 class ContextQueryBuilder {
-  constructor(resourceManager, sourceHandle) {
-    this.resourceManager = resourceManager;
+  constructor(dataSource, sourceHandle) {
+    this.dataSource = dataSource;
     this.sourceHandle = sourceHandle;
     this.operations = [];
   }
@@ -513,7 +516,7 @@ class ContextQueryBuilder {
   
   _execute() {
     // Execute operations against context data
-    let data = this.resourceManager._getAllContextData();
+    let data = this.dataSource._getAllContextData();
     let results = Array.isArray(data) ? data : Object.values(data);
     
     for (const op of this.operations) {
@@ -638,5 +641,6 @@ class ContextQueryBuilder {
   }
 }
 
-// ContextResourceManager implements ResourceManager interface
+// ContextResourceManager implements DataSource interface
 // (validation removed - interface is validated by usage)
+// NOTE: Despite its name, this is a DataSource not a ResourceManager

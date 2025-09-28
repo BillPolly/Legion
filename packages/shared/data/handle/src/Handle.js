@@ -200,6 +200,48 @@ export class Handle extends Actor {
   }
   
   /**
+   * Get a MetaHandle wrapping this Handle's prototype
+   * Enables introspection of the Handle's class structure
+   * 
+   * NOTE: This method is SYNCHRONOUS but uses dynamic imports.
+   * The imports are cached after first call, so subsequent calls are instant.
+   * 
+   * @returns {MetaHandle} MetaHandle wrapping this Handle's prototype
+   */
+  getPrototype() {
+    this._validateNotDestroyed();
+    
+    // Cache the imported classes to make this effectively synchronous after first call
+    if (!Handle._metaHandleClass) {
+      // First call - need to load classes
+      // This is technically async, but we handle it synchronously for the Handle pattern
+      throw new Error('MetaHandle classes not loaded. Call Handle.initializeIntrospection() first.');
+    }
+    
+    // Create MetaHandle for this Handle's constructor (synchronous after initialization)
+    const metaDataSource = new Handle._metaDataSourceClass(this.constructor);
+    const metaHandle = new Handle._metaHandleClass(metaDataSource, this.constructor);
+    
+    return metaHandle;
+  }
+  
+  /**
+   * Initialize introspection classes (call once at application startup)
+   * This loads MetaHandle and MetaDataSource classes to enable getPrototype()
+   * 
+   * @returns {Promise<void>}
+   */
+  static async initializeIntrospection() {
+    if (!Handle._metaHandleClass) {
+      const { MetaHandle } = await import('./introspection/MetaHandle.js');
+      const { MetaDataSource } = await import('./introspection/MetaDataSource.js');
+      
+      Handle._metaHandleClass = MetaHandle;
+      Handle._metaDataSourceClass = MetaDataSource;
+    }
+  }
+  
+  /**
    * Clean up all resources and subscriptions
    * CRITICAL: Synchronous cleanup - no race conditions
    */

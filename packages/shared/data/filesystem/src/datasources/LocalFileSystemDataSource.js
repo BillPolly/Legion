@@ -1,7 +1,7 @@
 /**
- * LocalFileSystemResourceManager - Node.js filesystem ResourceManager implementation
+ * LocalFileSystemDataSource - Node.js filesystem DataSource implementation
  * 
- * Implements the ResourceManager interface for local filesystem operations using Node.js fs module.
+ * Implements the DataSource interface for local filesystem operations using Node.js fs module.
  * Provides the query(), update(), subscribe(), and getSchema() methods required by Handle.
  * 
  * Features:
@@ -17,7 +17,7 @@ import fs from 'fs';
 import path from 'path';
 import { EventEmitter } from 'events';
 
-export class LocalFileSystemResourceManager extends EventEmitter {
+export class LocalFileSystemDataSource extends EventEmitter {
   constructor(options = {}) {
     super();
     
@@ -192,7 +192,7 @@ export class LocalFileSystemResourceManager extends EventEmitter {
     return {
       version: '1.0.0',
       type: 'local-filesystem',
-      provider: 'LocalFileSystemResourceManager',
+      provider: 'LocalFileSystemDataSource',
       capabilities: {
         read: true,
         write: true,

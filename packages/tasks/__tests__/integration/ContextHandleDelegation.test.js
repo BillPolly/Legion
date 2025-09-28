@@ -120,6 +120,7 @@ describe('Context Handle Delegation Pattern', () => {
   beforeEach(async () => {
     // Create ExecutionContext and its handle wrapper
     context = new ExecutionContext();
+    // NOTE: ContextResourceManager implements DataSource interface despite its name
     contextRM = new ContextResourceManager(context);
     contextHandle = new ContextHandle(contextRM);
     
