@@ -1,0 +1,517 @@
+/**
+ * Integration tests for BTExecutor
+ * 
+ * Tests complete tree execution with real tools and complex structures.
+ * No mocks - uses actual tool implementations.
+ */
+
+import { describe, it, expect, beforeEach, afterEach, afterAll } from '@jest/globals';
+import { BTExecutor } from '../../src/core/BTExecutor.js';
+import { BTTaskStrategy } from '../../src/core/BTTaskStrategy.js';
+import { ResourceManager } from '@legion/resource-manager';
+import { ToolRegistry } from '@legion/tools';
+import path from 'path';
+import fs from 'fs/promises';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+describe('BTExecutor Integration', () => {
+  let resourceManager;
+  let toolRegistry;
+  let executor;
+  let testDir;
+  
+  beforeEach(async () => {
+    // Get ResourceManager singleton
+    resourceManager = await ResourceManager.getInstance();
+    
+    // Get ToolRegistry singleton directly
+    toolRegistry = await ToolRegistry.getInstance();
+    
+    // Create BTExecutor
+    executor = new BTExecutor(toolRegistry);
+    
+    // Create test directory
+    testDir = path.join(__dirname, 'tmp', `test-${Date.now()}`);
+    await fs.mkdir(testDir, { recursive: true });
+  });
+  
+  afterEach(async () => {
+    // Clean up test directory
+    try {
+      await fs.rm(testDir, { recursive: true, force: true });
+    } catch (error) {
+      // Ignore cleanup errors
+    }
+  });
+  
+  afterAll(async () => {
+    // Close database connections
+    if (toolRegistry && typeof toolRegistry.close === 'function') {
+      await toolRegistry.close();
+    }
+  });
+  
+  describe('Simple Tree Execution', () => {
+    it('should execute a single action node', async () => {
+      const treeConfig = {
+        type: 'action',
+        name: 'Create Directory',
+        tool: 'directory_create',
+        params: {
+          directoryPath: path.join(testDir, 'output')
+        }
+      };
+      
+      const result = await executor.executeTree(treeConfig, {
+        workspaceDir: testDir,
+        toolRegistry: toolRegistry
+      });
+      
+      expect(result.status).toBe('SUCCESS');
+      
+      // Verify directory was created
+      const stats = await fs.stat(path.join(testDir, 'output'));
+      expect(stats.isDirectory()).toBe(true);
+    });
+    
+    it('should execute a sequence of actions', async () => {
+      const treeConfig = {
+        type: 'sequence',
+        name: 'File Operations',
+        children: [
+          {
+            type: 'action',
+            name: 'Create Dir',
+            tool: 'directory_create',
+            params: {
+              directoryPath: path.join(testDir, 'data')
+            }
+          },
+          {
+            type: 'action',
+            name: 'Write File',
+            tool: 'file_write',
+            params: {
+              filePath: path.join(testDir, 'data', 'test.txt'),
+              content: 'Hello from BT!'
+            },
+            outputVariable: 'writeResult'
+          },
+          {
+            type: 'action',
+            name: 'Read File',
+            tool: 'file_read',
+            params: {
+              filePath: path.join(testDir, 'data', 'test.txt')
+            },
+            outputVariable: 'readResult'
+          }
+        ]
+      };
+      
+      const result = await executor.executeTree(treeConfig, {
+        workspaceDir: testDir,
+        artifacts: {},
+        toolRegistry: toolRegistry
+      });
+      
+      expect(result.status).toBe('SUCCESS');
+      
+      // Check artifacts were created
+      expect(result.context.artifacts.writeResult).toBeDefined();
+      expect(result.context.artifacts.readResult).toBeDefined();
+      // file_read returns an object with {content, path}
+      expect(result.context.artifacts.readResult.value.content).toBe('Hello from BT!');
+    });
+  });
+  
+  describe('Control Flow Execution', () => {
+    it('should execute selector with alternatives', async () => {
+      const treeConfig = {
+        type: 'selector',
+        name: 'Try Operations',
+        children: [
+          {
+            type: 'action',
+            name: 'Try Non-existent',
+            tool: 'file_read',
+            params: {
+              filePath: path.join(testDir, 'nonexistent.txt')
+            }
+          },
+          {
+            type: 'action',
+            name: 'Fallback Write',
+            tool: 'file_write',
+            params: {
+              filePath: path.join(testDir, 'fallback.txt'),
+              content: 'Fallback succeeded'
+            },
+            outputVariable: 'fallbackResult'
+          }
+        ]
+      };
+      
+      const result = await executor.executeTree(treeConfig, {
+        workspaceDir: testDir,
+        artifacts: {},
+        toolRegistry: toolRegistry
+      });
+      
+      // Selector should succeed with second child
+      expect(result.status).toBe('SUCCESS');
+      expect(result.context.artifacts.fallbackResult).toBeDefined();
+      
+      // Verify fallback file was created
+      const content = await fs.readFile(path.join(testDir, 'fallback.txt'), 'utf8');
+      expect(content).toBe('Fallback succeeded');
+    });
+    
+    it('should execute condition with true branch', async () => {
+      const treeConfig = {
+        type: 'sequence',
+        name: 'Conditional Operations',
+        children: [
+          {
+            type: 'action',
+            name: 'Setup',
+            tool: 'file_write',
+            params: {
+              filePath: path.join(testDir, 'config.json'),
+              content: JSON.stringify({ enabled: true })
+            },
+            outputVariable: 'config'
+          },
+          {
+            type: 'condition',
+            name: 'Check Enabled',
+            condition: '@config !== undefined',  // Check if artifact was created (means success)
+            children: [
+              {
+                type: 'action',
+                name: 'Enabled Action',
+                tool: 'file_write',
+                params: {
+                  filePath: path.join(testDir, 'enabled.txt'),
+                  content: 'Feature is enabled'
+                }
+              }
+            ]
+          }
+        ]
+      };
+      
+      const result = await executor.executeTree(treeConfig, {
+        workspaceDir: testDir,
+        artifacts: {},
+        toolRegistry: toolRegistry
+      });
+      
+      expect(result.status).toBe('SUCCESS');
+      
+      // Verify conditional action executed
+      const exists = await fs.access(path.join(testDir, 'enabled.txt'))
+        .then(() => true)
+        .catch(() => false);
+      expect(exists).toBe(true);
+    });
+  });
+  
+  describe('Complex Tree Structures', () => {
+    it('should execute nested sequences and selectors', async () => {
+      const treeConfig = {
+        type: 'sequence',
+        name: 'Complex Tree',
+        children: [
+          {
+            type: 'action',
+            name: 'Create Base Dir',
+            tool: 'directory_create',
+            params: {
+              directoryPath: path.join(testDir, 'project')
+            }
+          },
+          {
+            type: 'selector',
+            name: 'Setup Project',
+            children: [
+              {
+                type: 'sequence',
+                name: 'Try NPM',
+                children: [
+                  {
+                    type: 'action',
+                    name: 'Try Read NPM',
+                    tool: 'file_read',
+                    params: {
+                      filePath: '/usr/bin/npm'
+                    }
+                  },
+                  {
+                    type: 'action',
+                    name: 'Create package.json',
+                    tool: 'file_write',
+                    params: {
+                      filePath: path.join(testDir, 'project', 'package.json'),
+                      content: JSON.stringify({ name: 'test-project', version: '1.0.0' }, null, 2)
+                    }
+                  }
+                ]
+              },
+              {
+                type: 'action',
+                name: 'Fallback Marker',
+                tool: 'file_write',
+                params: {
+                  filePath: path.join(testDir, 'project', 'setup.txt'),
+                  content: 'Manual setup'
+                }
+              }
+            ]
+          },
+          {
+            type: 'action',
+            name: 'Create Source',
+            tool: 'file_write',
+            params: {
+              filePath: path.join(testDir, 'project', 'index.js'),
+              content: 'console.log("Hello from BT!");'
+            },
+            outputVariable: 'sourceFile'
+          }
+        ]
+      };
+      
+      const result = await executor.executeTree(treeConfig, {
+        workspaceDir: testDir,
+        artifacts: {},
+        toolRegistry: toolRegistry
+      });
+      
+      expect(result.status).toBe('SUCCESS');
+      
+      // Verify project structure was created
+      const projectFiles = await fs.readdir(path.join(testDir, 'project'));
+      expect(projectFiles).toContain('index.js');
+      // Either package.json or setup.txt should exist
+      const hasPackageJson = projectFiles.includes('package.json');
+      const hasSetupTxt = projectFiles.includes('setup.txt');
+      expect(hasPackageJson || hasSetupTxt).toBe(true);
+    });
+    
+    it('should handle retry strategy with eventual success', async () => {
+      // Create a file that will be checked with retries
+      let attemptCount = 0;
+      const targetFile = path.join(testDir, 'delayed.txt');
+      
+      // Write file after a delay to simulate eventual availability
+      setTimeout(async () => {
+        await fs.writeFile(targetFile, 'Eventually available');
+      }, 150);
+      
+      const treeConfig = {
+        type: 'retry',
+        name: 'Retry File Read',
+        maxRetries: 5,
+        retryDelay: 50,
+        children: [
+          {
+            type: 'action',
+            name: 'Read Delayed File',
+            tool: 'file_read',
+            params: {
+              filePath: targetFile
+            },
+            outputVariable: 'fileContent'
+          }
+        ]
+      };
+      
+      const result = await executor.executeTree(treeConfig, {
+        workspaceDir: testDir,
+        artifacts: {},
+        toolRegistry: toolRegistry
+      });
+      
+      // Should eventually succeed after file appears
+      expect(result.status).toBe('SUCCESS');
+      expect(result.context.artifacts.fileContent).toBeDefined();
+      // file_read returns an object with {content, path}
+      expect(result.context.artifacts.fileContent.value.content).toBe('Eventually available');
+    });
+  });
+  
+  describe('Error Handling', () => {
+    it('should handle tool not found gracefully', async () => {
+      const treeConfig = {
+        type: 'action',
+        name: 'Missing Tool',
+        tool: 'nonexistent_tool_xyz',
+        params: {}
+      };
+      
+      const result = await executor.executeTree(treeConfig, {
+        workspaceDir: testDir,
+        toolRegistry: toolRegistry
+      });
+      
+      expect(result.status).toBe('FAILURE');
+      expect(result.error).toContain('nonexistent_tool_xyz');
+    });
+    
+    it('should fail sequence on child failure', async () => {
+      const treeConfig = {
+        type: 'sequence',
+        name: 'Failing Sequence',
+        children: [
+          {
+            type: 'action',
+            name: 'Successful Action',
+            tool: 'directory_create',
+            params: {
+              directoryPath: path.join(testDir, 'test-dir')
+            }
+          },
+          {
+            type: 'action',
+            name: 'Failing Action',
+            tool: 'file_read',
+            params: {
+              filePath: path.join(testDir, 'nonexistent', 'deep', 'file.txt')
+            }
+          },
+          {
+            type: 'action',
+            name: 'Should Not Execute',
+            tool: 'file_write',
+            params: {
+              filePath: path.join(testDir, 'should-not-exist.txt'),
+              content: 'This should not be written'
+            }
+          }
+        ]
+      };
+      
+      const result = await executor.executeTree(treeConfig, {
+        workspaceDir: testDir,
+        toolRegistry: toolRegistry
+      });
+      
+      expect(result.status).toBe('FAILURE');
+      
+      // First action should have succeeded
+      const dirExists = await fs.access(path.join(testDir, 'test-dir'))
+        .then(() => true)
+        .catch(() => false);
+      expect(dirExists).toBe(true);
+      
+      // Last action should not have executed
+      const fileExists = await fs.access(path.join(testDir, 'should-not-exist.txt'))
+        .then(() => true)
+        .catch(() => false);
+      expect(fileExists).toBe(false);
+    });
+  });
+  
+  describe('Artifact Flow', () => {
+    it('should flow artifacts through tree execution', async () => {
+      const treeConfig = {
+        type: 'sequence',
+        name: 'Artifact Flow Test',
+        children: [
+          {
+            type: 'action',
+            name: 'Generate Data',
+            tool: 'json_stringify',
+            params: {
+              object: {
+                timestamp: new Date().toISOString(),
+                value: 42
+              }
+            },
+            outputVariable: 'jsonData'
+          },
+          {
+            type: 'action',
+            name: 'Write JSON',
+            tool: 'file_write',
+            params: {
+              filePath: path.join(testDir, 'data.json'),
+              content: '@jsonData.result'  // Use the 'result' property which contains the JSON string
+            }
+          },
+          {
+            type: 'action',
+            name: 'Read Back',
+            tool: 'file_read',
+            params: {
+              filePath: path.join(testDir, 'data.json')
+            },
+            outputVariable: 'readBack'
+          },
+          {
+            type: 'action',
+            name: 'Parse JSON',
+            tool: 'json_parse',
+            params: {
+              json_string: '@readBack.content'  // Access the content property
+            },
+            outputVariable: 'parsedData'
+          }
+        ]
+      };
+      
+      const result = await executor.executeTree(treeConfig, {
+        workspaceDir: testDir,
+        artifacts: {},
+        toolRegistry: toolRegistry
+      });
+      
+      expect(result.status).toBe('SUCCESS');
+      
+      // Verify artifact chain
+      expect(result.context.artifacts.jsonData).toBeDefined();
+      expect(result.context.artifacts.readBack).toBeDefined();
+      expect(result.context.artifacts.parsedData).toBeDefined();
+      
+      // Verify data integrity
+      // json_parse returns { parsed: {...}, result: {...}, type: '...', isArray: false }
+      const parsed = result.context.artifacts.parsedData.value.result;
+      expect(parsed.value).toBe(42);
+    });
+  });
+  
+  describe('Custom Strategy Registration', () => {
+    it('should allow registering and using custom strategies', async () => {
+      // Create a custom strategy that always succeeds with a message
+      const CustomStrategy = Object.create(BTTaskStrategy);
+      CustomStrategy.executeBTNode = function(task, message) {
+        this.completeBTNode({
+          status: 'SUCCESS',
+          data: { message: 'Custom strategy executed!' },
+          context: message.context
+        });
+      };
+      
+      // Register the custom strategy
+      executor.registerStrategy('custom_test', CustomStrategy);
+      
+      const treeConfig = {
+        type: 'custom_test',
+        name: 'Custom Node',
+        customParam: 'test'
+      };
+      
+      const result = await executor.executeTree(treeConfig, {
+        workspaceDir: testDir,
+        toolRegistry: toolRegistry
+      });
+      
+      expect(result.status).toBe('SUCCESS');
+      expect(result.data.message).toBe('Custom strategy executed!');
+    });
+  });
+});
