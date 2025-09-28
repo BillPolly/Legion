@@ -25,13 +25,13 @@ export class NLPSystem {
   constructor(options = {}) {
     this.options = {
       llmClient: null,
-      kgEngine: null,
+      dataSource: null, // Using dataSource instead of kgEngine
       ...options
     };
     
     // Initialize components
     this.textPreprocessor = new TextPreprocessor();
-    this.ontologyExtractor = new OntologyExtractor(this.options.kgEngine);
+    this.ontologyExtractor = new OntologyExtractor(this.options.dataSource);
     this.tripleGenerator = new TripleGenerator();
     
     // Use provided LLM client or create real one (NO FALLBACK TO MOCK)

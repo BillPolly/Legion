@@ -8,8 +8,8 @@
  * - Example generation: Provide concrete examples for LLM guidance
  */
 export class OntologyExtractor {
-  constructor(kgEngine) {
-    this.kg = kgEngine;
+  constructor(dataSource) {
+    this.dataSource = dataSource; // Using Handle-based dataSource instead of kgEngine
     this.cache = new Map(); // Cache for frequently accessed schemas
   }
 

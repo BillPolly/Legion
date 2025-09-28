@@ -8,9 +8,9 @@ describe('OntologyExtractor', () => {
   });
 
   describe('constructor', () => {
-    test('should create instance with KG engine', () => {
+    test('should create instance with data source', () => {
       expect(extractor).toBeInstanceOf(OntologyExtractor);
-      expect(extractor.kg).toBeNull();
+      expect(extractor.dataSource).toBeNull();
       expect(extractor.cache).toBeInstanceOf(Map);
     });
   });

@@ -21,9 +21,11 @@
   "author": "Legion Team",
   "license": "MIT",
   "dependencies": {
-    "@legion/kg": "*",
-    "@legion/llm-client": "*",
-    "@legion/resource-manager": "*"
+    "@legion/triplestore": "workspace:*",
+    "@legion/handle": "workspace:*",
+    "@legion/llm-client": "workspace:*",
+    "@legion/resource-manager": "workspace:*",
+    "@legion/storage": "workspace:*"
   },
   "devDependencies": {
     "jest": "^29.7.0"
