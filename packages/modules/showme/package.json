@@ -23,8 +23,8 @@
   "author": "Legion Framework",
   "license": "MIT",
   "dependencies": {
-    "@legion/resource-manager": "file:../../resource-manager",
-    "@legion/server-framework": "file:../../server-framework",
+    "@legion/resource-manager": "*",
+    "@legion/server-framework": "*",
     "express": "^4.18.2",
     "node-fetch": "^3.3.0"
   },

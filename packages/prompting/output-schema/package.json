@@ -22,9 +22,9 @@
   "author": "Legion Framework",
   "license": "MIT",
   "dependencies": {
-    "@legion/schema": "file:../../schema",
-    "@legion/resource-manager": "file:../../resource-manager",
-    "@legion/llm-client": "file:../llm-client",
+    "@legion/schema": "*",
+    "@legion/resource-manager": "*",
+    "@legion/llm-client": "*",
     "json5": "^2.2.3"
   },
   "devDependencies": {

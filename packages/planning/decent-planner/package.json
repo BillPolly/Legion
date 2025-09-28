@@ -10,10 +10,10 @@
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
   },
   "dependencies": {
-    "@legion/planner": "file:../planner",
-    "@legion/bt-validator": "file:../bt-validator", 
-    "@legion/tools-registry": "file:../../tools-registry",
-    "@legion/prompt-manager": "file:../prompt-manager",
+    "@legion/planner": "*",
+    "@legion/bt-validator": "*", 
+    "@legion/tools-registry": "*",
+    "@legion/prompting-manager": "*",
     "zod": "^3.22.4"
   },
   "devDependencies": {

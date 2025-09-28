@@ -17,7 +17,7 @@
     "dev:enhanced": "node src/index.js --enhanced-mode"
   },
   "keywords": [
-"legion",
+    "legion",
     "code-agent",
     "ai",
     "code-generation",
@@ -29,7 +29,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-"url": "https://github.com/maxximus-dev/Legion.git"
+    "url": "https://github.com/maxximus-dev/Legion.git"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -43,7 +43,7 @@
   "dependencies": {
     "@babel/parser": "^7.23.6",
     "@babel/traverse": "^7.23.6",
-    "@legion/jester": "file:../jester",
+    "@legion/jester": "*",
     "@legion/planner": "*",
     "@legion/playwright": "*",
     "dotenv": "^17.2.0",

@@ -31,7 +31,7 @@
   "dependencies": {
     "openai": "^4.0.0",
     "@legion/tools-registry": "^1.0.0",
-    "@legion/schema": "file:../schema"
+    "@legion/schema": "*"
   },
   "devDependencies": {
     "jest": "^29.7.0"

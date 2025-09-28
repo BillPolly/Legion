@@ -11,7 +11,7 @@
     "demo": "node demo/demo.js"
   },
   "dependencies": {
-    "@legion/log-manager": "file:../log-manager",
+    "@legion/log-manager": "*",
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "puppeteer": "^21.0.0",

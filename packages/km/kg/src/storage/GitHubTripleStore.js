@@ -1,4 +1,19 @@
-import { ITripleStore, StorageError, ValidationError, NetworkError, AuthenticationError } from '@legion/kg-storage-core';
+import { ITripleStore, StorageError, ValidationError } from '@legion/triplestore';
+// Define additional error types locally since they're not in triplestore yet
+class NetworkError extends StorageError {
+  constructor(message, statusCode = null) {
+    super(message);
+    this.name = 'NetworkError';
+    this.statusCode = statusCode;
+  }
+}
+
+class AuthenticationError extends StorageError {
+  constructor(message) {
+    super(message);
+    this.name = 'AuthenticationError';
+  }
+}
 import { GitHubClient } from './GitHubClient.js';
 import { ConflictResolver } from './ConflictResolver.js';
 

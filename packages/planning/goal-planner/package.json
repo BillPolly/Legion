@@ -8,11 +8,11 @@
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand"
   },
   "dependencies": {
-    "@legion/resource-manager": "file:../../resource-manager",
-    "@legion/sop-registry": "file:../sop-registry",
-    "@legion/tools-registry": "file:../../tools-registry",
-    "@legion/llm-client": "file:../../prompting/llm-client",
-    "@legion/prompt-manager": "file:../../prompting/prompt-manager"
+    "@legion/resource-manager": "*",
+    "@legion/sop-registry": "*",
+    "@legion/tools-registry": "*",
+    "@legion/llm-client": "*",
+    "@legion/prompting-manager": "*"
   },
   "devDependencies": {
     "jest": "^29.0.0"

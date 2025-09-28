@@ -3,12 +3,18 @@
  * This file now acts as a facade for the extracted storage packages
  */
 
-// Re-export core interfaces from extracted package
-export * from '@legion/kg-storage-core';
-
-// Re-export storage implementations from extracted packages
-export { InMemoryTripleStore } from '@legion/kg-storage-memory';
-export { FileSystemTripleStore } from '@legion/kg-storage-file';
+// Re-export from the new @legion/triplestore package
+export { 
+  ITripleStore,
+  StorageError, 
+  ValidationError,
+  InMemoryProvider as InMemoryTripleStore,
+  FileSystemProvider as FileSystemTripleStore
+} from '@legion/triplestore';
+export {
+  createInMemoryTripleStore,
+  createFileSystemTripleStore
+} from '@legion/triplestore/factories';
 
 // Keep these in main package for now (will extract in later phase)
 export { GitHubTripleStore } from './GitHubTripleStore.js';
@@ -32,11 +38,11 @@ export { StorageConfig } from './StorageConfig.js';
 import { StorageConfig } from './StorageConfig.js';
 
 // Convenience function to create storage from config
-export function createTripleStore(config) {
+export async function createTripleStore(config) {
   return StorageConfig.createStore(config);
 }
 
 // Convenience function to create storage from environment
-export function createTripleStoreFromEnv() {
+export async function createTripleStoreFromEnv() {
   return StorageConfig.createFromEnvironment();
 }

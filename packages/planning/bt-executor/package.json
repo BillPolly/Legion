@@ -11,9 +11,9 @@
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest"
   },
   "dependencies": {
-    "@legion/bt-task": "file:../../shared/bt-task",
-    "@legion/tools-registry": "file:../../tools-registry",
-    "@legion/resource-manager": "file:../../resource-manager"
+    "@legion/bt-task": "*",
+    "@legion/tools-registry": "*",
+    "@legion/resource-manager": "*"
   },
   "devDependencies": {
     "jest": "^29.0.0"

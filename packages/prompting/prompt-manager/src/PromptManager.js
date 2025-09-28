@@ -1,11 +1,12 @@
 /**
  * PromptManager - Complete LLM interaction orchestrator
  * 
- * Coordinates object-query → prompt-builder → LLM → output-schema pipeline
+ * Coordinates Handle-based data extraction → prompt-builder → LLM → output-schema pipeline
  * with intelligent retry logic and error handling
  */
 
-import { ObjectQuery } from '@legion/kg-object-query';
+import { SimpleObjectHandle } from '@legion/handle';
+import { SimpleObjectDataSource } from '@legion/handle';
 import { PromptBuilder } from '@legion/prompt-builder';
 import { ResponseValidator } from '@legion/output-schema';
 import { RetryHandler } from './RetryHandler.js';
@@ -260,13 +261,11 @@ export class PromptManager {
   async _executePipelineAttempt(sourceObject, options = {}, attempt = 1, lastError = null) {
     const metadata = {};
 
-    // Step 1: Data extraction with object-query
+    // Step 1: Data extraction using Handle pattern
     const extractionStart = Date.now();
-    const labeledInputs = await this.objectQuery.execute(sourceObject, {
-      strict: options.strictValidation || false
-    });
+    const labeledInputs = await this._extractDataWithHandle(sourceObject, options);
     
-    metadata.objectQuery = {
+    metadata.dataExtraction = {
       durationMs: Date.now() - extractionStart,
       bindingsExtracted: Object.keys(labeledInputs).length
     };
@@ -325,6 +324,191 @@ export class PromptManager {
   }
 
   /**
+   * Extract data using Handle pattern instead of ObjectQuery
+   * @private
+   */
+  _extractDataWithHandle(sourceObject, options = {}) {
+    // Create a DataSource and Handle for the source object
+    const dataSource = new SimpleObjectDataSource(sourceObject);
+    const handle = new SimpleObjectHandle(dataSource);
+    
+    const result = {};
+    const querySpec = this.config.objectQuery;
+    
+    // Process bindings
+    if (querySpec.bindings) {
+      for (const [key, binding] of Object.entries(querySpec.bindings)) {
+        try {
+          if (binding.value !== undefined) {
+            // Direct value assignment
+            result[key] = binding.value;
+          } else if (binding.path) {
+            // Path-based extraction
+            const value = this._extractPath(handle, binding.path);
+            
+            // Check for required fields in strict mode
+            if (value === undefined && binding.required && options.strict) {
+              throw new Error(`Required binding path not found: ${binding.path}`);
+            }
+            
+            // Apply fallback if value is undefined
+            if (value === undefined && binding.fallback !== undefined) {
+              result[key] = binding.fallback;
+            } else if (binding.filter) {
+              // Apply filter
+              result[key] = this._applyFilter(value, binding.filter);
+            } else if (binding.transform) {
+              // Apply transformation
+              result[key] = this._applyTransform(value, binding.transform, binding.options);
+            } else {
+              result[key] = value;
+            }
+          } else if (binding.aggregate) {
+            // Handle aggregation
+            result[key] = this._processAggregation(handle, binding.aggregate);
+          }
+        } catch (error) {
+          if (options.strict) {
+            throw error;
+          }
+          // In non-strict mode, set undefined for failed extractions
+          result[key] = undefined;
+        }
+      }
+    }
+    
+    // Process context variables
+    if (querySpec.contextVariables) {
+      for (const [key, varDef] of Object.entries(querySpec.contextVariables)) {
+        const contextKey = '@' + key;
+        if (varDef.value !== undefined) {
+          result[contextKey] = varDef.value;
+        } else if (varDef.path) {
+          result[contextKey] = this._extractPath(handle, varDef.path);
+        }
+      }
+    }
+    
+    return result;
+  }
+  
+  /**
+   * Extract value from Handle using dot notation path
+   * @private
+   */
+  _extractPath(handle, path) {
+    const parts = path.split('.');
+    return handle.select(data => {
+      let value = data;
+      for (const part of parts) {
+        if (value === null || value === undefined) {
+          return undefined;
+        }
+        value = value[part];
+      }
+      return value;
+    }).value();
+  }
+  
+  /**
+   * Apply filter to value
+   * @private
+   */
+  _applyFilter(value, filter) {
+    if (!Array.isArray(value)) {
+      return value;
+    }
+    
+    return value.filter(item => {
+      for (const [key, filterValue] of Object.entries(filter)) {
+        if (typeof filterValue === 'object' && filterValue !== null) {
+          // Handle operators like $gt, $lt, etc.
+          for (const [op, opValue] of Object.entries(filterValue)) {
+            switch(op) {
+              case '$gt': if (!(item[key] > opValue)) return false; break;
+              case '$gte': if (!(item[key] >= opValue)) return false; break;
+              case '$lt': if (!(item[key] < opValue)) return false; break;
+              case '$lte': if (!(item[key] <= opValue)) return false; break;
+              case '$ne': if (item[key] === opValue) return false; break;
+              default: if (item[key] !== filterValue) return false;
+            }
+          }
+        } else {
+          // Simple equality filter
+          if (item[key] !== filterValue) return false;
+        }
+      }
+      return true;
+    });
+  }
+  
+  /**
+   * Apply transformation to value
+   * @private
+   */
+  _applyTransform(value, transform, options = {}) {
+    if (value === undefined || value === null) {
+      return value;
+    }
+    
+    switch(transform) {
+      case 'uppercase': return typeof value === 'string' ? value.toUpperCase() : value;
+      case 'lowercase': return typeof value === 'string' ? value.toLowerCase() : value;
+      case 'trim': return typeof value === 'string' ? value.trim() : value;
+      case 'capitalize': 
+        return typeof value === 'string' ? 
+          value.charAt(0).toUpperCase() + value.slice(1) : value;
+      case 'truncate':
+        const maxLength = options.maxLength || 100;
+        return typeof value === 'string' && value.length > maxLength ?
+          value.substring(0, maxLength) + '...' : value;
+      case 'join':
+        const separator = options.separator || ', ';
+        return Array.isArray(value) ? value.join(separator) : value;
+      case 'jsonStringify':
+        return JSON.stringify(value, null, options.indent || 2);
+      case 'jsonParse':
+        try {
+          return typeof value === 'string' ? JSON.parse(value) : value;
+        } catch {
+          return value;
+        }
+      default:
+        return value;
+    }
+  }
+  
+  /**
+   * Process aggregation using Handle
+   * @private
+   */
+  _processAggregation(handle, aggregateDef) {
+    if (!Array.isArray(aggregateDef)) {
+      throw new Error('Aggregate must be an array');
+    }
+    
+    const values = [];
+    let totalWeight = 0;
+    
+    for (const item of aggregateDef) {
+      const value = this._extractPath(handle, item.path);
+      const weight = item.weight || 1;
+      
+      if (value !== undefined) {
+        values.push({ value, weight });
+        totalWeight += weight;
+      }
+    }
+    
+    // Weighted combination
+    return values.map(({ value, weight }) => {
+      const contribution = weight / totalWeight;
+      const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+      return `${stringValue} (${(contribution * 100).toFixed(0)}% weight)`;
+    }).join('\n\n');
+  }
+
+  /**
    * Validate configuration requirements
    * @private
    */
@@ -349,10 +533,12 @@ export class PromptManager {
    * @private
    */
   _createPipelineComponents() {
-    try {
-      this.objectQuery = new ObjectQuery(this.config.objectQuery);
-    } catch (error) {
-      throw new Error(`Invalid objectQuery configuration: ${error.message}`);
+    // Store the query configuration directly (no longer creating ObjectQuery instance)
+    this.querySpec = this.config.objectQuery;
+    
+    // Validate query spec structure
+    if (!this.querySpec.bindings && !this.querySpec.contextVariables) {
+      throw new Error('Query specification must have bindings or contextVariables');
     }
 
     try {
@@ -387,7 +573,7 @@ export class PromptManager {
    * @private
    */
   _validateComponentCompatibility() {
-    // Check that prompt template placeholders match object-query bindings
+    // Check that prompt template placeholders match query bindings
     const promptPlaceholders = this.promptBuilder.getPlaceholders();
     const queryBindings = Object.keys(this.config.objectQuery.bindings || {});
     const contextVariables = Object.keys(this.config.objectQuery.contextVariables || {});
@@ -401,7 +587,7 @@ export class PromptManager {
                            contextVariables.includes(placeholder.replace('@', ''));
       
       if (!isBinding && !isContextVar) {
-        throw new Error(`Component compatibility validation failed: placeholder '${placeholder}' not found in object-query bindings or context variables`);
+        throw new Error(`Component compatibility validation failed: placeholder '${placeholder}' not found in query bindings or context variables`);
       }
     }
   }
@@ -410,9 +596,59 @@ export class PromptManager {
    * Validate configuration
    */
   validateConfiguration() {
-    this.objectQuery.validateQuery();
+    // Validate query spec
+    this.validateQuerySpec();
     this.promptBuilder.validateTemplate();
     this.responseValidator.validateSchema();
+  }
+
+  /**
+   * Validate query specification
+   */
+  validateQuerySpec() {
+    if (!this.querySpec || typeof this.querySpec !== 'object') {
+      throw new Error('Query specification must be an object');
+    }
+
+    if (!this.querySpec.bindings) {
+      throw new Error('Query specification must have bindings');
+    }
+
+    // Validate each binding
+    for (const [name, binding] of Object.entries(this.querySpec.bindings)) {
+      if (!name || typeof name !== 'string') {
+        throw new Error('Binding name must be a non-empty string');
+      }
+
+      if (!binding || typeof binding !== 'object') {
+        throw new Error(`Binding ${name} must be an object`);
+      }
+
+      if (!binding.path && binding.value === undefined && !binding.aggregate) {
+        throw new Error(`Binding ${name} must have path, value, or aggregate`);
+      }
+
+      if (binding.path && typeof binding.path !== 'string') {
+        throw new Error(`Path must be a string for binding ${name}`);
+      }
+    }
+
+    // Validate context variables if present
+    if (this.querySpec.contextVariables) {
+      for (const [name, varDef] of Object.entries(this.querySpec.contextVariables)) {
+        if (!name || typeof name !== 'string') {
+          throw new Error('Context variable name must be a non-empty string');
+        }
+
+        if (!varDef || typeof varDef !== 'object') {
+          throw new Error(`Context variable ${name} must be an object`);
+        }
+
+        if (!varDef.path && varDef.value === undefined) {
+          throw new Error(`Context variable ${name} must have path or value`);
+        }
+      }
+    }
   }
 
   /**
@@ -420,7 +656,7 @@ export class PromptManager {
    */
   getComponentStatus() {
     return {
-      objectQuery: this.objectQuery ? 'ready' : 'not_initialized',
+      dataExtraction: 'handle-based',
       promptBuilder: this.promptBuilder ? 'ready' : 'not_initialized',
       outputSchema: this.responseValidator ? 'ready' : 'not_initialized',
       llmClient: this.llmClient ? 'configured' : 'not_configured',
@@ -433,7 +669,7 @@ export class PromptManager {
    */
   analyzePipeline() {
     const promptComplexity = this.promptBuilder.analyzeComplexity();
-    const queryPaths = this.objectQuery.getRequiredPaths();
+    const queryPaths = this.getRequiredPaths();
     
     return {
       estimatedComplexity: promptComplexity.estimatedComplexity + queryPaths.length,
@@ -445,6 +681,38 @@ export class PromptManager {
       contextVariables: Object.keys(this.config.objectQuery.contextVariables || {}),
       requiredPaths: queryPaths
     };
+  }
+
+  /**
+   * Get required paths from query specification
+   */
+  getRequiredPaths() {
+    const paths = [];
+    
+    if (this.querySpec.bindings) {
+      for (const binding of Object.values(this.querySpec.bindings)) {
+        if (binding.path) {
+          paths.push(binding.path);
+        }
+        if (binding.aggregate) {
+          for (const item of binding.aggregate) {
+            if (item.path) {
+              paths.push(item.path);
+            }
+          }
+        }
+      }
+    }
+    
+    if (this.querySpec.contextVariables) {
+      for (const varDef of Object.values(this.querySpec.contextVariables)) {
+        if (varDef.path) {
+          paths.push(varDef.path);
+        }
+      }
+    }
+    
+    return [...new Set(paths)]; // Remove duplicates
   }
 
   /**
@@ -496,7 +764,7 @@ export class PromptManager {
   /**
    * Validate individual components
    */
-  validateObjectQuery() { this.objectQuery.validateQuery(); }
+  validateObjectQuery() { this.validateQuerySpec(); }
   validatePromptBuilder() { this.promptBuilder.validateTemplate(); }
   validateOutputSchema() { this.responseValidator.validateSchema(); }
   validateRetryConfig() { this.retryHandler.validateConfiguration(); }

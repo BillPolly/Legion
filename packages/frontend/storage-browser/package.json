@@ -26,9 +26,9 @@
   "author": "Legion Framework",
   "license": "MIT",
   "dependencies": {
-    "@legion/components": "file:../components",
-    "@legion/actors": "file:../../shared/actors",
-    "@legion/storage": "file:../../storage",
+    "@legion/components": "*",
+    "@legion/actors": "*",
+    "@legion/storage": "*",
     "ws": "^8.18.0"
   },
   "devDependencies": {

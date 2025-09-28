@@ -1,4 +1,4 @@
-import { InMemoryTripleStore } from '@legion/kg-storage-memory';
+import { createInMemoryTripleStore } from '@legion/triplestore';
 
 /**
  * Core Knowledge Graph Engine
@@ -7,7 +7,7 @@ import { InMemoryTripleStore } from '@legion/kg-storage-memory';
 export class KGEngine {
   constructor(tripleStore = null) {
     // Use provided storage or default to InMemoryTripleStore
-    this.store = tripleStore || new InMemoryTripleStore();
+    this.store = tripleStore || createInMemoryTripleStore();
   }
 
   /**

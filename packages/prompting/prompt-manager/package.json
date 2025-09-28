@@ -22,10 +22,10 @@
   "author": "Legion Framework",
   "license": "MIT",
   "dependencies": {
-    "@legion/kg-object-query": "file:../../km/kg-object-query",
-    "@legion/output-schema": "file:../output-schema",
-    "@legion/prompt-builder": "file:../prompt-builder",
-    "@legion/resource-manager": "file:../../resource-manager",
+    "@legion/handle": "*",
+    "@legion/output-schema": "*",
+    "@legion/prompt-builder": "*",
+    "@legion/resource-manager": "*",
     "gray-matter": "^4.0.3",
     "handlebars": "^4.7.8"
   },

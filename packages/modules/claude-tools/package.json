@@ -10,8 +10,8 @@
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
   },
   "dependencies": {
-    "@legion/resource-manager": "file:../resource-manager",
-    "@legion/tools-registry": "file:../tools-registry",
+    "@legion/resource-manager": "*",
+    "@legion/tools-registry": "*",
     "axios": "^1.6.0",
     "cheerio": "^1.0.0-rc.12",
     "fast-glob": "^3.3.3",

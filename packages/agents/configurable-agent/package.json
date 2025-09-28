@@ -22,10 +22,10 @@
   "author": "Legion Framework",
   "license": "MIT",
   "dependencies": {
-    "@legion/resource-manager": "file:../../resource-manager",
-    "@legion/llm-client": "file:../../prompting/llm-client",
-    "@legion/schema": "file:../../schema",
-    "@legion/tools-registry": "file:../../tools-registry"
+    "@legion/resource-manager": "*",
+    "@legion/llm-client": "*",
+    "@legion/schema": "*",
+    "@legion/tools-registry": "*"
   },
   "devDependencies": {
     "jest": "^29.7.0"

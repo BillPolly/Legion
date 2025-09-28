@@ -13,10 +13,10 @@
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
   },
   "dependencies": {
-    "@legion/llm-client": "file:../../prompting/llm-client",
-    "@legion/resource-manager": "file:../resource-manager",
-    "@legion/tools-registry": "file:../tools-registry",
-    "@legion/schema": "file:../schema",
+    "@legion/llm-client": "*",
+    "@legion/resource-manager": "*",
+    "@legion/tools-registry": "*",
+    "@legion/schema": "*",
     "zod": "^3.22.4"
   },
   "devDependencies": {

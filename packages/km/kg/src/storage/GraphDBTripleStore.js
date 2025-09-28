@@ -1,4 +1,18 @@
-import { ITripleStore, StorageError, ConnectionError, TransactionError, ValidationError } from '@legion/kg-storage-core';
+import { ITripleStore, StorageError, ValidationError } from '@legion/triplestore';
+// Define additional error types locally since they're not in triplestore yet
+class ConnectionError extends StorageError {
+  constructor(message) {
+    super(message);
+    this.name = 'ConnectionError';
+  }
+}
+
+class TransactionError extends StorageError {
+  constructor(message) {
+    super(message);
+    this.name = 'TransactionError';
+  }
+}
 
 /**
  * Graph database triple store implementation

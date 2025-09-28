@@ -1,11 +1,14 @@
-import { InMemoryTripleStore } from '@legion/kg-storage-memory';
-import { FileSystemTripleStore } from '@legion/kg-storage-file';
+import path from 'path';
+import { 
+  createInMemoryTripleStore,
+  createFileSystemTripleStore 
+} from '@legion/triplestore/factories';
+import { ValidationError } from '@legion/triplestore';
 import { GitHubTripleStore } from './GitHubTripleStore.js';
 import { SQLTripleStore } from './SQLTripleStore.js';
 import { MongoTripleStore } from './MongoTripleStore.js';
 import { GraphDBTripleStore } from './GraphDBTripleStore.js';
 import { RemoteTripleStore } from './RemoteTripleStore.js';
-import { ValidationError } from '@legion/kg-storage-core';
 
 /**
  * Factory for creating storage providers based on configuration
@@ -16,10 +19,10 @@ export class StorageConfig {
    * @param {Object} config - Storage configuration
    * @returns {ITripleStore} - Storage provider instance
    */
-  static createStore(config = {}) {
+  static async createStore(config = {}) {
     // Default to in-memory storage
     if (!config || !config.type) {
-      return new InMemoryTripleStore();
+      return createInMemoryTripleStore();
     }
 
     // Validate configuration
@@ -27,10 +30,18 @@ export class StorageConfig {
 
     switch (config.type) {
       case 'memory':
-        return new InMemoryTripleStore();
+        return createInMemoryTripleStore();
       
       case 'file':
-        return new FileSystemTripleStore(config.path, config);
+        // FileSystemProvider now requires a DataSource abstraction
+        // For backward compatibility, create with a local filesystem DataSource
+        const { LocalFileSystemDataSource } = await import('@legion/datasource');
+        const dataSource = new LocalFileSystemDataSource(path.dirname(config.path));
+        return createFileSystemTripleStore({
+          dataSource,
+          filePath: path.basename(config.path),
+          ...config
+        });
       
       case 'github':
         return new GitHubTripleStore(config.repo, config.path, config);
@@ -195,7 +206,7 @@ export class StorageConfig {
    * Create storage from environment variables
    * @returns {ITripleStore} - Storage provider instance
    */
-  static createFromEnvironment() {
+  static async createFromEnvironment() {
     const type = process.env.KG_STORAGE_TYPE || 'memory';
     const config = this.getDefaultConfig(type);
     

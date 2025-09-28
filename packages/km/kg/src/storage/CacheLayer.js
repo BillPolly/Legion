@@ -1,4 +1,4 @@
-import { StorageError } from '@legion/kg-storage-core';
+import { StorageError } from '@legion/triplestore';
 
 /**
  * LRU Cache with TTL support for storage optimization
