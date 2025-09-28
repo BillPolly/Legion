@@ -14,9 +14,9 @@
     "search": "node scripts/search-sops.js"
   },
   "dependencies": {
-    "@legion/resource-manager": "workspace:*",
-    "@legion/nomic": "workspace:*",
-    "@legion/llm-client": "workspace:*",
+    "@legion/resource-manager": "file:../../resource-manager",
+    "@legion/nomic": "file:../../nomic",
+    "@legion/llm-client": "file:../../prompting/llm-client",
     "mongodb": "^6.0.0"
   },
   "devDependencies": {

@@ -11,7 +11,7 @@
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch"
   },
   "dependencies": {
-    "@legion/handle": "workspace:*",
+    "@legion/handle": "file:../../shared/data/handle",
     "chokidar": "^3.5.3",
     "micromatch": "^4.0.5"
   },

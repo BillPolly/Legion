@@ -1,5 +1,5 @@
 {
-  "name": "log-manager-demo",
+  "name": "@legion/log-manager-demo",
   "version": "1.0.0",
   "type": "module",
   "description": "Live demo of log correlation between frontend and backend",

@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { createTask, TaskStrategy } from '@legion/tasks';
+import { createTask, TaskStrategy } from '@legion/shared-tasks';
 import { createRecursiveDecompositionStrategy } from '../../../src/strategies/recursive/RecursiveDecompositionStrategy.js';
 import { createAnalysisStrategy } from '../../../src/strategies/coding/AnalysisStrategy.js';
 import { createExecutionStrategy } from '../../../src/strategies/coding/ExecutionStrategy.js';

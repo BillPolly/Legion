@@ -124,22 +124,12 @@ export default class GlobalContext {
    * This is the typical way to create task-specific contexts
    */
   async createExecutionContext(services = {}) {
-    const { ExecutionContext } = await this._getExecutionContextClass();
+    const { ExecutionContext } = await import('@legion/shared-tasks');
     
     return new ExecutionContext({
       ...services,
       parent: this
     });
-  }
-
-  /**
-   * Get ExecutionContext class (dynamic import to avoid circular dependencies)
-   * @private
-   */
-  async _getExecutionContextClass() {
-    // Use dynamic import to avoid circular dependencies
-    const module = await import('./ExecutionContext.js');
-    return { ExecutionContext: module.default };
   }
 
   /**

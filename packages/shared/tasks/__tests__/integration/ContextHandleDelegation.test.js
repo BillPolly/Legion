@@ -9,6 +9,7 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import ExecutionContext from '../../src/core/ExecutionContext.js';
 import { ContextHandle } from '../../src/core/ContextHandle.js';
+import { ContextResourceManager } from '../../src/core/ContextResourceManager.js';
 
 // Mock file system handle for testing  
 class MockFileHandle extends ContextHandle {

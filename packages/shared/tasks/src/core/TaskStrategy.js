@@ -659,6 +659,54 @@ const TaskStrategy = {
    */
   removeArtifact(artifactName) {
     this.artifacts.delete(artifactName);
+  },
+
+  /**
+   * Check if artifact exists
+   */
+  hasArtifact(artifactName) {
+    return this.artifacts.has(artifactName);
+  },
+
+  /**
+   * Status management methods
+   */
+  isPending() {
+    return this.status === 'pending';
+  },
+
+  isCompleted() {
+    return this.status === 'completed';
+  },
+
+  isFailed() {
+    return this.status === 'failed';
+  },
+
+  markStarted() {
+    this.status = 'in-progress';
+    if (!this.metadata) {
+      this.metadata = {};
+    }
+    this.metadata.startedAt = new Date();
+  },
+
+  markCompleted(result) {
+    this.status = 'completed';
+    this.result = result;
+    if (!this.metadata) {
+      this.metadata = {};
+    }
+    this.metadata.completedAt = new Date();
+  },
+
+  markFailed(error) {
+    this.status = 'failed';
+    this.result = error;
+    if (!this.metadata) {
+      this.metadata = {};
+    }
+    this.metadata.failedAt = new Date();
   }
 };
 

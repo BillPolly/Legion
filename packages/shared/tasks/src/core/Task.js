@@ -593,7 +593,7 @@ export default class Task {
       current = current.parent;
     }
     
-    return joinPath(' > ');
+    return path.join(' > ');
   }
   
   /**

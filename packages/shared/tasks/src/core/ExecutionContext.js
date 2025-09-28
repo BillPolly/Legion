@@ -13,7 +13,7 @@ export default class ExecutionContext {
     this.sessionLogger = services.sessionLogger || null;
     
     // Task-specific configuration and state
-    this.workspaceDir = services.workspaceDir || context.workspaceDir || '/workspace';
+    this.workspaceDir = services.workspaceDir || '/workspace';
     this.testMode = services.testMode || false;
     this.fastToolDiscovery = services.fastToolDiscovery || false;
     this.maxDepth = services.maxDepth || 5;

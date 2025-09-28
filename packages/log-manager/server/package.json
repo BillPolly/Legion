@@ -1,5 +1,5 @@
 {
-  "name": "log-monitoring-server",
+  "name": "@legion/log-monitoring-server",
   "version": "1.0.0",
   "type": "module",
   "description": "Server that monitors external applications and provides log dashboard",
