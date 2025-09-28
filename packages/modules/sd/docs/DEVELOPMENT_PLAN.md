@@ -19,9 +19,9 @@
 This development plan creates specialized BT Actors and Tools that extend Legion's proven infrastructure to enable **autonomous software development**. All components build on existing Legion foundations:
 
 **Legion Components We're Building On:**
-- **BTAgentBase** (`@legion/actor-BT`) - Base class for all SD agents
+- **BTAgentBase** (`@legion/bt-task`) - Base class for all SD agents
 - **Tool** (`@legion/tools-registry`) - Base class for all SD tools
-- **BehaviorTreeExecutor** (`@legion/actor-BT`) - Executes agent workflows
+- **BehaviorTreeExecutor** (`@legion/bt-task`) - Executes agent workflows
 - **PlannerEngine** (`@legion/unified-planner`) - Generates BT plans
 - **ProfilePlanner** (`@legion/profile-planner`) - Domain-specific profiles
 - **ResourceManager** (`@legion/tools-registry`) - Singleton dependency injection
@@ -55,8 +55,8 @@ Legion Infrastructure        SD Extensions
 
 | Legion Component | Package | What It Provides | How SD Uses It |
 |-----------------|---------|------------------|----------------|
-| **BTAgentBase** | `@legion/actor-BT` | BT Actor base class with workflow execution | All SD agents extend this class |
-| **BehaviorTreeExecutor** | `@legion/actor-BT` | Executes BT workflows with node plugins | Runs SD agent workflows |
+| **BTAgentBase** | `@legion/bt-task` | BT Actor base class with workflow execution | All SD agents extend this class |
+| **BehaviorTreeExecutor** | `@legion/bt-task` | Executes BT workflows with node plugins | Runs SD agent workflows |
 | **Tool** | `@legion/tools-registry` | Base tool class with validation and events | All SD tools extend this |
 | **PlannerEngine** | `@legion/unified-planner` | Orchestrates planning strategies | Generates SD workflow plans |
 | **LLMStrategy** | `@legion/unified-planner` | LLM-based BT generation | Creates SD agent workflows |
@@ -207,7 +207,7 @@ Tool (Legion base)
 - ✅ Test end-to-end planning with SD profile
 
 ### 1.1 SD Module Creation (Standard Legion Module)
-- ✅ Create package.json with Legion dependencies (@legion/actor-BT, @legion/tools-registry, @legion/llm, etc.)
+- ✅ Create package.json with Legion dependencies (@legion/bt-task, @legion/tools-registry, @legion/llm, etc.)
 - ✅ Create SDModule.js extending Legion's Module class
 - ✅ Create module.json for ModuleLoader registration with LLM dependencies
 - ✅ Write tests for module initialization with ResourceManager
@@ -867,7 +867,7 @@ By extending Legion's existing infrastructure, SD provides:
 
 ```
 Legion Framework (Existing)
-├── @legion/actor-BT
+├── @legion/bt-task
 │   ├── BTAgentBase ← SDAgentBase ← [All SD Agents]
 │   └── BehaviorTreeExecutor (executes SD workflows)
 ├── @legion/tools-registry

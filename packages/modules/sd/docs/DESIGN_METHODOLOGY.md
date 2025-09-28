@@ -36,7 +36,7 @@
 The Software Design (SD) package extends the existing Legion framework's BT Actor infrastructure to enable **autonomous software development**. All SD agents are specialized BTAgentBase subclasses that leverage Legion's existing tool system, planning infrastructure, and resource management.
 
 **Key Foundation Components from Legion:**
-- **BTAgentBase** - All SD agents extend this base class from `@legion/actor-BT`
+- **BTAgentBase** - All SD agents extend this base class from `@legion/bt-task`
 - **Tool Class** - All SD tools extend Legion's Tool class from `@legion/tools-registry`
 - **PlannerEngine** - SD uses the existing planner from `@legion/unified-planner`
 - **ProfilePlanner** - SD extends profiles from `@legion/profile-planner`
@@ -89,7 +89,7 @@ The SD package is **NOT a standalone system** but a specialized extension of the
 ```
 Legion Actor (base class)
     ↓
-BTAgentBase (@legion/actor-BT)
+BTAgentBase (@legion/bt-task)
     ↓
 SDAgentBase (SD package base)
     ↓
@@ -2487,7 +2487,7 @@ const requirementValidator = {
 
 ```javascript
 // SD agents are specialized BTAgentBase instances
-import { BTAgentBase } from '@legion/actor-BT';
+import { BTAgentBase } from '@legion/bt-task';
 import { Tool } from '@legion/tools-registry';
 import { ResourceManager } from '@legion/tools-registry';
 

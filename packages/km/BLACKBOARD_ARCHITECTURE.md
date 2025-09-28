@@ -2211,7 +2211,7 @@ The agent architecture leverages a powerful inheritance chain:
 ```
 Actor (base class from @legion/actors)
   ↓ extends
-BehaviorTreeNode (from @legion/actor-BT)
+BehaviorTreeNode (from @legion/bt-task)
   ↓ extends
 BaseAgentBT (our agent base class)
   ↓ extends
@@ -2274,8 +2274,8 @@ const systemTree = {
 #### BaseAgentBT Class
 
 ```javascript
-import { BehaviorTreeNode, NodeStatus } from '@legion/actor-BT';
-import { BehaviorTreeExecutor } from '@legion/actor-BT';
+import { BehaviorTreeNode, NodeStatus } from '@legion/bt-task';
+import { BehaviorTreeExecutor } from '@legion/bt-task';
 
 /**
  * BaseAgentBT - Foundation for all behavior tree based agents

@@ -339,7 +339,7 @@ This package is designed to work seamlessly with other Legion framework componen
 
 - **@legion/schema**: Provides the underlying JSON Schema validation
 - **@legion/unified-planner**: Uses this validator for BT plan validation
-- **@legion/actor-bt**: Executes validated BT structures
+- **@legion/bt-task**: Executes validated BT structures
 
 ## Backward Compatibility
 
@@ -365,5 +365,5 @@ MIT
 
 - [@legion/schema](../schema) - JSON Schema to Zod conversion
 - [@legion/unified-planner](../unified-planner) - Unified planning framework
-- [@legion/actor-bt](../../shared/actor-bt) - Behavior Tree execution
+- [@legion/bt-task](../../shared/bt-task) - Behavior Tree execution
 - [Legion Framework](https://github.com/maxximus-dev/Legion)
