@@ -16,7 +16,7 @@ const testsToProcess = [
     source: 'unit/core/Task.test.js',
     dest: 'unit/core/Task.test.js',
     replacements: [
-      { from: /@legion\/tasks/g, to: '@legion/shared-tasks' },
+      { from: /@legion\/node-tasks/g, to: '@legion/tasks' },
       { from: /import.*ResourceManager.*\n/g, to: '' },
       { from: /import.*GlobalContext.*\n/g, to: '' },
       { from: /await ResourceManager\.getInstance\(\);?/g, to: '// ResourceManager not needed' },
@@ -30,15 +30,15 @@ const testsToProcess = [
     source: 'unit/core/Task.artifact-flow.test.js',
     dest: 'unit/core/Task.artifact-flow.test.js',
     replacements: [
-      { from: /@legion\/tasks/g, to: '@legion/shared-tasks' }
+      { from: /@legion\/node-tasks/g, to: '@legion/tasks' }
     ]
   },
   {
     source: 'integration/ContextHandleDelegation.test.js',
     dest: 'integration/ContextHandleDelegation.test.js',
     replacements: [
-      { from: /@legion\/tasks/g, to: '@legion/shared-tasks' },
-      { from: /@legion\/handle/g, to: '@legion/shared-tasks' },
+      { from: /@legion\/node-tasks/g, to: '@legion/tasks' },
+      { from: /@legion\/handle/g, to: '@legion/tasks' },
       { from: /import.*ResourceManager.*\n/g, to: '' }
     ]
   }

@@ -20,7 +20,7 @@
  * 3. Optionally override specific handlers
  */
 
-import { EnhancedTaskStrategy } from '@legion/shared-tasks';
+import { EnhancedTaskStrategy } from '@legion/tasks';
 import { createStrategy } from './StrategyFactory.js';
 import { createOnMessageHandler, createMessageRoutes } from './MessageHandlers.js';
 import { 

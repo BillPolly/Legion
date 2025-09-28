@@ -1,5 +1,5 @@
 /**
- * @legion/shared-tasks - Pure JavaScript Task Execution Framework
+ * @legion/tasks - Pure JavaScript Task Execution Framework
  * 
  * This package provides the core task execution framework without any external dependencies.
  * It can run in any JavaScript environment (browser, Node.js, etc.).
@@ -42,4 +42,4 @@ export { defer, delay, createDeferred, withTimeout, retry } from './utils/async.
 
 // Version and metadata
 export const version = '1.0.0';
-export const name = '@legion/shared-tasks';
+export const name = '@legion/tasks';

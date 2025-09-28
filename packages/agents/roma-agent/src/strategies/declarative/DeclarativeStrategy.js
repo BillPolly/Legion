@@ -17,7 +17,7 @@
  */
 
 import { createTypedStrategy } from '../utils/StandardTaskStrategy.js';
-import { ContextResourceManager, ContextDataSource, ContextHandle } from '@legion/shared-tasks';
+import { ContextResourceManager, ContextDataSource, ContextHandle } from '@legion/tasks';
 import { Handle } from '@legion/handle';
 
 /**

@@ -1,5 +1,5 @@
 {
-  "name": "@legion/shared-tasks",
+  "name": "@legion/tasks",
   "version": "1.0.0",
   "description": "Pure JavaScript task execution framework - core functionality with no external dependencies",
   "type": "module",

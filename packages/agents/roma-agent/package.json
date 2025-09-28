@@ -27,7 +27,7 @@
     "@legion/llm-client": "file:../../prompting/llm-client",
     "@legion/schema": "file:../../schema",
     "@legion/tools-registry": "file:../../tools-registry",
-    "@legion/shared-tasks": "file:../../shared/tasks",
+    "@legion/tasks": "file:../../shared/tasks",
     "@legion/handle": "file:../../shared/data/handle",
     "@legion/handle-dsl": "file:../../shared/data/handle-dsl",
     "@legion/sop-registry": "file:../../planning/sop-registry",

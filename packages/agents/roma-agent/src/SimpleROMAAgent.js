@@ -7,7 +7,7 @@
  * 3. COMPLEX tasks: Decompose into subtasks recursively
  */
 
-import { createTask, TaskManager } from '@legion/shared-tasks';
+import { createTask, TaskManager } from '@legion/tasks';
 import GlobalContext from './core/GlobalContext.js';
 import SessionLogger from './utils/SessionLogger.js';
 import { createRecursiveDecompositionStrategy } from './strategies/recursive/RecursiveDecompositionStrategy.js';
