@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach } from '@jest/globals';
-import { GellishValidator, GellishDictionary } from '@legion/kg-gellish';
+import { GellishValidator, GellishDictionary } from '@legion/gellish';
 
 describe('GellishValidator', () => {
   let validator;

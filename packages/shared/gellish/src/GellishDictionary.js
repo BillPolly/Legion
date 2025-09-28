@@ -3,6 +3,8 @@
  * 
  * Provides lookup and management of the ~650 standard Gellish relation types.
  * Each relation has a unique ID (UID), phrase, inverse phrase, and optional synonyms.
+ * 
+ * This is a direct migration from kg-gellish, maintaining all standard relations.
  */
 
 export class GellishDictionary {

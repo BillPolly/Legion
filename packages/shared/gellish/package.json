@@ -1,0 +1,36 @@
+{
+  "name": "@legion/gellish",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/index.js",
+  "description": "Gellish Controlled Natural Language for Handle-based resources",
+  "keywords": [
+    "gellish",
+    "cnl",
+    "controlled-natural-language",
+    "handle",
+    "knowledge-graph"
+  ],
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+  },
+  "dependencies": {
+    "@legion/handle": "*",
+    "@legion/actors": "*"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ]
+  }
+}

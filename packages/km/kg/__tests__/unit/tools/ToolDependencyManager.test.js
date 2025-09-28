@@ -1,7 +1,21 @@
 import { ToolDependencyManager } from '../../../src/tools/ToolDependencyManager.js';
 import { KGEngine } from '../../../src/core/KGEngine.js';
-import { WeatherTool } from '@legion/kg-examples';
 import '../../../src/serialization/ObjectExtensions.js';
+
+// Mock WeatherTool for testing (previously from @legion/kg-examples)
+class WeatherTool {
+  constructor() {
+    this.apiKey = null;
+  }
+  
+  async getCurrentWeather(location, units = 'metric') {
+    return { location, temperature: 20, units };
+  }
+  
+  async getForecast(location, days = 5) {
+    return { location, days, forecast: [] };
+  }
+}
 
 describe('ToolDependencyManager', () => {
   let kgEngine, dependencyManager;

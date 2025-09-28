@@ -3,15 +3,23 @@
  * 
  * Validates Gellish expressions against the standard vocabulary,
  * provides helpful error messages and suggestions for corrections.
+ * 
+ * CRITICAL: All operations are synchronous following Handle pattern
  */
 
 export class GellishValidator {
   constructor(dictionary) {
+    if (!dictionary) {
+      throw new Error('GellishDictionary is required');
+    }
+    
     this.dictionary = dictionary;
   }
 
   /**
    * Validate a Gellish expression
+   * CRITICAL: Synchronous operation - no await!
+   * 
    * @param {string} expression - The expression to validate
    * @returns {Object} - Validation result with valid flag, error message, and suggestions
    */
@@ -54,9 +62,26 @@ export class GellishValidator {
       };
     }
   }
+  
+  /**
+   * Validate multiple expressions
+   * CRITICAL: Synchronous operation - no await!
+   * 
+   * @param {Array<string>} expressions - Array of expressions to validate
+   * @returns {Array<Object>} - Array of validation results
+   */
+  validateMultiple(expressions) {
+    if (!expressions || expressions.length === 0) {
+      return [];
+    }
+    
+    return expressions.map(expr => this.validate(expr));
+  }
 
   /**
    * Find any valid relation phrase in the token array
+   * CRITICAL: Synchronous operation - no await!
+   * 
    * @param {Array<string>} tokens - Array of tokens to search
    * @returns {string|null} - Found relation phrase or null
    */
@@ -75,6 +100,8 @@ export class GellishValidator {
 
   /**
    * Suggest similar relations for invalid expressions
+   * CRITICAL: Synchronous operation - no await!
+   * 
    * @param {string} expression - The invalid expression
    * @returns {Array<string>} - Array of suggested relations
    */
@@ -90,6 +117,8 @@ export class GellishValidator {
 
   /**
    * Tokenize expression into array of words
+   * CRITICAL: Synchronous operation - no await!
+   * 
    * @param {string} expression - Expression to tokenize
    * @returns {Array<string>} - Array of tokens
    */
@@ -103,5 +132,57 @@ export class GellishValidator {
       .trim();
     
     return cleaned.split(/\s+/).filter(token => token.length > 0);
+  }
+  
+  /**
+   * Validate query syntax
+   * CRITICAL: Synchronous operation - no await!
+   * 
+   * @param {string} query - The query to validate
+   * @returns {Object} - Validation result for query
+   */
+  validateQuery(query) {
+    try {
+      if (!query || query.trim().length === 0) {
+        return {
+          valid: false,
+          error: "Query cannot be empty"
+        };
+      }
+      
+      const cleanQuery = query.replace(/\?+$/, '').trim();
+      const tokens = this.tokenize(cleanQuery);
+      
+      // Check for question words
+      const questionWords = ['what', 'which', 'who', 'how', 'where', 'when'];
+      const hasQuestionWord = tokens.some(token => 
+        questionWords.includes(token.toLowerCase())
+      );
+      
+      if (!hasQuestionWord) {
+        return {
+          valid: false,
+          error: "Query must contain a question word (what, which, who, etc.)"
+        };
+      }
+      
+      // Check for relation phrase
+      const relationFound = this.findAnyRelationPhrase(tokens);
+      if (!relationFound) {
+        return {
+          valid: false,
+          error: "No valid Gellish relation found in query",
+          suggestions: this.suggestSimilarRelations(query)
+        };
+      }
+      
+      return { valid: true };
+      
+    } catch (error) {
+      return {
+        valid: false,
+        error: error.message
+      };
+    }
   }
 }

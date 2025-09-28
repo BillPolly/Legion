@@ -1,18 +1,29 @@
 /**
- * GellishQueryParser - Converts Gellish queries to KG query patterns
+ * GellishQueryParser - Converts Gellish queries to query patterns
  * 
- * Parses Gellish natural language queries into knowledge graph query patterns
- * using the existing EntityRecognizer and GellishDictionary components.
+ * Parses Gellish natural language queries into query patterns
+ * using EntityRecognizer and GellishDictionary components.
+ * 
+ * CRITICAL: All operations are synchronous following Handle pattern
  */
 
 export class GellishQueryParser {
   constructor(dictionary, entityRecognizer) {
+    if (!dictionary) {
+      throw new Error('GellishDictionary is required');
+    }
+    if (!entityRecognizer) {
+      throw new Error('EntityRecognizer is required');
+    }
+    
     this.dictionary = dictionary;
     this.entityRecognizer = entityRecognizer;
   }
 
   /**
-   * Parse a Gellish query into a KG query pattern
+   * Parse a Gellish query into a query pattern
+   * CRITICAL: Synchronous operation - no await!
+   * 
    * @param {string} query - The Gellish query to parse
    * @returns {Array} - Query pattern array [subject, predicate, object] with null for variables
    * @throws {Error} - If the query cannot be parsed
@@ -40,6 +51,8 @@ export class GellishQueryParser {
 
   /**
    * Parse a type-filtered query (e.g., "Which pumps are part of System S200?")
+   * CRITICAL: Synchronous operation - no await!
+   * 
    * @param {string} query - The type-filtered query to parse
    * @returns {Object} - Type-filtered query structure
    * @throws {Error} - If the query cannot be parsed
@@ -85,6 +98,8 @@ export class GellishQueryParser {
 
   /**
    * Clean and normalize a query string
+   * CRITICAL: Synchronous operation - no await!
+   * 
    * @param {string} query - The query to clean
    * @returns {string} - The cleaned query
    */
@@ -97,6 +112,8 @@ export class GellishQueryParser {
 
   /**
    * Tokenize a query string
+   * CRITICAL: Synchronous operation - no await!
+   * 
    * @param {string} query - The query to tokenize
    * @returns {Array<string>} - Array of tokens
    */
@@ -106,6 +123,8 @@ export class GellishQueryParser {
 
   /**
    * Build a query pattern from recognized components
+   * CRITICAL: Synchronous operation - no await!
+   * 
    * @param {Object} recognized - The recognized query components
    * @param {string} originalQuery - The original query string
    * @returns {Array} - Query pattern [subject, predicate, object]
@@ -129,5 +148,44 @@ export class GellishQueryParser {
     }
     
     throw new Error(`Could not parse query: ${originalQuery}`);
+  }
+  
+  /**
+   * Parse query and return detailed parse result
+   * CRITICAL: Synchronous operation - no await!
+   * 
+   * @param {string} query - The Gellish query to parse
+   * @returns {Object} - Detailed parse result with pattern and metadata
+   */
+  parseDetailed(query) {
+    try {
+      const cleanQuery = this.cleanQuery(query);
+      const recognized = this.entityRecognizer.recognizeQuery(cleanQuery);
+      
+      if (!recognized.questionWord || !recognized.relation) {
+        return {
+          success: false,
+          error: `Could not parse query: ${query}`,
+          recognized: recognized
+        };
+      }
+      
+      const pattern = this.buildQueryPattern(recognized, cleanQuery);
+      
+      return {
+        success: true,
+        pattern: pattern,
+        questionWord: recognized.questionWord,
+        relation: recognized.relation,
+        object: recognized.object,
+        originalQuery: query
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        originalQuery: query
+      };
+    }
   }
 }

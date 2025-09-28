@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach } from '@jest/globals';
 import { KGEngine } from '../../../src/core/KGEngine.js';
 import { InMemoryTripleStore } from '@legion/kg-storage-memory';
 import { PatternQuery, LogicalQuery } from '../../../src/query/index.js';
-import { GellishSystem, GellishQueryParser, GellishDictionary, EntityRecognizer } from '@legion/kg-gellish';
+import { GellishSystem, GellishQueryParser, GellishDictionary, EntityRecognizer } from '@legion/gellish';
 
 describe('Gellish Query Integration', () => {
   let kg;

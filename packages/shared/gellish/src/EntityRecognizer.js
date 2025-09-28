@@ -1,18 +1,103 @@
 /**
- * EntityRecognizer - Identifies entities in Gellish text
+ * EntityRecognizer - Handle-aware entity recognition for Gellish text
  * 
- * Recognizes entities, relation phrases, and question words in Gellish expressions.
- * Classifies entities as individuals, persons, or concepts and generates appropriate IDs.
+ * Identifies entities, relation phrases, and question words in Gellish expressions.
+ * Uses Handle introspection to enhance entity recognition and classification.
  */
 
 export class EntityRecognizer {
-  constructor(dictionary) {
+  constructor(dictionary, handle = null) {
     this.dictionary = dictionary;
+    this.handle = handle; // Optional Handle for introspection
+    
+    // Standard entity patterns
     this.entityPatterns = [
       /^[A-Z][a-zA-Z0-9\s]*[A-Z0-9][0-9]+$/, // "Pump P101", "System S200"
       /^[A-Z][a-zA-Z]+\s+[A-Z][a-zA-Z]+$/, // "John Smith"
       /^[A-Z][a-zA-Z]+$/ // "Water", "Siemens"
     ];
+    
+    // Cache for known entities from Handle introspection
+    this._knownEntities = new Map();
+    this._entityTypes = new Map();
+    
+    // Initialize from Handle if available
+    if (this.handle) {
+      this.initializeFromHandle();
+    }
+  }
+
+  /**
+   * Initialize entity knowledge from Handle introspection
+   */
+  initializeFromHandle() {
+    if (!this.handle || !this.handle.getIntrospectionInfo) {
+      return;
+    }
+    
+    try {
+      const introspection = this.handle.getIntrospectionInfo();
+      
+      // Extract entity type information
+      if (introspection.entityType) {
+        this._entityTypes.set('default', introspection.entityType);
+      }
+      
+      // Extract known attributes and relationships
+      if (introspection.availableAttributes) {
+        introspection.availableAttributes.forEach(attr => {
+          this._knownEntities.set(attr, 'attribute');
+        });
+      }
+      
+      if (introspection.relationships) {
+        introspection.relationships.forEach(rel => {
+          this._knownEntities.set(rel, 'relationship');
+        });
+      }
+      
+      // Try to get schema for more entity information
+      const schema = this.handle.dataSource?.getSchema();
+      if (schema) {
+        this.extractEntitiesFromSchema(schema);
+      }
+    } catch (error) {
+      // Continue without introspection data
+      console.warn('Could not initialize from Handle:', error.message);
+    }
+  }
+
+  /**
+   * Extract entity information from Handle schema
+   */
+  extractEntitiesFromSchema(schema) {
+    if (schema.entities) {
+      Object.keys(schema.entities).forEach(entityName => {
+        this._knownEntities.set(entityName, 'entity');
+        const entityDef = schema.entities[entityName];
+        if (entityDef.type) {
+          this._entityTypes.set(entityName, entityDef.type);
+        }
+      });
+    }
+    
+    if (schema.types) {
+      Object.keys(schema.types).forEach(typeName => {
+        this._entityTypes.set(typeName, typeName);
+      });
+    }
+    
+    if (schema.attributes) {
+      Object.keys(schema.attributes).forEach(attrName => {
+        this._knownEntities.set(attrName, 'attribute');
+      });
+    }
+    
+    if (schema.relationships) {
+      Object.keys(schema.relationships).forEach(relName => {
+        this._knownEntities.set(relName, 'relationship');
+      });
+    }
   }
 
   /**
@@ -85,9 +170,13 @@ export class EntityRecognizer {
     if (questionWords.includes(firstToken)) {
       // Handle "which pumps" type questions
       if (firstToken === 'which' && tokens.length > 1) {
+        // Check if second token is a known entity type
+        const entityType = this.classifyEntityFromHandle(tokens[1]);
+        
         result.questionWord = {
           text: `${tokens[0]} ${tokens[1]}`,
-          type: 'variable'
+          type: 'variable',
+          entityType: entityType
         };
         
         // Look for relation starting from token 2
@@ -194,11 +283,22 @@ export class EntityRecognizer {
     const text = tokens.join(' ');
     const type = this.classifyEntity(text);
     
-    return {
+    const entity = {
       text: text,
       type: type,
       id: this.generateEntityId(text)
     };
+    
+    // Enhance with Handle introspection if available
+    if (this.handle) {
+      const handleType = this.classifyEntityFromHandle(text);
+      if (handleType && handleType !== 'unknown') {
+        entity.handleType = handleType;
+        entity.introspected = true;
+      }
+    }
+    
+    return entity;
   }
 
   /**
@@ -207,9 +307,57 @@ export class EntityRecognizer {
    * @returns {string} - Entity type: 'individual', 'person', or 'concept'
    */
   classifyEntity(text) {
+    // Check Handle-based classification first
+    if (this._entityTypes.has(text)) {
+      return this._entityTypes.get(text);
+    }
+    
+    // Check known entities
+    if (this._knownEntities.has(text)) {
+      return this._knownEntities.get(text);
+    }
+    
+    // Fall back to pattern matching
     if (this.entityPatterns[0].test(text)) return 'individual'; // "Pump P101"
     if (this.entityPatterns[1].test(text)) return 'person'; // "John Smith"
     return 'concept'; // "Water", "Siemens"
+  }
+
+  /**
+   * Classify entity using Handle introspection
+   * @param {string} text - Entity text to classify
+   * @returns {string} - Entity type from Handle or 'unknown'
+   */
+  classifyEntityFromHandle(text) {
+    // Check cached entity types
+    if (this._entityTypes.has(text)) {
+      return this._entityTypes.get(text);
+    }
+    
+    // Check known entities
+    if (this._knownEntities.has(text)) {
+      return this._knownEntities.get(text);
+    }
+    
+    // Try to query Handle for entity type
+    if (this.handle && this.handle.query) {
+      try {
+        const results = this.handle.query({
+          find: ['?type'],
+          where: [[text, 'rdf:type', '?type']]
+        });
+        
+        if (results.length > 0) {
+          const type = results[0][0];
+          this._entityTypes.set(text, type);
+          return type;
+        }
+      } catch (error) {
+        // Query failed, continue without type
+      }
+    }
+    
+    return 'unknown';
   }
 
   /**
@@ -229,5 +377,19 @@ export class EntityRecognizer {
   tokenize(text) {
     if (!text || text.trim().length === 0) return [];
     return text.split(/\s+/).filter(token => token.length > 0);
+  }
+
+  /**
+   * Update Handle reference for dynamic introspection
+   * @param {Handle} handle - New Handle to use for introspection
+   */
+  setHandle(handle) {
+    this.handle = handle;
+    this._knownEntities.clear();
+    this._entityTypes.clear();
+    
+    if (handle) {
+      this.initializeFromHandle();
+    }
   }
 }

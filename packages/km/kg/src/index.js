@@ -45,8 +45,7 @@ export * from './query/index.js';
 // Main system export
 export { KnowledgeGraphSystem } from './system/KnowledgeGraphSystem.js';
 
-// Example exports - moved to @legion/kg-examples package
-// Users should import examples from @legion/kg-examples instead
+// Example code has been removed - tests now use inline mocks as needed
 
 // Import for default export
 import { KnowledgeGraphSystem } from './system/KnowledgeGraphSystem.js';

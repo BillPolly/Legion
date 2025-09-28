@@ -1,17 +1,25 @@
 /**
- * GellishGenerator - Converts KG triples back to Gellish expressions
+ * GellishGenerator - Converts triples back to Gellish expressions
  * 
- * Converts knowledge graph triples back to natural language Gellish expressions
+ * Converts triples back to natural language Gellish expressions
  * and formats query results for human consumption.
+ * 
+ * CRITICAL: All operations are synchronous following Handle pattern
  */
 
 export class GellishGenerator {
   constructor(dictionary) {
+    if (!dictionary) {
+      throw new Error('GellishDictionary is required');
+    }
+    
     this.dictionary = dictionary;
   }
 
   /**
    * Generate a Gellish expression from a triple
+   * CRITICAL: Synchronous operation - no await!
+   * 
    * @param {string} subject - Subject entity ID
    * @param {string} predicate - Predicate (should be gellish:UID format)
    * @param {string} object - Object entity ID
@@ -42,9 +50,41 @@ export class GellishGenerator {
     // Generate expression
     return `${subjectText} ${relation.phrase} ${objectText}`;
   }
+  
+  /**
+   * Generate from triple array
+   * CRITICAL: Synchronous operation - no await!
+   * 
+   * @param {Array} triple - Triple array [subject, predicate, object]
+   * @returns {string} - Natural language Gellish expression
+   */
+  generateFromTriple(triple) {
+    if (!Array.isArray(triple) || triple.length !== 3) {
+      throw new Error('Triple must be an array with 3 elements');
+    }
+    
+    return this.generate(triple[0], triple[1], triple[2]);
+  }
+  
+  /**
+   * Generate from multiple triples
+   * CRITICAL: Synchronous operation - no await!
+   * 
+   * @param {Array<Array>} triples - Array of triple arrays
+   * @returns {Array<string>} - Array of Gellish expressions
+   */
+  generateMultiple(triples) {
+    if (!triples || triples.length === 0) {
+      return [];
+    }
+    
+    return triples.map(triple => this.generateFromTriple(triple));
+  }
 
   /**
    * Format query results back to natural language
+   * CRITICAL: Synchronous operation - no await!
+   * 
    * @param {Array} results - Array of query result triples
    * @param {string} originalQuery - The original query for context
    * @returns {string} - Formatted natural language results
@@ -65,6 +105,8 @@ export class GellishGenerator {
 
   /**
    * Extract UID from gellish predicate
+   * CRITICAL: Synchronous operation - no await!
+   * 
    * @param {string} predicate - Predicate in format "gellish:UID"
    * @returns {number|null} - Extracted UID or null if invalid
    */
@@ -79,6 +121,8 @@ export class GellishGenerator {
 
   /**
    * Format entity ID to human-readable name
+   * CRITICAL: Synchronous operation - no await!
+   * 
    * @param {string} entityId - Entity ID (e.g., "pump_p101")
    * @returns {string} - Formatted name (e.g., "Pump P101")
    */
@@ -101,5 +145,21 @@ export class GellishGenerator {
         return word.charAt(0).toUpperCase() + word.slice(1);
       })
       .join(' ');
+  }
+  
+  /**
+   * Format entity ID to identifier format (inverse of formatEntityName)
+   * CRITICAL: Synchronous operation - no await!
+   * 
+   * @param {string} entityName - Human-readable name (e.g., "Pump P101")
+   * @returns {string} - Entity ID (e.g., "pump_p101")
+   */
+  formatEntityId(entityName) {
+    if (!entityName || typeof entityName !== 'string') {
+      return entityName || '';
+    }
+    
+    // Convert to lowercase and replace spaces with underscores
+    return entityName.toLowerCase().replace(/\s+/g, '_');
   }
 }

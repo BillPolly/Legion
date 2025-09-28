@@ -15,8 +15,8 @@ Created separate packages for storage implementations:
 ### 2. Extracted RDF Support
 - `@legion/kg-rdf` - RDF parsing, serialization, and namespace management
 
-### 3. Extracted Examples
-- `@legion/kg-examples` - All example code and demo tools
+### 3. ~~Extracted Examples~~ (Removed)
+- ~~`@legion/kg-examples`~~ - Removed: example code not needed, tests now use inline mocks
 
 ### 4. Extracted Gellish CNL
 - `@legion/kg-gellish` - Gellish Controlled Natural Language support
@@ -44,14 +44,8 @@ import { InMemoryTripleStore } from '@legion/kg-storage-memory';
 import { InMemoryTripleStore } from '@legion/kg';
 ```
 
-### For Examples
-```javascript
-// Before
-import { WeatherTool } from '@legion/kg';
-
-// After
-import { WeatherTool } from '@legion/kg-examples';
-```
+### ~~For Examples~~ (No Longer Applicable)
+The examples package has been removed. Tests now use inline mocks as needed.
 
 ### For RDF
 ```javascript
