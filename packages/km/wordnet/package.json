@@ -16,9 +16,10 @@
   "author": "Legion Team",
   "license": "MIT",
   "dependencies": {
-    "@legion/kg": "*",
-    "@legion/resource-manager": "*",
-    "@legion/storage": "*",
+    "@legion/triplestore": "workspace:*",
+    "@legion/handle": "workspace:*",
+    "@legion/resource-manager": "workspace:*",
+    "@legion/storage": "workspace:*",
     "natural": "^6.0.0",
     "mongodb": "^6.0.0",
     "inquirer": "^9.0.0",

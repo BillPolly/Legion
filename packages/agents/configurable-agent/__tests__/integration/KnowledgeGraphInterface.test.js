@@ -5,8 +5,7 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from '@jest/globals';
 import { KnowledgeGraphInterface } from '../../src/knowledge/KnowledgeGraphInterface.js';
 import { getResourceManager } from '../../src/utils/ResourceAccess.js';
-import { InMemoryTripleStore } from '@legion/kg-storage-memory';
-import { MongoTripleStore } from '@legion/kg';
+import { InMemoryTripleStore } from '@legion/triplestore';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';

@@ -1,25 +1,12 @@
 /**
- * KnowledgeGraphInterface - Interface to the Legion knowledge graph system
+ * KnowledgeGraphInterface - Interface to the Legion knowledge graph system using Handle pattern
  * 
- * CRITICAL: This module requires @legion/kg-storage-memory which is not currently available.
+ * Uses the new Handle architecture with TripleStoreDataSource.
  * Following FAIL FAST principle - no fallbacks or mocks.
  */
 
-// This import will fail immediately if package doesn't exist - NO FALLBACK
-let InMemoryTripleStore;
-
-try {
-  const kgMemory = await import('@legion/kg-storage-memory');
-  InMemoryTripleStore = kgMemory.InMemoryTripleStore;
-} catch (error) {
-  // FAIL FAST - No fallback implementations
-  throw new Error(
-    `CRITICAL: Required @legion/kg-storage-memory package is not installed. ` +
-    `KnowledgeGraphInterface cannot function without this dependency. ` +
-    `Install @legion/kg-storage-memory package. ` +
-    `Error: ${error.message}`
-  );
-}
+import { TripleStoreDataSource } from '@legion/triplestore';
+import { InMemoryTripleStore } from '@legion/triplestore';
 
 /**
  * Manages knowledge graph operations for the agent
@@ -30,6 +17,7 @@ export class KnowledgeGraphInterface {
     this.namespace = config.namespace || 'agent';
     this.storageMode = config.storageMode || 'session';
     this.tripleStore = config.tripleStore || null;
+    this.dataSource = null;
     this.initialized = false;
   }
 
@@ -55,6 +43,9 @@ export class KnowledgeGraphInterface {
     if (!this.tripleStore) {
       this.tripleStore = new InMemoryTripleStore();
     }
+
+    // Wrap with DataSource interface
+    this.dataSource = new TripleStoreDataSource(this.tripleStore);
 
     this.initialized = true;
   }

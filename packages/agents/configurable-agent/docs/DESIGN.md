@@ -611,14 +611,11 @@ class KnowledgeGraphInterface {
   async initialize() {
     if (!this.enabled) return;
     
-    // Initialize KG based on storage type
-    const { KnowledgeGraphSystem } = await import('@legion/kg');
+    // Initialize Handle-based triple store architecture
+    const { TripleStoreDataSource, InMemoryTripleStore } = await import('@legion/triplestore');
     
-    this.kg = new KnowledgeGraphSystem({
-      storage: this.config.storage,
-      persistence: this.config.persistence,
-      schemas: this.config.schemas
-    });
+    this.tripleStore = new InMemoryTripleStore();
+    this.dataSource = new TripleStoreDataSource(this.tripleStore);
     
     await this.kg.initialize();
     
@@ -833,7 +830,8 @@ packages/agents/configurable-agent/
   "dependencies": {
     "@legion/actors": "workspace:*",
     "@legion/prompting": "workspace:*",
-    "@legion/kg": "workspace:*",
+    "@legion/triplestore": "workspace:*",
+    "@legion/handle": "workspace:*",
     "@legion/bt-task": "workspace:*",
     "@legion/resource-manager": "workspace:*",
     "@legion/llm": "workspace:*"

@@ -3,8 +3,9 @@
  * Main orchestrator for loading WordNet data into Knowledge Graph
  */
 
-import { KGEngine } from '@legion/kg';
-import { MongoTripleStore } from '@legion/kg';
+import { TripleStoreDataSource } from '@legion/triplestore';
+import { MongoDBTripleStore } from '../storage/MongoDBTripleStore.js';
+import { ResourceManager } from '@legion/resource-manager';
 import { SynsetProcessor } from '../processors/SynsetProcessor.js';
 import { RelationshipProcessor } from '../processors/RelationshipProcessor.js';
 import { HierarchyBuilder } from '../hierarchy/HierarchyBuilder.js';
@@ -14,8 +15,8 @@ import { DEFAULT_CONFIG } from '../config/default.js';
 export class WordNetFoundationalLoader {
   constructor(config = DEFAULT_CONFIG) {
     this.config = { ...DEFAULT_CONFIG, ...config };
-    this.store = null;
-    this.kg = null;
+    this.tripleStore = null;
+    this.dataSource = null;
     this.synsetProcessor = null;
     this.relationshipProcessor = null;
     this.hierarchyBuilder = null;
@@ -33,20 +34,24 @@ export class WordNetFoundationalLoader {
   async initialize() {
     console.log('Initializing WordNet Foundational Loader...');
 
-    // Create MongoDB storage
-    this.store = new MongoTripleStore(
-      this.config.mongodb.connectionString,
-      this.config.mongodb.dbName,
-      this.config.mongodb.collectionName
-    );
+    // Get ResourceManager instance
+    const resourceManager = await ResourceManager.getInstance();
 
-    // Create KG engine
-    this.kg = new KGEngine(this.store);
+    // Create MongoDB triple store
+    this.tripleStore = new MongoDBTripleStore({
+      uri: this.config.mongodb.connectionString,
+      database: this.config.mongodb.dbName,
+      collection: this.config.mongodb.collectionName
+    });
+    await this.tripleStore.connect();
 
-    // Initialize processors
-    this.synsetProcessor = new SynsetProcessor(this.kg, this.config);
-    this.relationshipProcessor = new RelationshipProcessor(this.kg, this.config);
-    this.hierarchyBuilder = new HierarchyBuilder(this.kg);
+    // Create data source wrapper
+    this.dataSource = new TripleStoreDataSource(this.tripleStore);
+
+    // Initialize processors with data source
+    this.synsetProcessor = new SynsetProcessor(this.dataSource, this.config);
+    this.relationshipProcessor = new RelationshipProcessor(this.dataSource, this.config);
+    this.hierarchyBuilder = new HierarchyBuilder(this.dataSource);
 
     console.log('WordNet Foundational Loader initialized');
   }
@@ -74,7 +79,7 @@ export class WordNetFoundationalLoader {
       // Phase 4: Create database indices
       if (this.config.loading.createIndices) {
         console.log('Phase 4: Creating database indices...');
-        await this.store.createIndices();
+        await this.tripleStore.createIndices();
       }
 
       // Phase 5: Final validation
@@ -82,7 +87,7 @@ export class WordNetFoundationalLoader {
       const validation = await this.validateOntology();
 
       this.stats.endTime = Date.now();
-      this.stats.totalTriples = await this.kg.size();
+      this.stats.totalTriples = await this.tripleStore.size();
       const duration = (this.stats.endTime - this.stats.startTime) / 1000;
 
       const summary = {
@@ -107,8 +112,8 @@ export class WordNetFoundationalLoader {
       console.error('Foundational ontology loading failed:', error);
       throw error;
     } finally {
-      if (this.store) {
-        await this.store.disconnect();
+      if (this.tripleStore) {
+        await this.tripleStore.disconnect();
       }
     }
   }
@@ -172,7 +177,7 @@ export class WordNetFoundationalLoader {
     validation.foundationalCategories = {};
     
     for (const category of categories) {
-      const descendants = await this.kg.queryAsync(null, null, category);
+      const descendants = await this.tripleStore.findTriples(null, null, category);
       validation.foundationalCategories[category] = descendants.length;
     }
 
@@ -180,17 +185,17 @@ export class WordNetFoundationalLoader {
   }
 
   async countByType(type) {
-    const results = await this.kg.queryAsync(null, 'rdf:type', type);
+    const results = await this.tripleStore.findTriples(null, 'rdf:type', type);
     return results.length;
   }
 
   // Getter methods for accessing components
-  getKGEngine() {
-    return this.kg;
+  getDataSource() {
+    return this.dataSource;
   }
 
-  getStore() {
-    return this.store;
+  getTripleStore() {
+    return this.tripleStore;
   }
 
   getStats() {

@@ -44,7 +44,7 @@ Common commands
     - Generate MCP config: npm run mcp:config
 
 Workspace selection
-- Replace @legion/<package> with a workspace name, e.g. @legion/tools-registry, @legion/kg, @legion/node-runner, etc.
+- Replace @legion/<package> with a workspace name, e.g. @legion/tools-registry, @legion/triplestore, @legion/node-runner, etc.
 - To list all declared workspaces, inspect the workspaces field in package.json and the package.json names under packages/.
 
 High-level architecture (big picture)

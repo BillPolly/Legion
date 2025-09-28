@@ -1,14 +1,14 @@
 /**
- * KGStatePersistence - Uses @legion/kg for agent state persistence
+ * KGStatePersistence - Uses Handle architecture for agent state persistence
  * 
- * Integrates with the Legion Knowledge Graph system for state persistence.
+ * Integrates with the new Handle pattern using TripleStoreDataSource.
  * Supports multiple storage backends: memory, file, and MongoDB.
  */
 
-// Import required KG packages using workspace names
-import { KnowledgeGraphSystem, createTripleStore } from '@legion/kg';
-import { InMemoryTripleStore } from '@legion/kg-storage-memory';
-import { FileSystemTripleStore } from '@legion/kg-storage-file';
+// Import Handle architecture components
+import { TripleStoreDataSource } from '@legion/triplestore';
+import { InMemoryTripleStore } from '@legion/triplestore';
+import { FileSystemTripleStore } from '@legion/triplestore';
 
 // MongoDB triple store is not available yet, so we'll handle it gracefully
 let MongoTripleStore = null;
@@ -25,8 +25,8 @@ export class KGStatePersistence {
     this.storageType = options.storageType || 'memory';
     this.storageConfig = options.storageConfig || {};
     
-    // KG system and store
-    this.kgSystem = null;
+    // TripleStore DataSource and store
+    this.dataSource = null;
     this.tripleStore = null;
     this.initialized = false;
     
@@ -46,14 +46,8 @@ export class KGStatePersistence {
       // Create the appropriate triple store based on storage type
       this.tripleStore = await this._createTripleStore();
       
-      // Initialize KG system with the triple store
-      this.kgSystem = new KnowledgeGraphSystem();
-      this.kgSystem.engine.store = this.tripleStore;
-      
-      // Register agent state namespace (if namespace manager is available)
-      if (this.kgSystem.namespaceManager && typeof this.kgSystem.namespaceManager.registerNamespace === 'function') {
-        this.kgSystem.namespaceManager.registerNamespace('agent', this.namespace);
-      }
+      // Wrap triple store with DataSource interface
+      this.dataSource = new TripleStoreDataSource(this.tripleStore);
       
       this.initialized = true;
     } catch (error) {
@@ -308,8 +302,7 @@ export class KGStatePersistence {
         );
         
       default:
-        // Try to create from config object
-        return createTripleStore(this.storageConfig);
+        throw new Error(`Unsupported storage type: ${this.storageType}`);
     }
   }
 
@@ -357,7 +350,7 @@ export class KGStatePersistence {
         if (this.tripleStore.removeTriple) {
           await this.tripleStore.removeTriple(subject, predicate, object);
         } else {
-          this.kgSystem.engine.removeTriple(subject, predicate, object);
+          throw new Error('Triple store does not support removeTriple method');
         }
       }
     }

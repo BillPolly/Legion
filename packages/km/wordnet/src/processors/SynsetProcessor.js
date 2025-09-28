@@ -1,14 +1,15 @@
 /**
  * Synset Processor
  * Converts WordNet synsets into Knowledge Graph concepts and word nodes
+ * Now uses Handle-based architecture with TripleStoreDataSource
  */
 
-import { idManager } from '@legion/kg';
+import { idGenerator } from '../utils/idGenerator.js';
 import { WordNetAccess } from '../wordnet/WordNetAccess.js';
 
 export class SynsetProcessor {
-  constructor(kgEngine, config) {
-    this.kg = kgEngine;
+  constructor(dataSource, config) {
+    this.dataSource = dataSource;
     this.config = config;
     this.wordnet = new WordNetAccess();
     this.wordNodeCache = new Map(); // Track existing word nodes for polysemy
@@ -35,25 +36,25 @@ export class SynsetProcessor {
     const triples = [];
 
     // 1. CREATE CONCEPT NODE (represents the abstract meaning)
-    triples.push([conceptId, 'rdf:type', 'kg:Concept']);
-    triples.push([conceptId, 'kg:conceptType', 'wordnet:Synset']);
-    triples.push([conceptId, 'kg:wordnetOffset', synsetData.synsetOffset]);
-    triples.push([conceptId, 'kg:partOfSpeech', synsetData.pos]);
+    triples.push({ subject: conceptId, predicate: 'rdf:type', object: 'kg:Concept' });
+    triples.push({ subject: conceptId, predicate: 'kg:conceptType', object: 'wordnet:Synset' });
+    triples.push({ subject: conceptId, predicate: 'kg:wordnetOffset', object: synsetData.synsetOffset });
+    triples.push({ subject: conceptId, predicate: 'kg:partOfSpeech', object: synsetData.pos });
     
     if (synsetData.gloss) {
-      triples.push([conceptId, 'kg:definition', synsetData.gloss]);
+      triples.push({ subject: conceptId, predicate: 'kg:definition', object: synsetData.gloss });
     }
 
     // Foundational ontology classification
     const ontologyRole = this.classifyOntologyRole(synsetData.pos);
-    triples.push([conceptId, 'kg:foundationalRole', ontologyRole]);
+    triples.push({ subject: conceptId, predicate: 'kg:foundationalRole', object: ontologyRole });
 
     // Lexical metadata
     if (synsetData.lexName) {
-      triples.push([conceptId, 'kg:lexicalFile', synsetData.lexName]);
+      triples.push({ subject: conceptId, predicate: 'kg:lexicalFile', object: synsetData.lexName });
     }
 
-    triples.push([conceptId, 'kg:created', new Date().toISOString()]);
+    triples.push({ subject: conceptId, predicate: 'kg:created', object: new Date().toISOString() });
 
     // 2. CREATE/LINK WORD NODES (represents textual forms)
     const wordResults = [];
@@ -69,8 +70,14 @@ export class SynsetProcessor {
       }
     }
 
-    // Store all triples
-    const addedCount = await this.kg.addTriples(triples);
+    // Store all triples using the triple store
+    const tripleStore = this.dataSource.tripleStore;
+    let addedCount = 0;
+    
+    for (const triple of triples) {
+      await tripleStore.addTriple(triple);
+      addedCount++;
+    }
     
     // Update statistics
     this.stats.conceptsCreated++;
@@ -92,20 +99,21 @@ export class SynsetProcessor {
     let isNewWord = false;
 
     // Check if word node already exists (for polysemy support)
-    const existingWord = await this.kg.queryAsync(wordId, 'rdf:type', 'kg:Word');
+    const tripleStore = this.dataSource.tripleStore;
+    const existingWord = await tripleStore.findTriples(wordId, 'rdf:type', 'kg:Word');
 
     if (existingWord.length === 0) {
       // CREATE NEW WORD NODE
       isNewWord = true;
-      triples.push([wordId, 'rdf:type', 'kg:Word']);
-      triples.push([wordId, 'kg:wordText', word]);
-      triples.push([wordId, 'kg:language', 'en']);
-      triples.push([wordId, 'kg:wordSource', 'wordnet']);
-      triples.push([wordId, 'kg:created', new Date().toISOString()]);
+      triples.push({ subject: wordId, predicate: 'rdf:type', object: 'kg:Word' });
+      triples.push({ subject: wordId, predicate: 'kg:wordText', object: word });
+      triples.push({ subject: wordId, predicate: 'kg:language', object: 'en' });
+      triples.push({ subject: wordId, predicate: 'kg:wordSource', object: 'wordnet' });
+      triples.push({ subject: wordId, predicate: 'kg:created', object: new Date().toISOString() });
 
       // Normalized form for matching
       const normalized = word.toLowerCase().replace(/[^a-z0-9]/g, '');
-      triples.push([wordId, 'kg:normalizedForm', normalized]);
+      triples.push({ subject: wordId, predicate: 'kg:normalizedForm', object: normalized });
 
       // Cache the word node
       this.wordNodeCache.set(wordId, { word, conceptIds: new Set([conceptId]) });
@@ -120,21 +128,21 @@ export class SynsetProcessor {
 
     // CREATE BIDIRECTIONAL CONCEPT-WORD RELATIONSHIPS
     const hasLabelRelId = this.generateRelationshipId(conceptId, wordId, 'hasLabel');
-    triples.push([conceptId, hasLabelRelId, wordId]);
-    triples.push([hasLabelRelId, 'rdf:type', 'kg:HasLabel']);
-    triples.push([hasLabelRelId, 'kg:relationSource', 'wordnet']);
-    triples.push([hasLabelRelId, 'kg:created', new Date().toISOString()]);
+    triples.push({ subject: conceptId, predicate: hasLabelRelId, object: wordId });
+    triples.push({ subject: hasLabelRelId, predicate: 'rdf:type', object: 'kg:HasLabel' });
+    triples.push({ subject: hasLabelRelId, predicate: 'kg:relationSource', object: 'wordnet' });
+    triples.push({ subject: hasLabelRelId, predicate: 'kg:created', object: new Date().toISOString() });
 
     const expressesRelId = this.generateRelationshipId(wordId, conceptId, 'expresses');
-    triples.push([wordId, expressesRelId, conceptId]);
-    triples.push([expressesRelId, 'rdf:type', 'kg:Expresses']);
-    triples.push([expressesRelId, 'kg:relationSource', 'wordnet']);
-    triples.push([expressesRelId, 'kg:created', new Date().toISOString()]);
+    triples.push({ subject: wordId, predicate: expressesRelId, object: conceptId });
+    triples.push({ subject: expressesRelId, predicate: 'rdf:type', object: 'kg:Expresses' });
+    triples.push({ subject: expressesRelId, predicate: 'kg:relationSource', object: 'wordnet' });
+    triples.push({ subject: expressesRelId, predicate: 'kg:created', object: new Date().toISOString() });
 
     // Track sense number for polysemy
     const cachedWord = this.wordNodeCache.get(wordId);
     const senseNumber = cachedWord ? cachedWord.conceptIds.size : 1;
-    triples.push([expressesRelId, 'kg:senseNumber', senseNumber]);
+    triples.push({ subject: expressesRelId, predicate: 'kg:senseNumber', object: senseNumber });
 
     return {
       wordId: wordId,
@@ -156,16 +164,16 @@ export class SynsetProcessor {
   }
 
   generateConceptId(synsetData) {
-    return idManager.generateId(`wn_concept_${synsetData.synsetOffset}_${synsetData.pos}`);
+    return idGenerator.generateId(`wn_concept_${synsetData.synsetOffset}_${synsetData.pos}`);
   }
 
   generateWordId(word) {
     const normalized = word.toLowerCase().replace(/[^a-z0-9]/g, '_');
-    return idManager.generateId(`wn_word_${normalized}_en`);
+    return idGenerator.generateId(`wn_word_${normalized}_en`);
   }
 
   generateRelationshipId(sourceId, targetId, relationType) {
-    return idManager.generateRelationshipId(sourceId, targetId, relationType);
+    return idGenerator.generateRelationshipId(sourceId, targetId, relationType);
   }
 
   getStats() {

@@ -1,14 +1,15 @@
 /**
  * Relationship Processor
  * Processes WordNet semantic relationships (hypernyms, meronyms, etc.)
+ * Now uses Handle-based architecture with TripleStoreDataSource
  */
 
-import { idManager } from '@legion/kg';
+import { idGenerator } from '../utils/idGenerator.js';
 import { WordNetAccess } from '../wordnet/WordNetAccess.js';
 
 export class RelationshipProcessor {
-  constructor(kgEngine, config) {
-    this.kg = kgEngine;
+  constructor(dataSource, config) {
+    this.dataSource = dataSource;
     this.config = config;
     this.wordnet = new WordNetAccess();
     this.stats = {
@@ -24,8 +25,9 @@ export class RelationshipProcessor {
     console.log('Processing WordNet semantic relationships...');
 
     // Get all concept nodes
-    const conceptQuery = await this.kg.queryAsync(null, 'rdf:type', 'kg:Concept');
-    const concepts = conceptQuery.map(([conceptId]) => conceptId);
+    const tripleStore = this.dataSource.tripleStore;
+    const conceptQuery = await tripleStore.findTriples(null, 'rdf:type', 'kg:Concept');
+    const concepts = conceptQuery.map((triple) => triple.subject);
 
     console.log(`Found ${concepts.length} concepts to process for relationships`);
 
@@ -123,9 +125,12 @@ export class RelationshipProcessor {
         }
       }
 
-      // Store relationship triples
+      // Store relationship triples using triple store
       if (triples.length > 0) {
-        await this.kg.addTriples(triples);
+        const tripleStore = this.dataSource.tripleStore;
+        for (const triple of triples) {
+          await tripleStore.addTriple(triple);
+        }
       }
 
     } catch (error) {
@@ -134,65 +139,67 @@ export class RelationshipProcessor {
   }
 
   createIsARelationship(subjectId, objectId) {
-    const relId = idManager.generateRelationshipId(subjectId, objectId, 'isa');
+    const relId = idGenerator.generateRelationshipId(subjectId, objectId, 'isa');
 
     return [
-      [subjectId, relId, objectId],
-      [relId, 'rdf:type', 'kg:IsA'],
-      [relId, 'kg:relationSource', 'wordnet'],
-      [relId, 'kg:hierarchyLevel', 'foundational'],
-      [relId, 'kg:created', new Date().toISOString()]
+      { subject: subjectId, predicate: relId, object: objectId },
+      { subject: relId, predicate: 'rdf:type', object: 'kg:IsA' },
+      { subject: relId, predicate: 'kg:relationSource', object: 'wordnet' },
+      { subject: relId, predicate: 'kg:hierarchyLevel', object: 'foundational' },
+      { subject: relId, predicate: 'kg:created', object: new Date().toISOString() }
     ];
   }
 
   createPartOfRelationship(partId, wholeId) {
-    const relId = idManager.generateRelationshipId(partId, wholeId, 'partof');
+    const relId = idGenerator.generateRelationshipId(partId, wholeId, 'partof');
 
     return [
-      [partId, relId, wholeId],
-      [relId, 'rdf:type', 'kg:PartOf'],
-      [relId, 'kg:relationSource', 'wordnet'],
-      [relId, 'kg:hierarchyLevel', 'foundational'],
-      [relId, 'kg:created', new Date().toISOString()]
+      { subject: partId, predicate: relId, object: wholeId },
+      { subject: relId, predicate: 'rdf:type', object: 'kg:PartOf' },
+      { subject: relId, predicate: 'kg:relationSource', object: 'wordnet' },
+      { subject: relId, predicate: 'kg:hierarchyLevel', object: 'foundational' },
+      { subject: relId, predicate: 'kg:created', object: new Date().toISOString() }
     ];
   }
 
   createHasPartRelationship(wholeId, partId) {
-    const relId = idManager.generateRelationshipId(wholeId, partId, 'haspart');
+    const relId = idGenerator.generateRelationshipId(wholeId, partId, 'haspart');
 
     return [
-      [wholeId, relId, partId],
-      [relId, 'rdf:type', 'kg:HasPart'],
-      [relId, 'kg:relationSource', 'wordnet'],
-      [relId, 'kg:hierarchyLevel', 'foundational'],
-      [relId, 'kg:created', new Date().toISOString()]
+      { subject: wholeId, predicate: relId, object: partId },
+      { subject: relId, predicate: 'rdf:type', object: 'kg:HasPart' },
+      { subject: relId, predicate: 'kg:relationSource', object: 'wordnet' },
+      { subject: relId, predicate: 'kg:hierarchyLevel', object: 'foundational' },
+      { subject: relId, predicate: 'kg:created', object: new Date().toISOString() }
     ];
   }
 
   createSimilarityRelationship(conceptId1, conceptId2) {
-    const relId = idManager.generateRelationshipId(conceptId1, conceptId2, 'similar');
+    const relId = idGenerator.generateRelationshipId(conceptId1, conceptId2, 'similar');
 
     return [
-      [conceptId1, relId, conceptId2],
-      [relId, 'rdf:type', 'kg:SimilarTo'],
-      [relId, 'kg:relationSource', 'wordnet'],
-      [relId, 'kg:hierarchyLevel', 'foundational'],
-      [relId, 'kg:created', new Date().toISOString()]
+      { subject: conceptId1, predicate: relId, object: conceptId2 },
+      { subject: relId, predicate: 'rdf:type', object: 'kg:SimilarTo' },
+      { subject: relId, predicate: 'kg:relationSource', object: 'wordnet' },
+      { subject: relId, predicate: 'kg:hierarchyLevel', object: 'foundational' },
+      { subject: relId, predicate: 'kg:created', object: new Date().toISOString() }
     ];
   }
 
   generateConceptId(synsetData) {
-    return idManager.generateId(`wn_concept_${synsetData.synsetOffset}_${synsetData.pos}`);
+    return idGenerator.generateId(`wn_concept_${synsetData.synsetOffset}_${synsetData.pos}`);
   }
 
   async getOffsetFromConceptId(conceptId) {
-    const offsetTriples = await this.kg.queryAsync(conceptId, 'kg:wordnetOffset', null);
-    return offsetTriples.length > 0 ? offsetTriples[0][2] : null;
+    const tripleStore = this.dataSource.tripleStore;
+    const offsetTriples = await tripleStore.findTriples(conceptId, 'kg:wordnetOffset', null);
+    return offsetTriples.length > 0 ? offsetTriples[0].object : null;
   }
 
   async getPosFromConceptId(conceptId) {
-    const posTriples = await this.kg.queryAsync(conceptId, 'kg:partOfSpeech', null);
-    return posTriples.length > 0 ? posTriples[0][2] : null;
+    const tripleStore = this.dataSource.tripleStore;
+    const posTriples = await tripleStore.findTriples(conceptId, 'kg:partOfSpeech', null);
+    return posTriples.length > 0 ? posTriples[0].object : null;
   }
 
   getStats() {

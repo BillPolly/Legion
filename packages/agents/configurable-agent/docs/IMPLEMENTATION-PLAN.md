@@ -54,7 +54,7 @@ This implementation plan follows Test-Driven Development (TDD) methodology witho
 
 ☑ **2.5** Write integration tests for state persistence scenarios
 
-☑ **2.6** Implement state persistence mechanisms using @legion/kg
+☑ **2.6** Implement state persistence mechanisms using Handle pattern
 
 ## Phase 3: Capability Management
 
@@ -92,7 +92,7 @@ This implementation plan follows Test-Driven Development (TDD) methodology witho
 
 ☑ **5.3** Write tests for relationship management
 
-☑ **5.4** Implement KnowledgeGraphInterface connecting to @legion/kg
+☑ **5.4** Implement KnowledgeGraphInterface using Handle-based triple store
 
 ☑ **5.5** Write integration tests with real MongoDB knowledge graph
 

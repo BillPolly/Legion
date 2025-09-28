@@ -57,6 +57,7 @@ export { SynsetProcessor } from './processors/SynsetProcessor.js';
 export { RelationshipProcessor } from './processors/RelationshipProcessor.js';
 export { HierarchyBuilder } from './hierarchy/HierarchyBuilder.js';
 export { WordNetAccess } from './wordnet/WordNetAccess.js';
+export { idGenerator } from './utils/idGenerator.js';
 
 // Run main function if this file is executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {

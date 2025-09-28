@@ -1,30 +1,32 @@
 /**
  * Ontology Validation Script
  * Validates the loaded WordNet foundational ontology
+ * Now uses Handle-based architecture with TripleStoreDataSource
  */
 
-import { KGEngine } from '@legion/kg';
-import { MongoTripleStore } from '@legion/kg';
+import { TripleStoreDataSource } from '@legion/triplestore';
+import { MongoDBTripleStore } from '../storage/MongoDBTripleStore.js';
 import { DEFAULT_CONFIG } from '../config/default.js';
 
 async function validateOntology(config = DEFAULT_CONFIG) {
   console.log('Starting ontology validation...');
 
-  const store = new MongoTripleStore(
-    config.mongodb.connectionString,
-    config.mongodb.dbName,
-    config.mongodb.collectionName
-  );
+  const tripleStore = new MongoDBTripleStore({
+    uri: config.mongodb.connectionString,
+    database: config.mongodb.dbName,
+    collection: config.mongodb.collectionName
+  });
 
-  const kg = new KGEngine(store);
+  await tripleStore.connect();
+  const dataSource = new TripleStoreDataSource(tripleStore);
 
   try {
     // Count entities by type
-    const concepts = await kg.queryAsync(null, 'rdf:type', 'kg:Concept');
-    const words = await kg.queryAsync(null, 'rdf:type', 'kg:Word');
-    const hasLabelRels = await kg.queryAsync(null, 'rdf:type', 'kg:HasLabel');
-    const expressesRels = await kg.queryAsync(null, 'rdf:type', 'kg:Expresses');
-    const isARels = await kg.queryAsync(null, 'rdf:type', 'kg:IsA');
+    const concepts = await tripleStore.findTriples(null, 'rdf:type', 'kg:Concept');
+    const words = await tripleStore.findTriples(null, 'rdf:type', 'kg:Word');
+    const hasLabelRels = await tripleStore.findTriples(null, 'rdf:type', 'kg:HasLabel');
+    const expressesRels = await tripleStore.findTriples(null, 'rdf:type', 'kg:Expresses');
+    const isARels = await tripleStore.findTriples(null, 'rdf:type', 'kg:IsA');
 
     console.log('Ontology Statistics:');
     console.log(`- Concepts: ${concepts.length}`);
@@ -37,28 +39,28 @@ async function validateOntology(config = DEFAULT_CONFIG) {
     const categories = ['kg:Entity', 'kg:Process', 'kg:Property', 'kg:Relation'];
     console.log('\nFoundational Categories:');
     for (const category of categories) {
-      const linkedConcepts = await kg.queryAsync(null, null, category);
+      const linkedConcepts = await tripleStore.findTriples(null, null, category);
       console.log(`- ${category}: ${linkedConcepts.length} linked concepts`);
     }
 
     // Check for polysemy examples
-    const bankWords = await kg.queryAsync(null, 'kg:wordText', 'bank');
+    const bankWords = await tripleStore.findTriples(null, 'kg:wordText', 'bank');
     if (bankWords.length > 0) {
-      const bankWordId = bankWords[0][0];
-      const bankConcepts = await kg.queryAsync(bankWordId, null, null);
-      const conceptCount = bankConcepts.filter(([,p,]) => p.includes('expresses')).length;
+      const bankWordId = bankWords[0].subject;
+      const bankConcepts = await tripleStore.findTriples(bankWordId, null, null);
+      const conceptCount = bankConcepts.filter(triple => triple.predicate.includes('expresses')).length;
       console.log(`\nPolysemy example: "Bank" has ${conceptCount} different meanings`);
     }
 
     // Sample concept details
-    const dogWords = await kg.queryAsync(null, 'kg:wordText', 'dog');
+    const dogWords = await tripleStore.findTriples(null, 'kg:wordText', 'dog');
     if (dogWords.length > 0) {
       console.log('\nSample concept analysis for "dog":');
-      const dogWordId = dogWords[0][0];
-      const dogRelations = await kg.queryAsync(dogWordId, null, null);
+      const dogWordId = dogWords[0].subject;
+      const dogRelations = await tripleStore.findTriples(dogWordId, null, null);
       console.log(`- Word node has ${dogRelations.length} relationships`);
       
-      const expressesConcepts = dogRelations.filter(([,p,]) => p.includes('expresses'));
+      const expressesConcepts = dogRelations.filter(triple => triple.predicate.includes('expresses'));
       console.log(`- Expresses ${expressesConcepts.length} concepts`);
     }
 
@@ -74,7 +76,7 @@ async function validateOntology(config = DEFAULT_CONFIG) {
     console.error('Validation failed:', error);
     return { isValid: false, error: error.message };
   } finally {
-    await store.disconnect();
+    await tripleStore.disconnect();
   }
 }
 

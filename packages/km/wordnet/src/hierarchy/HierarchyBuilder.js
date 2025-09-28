@@ -1,13 +1,14 @@
 /**
  * Hierarchy Builder
  * Builds foundational ontology hierarchy and validates structure
+ * Now uses Handle-based architecture with TripleStoreDataSource
  */
 
-import { idManager } from '@legion/kg';
+import { idGenerator } from '../utils/idGenerator.js';
 
 export class HierarchyBuilder {
-  constructor(kgEngine) {
-    this.kg = kgEngine;
+  constructor(dataSource) {
+    this.dataSource = dataSource;
   }
 
   async buildFoundationalHierarchy() {
@@ -29,50 +30,55 @@ export class HierarchyBuilder {
   async createRootConcepts() {
     const rootTriples = [
       // Top-level foundational concept
-      ['kg:FoundationalConcept', 'rdf:type', 'kg:Concept'],
-      ['kg:FoundationalConcept', 'kg:conceptType', 'kg:RootConcept'],
-      ['kg:FoundationalConcept', 'kg:definition', 'Root of all foundational concepts'],
-      ['kg:FoundationalConcept', 'kg:hierarchyLevel', 'root'],
+      { subject: 'kg:FoundationalConcept', predicate: 'rdf:type', object: 'kg:Concept' },
+      { subject: 'kg:FoundationalConcept', predicate: 'kg:conceptType', object: 'kg:RootConcept' },
+      { subject: 'kg:FoundationalConcept', predicate: 'kg:definition', object: 'Root of all foundational concepts' },
+      { subject: 'kg:FoundationalConcept', predicate: 'kg:hierarchyLevel', object: 'root' },
 
       // Primary ontological categories
-      ['kg:Entity', 'rdf:type', 'kg:Concept'],
-      ['kg:Entity', 'kg:conceptType', 'kg:FoundationalCategory'],
-      ['kg:Entity', 'kg:definition', 'Root concept for all entities and objects'],
-      ['kg:Entity', 'kg:foundationalRole', 'entity'],
+      { subject: 'kg:Entity', predicate: 'rdf:type', object: 'kg:Concept' },
+      { subject: 'kg:Entity', predicate: 'kg:conceptType', object: 'kg:FoundationalCategory' },
+      { subject: 'kg:Entity', predicate: 'kg:definition', object: 'Root concept for all entities and objects' },
+      { subject: 'kg:Entity', predicate: 'kg:foundationalRole', object: 'entity' },
 
-      ['kg:Process', 'rdf:type', 'kg:Concept'],
-      ['kg:Process', 'kg:conceptType', 'kg:FoundationalCategory'],
-      ['kg:Process', 'kg:definition', 'Root concept for all processes and transformations'],
-      ['kg:Process', 'kg:foundationalRole', 'process'],
+      { subject: 'kg:Process', predicate: 'rdf:type', object: 'kg:Concept' },
+      { subject: 'kg:Process', predicate: 'kg:conceptType', object: 'kg:FoundationalCategory' },
+      { subject: 'kg:Process', predicate: 'kg:definition', object: 'Root concept for all processes and transformations' },
+      { subject: 'kg:Process', predicate: 'kg:foundationalRole', object: 'process' },
 
-      ['kg:Property', 'rdf:type', 'kg:Concept'],
-      ['kg:Property', 'kg:conceptType', 'kg:FoundationalCategory'],
-      ['kg:Property', 'kg:definition', 'Root concept for all properties and attributes'],
-      ['kg:Property', 'kg:foundationalRole', 'property'],
+      { subject: 'kg:Property', predicate: 'rdf:type', object: 'kg:Concept' },
+      { subject: 'kg:Property', predicate: 'kg:conceptType', object: 'kg:FoundationalCategory' },
+      { subject: 'kg:Property', predicate: 'kg:definition', object: 'Root concept for all properties and attributes' },
+      { subject: 'kg:Property', predicate: 'kg:foundationalRole', object: 'property' },
 
-      ['kg:Relation', 'rdf:type', 'kg:Concept'],
-      ['kg:Relation', 'kg:conceptType', 'kg:FoundationalCategory'],
-      ['kg:Relation', 'kg:definition', 'Root concept for all relations'],
-      ['kg:Relation', 'kg:foundationalRole', 'relation']
+      { subject: 'kg:Relation', predicate: 'rdf:type', object: 'kg:Concept' },
+      { subject: 'kg:Relation', predicate: 'kg:conceptType', object: 'kg:FoundationalCategory' },
+      { subject: 'kg:Relation', predicate: 'kg:definition', object: 'Root concept for all relations' },
+      { subject: 'kg:Relation', predicate: 'kg:foundationalRole', object: 'relation' }
     ];
 
     // Create hierarchy relationships
     const hierarchyTriples = [
-      ['kg:Entity', idManager.generateRelationshipId('kg:Entity', 'kg:FoundationalConcept', 'isa'), 'kg:FoundationalConcept'],
-      ['kg:Process', idManager.generateRelationshipId('kg:Process', 'kg:FoundationalConcept', 'isa'), 'kg:FoundationalConcept'],
-      ['kg:Property', idManager.generateRelationshipId('kg:Property', 'kg:FoundationalConcept', 'isa'), 'kg:FoundationalConcept'],
-      ['kg:Relation', idManager.generateRelationshipId('kg:Relation', 'kg:FoundationalConcept', 'isa'), 'kg:FoundationalConcept']
+      { subject: 'kg:Entity', predicate: idGenerator.generateRelationshipId('kg:Entity', 'kg:FoundationalConcept', 'isa'), object: 'kg:FoundationalConcept' },
+      { subject: 'kg:Process', predicate: idGenerator.generateRelationshipId('kg:Process', 'kg:FoundationalConcept', 'isa'), object: 'kg:FoundationalConcept' },
+      { subject: 'kg:Property', predicate: idGenerator.generateRelationshipId('kg:Property', 'kg:FoundationalConcept', 'isa'), object: 'kg:FoundationalConcept' },
+      { subject: 'kg:Relation', predicate: idGenerator.generateRelationshipId('kg:Relation', 'kg:FoundationalConcept', 'isa'), object: 'kg:FoundationalConcept' }
     ];
 
     // Add relationship metadata
-    for (const [subj, rel, obj] of hierarchyTriples) {
-      rootTriples.push([subj, rel, obj]);
-      rootTriples.push([rel, 'rdf:type', 'kg:IsA']);
-      rootTriples.push([rel, 'kg:relationSource', 'foundational_hierarchy']);
-      rootTriples.push([rel, 'kg:hierarchyLevel', 'root']);
+    for (const hier of hierarchyTriples) {
+      rootTriples.push(hier);
+      rootTriples.push({ subject: hier.predicate, predicate: 'rdf:type', object: 'kg:IsA' });
+      rootTriples.push({ subject: hier.predicate, predicate: 'kg:relationSource', object: 'foundational_hierarchy' });
+      rootTriples.push({ subject: hier.predicate, predicate: 'kg:hierarchyLevel', object: 'root' });
     }
 
-    await this.kg.addTriples(rootTriples);
+    // Store all root triples using the triple store
+    const tripleStore = this.dataSource.tripleStore;
+    for (const triple of rootTriples) {
+      await tripleStore.addTriple(triple);
+    }
+    
     console.log('Created foundational root concepts');
   }
 
@@ -85,25 +91,29 @@ export class HierarchyBuilder {
       'r': 'kg:Property'
     };
 
+    const tripleStore = this.dataSource.tripleStore;
+
     for (const [pos, categoryId] of Object.entries(posToCategory)) {
       console.log(`Linking ${pos} concepts to ${categoryId}...`);
 
-      const conceptsQuery = await this.kg.queryAsync(null, 'kg:partOfSpeech', pos);
-      const concepts = conceptsQuery.map(([conceptId]) => conceptId);
+      const conceptsQuery = await tripleStore.findTriples(null, 'kg:partOfSpeech', pos);
+      const concepts = conceptsQuery.map((triple) => triple.subject);
 
       const linkTriples = [];
       for (const conceptId of concepts) {
-        const relId = idManager.generateRelationshipId(conceptId, categoryId, 'isa');
+        const relId = idGenerator.generateRelationshipId(conceptId, categoryId, 'isa');
         linkTriples.push(
-          [conceptId, relId, categoryId],
-          [relId, 'rdf:type', 'kg:IsA'],
-          [relId, 'kg:relationSource', 'foundational_hierarchy'],
-          [relId, 'kg:hierarchyLevel', 'category']
+          { subject: conceptId, predicate: relId, object: categoryId },
+          { subject: relId, predicate: 'rdf:type', object: 'kg:IsA' },
+          { subject: relId, predicate: 'kg:relationSource', object: 'foundational_hierarchy' },
+          { subject: relId, predicate: 'kg:hierarchyLevel', object: 'category' }
         );
       }
 
       if (linkTriples.length > 0) {
-        await this.kg.addTriples(linkTriples);
+        for (const triple of linkTriples) {
+          await tripleStore.addTriple(triple);
+        }
       }
 
       console.log(`Linked ${concepts.length} ${pos} concepts to ${categoryId}`);
@@ -122,9 +132,11 @@ export class HierarchyBuilder {
   }
 
   async calculateHierarchyStats() {
-    const allConcepts = await this.kg.queryAsync(null, 'rdf:type', 'kg:Concept');
-    const isARelations = await this.kg.queryAsync(null, 'rdf:type', 'kg:IsA');
-    const words = await this.kg.queryAsync(null, 'rdf:type', 'kg:Word');
+    const tripleStore = this.dataSource.tripleStore;
+    
+    const allConcepts = await tripleStore.findTriples(null, 'rdf:type', 'kg:Concept');
+    const isARelations = await tripleStore.findTriples(null, 'rdf:type', 'kg:IsA');
+    const words = await tripleStore.findTriples(null, 'rdf:type', 'kg:Word');
 
     return {
       totalConcepts: allConcepts.length,
@@ -135,14 +147,18 @@ export class HierarchyBuilder {
   }
 
   async detectSimpleCycles() {
+    const tripleStore = this.dataSource.tripleStore;
+    
     // Simple cycle detection for IS-A relationships
-    const isAQuery = await this.kg.queryAsync(null, 'rdf:type', 'kg:IsA');
+    const isAQuery = await tripleStore.findTriples(null, 'rdf:type', 'kg:IsA');
     const relationships = [];
     
-    for (const [relId] of isAQuery) {
-      const subjectQuery = await this.kg.queryAsync(null, relId, null);
+    for (const triple of isAQuery) {
+      const relId = triple.subject;
+      const subjectQuery = await tripleStore.findTriples(null, relId, null);
       if (subjectQuery.length > 0) {
-        const [subject, , object] = subjectQuery[0];
+        const subject = subjectQuery[0].subject;
+        const object = subjectQuery[0].object;
         relationships.push([subject, object]);
       }
     }
