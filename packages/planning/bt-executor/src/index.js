@@ -6,5 +6,5 @@
 
 export { DebugBehaviorTreeExecutor } from './DebugBehaviorTreeExecutor.js';
 
-// Re-export useful types from actor-bt
-export { NodeStatus } from '@legion/actor-bt';
+// Re-export useful types from bt-task (compatibility layer)
+export { NodeStatus } from '@legion/bt-task';

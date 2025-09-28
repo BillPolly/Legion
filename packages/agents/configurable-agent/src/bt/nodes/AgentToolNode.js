@@ -2,7 +2,7 @@
  * AgentToolNode - Behavior tree node for executing tools through ConfigurableAgent's CapabilityManager
  */
 
-import { BehaviorTreeNode, NodeStatus } from '@legion/actor-bt';
+import { BehaviorTreeNode, NodeStatus } from '@legion/bt-task';
 
 export class AgentToolNode extends BehaviorTreeNode {
   static getTypeName() {

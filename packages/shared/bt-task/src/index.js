@@ -20,3 +20,24 @@ export { RetryStrategy } from './strategies/RetryStrategy.js';
 // Integration
 export { BTLoader } from './integration/BTLoader.js';
 export { BTTool } from './integration/BTTool.js';
+
+// Compatibility layer for actor-BT migration
+export { 
+  BehaviorTreeExecutor,
+  BehaviorTreeNode,
+  NodeStatus,
+  MessageBus,
+  ActionNode,
+  SequenceNode,
+  SelectorNode,
+  ConditionNode,
+  RetryNode,
+  registerBuiltInNodes,
+  getNodeClass,
+  getAvailableNodeTypes,
+  validateNodeClass
+} from './compatibility/index.js';
+
+// Additional compatibility aliases
+export { BTLoader as BehaviorTreeLoader } from './integration/BTLoader.js';
+export { BTTool as BehaviorTreeTool } from './integration/BTTool.js';

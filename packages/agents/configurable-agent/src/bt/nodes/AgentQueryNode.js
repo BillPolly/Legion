@@ -2,7 +2,7 @@
  * AgentQueryNode - Behavior tree node for handling query operations through ConfigurableAgent
  */
 
-import { BehaviorTreeNode, NodeStatus } from '@legion/actor-bt';
+import { BehaviorTreeNode, NodeStatus } from '@legion/bt-task';
 
 export class AgentQueryNode extends BehaviorTreeNode {
   static getTypeName() {

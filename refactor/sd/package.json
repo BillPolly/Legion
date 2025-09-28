@@ -32,7 +32,7 @@
     "generate:example": "node src/generators/ExampleGenerator.js"
   },
   "dependencies": {
-    "@legion/actor-bt": "*",
+    "@legion/bt-task": "*",
     "@legion/tools-registry": "*",
     "@legion/resource-manager": "*",
     "@legion/llm": "*",

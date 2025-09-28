@@ -2,7 +2,7 @@
  * AgentChatNode - Behavior tree node for handling chat interactions through ConfigurableAgent
  */
 
-import { BehaviorTreeNode, NodeStatus } from '@legion/actor-bt';
+import { BehaviorTreeNode, NodeStatus } from '@legion/bt-task';
 
 export class AgentChatNode extends BehaviorTreeNode {
   static getTypeName() {

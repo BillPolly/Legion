@@ -4,7 +4,7 @@
  */
 
 import { DebugBehaviorTreeExecutor } from '../src/DebugBehaviorTreeExecutor.js';
-import { NodeStatus } from '@legion/actor-bt';
+import { NodeStatus } from '@legion/bt-task';
 import fs from 'fs/promises';
 import path from 'path';
 

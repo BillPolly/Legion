@@ -834,7 +834,7 @@ packages/agents/configurable-agent/
     "@legion/actors": "workspace:*",
     "@legion/prompting": "workspace:*",
     "@legion/kg": "workspace:*",
-    "@legion/actor-BT": "workspace:*",
+    "@legion/bt-task": "workspace:*",
     "@legion/resource-manager": "workspace:*",
     "@legion/llm": "workspace:*"
   }

@@ -10,7 +10,7 @@
  */
 
 import { EventEmitter } from 'events';
-import { NodeStatus } from '@legion/actor-bt';
+import { NodeStatus } from '@legion/bt-task';
 
 export class DebugBehaviorTreeExecutor extends EventEmitter {
   constructor(toolRegistry) {

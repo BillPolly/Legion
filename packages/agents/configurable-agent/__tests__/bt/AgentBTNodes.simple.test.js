@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeAll } from '@jest/globals';
 import { ConfigurableAgent } from '../../src/core/ConfigurableAgent.js';
 import { AgentChatNode } from '../../src/bt/nodes/AgentChatNode.js';
-import { NodeStatus } from '@legion/actor-bt';
+import { NodeStatus } from '@legion/bt-task';
 import { generateCleanConfig, generateIsolatedConfig } from './config-generator.js';
 
 describe('Agent BT Nodes - Simple Tests', () => {

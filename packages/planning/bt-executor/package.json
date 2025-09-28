@@ -11,7 +11,7 @@
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest"
   },
   "dependencies": {
-    "@legion/actor-bt": "file:../../shared/actor-BT",
+    "@legion/bt-task": "file:../../shared/bt-task",
     "@legion/tools-registry": "file:../../tools-registry",
     "@legion/resource-manager": "file:../../resource-manager"
   },

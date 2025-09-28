@@ -2,7 +2,7 @@
  * AgentStateNode - Behavior tree node for managing ConfigurableAgent state operations
  */
 
-import { BehaviorTreeNode, NodeStatus } from '@legion/actor-bt';
+import { BehaviorTreeNode, NodeStatus } from '@legion/bt-task';
 
 export class AgentStateNode extends BehaviorTreeNode {
   static getTypeName() {

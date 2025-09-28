@@ -5,7 +5,7 @@
 import { describe, it, expect, beforeAll, beforeEach } from '@jest/globals';
 import { ConfigurableAgent } from '../../src/core/ConfigurableAgent.js';
 import { AgentChatNode, AgentToolNode, AgentQueryNode, AgentStateNode } from '../../src/bt/nodes/index.js';
-import { NodeStatus } from '@legion/actor-bt';
+import { NodeStatus } from '@legion/bt-task';
 
 describe('Agent Behavior Tree Nodes', () => {
   let resourceManager;

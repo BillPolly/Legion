@@ -4,7 +4,7 @@
  * Extends the base BehaviorTreeExecutor with agent-specific functionality
  */
 
-import { BehaviorTreeExecutor } from '@legion/actor-bt';
+import { BehaviorTreeExecutor } from '@legion/bt-task';
 import { registerAgentNodeTypes } from './nodes/index.js';
 
 export class AgentBehaviorTreeExecutor extends BehaviorTreeExecutor {
