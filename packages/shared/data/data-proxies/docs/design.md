@@ -14,7 +14,7 @@ The Data Proxies package provides data proxy classes that extend Handle base cla
 
 ### New Architecture (Current)
 - Extends universal Handle package with Actor integration
-- ResourceManager abstraction for any data source
+- DataSource abstraction for any data source
 - Full remote execution capability via Actor system
 - Reuses validated patterns from Handle package
 
@@ -24,7 +24,7 @@ The Data Proxies package provides data proxy classes that extend Handle base cla
 
 1. **Universal Handle Pattern**: All proxies inherit from the Handle package's base classes
 2. **Actor-Based Remote Capability**: Every proxy can execute remotely via Actor system
-3. **ResourceManager Abstraction**: DataStore is accessed through ResourceManager interface
+3. **DataSource Abstraction**: DataStore is accessed through DataSource interface
 4. **Prototype Manufacturing**: Dynamic proxy generation based on entity schemas
 5. **Single Source of Truth**: Handle package provides all base functionality
 
@@ -48,7 +48,7 @@ The Data Proxies package provides data proxy classes that extend Handle base cla
 ```
 data-proxies/
 ├── src/
-│   ├── DataStoreResourceManager.js  # ResourceManager adapter for DataStore
+│   ├── DataStoreDataSource.js       # DataSource adapter for DataStore
 │   ├── EntityProxy.js               # Entity wrapper extending CachedHandle
 │   ├── StreamProxy.js               # Scalar value wrapper extending Handle
 │   ├── CollectionProxy.js           # Array wrapper extending CachedHandle
@@ -62,18 +62,18 @@ data-proxies/
 
 ## Class Hierarchy
 
-### DataStoreResourceManager
+### DataStoreDataSource
 
-The bridge between DataStore and the ResourceManager interface for Handle integration:
+The bridge between DataStore and the DataSource interface for Handle integration:
 
 ```javascript
-export class DataStoreResourceManager {
+export class DataStoreDataSource {
   constructor(dataStore) {
     this.dataStore = dataStore;
     this.subscriptions = new Map();
   }
   
-  // Synchronous ResourceManager interface (no await/promises)
+  // Synchronous DataSource interface (no await/promises)
   query(spec) {
     return this.dataStore.query(spec);
   }
@@ -123,8 +123,8 @@ Extends Handle from the Handle package:
 import { Handle } from '@legion/km-data-handle';
 
 export class EntityProxy extends Handle {
-  constructor(resourceManager, entityId, options = {}) {
-    super(resourceManager, options);
+  constructor(dataSource, entityId, options = {}) {
+    super(dataSource, options);
     this.entityId = entityId;
   }
   
@@ -137,7 +137,7 @@ export class EntityProxy extends Handle {
   // Synchronous query() method
   query(querySpec) {
     this._validateNotDestroyed();
-    return this.resourceManager.query(querySpec);
+    return this.dataSource.query(querySpec);
   }
   
   // Entity-specific methods
@@ -154,7 +154,7 @@ export class EntityProxy extends Handle {
   
   update(updateData) {
     this._validateNotDestroyed();
-    return this.resourceManager.updateEntity(this.entityId, updateData);
+    return this.dataSource.updateEntity(this.entityId, updateData);
   }
   
   subscribe(callback) {
@@ -163,7 +163,7 @@ export class EntityProxy extends Handle {
       find: ['?attr', '?value'],
       where: [[this.entityId, '?attr', '?value']]
     };
-    return this.resourceManager.subscribe(querySpec, () => {
+    return this.dataSource.subscribe(querySpec, () => {
       const entity = this.value();
       callback(entity);
     });
@@ -191,7 +191,7 @@ export class EntityProxy extends Handle {
       where: [[entityId, '?attr', '?value']]
     };
     
-    const results = this.resourceManager.query(querySpec);
+    const results = this.dataSource.query(querySpec);
     const entity = { ':db/id': entityId };
     
     results.forEach(([attr, value]) => {
@@ -212,8 +212,8 @@ import { Handle } from '@legion/km-data-handle';
 import { EntityProxy } from './EntityProxy.js';
 
 export class CollectionProxy extends Handle {
-  constructor(resourceManager, collectionSpec, options = {}) {
-    super(resourceManager, options);
+  constructor(dataSource, collectionSpec, options = {}) {
+    super(dataSource, options);
     this.collectionSpec = collectionSpec;
     this.entityKey = collectionSpec.entityKey || '?e';
     
@@ -224,14 +224,14 @@ export class CollectionProxy extends Handle {
   // Synchronous value() method (no await/promises)
   value() {
     this._validateNotDestroyed();
-    const results = this.resourceManager.query(this.collectionSpec);
+    const results = this.dataSource.query(this.collectionSpec);
     return this._extractEntityIds(results);
   }
   
   // Synchronous query() method
   query(querySpec) {
     this._validateNotDestroyed();
-    return this.resourceManager.query(querySpec);
+    return this.dataSource.query(querySpec);
   }
   
   // Collection-specific methods
@@ -254,7 +254,7 @@ export class CollectionProxy extends Handle {
     
     // Return cached proxy or create new one
     if (!this._entityProxies.has(entityId)) {
-      const proxy = new EntityProxy(this.resourceManager, entityId);
+      const proxy = new EntityProxy(this.dataSource, entityId);
       this._entityProxies.set(entityId, proxy);
     }
     
@@ -309,7 +309,7 @@ export class CollectionProxy extends Handle {
     const results = [];
     for (const entityId of entityIds) {
       try {
-        const result = this.resourceManager.updateEntity(entityId, updateData);
+        const result = this.dataSource.updateEntity(entityId, updateData);
         results.push({ entityId, success: true, result });
       } catch (error) {
         results.push({ entityId, success: false, error: error.message });
@@ -327,7 +327,7 @@ export class CollectionProxy extends Handle {
     const results = [];
     for (const entityId of filtered) {
       try {
-        const result = this.resourceManager.updateEntity(entityId, updateData);
+        const result = this.dataSource.updateEntity(entityId, updateData);
         results.push({ entityId, success: true, result });
       } catch (error) {
         results.push({ entityId, success: false, error: error.message });
@@ -385,8 +385,8 @@ Extends Handle for query result streaming:
 import { Handle } from '@legion/km-data-handle';
 
 export class StreamProxy extends Handle {
-  constructor(resourceManager, querySpec, options = {}) {
-    super(resourceManager, options);
+  constructor(dataSource, querySpec, options = {}) {
+    super(dataSource, options);
     this.querySpec = querySpec;
     this._subscriptions = new Map();
   }
@@ -394,13 +394,13 @@ export class StreamProxy extends Handle {
   // Synchronous value() method (no await/promises)
   value() {
     this._validateNotDestroyed();
-    return this.resourceManager.query(this.querySpec);
+    return this.dataSource.query(this.querySpec);
   }
   
   // Synchronous query() method
   query(querySpec) {
     this._validateNotDestroyed();
-    return this.resourceManager.query(querySpec);
+    return this.dataSource.query(querySpec);
   }
   
   // Filter results
@@ -413,7 +413,7 @@ export class StreamProxy extends Handle {
   // Subscribe to changes
   subscribe(callback) {
     this._validateNotDestroyed();
-    const subscription = this.resourceManager.subscribe(this.querySpec, callback);
+    const subscription = this.dataSource.subscribe(this.querySpec, callback);
     const subscriptionId = Date.now().toString();
     this._subscriptions.set(subscriptionId, subscription);
     
@@ -466,34 +466,34 @@ Factory for creating and managing different proxy types:
 import { EntityProxy } from './EntityProxy.js';
 import { CollectionProxy } from './CollectionProxy.js';
 import { StreamProxy } from './StreamProxy.js';
-import { DataStoreResourceManager } from './DataStoreResourceManager.js';
+import { DataStoreDataSource } from './DataStoreDataSource.js';
 import { ProxyTypeDetector } from './ProxyTypeDetector.js';
 
 export class DataStoreProxy {
   constructor(dataStore, options = {}) {
-    // Create ResourceManager adapter
-    this.resourceManager = new DataStoreResourceManager(dataStore);
+    // Create DataSource adapter
+    this.dataSource = new DataStoreDataSource(dataStore);
     this.detector = new ProxyTypeDetector();
     this.options = options;
   }
   
   // Create specific proxy types
   entity(entityId, options = {}) {
-    return new EntityProxy(this.resourceManager, entityId, {
+    return new EntityProxy(this.dataSource, entityId, {
       ...this.options,
       ...options
     });
   }
   
   collection(querySpec, options = {}) {
-    return new CollectionProxy(this.resourceManager, querySpec, {
+    return new CollectionProxy(this.dataSource, querySpec, {
       ...this.options,
       ...options
     });
   }
   
   stream(querySpec, options = {}) {
-    return new StreamProxy(this.resourceManager, querySpec, {
+    return new StreamProxy(this.dataSource, querySpec, {
       ...this.options,
       ...options
     });
@@ -501,7 +501,7 @@ export class DataStoreProxy {
   
   // General query method
   query(querySpec, options = {}) {
-    const results = this.resourceManager.query(querySpec);
+    const results = this.dataSource.query(querySpec);
     const proxyType = this.detector.detectType(querySpec, results);
     
     switch (proxyType) {
@@ -519,7 +519,7 @@ export class DataStoreProxy {
   
   // Subscribe to query changes
   subscribe(querySpec, callback) {
-    return this.resourceManager.subscribe(querySpec, callback);
+    return this.dataSource.subscribe(querySpec, callback);
   }
 }
 ```
@@ -535,15 +535,15 @@ All proxies inherit Actor capabilities from the Handle base class. The Actor sys
 ### Basic Usage
 
 ```javascript
-import { EntityProxy, DataStoreResourceManager } from '@legion/data-proxies';
+import { EntityProxy, DataStoreDataSource } from '@legion/data-proxies';
 import { createDataStore } from '@legion/data-store';
 
-// Create data store and resource manager
+// Create data store and DataSource adapter
 const store = createDataStore(schema);
-const resourceManager = new DataStoreResourceManager(store);
+const dataSource = new DataStoreDataSource(store);
 
 // Create proxy with Actor capabilities
-const userProxy = new EntityProxy(resourceManager, userId);
+const userProxy = new EntityProxy(dataSource, userId);
 
 // Use normal proxy methods (synchronous)
 const name = userProxy.get(':user/name');
@@ -560,7 +560,7 @@ Different proxy types can work together through the Actor system:
 
 ```javascript
 // EntityProxy and CollectionProxy working together
-const usersCollection = new CollectionProxy(resourceManager, userQuery);
+const usersCollection = new CollectionProxy(dataSource, userQuery);
 const specificUser = usersCollection.get(userId);
 
 // Changes propagate across proxy types
@@ -596,14 +596,14 @@ The refactoring maintains **full backward compatibility** - no migration is requ
 
 ### What Changed (Internal)
 1. **Handle Base Class**: All proxies now extend Handle from `@legion/km-data-handle`
-2. **ResourceManager Pattern**: DataStore access goes through ResourceManager adapter
+2. **DataSource Pattern**: DataStore access goes through DataSource adapter
 3. **Synchronous Interface**: All operations are synchronous (no await/promises needed)
 4. **Actor Capabilities**: All proxies now support Actor system methods
 
 ### What Stayed the Same (Public API)
 ```javascript
 // All existing code continues to work unchanged
-const proxy = new EntityProxy(resourceManager, entityId);
+const proxy = new EntityProxy(dataSource, entityId);
 const data = proxy.value();              // Still synchronous
 const name = proxy.get(':user/name');    // Still synchronous
 proxy.set(':user/age', 31);              // Still synchronous
@@ -613,7 +613,7 @@ const result = await proxy.call('remoteMethod', params);   // Actor system
 const response = await proxy.receive(message);            // Actor system
 ```
 
-### Using New ResourceManager Pattern
+### Using New DataSource Pattern
 
 ```javascript
 // Before (still works with existing DataStoreProxy)
@@ -621,10 +621,10 @@ const dataStoreProxy = new DataStoreProxy(dataStore);
 const entity = dataStoreProxy.entity(entityId);
 
 // New pattern (for direct proxy usage)
-import { DataStoreResourceManager, EntityProxy } from '@legion/data-proxies';
+import { DataStoreDataSource, EntityProxy } from '@legion/data-proxies';
 
-const resourceManager = new DataStoreResourceManager(dataStore);
-const entity = new EntityProxy(resourceManager, entityId);
+const dataSource = new DataStoreDataSource(dataStore);
+const entity = new EntityProxy(dataSource, entityId);
 ```
 
 ## Testing Coverage
@@ -653,7 +653,7 @@ The Handle base class integration successfully transforms data-proxies from Data
 ### Successfully Delivered
 1. **✅ Handle Base Class Integration**: All proxies extend Handle from `@legion/km-data-handle`
 2. **✅ Actor System Capabilities**: All proxies support `receive()`, `call()`, `query()` methods
-3. **✅ Synchronous ResourceManager**: Eliminates race conditions in reactive scenarios
+3. **✅ Synchronous DataSource**: Eliminates race conditions in reactive scenarios
 4. **✅ Cross-Proxy Compatibility**: Different proxy types work together seamlessly
 5. **✅ Memory Safety**: Proper subscription cleanup and cascading destruction
 6. **✅ Backward Compatibility**: All existing code continues to work unchanged

@@ -12,9 +12,9 @@ The `Handle` class is the universal abstract base class that inherits from `Acto
 
 ```javascript
 export class Handle extends Actor {
-  constructor(resourceManager) {
+  constructor(dataSource) {
     super(); // Actor inheritance for remote capability
-    this.resourceManager = resourceManager; // Resource representative
+    this.dataSource = dataSource; // DataSource representative
     this._subscriptions = new Set(); // Synchronous subscription tracking
     this._destroyed = false; // Destruction lifecycle
   }
@@ -28,16 +28,16 @@ export class Handle extends Actor {
 }
 ```
 
-### ResourceManager Interface
+### DataSource Interface
 
-The ResourceManager is an **abstract interface contract** that actual resource managers must implement. It represents the actual resource that the Handle proxies, following the conceptual pattern where the Handle is a placeholder that delegates to the ResourceManager.
+The DataSource is an **abstract interface contract** that actual data sources must implement. It represents the actual data backend that the Handle proxies, following the conceptual pattern where the Handle is a placeholder that delegates to the DataSource.
 
-**Important**: ResourceManagers are not required to inherit from this interface - they must simply implement the required methods.
+**Important**: DataSources are not required to inherit from this interface - they must simply implement the required methods.
 
 ```javascript
 // Abstract interface - not a class to inherit from
-export const ResourceManagerInterface = {
-  // Required methods that all ResourceManagers must implement
+export const DataSourceInterface = {
+  // Required methods that all DataSources must implement
   query: (querySpec) => {}, // Execute query synchronously
   subscribe: (querySpec, callback) => {}, // Set up subscription synchronously
   getSchema: () => {}, // Get resource schema for introspection
@@ -65,15 +65,15 @@ subscribe(querySpec, callback) {
   // Synchronous validation
   this._validateQuerySpec(querySpec);
   
-  // Synchronous resource manager delegation
-  const resourceSubscription = this.resourceManager.subscribe(querySpec, callback);
+  // Synchronous DataSource delegation
+  const dataSourceSubscription = this.dataSource.subscribe(querySpec, callback);
   
   // Synchronous tracking wrapper creation
   const trackingWrapper = {
-    id: resourceSubscription.id,
+    id: dataSourceSubscription.id,
     unsubscribe: () => {
       this._subscriptions.delete(trackingWrapper); // Synchronous cleanup
-      resourceSubscription.unsubscribe();
+      dataSourceSubscription.unsubscribe();
     }
   };
   
@@ -84,7 +84,7 @@ subscribe(querySpec, callback) {
 
 // WRONG: Asynchronous patterns in Handle infrastructure
 async subscribe(querySpec, callback) { // ❌ NO async in Handle!
-  await this.resourceManager.subscribe(querySpec, callback); // ❌ NO await!
+  await this.dataSource.subscribe(querySpec, callback); // ❌ NO await!
 }
 ```
 
@@ -112,13 +112,13 @@ Handles provide introspection capabilities through prototype manufacturing:
 - **Dynamic Prototypes**: Generate entity prototypes at runtime based on schema
 - **Introspection API**: Uniform interface for discovering capabilities across all resources
 
-### 4. Resource Manager Delegation
+### 4. DataSource Delegation
 
-The Handle is a **placeholder proxy** that delegates all actual work to the ResourceManager:
+The Handle is a **placeholder proxy** that delegates all actual work to the DataSource:
 
 - **Handle Role**: Message routing, subscription tracking, lifecycle management, validation
-- **ResourceManager Role**: Actual data access, query execution, schema management
-- **Pattern**: Handle receives requests → validates → delegates to ResourceManager → tracks subscriptions
+- **DataSource Role**: Actual data access, query execution, schema management
+- **Pattern**: Handle receives requests → validates → delegates to DataSource → tracks subscriptions
 
 ## Package Structure
 
@@ -128,7 +128,7 @@ packages/km/data/handle/
 ├── src/
 │   ├── index.js                # Main exports
 │   ├── Handle.js               # Universal Handle base class
-│   ├── ResourceManager.js      # Abstract ResourceManager interface
+│   ├── DataSource.js           # Abstract DataSource interface
 │   ├── PrototypeFactory.js     # Universal knowledge layer
 │   ├── CachedHandle.js         # Caching patterns and utilities
 │   └── ValidationUtils.js      # Common validation utilities
@@ -149,35 +149,35 @@ packages/km/data/handle/
 import { Handle } from '@legion/km-data-handle';
 
 export class DataStoreHandle extends Handle {
-  constructor(resourceManager) {
-    super(resourceManager); // Validates ResourceManager interface
-    this._enablePrototypeFactory(resourceManager.getSchema());
+  constructor(dataSource) {
+    super(dataSource); // Validates DataSource interface
+    this._enablePrototypeFactory(dataSource.getSchema());
   }
   
   // Required implementation
   value() {
-    // Return current data from resource manager
-    return this.resourceManager.query({ find: ['?e', '?a', '?v'] });
+    // Return current data from DataSource
+    return this.dataSource.query({ find: ['?e', '?a', '?v'] });
   }
   
   // Required implementation  
   query(querySpec) {
     this._validateQuerySpec(querySpec);
-    return this.resourceManager.query(querySpec);
+    return this.dataSource.query(querySpec);
   }
 }
 ```
 
-### 2. Implementing a ResourceManager
+### 2. Implementing a DataSource
 
 ```javascript
-// ResourceManager implementation - does NOT need to inherit from anything
-export class DataScriptResourceManager {
+// DataSource implementation - does NOT need to inherit from anything
+export class DataScriptDataSource {
   constructor(database) {
     this.database = database;
   }
   
-  // Required: Implement ResourceManager interface
+  // Required: Implement DataSource interface
   query(querySpec) {
     return this.database.q(querySpec.find, this.database.db, ...querySpec.where);
   }
@@ -201,7 +201,7 @@ export class DataScriptResourceManager {
 
 ```javascript
 // Frontend/Backend sharing through Actor system
-const handle = new DataStoreHandle(resourceManager);
+const handle = new DataStoreHandle(dataSource);
 
 // Local usage
 const results = handle.query({ find: ['?e'], where: [['?e', ':user/name', 'John']] });
@@ -217,8 +217,8 @@ const remoteResults = await handle.receive({
 
 ### 1. Universal Pattern
 - **Consistency**: Same interface and patterns across all resource types
-- **Interoperability**: Handles can work with any ResourceManager implementation
-- **Extensibility**: Easy to add new resource types by implementing ResourceManager interface
+- **Interoperability**: Handles can work with any DataSource implementation
+- **Extensibility**: Easy to add new resource types by implementing DataSource interface
 
 ### 2. Remote Capability
 - **Actor Integration**: Inherits from Actor for seamless frontend/backend sharing
@@ -243,9 +243,9 @@ const remoteResults = await handle.receive({
 2. **Must implement value()**: Synchronous method to get current data
 3. **Must implement query()**: Synchronous method to execute queries
 4. **Should call super() in constructor**: Ensures proper initialization
-5. **Should validate ResourceManager**: Use inherited validation or extend it
+5. **Should validate DataSource**: Use inherited validation or extend it
 
-### For ResourceManager Implementations
+### For DataSource Implementations
 
 1. **Must implement query()**: Execute queries synchronously
 2. **Must implement subscribe()**: Set up subscriptions synchronously  
@@ -264,7 +264,7 @@ const remoteResults = await handle.receive({
 
 Existing proxy implementations can be migrated incrementally:
 
-1. **Extract ResourceManager**: Move data access logic to ResourceManager implementation
+1. **Extract DataSource**: Move data access logic to DataSource implementation
 2. **Inherit from Handle**: Replace existing base class with Handle
 3. **Remove async**: Convert async operations to synchronous dispatcher pattern
 4. **Add Actor support**: Implement receive() method for remote capability
@@ -272,8 +272,8 @@ Existing proxy implementations can be migrated incrementally:
 
 ## Testing Strategy
 
-- **Unit Tests**: Test each Handle method independently with mock ResourceManagers
-- **Integration Tests**: Test with real ResourceManager implementations
+- **Unit Tests**: Test each Handle method independently with mock DataSources
+- **Integration Tests**: Test with real DataSource implementations
 - **Actor Tests**: Verify remote capability through Actor message passing
 - **Synchronous Tests**: Ensure no async operations in Handle infrastructure
 - **Lifecycle Tests**: Verify proper subscription cleanup and destruction

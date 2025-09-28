@@ -33,10 +33,10 @@ The Handle package implements a three-layer architecture that provides universal
                     ↓
 ```
 
-### Layer 3: Resource Management
+### Layer 3: Data Source
 ```
 ┌─────────────────────────────────────────┐
-│         Resource Manager Layer          │
+│           DataSource Layer              │
 ├─────────────────────────────────────────┤
 │ • Actual data access                   │
 │ • Query execution                      │
@@ -343,7 +343,7 @@ const results = await remoteHandle.receive({
 │ 1. Handle._validateNotDestroyed()       │
 │ 2. Handle._validateQuerySpec()          │
 │ 3. Handle._validateCallback()           │
-│ 4. ResourceManager-specific validation  │
+│ 4. DataSource-specific validation       │
 │ 5. Schema validation (if available)     │
 └─────────────────────────────────────────┘
 ```
@@ -384,7 +384,7 @@ export class ValidationUtils {
 ```
 1. Handle.subscribe()
    ↓
-2. Create ResourceManager subscription
+2. Create DataSource subscription
    ↓
 3. Wrap in tracking wrapper
    ↓
@@ -398,7 +398,7 @@ export class ValidationUtils {
    ↓
 7. Remove from _subscriptions Set
    ↓
-8. Call ResourceManager unsubscribe
+8. Call DataSource unsubscribe
 ```
 
 ### Destruction Lifecycle
@@ -466,7 +466,7 @@ class Handle {
   destroy() {
     // Clean up all tracked subscriptions
     for (const subscription of this._subscriptions) {
-      subscription.unsubscribe(); // ResourceManager cleanup
+      subscription.unsubscribe(); // DataSource cleanup
     }
     this._subscriptions.clear(); // Handle cleanup
   }

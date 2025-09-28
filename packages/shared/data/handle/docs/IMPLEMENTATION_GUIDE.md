@@ -2,26 +2,26 @@
 
 ## Quick Start Guide
 
-This guide provides step-by-step instructions for implementing Handle subclasses and ResourceManager implementations.
+This guide provides step-by-step instructions for implementing Handle subclasses and DataSource implementations.
 
 ## Implementing a Handle Subclass
 
 ### Step 1: Basic Handle Subclass Structure
 
 ```javascript
-import { Handle } from '@legion/km-data-handle';
+import { Handle } from '@legion/handle';
 
 export class MyResourceHandle extends Handle {
-  constructor(resourceManager, additionalOptions = {}) {
-    // REQUIRED: Call super with ResourceManager
-    super(resourceManager);
+  constructor(dataSource, additionalOptions = {}) {
+    // REQUIRED: Call super with DataSource
+    super(dataSource);
     
     // Store any additional options
     this.options = additionalOptions;
     
     // Enable prototype factory if introspection needed
     if (additionalOptions.enableIntrospection) {
-      this._enablePrototypeFactory(resourceManager.getSchema());
+      this._enablePrototypeFactory(dataSource.getSchema());
     }
   }
   
@@ -29,8 +29,8 @@ export class MyResourceHandle extends Handle {
   value() {
     this._validateNotDestroyed(); // Use inherited validation
     
-    // Get current data from ResourceManager (synchronous)
-    return this.resourceManager.query({
+    // Get current data from DataSource (synchronous)
+    return this.dataSource.query({
       find: ['?data'],
       where: [['?e', ':resource/data', '?data']]
     });
@@ -41,8 +41,8 @@ export class MyResourceHandle extends Handle {
     this._validateNotDestroyed(); // Use inherited validation
     this._validateQuerySpec(querySpec); // Use inherited validation
     
-    // Delegate to ResourceManager (synchronous)
-    return this.resourceManager.query(querySpec);
+    // Delegate to DataSource (synchronous)
+    return this.dataSource.query(querySpec);
   }
 }
 ```
@@ -78,12 +78,12 @@ export class MyResourceHandle extends Handle {
       throw new Error('Update data must be an object');
     }
     
-    // Delegate to ResourceManager if it supports updates
-    if (typeof this.resourceManager.update === 'function') {
-      return this.resourceManager.update({ id, data });
+    // Delegate to DataSource if it supports updates
+    if (typeof this.dataSource.update === 'function') {
+      return this.dataSource.update({ id, data });
     }
     
-    throw new Error('ResourceManager does not support updates');
+    throw new Error('DataSource does not support updates');
   }
   
   // Resource-specific subscription patterns
@@ -106,12 +106,12 @@ export class MyResourceHandle extends Handle {
 ### Step 3: Add Caching (Optional)
 
 ```javascript
-import { CachedHandle } from '@legion/km-data-handle';
+import { CachedHandle } from '@legion/handle';
 
 export class MyCachedResourceHandle extends CachedHandle {
-  constructor(resourceManager, options = {}) {
+  constructor(dataSource, options = {}) {
     // CachedHandle provides caching capabilities
-    super(resourceManager, {
+    super(dataSource, {
       cacheTTL: options.cacheTTL || 30000, // 30 seconds default
       enableIntrospection: options.enableIntrospection
     });
@@ -126,8 +126,8 @@ export class MyCachedResourceHandle extends CachedHandle {
       return this._cachedData;
     }
     
-    // Query ResourceManager and cache result
-    const data = this.resourceManager.query({
+    // Query DataSource and cache result
+    const data = this.dataSource.query({
       find: ['?data'],
       where: [['?e', ':resource/data', '?data']]
     });
@@ -142,20 +142,20 @@ export class MyCachedResourceHandle extends CachedHandle {
     this._validateNotDestroyed();
     this._validateQuerySpec(querySpec);
     
-    // For queries, typically bypass cache and go direct to ResourceManager
-    return this.resourceManager.query(querySpec);
+    // For queries, typically bypass cache and go direct to DataSource
+    return this.dataSource.query(querySpec);
   }
 }
 ```
 
-## Implementing a ResourceManager
+## Implementing a DataSource
 
-### Step 1: Basic ResourceManager Implementation
+### Step 1: Basic DataSource Implementation
 
 ```javascript
-export class MyResourceManager {
-  constructor(dataSource, options = {}) {
-    this.dataSource = dataSource; // Your underlying data source
+export class MyDataSource {
+  constructor(backendStore, options = {}) {
+    this.backendStore = backendStore; // Your underlying storage
     this.options = options;
     this._subscriptions = new Map(); // Track subscriptions
     this._schema = options.schema || this._generateSchema();
@@ -207,14 +207,14 @@ export class MyResourceManager {
   
   // Your implementation-specific methods
   _executeQuery(querySpec) {
-    // Implement based on your data source
+    // Implement based on your backend store
     // Examples: SQL query, DataScript query, API call, etc.
-    return this.dataSource.query(querySpec);
+    return this.backendStore.query(querySpec);
   }
   
   _registerSubscription(subscription) {
-    // Register with your data source for change notifications
-    this.dataSource.onChanges((changes) => {
+    // Register with your backend store for change notifications
+    this.backendStore.onChanges((changes) => {
       // Check if changes match subscription query
       if (this._matchesQuery(changes, subscription.querySpec)) {
         // Invoke callback synchronously
@@ -225,7 +225,7 @@ export class MyResourceManager {
   
   _unregisterSubscription(subscriptionId) {
     // Clean up subscription registration
-    // Implementation depends on your data source
+    // Implementation depends on your backend store
   }
   
   _matchesQuery(changes, querySpec) {
@@ -235,7 +235,7 @@ export class MyResourceManager {
   }
   
   _generateSchema() {
-    // Generate schema from data source if not provided
+    // Generate schema from backend store if not provided
     return {
       attributes: {},
       relationships: {},
@@ -248,7 +248,7 @@ export class MyResourceManager {
 ### Step 2: Add Optional Capabilities
 
 ```javascript
-export class MyResourceManager {
+export class MyDataSource {
   // ... basic implementation from Step 1 ...
   
   // OPTIONAL: Implement update() for data modification
@@ -258,7 +258,7 @@ export class MyResourceManager {
     }
     
     // Execute update synchronously
-    const result = this.dataSource.update(updateSpec);
+    const result = this.backendStore.update(updateSpec);
     
     // Notify subscribers of changes
     this._notifySubscribers(result.changes);
@@ -279,7 +279,7 @@ export class MyResourceManager {
   // OPTIONAL: Implement getMetadata() for additional info
   getMetadata() {
     return {
-      dataSourceType: this.dataSource.constructor.name,
+      backendStoreType: this.backendStore.constructor.name,
       subscriptionCount: this._subscriptions.size,
       schemaVersion: this._schema.version || '1.0.0',
       capabilities: {
@@ -402,7 +402,7 @@ export class CachedResourceHandle extends CachedHandle {
     }
     
     // Fetch fresh data
-    const data = this.resourceManager.query(this._buildValueQuery());
+    const data = this.dataSource.query(this._buildValueQuery());
     
     // Update cache
     this._updateLocalCache(data);
@@ -450,7 +450,7 @@ customOperation(params) {
   }
   
   // Execute operation
-  return this.resourceManager.customOperation(params);
+  return this.dataSource.customOperation(params);
 }
 ```
 
@@ -462,18 +462,18 @@ customOperation(params) {
 import { MyResourceHandle } from './MyResourceHandle.js';
 
 describe('MyResourceHandle', () => {
-  let mockResourceManager;
+  let mockDataSource;
   let handle;
   
   beforeEach(() => {
-    // Create mock ResourceManager with required methods
-    mockResourceManager = {
+    // Create mock DataSource with required methods
+    mockDataSource = {
       query: jest.fn(),
       subscribe: jest.fn(),
       getSchema: jest.fn(() => ({ attributes: {} }))
     };
     
-    handle = new MyResourceHandle(mockResourceManager);
+    handle = new MyResourceHandle(mockDataSource);
   });
   
   afterEach(() => {
@@ -486,15 +486,15 @@ describe('MyResourceHandle', () => {
     expect(typeof handle.query).toBe('function');
   });
   
-  test('should delegate query to ResourceManager', () => {
+  test('should delegate query to DataSource', () => {
     const querySpec = { find: ['?e'], where: [] };
     const expectedResults = [1, 2, 3];
     
-    mockResourceManager.query.mockReturnValue(expectedResults);
+    mockDataSource.query.mockReturnValue(expectedResults);
     
     const results = handle.query(querySpec);
     
-    expect(mockResourceManager.query).toHaveBeenCalledWith(querySpec);
+    expect(mockDataSource.query).toHaveBeenCalledWith(querySpec);
     expect(results).toBe(expectedResults);
   });
   
@@ -506,20 +506,20 @@ describe('MyResourceHandle', () => {
 });
 ```
 
-### Integration Testing with Real ResourceManager
+### Integration Testing with Real DataSource
 
 ```javascript
 import { MyResourceHandle } from './MyResourceHandle.js';
-import { MyResourceManager } from './MyResourceManager.js';
+import { MyDataSource } from './MyDataSource.js';
 
 describe('MyResourceHandle Integration', () => {
-  let resourceManager;
+  let dataSource;
   let handle;
   
   beforeEach(() => {
-    // Create real ResourceManager with test data
-    resourceManager = new MyResourceManager(createTestDataSource());
-    handle = new MyResourceHandle(resourceManager);
+    // Create real DataSource with test backend
+    dataSource = new MyDataSource(createTestBackend());
+    handle = new MyResourceHandle(dataSource);
   });
   
   test('should retrieve real data', () => {
@@ -537,8 +537,8 @@ describe('MyResourceHandle Integration', () => {
       done();
     });
     
-    // Trigger change in ResourceManager
-    resourceManager.update({ /* test update */ });
+    // Trigger change in DataSource
+    dataSource.update({ /* test update */ });
   });
 });
 ```
@@ -549,25 +549,25 @@ describe('MyResourceHandle Integration', () => {
 ```javascript
 // ❌ WRONG: Using async/await in Handle
 async query(querySpec) {
-  await this.resourceManager.query(querySpec);
+  await this.dataSource.query(querySpec);
 }
 
 // ✅ CORRECT: Synchronous operations only
 query(querySpec) {
-  return this.resourceManager.query(querySpec);
+  return this.dataSource.query(querySpec);
 }
 ```
 
-### 2. Missing ResourceManager Interface Methods
+### 2. Missing DataSource Interface Methods
 ```javascript
-// ❌ WRONG: ResourceManager missing required methods
-class BadResourceManager {
+// ❌ WRONG: DataSource missing required methods
+class BadDataSource {
   query() { /* ... */ }
   // Missing subscribe() and getSchema()
 }
 
 // ✅ CORRECT: Implement all required methods
-class GoodResourceManager {
+class GoodDataSource {
   query(querySpec) { /* ... */ }
   subscribe(querySpec, callback) { /* ... */ }
   getSchema() { /* ... */ }
@@ -578,8 +578,8 @@ class GoodResourceManager {
 ```javascript
 // ❌ WRONG: Manual subscription tracking
 class BadHandle extends Handle {
-  constructor(resourceManager) {
-    super(resourceManager);
+  constructor(dataSource) {
+    super(dataSource);
     this.mySubscriptions = []; // Manual tracking
   }
 }
@@ -597,15 +597,15 @@ class GoodHandle extends Handle {
 ```javascript
 // ❌ WRONG: Skip validation
 query(querySpec) {
-  return this.resourceManager.query(querySpec); // No validation
+  return this.dataSource.query(querySpec); // No validation
 }
 
 // ✅ CORRECT: Always validate
 query(querySpec) {
   this._validateNotDestroyed();
   this._validateQuerySpec(querySpec);
-  return this.resourceManager.query(querySpec);
+  return this.dataSource.query(querySpec);
 }
 ```
 
-Following this implementation guide ensures your Handle subclasses and ResourceManager implementations integrate seamlessly with the Actor system while maintaining the synchronous dispatcher pattern and providing comprehensive functionality.
+Following this implementation guide ensures your Handle subclasses and DataSource implementations integrate seamlessly with the Actor system while maintaining the synchronous dispatcher pattern and providing comprehensive functionality.

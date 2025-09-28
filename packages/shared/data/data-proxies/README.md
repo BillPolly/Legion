@@ -11,7 +11,7 @@ This package provides data proxy classes that extend the Handle base class from 
 All proxy classes extend the `Handle` base class, which provides:
 
 - **Actor System Integration**: All proxies support `receive()`, `call()`, `query()` methods from Actor base
-- **Resource Manager Pattern**: Synchronous data access through ResourceManager interface
+- **DataSource Pattern**: Synchronous data access through DataSource interface
 - **Lifecycle Management**: Proper subscription cleanup and cascading destruction
 - **Error Handling**: Consistent "Handle has been destroyed" error handling
 
@@ -21,11 +21,11 @@ All proxy classes extend the `Handle` base class, which provides:
 Proxy wrapper for individual entities with direct property access.
 
 ```javascript
-import { EntityProxy, DataStoreResourceManager } from '@legion/data-proxies';
+import { EntityProxy, DataStoreDataSource } from '@legion/data-proxies';
 
 const store = createDataStore(schema);
-const resourceManager = new DataStoreResourceManager(store);
-const entityProxy = new EntityProxy(resourceManager, entityId);
+const dataSource = new DataStoreDataSource(store);
+const entityProxy = new EntityProxy(dataSource, entityId);
 
 // Access entity data
 const name = entityProxy.get(':user/name');
@@ -42,7 +42,7 @@ Proxy wrapper for collections of entities with iteration and filtering.
 ```javascript
 import { CollectionProxy } from '@legion/data-proxies';
 
-const collectionProxy = new CollectionProxy(resourceManager, {
+const collectionProxy = new CollectionProxy(dataSource, {
   find: ['?e'],
   where: [['?e', ':user/active', true]],
   entityKey: '?e'
@@ -68,7 +68,7 @@ Proxy wrapper for continuous query result streaming.
 ```javascript
 import { StreamProxy } from '@legion/data-proxies';
 
-const streamProxy = new StreamProxy(resourceManager, {
+const streamProxy = new StreamProxy(dataSource, {
   find: ['?e', '?name'],
   where: [
     ['?e', ':user/active', true],
@@ -107,23 +107,23 @@ const subscription = dataStoreProxy.subscribe(querySpec, callback);
 const queryResults = dataStoreProxy.query(querySpec);
 ```
 
-## Resource Manager
+## DataSource Adapter
 
-### DataStoreResourceManager
-Adapter that bridges DataStore to the ResourceManager interface required by Handle.
+### DataStoreDataSource
+Adapter that bridges DataStore to the DataSource interface required by Handle.
 
 ```javascript
-import { DataStoreResourceManager } from '@legion/data-proxies';
+import { DataStoreDataSource } from '@legion/data-proxies';
 
-const resourceManager = new DataStoreResourceManager(store);
+const dataSource = new DataStoreDataSource(store);
 
-// ResourceManager interface (all synchronous)
-const results = resourceManager.query(querySpec);
-const subscription = resourceManager.subscribe(querySpec, callback);
-const schema = resourceManager.getSchema();
+// DataSource interface (all synchronous)
+const results = dataSource.query(querySpec);
+const subscription = dataSource.subscribe(querySpec, callback);
+const schema = dataSource.getSchema();
 ```
 
-**Important**: All ResourceManager operations are synchronous to eliminate race conditions in rapid subscribe/unsubscribe scenarios.
+**Important**: All DataSource operations are synchronous to eliminate race conditions in rapid subscribe/unsubscribe scenarios.
 
 ## Cross-Proxy Integration
 
@@ -131,7 +131,7 @@ Different proxy types work together seamlessly:
 
 ```javascript
 // Entity and Collection integration
-const activeUsers = new CollectionProxy(resourceManager, {
+const activeUsers = new CollectionProxy(dataSource, {
   find: ['?e'],
   where: [['?e', ':user/active', true]],
   entityKey: '?e'
@@ -142,7 +142,7 @@ aliceEntity.set(':user/status', 'online');
 // Collection automatically reflects the change
 
 // Collection and Stream integration
-const userStream = new StreamProxy(resourceManager, {
+const userStream = new StreamProxy(dataSource, {
   find: ['?e', '?name'],
   where: [['?e', ':user/name', '?name']]
 });

@@ -109,7 +109,7 @@ Unified file system API that works across different environments.
 
 **Key Features:**
 - DirectoryHandle and FileHandle abstractions
-- Pluggable ResourceManager backends
+- Pluggable DataSource backends
 - Same API for Node.js, browser, or remote systems
 - File watching and search capabilities
 - Actor-based remote file system access
@@ -530,41 +530,32 @@ const jsFiles = srcDir.search('*.js', { recursive: true });
 
 ## Integration Guide
 
-### 1. With ResourceManager
+### 1. Application Setup
 
-The ResourceManager provides centralized resource access:
+Create and configure your data store at application startup:
 
 ```javascript
-import { ResourceManager } from '@legion/resource-manager';
+import { createDataStore } from '@legion/data-store';
+import { DataStoreProxy } from '@legion/data-proxies';
 
-class AppResourceManager extends ResourceManager {
-  async initialize() {
-    // Create data store
-    this.dataStore = createDataStore(schema);
-    
-    // Register with resource manager
-    this.register('dataStore', this.dataStore);
-    
-    // Create proxy
-    this.db = new DataStoreProxy(this.dataStore);
-    this.register('db', this.db);
-  }
-  
-  // Implement DataSource interface
-  query(querySpec) {
-    return this.dataStore.query(querySpec);
-  }
-  
-  subscribe(querySpec, callback) {
-    return this.dataStore.subscribe(querySpec, callback);
-  }
-}
+// Define schema
+const schema = {
+  'user/name': { type: 'string' },
+  'user/email': { type: 'string', unique: true },
+  'user/age': { type: 'number' }
+};
 
-// Usage
-const rm = new AppResourceManager();
-await rm.initialize();
+// Create data store
+const dataStore = createDataStore(schema);
 
-const db = rm.get('db');
+// Create proxy for convenient access
+const db = new DataStoreProxy(dataStore);
+
+// Export for use throughout application
+export { dataStore, db };
+
+// Usage in other modules
+import { db } from './data-setup';
 const users = db.collection('user');
 ```
 
