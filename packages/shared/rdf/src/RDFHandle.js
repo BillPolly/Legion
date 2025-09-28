@@ -139,6 +139,66 @@ export class RDFHandle extends Handle {
   }
   
   /**
+   * Actor system message handling - extend Handle's receive method
+   * Adds RDF-specific message handling to base Actor functionality
+   */
+  receive(message) {
+    this._validateNotDestroyed();
+    
+    if (typeof message === 'object' && message.type) {
+      switch (message.type) {
+        case 'follow':
+          return this._handleFollowMessage(message);
+        case 'properties':
+          return this.getProperties();
+        case 'query':
+        case 'value':
+        case 'subscribe':
+        case 'destroy':
+        case 'introspect':
+          // These are handled by Handle base class
+          return super.receive(message);
+        default:
+          // Unknown message type - throw error for Actor pattern compliance
+          throw new Error(`Unknown message type: ${message.type}`);
+      }
+    }
+    
+    // For non-object messages or messages without type, delegate to parent
+    return super.receive(message);
+  }
+  
+  /**
+   * Handle 'follow' message for relationship navigation
+   * @private
+   */
+  _handleFollowMessage(message) {
+    if (!message.property) {
+      throw new Error('Follow message requires property field');
+    }
+    
+    return this.followLink(message.property);
+  }
+  
+  /**
+   * Get introspection information with RDF-specific metadata
+   * Extends Handle's getIntrospectionInfo with RDF details
+   */
+  getIntrospectionInfo() {
+    this._validateNotDestroyed();
+    
+    // Get base introspection info from Handle
+    const info = super.getIntrospectionInfo();
+    
+    // Add RDF-specific metadata
+    info.resourceURI = this.entityId;
+    info.rdfType = this.getType();
+    info.properties = this.getProperties();
+    
+    return info;
+  }
+  
+  /**
    * Get the URI of this RDF entity
    * 
    * @returns {string} Entity URI
@@ -262,6 +322,14 @@ export class RDFHandle extends Handle {
   destroy() {
     this._valueCache = null;
     super.destroy();
+  }
+  
+  /**
+   * Manually invalidate the value cache
+   * Used when external changes are made to the underlying data
+   */
+  invalidateCache() {
+    this._valueCache = null;
   }
   
   /**

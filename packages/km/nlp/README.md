@@ -1,17 +1,19 @@
-# NLP-to-KG Processing System
+# @legion/nlp
 
-An intelligent NLP processing system that transforms natural language text into structured knowledge graph representations using existing ontologies and Large Language Models (LLMs) for intelligent extraction.
+NLP-to-Knowledge Graph Processing System - Transforms natural language text into structured knowledge graph representations using Handle-based architecture and real LLM integration.
 
-## 🎯 Project Status: Phase 1 Complete ✅
+## 🎯 Project Status: Handle Migration Complete ✅
 
 **Current Version:** 1.0.0-phase1  
-**Implementation Status:** Phase 1: Core Infrastructure - **COMPLETED**
+**Architecture:** Handle-based with DataSource abstraction  
+**Migration Status:** Successfully migrated from @legion/kg to modern Handle patterns
 
-### ✅ Phase 1 Achievements
+### ✅ Current Achievements
 
+- **Handle-based Architecture**: Complete migration to DataSource pattern for knowledge graph integration
+- **Real LLM Integration**: Production-ready integration with language models (no mock fallbacks)
 - **Text Input Layer**: Complete text preprocessing with structure detection and language identification
 - **Ontology-Guided Pipeline**: Domain-aware schema extraction with hardcoded ontologies for industrial, business, and technical domains
-- **LLM Integration**: Standardized LLM interface with comprehensive mock implementation for testing
 - **Knowledge Graph Constructor**: RDF triple generation with proper namespacing and metadata tracking
 - **Complete Integration**: End-to-end pipeline from text to structured knowledge triples
 
@@ -20,21 +22,18 @@ An intelligent NLP processing system that transforms natural language text into 
 ### Installation
 
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd packages/NLP
-
-# Install dependencies (when available)
-npm install
+# Install from workspace root
+npm install @legion/nlp
 ```
 
 ### Basic Usage
 
 ```javascript
-import { NLPSystem } from './src/index.js';
+import { NLPSystem } from '@legion/nlp';
 
-// Initialize the NLP system
+// Initialize the NLP system with real LLM
 const nlpSystem = new NLPSystem();
+await nlpSystem.initialize();
 
 // Process text and extract knowledge
 const text = `
@@ -51,14 +50,29 @@ if (result.success) {
 }
 ```
 
+### With DataSource Integration
+
+```javascript
+import { NLPSystem } from '@legion/nlp';
+import { TripleStoreDataSource } from '@legion/triplestore';
+
+// Use with Handle-based DataSource
+const dataSource = new TripleStoreDataSource(/* config */);
+const nlpSystem = new NLPSystem({ dataSource });
+await nlpSystem.initialize();
+```
+
 ### Running Tests
 
 ```bash
-# Run comprehensive Phase 1 tests
-node test-phase1-complete.js
+# Run all tests with Jest
+npm test
 
-# Run basic functionality tests
-node test-manual-basic.js
+# Run with watch mode
+npm run test:watch
+
+# Run with coverage
+npm run test:coverage
 ```
 
 ## 🏗️ Architecture Overview
@@ -66,10 +80,10 @@ node test-manual-basic.js
 ### Core Components
 
 1. **TextPreprocessor** - Normalizes text, detects structure, and segments content
-2. **OntologyExtractor** - Extracts domain-relevant schemas to guide LLM processing
-3. **MockLLMClient** - Simulates LLM behavior for entity and relationship extraction
+2. **OntologyExtractor** - Extracts domain-relevant schemas to guide LLM processing (uses DataSource for KG integration)
+3. **RealLLMClient** - Production LLM integration for entity and relationship extraction (no mock fallbacks)
 4. **TripleGenerator** - Converts extractions into RDF triples with proper formatting
-5. **NLPSystem** - Orchestrates the complete processing pipeline
+5. **NLPSystem** - Orchestrates the complete processing pipeline with Handle-based architecture
 
 ### Processing Pipeline
 
@@ -192,14 +206,35 @@ The pump is part of Cooling System S300.
 - **Phase 4**: Relationship Processing (4 weeks)
 - **Phase 5**: Validation & Comparison Layer (4 weeks)
 
-## 🤝 Integration with Existing Systems
+## 🔗 Dependencies
 
-This NLP system is designed to integrate seamlessly with:
+- **@legion/triplestore**: Triple store abstraction layer
+- **@legion/handle**: Handle-based data access pattern  
+- **@legion/llm-client**: Language model integration
+- **@legion/resource-manager**: Configuration and dependency management
+- **@legion/storage**: Storage provider abstraction
 
-- **KG Package** (`../KG`): Core knowledge graph functionality
-- **Gellish System**: Natural language generation and validation
-- **Storage Providers**: All existing triple store implementations
-- **Query System**: Existing query and retrieval capabilities
+## 🔄 Migration from @legion/kg
+
+This package has been successfully migrated from the deprecated `@legion/kg` package:
+
+- **Old**: Used `kgEngine` for knowledge graph operations
+- **New**: Uses `dataSource` with Handle-based architecture
+- **Old**: Direct dependency on `@legion/kg`
+- **New**: Uses `@legion/triplestore` and Handle patterns
+- **Old**: Mock LLM fallbacks for testing
+- **New**: Real LLM integration only (FAIL FAST approach)
+
+See `packages/km/MIGRATION_PLAN.md` for detailed migration information.
+
+## 🤝 Integration with Legion Framework
+
+This NLP system integrates seamlessly with:
+
+- **@legion/triplestore**: Triple store operations through DataSource abstraction
+- **@legion/rdf**: RDF/Gellish processing for semantic web compatibility
+- **@legion/storage**: All existing triple store implementations
+- **Handle System**: Universal proxy pattern for resource access
 
 ## 📚 Documentation
 

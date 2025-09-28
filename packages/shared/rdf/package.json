@@ -15,7 +15,9 @@
   "license": "MIT",
   "dependencies": {
     "@legion/triplestore": "workspace:*",
-    "@legion/handle": "workspace:*"
+    "@legion/handle": "workspace:*",
+    "@legion/data-proxies": "workspace:*",
+    "@legion/handle-dsl": "workspace:*"
   },
   "devDependencies": {
     "jest": "^29.7.0"
