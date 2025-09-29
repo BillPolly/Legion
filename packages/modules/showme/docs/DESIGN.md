@@ -2,25 +2,44 @@
 
 ## Overview
 
-The ShowMe module provides a generic tool for displaying any type of asset in an appropriate floating window interface. When an agent creates or finds an asset (file, image, data, web content, etc.), the ShowMe tool automatically detects the asset type and displays it using the most suitable viewer component.
+The ShowMe module provides a generic tool for displaying any type of resource in an appropriate floating window interface. It integrates deeply with Legion's Handle system, enabling display of Handles (strategies, files, memory, etc.) as well as traditional assets (images, JSON, tables). The tool automatically detects the resource type and displays it using the most suitable viewer component.
+
+**Key Capabilities:**
+- Display Legion Handles with introspection and interaction
+- Display traditional assets (files, images, data, web content)
+- Launch in chromeless browser window (app mode) for native look
+- Actor-based communication for CLI → Browser control
+- Real-time Handle state updates via subscriptions
 
 ## Core Principles
 
-### 1. Generic Asset Handling
-- **Universal Interface**: Single tool that handles any asset type
-- **Automatic Detection**: Intelligent asset type detection without manual specification
-- **Extensible**: Easy to add new asset types and viewers
+### 1. Handle-First Design
+- **Legion URI Support**: Accept and display any Legion Handle via URI
+- **Handle Introspection**: Automatically extract metadata, properties, methods from Handles
+- **Type-Specific Renderers**: Specialized viewers for different Handle types (strategy, filesystem, mongodb)
+- **Backward Compatibility**: Still supports traditional assets for non-Handle use cases
 
-### 2. Reuse Existing Infrastructure
+### 2. Fail-Fast Architecture
+- **No Fallbacks**: Clear error messages, no degraded experiences
+- **No Mocks in Implementation**: Only real services and resources
+- **Explicit Failures**: Every error case raises an exception with clear context
+
+### 3. Actor-Based Communication
+- **CLI Control**: CLI sends Actor messages to control browser windows
+- **Real-time Updates**: Handle subscriptions push live state changes to UI
+- **WebSocket Protocol**: All communication via WebSocket Actor messages
+- **Protocol Validation**: Schema-validated messages between server and client
+
+### 4. Native App Experience
+- **Chromeless Windows**: Launch browser in app mode (--app flag)
+- **No Browser Chrome**: No tabs, URL bar, or browser UI
+- **Window Control**: Full control over size, position, title from CLI
+
+### 5. Reuse Existing Infrastructure
 - **Legion Components**: Uses existing Window, CodeEditor, ImageViewer, Grid, Tree components
 - **Server Framework**: Built on ConfigurableActorServer pattern
 - **MVVM Architecture**: Follows proven decent-planner-ui patterns
-- **Protocol Actors**: Point-to-point client-server communication
-
-### 3. Agent-Friendly Design
-- **Simple Interface**: `show_me(asset, title?, hint?)` - one function for everything
-- **Fail-Fast**: Clear error messages for unsupported assets
-- **No Fallbacks**: Clean failures instead of degraded experience
+- **ResourceManager Integration**: Uses ResourceManager for Handle resolution
 
 ## Architecture
 
@@ -81,16 +100,20 @@ The detector uses a multi-stage approach to identify asset types:
 3. **File extension analysis** (for file paths)
 4. **Default fallback** (text viewer)
 
-### Supported Asset Types
+### Supported Resource Types
 
-| Asset Type | Detection Method | Viewer Component |
-|------------|------------------|------------------|
-| **Image** | MIME type, file extension, binary data | ImageViewer |
-| **Code** | File extension, syntax patterns | CodeEditor |
-| **JSON** | MIME type, object structure | Tree (JSON tree view) |
-| **Data** | Array structure, CSV format | Grid (tabular view) |
+| Resource Type | Detection Method | Viewer Component |
+|--------------|------------------|------------------|
+| **Handle** | Legion URI pattern, Handle instance | HandleRenderer (introspection view) |
+| **Strategy Handle** | Handle with resourceType='strategy' | StrategyRenderer (specialized) |
+| **File Handle** | Handle with resourceType='filesystem' | FileRenderer (content + metadata) |
+| **Memory Handle** | Handle with resourceType='memory' | MemoryRenderer (entity graph) |
+| **Image** | MIME type, file extension, binary data | ImageRenderer |
+| **Code** | File extension, syntax patterns | CodeRenderer |
+| **JSON** | MIME type, object structure | JSONRenderer (tree view) |
+| **Data** | Array structure, CSV format | TableRenderer (tabular view) |
 | **Web** | URL, HTML content | Embedded iframe |
-| **Text** | Default fallback | CodeEditor (plain text) |
+| **Text** | Default for non-Handle assets | CodeRenderer (plain text) |
 
 ### Detection Logic
 
@@ -560,22 +583,293 @@ The module uses ResourceManager for:
 - **Multiple assets**: Concurrent display scenarios
 - **Error recovery**: Graceful degradation testing
 
+## Handle Integration
+
+### Handle Detection and Resolution
+
+```javascript
+class AssetTypeDetector {
+  detectResourceType(resource, hint) {
+    // 1. Check if it's a Legion URI string
+    if (typeof resource === 'string' && resource.startsWith('legion://')) {
+      return 'handle-uri';
+    }
+
+    // 2. Check if it's a Handle instance
+    if (resource && typeof resource.toURI === 'function' && resource.resourceType) {
+      return `handle-${resource.resourceType}`;
+    }
+
+    // 3. Fall back to traditional asset detection
+    return this.detectAssetType(resource, hint);
+  }
+}
+```
+
+### Handle Renderer Architecture
+
+```javascript
+class HandleRenderer {
+  async render(handle, container) {
+    // Extract Handle metadata
+    const metadata = handle.getMetadata ? handle.getMetadata() : {};
+    const schema = handle.getSchema ? handle.getSchema() : {};
+
+    // Build introspection view
+    const view = {
+      header: this.renderHeader(handle),
+      properties: this.renderProperties(handle, schema),
+      methods: this.renderMethods(handle),
+      capabilities: this.renderCapabilities(metadata),
+      actions: this.renderActions(handle)
+    };
+
+    // Render to container
+    this.displayInWindow(view, container);
+
+    // Setup live updates if Handle supports subscriptions
+    if (typeof handle.subscribe === 'function') {
+      handle.subscribe((changes) => {
+        this.updateView(changes);
+      });
+    }
+  }
+
+  renderHeader(handle) {
+    return {
+      uri: handle.toURI(),
+      type: handle.resourceType,
+      server: handle.server || 'local'
+    };
+  }
+
+  renderProperties(handle, schema) {
+    const props = [];
+    const schemaProps = schema.properties || {};
+
+    for (const [key, value] of Object.entries(schemaProps)) {
+      props.push({
+        name: key,
+        value: handle[key],
+        type: value.type,
+        description: value.description
+      });
+    }
+
+    return props;
+  }
+
+  renderMethods(handle) {
+    const methods = [];
+
+    // Extract methods from handle
+    for (const key of Object.keys(handle)) {
+      if (typeof handle[key] === 'function' && !key.startsWith('_')) {
+        methods.push({
+          name: key,
+          callable: true
+        });
+      }
+    }
+
+    return methods;
+  }
+
+  renderActions(handle) {
+    const actions = [];
+
+    // Common Handle actions
+    actions.push({
+      label: 'Copy URI',
+      action: () => navigator.clipboard.writeText(handle.toURI())
+    });
+
+    actions.push({
+      label: 'View JSON',
+      action: () => this.showJSON(handle.toJSON())
+    });
+
+    // Handle-type specific actions
+    if (handle.resourceType === 'strategy') {
+      actions.push({
+        label: 'Instantiate',
+        action: () => this.instantiateStrategy(handle)
+      });
+    }
+
+    return actions;
+  }
+}
+```
+
+### Strategy Renderer (Specialized)
+
+```javascript
+class StrategyRenderer extends HandleRenderer {
+  async render(strategyHandle, container) {
+    // Get strategy metadata
+    const metadata = await strategyHandle.getMetadata();
+
+    // Build strategy-specific view
+    const view = {
+      header: {
+        name: metadata.strategyName,
+        type: metadata.strategyType,
+        uri: strategyHandle.toURI()
+      },
+      requirements: {
+        tools: metadata.requiredTools || [],
+        prompts: metadata.promptSchemas || []
+      },
+      capabilities: metadata.capabilities || [],
+      file: {
+        path: metadata.filePath,
+        size: metadata.fileSize,
+        modified: metadata.lastModified
+      },
+      actions: [
+        {
+          label: 'Instantiate Strategy',
+          action: async () => {
+            const rm = await ResourceManager.getInstance();
+            const context = {
+              resourceManager: rm,
+              toolRegistry: rm.get('toolRegistry'),
+              llmClient: await rm.get('llmClient')
+            };
+            const strategy = await strategyHandle.instantiate(context);
+            this.showSuccess(`Strategy instantiated: ${strategy.strategyType}`);
+          }
+        },
+        {
+          label: 'View Source',
+          action: async () => {
+            const source = await this.loadSource(metadata.filePath);
+            this.showInCodeViewer(source, 'javascript');
+          }
+        },
+        {
+          label: 'Search Similar',
+          action: async () => {
+            const semanticSearch = rm.get('handleSemanticSearch');
+            const similar = await semanticSearch.searchHandles(
+              metadata.strategyName,
+              { handleTypes: ['strategy'], limit: 10 }
+            );
+            this.showSearchResults(similar);
+          }
+        }
+      ]
+    };
+
+    this.displayStrategyView(view, container);
+  }
+}
+```
+
+### Browser Launch in App Mode
+
+```javascript
+class ShowMeServer {
+  async launchBrowser(url, options = {}) {
+    const { default: open } = await import('open');
+
+    // Launch Chrome in app mode (chromeless)
+    await open(url, {
+      app: {
+        name: open.apps.chrome,
+        arguments: [
+          `--app=${url}`,                    // App mode (no browser chrome)
+          `--window-size=${options.width || 1200},${options.height || 800}`,
+          `--window-position=${options.x || 100},${options.y || 100}`,
+          '--disable-features=TranslateUI',  // Disable translate bar
+          '--hide-scrollbars',               // Clean look
+          '--no-default-browser-check',      // Skip default browser prompt
+          '--disable-popup-blocking'         // Allow window.open
+        ]
+      }
+    });
+
+    console.log(`Launched browser in app mode: ${url}`);
+  }
+}
+```
+
+### CLI Display Engine Integration
+
+```javascript
+class CLIDisplayEngine {
+  constructor(resourceManager) {
+    this.resourceManager = resourceManager;
+    this.showMeActor = null;
+  }
+
+  async initialize() {
+    // Get ShowMe service from ResourceManager
+    this.showMeService = this.resourceManager.get('showme');
+
+    // Get ShowMe server actor for direct messaging
+    this.showMeActor = await this.showMeService.getServerActor();
+  }
+
+  async displayHandle(handle, options = {}) {
+    // Send Handle URI to ShowMe
+    await this.showMeActor.send({
+      type: 'display-resource',
+      resource: handle.toURI(),
+      window: {
+        title: options.title || `${handle.resourceType}: ${handle.toURI()}`,
+        width: options.width || 1000,
+        height: options.height || 700,
+        position: options.position || 'center'
+      }
+    });
+
+    console.log(chalk.green('✓ Displaying in ShowMe window'));
+  }
+
+  async exploreInteractive(handle) {
+    await this.displayHandle(handle, {
+      title: `Explore: ${handle.resourceType}`,
+      width: 1200,
+      height: 800
+    });
+  }
+}
+```
+
 ## MVP Scope
 
 ### Included in MVP
-- ✅ Core ShowMeTool with basic asset detection
-- ✅ Image, code, JSON, and data display
-- ✅ ConfigurableActorServer integration
-- ✅ Protocol-based client-server actors
-- ✅ Window management with existing Legion components
-- ✅ Basic error handling and validation
+- ✅ **Handle Integration**: Accept and display Legion URI Handles
+- ✅ **Handle Renderer**: Generic introspection view for any Handle type
+- ✅ **Strategy Renderer**: Specialized viewer for strategy handles
+- ✅ **Resource Detection**: Detect Handles vs traditional assets
+- ✅ **App Mode Launch**: Chromeless browser window with --app flag
+- ✅ **Actor Communication**: CLI → Server → Browser messaging
+- ✅ **Existing Renderers**: Image, code, JSON, table display (already working)
+- ✅ **ConfigurableActorServer**: Built on existing server framework
+- ✅ **Protocol Validation**: Schema-validated actor messages
+- ✅ **Fail-Fast**: No fallbacks, explicit error handling
 
 ### Not Included in MVP
-- 🚫 Advanced asset formats (video, audio, 3D models)
-- 🚫 Real-time collaborative viewing
-- 🚫 Asset persistence beyond session
-- 🚫 Advanced window management (workspaces, layouts)
-- 🚫 Asset editing capabilities
-- 🚫 Integration with external viewers
+- 🚫 **Handle Editing**: Read-only Handle viewing (no modification)
+- 🚫 **Advanced Handle Types**: Focus on strategy, file, memory handles only
+- 🚫 **Real-time Collaboration**: Single-user viewing only
+- 🚫 **Persistence**: No saving of Handle states or sessions
+- 🚫 **Advanced Window Management**: No workspaces or custom layouts
+- 🚫 **Video/Audio Assets**: Images and static content only
+- 🚫 **Security/Authentication**: Local-only, trusted environment
+- 🚫 **Performance Optimization**: Focus on correctness, not speed
+- 🚫 **Migration/Upgrade**: New implementation, no backward compatibility
+- 🚫 **Documentation**: Design doc only, no user docs
 
-The MVP focuses on providing a solid, working foundation that demonstrates the core value proposition while leveraging all existing Legion infrastructure.
+### Implementation Approach
+- **TDD Without Refactor**: Get it right first time, comprehensive testing
+- **No Mocks in Integration Tests**: Use real ResourceManager, real Handles
+- **No Mocks in Implementation**: Only real services and resources
+- **Fail-Fast**: Every error raises an exception, no silent failures
+- **Phase-Based Development**: Each phase delivers working, testable functionality
+- **Local Development**: No deployment concerns, local UAT only
+
+The MVP focuses on providing Handle integration that works correctly with comprehensive testing, leveraging existing ShowMe infrastructure while adding Handle-specific capabilities.

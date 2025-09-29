@@ -1,31 +1,66 @@
 /**
  * ShowMeModule
- * 
+ *
  * Main module class for ShowMe - Generic asset display module for Legion framework
  * Provides tools for displaying any asset type in appropriate floating windows
  */
 
 import { AssetTypeDetector } from './detection/AssetTypeDetector.js';
 import { ShowAssetTool } from './tools/ShowAssetTool.js';
+import { ResourceManager } from '@legion/resource-manager';
 
 export class ShowMeModule {
   constructor(options = {}) {
     this.name = 'ShowMe';
     this.version = '1.0.0';
     this.description = 'Generic asset display module for Legion framework. Provides tools for displaying any asset type (images, JSON, code, tables, web content) in appropriate floating windows with intelligent type detection.';
-    
+
     // Store configuration
     this.config = {
       serverPort: options.serverPort || process.env.SHOWME_PORT || 3700,
       testMode: options.testMode || false,
       ...options
     };
-    
+
+    // ResourceManager will be initialized asynchronously
+    this.resourceManager = null;
+    this._resourceManagerReady = false;
+
     // Initialize components
     this.assetDetector = new AssetTypeDetector();
-    
-    // Initialize tools
-    this.tools = this.initializeTools();
+
+    // Initialize tools (will be finalized after ResourceManager is ready)
+    this.tools = [];
+
+    // Initialize asynchronously
+    this._initialized = this._initialize();
+  }
+
+  /**
+   * Initialize module asynchronously
+   * @private
+   */
+  async _initialize() {
+    try {
+      // Get ResourceManager singleton - fail-fast if unavailable
+      this.resourceManager = await ResourceManager.getInstance();
+      this._resourceManagerReady = true;
+
+      // Now initialize tools with ResourceManager available
+      this.tools = this.initializeTools();
+
+      return true;
+    } catch (error) {
+      throw new Error(`Failed to initialize ShowMeModule: ${error.message}`);
+    }
+  }
+
+  /**
+   * Ensure module is fully initialized
+   * @returns {Promise<void>}
+   */
+  async ensureInitialized() {
+    await this._initialized;
   }
 
   /**
@@ -68,9 +103,10 @@ export class ShowMeModule {
   initializeTools() {
     const tools = [];
 
-    // Create ShowAssetTool
+    // Create ShowAssetTool with ResourceManager for Handle resolution
     const showAssetTool = new ShowAssetTool({
       assetDetector: this.assetDetector,
+      resourceManager: this.resourceManager,
       serverPort: this.config.serverPort,
       testMode: this.config.testMode
     });

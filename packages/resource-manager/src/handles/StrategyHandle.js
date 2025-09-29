@@ -38,7 +38,7 @@ export class StrategyHandle {
     return new Proxy(this, {
       get(target, prop, receiver) {
         // Handle methods and private properties directly
-        if (prop in target || prop.startsWith('_') || typeof target[prop] === 'function') {
+        if (prop in target || (typeof prop === 'string' && prop.startsWith('_')) || typeof target[prop] === 'function') {
           return Reflect.get(target, prop, receiver);
         }
 
@@ -209,7 +209,9 @@ export class StrategyHandle {
    * @returns {string} Legion URI
    */
   toURI() {
-    return `legion://${this.server}/${this.resourceType}${this.filePath}`;
+    // Ensure filePath starts with / for proper URI formatting
+    const path = this.filePath.startsWith('/') ? this.filePath : `/${this.filePath}`;
+    return `legion://${this.server}/${this.resourceType}${path}`;
   }
 
   /**

@@ -10,19 +10,22 @@
 
 export class AssetTypeDetector {
   constructor() {
-    // Supported asset types
-    this.supportedTypes = ['image', 'code', 'json', 'data', 'web', 'text'];
-    
+    // Supported asset types (includes 'handle' for Legion Handles)
+    this.supportedTypes = ['handle', 'image', 'code', 'json', 'data', 'web', 'text'];
+
+    // Legion URI regex pattern
+    this.legionUriPattern = /^legion:\/\/([^\/]+)\/([^\/\?#]+)(\/[^\?#]*)?(\?[^#]*)?(#.*)?$/;
+
     // File extension mappings
     this.imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico'];
     this.codeExtensions = [
-      '.js', '.jsx', '.ts', '.tsx', '.py', '.cpp', '.c', '.h', '.hpp', 
-      '.java', '.cs', '.php', '.rb', '.go', '.rs', '.swift', '.kt', 
+      '.js', '.jsx', '.ts', '.tsx', '.py', '.cpp', '.c', '.h', '.hpp',
+      '.java', '.cs', '.php', '.rb', '.go', '.rs', '.swift', '.kt',
       '.css', '.scss', '.less', '.html', '.xml', '.sql', '.sh', '.bat',
       '.yml', '.yaml', '.toml', '.ini', '.cfg', '.conf'
     ];
     this.jsonExtensions = ['.json'];
-    
+
     // Image file headers (magic numbers)
     this.imageHeaders = [
       [0xFF, 0xD8, 0xFF], // JPEG
@@ -31,7 +34,7 @@ export class AssetTypeDetector {
       [0x52, 0x49, 0x46, 0x46], // RIFF (WebP container)
       [0x3C, 0x73, 0x76, 0x67] // SVG (<svg)
     ];
-    
+
     // Code pattern regexes
     this.codePatterns = [
       /function\s+\w+\s*\(/,
@@ -51,6 +54,159 @@ export class AssetTypeDetector {
       /\s*\/\/.*$/m,          // Single-line comments
       /\{\s*\w+:\s*\w+.*\}/   // Object/config syntax
     ];
+  }
+
+  /**
+   * Enhanced detection method that returns rich result object
+   * Supports Legion Handles in addition to traditional assets
+   * @param {*} asset - Asset to detect (any type)
+   * @param {Object} options - Detection options
+   * @param {string} options.hint - Optional hint for asset type
+   * @returns {Object} Detection result with type, subtype, uri, instance, etc.
+   */
+  detect(asset, options = {}) {
+    const { hint } = options;
+
+    // Validate input
+    if (asset === null) {
+      throw new Error('Cannot detect asset type from null');
+    }
+    if (asset === undefined) {
+      throw new Error('Cannot detect asset type from undefined');
+    }
+    if (typeof asset === 'string' && asset.trim() === '') {
+      throw new Error('Cannot detect asset type from empty string');
+    }
+
+    // Priority 1: Check for Legion Handle (highest priority)
+    const handleResult = this.detectHandle(asset);
+    if (handleResult) {
+      return handleResult;
+    }
+
+    // Priority 2: Traditional asset detection
+    const assetType = this.detectAssetType(asset, hint);
+
+    // Build result object based on asset type
+    return this.buildTraditionalAssetResult(assetType, asset);
+  }
+
+  /**
+   * Detect if asset is a Legion Handle (URI string or Handle instance)
+   * @param {*} asset - Asset to check
+   * @returns {Object|null} Handle detection result or null if not a Handle
+   */
+  detectHandle(asset) {
+    // Check for Handle instance (object with toURI() and resourceType)
+    if (this.isHandleInstance(asset)) {
+      let uri;
+      try {
+        uri = asset.toURI();
+      } catch (error) {
+        throw new Error(`URI generation failed: ${error.message}`);
+      }
+
+      // Validate that toURI() returns Legion URI
+      if (!uri || typeof uri !== 'string' || !uri.startsWith('legion://')) {
+        throw new Error('Handle toURI() must return Legion URI starting with "legion://"');
+      }
+
+      // Parse URI to extract subtype (resource type)
+      const match = uri.match(this.legionUriPattern);
+      if (!match) {
+        throw new Error(`Invalid Legion URI format: ${uri}`);
+      }
+
+      const subtype = match[2]; // Resource type from URI path
+
+      return {
+        type: 'handle',
+        subtype,
+        uri,
+        instance: asset
+      };
+    }
+
+    // Check for Legion URI string
+    if (typeof asset === 'string' && asset.startsWith('legion://')) {
+      const match = asset.match(this.legionUriPattern);
+      if (!match) {
+        throw new Error(`Invalid Legion URI format: ${asset}`);
+      }
+
+      const subtype = match[2]; // Resource type from URI path
+
+      return {
+        type: 'handle',
+        subtype,
+        uri: asset
+      };
+    }
+
+    return null;
+  }
+
+  /**
+   * Check if object is a Handle instance
+   * @param {*} obj - Object to check
+   * @returns {boolean} True if object has Handle interface
+   */
+  isHandleInstance(obj) {
+    return (
+      typeof obj === 'object' &&
+      obj !== null &&
+      typeof obj.toURI === 'function' &&
+      typeof obj.resourceType === 'string'
+    );
+  }
+
+  /**
+   * Build result object for traditional asset types
+   * @param {string} type - Detected asset type
+   * @param {*} asset - Original asset
+   * @returns {Object} Asset result object
+   */
+  buildTraditionalAssetResult(type, asset) {
+    const result = { type };
+
+    switch (type) {
+      case 'image':
+        if (typeof asset === 'string') {
+          result.path = asset;
+        } else if (Buffer.isBuffer(asset)) {
+          result.buffer = asset;
+        }
+        break;
+
+      case 'json':
+        if (typeof asset === 'object') {
+          result.data = asset;
+        } else if (typeof asset === 'string') {
+          result.path = asset;
+        }
+        break;
+
+      case 'web':
+        if (typeof asset === 'string' && (asset.startsWith('http://') || asset.startsWith('https://'))) {
+          result.url = asset;
+        } else {
+          result.content = asset;
+        }
+        break;
+
+      case 'code':
+      case 'text':
+        if (typeof asset === 'string') {
+          result.content = asset;
+        }
+        break;
+
+      case 'data':
+        result.data = asset;
+        break;
+    }
+
+    return result;
   }
 
   /**

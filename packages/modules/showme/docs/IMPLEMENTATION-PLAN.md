@@ -1,236 +1,472 @@
-# ShowMe Module Implementation Plan
+# ShowMe Handle Integration - Implementation Plan
 
 ## Overview
 
-This implementation plan follows a **Test-Driven Development (TDD) approach without refactoring phases** - we aim to get the implementation right on the first try. The plan focuses exclusively on **functional correctness** for MVP delivery.
+This plan details the implementation of Handle integration for ShowMe module, enabling display of Legion Handles in chromeless browser windows with rich introspection and interaction capabilities.
 
-## Implementation Rules
+**Reference Document**: All implementation details are specified in [DESIGN.md](./DESIGN.md). This plan provides the execution sequence only.
+
+## Implementation Approach
 
 ### Core Principles
-1. **TDD Without Refactor**: Write test → Write minimal code to pass → Move to next test
-2. **Get It Right First Time**: Design implementation carefully to avoid refactoring needs
-3. **Comprehensive Testing**: Every component must have both unit and integration tests
-4. **MVP Focus**: Only functional correctness matters - no NFRs (security, performance, etc.)
+1. **TDD Without Refactor**: Write tests first, implement correctly the first time
+2. **No Mocks in Integration Tests**: Use real ResourceManager, real Handles, real services
+3. **No Mocks in Implementation Code**: Only real services and resources, fail fast on errors
+4. **Fail-Fast**: Every error raises an exception with clear context
+5. **Phase-Based**: Each phase delivers working, demonstrable functionality
+6. **Comprehensive Testing**: Unit tests for components, integration tests for flows
 
-### Strict Requirements
-- ✅ **NO MOCKS in integration tests** - All integration tests use real dependencies
-- ✅ **NO MOCKS in implementation code** - Never mock anything in production code
-- ✅ **NO FALLBACKS** - Always fail fast with clear error messages
-- ✅ **FAIL FAST** - Raise errors immediately when conditions are not met
-- ✅ **Local/UAT only** - No publishing, deployment, or production concerns
+### Testing Rules
+- **Unit Tests**: Test individual classes/functions in isolation
+- **Integration Tests**: Test complete flows with real dependencies (NO MOCKS)
+- **All Tests Must Pass**: No skipping, no fallbacks, tests fail if resources unavailable
+- **Test Location**: All tests in `__tests__/` directory
+- **Run Tests Sequentially**: Use `--runInBand` for Jest
 
-### Testing Strategy
-- **Unit Tests**: Test individual classes/functions in isolation (mocks allowed here only)
-- **Integration Tests**: Test component interactions with real dependencies (NO MOCKS)
-- **End-to-End Tests**: Test complete workflow from tool call to UI display (NO MOCKS)
+### Workflow Rules
+1. **Read Design**: At the beginning of each phase, reread [DESIGN.md](./DESIGN.md)
+2. **Write Tests First**: Unit tests, then integration tests, then implementation
+3. **Run Tests Continuously**: After each implementation step
+4. **Update Plan**: Mark completed steps with ✅
+5. **Commit Per Phase**: Commit and push after each completed phase
 
-## Implementation Phases
+## Phases and Steps
 
-### Phase 1: Foundation & Core Detection
-**Objective**: Establish basic module structure and asset detection capabilities
+### Phase 1: Handle Detection and Resolution
+**Goal**: Enable ShowMe to detect and resolve Legion Handles via ResourceManager
 
-#### 1.1 Project Setup
-- [x] Set up Jest test configuration with ES6 modules support
-- [x] Create basic module structure following Legion patterns
-- [x] Set up test utilities and helpers (no mocks for integration)
-- [x] Verify all dependencies are correctly configured
+**Prerequisites**: Read [DESIGN.md](./DESIGN.md) - Handle Integration section
 
-#### 1.2 Asset Detection System
-- [x] Write unit tests for AssetTypeDetector class
-- [x] Implement AssetTypeDetector with all detection methods
-- [x] Write integration tests for detection with real asset samples
-- [x] Verify detection accuracy across all supported asset types
+#### Steps:
+- [✅] 1.1: Write unit tests for Handle detection in AssetTypeDetector
+  - Test Legion URI string detection (`legion://...`)
+  - Test Handle instance detection (has `toURI()` and `resourceType`)
+  - Test backward compatibility with traditional assets
+  - Test error cases (invalid URIs, malformed Handles)
 
-#### 1.3 Core Module Framework
-- [x] Write unit tests for ShowMeModule class
-- [x] Implement ShowMeModule class with tool registration
-- [x] Write integration tests for module loading and initialization
-- [x] Verify module integrates correctly with Legion module system
+- [✅] 1.2: Implement Handle detection in AssetTypeDetector
+  - Added `detect()` method returning rich result objects
+  - Added `detectHandle()` helper method
+  - Added `isHandleInstance(resource)` helper method
+  - Returns handle type with subtype (e.g., type: 'handle', subtype: 'strategy')
+  - Fail-fast on invalid inputs with clear error messages
 
-**Phase 1 Progress**: ✅ 12/12 steps complete (100%)
+- [✅] 1.3: Write unit tests for ResourceManager integration in ShowMeModule
+  - Test ResourceManager singleton retrieval
+  - Test ResourceManager stored and available
+  - Test ResourceManager passed to ShowAssetTool
+  - Test error handling for missing ResourceManager
+  - All 19 tests passing
 
-### Phase 2: Tool Implementation
-**Objective**: Implement the core ShowMeTool with full functionality
+- [✅] 1.4: Add ResourceManager to ShowMeModule
+  - Added async initialization with `_initialize()` method
+  - Import ResourceManager singleton in ShowMeModule constructor
+  - Store ResourceManager instance after async initialization
+  - Pass ResourceManager to ShowAssetTool in options
+  - Fail-fast if ResourceManager unavailable
+  - Added `ensureInitialized()` method for tests
 
-#### 2.1 Tool Interface
-- [x] Write unit tests for ShowMeTool input validation
-- [x] Write unit tests for ShowMeTool schema compliance
-- [x] Implement ShowMeTool class with input/output handling
-- [x] Write integration tests for tool execution with real assets
+- [✅] 1.5: Write integration tests for Handle resolution flow
+  - Created HandleResolution.integration.test.js with 12 tests
+  - Tests complete flow: URI → detection → resolution → metadata
+  - Uses real ResourceManager and strategy files (NO MOCKS)
+  - Tests Handle instance detection
+  - Tests error handling and backward compatibility
+  - All 12 tests passing
 
-#### 2.2 Tool-Server Communication
-- [x] Write unit tests for server management functionality
-- [x] Write unit tests for asset transmission logic
-- [x] Implement server startup and communication methods
-- [x] Write integration tests for tool-server interaction (no mocks)
+- [✅] 1.6: Run all Phase 1 tests
+  - AssetTypeDetector Handle tests: 31 passing
+  - ShowMeModule ResourceManager tests: 19 passing
+  - Handle resolution integration tests: 12 passing
+  - **Total: 62 tests, 100% pass rate**
+  - Fixed StrategyHandle.toURI() path formatting bug
+  - Fixed StrategyHandle Proxy prop.startsWith() type check
+  - Ready to commit
 
-#### 2.3 Tool Error Handling
-- [x] Write unit tests for all error scenarios
-- [x] Implement comprehensive error handling with fail-fast approach
-- [x] Write integration tests for error propagation
-- [x] Verify error messages are clear and actionable
+### Phase 2: HandleRenderer Implementation
+**Goal**: Create generic renderer for any Handle type with introspection view
 
-**Phase 2 Progress**: ✅ 12/12 steps complete (100%)
+**Prerequisites**: Read [DESIGN.md](./DESIGN.md) - Handle Renderer Architecture section
 
-### Phase 3: Server Infrastructure
-**Objective**: Build the ShowMe server using ConfigurableActorServer
+#### Steps:
+- [ ] 2.1: Write unit tests for HandleRenderer class structure
+  - Test renderer instantiation
+  - Test `render(handle, container)` method signature
+  - Test error handling for missing handle
+  - Test error handling for invalid container
 
-#### 3.1 Server Setup
-- [x] Write unit tests for ShowMeServer configuration
-- [x] Write unit tests for server initialization logic
-- [x] Implement ShowMeServer class extending ConfigurableActorServer
-- [x] Write integration tests for server startup and configuration *(completed via ToolServerInteraction.test.js)*
+- [ ] 2.2: Create HandleRenderer base structure
+  - Create `/src/renderers/HandleRenderer.js`
+  - Implement constructor
+  - Implement `render(handle, container)` method stub
+  - Add error validation for inputs
 
-#### 3.2 Asset Storage & API
-- [x] Write unit tests for asset storage functionality
-- [x] Write unit tests for API endpoint handlers
-- [x] Implement asset storage and retrieval system
-- [x] Write integration tests for API endpoints with real HTTP requests *(completed via ToolServerInteraction.test.js)*
+- [ ] 2.3: Write unit tests for Handle introspection methods
+  - Test `renderHeader(handle)` - extracts URI, type, server
+  - Test `renderProperties(handle, schema)` - extracts properties from schema
+  - Test `renderMethods(handle)` - finds callable methods
+  - Test `renderCapabilities(metadata)` - formats capabilities list
+  - Test `renderActions(handle)` - generates action buttons
 
-#### 3.3 Actor System Integration
-- [x] Write unit tests for ShowMeServerActor protocol compliance
-- [x] Implement ShowMeServerActor with message handling
-- [x] Write integration tests for server actor communication
-- [x] Verify protocol contract enforcement and validation
+- [ ] 2.4: Implement Handle introspection methods
+  - Implement `renderHeader(handle)` helper
+  - Implement `renderProperties(handle, schema)` helper
+  - Implement `renderMethods(handle)` helper
+  - Implement `renderCapabilities(metadata)` helper
+  - Implement `renderActions(handle)` helper
+  - Fail-fast on missing Handle methods (toURI, getMetadata, getSchema)
 
-**Phase 3 Progress**: ✅ 12/12 steps complete (100%)
+- [ ] 2.5: Write unit tests for view structure generation
+  - Test complete view object structure
+  - Test property formatting (name, value, type, description)
+  - Test method list generation
+  - Test action button structure
 
-### Phase 4: UI Client Implementation
-**Objective**: Build the client-side UI system for asset display
+- [ ] 2.6: Implement view generation and display
+  - Create view structure from introspection data
+  - Implement `displayInWindow(view, container)` method
+  - Create HTML template for Handle view
+  - Add CSS styling for Handle display
+  - Integrate with existing Window component
 
-#### 4.1 Client Actor
-- [x] Write unit tests for ShowMeClientActor protocol compliance
-- [x] Write unit tests for client actor message handling
-- [x] Implement ShowMeClientActor with server communication
-- [x] Write integration tests for client-server actor communication (real WebSocket)
+- [ ] 2.7: Write integration tests for HandleRenderer
+  - Create real strategy Handle from strategy file
+  - Instantiate HandleRenderer
+  - Render Handle in test container
+  - Verify all sections present (header, properties, methods, actions)
+  - Verify Handle URI displayed correctly
+  - Verify metadata extracted correctly
+  - NO MOCKS - use real Handle instance
 
-#### 4.2 Asset Display Manager
-- [x] Write unit tests for AssetDisplayManager window management
-- [x] Write unit tests for viewer creation logic
-- [x] Implement AssetDisplayManager extending ResourceWindowManager
-- [x] Write integration tests for display manager with real Legion components
+- [ ] 2.8: Run all Phase 2 tests
+  - Verify 100% pass rate
+  - Fix any failures
+  - Commit: "feat: Implement HandleRenderer for generic Handle display"
 
-#### 4.3 Viewer Implementations
-- [x] Write unit tests for each viewer type (Image, Code, JSON, Data, Web)
-- [x] Implement all viewer creation methods
-- [x] Write integration tests for viewers with real Legion components
-- [x] Verify each viewer displays assets correctly in actual windows
+### Phase 3: StrategyRenderer Implementation
+**Goal**: Create specialized renderer for strategy Handles with strategy-specific features
 
-**Phase 4 Progress**: ✅ 12/12 steps complete (100%)
+**Prerequisites**: Read [DESIGN.md](./DESIGN.md) - Strategy Renderer section
 
-### Phase 5: Integration & End-to-End Testing
-**Objective**: Verify complete system integration and workflow
+#### Steps:
+- [ ] 3.1: Write unit tests for StrategyRenderer class structure
+  - Test StrategyRenderer extends HandleRenderer
+  - Test strategy metadata extraction
+  - Test error handling for non-strategy Handles
 
-#### 5.1 Component Integration
-- [x] Write integration tests for Tool → Server communication (real HTTP)
-- [x] Write integration tests for Server → Client actor communication (real WebSocket)
-- [x] Write integration tests for Client → UI component flow (real DOM)
-- [x] Verify all components work together without mocks
+- [ ] 3.2: Create StrategyRenderer class
+  - Create `/src/renderers/StrategyRenderer.js`
+  - Extend HandleRenderer base class
+  - Implement constructor
+  - Override `render(strategyHandle, container)` method
 
-#### 5.2 Complete Workflow Testing
-- [x] Write end-to-end tests for image asset display workflow
-- [x] Write end-to-end tests for code asset display workflow  
-- [x] Write end-to-end tests for JSON asset display workflow
-- [x] Write end-to-end tests for data asset display workflow
+- [ ] 3.3: Write unit tests for strategy-specific view sections
+  - Test requirements section (tools, prompts)
+  - Test capabilities display
+  - Test file information display
+  - Test strategy actions generation
 
-#### 5.3 Error Scenario Testing
-- [x] Write integration tests for server unavailable scenarios
-- [x] Write integration tests for invalid asset scenarios
-- [x] Write integration tests for component loading failures
-- [x] Verify all error paths fail fast with clear messages
+- [ ] 3.4: Implement strategy view building
+  - Implement strategy metadata extraction
+  - Build requirements section (requiredTools, promptSchemas)
+  - Build capabilities section from metadata
+  - Build file information section (path, size, modified)
+  - Generate strategy-specific actions
 
-#### 5.4 Multi-Asset Scenarios
-- [ ] Write integration tests for concurrent asset display
-- [ ] Write integration tests for multiple window management
-- [ ] Write integration tests for asset type switching
-- [ ] Verify system handles complex real-world usage patterns
+- [ ] 3.5: Write unit tests for strategy actions
+  - Test "Instantiate Strategy" action handler
+  - Test "View Source" action handler
+  - Test "Search Similar" action handler
+  - Test error handling for each action
+  - Test action button rendering
 
-**Phase 5 Progress**: ✅ 12/16 steps complete (75%)
+- [ ] 3.6: Implement strategy actions
+  - Implement instantiation flow with context injection
+  - Implement source code loading and display
+  - Implement semantic search integration
+  - Add success/error notifications for actions
+  - Fail-fast on action errors
 
-### Phase 6: Tool Registry Integration
-**Objective**: Integrate ShowMe tool with Legion tool registry system
+- [ ] 3.7: Write integration tests for StrategyRenderer
+  - Create real strategy Handle (SimpleNodeTestStrategy)
+  - Instantiate StrategyRenderer
+  - Render strategy in test container
+  - Verify strategy metadata displayed correctly
+  - Verify tools and prompts listed
+  - Verify file information shown
+  - Verify action buttons present
+  - NO MOCKS - use real strategy Handle
 
-#### 6.1 Registry Integration
-- [ ] Write unit tests for module registration process
-- [ ] Write unit tests for tool discovery functionality
-- [ ] Implement complete module registration with tool registry
-- [ ] Write integration tests for tool registry discovery (real registry)
+- [ ] 3.8: Run all Phase 3 tests
+  - Verify 100% pass rate
+  - Fix any failures
+  - Commit: "feat: Implement StrategyRenderer for strategy Handle display"
 
-#### 6.2 Tool Execution Integration
-- [ ] Write integration tests for tool execution via registry (real execution)
-- [ ] Write integration tests for tool result handling
-- [ ] Verify tool works identically whether called directly or via registry
-- [ ] Write integration tests for concurrent tool executions
+### Phase 4: ShowAssetTool Handle Integration
+**Goal**: Update ShowAssetTool to accept and process Handle URIs and Handle instances
 
-#### 6.3 Agent Integration Testing
-- [ ] Write integration tests simulating agent tool usage patterns
-- [ ] Write integration tests for various asset types from agents
-- [ ] Verify tool interface meets agent workflow requirements
-- [ ] Test tool usage in realistic agent automation scenarios
+**Prerequisites**: Read [DESIGN.md](./DESIGN.md) - Handle Detection and Resolution section
 
-**Phase 6 Progress**: ⬜ 0/12 steps complete (0%)
+#### Steps:
+- [ ] 4.1: Write unit tests for Handle input processing in ShowAssetTool
+  - Test Legion URI string input
+  - Test Handle instance input
+  - Test traditional asset input (backward compatibility)
+  - Test error cases (invalid Handle URI, missing Handle)
 
-### Phase 7: System Validation & UAT Preparation
-**Objective**: Validate complete system functionality for UAT readiness
+- [ ] 4.2: Update ShowAssetTool.execute() for Handle detection
+  - Add Handle detection using updated AssetTypeDetector
+  - Branch on detected type (handle-* vs traditional asset)
+  - Preserve backward compatibility for non-Handle assets
 
-#### 7.1 Comprehensive System Testing
-- [ ] Run complete test suite and verify 100% pass rate
-- [ ] Test all asset types with real-world sample files
-- [ ] Verify error handling in all failure scenarios
-- [ ] Test system resource usage and basic performance
+- [ ] 4.3: Write unit tests for Handle resolution
+  - Test Handle resolution from URI via ResourceManager
+  - Test Handle metadata extraction
+  - Test Handle caching
+  - Test error handling for resolution failures
 
-#### 7.2 UAT Scenario Testing
-- [ ] Test ShowMe with real agent-generated assets
-- [ ] Test ShowMe with various file formats and data structures
-- [ ] Test ShowMe with edge cases and boundary conditions
-- [ ] Verify system stability under typical usage patterns
+- [ ] 4.4: Implement Handle resolution in ShowAssetTool
+  - Add Handle resolution via ResourceManager.createHandleFromURI()
+  - Extract Handle metadata
+  - Cache resolved Handle
+  - Fail-fast on resolution errors
 
-#### 7.3 Integration Verification
-- [ ] Verify integration with existing Legion tools and modules
-- [ ] Test ShowMe in context of complete Legion agent workflows
-- [ ] Verify no conflicts with other Legion components
-- [ ] Confirm MVP functionality meets all design requirements
+- [ ] 4.5: Write unit tests for Handle storage
+  - Test Handle URI storage (not full Handle instance)
+  - Test Handle metadata caching
+  - Test Handle retrieval and re-resolution
+  - Test storage efficiency (URIs vs instances)
 
-**Phase 7 Progress**: ⬜ 0/12 steps complete (0%)
+- [ ] 4.6: Update asset storage for Handles
+  - Store Handle URIs instead of full instances
+  - Store Handle metadata separately
+  - Implement Handle re-resolution on retrieval
+  - Update asset counter and ID generation
 
-## Testing Requirements Summary
+- [ ] 4.7: Write integration tests for Handle display flow
+  - Create strategy Handle from real strategy file
+  - Call ShowAssetTool.execute() with Handle instance
+  - Verify Handle detected correctly
+  - Verify Handle stored as URI
+  - Verify metadata cached
+  - Call execute() with Handle URI string
+  - Verify Handle resolved correctly
+  - NO MOCKS - use real ResourceManager and Handles
 
-### Unit Tests Required
-- AssetTypeDetector (all detection methods) ✅
-- ShowMeTool (interface, validation, execution) ✅
-- ShowMeServer (configuration, initialization, API) ✅
-- ShowMeServerActor (protocol compliance, message handling) ✅
-- ShowMeClientActor (protocol compliance, message handling) ✅
-- AssetDisplayManager (window management, viewer creation) ✅
-- All viewer implementations (Image, Code, JSON, Data, Web) ✅
+- [ ] 4.8: Run all Phase 4 tests
+  - Verify 100% pass rate
+  - Fix any failures
+  - Commit: "feat: Add Handle support to ShowAssetTool"
 
-### Integration Tests Required
-- Asset detection with real asset samples ✅
-- Tool execution with real server communication ⬜
-- Server-client actor communication with real WebSocket ⬜
-- UI component integration with real Legion components ⬜
-- Complete workflow testing with real dependencies ⬜
-- Error scenario testing with real failure conditions ⬜
+### Phase 5: Actor Protocol Updates for Handles
+**Goal**: Update Actor protocol to support Handle display messages
 
-### End-to-End Tests Required
-- Complete agent → tool → server → client → UI workflow
-- Multiple asset type display scenarios
-- Concurrent asset display scenarios
-- Error recovery scenarios
+**Prerequisites**: Read [DESIGN.md](./DESIGN.md) - Protocol-Based Actors section
 
-## Success Criteria
+#### Steps:
+- [ ] 5.1: Write unit tests for protocol schema updates
+  - Test 'display-resource' message schema
+  - Test Handle URI field in schema
+  - Test handle type field in schema
+  - Test schema validation for Handle messages
+  - Test backward compatibility with asset messages
 
-### MVP Completion Criteria
-- [ ] All 88 implementation steps completed with green ticks
-- [ ] 100% test pass rate across all test suites
-- [ ] Successfully displays all supported asset types (image, code, JSON, data, web)
-- [ ] Integrates seamlessly with Legion tool registry
-- [ ] Fails fast with clear error messages in all failure scenarios
-- [ ] No mocks used in integration tests or implementation code
-- [ ] Ready for UAT with real agent workflows
+- [ ] 5.2: Update ShowMeServerActor protocol definition
+  - Add 'display-resource' to receives messages
+  - Add handleURI field to schema
+  - Add handleType field to schema
+  - Update protocol version to 2.0.0
+  - Document protocol changes
 
-**Total Progress**: ✅ 60/88 steps complete (68.2%)
+- [ ] 5.3: Write unit tests for ShowMeServerActor Handle handling
+  - Test Handle URI reception
+  - Test Handle resolution via ResourceManager
+  - Test renderer type selection based on Handle type
+  - Test message forwarding to clients
+  - Test error handling for invalid Handles
 
----
+- [ ] 5.4: Implement Handle handling in ShowMeServerActor
+  - Add `handleDisplayResource(message)` method
+  - Resolve Handle from URI using ResourceManager
+  - Detect Handle type (strategy, filesystem, etc.)
+  - Select appropriate renderer type
+  - Send to connected clients with renderer info
+  - Fail-fast on resolution or renderer selection errors
 
-*Note: This implementation plan focuses exclusively on functional correctness for MVP delivery. No NFRs, deployment concerns, or production optimizations are included.*
+- [ ] 5.5: Write unit tests for ShowMeClientActor Handle rendering
+  - Test renderer type routing
+  - Test HandleRenderer usage for generic Handles
+  - Test StrategyRenderer usage for strategy Handles
+  - Test error handling for unknown renderer types
+
+- [ ] 5.6: Update ShowMeClientActor for Handle rendering
+  - Add renderer type detection from message
+  - Route to HandleRenderer for generic Handles
+  - Route to StrategyRenderer for strategy Handles
+  - Implement renderer instantiation and rendering
+  - Handle rendering errors gracefully
+
+- [ ] 5.7: Write integration tests for Actor Handle messaging
+  - Start real ShowMe server
+  - Send 'display-resource' message with strategy Handle URI
+  - Verify server resolves Handle correctly
+  - Verify server selects StrategyRenderer
+  - Verify client receives message with renderer type
+  - Verify client renders Handle correctly
+  - NO MOCKS - real Actor communication, real Handles
+
+- [ ] 5.8: Run all Phase 5 tests
+  - Verify 100% pass rate
+  - Fix any failures
+  - Commit: "feat: Update Actor protocol for Handle display"
+
+### Phase 6: App Mode Browser Launch
+**Goal**: Launch browser in chromeless app mode automatically
+
+**Prerequisites**: Read [DESIGN.md](./DESIGN.md) - Browser Launch in App Mode section
+
+#### Steps:
+- [ ] 6.1: Write unit tests for browser launch options
+  - Test chrome app mode arguments generation
+  - Test window size options
+  - Test window position options
+  - Test chrome disable flags
+  - Test error handling for missing browser
+
+- [ ] 6.2: Implement browser launch method in ShowMeServer
+  - Add `launchBrowser(url, options)` method to ShowMeServer
+  - Import `open` package
+  - Build chrome app mode argument array
+  - Include window size, position, and disable flags
+  - Fail-fast if browser launch fails
+
+- [ ] 6.3: Write unit tests for launch integration
+  - Test launch triggered on first display
+  - Test browser reuse for subsequent displays
+  - Test launch option defaults
+  - Test launch option overrides
+
+- [ ] 6.4: Integrate browser launch with ShowMeServer start
+  - Track whether browser has been launched
+  - Detect first asset/Handle display
+  - Call launchBrowser() automatically
+  - Log launch success/failure
+  - Handle multiple windows if needed
+
+- [ ] 6.5: Write integration tests for browser launch
+  - Start ShowMe server
+  - Send display request (Handle or asset)
+  - Verify browser process launched
+  - Verify app mode flags present in process args
+  - Verify window size/position correct
+  - Manual verification: Check browser has no chrome (no tabs, URL bar, etc.)
+  - NO MOCKS - real browser launch
+
+- [ ] 6.6: Run all Phase 6 tests
+  - Verify 100% pass rate (excluding manual verification)
+  - Fix any failures
+  - Commit: "feat: Add chromeless browser launch in app mode"
+
+### Phase 7: End-to-End Integration Testing
+**Goal**: Test complete flow from tool call to Handle display in chromeless browser
+
+**Prerequisites**: Read [DESIGN.md](./DESIGN.md) - All sections
+
+#### Steps:
+- [ ] 7.1: Write end-to-end integration test for strategy Handle display
+  - Create real strategy Handle from SimpleNodeTestStrategy file
+  - Start ShowMe server
+  - Call ShowAssetTool.execute() with Handle URI
+  - Verify Actor message sent correctly
+  - Verify server resolves Handle
+  - Verify server selects StrategyRenderer
+  - Verify client receives and renders Handle
+  - Verify browser launches in app mode
+  - NO MOCKS - complete real flow
+
+- [ ] 7.2: Test strategy Handle introspection display
+  - Display SimpleNodeTestStrategy Handle
+  - Verify strategy metadata shown (name, type)
+  - Verify tools listed (file_write, file_read, command_executor)
+  - Verify prompts listed (analyzeCode, generateTest, generateTestConfig)
+  - Verify file information shown (path, size, modified)
+  - Verify action buttons present
+
+- [ ] 7.3: Test Handle action functionality
+  - Click "Copy URI" action - verify clipboard
+  - Click "View JSON" action - verify JSON display
+  - Test strategy-specific actions if accessible
+  - Verify all actions complete successfully
+  - Verify error handling for failed actions
+
+- [ ] 7.4: Test different Handle types
+  - Display strategy Handle → verify StrategyRenderer used
+  - Display file Handle → verify HandleRenderer used (generic)
+  - Verify renderer selection logic works correctly
+
+- [ ] 7.5: Test error scenarios end-to-end
+  - Invalid Handle URI
+  - Non-existent strategy file
+  - ResourceManager unavailable
+  - Browser launch failure
+  - Renderer instantiation failure
+  - Verify all fail fast with clear error messages
+
+- [ ] 7.6: Test backward compatibility
+  - Display traditional assets (image, JSON, table)
+  - Verify existing renderers still work
+  - Verify no regressions in asset display
+  - Verify Handle and asset displays can coexist
+
+- [ ] 7.7: Manual UAT
+  - Start ShowMe server
+  - Display strategy Handle via ShowAssetTool
+  - Verify browser window is chromeless (no tabs, URL bar)
+  - Verify all UI sections present and formatted correctly
+  - Verify all actions work
+  - Verify window size and position correct
+  - Test multiple Handle displays
+  - Document any issues found
+
+- [ ] 7.8: Run all tests (full regression)
+  - Run all unit tests across all phases
+  - Run all integration tests across all phases
+  - Verify 100% pass rate
+  - Fix any failures
+  - Commit: "feat: Complete ShowMe Handle integration with app mode launch"
+  - Push all commits
+
+## Completion Criteria
+
+### All Phases Complete When:
+- ✅ All unit tests passing (100%)
+- ✅ All integration tests passing (100%)
+- ✅ NO MOCKS in any integration tests
+- ✅ NO MOCKS in any implementation code
+- ✅ Strategy Handles display correctly in chromeless browser
+- ✅ All Handle metadata and actions visible and functional
+- ✅ Browser launches in app mode (no chrome)
+- ✅ Actor messages flow correctly Tool → Server → Browser
+- ✅ Backward compatibility maintained for traditional assets
+- ✅ All code committed and pushed
+- ✅ Manual UAT confirms full functionality
+
+### Success Metrics:
+1. Can display any Handle via ShowAssetTool with Handle URI
+2. StrategyRenderer shows all strategy metadata correctly
+3. Browser launches automatically in chromeless mode
+4. Actor protocol supports Handle display messages
+5. Generic HandleRenderer works for non-strategy Handles
+6. All tests pass without mocks
+7. No silent failures (all errors raise exceptions)
+8. Traditional asset display still works (backward compatible)
+
+## Notes
+
+- **Design Reference**: Always refer to [DESIGN.md](./DESIGN.md) for implementation details
+- **Test-First**: Write tests before implementation in every step
+- **No Shortcuts**: No mocks in integration tests, no fallbacks, no silent failures
+- **Phase Commits**: Commit after each completed phase
+- **Update Plan**: Mark steps complete with ✅ as you proceed
+- **Reread Design**: At start of each phase, reread relevant design sections
+- **Real Strategy File**: Use SimpleNodeTestStrategy.js for all integration tests

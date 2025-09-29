@@ -7,22 +7,14 @@ export default {
   // ES6 module support
   preset: null,
   testEnvironment: 'jsdom',
-  
+
   // Test environment options
   testEnvironmentOptions: {
     customExportConditions: ['node', 'node-addons']
   },
-  
+
   // Transform settings for ES modules
   transform: {},
-  
-  // Module resolution
-  moduleNameMapper: {
-    '^@legion/server-framework$': '<rootDir>/../../server-framework/src',
-    '^@legion/resource-manager$': '<rootDir>/../../resource-manager/src', 
-    '^@legion/actors$': '<rootDir>/../../shared/actors/src',
-    '^@legion/(.+)$': '<rootDir>/../../$1/src'
-  },
   
   // Test file patterns - DOM-based tests only
   testMatch: [
