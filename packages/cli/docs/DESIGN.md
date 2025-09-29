@@ -202,24 +202,195 @@ const fileHandles = await registry.search('file operations');
 
 ### DisplayEngine (Handle Visualization)
 
-**Automatic Handle Rendering:**
-- Renders any Handle's state and capabilities automatically
-- Provides consistent visualization across all Handle types
-- Supports multiple output formats (table, tree, json, interactive)
-- Enables Handle introspection and help generation
+**Hybrid Terminal + Browser Approach:**
+- **Terminal-First**: Text rendering with tables, trees, colors in terminal (blessed/ink for rich TUI)
+- **ShowMe Integration**: Complex visualizations delegated to ShowMe browser windows
+- **Actor-Based Control**: CLI controls ShowMe browser via Actor messaging
+- **Chromeless Windows**: Browser launched in app mode (--app flag, no tabs/chrome)
+- **Seamless Flow**: Terminal for navigation, browser for rich Handle visualization
 
-**Display Engine as Handle:**
+**Display Engine Modes:**
+
 ```javascript
-// Display engine accessible as Handle
-const display = await rm.createHandleFromURI('legion://local/cli/display');
+class DisplayEngine {
+  constructor(resourceManager) {
+    this.resourceManager = resourceManager;
+    this.showMeService = null;
+    this.mode = 'auto'; // 'terminal', 'browser', 'auto'
+  }
 
-// Automatic Handle visualization
-await display.render(toolHandle, 'table');
-await display.render(memoryHandle, 'tree');
-await display.renderHelp(configHandle);
+  async render(handle, format = 'auto') {
+    // Terminal rendering for simple displays
+    if (this.shouldUseTerminal(handle, format)) {
+      return this.renderTerminal(handle, format);
+    }
 
-// Interactive Handle exploration
-await display.exploreInteractive(sessionHandle);
+    // Browser rendering for complex displays
+    return this.renderBrowser(handle, format);
+  }
+
+  // Terminal rendering (fast, SSH-friendly)
+  async renderTerminal(handle, format) {
+    switch (format) {
+      case 'table':
+        return this.renderTable(handle);
+      case 'tree':
+        return this.renderTree(handle);
+      case 'json':
+        return this.renderJSON(handle);
+      default:
+        return this.renderSummary(handle);
+    }
+  }
+
+  // Browser rendering via ShowMe (rich, interactive)
+  async renderBrowser(handle, options = {}) {
+    // Get ShowMe service
+    if (!this.showMeService) {
+      this.showMeService = this.resourceManager.get('showme');
+    }
+
+    // Send Handle URI to ShowMe via Actor messaging
+    await this.showMeService.display(handle, {
+      window: {
+        title: options.title || `${handle.resourceType}: ${handle.toURI()}`,
+        width: options.width || 1000,
+        height: options.height || 700,
+        chromeless: true // Launch in app mode
+      }
+    });
+
+    console.log(chalk.green('✓ Displaying in browser window'));
+  }
+
+  // Interactive exploration in browser
+  async exploreInteractive(handle) {
+    console.log(chalk.cyan('🔍 Opening interactive explorer...'));
+
+    await this.renderBrowser(handle, {
+      title: `Explore: ${handle.resourceType}`,
+      width: 1200,
+      height: 800
+    });
+  }
+
+  shouldUseTerminal(handle, format) {
+    // Use terminal for simple formats
+    if (['table', 'json', 'summary'].includes(format)) {
+      return true;
+    }
+
+    // Use browser for complex Handle types
+    if (handle.resourceType === 'strategy') {
+      return false;
+    }
+
+    return this.mode === 'terminal';
+  }
+}
+```
+
+**Terminal Rendering Examples:**
+
+```javascript
+// Simple table in terminal
+await display.render(strategyHandle, 'table');
+// Output:
+// ┌──────────────┬────────────────────────────────────┐
+// │ Property     │ Value                              │
+// ├──────────────┼────────────────────────────────────┤
+// │ URI          │ legion://local/strategy/...        │
+// │ Type         │ strategy                           │
+// │ Name         │ SimpleNodeTestStrategy             │
+// │ Tools        │ file_write, file_read, command_... │
+// └──────────────┴────────────────────────────────────┘
+
+// JSON output
+await display.render(strategyHandle, 'json');
+// Output:
+// {
+//   "uri": "legion://local/strategy/...",
+//   "resourceType": "strategy",
+//   "strategyName": "SimpleNodeTestStrategy",
+//   "requiredTools": ["file_write", "file_read"],
+//   "promptSchemas": ["analyzeCode", "generateTest"]
+// }
+```
+
+**Browser Rendering Examples:**
+
+```javascript
+// Complex interactive display
+await display.exploreInteractive(strategyHandle);
+// Action: Opens chromeless browser window with:
+//   - Full Handle introspection
+//   - Interactive property exploration
+//   - Action buttons (Instantiate, View Source)
+//   - Live updates via Handle subscriptions
+//   - Syntax-highlighted source code
+//   - Related strategies via semantic search
+```
+
+**Display Engine Decision Flow:**
+
+```
+User types command
+       ↓
+CLI receives input
+       ↓
+   Parse command
+       ↓
+  /show <handle-uri>
+       ↓
+  DisplayEngine.render()
+       ↓
+   ┌─────────────────┐
+   │ Simple display? │
+   └────┬───────┬────┘
+        │       │
+    Yes │       │ No
+        │       │
+        ↓       ↓
+   Terminal   ShowMe
+   (table,    (browser,
+    tree,      interactive,
+    json)      chromeless)
+```
+
+**ShowMe Actor Integration:**
+
+```javascript
+class DisplayEngine {
+  async initializeShowMe() {
+    // Get ShowMe service from ResourceManager
+    this.showMeService = this.resourceManager.get('showme');
+
+    // Get ShowMe server actor for direct messaging
+    this.showMeActor = await this.showMeService.getServerActor();
+  }
+
+  async displayHandle(handle, options = {}) {
+    // Send Actor message to ShowMe server
+    await this.showMeActor.send({
+      type: 'display-resource',
+      resource: handle.toURI(),
+      window: {
+        title: options.title || `${handle.resourceType}: ${handle.toURI()}`,
+        width: options.width || 1000,
+        height: options.height || 700,
+        position: options.position || 'center',
+        chromeless: true
+      }
+    });
+
+    // ShowMe server:
+    //   1. Resolves Handle from URI
+    //   2. Determines renderer (HandleRenderer/StrategyRenderer)
+    //   3. Launches browser in app mode if needed
+    //   4. Sends display message to browser via WebSocket
+    //   5. Browser renders Handle with appropriate viewer
+  }
+}
 ```
 
 ### CommandProcessor (Handle-Based Command Routing)
