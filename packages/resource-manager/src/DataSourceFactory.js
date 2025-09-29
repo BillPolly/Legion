@@ -5,11 +5,13 @@
  */
 
 import { Neo4jDataSource } from './datasources/Neo4jDataSource.js';
+import { NomicDataSource } from './datasources/NomicDataSource.js';
+import { QdrantDataSource } from './datasources/QdrantDataSource.js';
 
 export class DataSourceFactory {
   /**
    * Create a DataSource instance
-   * @param {string} type - Type of DataSource ('neo4j', 'mongodb', etc.)
+   * @param {string} type - Type of DataSource ('neo4j', 'mongodb', 'nomic', 'qdrant', etc.)
    * @param {ResourceManager} resourceManager - ResourceManager instance
    * @returns {Promise<Object>} Initialized DataSource instance
    */
@@ -28,7 +30,14 @@ export class DataSourceFactory {
         
       case 'qdrant':
       case 'vector':
-        throw new Error('Qdrant DataSource not yet implemented');
+        dataSource = new QdrantDataSource(resourceManager);
+        break;
+        
+      case 'nomic':
+      case 'embedding':
+      case 'embeddings':
+        dataSource = new NomicDataSource(resourceManager);
+        break;
         
       default:
         throw new Error(`Unknown DataSource type: ${type}`);
@@ -47,5 +56,23 @@ export class DataSourceFactory {
    */
   static async createNeo4j(resourceManager) {
     return this.create('neo4j', resourceManager);
+  }
+  
+  /**
+   * Create Nomic DataSource
+   * @param {ResourceManager} resourceManager - ResourceManager instance
+   * @returns {Promise<NomicDataSource>} Initialized Nomic DataSource
+   */
+  static async createNomic(resourceManager) {
+    return this.create('nomic', resourceManager);
+  }
+  
+  /**
+   * Create Qdrant DataSource
+   * @param {ResourceManager} resourceManager - ResourceManager instance
+   * @returns {Promise<QdrantDataSource>} Initialized Qdrant DataSource
+   */
+  static async createQdrant(resourceManager) {
+    return this.create('qdrant', resourceManager);
   }
 }

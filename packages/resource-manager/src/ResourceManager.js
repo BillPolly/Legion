@@ -509,6 +509,15 @@ export class ResourceManager {
   }
 
   /**
+   * Get Handle from URI (convenience method)
+   * @param {string} uri - Legion URI (legion://server/type/path)
+   * @returns {Handle} Handle instance for the resource
+   */
+  async getHandle(uri) {
+    return this.createHandleFromURI(uri);
+  }
+
+  /**
    * Create Handle from URI (instance method) with caching
    * @param {string} uri - Legion URI (legion://server/type/path)
    * @returns {Handle} Handle instance for the resource
@@ -663,8 +672,26 @@ export class ResourceManager {
    * @private
    */
   async _createDataSource(parsed) {
-    const dataSourceFactory = await this._getDataSourceFactoryAsync();
-    return await dataSourceFactory.create(parsed, this);
+    // Initialize DataSource cache if needed
+    if (!this._dataSourceCache) {
+      this._dataSourceCache = new Map();
+    }
+    
+    // Use resource type as cache key (all handles of same type share DataSource)
+    const cacheKey = parsed.resourceType;
+    
+    // Check cache first
+    if (this._dataSourceCache.has(cacheKey)) {
+      return this._dataSourceCache.get(cacheKey);
+    }
+    
+    // Create new DataSource and cache it
+    const { DataSourceFactory } = await import('./DataSourceFactory.js');
+    const dataSource = await DataSourceFactory.create(parsed.resourceType, this);
+    
+    this._dataSourceCache.set(cacheKey, dataSource);
+    
+    return dataSource;
   }
 
   /**
@@ -710,6 +737,159 @@ export class ResourceManager {
   }
 
   /**
+   * Initialize service clients
+   * @private
+   */
+  async _initializeServiceClients() {
+    try {
+      // Initialize Qdrant client
+      await this._initializeQdrantClient();
+      
+      // Initialize Nomic client (already handled by NomicDataSource)
+      // Nomic client is created on-demand by NomicDataSource
+      
+    } catch (error) {
+      console.warn('Service client initialization warning:', error.message);
+      // Don't fail initialization if services aren't available
+    }
+  }
+
+  /**
+   * Initialize Qdrant client
+   * @private
+   */
+  async _initializeQdrantClient() {
+    const qdrantUrl = this.get('env.QDRANT_URL') || 'http://localhost:6333';
+    
+    try {
+      // Check if Qdrant is accessible
+      const isHealthy = await this._checkQdrantHealth();
+      
+      if (isHealthy) {
+        // Create a simple REST client for Qdrant
+        const qdrantClient = {
+          baseUrl: qdrantUrl,
+          
+          async getCollections() {
+            const fetch = (await import('node-fetch')).default;
+            const response = await fetch(`${qdrantUrl}/collections`);
+            if (!response.ok) {
+              throw new Error(`Qdrant request failed: ${response.status}`);
+            }
+            return await response.json();
+          },
+          
+          async createCollection(name, config) {
+            const fetch = (await import('node-fetch')).default;
+            const response = await fetch(`${qdrantUrl}/collections/${name}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(config)
+            });
+            if (!response.ok) {
+              throw new Error(`Failed to create collection: ${response.status}`);
+            }
+            return await response.json();
+          },
+          
+          async getCollection(name) {
+            const fetch = (await import('node-fetch')).default;
+            const response = await fetch(`${qdrantUrl}/collections/${name}`);
+            if (!response.ok) {
+              throw new Error(`Collection not found: ${response.status}`);
+            }
+            return await response.json();
+          },
+          
+          async deleteCollection(name) {
+            const fetch = (await import('node-fetch')).default;
+            const response = await fetch(`${qdrantUrl}/collections/${name}`, {
+              method: 'DELETE'
+            });
+            if (!response.ok) {
+              throw new Error(`Failed to delete collection: ${response.status}`);
+            }
+            return await response.json();
+          },
+          
+          async upsert(collection, data) {
+            const fetch = (await import('node-fetch')).default;
+            const response = await fetch(`${qdrantUrl}/collections/${collection}/points`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data)
+            });
+            if (!response.ok) {
+              throw new Error(`Failed to upsert points: ${response.status}`);
+            }
+            return await response.json();
+          },
+          
+          async search(collection, data) {
+            const fetch = (await import('node-fetch')).default;
+            const response = await fetch(`${qdrantUrl}/collections/${collection}/points/search`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data)
+            });
+            if (!response.ok) {
+              throw new Error(`Search failed: ${response.status}`);
+            }
+            return await response.json();
+          },
+          
+          async retrieve(collection, data) {
+            const fetch = (await import('node-fetch')).default;
+            const response = await fetch(`${qdrantUrl}/collections/${collection}/points`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data)
+            });
+            if (!response.ok) {
+              throw new Error(`Retrieve failed: ${response.status}`);
+            }
+            return await response.json();
+          },
+          
+          async delete(collection, data) {
+            const fetch = (await import('node-fetch')).default;
+            const response = await fetch(`${qdrantUrl}/collections/${collection}/points/delete`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data)
+            });
+            if (!response.ok) {
+              throw new Error(`Delete failed: ${response.status}`);
+            }
+            return await response.json();
+          },
+          
+          async update(collection, data) {
+            const fetch = (await import('node-fetch')).default;
+            const response = await fetch(`${qdrantUrl}/collections/${collection}/points/payload`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data)
+            });
+            if (!response.ok) {
+              throw new Error(`Update failed: ${response.status}`);
+            }
+            return await response.json();
+          }
+        };
+        
+        // Store the client in resources
+        this._resources.set('qdrantClient', qdrantClient);
+        
+        console.log('Qdrant client initialized successfully');
+      }
+    } catch (error) {
+      console.warn('Failed to initialize Qdrant client:', error.message);
+      // Don't fail - client will be created on-demand if needed
+    }
+  }
+
+  /**
    * Initialize default Handle types
    * @private
    */
@@ -720,6 +900,9 @@ export class ResourceManager {
     this._registerHandleType('mongodb', () => import('./handles/MongoHandle.js').then(m => m.MongoHandle));
     this._registerHandleType('filesystem', () => import('./handles/FileHandle.js').then(m => m.FileHandle));
     this._registerHandleType('service', () => import('./handles/ServiceHandle.js').then(m => m.ServiceHandle));
+    this._registerHandleType('nomic', () => import('./handles/NomicHandle.js').then(m => m.NomicHandle));
+    this._registerHandleType('qdrant', () => import('./handles/QdrantHandle.js').then(m => m.QdrantHandle));
+    this._registerHandleType('vector', () => import('./handles/QdrantHandle.js').then(m => m.QdrantHandle));
   }
 
   /**
@@ -831,6 +1014,16 @@ export class ResourceManager {
       }
       
       this._handleCache.clear();
+    }
+    
+    if (this._dataSourceCache) {
+      // Cleanup all cached DataSources
+      for (const dataSource of this._dataSourceCache.values()) {
+        if (dataSource && typeof dataSource.cleanup === 'function') {
+          dataSource.cleanup();
+        }
+      }
+      this._dataSourceCache.clear();
     }
     
     if (this._uriCache) {
