@@ -98,6 +98,10 @@ test-results/
 dbs/
 **/dbs/
 
+# Neo4j database files (Docker volume mount)
+packages/resource-manager/neo4j/data/
+**/neo4j/data/
+
 # Temporary directories
 tmp/
 /tmp/

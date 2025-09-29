@@ -209,13 +209,24 @@ export class ResourceManager {
         this._resources.set('env', envVars);
       }
       
-      // Ensure required services are running (in background, don't block)
+      // Initialize service management
+      this._initializeServiceManagement();
+      
+      // Auto-start configured services
       if (!isTestEnvironment()) {
-        setImmediate(() => {
-          this._ensureServicesRunning().catch(error => {
-            console.warn('Background service initialization failed:', error.message);
-          });
-        });
+        const autoStartServices = this.get('env.AUTO_START_SERVICES');
+        if (autoStartServices) {
+          // Parse comma-separated list of services to auto-start
+          const services = autoStartServices.split(',').map(s => s.trim());
+          for (const service of services) {
+            // Start service asynchronously without blocking
+            setImmediate(() => {
+              this._startService(service).catch(error => {
+                console.warn(`Failed to auto-start service ${service}:`, error.message);
+              });
+            });
+          }
+        }
       }
       
       // Mark as initialized
@@ -867,6 +878,396 @@ export class ResourceManager {
   }
 
   /**
+   * Initialize service management infrastructure
+   * @private
+   */
+  _initializeServiceManagement() {
+    // Service registry for lazy initialization
+    this._services = new Map();
+    
+    // Service configurations
+    this._serviceConfigs = new Map([
+      ['neo4j', {
+        containerName: 'legion-neo4j',
+        imageName: 'neo4j:5.13.0',
+        ports: ['-p 7474:7474', '-p 7687:7687'],
+        volumes: [
+          `-v ${process.cwd()}/packages/resource-manager/neo4j/data:/data`,
+          `-v ${process.cwd()}/packages/resource-manager/neo4j/logs:/logs`
+        ],
+        environment: ['-e NEO4J_AUTH=neo4j/password123'],
+        healthCheck: async () => this._checkNeo4jHealth(),
+        createHandle: () => this._createNeo4jHandle()
+      }],
+      ['mongodb', {
+        containerName: 'legion-mongodb',
+        imageName: 'mongo:latest',
+        ports: ['-p 27017:27017'],
+        volumes: ['-v mongodb_data:/data/db'],
+        environment: [],
+        healthCheck: async () => this._checkMongoHealth(),
+        createHandle: () => this._createMongoHandle()
+      }],
+      ['qdrant', {
+        containerName: 'legion-qdrant',
+        imageName: 'qdrant/qdrant:latest',
+        ports: ['-p 6333:6333', '-p 6334:6334'],
+        volumes: ['-v qdrant_storage:/qdrant/storage:z'],
+        environment: [],
+        healthCheck: async () => this._checkQdrantHealth(),
+        createHandle: () => this._createQdrantHandle()
+      }]
+    ]);
+  }
+
+  /**
+   * Get service handle with lazy initialization
+   * @param {string} serviceName - Name of the service (neo4j, mongodb, qdrant)
+   * @returns {Promise<Object>} Service handle
+   */
+  async getService(serviceName) {
+    // Check if service is already initialized
+    if (this._services.has(serviceName)) {
+      return this._services.get(serviceName);
+    }
+    
+    // Get service configuration
+    const config = this._serviceConfigs.get(serviceName);
+    if (!config) {
+      throw new Error(`Unknown service: ${serviceName}`);
+    }
+    
+    // Start service if needed
+    await this._startService(serviceName);
+    
+    // Create and cache service handle
+    const handle = await config.createHandle();
+    this._services.set(serviceName, handle);
+    
+    return handle;
+  }
+
+  /**
+   * Get Neo4j server handle with automatic Docker management
+   * @returns {Promise<Object>} Neo4j server connection details and handle
+   */
+  async getNeo4jServer() {
+    return this.getService('neo4j');
+  }
+  
+  /**
+   * Start a service (Docker container)
+   * @param {string} serviceName - Name of the service to start
+   * @private
+   */
+  async _startService(serviceName) {
+    if (isTestEnvironment()) {
+      return; // Skip Docker management in tests
+    }
+    
+    const config = this._serviceConfigs.get(serviceName);
+    if (!config) {
+      throw new Error(`Unknown service: ${serviceName}`);
+    }
+    
+    const { execSync } = await import('child_process');
+    
+    try {
+      // Ensure Docker is running
+      await this._ensureDockerRunning();
+      
+      // Check if container is already running
+      const running = execSync(`docker ps --format "{{.Names}}" | grep -i ${config.containerName} || echo ""`, {
+        stdio: 'pipe'
+      }).toString().trim();
+      
+      if (!running) {
+        // Check if container exists but is stopped
+        const stopped = execSync(`docker ps -a --format "{{.Names}}" | grep -i ${config.containerName} || echo ""`, {
+          stdio: 'pipe'
+        }).toString().trim();
+        
+        if (stopped) {
+          console.log(`Starting existing ${serviceName} container...`);
+          execSync(`docker start ${config.containerName}`, { stdio: 'pipe' });
+        } else {
+          // Create and start new container
+          console.log(`Creating new ${serviceName} container...`);
+          const dockerCmd = [
+            'docker run -d',
+            `--name ${config.containerName}`,
+            ...config.ports,
+            ...config.volumes,
+            ...config.environment,
+            config.imageName
+          ].join(' ');
+          
+          execSync(dockerCmd, { stdio: 'pipe' });
+        }
+        
+        // Wait for service to be ready
+        await this._waitForService(serviceName, config);
+      }
+    } catch (error) {
+      console.error(`Error starting ${serviceName}:`, error.message);
+      throw new Error(`Failed to start ${serviceName}: ${error.message}`);
+    }
+  }
+  
+  /**
+   * Wait for a service to be ready
+   * @param {string} serviceName - Name of the service
+   * @param {Object} config - Service configuration
+   * @private
+   */
+  async _waitForService(serviceName, config) {
+    console.log(`Waiting for ${serviceName} to be ready...`);
+    
+    let retries = 30;
+    while (retries > 0) {
+      try {
+        const isReady = await config.healthCheck();
+        if (isReady) {
+          console.log(`${serviceName} is ready`);
+          return;
+        }
+      } catch {
+        // Still starting up
+      }
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      retries--;
+    }
+    
+    throw new Error(`${serviceName} failed to start in time`);
+  }
+  
+  /**
+   * Create Neo4j service handle
+   * @private
+   */
+  async _createNeo4jHandle() {
+    const neo4jUri = this.get('env.NEO4J_URI') || 'bolt://localhost:7687';
+    const neo4jUser = this.get('env.NEO4J_USER') || 'neo4j';
+    const neo4jPassword = this.get('env.NEO4J_PASSWORD') || 'password123';
+    const neo4jDatabase = this.get('env.NEO4J_DATABASE') || 'neo4j';
+    
+    // Import neo4j-driver
+    const neo4j = await import('neo4j-driver');
+    
+    // Create the driver with connection pooling
+    const driver = neo4j.default.driver(
+      neo4jUri,
+      neo4j.default.auth.basic(neo4jUser, neo4jPassword),
+      {
+        maxConnectionPoolSize: parseInt(this.get('env.NEO4J_MAX_CONNECTION_POOL_SIZE') || '50'),
+        connectionTimeout: 30000,
+        maxTransactionRetryTime: 30000
+      }
+    );
+    
+    // Verify connectivity
+    try {
+      await driver.verifyConnectivity();
+      console.log('Neo4j driver connected successfully');
+    } catch (error) {
+      console.error('Failed to connect to Neo4j:', error.message);
+      throw error;
+    }
+    
+    // Create handle with full Neo4j capabilities
+    return {
+      uri: neo4jUri,
+      user: neo4jUser,
+      password: neo4jPassword,
+      database: neo4jDatabase,
+      driver,
+      
+      // Session management
+      session(config = {}) {
+        return driver.session({
+          database: config.database || neo4jDatabase,
+          defaultAccessMode: config.mode || neo4j.default.session.WRITE
+        });
+      },
+      
+      // Execute a single query
+      async run(query, params = {}) {
+        const session = this.session();
+        try {
+          const result = await session.run(query, params);
+          return result;
+        } finally {
+          await session.close();
+        }
+      },
+      
+      // Transaction support
+      async transaction(work, config = {}) {
+        const session = this.session(config);
+        try {
+          if (config.readOnly) {
+            return await session.executeRead(work);
+          } else {
+            return await session.executeWrite(work);
+          }
+        } finally {
+          await session.close();
+        }
+      },
+      
+      // Health check
+      async isHealthy() {
+        try {
+          await driver.verifyConnectivity();
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      
+      // Get driver stats
+      getStats() {
+        const serverInfo = driver.getServerInfo();
+        return {
+          address: serverInfo.address,
+          version: serverInfo.version,
+          protocolVersion: serverInfo.protocolVersion
+        };
+      },
+      
+      // Close driver and all connections
+      async close() {
+        await driver.close();
+      }
+    };
+  }
+  
+  /**
+   * Check Neo4j health
+   * @private
+   */
+  async _checkNeo4jHealth() {
+    const neo4jUrl = this.get('env.NEO4J_URI') || 'bolt://localhost:7687';
+    const httpUrl = neo4jUrl.replace('bolt://', 'http://').replace(':7687', ':7474');
+    
+    try {
+      const fetch = (await import('node-fetch')).default;
+      const response = await fetch(httpUrl, { timeout: 2000 });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }
+  
+  /**
+   * Create MongoDB service handle
+   * @private
+   */
+  async _createMongoHandle() {
+    const mongoUrl = this.get('env.MONGODB_URL') || 'mongodb://localhost:27017';
+    
+    return {
+      uri: mongoUrl,
+      getConnection() {
+        // Will be implemented when needed
+        return { uri: mongoUrl };
+      }
+    };
+  }
+  
+  /**
+   * Check MongoDB health
+   * @private
+   */
+  async _checkMongoHealth() {
+    // Simple check - try to connect
+    // Will be enhanced when MongoDB DataSource is implemented
+    return true;
+  }
+  
+  /**
+   * Create Qdrant service handle
+   * @private
+   */
+  async _createQdrantHandle() {
+    const qdrantUrl = this.get('env.QDRANT_URL') || 'http://localhost:6333';
+    
+    return {
+      uri: qdrantUrl,
+      getConnection() {
+        return { uri: qdrantUrl };
+      }
+    };
+  }
+  
+  /**
+   * Check Qdrant health
+   * @private
+   */
+  async _checkQdrantHealth() {
+    const qdrantUrl = this.get('env.QDRANT_URL') || 'http://localhost:6333';
+    
+    try {
+      const fetch = (await import('node-fetch')).default;
+      const response = await fetch(`${qdrantUrl}/collections`, { timeout: 2000 });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }
+  
+  /**
+   * Ensure Docker is running
+   * @private
+   */
+  async _ensureDockerRunning() {
+    const { execSync } = await import('child_process');
+    
+    try {
+      execSync('docker ps', { stdio: 'pipe' });
+    } catch (dockerError) {
+      // Try to start Docker
+      console.log('Docker not running, attempting to start...');
+      await this._startDocker();
+    }
+  }
+  
+  /**
+   * Start Docker daemon
+   * @private
+   */
+  async _startDocker(execSync) {
+    try {
+      // Try to start colima (Docker for Mac)
+      execSync('colima start --cpu 2 --memory 2', {
+        stdio: 'pipe',
+        timeout: 60000
+      });
+      console.log('Docker started successfully via colima');
+    } catch (colimaError) {
+      // Try Docker Desktop
+      try {
+        execSync('open -a Docker', { stdio: 'pipe' });
+        // Wait for Docker to be ready
+        let retries = 30;
+        while (retries > 0) {
+          try {
+            execSync('docker ps', { stdio: 'pipe' });
+            console.log('Docker started successfully');
+            return;
+          } catch {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            retries--;
+          }
+        }
+        throw new Error('Docker failed to start in time');
+      } catch (dockerDesktopError) {
+        throw new Error('Docker is required but not available');
+      }
+    }
+  }
+
+  /**
    * Ensure required services are running (Docker, Qdrant, MongoDB)
    * @private
    */
@@ -1000,6 +1401,37 @@ export class ResourceManager {
       // Don't throw - allow ResourceManager to initialize even if services aren't available
       // Tests should fail appropriately if they need these services
     }
+  }
+
+  /**
+   * Synchronous query interface for Handles
+   * Uses message passing to delegate to appropriate DataSource
+   */
+  query(queryRequest) {
+    const { dataSource, querySpec, handler } = queryRequest;
+    
+    if (dataSource === 'neo4j' && handler) {
+      // For Neo4j queries, delegate to the handler's async method synchronously
+      // This is a simplified implementation - in a full actor system, 
+      // this would use proper message passing with queues
+      if (querySpec.type === 'schema') {
+        return this._syncWrapper(() => handler.getSchemaAsync());
+      } else {
+        return this._syncWrapper(() => handler.queryAsync(querySpec));
+      }
+    }
+    
+    throw new Error(`Unsupported sync query: ${dataSource}`);
+  }
+  
+  /**
+   * Simple synchronous wrapper for async operations
+   * In production, this would use proper message passing
+   */
+  _syncWrapper(asyncFn) {
+    // For now, we'll throw an error to indicate this needs proper implementation
+    // In a real actor system, this would use message queues
+    throw new Error('Synchronous query wrapper not yet implemented - use async DataSource methods directly');
   }
 }
 

@@ -14,10 +14,10 @@
   "author": "Legion Team",
   "license": "MIT",
   "dependencies": {
-    "@legion/triplestore": "workspace:*",
-    "@legion/handle": "workspace:*",
-    "@legion/data-proxies": "workspace:*",
-    "@legion/handle-dsl": "workspace:*"
+    "@legion/triplestore": "^1.0.0",
+    "@legion/handle": "^1.0.0",
+    "@legion/data-proxies": "^1.0.0",
+    "@legion/handle-dsl": "^1.0.0"
   },
   "devDependencies": {
     "jest": "^29.7.0"

@@ -9,6 +9,16 @@
 // Main export - the singleton ResourceManager
 export { ResourceManager } from './ResourceManager.js';
 
+// DataSource exports
+export { Neo4jDataSource } from './datasources/Neo4jDataSource.js';
+
+// Handle exports
+export { GraphDatabaseHandle } from './handles/GraphDatabaseHandle.js';
+export { NodeHandle } from './handles/NodeHandle.js';
+
+// DataSourceFactory for creating DataSources
+export { DataSourceFactory } from './DataSourceFactory.js';
+
 // Convenience function for getting the singleton
 import { ResourceManager } from './ResourceManager.js';
 
