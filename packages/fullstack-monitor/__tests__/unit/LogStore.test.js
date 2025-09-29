@@ -11,8 +11,7 @@ describe('LogStore', () => {
   let resourceManager;
 
   beforeEach(async () => {
-    resourceManager = ResourceManager.getInstance();
-    await resourceManager.initialize();
+    resourceManager = await ResourceManager.getInstance();
     logStore = await LogStore.create(resourceManager);
   });
 
