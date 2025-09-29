@@ -2,98 +2,120 @@
 
 ## Overview
 
-The Legion CLI is a unified command-line interface that integrates four core Legion framework components to provide a powerful, memory-enabled, tool-executing CLI system with persistent context and hierarchical task execution.
+The Legion CLI is a Handle-centric command-line interface that provides a unified, consistent way to interact with any resource, tool, or artifact through the Legion framework's Handle system. Everything in the CLI - commands, tools, memory, sessions, configuration - is accessed through Handles, creating an elegant and powerful interface.
 
-## Architecture Foundation
+## Handle-Centric Architecture
+
+### Everything is a Handle
+
+The CLI operates on the principle that **every resource, tool, command, and artifact** is accessed through a Handle. This creates a consistent, discoverable, and automatically displayable interface:
+
+**1. Tools as Handles**
+- `legion://local/tools/file_read` - File reading tool
+- `legion://local/tools/calculator` - Calculator functionality  
+- `legion://local/tools/web_scraper` - Web scraping capabilities
+
+**2. Memory as Handles**
+- `legion://local/memory/entities` - Knowledge graph entities
+- `legion://local/memory/sessions/current` - Current session data
+- `legion://local/memory/conversations` - Conversation history
+
+**3. Configuration as Handles**
+- `legion://local/env/ANTHROPIC_API_KEY` - API configuration
+- `legion://local/config/cli/theme` - CLI appearance settings
+- `legion://local/config/agent/model` - LLM model selection
+
+**4. Tasks and Artifacts as Handles**
+- `legion://local/tasks/current` - Currently executing task
+- `legion://local/artifacts/generated_code` - Generated code artifacts
+- `legion://local/workspace/project.json` - Project files
 
 ### Core Integration Components
 
-**1. ConfigurableAgent (Agent Runtime)**
-- JSON-configured agent with LLM integration
-- Memory management via AgentState and KnowledgeGraph
-- Tool execution through CapabilityManager
+**1. ConfigurableAgent (Agent Runtime via Handles)**
+- Agent accessed as: `legion://local/agent/current`
+- Memory via: `legion://local/agent/memory/*`
+- Tool capabilities via: `legion://local/agent/tools/*`
 - Message-based Actor pattern communication
 
-**2. ResourceManager (Unified Resource Access)**
-- Singleton pattern with transparent Proxy-based access
+**2. ResourceManager (Universal Handle Provider)**
+- Singleton pattern with Handle creation and caching
 - Legion URI system: `legion://server/type/path`
-- Handle abstraction for different resource types
-- Environment variable and service management
+- Transparent Handle abstraction for all resource types
+- Automatic Handle discovery and registration
 
-**3. Actor/Message System (Communication Framework)**
-- Fire-and-forget messaging via `send()` and `defer()`
-- Message routing through `receive()` method
-- Asynchronous coordination between components
+**3. Actor/Message System (Handle Communication)**
+- Handles can send/receive messages via Actor pattern
+- Fire-and-forget messaging between Handle instances
+- Event-driven Handle coordination and updates
 
-**4. Tasks System (Hierarchical Execution)**
-- Parent-child task relationships with artifact flow
-- ExecutionContext for dependency injection
-- Strategy pattern for pluggable task behaviors
-- Conversation history per task context
+**4. Tasks System (Handle-based Execution)**
+- Tasks accessed as Handles: `legion://local/tasks/{id}`
+- Artifacts flow between tasks via Handle references
+- ExecutionContext provides Handle-based dependency injection
 
 ## System Architecture
 
-### CLI Class (Primary Interface)
+### CLI as Handle Gateway
 
 ```
-CLI
-├── ConfigurableAgent (agent runtime)
-├── ResourceManager (resource access)
-├── CommandRouter (slash command routing)
-├── TaskOrchestrator (task execution)
-├── MemoryManager (persistent context)
-└── SessionManager (session lifecycle)
+CLI (Handle-based Interface)
+├── ResourceManager (Handle Provider)
+├── HandleRegistry (Auto-discovery)
+├── DisplayEngine (Handle Visualization)
+├── CommandProcessor (Handle Command Routing)
+└── SessionContext (Handle-based State)
 ```
 
-### Core Components
+### Handle-First Design
 
 **CLI Class**
-- Main entry point and session coordinator
-- Integrates all subsystems
-- Manages readline interface and user interaction
-- Handles session persistence and restoration
+- Primary Handle gateway and user interface
+- Discovers and presents available Handles
+- Routes user input to appropriate Handles
+- Manages Handle-based session state
 
-**CommandRouter**
-- Routes slash commands (`/help`, `/tools`, `/memory`, etc.)
-- Integrates with ConfigurableAgent's message routing
-- Provides command discovery and help system
-- Maps commands to agent message types
+**HandleRegistry**
+- Auto-discovers available Handles by type
+- Maintains Handle metadata and capabilities
+- Provides Handle search and filtering
+- Enables dynamic Handle loading
 
-**TaskOrchestrator**
-- Creates Task objects for complex operations
-- Manages hierarchical task execution
-- Coordinates artifact flow between tasks
-- Provides task status and progress tracking
+**DisplayEngine**
+- Automatically renders Handle states and capabilities
+- Provides consistent Handle visualization
+- Supports multiple output formats (table, tree, json)
+- Enables Handle introspection and help
 
-**MemoryManager**
-- Wraps ConfigurableAgent's KnowledgeGraph
-- Provides persistent memory across sessions
-- Manages entity/relationship storage
-- Offers memory search and retrieval
+**CommandProcessor**
+- Maps user commands to Handle operations
+- Supports both slash commands and natural language
+- Routes complex operations to ConfigurableAgent Handle
+- Provides Handle-based command completion
 
-**SessionManager**
-- Handles session lifecycle (create, save, restore)
-- Manages session metadata and indexing
-- Provides session switching capabilities
-- Integrates with ResourceManager for storage
+**SessionContext**
+- All session state stored as Handles
+- Session persistence via Handle serialization
+- Cross-session Handle reference resolution
+- Handle-based session switching and management
 
-### Message Flow Architecture
+### Handle-Based Message Flow
 
 **User Input Processing:**
-1. User enters command or query
-2. CLI determines if it's a slash command or natural language
-3. CommandRouter handles slash commands directly
-4. Natural language goes to ConfigurableAgent via Actor pattern
-5. ConfigurableAgent processes with LLM and memory context
-6. Tool execution requests route through CapabilityManager
-7. Responses flow back through Actor messaging
+1. User enters command or query via CLI
+2. CLI accesses HandleRegistry to resolve available commands/tools
+3. Input routes to appropriate Handle based on URI pattern
+4. Handles communicate via Actor messaging system
+5. Complex queries route to ConfigurableAgent Handle
+6. Tool execution requests route through Tool Handles
+7. All responses flow through Handle Actor messaging
 
-**Task Execution Flow:**
-1. Complex requests create Task objects via TaskOrchestrator
-2. Tasks inherit strategy from parent context
-3. ExecutionContext provides dependency injection
-4. Task hierarchy manages artifact flow
-5. Completion messages propagate through Actor system
+**Handle-Based Task Execution:**
+1. Complex requests create Task Handles via TaskOrchestrator Handle
+2. Task Handles inherit strategy from parent Handle context
+3. ExecutionContext provides Handle-based dependency injection
+4. Task hierarchy manages artifact flow between Handles
+5. Completion messages propagate through Handle Actor system
 
 ### Handle Integration
 
@@ -129,75 +151,125 @@ const memory = await rm.createHandleFromURI('legion://local/memory/entities');
 await memory.store('project', entityData);
 ```
 
-## Core Components Detail
+## Core Components Detail - Handle-Based Design
 
-### CLI Class
+### CLI Gateway (Handle-Based Interface)
 
 **Responsibilities:**
-- Session management and persistence
-- User interface (readline integration)
-- Component coordination and lifecycle
-- Error handling and graceful degradation
+- Serve as the primary Handle gateway for user interaction
+- Auto-discover and present available Handles to users
+- Route user input to appropriate Handle operations
+- Manage Handle-based session state and persistence
 
-**Key Methods:**
-- `start()` - Initialize components and start interactive session
-- `processInput(input)` - Route user input to appropriate handler
-- `executeCommand(command, args)` - Execute slash commands
-- `handleNaturalLanguage(query)` - Send to ConfigurableAgent
-- `shutdown()` - Clean shutdown with session save
+**Handle-Centric Design:**
+- CLI itself is accessible as `legion://local/cli/current`
+- All CLI operations performed through Handle method invocation
+- Session state stored as Handles: `legion://local/cli/session/{id}`
+- Configuration accessed via Handles: `legion://local/cli/config/*`
 
-### CommandRouter
-
-**Slash Command Implementation:**
-- `/help` - Show available commands and usage
-- `/tools` - List available tools and capabilities
-- `/memory` - Memory search and management commands
-- `/tasks` - Task status and management
-- `/session` - Session operations (save, load, list, switch)
-- `/clear` - Clear current conversation context
-- `/config` - Configuration management
-- `/exit` - Graceful shutdown
-
-**Command Pattern:**
+**Key Handle Operations:**
 ```javascript
-class Command {
-  async execute(args, context) {
-    // Command implementation
-  }
-  
-  getHelp() {
-    // Return help text
-  }
-}
+// CLI accessed as Handle
+const cli = await rm.createHandleFromURI('legion://local/cli/current');
+
+// All CLI functions via Handle methods
+await cli.start();
+await cli.processInput(userInput);
+await cli.executeCommand('/help', []);
+await cli.shutdown();
 ```
 
-### TaskOrchestrator
+### HandleRegistry (Auto-Discovery Engine)
 
-**Task Management:**
-- Creates Task objects with appropriate ExecutionContext
-- Manages task hierarchy and parent-child relationships
-- Coordinates artifact flow between tasks
-- Provides task status monitoring and reporting
+**Handle Discovery and Management:**
+- Automatically discovers all available Handles by type
+- Maintains Handle metadata, capabilities, and relationships
+- Provides Handle search, filtering, and categorization
+- Enables dynamic Handle loading and registration
 
-**Integration Points:**
-- Uses ConfigurableAgent for LLM-based task processing
-- Leverages ResourceManager for tool access
-- Employs Actor pattern for async coordination
-- Manages memory persistence through KnowledgeGraph
-
-### MemoryManager
-
-**Memory Operations:**
-- Entity storage and retrieval
-- Relationship management
-- Memory search and filtering
-- Cross-session persistence
-
-**Handle Integration:**
+**Registry as Handle:**
 ```javascript
-const memoryHandle = await rm.createHandleFromURI('legion://local/memory/session123');
-await memoryHandle.storeEntity('user-preference', { theme: 'dark' });
-const preferences = await memoryHandle.findEntities({ type: 'user-preference' });
+// Access registry itself as Handle
+const registry = await rm.createHandleFromURI('legion://local/handles/registry');
+
+// Discover available tools
+const toolHandles = await registry.discoverByType('tools');
+const memoryHandles = await registry.discoverByType('memory');
+
+// Search Handle capabilities
+const fileHandles = await registry.search('file operations');
+```
+
+### DisplayEngine (Handle Visualization)
+
+**Automatic Handle Rendering:**
+- Renders any Handle's state and capabilities automatically
+- Provides consistent visualization across all Handle types
+- Supports multiple output formats (table, tree, json, interactive)
+- Enables Handle introspection and help generation
+
+**Display Engine as Handle:**
+```javascript
+// Display engine accessible as Handle
+const display = await rm.createHandleFromURI('legion://local/cli/display');
+
+// Automatic Handle visualization
+await display.render(toolHandle, 'table');
+await display.render(memoryHandle, 'tree');
+await display.renderHelp(configHandle);
+
+// Interactive Handle exploration
+await display.exploreInteractive(sessionHandle);
+```
+
+### CommandProcessor (Handle-Based Command Routing)
+
+**Handle Command Integration:**
+- Maps slash commands to Handle operations
+- Supports both command-style and natural language Handle interaction
+- Routes complex operations to ConfigurableAgent Handle
+- Provides Handle-based command completion and validation
+
+**Commands as Handle Operations:**
+```javascript
+// Traditional slash commands become Handle operations
+const processor = await rm.createHandleFromURI('legion://local/cli/commands');
+
+// Each command routes to appropriate Handle
+await processor.route('/tools', toolRegistryHandle);
+await processor.route('/memory search', memoryHandle);
+await processor.route('/session save', sessionHandle);
+
+// Natural language routed to agent Handle
+const agent = await rm.createHandleFromURI('legion://local/agent/current');
+await processor.routeNaturalLanguage(query, agent);
+```
+
+### SessionContext (Handle-Based State Management)
+
+**Session State as Handles:**
+- All session state stored and accessed through Handles
+- Session persistence via Handle serialization/deserialization
+- Cross-session Handle reference resolution and restoration
+- Handle-based session switching and management
+
+**Session Handle Patterns:**
+```javascript
+// Current session as Handle
+const session = await rm.createHandleFromURI('legion://local/cli/session/current');
+
+// Session data via Handle properties
+session.startTime = new Date();
+session.userId = 'user123';
+session.preferences = { theme: 'dark' };
+
+// Session persistence
+await session.save();
+await session.switchTo('legion://local/cli/session/previous');
+
+// Session restoration
+const savedSession = await rm.createHandleFromURI('legion://local/cli/session/workspace-2024');
+await savedSession.restore();
 ```
 
 ## Package Structure
