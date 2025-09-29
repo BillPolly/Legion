@@ -2165,7 +2165,7 @@ ENVIRONMENT VARIABLES:
       const result = await this.stopVideoRecording(sessionId);
       let message = `✅ ${result.message}\n`;
       message += `📁 Output: ${result.outputPath}\n`;
-      message += `⏱️ Duration: ${result.duration.toFixed(1)}s\n`;
+      message += `⏱️ Duration: ${typeof result.duration === 'number' ? result.duration.toFixed(1) : result.duration || 'unknown'}s\n`;
       message += `🎞️ Frames: ${result.frameCount}`;
       if (result.fileStats) {
         message += `\n📊 Size: ${(result.fileStats.size / 1024 / 1024).toFixed(2)} MB`;

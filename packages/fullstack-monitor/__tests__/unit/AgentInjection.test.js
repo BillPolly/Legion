@@ -12,8 +12,7 @@ describe('Agent Injection Simple Tests', () => {
   let resourceManager;
 
   beforeEach(async () => {
-    resourceManager = ResourceManager.getInstance();
-    await resourceManager.initialize();
+    resourceManager = await ResourceManager.getInstance();
     
     // Create monitor without starting WebSocket server to speed up tests
     monitor = new FullStackMonitor({
