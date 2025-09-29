@@ -8,67 +8,35 @@
 import { Tool } from '@legion/tools-registry';
 
 export class CloseWindowTool extends Tool {
-  constructor() {
-    super({
-      name: 'close_window',
-      description: 'Close floating windows programmatically by window ID',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          context: {
-            type: 'object',
-            description: 'Agent execution context'
-          },
-          windowId: {
-            type: 'string',
-            description: 'Window identifier to close'
-          }
-        },
-        required: ['context', 'windowId']
-      },
-      outputSchema: {
-        type: 'object',
-        properties: {
-          windowId: {
-            type: 'string',
-            description: 'Window ID that was closed'
-          },
-          closed: {
-            type: 'boolean',
-            description: 'Whether window was successfully closed'
-          }
-        },
-        required: ['windowId', 'closed']
-      }
-    });
-    
+  constructor(module, toolName) {
+    super(module, toolName);
+    this.description = 'Close floating windows programmatically by window ID';
     this.category = 'ui';
+    
+    // Context-first parameter schema
+    this.parameterSchema = [
+      {
+        name: 'context',
+        type: 'object',
+        required: true,
+        description: 'Agent execution context'
+      },
+      {
+        name: 'windowId',
+        type: 'string',
+        required: true,
+        description: 'Window identifier to close'
+      }
+    ];
   }
   
   /**
-   * Execute close window tool
-   * @param {Object} params - Parameters containing context and windowId
+   * Pure business logic - base Tool class handles validation using metadata
+   * @param {Object} params - Tool parameters from metadata schema
    * @returns {Object} Close operation result
    */
   async _execute(params) {
     const { context, windowId } = params;
-    // Validate context (fail fast)
-    if (!context) {
-      throw new Error('Context is required as first parameter');
-    }
-    
-    if (!context.resourceService) {
-      throw new Error('resourceService not available in context');
-    }
-    
-    // Validate window ID (fail fast)
-    if (!windowId) {
-      throw new Error('Window ID is required');
-    }
-    
-    if (typeof windowId !== 'string' || windowId.trim() === '') {
-      throw new Error('Window ID cannot be empty');
-    }
     
     console.log(`CloseWindowTool: Closing window ${windowId}`);
     
@@ -86,5 +54,18 @@ export class CloseWindowTool extends Tool {
       console.error('CloseWindowTool failed:', error);
       throw error; // NO FALLBACKS - fail fast
     }
+  }
+  
+  /**
+   * Get tool metadata for tool registry
+   * @returns {Object} Tool metadata
+   */
+  getMetadata() {
+    return {
+      name: this.name,
+      description: this.description,
+      category: this.category,
+      parameters: this.parameterSchema
+    };
   }
 }

@@ -52,8 +52,10 @@ export default class ChatClientSubActor {
     });
   }
 
-  handleSendMessage(text) {
-    if (!text.trim()) return;
+  handleSendMessage(data) {
+    const text = typeof data === 'string' ? data : data.text;
+    console.log('💬 ChatClientSubActor: handleSendMessage called with:', data, 'text:', text);
+    if (!text || !text.trim()) return;
     
     // Add user message to local state
     const userMessage = {
@@ -67,9 +69,13 @@ export default class ChatClientSubActor {
     this.state.inputText = '';
     
     // Update UI
+    console.log('💬 ChatClientSubActor: updating UI, chatComponent exists:', !!this.chatComponent);
     if (this.chatComponent) {
+      console.log('💬 ChatClientSubActor: calling updateMessages with', this.state.messages.length, 'messages');
       this.chatComponent.updateMessages(this.state.messages);
       this.chatComponent.clearInput();
+    } else {
+      console.error('💬 ChatClientSubActor: chatComponent is null in handleSendMessage!');
     }
     
     // Send to server via parent actor
@@ -111,8 +117,12 @@ export default class ChatClientSubActor {
 
       case 'agent-response':
         // Tool agent response (enhanced format)
+        console.log('💬 ChatClientSubActor: got agent-response, chatComponent exists:', !!this.chatComponent);
         if (this.chatComponent) {
+          console.log('💬 ChatClientSubActor: calling addAgentMessage with:', data);
           this.chatComponent.addAgentMessage(data);
+        } else {
+          console.error('💬 ChatClientSubActor: chatComponent is null!');
         }
         break;
 

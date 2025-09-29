@@ -2,7 +2,7 @@
   "name": "@legion/agent-tools",
   "version": "1.0.0",
   "description": "UI tools for agent planning that integrate with transparent resource handle system",
-  "main": "src/index.js",
+  "main": "./src/index.js",
   "type": "module",
   "directories": {
     "doc": "docs"
@@ -13,7 +13,9 @@
   "keywords": ["legion", "agent", "tools", "ui"],
   "author": "",
   "license": "ISC",
-  "dependencies": {},
+  "dependencies": {
+    "@legion/tools-registry": "*"
+  },
   "devDependencies": {
     "jest": "^29.7.0"
   }

@@ -4,7 +4,10 @@
  * Exports the AgentToolsModule for tool registry integration
  */
 
-export { AgentToolsModule } from './AgentToolsModule.js';
+// Named exports
 export { DisplayResourceTool } from './tools/DisplayResourceTool.js';
 export { NotifyUserTool } from './tools/NotifyUserTool.js';  
 export { CloseWindowTool } from './tools/CloseWindowTool.js';
+
+// Default export - Legion Module
+export { default as AgentToolsModule } from './AgentToolsModule.js';

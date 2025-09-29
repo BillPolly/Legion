@@ -8,6 +8,7 @@
 import { ToolUsingChatAgent } from './ToolUsingChatAgent.js';
 import { SlashCommandAgent } from './SlashCommandAgent.js';
 import { ResourceManager } from '@legion/resource-manager';
+import { AgentContext } from './AgentContext.js';
 
 export default class ChatServerToolAgent {
   constructor(services) {
@@ -84,6 +85,33 @@ export default class ChatServerToolAgent {
         (eventType, data) => this.forwardAgentEvent(eventType, data),
         resourceActor
       );
+      
+      // Wire agent capabilities using serializable context
+      try {
+        if (this.parentActor) {
+          // AgentContext imported at top
+          
+          const agentCapabilities = {
+            resourceActor: this.parentActor.resourceSubActor, // Same as /show command uses
+            toolRegistry: this.toolRegistry,
+            llmClient: llmClient,
+            plannerActor: this.parentActor.plannerSubActor,
+            chatActor: this,
+            artifacts: null // Will be set by agent
+          };
+          
+          console.log('[ChatServerToolAgent] Debug capabilities:');
+          console.log('  resourceActor:', !!agentCapabilities.resourceActor);
+          console.log('  toolRegistry:', !!agentCapabilities.toolRegistry);
+          console.log('  llmClient:', !!agentCapabilities.llmClient);
+          
+          const agentContext = new AgentContext(agentCapabilities);
+          this.toolAgent.setAgentContext(agentContext);
+          console.log('[ChatServerToolAgent] Serializable agent context wired');
+        }
+      } catch (error) {
+        console.error('[ChatServerToolAgent] Agent context wiring failed:', error);
+      }
       
       this.state.agentInitialized = true;
       console.log('[ChatServerToolAgent] ✅ Tool agent initialized successfully');
