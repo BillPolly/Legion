@@ -94,12 +94,7 @@ export default class PlannerServerSubActor {
       console.log('[PlannerServerSubActor] ✅ Injected toolRegistry into shared services');
     }
     
-    // Load all modules for the tool registry
-    if (this.toolRegistry) {
-      console.log('Loading all tool modules...');
-      const loadResult = await this.toolRegistry.loadAllModules();
-      console.log(`✅ Loaded ${loadResult.loaded} modules, ${loadResult.failed} failed`);
-    }
+    // Tool registry modules will be loaded on-demand when searched
     
     console.log('✅ DecentPlanner initialized');
   }
@@ -121,13 +116,6 @@ export default class PlannerServerSubActor {
         break;
         
       // NOTE: Tool registry messages now handled by ToolRegistryServerSubActor
-      case 'search-tools-text':
-        this.handleSearchToolsTextRequest(data);
-        break;
-        
-      case 'search-tools-semantic':
-        this.handleSearchToolsSemanticRequest(data);
-        break;
         
       case 'ping':
         this.remoteActor.receive('pong', { timestamp: Date.now() });
@@ -166,17 +154,6 @@ export default class PlannerServerSubActor {
 
       // NOTE: Module search now handled by ToolRegistryServerSubActor
 
-      case 'database-query':
-        this.handleDatabaseQueryRequest(data);
-        break;
-
-      case 'module-load':
-        this.handleModuleLoadRequest(data);
-        break;
-
-      case 'module-unload':
-        this.handleModuleUnloadRequest(data);
-        break;
         
       default:
         console.warn('Unknown message type:', messageType);
@@ -411,117 +388,6 @@ export default class PlannerServerSubActor {
     return enhancedResult;
   }
 
-  async handleListAllToolsRequest() {
-    try {
-      if (!this.toolRegistry) {
-        throw new Error('Tool registry not initialized');
-      }
-      
-      const tools = await this.toolRegistry.listTools();
-      
-      this.remoteActor.receive('toolsListComplete', {
-        tools,
-        count: tools.length,
-        timestamp: new Date().toISOString()
-      });
-      
-    } catch (error) {
-      console.error('Failed to list tools - FULL ERROR:', error);
-      console.error('Error message:', error.message);  
-      console.error('Error stack:', error.stack);
-      console.error('Error JSON:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
-      
-      this.remoteActor.receive('toolsListError', {
-        error: error.message || 'Tool registry not initialized'
-      });
-    }
-  }
-
-  async handleSearchToolsTextRequest(data) {
-    try {
-      const { query } = data;
-      
-      if (!this.toolRegistry) {
-        throw new Error('Tool registry not initialized');
-      }
-      
-      const allTools = await this.toolRegistry.listTools();
-      const queryLower = query.toLowerCase();
-      
-      const results = allTools.filter(tool => {
-        const nameMatch = tool.name.toLowerCase().includes(queryLower);
-        const descMatch = (tool.description || '').toLowerCase().includes(queryLower);
-        return nameMatch || descMatch;
-      });
-      
-      this.remoteActor.receive('toolsSearchTextComplete', {
-        query,
-        results,
-        count: results.length,
-        timestamp: new Date().toISOString()
-      });
-      
-    } catch (error) {
-      console.error('Text search failed:', error);
-      this.remoteActor.receive('toolsSearchTextError', {
-        error: error.message
-      });
-    }
-  }
-
-  async handleSearchToolsSemanticRequest(data) {
-    try {
-      const { query, limit = 20 } = data;
-      
-      if (!this.toolRegistry) {
-        throw new Error('Tool registry not initialized');
-      }
-      
-      const results = await this.toolRegistry.searchTools(query, { limit });
-      
-      this.remoteActor.receive('toolsSearchSemanticComplete', {
-        query,
-        results,
-        count: results.length,
-        timestamp: new Date().toISOString()
-      });
-      
-    } catch (error) {
-      console.error('Semantic search failed:', error);
-      this.remoteActor.receive('toolsSearchSemanticError', {
-        error: error.message
-      });
-    }
-  }
-
-  async handleGetRegistryStatsRequest() {
-    try {
-      if (!this.toolRegistry) {
-        throw new Error('Tool registry not initialized');
-      }
-      
-      const allTools = await this.toolRegistry.listTools();
-      const uniqueModules = new Set(allTools.map(t => t.moduleName)).size;
-      
-      const stats = {
-        totalTools: allTools.length,
-        totalModules: uniqueModules,
-        timestamp: new Date().toISOString()
-      };
-      
-      this.remoteActor.receive('registryStatsComplete', stats);
-      
-    } catch (error) {
-      console.error('Failed to get registry stats - FULL ERROR:', error);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-      console.error('Error JSON:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
-      
-      this.remoteActor.receive('registryStatsError', {
-        error: error.message || 'Tool registry not initialized'
-      });
-    }
-  }
   
   // NOTE: Tool registry handlers moved to ToolRegistryServerSubActor
 

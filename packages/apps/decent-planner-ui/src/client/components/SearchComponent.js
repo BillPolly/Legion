@@ -425,21 +425,12 @@ export class SearchComponent {
     this.updateError();
     this.updateLoading();
     
-    if (!this.model.remoteActor) {
-      console.error('❌ No remote actor available for search');
-      this.model.error = 'Search service not available';
-      this.model.isLoading = false;
-      this.updateError();
-      this.updateLoading();
-      return;
-    }
-    
     if (this.model.searchType === 'text') {
       console.log('🔍 Sending text search request:', query);
-      this.model.remoteActor.receive('tools:search', { query, options: { type: 'text', limit: 50 } });
+      this.model.remoteActor.receive('search-tools-text', { query });
     } else {
       console.log('🔍 Sending semantic search request:', query);
-      this.model.remoteActor.receive('tools:search', { query, options: { type: 'semantic', limit: 50 } });
+      this.model.remoteActor.receive('search-tools-semantic', { query, limit: 50 });
     }
   }
   
@@ -459,14 +450,14 @@ export class SearchComponent {
   
   loadRegistryStats() {
     if (!this.model.remoteActor) return;
-    this.model.remoteActor.receive('registry:stats', {});
+    this.model.remoteActor.receive('get-registry-stats', {});
   }
   
   loadAllTools() {
     if (!this.model.remoteActor) return;
     this.model.isLoading = true;
     this.updateLoading();
-    this.model.remoteActor.receive('tools:search', { query: '', options: { limit: 1000 } });
+    this.model.remoteActor.receive('list-all-tools', {});
   }
   
   // MESSAGE HANDLERS
@@ -476,10 +467,8 @@ export class SearchComponent {
   }
   
   handleToolsList(data) {
-    // Handle both direct array and object with tools property
-    const tools = Array.isArray(data) ? data : (data.tools || []);
-    console.log('🔍 SearchComponent received tools list:', tools.length, 'tools');
-    this.model.allTools = tools;
+    console.log('🔍 SearchComponent received tools list:', data.tools?.length || 0, 'tools');
+    this.model.allTools = data.tools || [];
     this.model.searchResults = this.model.allTools;
     this.model.isLoading = false;
     
@@ -489,10 +478,8 @@ export class SearchComponent {
   }
   
   handleSearchResults(data) {
-    // Handle both direct array and object with results/tools property
-    const results = Array.isArray(data) ? data : (data.results || data.tools || []);
-    console.log('🔍 SearchComponent received search results:', results.length, 'results');
-    this.model.searchResults = results;
+    console.log('🔍 SearchComponent received search results:', data.results?.length || 0, 'results');
+    this.model.searchResults = data.results || [];
     this.model.isLoading = false;
     
     this.updateSearchButton();
@@ -535,29 +522,29 @@ export class SearchComponent {
         break;
     }
   }
-
+  
   /**
-   * Set connection status (required by ToolsBrowserComponent)
-   * @param {boolean} connected - Whether the component is connected
-   */
-  setConnected(connected) {
-    // Update UI to reflect connection status
-    if (connected) {
-      console.log('🔗 SearchComponent connected');
-    } else {
-      console.log('🔌 SearchComponent disconnected');
-    }
-  }
-
-  /**
-   * Update tools data (required by ToolsBrowserComponent) 
-   * @param {Array} tools - Array of tool data
+   * Update tools list - compatibility method for ToolsBrowserComponent
    */
   updateTools(tools) {
-    if (Array.isArray(tools)) {
-      this.handleToolsList(tools);
+    console.log('🔍 SearchComponent updateTools called with', tools?.length || 0, 'tools');
+    this.model.allTools = tools || [];
+    this.model.searchResults = tools || [];
+    this.updateToolsList();
+  }
+  
+  /**
+   * Set connection status - compatibility method for ToolsBrowserComponent
+   */
+  setConnected(connected) {
+    console.log('🔍 SearchComponent setConnected called with', connected);
+    // Update any connection-related UI if needed
+    if (!connected) {
+      this.model.error = 'Disconnected from server';
+      this.updateError();
     } else {
-      console.warn('updateTools called with invalid data:', tools);
+      this.model.error = null;
+      this.updateError();
     }
   }
 }

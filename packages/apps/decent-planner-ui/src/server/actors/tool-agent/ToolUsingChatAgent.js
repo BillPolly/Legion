@@ -8,36 +8,27 @@
  */
 
 import { extractJSON } from '@legion/planner';
-import { ContextOptimizer } from './ContextOptimizer.js';
 
 export class ToolUsingChatAgent {
-  constructor(toolRegistry, llmClient, eventCallback = null, resourceActor = null) {
+  constructor(toolRegistry, llmClient, eventCallback = null) {
     this.toolRegistry = toolRegistry;
     this.llmClient = llmClient;
     this.eventCallback = eventCallback; // For UI observability
-    this.resourceActor = resourceActor; // For AgentTools like display_resource
-    
-    // Initialize intelligent context optimization
-    this.contextOptimizer = new ContextOptimizer(llmClient);
     
     // Reuse BT Executor's proven context pattern
     this.executionContext = { 
       artifacts: {
-        output_directory: {
-          value: './tmp',
-          description: 'Default directory for saving generated files and outputs. When using tools with path parameters, use this directory path with specific filenames (e.g., "./tmp/image.png", "./tmp/document.txt").'
-        },
-        agent_context: {
-          value: {
-            resourceActor: this.resourceActor,
-            toolRegistry: this.toolRegistry,
-            llmClient: this.llmClient,
-            artifacts: null // Will be set dynamically
-          },
-          description: 'Agent execution context for AgentTools (UI category tools). Use @agent_context for context parameter.'
+        // Add context for AgentTools
+        context: {
+          resourceService: null, // Will be set by parent actor
+          artifacts: null, // Will reference this.executionContext.artifacts
+          llmClient: this.llmClient
         }
       }
     };
+    
+    // Set circular reference for artifacts
+    this.executionContext.artifacts.context.artifacts = this.executionContext.artifacts;
     this.chatHistory = [];
     
     // Agent-specific state
@@ -72,17 +63,12 @@ export class ToolUsingChatAgent {
         // Can answer with existing context
         const response = await this.respondWithContext(userInput);
         this.addAgentMessage(response);
-        
-        // Automatic intelligent context optimization after completion
-        await this.optimizeContextIntelligently();
-        
         return {
           userResponse: response,
           toolsUsed: [],
           contextUpdated: [],
           reasoning: toolNeedAnalysis.reasoning,
-          operationCount: 0,
-          complete: true
+          operationCount: 0
         };
       }
 
@@ -93,11 +79,7 @@ export class ToolUsingChatAgent {
       if (this.currentSearchResults.length === 0) {
         const explanation = await this.explainNoToolsFound(userInput);
         this.addAgentMessage(explanation.userResponse);
-        
-        // Automatic intelligent context optimization after completion
-        await this.optimizeContextIntelligently();
-        
-        return { ...explanation, complete: true };
+        return explanation;
       }
 
       // Stage 3: Select tool sequence (single or multiple tools)
@@ -107,11 +89,7 @@ export class ToolUsingChatAgent {
       if (toolPlan.type === 'none') {
         const explanation = await this.explainNoSuitableTools(userInput, searchResults);
         this.addAgentMessage(explanation.userResponse);
-        
-        // Automatic intelligent context optimization after completion
-        await this.optimizeContextIntelligently();
-        
-        return { ...explanation, complete: true };
+        return explanation;
       }
 
       // Stage 4: Execute tool plan (single tool or sequence)
@@ -122,9 +100,6 @@ export class ToolUsingChatAgent {
       const userResponse = await this.generateUserResponse(userInput, executionResults, toolPlan);
 
       this.addAgentMessage(userResponse);
-
-      // Automatic intelligent context optimization after successful completion
-      await this.optimizeContextIntelligently();
 
       return {
         userResponse: userResponse,
@@ -139,9 +114,6 @@ export class ToolUsingChatAgent {
       console.error('[ToolAgent] Error processing message:', error);
       const errorResponse = `Sorry, I encountered an error while processing your request: ${error.message}`;
       this.addAgentMessage(errorResponse);
-      
-      // Optimize context even after errors to clean up any partial state
-      await this.optimizeContextIntelligently();
       
       return {
         userResponse: errorResponse,
@@ -202,27 +174,126 @@ Return this exact format:
    * Enhanced with context awareness
    */
   async searchForTools(userInput) {
-    // Create context-aware search query
+    // Extract key capabilities from user input for better tool discovery
+    const capabilities = this.extractCapabilities(userInput);
+    
     const contextVars = Object.keys(this.executionContext.artifacts);
     const contextInfo = contextVars.length > 0 
       ? ` (available data: ${contextVars.join(', ')})`
       : '';
     
-    const enhancedQuery = userInput + contextInfo;
+    // Search with capability-focused terms
+    const enhancedQuery = capabilities.join(' ') + contextInfo;
     console.log(`[ToolAgent] Enhanced search query: "${enhancedQuery}"`);
+    console.log(`[ToolAgent] Extracted capabilities: [${capabilities.join(', ')}]`);
 
     try {
       // Use existing semantic search infrastructure
-      const searchResults = await this.toolRegistry.searchTools(enhancedQuery, {
+      let searchResults = await this.toolRegistry.searchTools(enhancedQuery, {
         limit: 10,
         threshold: 0.3
       });
+
+      // Enhanced search: If we extracted specific capabilities but didn't find key tools,
+      // do direct lookups for critical tools
+      if (capabilities.includes('generate image')) {
+        const generateImageTool = await this.toolRegistry.getTool('generate_image');
+        if (generateImageTool && !searchResults.find(r => r.name === 'generate_image')) {
+          console.log('[ToolAgent] Adding generate_image tool via direct lookup');
+          searchResults.push({
+            name: 'generate_image',
+            description: generateImageTool.description,
+            tool: generateImageTool,
+            confidence: 1.0
+          });
+        }
+      }
+
+      if (capabilities.includes('display resource')) {
+        const displayTool = await this.toolRegistry.getTool('display_resource');
+        if (displayTool && !searchResults.find(r => r.name === 'display_resource')) {
+          console.log('[ToolAgent] Adding display_resource tool via direct lookup');
+          searchResults.push({
+            name: 'display_resource',
+            description: displayTool.description,
+            tool: displayTool,
+            confidence: 1.0
+          });
+        }
+      }
 
       return searchResults || [];
     } catch (error) {
       console.error('[ToolAgent] Error in semantic search:', error);
       return [];
     }
+  }
+
+  /**
+   * Extract key capabilities from user request for better tool matching
+   */
+  extractCapabilities(userInput) {
+    const input = userInput.toLowerCase();
+    const capabilities = [];
+    
+    // Image generation capabilities
+    if (input.includes('create') && (input.includes('image') || input.includes('picture') || input.includes('photo'))) {
+      capabilities.push('generate image');
+    }
+    if (input.includes('generate') && (input.includes('image') || input.includes('picture'))) {
+      capabilities.push('generate image');
+    }
+    
+    // Display/show capabilities
+    if (input.includes('show') || input.includes('display') || input.includes('window')) {
+      capabilities.push('display resource');
+    }
+    
+    // Notification capabilities
+    if (input.includes('notify') || input.includes('alert') || input.includes('message')) {
+      capabilities.push('notify user');
+    }
+    
+    // File operations
+    if (input.includes('save') || input.includes('write') || input.includes('file')) {
+      capabilities.push('file write');
+    }
+    if (input.includes('read') || input.includes('load')) {
+      capabilities.push('file read');
+    }
+    
+    // Analysis capabilities  
+    if (input.includes('analyze') || input.includes('analyse') || input.includes('examine')) {
+      capabilities.push('analyze picture');
+    }
+    
+    // Default fallback - use original input if no capabilities extracted
+    if (capabilities.length === 0) {
+      capabilities.push(userInput);
+    }
+    
+    return capabilities;
+  }
+
+  /**
+   * Set serializable agent context for AgentTools
+   */
+  setAgentContext(agentContext) {
+    // Set artifacts reference in context
+    agentContext.artifacts = this.executionContext.artifacts;
+    
+    // Put context with direct property access for tools
+    this.executionContext.artifacts.context = {
+      resourceActor: agentContext.resourceActor,
+      toolRegistry: agentContext.toolRegistry,
+      llmClient: agentContext.llmClient,
+      plannerActor: agentContext.plannerActor,
+      artifacts: this.executionContext.artifacts,
+      // Add serialize method for client transmission
+      serialize: () => agentContext.serialize()
+    };
+    console.log('[ToolAgent] Agent context set with direct property access');
+    console.log('[ToolAgent] Context has resourceActor:', !!this.executionContext.artifacts.context.resourceActor);
   }
 
   /**
@@ -241,9 +312,8 @@ ${userInput}
 ${searchResults.map(result => `
 ### ${result.name}
 Description: ${result.tool.description || result.description || 'No description'}
-${result.tool.category === 'ui' ? '**AgentTool**: Context provided automatically - do not specify context parameter' : ''}
 Inputs:
-${this.formatToolInputSchema(result.tool.inputSchema, result.tool.category === 'ui')}
+${this.formatToolInputSchema(result.tool.inputSchema)}
 Outputs: ${this.formatToolOutputSchema(result.tool.outputSchema)}
 `).join('\n')}
 
@@ -256,28 +326,21 @@ Create a tool execution sequence that fulfills the user's request. You can:
 1. **Single Tool**: If one tool can handle the request completely
 2. **Tool Sequence**: If multiple tools need to be chained together
 
-## Variable Rules  
+## Variable Rules
 - Store outputs with unique variable names: \`"outputs": {"toolField": "unique_var_name"}\`
 - Reference stored variables: \`"@varName"\`
-- **IMPORTANT**: Use actual values (like file paths, content) in inputs when you have them, not variable names
-- Use @varName syntax only when you need data from a previous tool's output
 - Only store outputs that will be used later
 - Use exact parameter names from tool specifications
-
-## File Storage Guidelines
-- **ALWAYS use the output_directory context variable for file storage when tools have path/directory parameters**
-- For tools with path parameters, use the output_directory value (e.g., "path": "@output_directory")
-- This ensures all generated files are organized in the designated output location
 
 ## Response Format
 
 **Single Tool Response:**
 {
   "type": "single",
-  "tool": "tool_name",  
+  "tool": "tool_name",
   "description": "What this accomplishes",
   "inputs": {
-    "paramName": "use_literal_values_when_you_know_them_or_@varName_when_referencing_previous_outputs"
+    "paramName": "literal_value_or_@varName"
   },
   "outputs": {
     "toolOutputField": "unique_variable_name"
@@ -414,7 +477,7 @@ Variables stored: ${executionResults.variablesStored.join(', ')}
 Execution results:
 ${executionResults.results.map((result, i) => `
 ${i + 1}. ${executionResults.toolsExecuted[i]}: ${result.success ? 'Success' : 'Failed'}
-   ${result.success ? this.summarizeToolResult(result.data) : `Error: ${result.error}`}
+   ${result.success ? JSON.stringify(result.data) : `Error: ${result.error}`}
 `).join('')}
 
 Current context:
@@ -469,27 +532,7 @@ Respond with this exact format:
 
     try {
       // 4. Execute tool
-      let result;
-      
-      // Check if this is an AgentTool (UI category) that needs context as first parameter
-      if (tool.category === 'ui' && this.resourceActor) {
-        console.log(`[ToolAgent] Executing AgentTool with context: ${selectedTool}`);
-        
-        // Create context for AgentTools (same pattern as /show command)
-        const agentContext = {
-          resourceActor: this.resourceActor,
-          toolRegistry: this.toolRegistry,
-          llmClient: this.llmClient,
-          artifacts: this.executionContext.artifacts
-        };
-        
-        // AgentTools expect context as first parameter, then other resolved inputs
-        result = await tool.execute({ context: agentContext, ...resolvedInputs });
-      } else {
-        // Regular tools get just the resolved inputs
-        result = await tool.execute(resolvedInputs);
-      }
-      
+      const result = await tool.execute(resolvedInputs);
       console.log(`[ToolAgent] Tool execution result:`, { success: result.success, hasData: !!result.data });
 
       // 5. Store result in context with proper field extraction (BT Executor's pattern)
@@ -671,7 +714,7 @@ Return this exact format:
 }
     `;
 
-    const response = await this.trackLLMInteraction(prompt, 'completion-decision');
+    const response = await this.llmClient.complete(prompt);
 
     try {
       return extractJSON(response);
@@ -743,7 +786,7 @@ Explain to the user:
 Be helpful and specific.
     `;
 
-    const explanation = await this.trackLLMInteraction(prompt, 'no-suitable-tools');
+    const explanation = await this.llmClient.complete(prompt);
 
     return {
       success: false,
@@ -804,46 +847,15 @@ Be helpful and specific.
 
   /**
    * Format chat history for LLM prompts
-   * Filters out large content like base64 data to prevent prompt pollution
    */
   formatChatHistory() {
     if (this.chatHistory.length === 0) {
       return 'No previous chat history.';
     }
 
-    return this.chatHistory.slice(-5).map(msg => {
-      const role = msg.role === 'user' ? 'User' : 'Agent';
-      const content = this.sanitizeContentForPrompt(msg.content);
-      return `${role}: ${content}`;
-    }).join('\n');
-  }
-
-  /**
-   * Sanitize content for LLM prompts by removing/summarizing large data
-   */
-  sanitizeContentForPrompt(content) {
-    if (!content || typeof content !== 'string') {
-      return content;
-    }
-
-    // Check if content contains base64 data URLs
-    if (content.includes('data:image/') && content.includes('base64,')) {
-      // Replace base64 data with summary
-      return content.replace(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]{100,}/g, '[IMAGE_DATA_REMOVED]');
-    }
-
-    // Check for other large base64 strings
-    if (content.length > 1000 && /[A-Za-z0-9+/]{500,}={0,2}/.test(content)) {
-      // Likely contains large base64 data, truncate and summarize
-      return content.substring(0, 200) + '... [LARGE_DATA_TRUNCATED] ...' + content.substring(content.length - 50);
-    }
-
-    // Normal content, just limit length for sanity
-    if (content.length > 2000) {
-      return content.substring(0, 1000) + '... [CONTENT_TRUNCATED] ...' + content.substring(content.length - 200);
-    }
-
-    return content;
+    return this.chatHistory.slice(-5).map(msg => 
+      `${msg.role === 'user' ? 'User' : 'Agent'}: ${msg.content}`
+    ).join('\n');
   }
 
   /**
@@ -860,140 +872,39 @@ Be helpful and specific.
 
     return keys.map(key => {
       const value = artifacts[key];
-      
-      // Handle new format with value/description structure
-      if (value && typeof value === 'object' && value.hasOwnProperty('value') && value.hasOwnProperty('description')) {
-        return `- ${key}: "${value.value}" (${value.description})`;
-      }
-      
-      // Handle legacy simple value format
       const preview = this.getDetailedVariablePreview(value);
       return `- ${key}: ${preview}`;
     }).join('\n');
   }
 
   /**
-   * Check if a string appears to be base64 encoded data
+   * Get detailed variable preview that shows actual data for LLM context
    */
-  isBase64String(str) {
-    if (typeof str !== 'string' || str.length < 100) return false;
-    
-    // Handle data URLs (data:image/png;base64,...)
-    if (str.startsWith('data:')) {
-      const base64Part = str.split(',')[1];
-      if (base64Part) {
-        str = base64Part;
-      }
-    }
-    
-    // Base64 pattern: letters, numbers, +, /, = (padding)
-    const base64Pattern = /^[A-Za-z0-9+/]*={0,2}$/;
-    if (!base64Pattern.test(str)) return false;
-    
-    // Additional heuristics for base64 data
-    const hasBase64Chars = /[+/]/.test(str) || str.length > 1000; // Very long strings likely base64
-    const properPadding = str.match(/=*$/)?.[0].length <= 2;
-    const lengthMultipleOf4 = str.length % 4 === 0;
-    
-    return hasBase64Chars && properPadding && lengthMultipleOf4;
-  }
-
-  /**
-   * Get smart summary of data type and size without exposing large content
-   */
-  getDataTypeSummary(value) {
+  getDetailedVariablePreview(value) {
     if (value === null) return 'null';
     if (value === undefined) return 'undefined';
     
     const type = typeof value;
-    
-    if (type === 'string') {
-      // Handle data URLs specifically
-      if (value.startsWith('data:')) {
-        const [mimeInfo] = value.split(',');
-        const sizeKB = Math.round(value.length / 1024);
-        return `[DATA_URL: ${mimeInfo.split(';')[0].split(':')[1] || 'unknown'}, ~${sizeKB}KB]`;
-      }
-      
-      if (this.isBase64String(value)) {
-        const sizeKB = Math.round(value.length * 0.75 / 1024); // Approximate decoded size
-        return `[BASE64_DATA: ~${sizeKB}KB]`;
-      }
-      
-      if (value.length > 1000) {
-        return `[LARGE_TEXT: ${value.length} chars]`;
-      }
-      
-      if (value.length > 100) {
-        return `"${value.substring(0, 47)}...${value.substring(value.length - 20)}"`;
-      }
-      
-      return `"${value}"`;
-    }
-    
-    if (type === 'object') {
-      if (Array.isArray(value)) {
-        return `Array(${value.length} items)`;
-      }
-      
-      const keys = Object.keys(value);
-      if (keys.length === 0) return '{}';
-      
-      // Check if object contains large string values
-      const hasLargeStrings = keys.some(key => 
-        typeof value[key] === 'string' && value[key].length > 1000
-      );
-      
-      if (hasLargeStrings) {
-        return `Object(${keys.length} keys, contains large data)`;
-      }
-      
-      // For small objects, try to show actual content
-      try {
-        const jsonStr = JSON.stringify(value);
-        return jsonStr.length < 200 ? jsonStr : `Object(${keys.length} keys)`;
-      } catch (error) {
-        return `Object(${keys.length} keys)`;
-      }
-    }
-    
-    return String(value);
-  }
-
-  /**
-   * Get detailed variable preview that shows actual data for LLM context
-   * Now with intelligent handling of large strings and base64 data
-   */
-  getDetailedVariablePreview(value) {
-    return this.getDataTypeSummary(value);
-  }
-
-  /**
-   * Summarize tool result data for LLM prompts without including large content
-   */
-  summarizeToolResult(data) {
-    if (!data || typeof data !== 'object') {
-      return this.getDataTypeSummary(data);
-    }
-
-    // For objects, create a summary showing structure without large content
-    const summary = {};
-    for (const [key, value] of Object.entries(data)) {
-      if (typeof value === 'string' && value.length > 100) {
-        // Use the same smart summarization as context variables
-        summary[key] = this.getDataTypeSummary(value);
-      } else if (typeof value === 'object' && value !== null) {
-        summary[key] = `[OBJECT: ${Object.keys(value).length} keys]`;
-      } else {
-        summary[key] = value;
-      }
-    }
-
-    try {
-      const jsonStr = JSON.stringify(summary);
-      return jsonStr.length < 300 ? jsonStr : `Object(${Object.keys(data).length} keys with summarized large content)`;
-    } catch (error) {
-      return `Object(${Object.keys(data).length} keys)`;
+    switch (type) {
+      case 'string':
+        return value.length > 100 ? `"${value.substring(0, 97)}..."` : `"${value}"`;
+      case 'number':
+      case 'boolean':
+        return String(value);
+      case 'object':
+        if (Array.isArray(value)) {
+          return value.length < 5 ? JSON.stringify(value) : `Array(${value.length})`;
+        } else {
+          // Show actual object content if small
+          try {
+            const jsonStr = JSON.stringify(value);
+            return jsonStr.length < 200 ? jsonStr : `Object(${Object.keys(value).length} keys)`;
+          } catch (error) {
+            return `Object(${Object.keys(value).length} keys)`;
+          }
+        }
+      default:
+        return `${type}`;
     }
   }
 
@@ -1011,10 +922,9 @@ Be helpful and specific.
     }
 
     return Object.entries(properties).map(([param, schema]) => {
-      const type = schema.type || (typeof schema === 'string' ? schema : 'string');
-      const isRequired = inputSchema.required?.includes(param);
-      const requiredLabel = isRequired ? '(required)' : '(optional)';
-      return `  - ${param} ${requiredLabel} (${type}): ${schema.description || this.getParameterDescription(param)}`;
+      const type = schema.type || typeof schema === 'string' ? schema : 'string';
+      const required = inputSchema.required?.includes(param) ? '*' : '';
+      return `  - ${param}${required} (${type}): ${schema.description || this.getParameterDescription(param)}`;
     }).join('\n');
   }
 
@@ -1182,94 +1092,10 @@ Be helpful and specific.
   /**
    * Clear context (for testing or reset)
    */
-  /**
-   * Intelligent context optimization using LLM-driven decisions
-   * Replaces the old clearContext() with smart optimization that preserves infrastructure
-   */
-  async optimizeContextIntelligently() {
-    try {
-      console.log('[ToolAgent] Starting automatic context optimization...');
-      
-      // Create context snapshot (preserves infrastructure variables)
-      const contextSnapshot = this.getContextSnapshot();
-      
-      // Use ContextOptimizer for intelligent optimization
-      const optimizedContext = await this.contextOptimizer.optimizeContext(contextSnapshot);
-      
-      // Apply optimizations while preserving infrastructure
-      this.applyOptimizedContext(optimizedContext);
-      
-      console.log('[ToolAgent] ✅ Context optimization complete');
-    } catch (error) {
-      console.error('[ToolAgent] Context optimization failed (continuing with current context):', error.message);
-      // Don't throw - optimization failure shouldn't break the user workflow
-    }
-  }
-  
-  /**
-   * Legacy clearContext method - DEPRECATED
-   * Use optimizeContextIntelligently() instead
-   */
   clearContext() {
-    console.warn('[ToolAgent] ⚠️  clearContext() is deprecated - use optimizeContextIntelligently() instead');
     this.executionContext.artifacts = {};
     this.chatHistory = [];
     this.operationHistory = [];
     this.currentOperation = null;
-    // Note: Infrastructure variables (resourceActor, toolRegistry, etc.) are preserved
-  }
-  
-  /**
-   * Get complete context snapshot for optimization
-   * @returns {Object} Context snapshot with all state
-   */
-  getContextSnapshot() {
-    return {
-      chatHistory: this.chatHistory,
-      executionContext: this.executionContext,
-      operationHistory: this.operationHistory,
-      llmInteractions: this.llmInteractions,
-      currentOperation: this.currentOperation,
-      // Infrastructure variables that must be preserved
-      resourceActor: this.resourceActor,
-      toolRegistry: this.toolRegistry,
-      llmClient: this.llmClient,
-      eventCallback: this.eventCallback
-    };
-  }
-  
-  /**
-   * Apply optimized context while preserving infrastructure
-   * @param {Object} optimizedContext - Context returned by ContextOptimizer
-   */
-  applyOptimizedContext(optimizedContext) {
-    // Apply user data optimizations
-    this.chatHistory = optimizedContext.chatHistory || [];
-    this.executionContext = optimizedContext.executionContext || { artifacts: {} };
-    this.operationHistory = optimizedContext.operationHistory || [];
-    this.llmInteractions = optimizedContext.llmInteractions || [];
-    this.currentOperation = optimizedContext.currentOperation || null;
-    
-    // Ensure infrastructure variables are always preserved (even if optimization failed)
-    if (!this.resourceActor && optimizedContext.resourceActor) {
-      this.resourceActor = optimizedContext.resourceActor;
-    }
-    if (!this.toolRegistry && optimizedContext.toolRegistry) {
-      this.toolRegistry = optimizedContext.toolRegistry;
-    }
-    if (!this.llmClient && optimizedContext.llmClient) {
-      this.llmClient = optimizedContext.llmClient;
-    }
-    if (!this.eventCallback && optimizedContext.eventCallback) {
-      this.eventCallback = optimizedContext.eventCallback;
-    }
-    
-    // Always ensure output_directory exists
-    if (!this.executionContext.artifacts.output_directory) {
-      this.executionContext.artifacts.output_directory = {
-        value: './tmp',
-        description: 'Default directory for saving generated files and outputs.'
-      };
-    }
   }
 }

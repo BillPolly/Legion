@@ -9,48 +9,103 @@ import { Module } from '@legion/tools-registry';
 import { DisplayResourceTool } from './tools/DisplayResourceTool.js';
 import { NotifyUserTool } from './tools/NotifyUserTool.js';
 import { CloseWindowTool } from './tools/CloseWindowTool.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-class AgentToolsModule extends Module {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export default class AgentToolsModule extends Module {
   constructor() {
     super();
-    this.name = 'agent-tools';
+    this.name = 'agent-tools-module';
     this.description = 'UI tools for agent planning that integrate with transparent resource handle system';
     this.version = '1.0.0';
+    this.resourceManager = null;
     
-    // Create tool instances
-    this.tools = [
-      new DisplayResourceTool(),
-      new NotifyUserTool(),
-      new CloseWindowTool()
-    ];
+    // Set metadata path for base class to load module.json
+    this.metadataPath = path.join(__dirname, 'module.json');
+    
+    // Tools will be initialized in initialize() - use object format for Module base class
+    this.tools = {};
   }
   
   /**
-   * Static factory method for module creation
+   * Initialize the module and create tool instances
+   */
+  async initialize() {
+    console.log('🔄 Initializing AgentToolsModule...');
+    
+    try {
+      // Call parent initialize() to load metadata automatically
+      await super.initialize();
+      
+      console.log('🔍 Metadata loaded:', this.metadata ? 'YES' : 'NO');
+      console.log('🔍 Metadata file path:', this.metadataPath);
+      if (this.metadata) {
+        console.log('🔍 Metadata tools:', Object.keys(this.metadata.tools || {}).length);
+        console.log('🔍 Tool keys:', Object.keys(this.metadata.tools || {}));
+      }
+      
+      // Create tools using proper base class pattern with metadata
+      if (this.metadata) {
+        const tools = [
+          { key: 'display_resource', class: DisplayResourceTool },
+          { key: 'notify_user', class: NotifyUserTool },
+          { key: 'close_window', class: CloseWindowTool }
+        ];
+
+        for (const { key, class: ToolClass } of tools) {
+          try {
+            const toolMetadata = this.getToolMetadata(key);
+            if (toolMetadata) {
+              // Use base class method with proper Tool class constructor
+              const tool = this.createToolFromMetadata(key, ToolClass);
+              this.registerTool(toolMetadata.name, tool);
+              console.log(`✅ Created proper Tool instance: ${toolMetadata.name}`);
+            }
+          } catch (error) {
+            console.warn(`Failed to create tool ${key}: ${error.message}`);
+          }
+        }
+      }
+      
+      console.log(`✅ AgentToolsModule initialized with ${Object.keys(this.tools).length} tools`);
+      
+      // Debug: Test getTools() method and tool structure
+      try {
+        const toolsArray = this.getTools();
+        console.log('🔍 getTools() returns:', Array.isArray(toolsArray) ? `array with ${toolsArray.length} tools` : 'not an array');
+        if (Array.isArray(toolsArray)) {
+          console.log('🔍 Tool names:', toolsArray.map(t => t.name));
+          toolsArray.forEach(tool => {
+            console.log(`🔍 Tool ${tool.name}:`);
+            console.log(`   - has name: ${!!tool.name}`);
+            console.log(`   - has execute: ${typeof tool.execute === 'function'}`);
+            console.log(`   - has _execute: ${typeof tool._execute === 'function'}`);
+            console.log(`   - constructor: ${tool.constructor.name}`);
+          });
+        }
+      } catch (error) {
+        console.error('❌ getTools() error:', error.message);
+      }
+      
+    } catch (error) {
+      console.error('❌ Failed to initialize AgentToolsModule:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Static factory method required by tool registry
    * @param {Object} resourceManager - Resource manager instance
-   * @returns {Promise<AgentToolsModule>} Module instance
+   * @returns {AgentToolsModule} Module instance
    */
   static async create(resourceManager) {
     const module = new AgentToolsModule();
     module.resourceManager = resourceManager;
     await module.initialize();
     return module;
-  }
-
-  /**
-   * Initialize the module
-   */
-  async initialize() {
-    // Module is already initialized in constructor
-    // This method is here for compatibility with the interface
-  }
-
-  /**
-   * Get all tools provided by this module
-   * @returns {Array} Array of tool instances
-   */
-  getTools() {
-    return this.tools;
   }
   
   /**
@@ -69,79 +124,4 @@ class AgentToolsModule extends Module {
   getToolNames() {
     return this.tools.map(tool => tool.name);
   }
-  
-  /**
-   * Test all tools in this module
-   * @returns {Promise<Object>} Test results with detailed report
-   */
-  async testTools() {
-    const results = {
-      moduleName: this.name,
-      totalTools: this.tools.length,
-      successful: 0,
-      failed: 0,
-      results: [],
-      summary: ''
-    };
-    
-    console.log(`[${this.name}] Testing ${this.tools.length} tools...`);
-    
-    // Create mock context for testing
-    const mockContext = {
-      resourceService: {
-        displayResource: async () => ({ windowId: 'test-window', viewerType: 'auto' }),
-        showNotification: async () => ({ notificationId: 'test-notification' }),
-        closeWindow: async () => ({ closed: true })
-      }
-    };
-    
-    const mockResourceHandle = {
-      path: '/test/path.js',
-      __isResourceHandle: true
-    };
-    
-    for (const tool of this.tools) {
-      const testResult = {
-        toolName: tool.name,
-        success: false,
-        error: null,
-        duration: 0
-      };
-      
-      try {
-        const startTime = Date.now();
-        
-        // Test tool based on its type
-        if (tool.name === 'display_resource') {
-          const params = { context: mockContext, resourceHandle: mockResourceHandle };
-          await tool._execute(params);
-        } else if (tool.name === 'notify_user') {
-          const params = { context: mockContext, message: 'Test notification' };
-          await tool._execute(params);
-        } else if (tool.name === 'close_window') {
-          const params = { context: mockContext, windowId: 'test-window' };
-          await tool._execute(params);
-        }
-        
-        testResult.duration = Date.now() - startTime;
-        testResult.success = true;
-        results.successful++;
-        console.log(`[${this.name}] ✓ ${tool.name} passed (${testResult.duration}ms)`);
-        
-      } catch (error) {
-        testResult.error = error.message;
-        results.failed++;
-        console.log(`[${this.name}] ✗ ${tool.name} failed: ${error.message}`);
-      }
-      
-      results.results.push(testResult);
-    }
-    
-    results.summary = `${results.successful}/${results.totalTools} tools passed`;
-    console.log(`[${this.name}] Test complete: ${results.summary}`);
-    
-    return results;
-  }
 }
-
-export default AgentToolsModule;

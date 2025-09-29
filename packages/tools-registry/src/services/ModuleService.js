@@ -608,9 +608,30 @@ export class ModuleService {
       const validation = await this.moduleDiscovery.validateModule(moduleInstance);
       
       if (!validation.valid) {
-        const errorMessages = Array.isArray(validation.errors) 
-          ? validation.errors.join(', ')
-          : JSON.stringify(validation.errors);
+        console.error('🔍 VALIDATION DEBUG - validation object:', validation);
+        console.error('🔍 VALIDATION DEBUG - errors type:', typeof validation.errors);
+        console.error('🔍 VALIDATION DEBUG - errors array?:', Array.isArray(validation.errors));
+        console.error('🔍 VALIDATION DEBUG - errors length:', validation.errors?.length);
+        console.error('🔍 VALIDATION DEBUG - raw errors:', validation.errors);
+        
+        let errorMessages = 'Unknown validation error';
+        
+        if (Array.isArray(validation.errors)) {
+          errorMessages = validation.errors.map(err => {
+            if (typeof err === 'string') return err;
+            if (typeof err === 'object' && err.message) return err.message;
+            return JSON.stringify(err);
+          }).join(', ');
+        } else if (validation.errors) {
+          if (typeof validation.errors === 'string') {
+            errorMessages = validation.errors;
+          } else if (validation.errors.message) {
+            errorMessages = validation.errors.message;
+          } else {
+            errorMessages = JSON.stringify(validation.errors, null, 2);
+          }
+        }
+        
         result.error = `Module validation failed: ${errorMessages}`;
         return result;
       }
