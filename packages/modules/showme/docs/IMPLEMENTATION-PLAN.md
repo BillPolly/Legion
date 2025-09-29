@@ -35,10 +35,11 @@ This plan details the implementation of Handle integration for ShowMe module, en
 **Completed:**
 - ✅ Phase 1: Handle Detection and Resolution (62 tests passing)
 - ✅ Phase 2: HandleRenderer Implementation (50 tests passing)
-- **Total: 112 tests passing, 2 phases complete**
+- ✅ Phase 3: StrategyRenderer Implementation (36 tests passing)
+- **Total: 148 tests passing, 3 phases complete**
 
 **Current:**
-- 🔄 Phase 3: StrategyRenderer Implementation (starting now)
+- 🔄 Phase 4: ShowAssetTool Handle Integration (in progress)
 
 **Remaining:**
 - ⏳ Phase 4: ShowAssetTool Handle Integration
@@ -193,16 +194,20 @@ This plan details the implementation of Handle integration for ShowMe module, en
 **Prerequisites**: Read [DESIGN.md](./DESIGN.md) - Handle Detection and Resolution section
 
 #### Steps:
-- [ ] 4.1: Write unit tests for Handle input processing in ShowAssetTool
+- [✅] 4.1: Write unit tests for Handle input processing in ShowAssetTool
   - Test Legion URI string input
   - Test Handle instance input
   - Test traditional asset input (backward compatibility)
   - Test error cases (invalid Handle URI, missing Handle)
+  - Created ShowAssetTool.handles.test.js with 25 tests
+  - All 25 tests passing
 
-- [ ] 4.2: Update ShowAssetTool.execute() for Handle detection
-  - Add Handle detection using updated AssetTypeDetector
+- [✅] 4.2: Update ShowAssetTool.execute() for Handle detection
+  - Add Handle detection using updated AssetTypeDetector.detect()
   - Branch on detected type (handle-* vs traditional asset)
+  - Store URI for Handles, not full instance
   - Preserve backward compatibility for non-Handle assets
+  - Updated generateTitle() to handle Handle types
 
 - [ ] 4.3: Write unit tests for Handle resolution
   - Test Handle resolution from URI via ResourceManager

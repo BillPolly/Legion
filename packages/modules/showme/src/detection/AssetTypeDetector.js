@@ -97,13 +97,21 @@ export class AssetTypeDetector {
    * @returns {Object|null} Handle detection result or null if not a Handle
    */
   detectHandle(asset) {
+    // Check for objects that LOOK like Handles but are invalid
+    if (typeof asset === 'object' && asset !== null && asset.resourceType) {
+      // Has resourceType but might be missing toURI - fail fast
+      if (typeof asset.toURI !== 'function') {
+        throw new Error('Object with resourceType must have toURI() method to be a valid Handle');
+      }
+    }
+
     // Check for Handle instance (object with toURI() and resourceType)
     if (this.isHandleInstance(asset)) {
       let uri;
       try {
         uri = asset.toURI();
       } catch (error) {
-        throw new Error(`URI generation failed: ${error.message}`);
+        throw new Error(`Handle URI generation failed: ${error.message}`);
       }
 
       // Validate that toURI() returns Legion URI

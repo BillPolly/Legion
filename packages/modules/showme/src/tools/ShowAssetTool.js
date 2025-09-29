@@ -52,15 +52,23 @@ export class ShowAssetTool {
 
       const { asset, hint, title, options = {} } = params;
 
-      // Detect asset type
-      const detectedType = this.assetDetector.detectAssetType(asset, hint);
+      // Detect asset type using new detect() method that returns rich result
+      const detectionResult = this.assetDetector.detect(asset, { hint });
+      const detectedType = detectionResult.type === 'handle'
+        ? `handle-${detectionResult.subtype}`
+        : detectionResult.type;
+
+      // For Handles, store URI not full instance
+      const assetToStore = detectionResult.type === 'handle'
+        ? (detectionResult.uri || detectionResult.instance.toURI())
+        : asset;
 
       // Generate title if not provided
-      const finalTitle = title || this.generateTitle(asset, detectedType);
+      const finalTitle = title || this.generateTitle(assetToStore, detectedType, detectionResult);
 
       // In test mode, skip server operations and return mock result
       if (this.testMode) {
-        const assetHandle = this.createAssetHandle(asset, detectedType, finalTitle);
+        const assetHandle = this.createAssetHandle(assetToStore, detectedType, finalTitle);
         return {
           success: true,
           window_id: this.generateWindowId(),
@@ -75,14 +83,14 @@ export class ShowAssetTool {
       await this.ensureServerRunning();
 
       // Create handle for the asset (not the asset data itself)
-      const assetHandle = this.createAssetHandle(asset, detectedType, finalTitle);
+      const assetHandle = this.createAssetHandle(assetToStore, detectedType, finalTitle);
 
       // Send handle to server actor for display
       const displayResult = await this.sendHandleToServerActor({
         assetId: assetHandle.id,
         assetType: detectedType,
         title: finalTitle,
-        asset: asset // This will be stored by the actor, not transmitted
+        asset: assetToStore // Store URI for Handles, full data for traditional assets
       });
 
       if (!displayResult) {
@@ -235,34 +243,41 @@ export class ShowAssetTool {
    * @private
    * @param {*} asset - Asset being displayed
    * @param {string} detectedType - Detected asset type
+   * @param {Object} detectionResult - Full detection result with Handle info
    * @returns {string} Generated title
    */
-  generateTitle(asset, detectedType) {
+  generateTitle(asset, detectedType, detectionResult = null) {
+    // Handle type-specific titles
+    if (detectedType.startsWith('handle-')) {
+      const subtype = detectedType.replace('handle-', '');
+      return `${subtype.charAt(0).toUpperCase() + subtype.slice(1)} Handle`;
+    }
+
     switch (detectedType) {
       case 'image':
         if (typeof asset === 'string' && (asset.startsWith('http') || asset.includes('/'))) {
           return `Image: ${this.getFileName(asset)}`;
         }
         return 'Image Viewer';
-      
+
       case 'code':
         if (typeof asset === 'string' && asset.includes('.')) {
           return `Code: ${this.getFileName(asset)}`;
         }
         return 'Code Viewer';
-      
+
       case 'json':
         return 'JSON Viewer';
-      
+
       case 'data':
         return 'Data Table';
-      
+
       case 'web':
         if (typeof asset === 'string' && asset.startsWith('http')) {
           return `Web: ${asset}`;
         }
         return 'Web Content';
-      
+
       case 'text':
       default:
         return 'Text Viewer';

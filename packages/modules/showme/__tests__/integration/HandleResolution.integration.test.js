@@ -164,16 +164,16 @@ describe('Handle Resolution Integration', () => {
       }).toThrow(/Invalid Legion URI/);
     });
 
-    test('should handle malformed Handle instance gracefully', () => {
+    test('should fail fast on malformed Handle instance', () => {
       const malformed = {
         // Missing toURI()
         resourceType: 'strategy'
       };
 
-      // Should not detect as Handle
-      const result = detector.detect(malformed);
-      expect(result.type).not.toBe('handle');
-      expect(result.type).toBe('json'); // Falls back to JSON detection
+      // Should throw error (fail-fast)
+      expect(() => {
+        detector.detect(malformed);
+      }).toThrow(/must have toURI/);
     });
   });
 
