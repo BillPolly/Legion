@@ -1,6 +1,6 @@
 /**
  * FullStackMonitor - Orchestrates browser and backend monitoring for complete observability
- * Combines log-manager and browser-monitor to provide unified debugging capabilities
+ * Provides unified debugging capabilities with integrated browser and backend monitoring
  */
 
 import { EventEmitter } from 'events';
