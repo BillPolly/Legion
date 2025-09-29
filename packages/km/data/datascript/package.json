@@ -1,0 +1,73 @@
+{
+  "name": "@legion/datascript",
+  "version": "1.0.0",
+  "description": "Immutable in-memory database and Datalog query engine for JavaScript/TypeScript. A complete port of DataScript to modern ES6+ with zero dependencies.",
+  "main": "index.js",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "types": "./index.d.ts"
+    },
+    "./src/*": "./src/*"
+  },
+  "browser": {
+    "./src/storage/storage.js": "./src/storage/storage_web.js"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "src/**/*",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test",
+    "test:watch": "node --test --watch",
+    "test:coverage": "node --test --coverage",
+    "test:unit": "node --test test/unit/",
+    "test:integration": "node --test test/integration/",
+    "test:e2e": "node --test test/e2e/",
+    "benchmark": "node scripts/benchmark.js",
+    "examples": "node scripts/test-all.js",
+    "lint": "echo 'Linting would go here (ESLint not included to keep zero deps)'",
+    "format": "echo 'Formatting would go here (Prettier not included to keep zero deps)'",
+    "clean": "rm -rf coverage .nyc_output",
+    "prepack": "npm test"
+  },
+  "keywords": [
+    "database",
+    "datalog",
+    "immutable",
+    "datascript",
+    "query",
+    "pull",
+    "reactive",
+    "functional",
+    "clojure",
+    "graph",
+    "triple-store",
+    "in-memory",
+    "zero-dependencies"
+  ],
+  "author": "DataScript JS Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/datascript-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/datascript-js/issues"
+  },
+  "homepage": "https://github.com/your-username/datascript-js#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "engineStrict": true,
+  "devDependencies": {},
+  "dependencies": {},
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/your-username"
+  }
+}
