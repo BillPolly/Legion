@@ -133,6 +133,63 @@ export class PromptLoader {
     if (!config.outputPrompt) {
       config.outputPrompt = this.generateOutputPrompt(config.responseSchema);
     }
+
+    // Validate querySpec if present
+    if (config.querySpec) {
+      this.validateQuerySpec(config.querySpec);
+    }
+  }
+
+  /**
+   * Validate querySpec configuration
+   * @param {Object} querySpec - Query specification to validate
+   */
+  validateQuerySpec(querySpec) {
+    if (!querySpec || typeof querySpec !== 'object') {
+      throw new Error('QuerySpec must be an object');
+    }
+
+    if (!querySpec.bindings && !querySpec.contextVariables) {
+      throw new Error('QuerySpec must have bindings or contextVariables');
+    }
+
+    // Validate bindings
+    if (querySpec.bindings) {
+      for (const [name, binding] of Object.entries(querySpec.bindings)) {
+        if (!name || typeof name !== 'string') {
+          throw new Error('Binding name must be a non-empty string');
+        }
+
+        if (!binding || typeof binding !== 'object') {
+          throw new Error(`Binding ${name} must be an object`);
+        }
+
+        if (!binding.path && binding.value === undefined && !binding.aggregate) {
+          throw new Error(`Binding ${name} must have path, value, or aggregate`);
+        }
+
+        if (binding.path && typeof binding.path !== 'string') {
+          throw new Error(`Path must be a string for binding ${name}`);
+        }
+      }
+    }
+
+    // Validate context variables
+    if (querySpec.contextVariables) {
+      for (const [name, varDef] of Object.entries(querySpec.contextVariables)) {
+        if (!name || typeof name !== 'string') {
+          throw new Error('Context variable name must be a non-empty string');
+        }
+
+        if (!varDef || typeof varDef !== 'object') {
+          throw new Error(`Context variable ${name} must be an object`);
+        }
+
+        if (!varDef.path && varDef.value === undefined) {
+          throw new Error(`Context variable ${name} must have path or value`);
+        }
+      }
+    }
   }
 
   /**
@@ -266,7 +323,8 @@ export class PromptLoader {
       responseSchema: config.responseSchema,
       llmClient: context.llmClient,
       examples: config.examples || [],
-      maxRetries: config.responseProcessor.retries || 3
+      maxRetries: config.responseProcessor.retries || 3,
+      querySpec: config.querySpec || null
     });
 
     // Add metadata for debugging/logging

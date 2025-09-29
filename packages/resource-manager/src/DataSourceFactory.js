@@ -7,6 +7,7 @@
 import { Neo4jDataSource } from './datasources/Neo4jDataSource.js';
 import { NomicDataSource } from './datasources/NomicDataSource.js';
 import { QdrantDataSource } from './datasources/QdrantDataSource.js';
+import { MongoDataSource } from './datasources/MongoDataSource.js';
 
 export class DataSourceFactory {
   /**
@@ -26,7 +27,8 @@ export class DataSourceFactory {
         
       case 'mongodb':
       case 'document':
-        throw new Error('MongoDB DataSource not yet implemented');
+        dataSource = new MongoDataSource({ resourceManager });
+        break;
         
       case 'qdrant':
       case 'vector':
@@ -74,5 +76,14 @@ export class DataSourceFactory {
    */
   static async createQdrant(resourceManager) {
     return this.create('qdrant', resourceManager);
+  }
+
+  /**
+   * Create MongoDB DataSource
+   * @param {ResourceManager} resourceManager - ResourceManager instance
+   * @returns {Promise<MongoDataSource>} Initialized MongoDB DataSource
+   */
+  static async createMongo(resourceManager) {
+    return this.create('mongodb', resourceManager);
   }
 }
