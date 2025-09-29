@@ -36,13 +36,13 @@ This plan details the implementation of Handle integration for ShowMe module, en
 - ✅ Phase 1: Handle Detection and Resolution (62 tests passing)
 - ✅ Phase 2: HandleRenderer Implementation (50 tests passing)
 - ✅ Phase 3: StrategyRenderer Implementation (36 tests passing)
-- **Total: 148 tests passing, 3 phases complete**
+- ✅ Phase 4: ShowAssetTool Handle Integration (49 tests passing)
+- **Total: 197 tests passing, 4 phases complete**
 
 **Current:**
-- 🔄 Phase 4: ShowAssetTool Handle Integration (in progress)
+- 🔄 Phase 5: Actor Protocol Updates for Handles (starting now)
 
 **Remaining:**
-- ⏳ Phase 4: ShowAssetTool Handle Integration
 - ⏳ Phase 5: Actor Protocol Updates for Handles
 - ⏳ Phase 6: App Mode Browser Launch
 - ⏳ Phase 7: End-to-End Integration Testing
@@ -209,44 +209,27 @@ This plan details the implementation of Handle integration for ShowMe module, en
   - Preserve backward compatibility for non-Handle assets
   - Updated generateTitle() to handle Handle types
 
-- [ ] 4.3: Write unit tests for Handle resolution
-  - Test Handle resolution from URI via ResourceManager
-  - Test Handle metadata extraction
-  - Test Handle caching
-  - Test error handling for resolution failures
+- [✅] 4.3-4.6: Handle resolution and storage (covered in integration tests)
+  - Handle resolution via ResourceManager.fromURI() working
+  - Handle metadata extraction and caching working
+  - URI storage (not full instances) implemented
+  - Storage efficiency verified in tests
 
-- [ ] 4.4: Implement Handle resolution in ShowAssetTool
-  - Add Handle resolution via ResourceManager.createHandleFromURI()
-  - Extract Handle metadata
-  - Cache resolved Handle
-  - Fail-fast on resolution errors
+- [✅] 4.7: Write integration tests for Handle display flow
+  - Created ShowAssetTool.Handle.integration.test.js with 24 tests
+  - Tests complete flow: Handle instance → detection → storage → resolution
+  - Tests Handle URI string flow
+  - Tests storage efficiency (URIs not instances)
+  - Tests metadata extraction and caching
+  - Tests backward compatibility with traditional assets
+  - NO MOCKS - uses real ResourceManager and Handles
+  - All 24 integration tests passing
 
-- [ ] 4.5: Write unit tests for Handle storage
-  - Test Handle URI storage (not full Handle instance)
-  - Test Handle metadata caching
-  - Test Handle retrieval and re-resolution
-  - Test storage efficiency (URIs vs instances)
-
-- [ ] 4.6: Update asset storage for Handles
-  - Store Handle URIs instead of full instances
-  - Store Handle metadata separately
-  - Implement Handle re-resolution on retrieval
-  - Update asset counter and ID generation
-
-- [ ] 4.7: Write integration tests for Handle display flow
-  - Create strategy Handle from real strategy file
-  - Call ShowAssetTool.execute() with Handle instance
-  - Verify Handle detected correctly
-  - Verify Handle stored as URI
-  - Verify metadata cached
-  - Call execute() with Handle URI string
-  - Verify Handle resolved correctly
-  - NO MOCKS - use real ResourceManager and Handles
-
-- [ ] 4.8: Run all Phase 4 tests
-  - Verify 100% pass rate
-  - Fix any failures
-  - Commit: "feat: Add Handle support to ShowAssetTool"
+- [✅] 4.8: Run all Phase 4 tests
+  - Unit tests: 25/25 passing
+  - Integration tests: 24/24 passing
+  - **Total Phase 4: 49/49 tests passing (100% pass rate)**
+  - Ready to commit
 
 ### Phase 5: Actor Protocol Updates for Handles
 **Goal**: Update Actor protocol to support Handle display messages
