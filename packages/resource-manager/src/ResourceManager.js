@@ -34,14 +34,17 @@ export class ResourceManager {
     
     // Internal storage
     this._resources = new Map();
-    
+
     // Flag to track initialization status
     this.initialized = false;
-    
+
     // Handle and URI caching
     // These are not initialized in constructor - they remain undefined until first use
     // this._handleCache - Initialized lazily
     // this._uriCache - Initialized lazily
+
+    // Connection cache for MongoDB and other database clients
+    this._connectionCache = new Map();
     
     // Load initial resources if provided
     if (initialResources) {
@@ -316,6 +319,13 @@ export class ResourceManager {
       this._resources.set('simplePromptClient', promise);
       return promise;
     }
+
+    // Special handling for handleSemanticSearch - create it if it doesn't exist
+    if (name === 'handleSemanticSearch' && !this._resources.has('handleSemanticSearch')) {
+      const promise = this.createHandleSemanticSearch();
+      this._resources.set('handleSemanticSearch', promise);
+      return promise;
+    }
     
     // Handle dot notation (e.g., 'env.ANTHROPIC_API_KEY')
     if (name.includes('.')) {
@@ -479,7 +489,7 @@ export class ResourceManager {
     // Get the LLMClient instance
     const llmClient = await this.get('llmClient');
 
-    // Import SimplePromptClient dynamically  
+    // Import SimplePromptClient dynamically
     const { SimplePromptClient } = await import('@legion/llm-client');
 
     const simpleClient = new SimplePromptClient({
@@ -496,6 +506,56 @@ export class ResourceManager {
     this.simplePromptClient = simpleClient;
 
     return simpleClient;
+  }
+
+  /**
+   * Create and configure HandleSemanticSearchManager for semantic handle search
+   * @param {Object} config - Optional configuration override
+   * @returns {Promise<HandleSemanticSearchManager>} Configured HandleSemanticSearchManager instance
+   */
+  async createHandleSemanticSearch(config = {}) {
+    // Check if already cached
+    if (this._handleSemanticSearch && !config.force) {
+      return this._handleSemanticSearch;
+    }
+
+    // Import required modules - Try workspace import first, fall back to relative path
+    let HandleMetadataExtractor, HandleGlossGenerator, HandleVectorStore, HandleSemanticSearchManager;
+    try {
+      const module = await import('@legion/handle-semantic-search');
+      ({ HandleMetadataExtractor, HandleGlossGenerator, HandleVectorStore, HandleSemanticSearchManager } = module);
+    } catch (err) {
+      // Fall back to relative import for monorepo testing
+      const path = await import('path');
+      const { fileURLToPath } = await import('url');
+      const __dirname = path.dirname(fileURLToPath(import.meta.url));
+      const handleSemanticSearchPath = path.resolve(__dirname, '../../handle-semantic-search/src/index.js');
+      const module = await import(handleSemanticSearchPath);
+      ({ HandleMetadataExtractor, HandleGlossGenerator, HandleVectorStore, HandleSemanticSearchManager } = module);
+    }
+
+    // Create components
+    const metadataExtractor = new HandleMetadataExtractor();
+
+    const llmClient = await this.get('llmClient');
+    const glossGenerator = new HandleGlossGenerator(llmClient);
+    await glossGenerator.initialize();
+
+    const vectorStore = new HandleVectorStore(this);
+    await vectorStore.initialize();
+
+    // Create and cache manager
+    const manager = new HandleSemanticSearchManager(
+      this,
+      metadataExtractor,
+      glossGenerator,
+      vectorStore
+    );
+
+    // Cache for reuse (singleton pattern)
+    this._handleSemanticSearch = manager;
+
+    return manager;
   }
 
   /**
@@ -628,7 +688,7 @@ export class ResourceManager {
     const fullPath = pathParts.filter(p => p.length > 0);
 
     // Validate required path for certain resource types
-    if (['env', 'filesystem'].includes(resourceType) && path.length === 0) {
+    if (['env', 'filesystem', 'strategy'].includes(resourceType) && path.length === 0) {
       throw new Error(`Resource type '${resourceType}' requires a non-empty path`);
     }
 
@@ -676,21 +736,46 @@ export class ResourceManager {
     if (!this._dataSourceCache) {
       this._dataSourceCache = new Map();
     }
-    
+
     // Use resource type as cache key (all handles of same type share DataSource)
     const cacheKey = parsed.resourceType;
-    
+
     // Check cache first
     if (this._dataSourceCache.has(cacheKey)) {
       return this._dataSourceCache.get(cacheKey);
     }
-    
-    // Create new DataSource and cache it
-    const { DataSourceFactory } = await import('./DataSourceFactory.js');
-    const dataSource = await DataSourceFactory.create(parsed.resourceType, this);
-    
+
+    // Create DataSource - handle MongoDB, Filesystem, and Strategy specially as they need parsed context
+    let dataSource;
+    if (parsed.resourceType === 'mongodb') {
+      const { MongoDataSource } = await import('./datasources/MongoDataSource.js');
+      const context = {
+        resourceManager: this,
+        parsed,
+        getCachedConnection: (key, factory) => this.getCachedConnection(key, factory)
+      };
+      dataSource = new MongoDataSource(context);
+    } else if (parsed.resourceType === 'filesystem') {
+      const { FileDataSource } = await import('./datasources/FileDataSource.js');
+      const context = {
+        resourceManager: this,
+        parsed
+      };
+      dataSource = new FileDataSource(context);
+    } else if (parsed.resourceType === 'strategy') {
+      const { StrategyDataSource } = await import('./datasources/StrategyDataSource.js');
+      const context = {
+        resourceManager: this,
+        parsed
+      };
+      dataSource = new StrategyDataSource(context);
+    } else {
+      const { DataSourceFactory } = await import('./DataSourceFactory.js');
+      dataSource = await DataSourceFactory.create(parsed.resourceType, this);
+    }
+
     this._dataSourceCache.set(cacheKey, dataSource);
-    
+
     return dataSource;
   }
 
@@ -903,6 +988,7 @@ export class ResourceManager {
     this._registerHandleType('nomic', () => import('./handles/NomicHandle.js').then(m => m.NomicHandle));
     this._registerHandleType('qdrant', () => import('./handles/QdrantHandle.js').then(m => m.QdrantHandle));
     this._registerHandleType('vector', () => import('./handles/QdrantHandle.js').then(m => m.QdrantHandle));
+    this._registerHandleType('strategy', () => import('./handles/StrategyHandle.js').then(m => m.StrategyHandle));
   }
 
   /**
@@ -962,19 +1048,41 @@ export class ResourceManager {
   }
 
   /**
+   * Get or create a cached connection (for MongoDB, databases, etc.)
+   * @param {string} key - Connection cache key
+   * @param {Function} factory - Async factory function to create connection if not cached
+   * @returns {Promise<any>} Cached or newly created connection
+   */
+  async getCachedConnection(key, factory) {
+    if (!this._connectionCache) {
+      this._connectionCache = new Map();
+    }
+
+    if (this._connectionCache.has(key)) {
+      return this._connectionCache.get(key);
+    }
+
+    // Create new connection using factory
+    const connection = await factory();
+    this._connectionCache.set(key, connection);
+
+    return connection;
+  }
+
+  /**
    * Get Handle cache statistics
    * @returns {Object} Cache statistics
    */
   getHandleCacheStats() {
     this._ensureCaches();
-    
+
     if (this._handleCache.getStats) {
       return {
         handles: this._handleCache.getStats(),
         uris: this._uriCache.getStats()
       };
     }
-    
+
     // Fallback for Map-based cache
     return {
       handles: {
