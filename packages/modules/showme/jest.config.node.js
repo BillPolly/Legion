@@ -14,6 +14,7 @@ export default {
   // Test file patterns - only server and integration tests
   testMatch: [
     '**/__tests__/unit/tools/*.test.js',
+    '**/__tests__/unit/actors/*.test.js',
     '**/__tests__/unit/ShowMeModule.test.js',
     '**/__tests__/integration/**/*.test.js'
   ],

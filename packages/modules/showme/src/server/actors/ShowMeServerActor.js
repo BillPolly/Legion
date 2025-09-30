@@ -6,17 +6,21 @@
  */
 
 import { Actor } from '@legion/actors';
+import { ResourceManager } from '@legion/resource-manager';
 
 export class ShowMeServerActor extends Actor {
   constructor(actorSpace, config = {}) {
     super(actorSpace, config);
-    
+
     // Track connected clients and assets
     this.connectedClients = new Set();
     this.assetsStored = 0;
-    
+
     // Reference to server for asset operations
     this.server = config.server;
+
+    // ResourceManager for Handle resolution
+    this.resourceManager = null;
   }
 
   /**
@@ -25,7 +29,7 @@ export class ShowMeServerActor extends Actor {
   getProtocol() {
     return {
       name: "ShowMeServer",
-      version: "1.0.0",
+      version: "2.0.0",
       state: {
         schema: {
           connectedClients: { type: 'number', required: true },
@@ -60,6 +64,14 @@ export class ShowMeServerActor extends Actor {
               asset: { type: 'any', required: true }
             }
           },
+          "display-resource": {
+            schema: {
+              handleURI: { type: 'string', required: true },
+              handleType: { type: 'string', required: true },
+              title: { type: 'string', required: false },
+              options: { type: 'object', required: false }
+            }
+          },
           "request-asset": {
             schema: {
               assetId: { type: 'string', required: true },
@@ -78,6 +90,13 @@ export class ShowMeServerActor extends Actor {
             schema: {
               assetId: { type: 'string', required: true },
               assetType: { type: 'string', required: true },
+              title: { type: 'string', required: true }
+            }
+          },
+          "resource-ready": {
+            schema: {
+              handleURI: { type: 'string', required: true },
+              rendererType: { type: 'string', required: true },
               title: { type: 'string', required: true }
             }
           },
@@ -111,14 +130,17 @@ export class ShowMeServerActor extends Actor {
    */
   async initialize() {
     await super.initialize();
-    
+
+    // Get ResourceManager singleton for Handle resolution
+    this.resourceManager = await ResourceManager.getInstance();
+
     // Set initial state
     this.updateState({
       connectedClients: 0,
       assetsStored: this.server ? this.server.assetStorage.size : 0,
       serverRunning: true
     });
-    
+
     console.log('ShowMeServerActor initialized');
   }
 
@@ -160,7 +182,7 @@ export class ShowMeServerActor extends Actor {
    */
   async handleDisplayAsset({ assetId, assetType, title, asset }) {
     console.log(`Displaying asset: ${assetId} (${assetType})`);
-    
+
     // Store asset if server reference available
     if (this.server && this.server.assetStorage) {
       this.server.assetStorage.set(assetId, {
@@ -170,18 +192,92 @@ export class ShowMeServerActor extends Actor {
         title,
         timestamp: Date.now()
       });
-      
+
       this.updateState({
         assetsStored: this.server.assetStorage.size
       });
     }
-    
+
     // Notify all connected clients that asset is ready
     await this.broadcast('asset-ready', {
       assetId,
       assetType,
       title
     });
+  }
+
+  /**
+   * Handle display resource request (for Handles)
+   */
+  async handleDisplayResource({ handleURI, handleType, title, options = {} }) {
+    console.log(`Displaying resource: ${handleURI} (${handleType})`);
+
+    // Validate ResourceManager is available
+    if (!this.resourceManager) {
+      throw new Error('ResourceManager not initialized');
+    }
+
+    // Resolve Handle from URI
+    let handle;
+    try {
+      handle = await ResourceManager.fromURI(handleURI);
+    } catch (error) {
+      throw new Error(`Failed to resolve Handle: ${error.message}`);
+    }
+
+    // Determine renderer type based on Handle type
+    const rendererType = this.selectRendererType(handleType);
+
+    // Generate title if not provided
+    const finalTitle = title || this.generateHandleTitle(handleType, handleURI);
+
+    // Store Handle URI (not full instance) if server reference available
+    if (this.server && this.server.assetStorage) {
+      this.server.assetStorage.set(handleURI, {
+        id: handleURI,
+        handleURI,
+        handleType,
+        rendererType,
+        title: finalTitle,
+        timestamp: Date.now()
+      });
+
+      this.updateState({
+        assetsStored: this.server.assetStorage.size
+      });
+    }
+
+    // Notify all connected clients that resource is ready
+    await this.broadcast('resource-ready', {
+      handleURI,
+      rendererType,
+      title: finalTitle
+    });
+  }
+
+  /**
+   * Select appropriate renderer type based on Handle type
+   * @private
+   */
+  selectRendererType(handleType) {
+    // Map Handle types to renderer types
+    const rendererMap = {
+      'strategy': 'StrategyRenderer',
+      'strategyUsers': 'StrategyRenderer', // Specific strategy subdirectory
+      'filesystem': 'HandleRenderer',
+      'datastore': 'HandleRenderer'
+    };
+
+    return rendererMap[handleType] || 'HandleRenderer';
+  }
+
+  /**
+   * Generate title for Handle
+   * @private
+   */
+  generateHandleTitle(handleType, handleURI) {
+    const type = handleType.charAt(0).toUpperCase() + handleType.slice(1);
+    return `${type} Handle`;
   }
 
   /**
