@@ -9,6 +9,7 @@ import { ConfigurableActorServer } from '@legion/server-framework';
 import { ResourceManager } from '@legion/resource-manager';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import open from 'open';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -39,8 +40,14 @@ export class ShowMeServer extends ConfigurableActorServer {
     };
 
     super({ ...defaultConfig, ...config });
-    
+
     this.isRunning = false;
+    this.browserLaunched = false;
+    this.browserOptions = config.browserOptions || {
+      app: true,
+      width: 1200,
+      height: 800
+    };
   }
 
   /**
@@ -98,13 +105,77 @@ export class ShowMeServer extends ConfigurableActorServer {
   }
 
   /**
+   * Launch browser in app mode
+   * @param {string} url - URL to open
+   * @param {Object} options - Browser launch options
+   */
+  async launchBrowser(url, options = {}) {
+    // Merge with default browser options
+    const launchOptions = { ...this.browserOptions, ...options };
+
+    // Build Chrome app mode arguments
+    const chromeArgs = [];
+
+    // App mode (chromeless window)
+    if (launchOptions.app) {
+      chromeArgs.push(`--app=${url}`);
+    }
+
+    // Window size
+    if (launchOptions.width && launchOptions.height) {
+      chromeArgs.push(`--window-size=${launchOptions.width},${launchOptions.height}`);
+    }
+
+    // Window position
+    if (launchOptions.x !== undefined && launchOptions.y !== undefined) {
+      chromeArgs.push(`--window-position=${launchOptions.x},${launchOptions.y}`);
+    }
+
+    // Additional Chrome flags to disable unnecessary features
+    chromeArgs.push('--disable-features=TranslateUI');
+    chromeArgs.push('--disable-sync');
+    chromeArgs.push('--no-first-run');
+    chromeArgs.push('--no-default-browser-check');
+
+    try {
+      console.log(`Launching browser in app mode: ${url}`);
+      console.log(`Chrome args: ${chromeArgs.join(' ')}`);
+
+      // Launch browser with Chrome-specific arguments
+      await open(url, {
+        app: {
+          name: 'google chrome',
+          arguments: chromeArgs
+        }
+      });
+
+      this.browserLaunched = true;
+      console.log('Browser launched successfully');
+    } catch (error) {
+      throw new Error(`Failed to launch browser: ${error.message}`);
+    }
+  }
+
+  /**
+   * Trigger browser launch on first display
+   * @param {string} path - Path to display (default: /showme)
+   */
+  async ensureBrowserLaunched(path = '/showme') {
+    if (!this.browserLaunched && this.isRunning) {
+      const url = `http://localhost:${this.config.port}${path}`;
+      await this.launchBrowser(url);
+    }
+  }
+
+  /**
    * Get server status
    */
   getStatus() {
     return {
       running: this.isRunning,
       port: this.config.port,
-      url: this.isRunning ? `http://localhost:${this.config.port}` : null
+      url: this.isRunning ? `http://localhost:${this.config.port}` : null,
+      browserLaunched: this.browserLaunched
     };
   }
 }
