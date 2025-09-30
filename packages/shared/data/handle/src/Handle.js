@@ -77,12 +77,16 @@ export class Handle extends Actor {
   /**
    * Actor system message handling
    * Routes Actor messages to appropriate handle methods
+   * Phase 6: Added remote-call handling for RemoteHandle support
    */
   receive(message) {
     this._validateNotDestroyed();
-    
+
     if (typeof message === 'object' && message.type) {
       switch (message.type) {
+        case 'remote-call':
+          // Phase 6: Handle remote method calls from RemoteHandle
+          return this._handleRemoteCall(message);
         case 'query':
           return this.query(message.querySpec);
         case 'value':
@@ -97,8 +101,42 @@ export class Handle extends Actor {
           return super.receive(message);
       }
     }
-    
+
     return super.receive(message);
+  }
+
+  /**
+   * Handle remote method call from RemoteHandle
+   * Phase 6: Server-Side Handle Protocol
+   *
+   * @param {Object} message - Remote call message
+   * @param {string} message.callId - Unique call identifier
+   * @param {string} message.method - Method name to call on dataSource
+   * @param {Array} message.args - Arguments to pass to method
+   * @returns {Object} Response object with callId and result or error
+   * @private
+   */
+  _handleRemoteCall(message) {
+    const { callId, method, args = [] } = message;
+
+    try {
+      // Execute method on DataSource
+      const result = this.dataSource[method](...args);
+
+      // Return success response
+      return {
+        type: 'remote-response',
+        callId,
+        result
+      };
+    } catch (error) {
+      // Return error response
+      return {
+        type: 'remote-response',
+        callId,
+        error: error.message || String(error)
+      };
+    }
   }
   
   /**
@@ -137,16 +175,34 @@ export class Handle extends Actor {
   
   /**
    * Serialize handle for remote transmission
-   * Returns a simple object that can be sent over the wire
+   * Returns metadata WITHOUT GUID (ActorSerializer adds the GUID)
+   *
+   * This is called by ActorSerializer AFTER it assigns a GUID to this Handle.
+   * The returned metadata is merged with the Actor GUID to create the full serialization.
    */
   serialize() {
     this._validateNotDestroyed();
-    
+
+    // Get schema from DataSource (may be null)
+    let schema = null;
+    try {
+      schema = this.dataSource.getSchema();
+    } catch (error) {
+      // DataSource may not support getSchema() - that's ok
+      console.warn('Handle.serialize(): DataSource.getSchema() failed:', error.message);
+    }
+
+    // Determine capabilities based on DataSource methods
+    const capabilities = ['query', 'subscribe', 'getSchema', 'queryBuilder'];
+    if (typeof this.dataSource.update === 'function') {
+      capabilities.push('update');
+    }
+
     return {
       __type: 'RemoteHandle',
       handleType: this.handleType,
-      handleId: this.id || `handle-${Date.now()}`,
-      isDestroyed: this._destroyed
+      schema: schema,
+      capabilities: capabilities
     };
   }
   

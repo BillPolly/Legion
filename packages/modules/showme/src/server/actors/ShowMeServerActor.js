@@ -7,7 +7,7 @@
 
 import { Actor } from '@legion/actors';
 import { ResourceManager } from '@legion/resource-manager';
-import { AssetHandle } from '../../handles/AssetHandle.js';
+import { AssetHandle } from '../../handles/AssetHandleV2.js';
 
 export class ShowMeServerActor extends Actor {
   constructor(actorSpace, config = {}) {
@@ -193,11 +193,12 @@ export class ShowMeServerActor extends Actor {
 
   /**
    * Handle display asset request
+   * Updated to use Handle pattern instead of Actor pattern
    */
   async handleDisplayAsset({ assetId, assetType, title, asset }) {
     console.log(`Displaying asset: ${assetId} (${assetType})`);
 
-    // Create AssetHandle - this is an Actor!
+    // Create AssetHandle - this is a Handle (also an Actor for remote capability)!
     const assetHandle = new AssetHandle({
       id: assetId,
       assetType,
@@ -215,9 +216,10 @@ export class ShowMeServerActor extends Actor {
       });
     }
 
-    // Send the Handle Actor to client - it will be serialized as RemoteActor!
+    // Send the Handle to client - it will be serialized as RemoteHandle!
+    // Client receives RemoteHandle that can call methods directly
     await this.broadcast('display-asset', {
-      asset: assetHandle,  // This is an Actor - will become RemoteActor on client side!
+      asset: assetHandle,  // This is a Handle - will become RemoteHandle on client side!
       title
     });
   }

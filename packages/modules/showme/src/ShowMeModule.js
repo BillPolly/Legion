@@ -8,6 +8,8 @@
 import { AssetTypeDetector } from './detection/AssetTypeDetector.js';
 import { ShowAssetTool } from './tools/ShowAssetTool.js';
 import { ResourceManager } from '@legion/resource-manager';
+import { ActorSerializer } from '@legion/actors';
+import { RemoteHandle } from '@legion/handle';
 
 export class ShowMeModule {
   constructor(options = {}) {
@@ -42,6 +44,9 @@ export class ShowMeModule {
    */
   async _initialize() {
     try {
+      // Register RemoteHandle with ActorSerializer for Handle serialization
+      ActorSerializer.registerRemoteHandle(RemoteHandle);
+
       // Get ResourceManager singleton - fail-fast if unavailable
       this.resourceManager = await ResourceManager.getInstance();
       this._resourceManagerReady = true;

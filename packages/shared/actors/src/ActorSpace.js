@@ -84,16 +84,22 @@ export class ActorSpace {
      * @param {object} decodedMessage - The decoded message object (must have targetGuid, payload).
      * @param {Channel} sourceChannel - The channel the message arrived on.
      */
-    handleIncomingMessage(decodedMessage) {
+    handleIncomingMessage(decodedMessage, channel) {
         const { targetGuid, payload } = decodedMessage;
 
         let targetActor = this.guidToObject.get(targetGuid);
 
         if (targetActor) {
+            let response;
             if(Array.isArray(payload)){
-                targetActor.receive(...payload)
+                response = targetActor.receive(...payload);
             } else {
-                targetActor.receive(payload);
+                response = targetActor.receive(payload);
+            }
+
+            // Phase 7: If receive() returns a response and payload has sourceGuid, send response back
+            if (response && payload && payload.sourceGuid) {
+                channel.send(payload.sourceGuid, response);
             }
         } else {
             // Unknown GUID claims to be from *this* space, but we don't know it. Error.

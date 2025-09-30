@@ -63,28 +63,126 @@ RemoteHandle (Handle that IS its own DataSource)
 
 ## Serialization Flow
 
+### Critical Serialization Order
+
+**ActorSerializer must check `isActor` BEFORE checking `serialize()` to properly handle Handles:**
+
+```javascript
+// In ActorSerializer.serialize() - CORRECTED ORDER
+if (value?.isActor === true) {
+  // Generate GUID and register in ActorSpace
+  let guid = this.actorSpace.objectToGuid.get(value);
+  if (!guid) {
+    guid = this.actorSpace._generateGuid();
+    this.actorSpace.objectToGuid.set(value, guid);
+    this.actorSpace.guidToObject.set(guid, value);
+  }
+
+  // Check if Actor has custom serialization (like Handle)
+  if (typeof value.serialize === 'function') {
+    const customData = value.serialize();
+    // Merge Actor GUID with custom serialization
+    return {
+      '#actorGuid': guid,
+      ...customData
+    };
+  }
+
+  // Standard Actor serialization
+  return { '#actorGuid': guid };
+}
+```
+
 ### Server Side Serialization
 
-1. Server has real Handle with real DataSource
-2. Handle.serialize() called by ActorSerializer
-3. Returns:
+1. Server has real Handle (e.g., ImageHandle) with real DataSource
+2. ActorSerializer detects Handle is an Actor (`isActor: true`)
+3. ActorSerializer generates GUID and registers Handle in ActorSpace
+4. ActorSerializer calls Handle.serialize() for custom metadata
+5. Final serialization merges GUID with Handle metadata:
+
 ```javascript
 {
-  __type: 'RemoteHandle',
-  actorGuid: 'server-123',        // Actor GUID from ActorSpace
-  handleType: 'ImageHandle',       // Constructor name
-  schema: { /* schema object */ }, // For PrototypeFactory
-  capabilities: ['query', 'update', 'subscribe']
+  '#actorGuid': 'server-123',           // Added by ActorSerializer
+  __type: 'RemoteHandle',               // From Handle.serialize()
+  handleType: 'ImageHandle',            // From Handle.serialize()
+  schema: { /* schema object */ },      // From Handle.serialize()
+  capabilities: ['query', 'update', 'subscribe']  // From Handle.serialize()
+}
+```
+
+**Key Point**: Handle.serialize() returns metadata WITHOUT the GUID. ActorSerializer adds the GUID.
+
+### Handle.serialize() Implementation
+
+```javascript
+// In Handle.js
+serialize() {
+  this._validateNotDestroyed();
+
+  // Get schema from DataSource
+  const schema = this.dataSource.getSchema();
+
+  // Determine capabilities
+  const capabilities = ['query', 'subscribe', 'getSchema', 'queryBuilder'];
+  if (typeof this.dataSource.update === 'function') {
+    capabilities.push('update');
+  }
+
+  return {
+    __type: 'RemoteHandle',
+    handleType: this.handleType,
+    schema: schema,
+    capabilities: capabilities
+  };
 }
 ```
 
 ### Client Side Deserialization
 
-1. ActorSerializer detects `__type: 'RemoteHandle'`
-2. Creates RemoteHandle with serialization data
-3. RemoteHandle registered in ActorSpace with GUID
-4. PrototypeFactory manufactures typed prototype from schema
-5. Client code receives fully-functional Handle proxy
+1. ActorSerializer receives serialized data with both `'#actorGuid'` and `__type: 'RemoteHandle'`
+2. Detects this is a RemoteHandle (not a generic RemoteActor)
+3. Creates RemoteHandle instance with GUID, channel, and metadata
+4. Registers RemoteHandle in ActorSpace with GUID
+5. RemoteHandle constructor enables PrototypeFactory with schema
+6. Client code receives fully-functional RemoteHandle
+
+```javascript
+// In ActorSerializer.deserialize() - UPDATED
+const reviver = (key, value) => {
+  if (typeof value === 'object' && value !== null) {
+    // Check for Actor GUID (standard Actor deserialization)
+    if (value.hasOwnProperty('#actorGuid')) {
+      const guid = value['#actorGuid'];
+      const existingObj = this.actorSpace.guidToObject.get(guid);
+
+      if (existingObj) {
+        return existingObj;
+      }
+
+      // Check if this is a RemoteHandle
+      if (value.__type === 'RemoteHandle') {
+        // Create RemoteHandle with all metadata
+        const remoteHandle = new RemoteHandle(guid, channel, {
+          handleType: value.handleType,
+          schema: value.schema,
+          capabilities: value.capabilities
+        });
+
+        // Register in ActorSpace
+        this.actorSpace.guidToObject.set(guid, remoteHandle);
+        this.actorSpace.objectToGuid.set(remoteHandle, guid);
+
+        return remoteHandle;
+      }
+
+      // Standard RemoteActor for non-Handle Actors
+      return this.actorSpace.makeRemote(guid, channel);
+    }
+  }
+  return value;
+};
+```
 
 ## DataSource Implementation
 

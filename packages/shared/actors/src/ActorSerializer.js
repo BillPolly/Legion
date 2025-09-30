@@ -11,6 +11,15 @@ export class ActorSerializer {
   }
 
   /**
+   * Register RemoteHandle class for deserialization
+   * Must be called before deserializing Handles
+   * @param {class} RemoteHandleClass - RemoteHandle class constructor
+   */
+  static registerRemoteHandle(RemoteHandleClass) {
+    globalThis.__RemoteHandleClass = RemoteHandleClass;
+  }
+
+  /**
    * Encodes a JavaScript object into a JSON string, handling Actors and circular references.
    * Uses the ActorSpace's knowledge of local actors.
    * @param {*} obj - The object to encode.
@@ -31,37 +40,19 @@ export class ActorSerializer {
         return '[Circular]'; // Simple marker for circular refs
       }
 
-      // --- Object Self-Serialization ---
-      // Check if object has a serialize method and delegate to it
-      // Do this BEFORE adding to visited set to avoid circular detection on serialized result
-      if (typeof value.serialize === 'function') {
-        try {
-          const serialized = value.serialize();
-          // Don't add the original object to visited set since we're returning its serialized form
-          return serialized;
-        } catch (error) {
-          console.warn(`ActorSerializer: Object serialize() method failed for key "${key}":`, error.message);
-          // Fall through to default handling
-        }
-      }
-
-      // Add to visited set only after trying serialize method
+      // Add to visited set before processing
       visited.add(value);
 
-      // --- Actor Handling ---
+      // --- Actor Handling (MUST check BEFORE serialize() for Handles) ---
       if (value?.isActor === true) {
         // Is it an actor *already known* to this space?
         let guid = this.actorSpace.objectToGuid.get(value);
-        if (guid) {
-          // Yes, return its GUID reference
-          return { '#actorGuid': guid };
-        } else {
+        if (!guid) {
           // If not known, should we assign a GUID? Only if it's a LocalActor belonging to this space.
           if (!value.isRemote) { // local
             guid = this.actorSpace._generateGuid();
             this.actorSpace.objectToGuid.set(value, guid);
             this.actorSpace.guidToObject.set(guid, value);
-            return { '#actorGuid': guid };
           } else if (value.isRemote) {
             // It's a RemoteActorPlaceholder not in our map. This is an error state.
             const logPrefix = `[${this.actorSpace.spaceId} Serialize Replacer Key: "${key}"]`;
@@ -69,8 +60,40 @@ export class ActorSerializer {
             return null; // Or throw?
           }
         }
+
+        // Check if Actor has custom serialization (like Handle)
+        if (guid && typeof value.serialize === 'function') {
+          try {
+            const customData = value.serialize();
+            // Merge Actor GUID with custom serialization data
+            return {
+              '#actorGuid': guid,
+              ...customData
+            };
+          } catch (error) {
+            console.warn(`ActorSerializer: Actor serialize() method failed for key "${key}":`, error.message);
+            // Fall back to just GUID
+            return { '#actorGuid': guid };
+          }
+        }
+
+        // Standard Actor serialization (just GUID)
+        if (guid) {
+          return { '#actorGuid': guid };
+        }
       }
-      // If it's not an actor OR it's an unknown LocalActor passed as data OR a known RemoteActorPlaceholder, proceed.
+
+      // --- Object Self-Serialization (for non-Actor objects) ---
+      // Check if object has a serialize method and delegate to it
+      if (typeof value.serialize === 'function') {
+        try {
+          const serialized = value.serialize();
+          return serialized;
+        } catch (error) {
+          console.warn(`ActorSerializer: Object serialize() method failed for key "${key}":`, error.message);
+          // Fall through to default handling
+        }
+      }
 
       // Default handling for other objects/arrays
       return value;
@@ -121,7 +144,49 @@ export class ActorSerializer {
             // Known GUID. Return the existing local actor or remote placeholder
             return existingObj;
           } else {
-            // Unknown GUID, this must be a remote actor new to this space.
+            // Check if this is a RemoteHandle (Handle sent from server)
+            if (value.__type === 'RemoteHandle') {
+              // Import RemoteHandle dynamically to avoid circular dependencies
+              // RemoteHandle is in @legion/handle package
+              try {
+                // Dynamic import - RemoteHandle should be available
+                const RemoteHandle = globalThis.__RemoteHandleClass;
+
+                if (!RemoteHandle) {
+                  throw new Error(`RemoteHandle class not available. ` +
+                    `Make sure RemoteHandle is imported and registered via ActorSerializer.registerRemoteHandle(). ` +
+                    `Received Handle with type '${value.handleType}' and GUID '${guid}'.`);
+                }
+
+                // Phase 7: Create RemoteHandle with remote server GUID
+                // Note: 'guid' is the server Handle's GUID that RemoteHandle will call
+                const remoteHandle = new RemoteHandle(guid, channel, {
+                  handleType: value.handleType,
+                  schema: value.schema,
+                  capabilities: value.capabilities
+                });
+
+                // Wrap RemoteHandle in Proxy to forward unknown method calls
+                const proxiedHandle = RemoteHandle.createProxy(remoteHandle);
+
+                // Phase 7: Register RemoteHandle with its OWN GUID in client ActorSpace
+                // Generate new GUID for RemoteHandle in this ActorSpace
+                // NOTE: Register BOTH the proxy AND the original remoteHandle with the same GUID
+                // so that lookups work whether using the proxy or the original
+                const clientGuid = this.actorSpace._generateGuid();
+                this.actorSpace.guidToObject.set(clientGuid, proxiedHandle);  // Register proxy for message routing
+                this.actorSpace.objectToGuid.set(remoteHandle, clientGuid);   // Register original for GUID lookup
+                this.actorSpace.objectToGuid.set(proxiedHandle, clientGuid);  // Register proxy for GUID lookup
+
+                // Return the proxied handle to the user
+                return proxiedHandle;
+              } catch (error) {
+                console.error('Failed to create RemoteHandle:', error);
+                throw error;
+              }
+            }
+
+            // Unknown GUID, this must be a standard remote actor new to this space.
             // The channel is crucial here to correctly associate the remote actor.
             if (!channel) {
               console.error(`ActorSerializer (for ${this.actorSpace.spaceId}): Deserialization of new remote actor GUID ${guid} failed. Source channel not provided.`);

@@ -232,10 +232,17 @@ export class SimpleObjectDataSource {
    * @private
    */
   _isEntityVariable(variable, whereClauses) {
+    // Phase 7: If where is not provided or empty and variable is '?item', treat as entity variable
+    if (variable === '?item') {
+      if (!whereClauses || !Array.isArray(whereClauses) || whereClauses.length === 0) {
+        return true;
+      }
+    }
+
     if (!whereClauses || !Array.isArray(whereClauses)) {
       return false;
     }
-    
+
     return whereClauses.some(clause => {
       return Array.isArray(clause) && clause.length >= 1 && clause[0] === variable;
     });

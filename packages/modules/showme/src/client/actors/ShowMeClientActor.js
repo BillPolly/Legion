@@ -143,16 +143,16 @@ export class ShowMeClientActor extends Actor {
   }
 
   /**
-   * Handle display asset request with RemoteActor Handle
-   * asset is a RemoteActor proxy to AssetHandle on server
+   * Handle display asset request with RemoteHandle
+   * asset is a RemoteHandle proxy to AssetHandle on server
    */
   async handleDisplayAsset({ asset, title }) {
-    console.log(`Display asset received - asset is RemoteActor:`, asset.isRemote);
+    console.log(`Display asset received - asset is RemoteHandle:`, asset.isRemote);
 
-    // Call methods on the RemoteActor to get data
-    const metadata = await asset.receive('getMetadata');
-    const assetData = await asset.receive('getData');
-    const assetType = await asset.receive('getType');
+    // Call methods directly on the RemoteHandle - they work transparently!
+    const metadata = await asset.getMetadata();
+    const assetData = await asset.getData();
+    const assetType = await asset.getType();
 
     console.log(`Asset metadata:`, metadata);
 
