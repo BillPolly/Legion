@@ -6,6 +6,8 @@
  */
 
 import { validateDataSourceInterface } from '@legion/handle';
+import fs from 'fs';
+import path from 'path';
 
 export class AssetDataSource {
   constructor(assetData) {
@@ -15,6 +17,10 @@ export class AssetDataSource {
     this.assetType = assetData.assetType || assetData.type || 'unknown';
     this.title = assetData.title || 'Untitled';
     this.timestamp = assetData.timestamp || Date.now();
+    this.path = assetData.path;
+
+    // Cache for loaded data
+    this._loadedData = null;
 
     // Validate DataSource interface
     validateDataSourceInterface(this, 'AssetDataSource');

@@ -104,19 +104,47 @@ export class ShowMeClientActor extends Actor {
    * Initialize the actor
    */
   async initialize() {
-    await super.initialize();
-    
     // Set initial state
     this.updateState({
       connected: false,
       windowsOpen: 0,
       clientId: this.clientId
     });
-    
-    // Connect to server
-    await this.connectToServer();
-    
-    console.log('ShowMeClientActor initialized');
+
+    // Don't send anything - wait for server to send ready message first
+    console.log('ShowMeClientActor initialized - waiting for server');
+  }
+
+  /**
+   * Set remote server actor reference
+   * Called by framework after handshake
+   */
+  setRemoteActor(remoteActor) {
+    this.remoteActor = remoteActor;
+    console.log('ShowMeClientActor: Remote server actor set');
+    // Wait for server to send first message
+  }
+
+  /**
+   * Handle messages from server
+   */
+  receive(messageType, data) {
+    console.log('[CLIENT] Received message:', messageType, typeof data);
+
+    if (messageType === 'ready') {
+      console.log('[CLIENT] Got ready from server');
+      this.updateState({ connected: true });
+      return;
+    }
+
+    if (messageType === 'display-asset') {
+      console.log('[CLIENT] Got display-asset message');
+      this.handleDisplayAsset(data);
+      return;
+    }
+
+    // Call parent receive for default handling
+    return super.receive(messageType, data);
   }
 
   /**
@@ -128,11 +156,11 @@ export class ShowMeClientActor extends Actor {
         clientId: this.clientId,
         timestamp: Date.now()
       });
-      
+
       this.updateState({
         connected: true
       });
-      
+
       console.log(`Connected to ShowMe server as ${this.clientId}`);
     } catch (error) {
       console.error('Failed to connect to ShowMe server:', error);
@@ -144,58 +172,97 @@ export class ShowMeClientActor extends Actor {
 
   /**
    * Handle display asset request with RemoteHandle
-   * asset is a RemoteHandle proxy to AssetHandle on server
+   * asset is a RemoteHandle proxy to FileHandle on server
    */
   async handleDisplayAsset({ asset, title }) {
     console.log(`Display asset received - asset is RemoteHandle:`, asset.isRemote);
+    console.log(`Asset type:`, typeof asset, `constructor:`, asset?.constructor?.name);
+    console.log(`Asset has query:`, typeof asset.query);
+    console.log(`Asset keys:`, Object.keys(asset).slice(0, 10));
 
-    // Call methods directly on the RemoteHandle - they work transparently!
-    const metadata = await asset.getMetadata();
-    const assetData = await asset.getData();
-    const assetType = await asset.getType();
+    try {
+      // For FileHandle RemoteHandle, determine type
+      // For now, assume image type (could query metadata later)
+      const assetType = 'image';
+      const filePath = title || 'asset';
 
-    console.log(`Asset metadata:`, metadata);
+      // Use file path as ID
+      const assetId = filePath || `asset-${Date.now()}`;
 
-    const assetId = metadata.id;
+      console.log(`Asset type: ${assetType}, path: ${filePath}`);
 
-    // Check if window already exists
-    if (this.openWindows.has(assetId)) {
-      const windowInfo = this.openWindows.get(assetId);
-      if (this.displayManager && this.displayManager.focusWindow) {
-        this.displayManager.focusWindow(windowInfo.windowId);
+      // Check if window already exists
+      if (this.openWindows.has(assetId)) {
+        const windowInfo = this.openWindows.get(assetId);
+        if (this.displayManager && this.displayManager.focusWindow) {
+          this.displayManager.focusWindow(windowInfo.windowId);
+        }
+        return;
       }
-      return;
-    }
 
-    // Display using display manager
-    if (this.displayManager && this.displayManager.createWindow) {
-      try {
+      // Display using display manager
+      if (this.displayManager && this.displayManager.createWindow) {
         const window = this.displayManager.createWindow({
           id: assetId,
-          title: title || metadata.title,
+          title: title || filePath.split('/').pop(),
           type: assetType
         });
 
-        const renderedContent = this.renderAssetContent(assetData, assetType);
-        window.setContent(renderedContent);
+        // Load file content and render
+        if (assetType === 'image') {
+          console.log('[CLIENT] Getting image data from RemoteHandle...');
+          console.log('[CLIENT] Asset is RemoteHandle:', asset.isRemote);
+
+          // asset is a RemoteHandle with getData() method
+          const imageData = await asset.getData();
+          console.log('[CLIENT] Image data received:', typeof imageData, imageData?.substring(0, 50));
+
+          // imageData should be a data URL string
+          const dataUrl = imageData;
+
+          const renderedContent = this.renderAssetContent(dataUrl, assetType);
+          console.log('[CLIENT] Rendered HTML:', renderedContent.substring(0, 100));
+          window.setContent(renderedContent);
+        } else {
+          // For other types, get as text via query
+          const results = await asset.query({ read: {} });
+          const content = results[0];
+          const renderedContent = this.renderAssetContent(content, assetType);
+          window.setContent(renderedContent);
+        }
+
         window.show();
 
         this.openWindows.set(assetId, {
           windowId: window.id,
           assetType,
-          title: title || metadata.title,
+          title: title || filePath.split('/').pop(),
           openedAt: Date.now(),
-          assetHandle: asset  // Store RemoteActor!
+          assetHandle: asset
         });
 
         this.updateState({
           windowsOpen: this.openWindows.size
         });
-
-      } catch (error) {
-        console.error(`Failed to display asset ${assetId}:`, error);
       }
+    } catch (error) {
+      console.error(`Failed to display asset:`, error);
     }
+  }
+
+  /**
+   * Get MIME type from file extension
+   */
+  _getMimeType(extension) {
+    const mimeTypes = {
+      'png': 'image/png',
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg',
+      'gif': 'image/gif',
+      'webp': 'image/webp',
+      'svg': 'image/svg+xml'
+    };
+    return mimeTypes[extension] || 'application/octet-stream';
   }
 
   /**
@@ -395,7 +462,16 @@ export class ShowMeClientActor extends Actor {
    */
   updateState(updates) {
     this.state = { ...this.state, ...updates };
-    this.emitStateChange();
+    if (this.emitStateChange) {
+      this.emitStateChange();
+    }
+  }
+
+  /**
+   * Emit state change (stub for browser environment)
+   */
+  emitStateChange() {
+    // Stub - in browser this would emit events to UI components
   }
 
   /**

@@ -12,17 +12,25 @@
  */
 
 import path from 'path';
+import { Handle } from '@legion/handle';
 
-export class FileHandle {
+export class FileHandle extends Handle {
   constructor(dataSource, parsed) {
     if (!dataSource) {
       throw new Error('DataSource is required for FileHandle');
     }
-    
+
     if (!parsed) {
       throw new Error('Parsed URI components are required for FileHandle');
     }
 
+    // Call Handle constructor with dataSource
+    super(dataSource);
+
+    // CRITICAL: Ensure Actor properties are accessible (needed for serialization)
+    this.isActor = true;
+
+    // FileHandle-specific initialization
     this.dataSource = dataSource;
     this.parsed = parsed;
     this._destroyed = false;
@@ -31,10 +39,10 @@ export class FileHandle {
     this.filePath = parsed.path || '';
     this.server = parsed.server;
     this.resourceType = parsed.resourceType;
-    
-    // Handle type based on filesystem structure
-    this.handleType = this._determineHandleType();
-    
+
+    // Determine if this is a file or directory (handleType comes from Handle getter)
+    this._handleType = this._determineHandleType();
+
     // Cached file data
     this._content = null;
     this._stats = null;
@@ -44,11 +52,20 @@ export class FileHandle {
     // Create proxy for transparent property access
     return new Proxy(this, {
       get(target, prop, receiver) {
+        // CRITICAL: Expose Actor serialization properties for Actor channel transport
+        if (prop === 'isActor') {
+          // Must explicitly return the value from the prototype chain
+          return target.isActor !== undefined ? target.isActor : true;
+        }
+        if (prop === 'serialize') {
+          return Reflect.get(target, prop, receiver);
+        }
+
         // Handle methods and private properties directly
         if (prop in target || prop.startsWith('_') || typeof target[prop] === 'function') {
           return Reflect.get(target, prop, receiver);
         }
-        
+
         // For file content access, delegate to getContent for text files
         if (typeof prop === 'string' && target.handleType === 'file') {
           // Special properties for file metadata
@@ -633,26 +650,10 @@ export class FileHandle {
   }
 
   /**
-   * JSON representation
-   * @returns {Object} JSON-serializable object
+   * REMOVED: toJSON() interferes with Actor serialization
+   * Handle.serialize() provides proper serialization for Actor channels
+   * If non-Actor JSON serialization is needed, it should be handled separately
    */
-  toJSON() {
-    if (this._destroyed) {
-      return { destroyed: true };
-    }
-    
-    return {
-      type: 'FileHandle',
-      handleType: this.handleType,
-      uri: this.toURI(),
-      filePath: this.filePath,
-      name: this.getName(),
-      extension: this.getExtension(),
-      server: this.server,
-      hasCachedContent: !!this._content,
-      hasCachedStats: !!this._stats
-    };
-  }
 
   // Private helper methods
 

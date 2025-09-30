@@ -47,9 +47,9 @@ async function initialize() {
  */
 function getServerUrl() {
   const params = new URLSearchParams(window.location.search);
-  const serverUrl = params.get('server') || 
-                   window.SHOWME_SERVER_URL || 
-                   'ws://localhost:3700/showme';
+  const serverUrl = params.get('server') ||
+                   window.SHOWME_SERVER_URL ||
+                   'ws://localhost:3700/ws?route=/showme';
   return serverUrl;
 }
 

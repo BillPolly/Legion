@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ShowMe Demo</title>
+  <style>
+    body { font-family: system-ui; padding: 20px; }
+    #status { padding: 10px; background: #f0f0f0; border-radius: 4px; margin-bottom: 20px; }
+    .image-window { border: 2px solid #ccc; padding: 10px; margin: 10px; display: inline-block; }
+    .image-window img { max-width: 800px; }
+  </style>
+</head>
+<body>
+  <h1>ShowMe Actor Demo</h1>
+  <div id="status">Connecting...</div>
+  <div id="windows"></div>
+
+  <script type="module">
+    // Import Actor framework from server
+    import { ActorSpace } from '/legion/actors/src/ActorSpace.js';
+    import { Channel } from '/legion/actors/src/Channel.js';
+    import { ActorSerializer } from '/legion/actors/src/ActorSerializer.js';
+    import { ShowMeClientActor } from '/showme-src/client/actors/ShowMeClientActor.js';
+    import { RemoteHandle } from '/legion/handle/src/remote/RemoteHandle.js';
+
+    console.log('📦 Loaded Actor framework');
+
+    // Register RemoteHandle class
+    ActorSerializer.registerRemoteHandle(RemoteHandle);
+    console.log('✅ Registered RemoteHandle');
+
+    // Create ActorSpace
+    const clientSpace = new ActorSpace('browser-client');
+    console.log('✅ Created ActorSpace:', clientSpace.spaceId);
+
+    // Connect WebSocket
+    const ws = new WebSocket('ws://localhost:3700/ws?route=/showme');
+
+    ws.onopen = () => {
+      console.log('🔌 WebSocket connected');
+      document.getElementById('status').textContent = 'Connected!';
+
+      // Create Channel
+      const channel = new Channel(clientSpace, ws);
+      console.log('✅ Created Channel');
+
+      // Create Client Actor with display manager
+      const clientActor = new ShowMeClientActor(clientSpace, {
+        displayManager: {
+          createWindow: (options) => {
+            console.log('🪟 Creating window:', options);
+            const div = document.createElement('div');
+            div.className = 'image-window';
+            div.innerHTML = `<h3>${options.title}</h3><div id="content-${options.id}"></div>`;
+            document.getElementById('windows').appendChild(div);
+            return {
+              id: options.id,
+              element: div,
+              setContent: (html) => {
+                document.getElementById(`content-${options.id}`).innerHTML = html;
+              },
+              show: () => {
+                console.log('✅ Window shown');
+              }
+            };
+          }
+        }
+      });
+
+      // ADD METHOD MAPPINGS!
+      clientActor['display-asset'] = clientActor.handleDisplayAsset.bind(clientActor);
+      clientActor['server-status'] = clientActor.handleServerStatus.bind(clientActor);
+      console.log('✅ Created Client Actor with method mappings');
+
+      // Register in ActorSpace
+      clientSpace.register(clientActor, 'client-root');
+      console.log('✅ Registered actor with GUID: client-root');
+
+      // Send handshake
+      ws.send(JSON.stringify({
+        type: 'actor_handshake',
+        clientRootActor: 'client-root',
+        route: '/showme'
+      }));
+      console.log('✅ Sent handshake');
+    };
+
+    ws.onerror = (err) => {
+      console.error('❌ WebSocket error:', err);
+      document.getElementById('status').textContent = 'Connection failed!';
+    };
+
+    ws.onclose = () => {
+      console.log('🔌 WebSocket closed');
+      document.getElementById('status').textContent = 'Disconnected';
+    };
+  </script>
+</body>
+</html>

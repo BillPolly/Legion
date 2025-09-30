@@ -79,15 +79,19 @@ export class Handle extends Actor {
    * Routes Actor messages to appropriate handle methods
    * Phase 6: Added remote-call handling for RemoteHandle support
    */
-  receive(message) {
+  async receive(message) {
     this._validateNotDestroyed();
 
     if (typeof message === 'object' && message.type) {
       switch (message.type) {
         case 'remote-call':
           // Phase 6: Handle remote method calls from RemoteHandle
-          return this._handleRemoteCall(message);
+          return await this._handleRemoteCall(message);
         case 'query':
+          // Use async query if DataSource supports it (for filesystem operations)
+          if (typeof this.dataSource.queryAsync === 'function') {
+            return await this.dataSource.queryAsync(message.querySpec);
+          }
           return this.query(message.querySpec);
         case 'value':
           return this.value();
@@ -116,12 +120,30 @@ export class Handle extends Actor {
    * @returns {Object} Response object with callId and result or error
    * @private
    */
-  _handleRemoteCall(message) {
+  async _handleRemoteCall(message) {
     const { callId, method, args = [] } = message;
 
     try {
-      // Execute method on DataSource
-      const result = this.dataSource[method](...args);
+      let result;
+
+      // Phase 12: First check if method exists on Handle itself (custom methods like getData, getMetadata)
+      if (typeof this[method] === 'function') {
+        // Call method on Handle
+        result = await this[method](...args);
+      } else {
+        // Check if async version of method exists on DataSource (e.g., queryAsync for query)
+        const asyncMethod = method + 'Async';
+
+        if (typeof this.dataSource[asyncMethod] === 'function') {
+          // Use async version if available (needed for filesystem operations)
+          result = await this.dataSource[asyncMethod](...args);
+        } else if (typeof this.dataSource[method] === 'function') {
+          // Execute method on DataSource (may be async)
+          result = await this.dataSource[method](...args);
+        } else {
+          throw new Error(`Method '${method}' not found on Handle or DataSource`);
+        }
+      }
 
       // Return success response
       return {

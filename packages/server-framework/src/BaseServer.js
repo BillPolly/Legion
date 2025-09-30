@@ -304,13 +304,46 @@ export class BaseServer {
       throw error; // NO FALLBACKS - fail fast
     }
     
-    // Set up static routes
-    for (const [path, directory] of this.staticRoutes) {
+    // Set up static routes with import rewriting middleware
+    for (const [routePath, directory] of this.staticRoutes) {
       try {
-        app.use(path, express.static(directory));
-        console.log(`Serving static files at ${path} from ${directory}`);
+        // Add middleware to rewrite imports in JS files
+        app.use(routePath, async (req, res, next) => {
+          // Only process .js and .mjs files
+          if (req.path.endsWith('.js') || req.path.endsWith('.mjs')) {
+            try {
+              const fs = await import('fs');
+              const filePath = path.join(directory, req.path);
+
+              // Check if file exists
+              try {
+                await fs.promises.access(filePath);
+              } catch {
+                return next(); // File doesn't exist, pass to next handler
+              }
+
+              const content = await fs.promises.readFile(filePath, 'utf8');
+              const rewrittenContent = this.importRewriter.rewrite(content, {
+                requestPath: req.path,
+                baseUrl: routePath
+              });
+
+              res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+              res.send(rewrittenContent);
+            } catch (error) {
+              console.error(`Error rewriting imports for ${req.path}:`, error.message);
+              next(); // Fall through to static handler
+            }
+          } else {
+            next(); // Not a JS file, pass to static handler
+          }
+        });
+
+        // Then add the static handler for other files
+        app.use(routePath, express.static(directory));
+        console.log(`Serving static files at ${routePath} from ${directory}`);
       } catch (error) {
-        console.warn(`Failed to setup static route ${path} -> ${directory}:`, error);
+        console.warn(`Failed to setup static route ${routePath} -> ${directory}:`, error);
         // Continue with other routes
       }
     }

@@ -84,17 +84,22 @@ export class ActorSpace {
      * @param {object} decodedMessage - The decoded message object (must have targetGuid, payload).
      * @param {Channel} sourceChannel - The channel the message arrived on.
      */
-    handleIncomingMessage(decodedMessage, channel) {
+    async handleIncomingMessage(decodedMessage, channel) {
         const { targetGuid, payload } = decodedMessage;
 
         let targetActor = this.guidToObject.get(targetGuid);
 
         if (targetActor) {
+            const msgType = Array.isArray(payload) ? payload[0] : 'unknown';
+            console.log(`ACTORSPACE ${this.spaceId}: Dispatching type="${msgType}" to actor ${targetGuid}`);
             let response;
             if(Array.isArray(payload)){
-                response = targetActor.receive(...payload);
+                response = await targetActor.receive(...payload);
             } else {
-                response = targetActor.receive(payload);
+                response = await targetActor.receive(payload);
+            }
+            if (response !== undefined) {
+                console.log(`ACTORSPACE ${this.spaceId}: Actor ${targetGuid} returned response`);
             }
 
             // Phase 7: If receive() returns a response and payload has sourceGuid, send response back

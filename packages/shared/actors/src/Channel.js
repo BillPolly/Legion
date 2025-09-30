@@ -41,8 +41,9 @@ export class Channel {
             payload = [payload,...args];
         }
         const encodedData = this.actorSpace.encode({targetGuid,payload})
-        console.log("chanel sending ",encodedData.length," bytes");
-        // it will not be encoded! the 
+        const msgType = Array.isArray(payload) ? payload[0] : 'unknown';
+        console.log("CHANNEL SEND: target=", targetGuid, "type=", msgType, "bytes=", encodedData.length);
+        // it will not be encoded! the
         try {
             // TODO: Check endpoint readyState before sending?
             // The underlying endpoint (e.g. WebSocket) might handle this.
@@ -70,9 +71,10 @@ export class Channel {
         // console.log(`Channel ${this.channelId}: Received raw message:`, event.data);
         try {
             const input = event.data;
-            console.log("CHAN input: ",input);
             // Decode using the ActorSpace's decoder, passing this channel as context
             const decodedMessage = this.actorSpace.decode(event.data, this);
+            const msgType = Array.isArray(decodedMessage.payload) ? decodedMessage.payload[0] : 'unknown';
+            console.log("CHANNEL RECEIVE: target=", decodedMessage.targetGuid, "type=", msgType, "bytes=", input.length);
             // Pass the decoded message AND this channel instance to the ActorSpace
             this.actorSpace.handleIncomingMessage(decodedMessage, this);
         } catch (error) {

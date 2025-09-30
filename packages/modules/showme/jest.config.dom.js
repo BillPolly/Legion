@@ -24,6 +24,7 @@ export default {
     '**/__tests__/integration/ViewersIntegration.test.js',
     '**/__tests__/integration/CompleteSystemIntegration.test.js',
     '**/__tests__/integration/ClientToUIIntegration.test.js',
+    '**/__tests__/integration/E2E.AssetHandle.Display.test.js',
     '**/__tests__/unit/renderers/**/*.test.js'
   ],
   

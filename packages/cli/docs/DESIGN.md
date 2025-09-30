@@ -213,9 +213,10 @@ const fileHandles = await registry.search('file operations');
 
 ```javascript
 class DisplayEngine {
-  constructor(resourceManager) {
+  constructor(showme, resourceManager) {
+    this.showme = showme;  // ShowMeController instance
     this.resourceManager = resourceManager;
-    this.showMeService = null;
+    this.openWindows = [];
     this.mode = 'auto'; // 'terminal', 'browser', 'auto'
   }
 
@@ -245,29 +246,24 @@ class DisplayEngine {
 
   // Browser rendering via ShowMe (rich, interactive)
   async renderBrowser(handle, options = {}) {
-    // Get ShowMe service
-    if (!this.showMeService) {
-      this.showMeService = this.resourceManager.get('showme');
-    }
-
-    // Send Handle URI to ShowMe via Actor messaging
-    await this.showMeService.display(handle, {
-      window: {
-        title: options.title || `${handle.resourceType}: ${handle.toURI()}`,
-        width: options.width || 1000,
-        height: options.height || 700,
-        chromeless: true // Launch in app mode
-      }
+    // Open window using ShowMeController
+    const window = await this.showme.openWindow(handle, {
+      title: options.title || handle.toURI?.() || 'Handle',
+      width: options.width || 1000,
+      height: options.height || 700
     });
 
-    console.log(chalk.green('✓ Displaying in browser window'));
+    this.openWindows.push(window);
+    console.log(chalk.green(`✓ Displaying in browser window ${window.id}`));
+
+    return window;
   }
 
   // Interactive exploration in browser
   async exploreInteractive(handle) {
     console.log(chalk.cyan('🔍 Opening interactive explorer...'));
 
-    await this.renderBrowser(handle, {
+    return await this.renderBrowser(handle, {
       title: `Explore: ${handle.resourceType}`,
       width: 1200,
       height: 800
@@ -357,38 +353,45 @@ CLI receives input
     json)      chromeless)
 ```
 
-**ShowMe Actor Integration:**
+**ShowMe Integration:**
 
 ```javascript
-class DisplayEngine {
-  async initializeShowMe() {
-    // Get ShowMe service from ResourceManager
-    this.showMeService = this.resourceManager.get('showme');
+// In CLI initialization:
+import { ShowMeController } from '@legion/showme';
 
-    // Get ShowMe server actor for direct messaging
-    this.showMeActor = await this.showMeService.getServerActor();
+class CLI {
+  async initialize() {
+    // Create ShowMeController
+    this.showme = new ShowMeController({ port: 3700 });
+    await this.showme.initialize();
+    await this.showme.start();
+
+    // Create DisplayEngine with ShowMeController
+    this.displayEngine = new DisplayEngine(this.showme, this.resourceManager);
   }
 
+  async shutdown() {
+    await this.showme.stop();
+  }
+}
+
+// DisplayEngine uses ShowMeController directly:
+class DisplayEngine {
   async displayHandle(handle, options = {}) {
-    // Send Actor message to ShowMe server
-    await this.showMeActor.send({
-      type: 'display-resource',
-      resource: handle.toURI(),
-      window: {
-        title: options.title || `${handle.resourceType}: ${handle.toURI()}`,
-        width: options.width || 1000,
-        height: options.height || 700,
-        position: options.position || 'center',
-        chromeless: true
-      }
+    // Open browser window with Handle
+    const window = await this.showme.openWindow(handle, {
+      title: options.title || handle.toURI?.() || 'Handle',
+      width: options.width || 1000,
+      height: options.height || 700
     });
 
-    // ShowMe server:
-    //   1. Resolves Handle from URI
-    //   2. Determines renderer (HandleRenderer/StrategyRenderer)
-    //   3. Launches browser in app mode if needed
-    //   4. Sends display message to browser via WebSocket
-    //   5. Browser renders Handle with appropriate viewer
+    // ShowMeController:
+    //   1. Launches browser in app mode if needed
+    //   2. Creates ShowMeWindow object
+    //   3. Sends Handle to browser via Actor/WebSocket
+    //   4. Returns Window object for control
+
+    return window;
   }
 }
 ```
@@ -532,6 +535,21 @@ class TaskOrchestrator {
   getTaskHistory()
 }
 ```
+
+**Behavior Trees and Task Execution:**
+
+In this implementation, Behavior Trees (BTs) are simply tasks. BT execution follows task execution automatically - there is no separate BT execution system. When a task uses a BT strategy, the TaskOrchestrator executes it like any other task strategy. This unified approach eliminates the need for special-purpose BT execution code in the CLI.
+
+**Strategy Handles - Storage and Instantiation:**
+
+Strategies are accessed through the generic Handle system via StrategyDataSource. This provides a uniform interface for:
+
+- **Storage**: Strategies stored as JavaScript files with embedded JSDoc metadata, queryable via `legion://local/strategy/path/to/Strategy.js` URIs
+- **Discovery**: Semantic search via embeddings, tag-based queries, and dependency resolution
+- **Instantiation**: `await strategyHandle.instantiate(context, options)` loads and creates strategy instances with proper dependency injection
+- **Composition**: Complex strategies composed from simpler ones via the DataSource interface
+
+The CLI doesn't need special-purpose strategy code - all strategy operations work through the standard Handle/DataSource pattern provided by ResourceManager. See [BT Strategy Store design](/packages/bt-strategy-store/docs/DESIGN.md) for full details.
 
 ### MemoryManager
 

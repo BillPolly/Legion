@@ -71,6 +71,24 @@ export class RemoteHandle extends Handle {
     // Phase 11: Initialize subscription tracking
     this._subscriptions = new Map();
     this._subscriptionCounter = 0;
+
+    // Phase 12: Create methods for custom capabilities
+    // capabilities like 'getData', 'getMetadata', 'getTitle' etc.
+    if (this.capabilities && Array.isArray(this.capabilities)) {
+      for (const capability of this.capabilities) {
+        // Skip DataSource methods that are already implemented
+        if (['query', 'subscribe', 'getSchema', 'queryBuilder', 'update'].includes(capability)) {
+          continue;
+        }
+
+        // Create async method that proxies to remote
+        if (!this[capability]) {
+          this[capability] = (...args) => {
+            return this._callRemote(capability, ...args);
+          };
+        }
+      }
+    }
   }
 
   // ============================================================================

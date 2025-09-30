@@ -7,18 +7,18 @@
 
 import { Actor } from '@legion/actors';
 import { ResourceManager } from '@legion/resource-manager';
-import { AssetHandle } from '../../handles/AssetHandleV2.js';
+import { ImageHandle } from '../../handles/ImageHandle.js';
 
 export class ShowMeServerActor extends Actor {
-  constructor(actorSpace, config = {}) {
-    super(actorSpace, config);
+  constructor(services = {}) {
+    super();
 
     // Track connected clients and assets
     this.connectedClients = new Set();
     this.assetsStored = 0;
 
     // Reference to server for asset operations
-    this.server = config.server;
+    this.server = services.server;
 
     // ResourceManager for Handle resolution
     this.resourceManager = null;
@@ -30,9 +30,65 @@ export class ShowMeServerActor extends Actor {
   /**
    * Set the remote client actor
    */
-  setRemoteActor(remoteActor) {
-    this.remoteActor = remoteActor;
-    console.log('ShowMeServerActor: Remote actor set');
+  async setRemoteActor(remoteActor) {
+    try {
+      this.remoteActor = remoteActor;
+      console.log('ShowMeServerActor: Remote actor set');
+
+      // Send ready message and test image after short delay
+      setTimeout(async () => {
+        console.log('[SERVER] Sending ready to client...');
+        this.remoteActor.receive('ready', { timestamp: Date.now() });
+
+        // Send test image Handle
+        await this.sendTestImage();
+      }, 100);
+    } catch (error) {
+      console.error('[SERVER] Error in setRemoteActor:', error.message, error.stack);
+    }
+  }
+
+  /**
+   * Send test image to client
+   */
+  async sendTestImage() {
+    try {
+      console.log('[SERVER] Creating FileHandle for test image...');
+
+      // Get test image
+      const imagePath = '/Users/maxximus/Documents/max-projects/pocs/Legion/packages/modules/showme/__tests__/__tmp/test-image.jpg';
+
+      // Create FileHandle using ResourceManager
+      const resourceManager = await ResourceManager.getInstance();
+      const fileHandle = await resourceManager.createHandleFromURI(`legion://local/filesystem/${imagePath}`);
+
+      console.log('[SERVER] Sending display-asset with FileHandle to client...');
+      // ActorSerializer will automatically register the Handle
+      this.remoteActor.receive('display-asset', {
+        asset: fileHandle,
+        title: '🐱 Test Cat Image'
+      });
+      console.log('[SERVER] Display-asset message sent');
+    } catch (error) {
+      console.error('[SERVER] Error sending test image:', error.message, error.stack);
+    }
+  }
+
+  /**
+   * Handle messages from client
+   */
+  receive(messageType, data) {
+    console.log('[SERVER TEST] Received message:', messageType, data);
+
+    if (messageType === 'ping') {
+      console.log('[SERVER TEST] Got ping from client, count:', data);
+      // Send pong back
+      this.remoteActor.receive('pong', data + 1);
+      return data + 1;
+    }
+
+    // Call parent receive for default handling
+    return super.receive(messageType, data);
   }
 
   /**
@@ -198,28 +254,30 @@ export class ShowMeServerActor extends Actor {
   async handleDisplayAsset({ assetId, assetType, title, asset }) {
     console.log(`Displaying asset: ${assetId} (${assetType})`);
 
-    // Create AssetHandle - this is a Handle (also an Actor for remote capability)!
-    const assetHandle = new AssetHandle({
+    // Create ImageHandle with the asset data
+    // ImageHandle is a Handle that wraps image data and exposes getData(), getMetadata(), etc.
+    const imageHandle = new ImageHandle({
       id: assetId,
-      assetType,
-      title,
-      asset,
-      timestamp: Date.now()
+      title: title,
+      type: asset.type || 'image/png',
+      data: asset.data || asset,  // Support both {data: '...'} and direct data
+      width: asset.width,
+      height: asset.height
     });
 
     // Store the handle if server reference available
     if (this.server && this.server.assetStorage) {
-      this.server.assetStorage.set(assetId, assetHandle);
+      this.server.assetStorage.set(assetId, imageHandle);
 
       this.updateState({
         assetsStored: this.server.assetStorage.size
       });
     }
 
-    // Send the Handle to client - it will be serialized as RemoteHandle!
-    // Client receives RemoteHandle that can call methods directly
+    // Send the ImageHandle to client
+    // ActorSerializer will automatically register it and create RemoteHandle on client
     await this.broadcast('display-asset', {
-      asset: assetHandle,  // This is a Handle - will become RemoteHandle on client side!
+      asset: imageHandle,
       title
     });
   }

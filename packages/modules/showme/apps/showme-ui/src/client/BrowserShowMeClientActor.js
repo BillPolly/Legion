@@ -21,7 +21,7 @@ export class BrowserShowMeClientActor {
     this.connected = false;
     
     // Server URL
-    this.serverUrl = config.serverUrl || 'ws://localhost:3893/showme';
+    this.serverUrl = config.serverUrl || 'ws://localhost:3700/ws?route=/showme';
     
     // Event handlers
     this.handlers = new Map();
@@ -51,6 +51,14 @@ export class BrowserShowMeClientActor {
         this.websocket.onopen = () => {
           this.connected = true;
           console.log('Connected to ShowMe server');
+
+          // Send actor handshake
+          this.websocket.send(JSON.stringify({
+            type: 'actor_handshake',
+            clientRootActor: this.clientId,
+            route: '/showme'
+          }));
+
           resolve();
         };
         
@@ -79,7 +87,46 @@ export class BrowserShowMeClientActor {
    */
   handleMessage(message) {
     console.log('Received message:', message);
-    
+
+    // Handle Actor protocol messages (display-asset with RemoteHandle)
+    if (message.targetGuid && message.payload) {
+      if (Array.isArray(message.payload) && message.payload[0] === 'display-asset') {
+        const data = message.payload[1];
+        if (data.asset && data.asset.__remoteHandle) {
+          console.log('🎨 RemoteHandle received, calling getData()...');
+          this.websocket.send(JSON.stringify({
+            targetGuid: data.asset.guid,
+            payload: ['getData']
+          }));
+          this.pendingAsset = { title: data.title };
+        }
+      } else if (Array.isArray(message.payload) && message.payload.length === 1 && this.pendingAsset) {
+        // Response from getData() - display the image!
+        const imageData = message.payload[0];
+        console.log('🖼️  Image data received!');
+
+        const window = this.displayManager.createWindow({
+          id: `asset-${Date.now()}`,
+          title: this.pendingAsset.title || 'Asset',
+          width: 900,
+          height: 700
+        });
+
+        const content = window.element.querySelector('.showme-window-content');
+        const img = document.createElement('img');
+        img.src = imageData;
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+        content.innerHTML = '';
+        content.appendChild(img);
+        window.show();
+
+        console.log('✅ Image displayed!');
+        this.pendingAsset = null;
+      }
+      return;
+    }
+
     switch (message.type) {
       case 'asset-ready':
         this.handleAssetReady(message);

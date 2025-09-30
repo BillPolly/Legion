@@ -40,31 +40,21 @@ export class ShowMeApp {
       container: this.config.container
     });
     await this.displayManager.initialize();
-    
+
     // Create asset renderer
     this.renderer = new AssetRenderer();
-    
-    // Create WebSocket service
-    this.wsService = new WebSocketService({
-      url: this.config.serverUrl,
-      reconnectInterval: this.config.reconnectInterval,
-      maxReconnectAttempts: this.config.maxReconnectAttempts
-    });
-    
-    // Create client actor with display manager
+
+    // Create client actor with display manager - it handles the WebSocket connection
     this.clientActor = new BrowserShowMeClientActor({
       displayManager: this.displayManager,
       serverUrl: this.config.serverUrl
     });
-    
+
+    // Initialize connects the WebSocket
     await this.clientActor.initialize();
-    
-    // Set up WebSocket event handlers
-    this.setupWebSocketHandlers();
-    
-    // Connect to server
-    await this.connect();
-    
+
+    this.connected = true;
+
     // Set up UI
     this.setupUI();
   }
