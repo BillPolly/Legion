@@ -1,6 +1,6 @@
 /**
  * Unit tests for StreamProxy class extending Handle from @legion/km-data-handle
- * Tests the StreamProxy class in isolation with mocked ResourceManager
+ * Tests the StreamProxy class in isolation with mocked DataSource
  */
 
 import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
@@ -8,7 +8,7 @@ import { StreamProxy } from '../../src/StreamProxy.js';
 import { DefaultQueryBuilder } from '../../src/DefaultQueryBuilder.js';
 
 describe('StreamProxy Unit Tests', () => {
-  let mockResourceManager;
+  let mockDataSource;
   let streamProxy;
   const testQuerySpec = {
     find: ['?e'],
@@ -16,14 +16,14 @@ describe('StreamProxy Unit Tests', () => {
   };
 
   beforeEach(() => {
-    // Create mock ResourceManager that implements Handle interface
-    mockResourceManager = {
+    // Create mock DataSource that implements Handle interface
+    mockDataSource = {
       query: jest.fn(),
       subscribe: jest.fn(),
       getSchema: jest.fn(),
       transact: jest.fn(),
       get: jest.fn(),
-      queryBuilder: jest.fn((sourceHandle) => new DefaultQueryBuilder(mockResourceManager, sourceHandle))
+      queryBuilder: jest.fn((sourceHandle) => new DefaultQueryBuilder(mockDataSource, sourceHandle))
     };
   });
 
@@ -35,49 +35,49 @@ describe('StreamProxy Unit Tests', () => {
   });
 
   describe('StreamProxy Construction', () => {
-    it('should create StreamProxy with valid ResourceManager and querySpec', () => {
+    it('should create StreamProxy with valid DataSource and querySpec', () => {
       expect(() => {
-        streamProxy = new StreamProxy(mockResourceManager, testQuerySpec);
+        streamProxy = new StreamProxy(mockDataSource, testQuerySpec);
       }).not.toThrow();
 
       expect(streamProxy).toBeInstanceOf(StreamProxy);
-      expect(streamProxy.resourceManager).toBe(mockResourceManager);
+      expect(streamProxy.dataSource).toBe(mockDataSource);
       expect(streamProxy.querySpec).toEqual(testQuerySpec);
     });
 
-    it('should throw error when ResourceManager is null', () => {
+    it('should throw error when DataSource is null', () => {
       expect(() => {
         new StreamProxy(null, testQuerySpec);
-      }).toThrow('ResourceManager must be a non-null object');
+      }).toThrow('DataSource must be a non-null object');
     });
 
-    it('should throw error when ResourceManager is undefined', () => {
+    it('should throw error when DataSource is undefined', () => {
       expect(() => {
         new StreamProxy(undefined, testQuerySpec);
-      }).toThrow('ResourceManager must be a non-null object');
+      }).toThrow('DataSource must be a non-null object');
     });
 
-    it('should throw error when ResourceManager is not an object', () => {
+    it('should throw error when DataSource is not an object', () => {
       expect(() => {
         new StreamProxy('not-a-resource-manager', testQuerySpec);
-      }).toThrow('ResourceManager must be a non-null object');
+      }).toThrow('DataSource must be a non-null object');
     });
 
     it('should throw error when querySpec is null', () => {
       expect(() => {
-        new StreamProxy(mockResourceManager, null);
+        new StreamProxy(mockDataSource, null);
       }).toThrow('Query specification is required');
     });
 
     it('should throw error when querySpec is undefined', () => {
       expect(() => {
-        new StreamProxy(mockResourceManager, undefined);
+        new StreamProxy(mockDataSource, undefined);
       }).toThrow('Query specification is required');
     });
 
     it('should throw error when querySpec is not an object', () => {
       expect(() => {
-        new StreamProxy(mockResourceManager, 'not-an-object');
+        new StreamProxy(mockDataSource, 'not-an-object');
       }).toThrow('Query specification must be an object');
     });
 
@@ -87,7 +87,7 @@ describe('StreamProxy Unit Tests', () => {
       };
 
       expect(() => {
-        new StreamProxy(mockResourceManager, invalidSpec);
+        new StreamProxy(mockDataSource, invalidSpec);
       }).toThrow('Query specification must have find clause');
     });
 
@@ -98,7 +98,7 @@ describe('StreamProxy Unit Tests', () => {
       };
 
       expect(() => {
-        new StreamProxy(mockResourceManager, invalidSpec);
+        new StreamProxy(mockDataSource, invalidSpec);
       }).toThrow('Query specification must have find clause');
     });
 
@@ -108,7 +108,7 @@ describe('StreamProxy Unit Tests', () => {
       };
 
       expect(() => {
-        new StreamProxy(mockResourceManager, invalidSpec);
+        new StreamProxy(mockDataSource, invalidSpec);
       }).toThrow('Query specification must have where clause');
     });
 
@@ -119,32 +119,32 @@ describe('StreamProxy Unit Tests', () => {
       };
 
       expect(() => {
-        new StreamProxy(mockResourceManager, invalidSpec);
+        new StreamProxy(mockDataSource, invalidSpec);
       }).toThrow('Where clause must be an array');
     });
   });
 
   describe('StreamProxy Value Operations', () => {
     beforeEach(() => {
-      streamProxy = new StreamProxy(mockResourceManager, testQuerySpec);
+      streamProxy = new StreamProxy(mockDataSource, testQuerySpec);
     });
 
-    it('should return query results from ResourceManager', () => {
+    it('should return query results from DataSource', () => {
       const mockResults = [['entity1'], ['entity2'], ['entity3']];
-      mockResourceManager.query.mockReturnValue(mockResults);
+      mockDataSource.query.mockReturnValue(mockResults);
 
       const result = streamProxy.value();
 
-      expect(mockResourceManager.query).toHaveBeenCalledWith(testQuerySpec);
+      expect(mockDataSource.query).toHaveBeenCalledWith(testQuerySpec);
       expect(result).toBe(mockResults);
     });
 
     it('should handle empty query results', () => {
-      mockResourceManager.query.mockReturnValue([]);
+      mockDataSource.query.mockReturnValue([]);
 
       const result = streamProxy.value();
 
-      expect(mockResourceManager.query).toHaveBeenCalledWith(testQuerySpec);
+      expect(mockDataSource.query).toHaveBeenCalledWith(testQuerySpec);
       expect(result).toEqual([]);
     });
 
@@ -159,7 +159,7 @@ describe('StreamProxy Unit Tests', () => {
 
   describe('StreamProxy Query Operations', () => {
     beforeEach(() => {
-      streamProxy = new StreamProxy(mockResourceManager, testQuerySpec);
+      streamProxy = new StreamProxy(mockDataSource, testQuerySpec);
     });
 
     it('should execute additional query with valid querySpec', () => {
@@ -168,11 +168,11 @@ describe('StreamProxy Unit Tests', () => {
         where: [['?e', ':status', 'active']]
       };
       const mockResults = [['active1'], ['active2']];
-      mockResourceManager.query.mockReturnValue(mockResults);
+      mockDataSource.query.mockReturnValue(mockResults);
 
       const result = streamProxy.query(additionalQuerySpec);
 
-      expect(mockResourceManager.query).toHaveBeenCalledWith(additionalQuerySpec);
+      expect(mockDataSource.query).toHaveBeenCalledWith(additionalQuerySpec);
       expect(result).toBe(mockResults);
     });
 
@@ -198,7 +198,7 @@ describe('StreamProxy Unit Tests', () => {
 
   describe('StreamProxy Filter Operations', () => {
     beforeEach(() => {
-      streamProxy = new StreamProxy(mockResourceManager, testQuerySpec);
+      streamProxy = new StreamProxy(mockDataSource, testQuerySpec);
     });
 
     it('should create filtered StreamProxy with valid predicate', () => {
@@ -208,12 +208,12 @@ describe('StreamProxy Unit Tests', () => {
 
       expect(filteredProxy).toBeInstanceOf(StreamProxy);
       expect(filteredProxy).not.toBe(streamProxy);
-      expect(filteredProxy.resourceManager).toBe(mockResourceManager);
+      expect(filteredProxy.dataSource).toBe(mockDataSource);
     });
 
     it('should apply filter to value() results', () => {
       const mockResults = [['entity1'], ['entity2'], ['entity3']];
-      mockResourceManager.query.mockReturnValue(mockResults);
+      mockDataSource.query.mockReturnValue(mockResults);
       const filterPredicate = (item) => item[0] === 'entity1' || item[0] === 'entity3';
 
       const filteredProxy = streamProxy.filter(filterPredicate);
@@ -245,24 +245,24 @@ describe('StreamProxy Unit Tests', () => {
 
   describe('StreamProxy Subscription Operations', () => {
     beforeEach(() => {
-      streamProxy = new StreamProxy(mockResourceManager, testQuerySpec);
+      streamProxy = new StreamProxy(mockDataSource, testQuerySpec);
     });
 
     it('should create subscription with callback only (monitors current stream)', () => {
       const mockSubscription = { id: 'sub1', unsubscribe: jest.fn() };
-      mockResourceManager.subscribe.mockReturnValue(mockSubscription);
+      mockDataSource.subscribe.mockReturnValue(mockSubscription);
       const callback = jest.fn();
 
       const subscription = streamProxy.subscribe(callback);
 
-      expect(mockResourceManager.subscribe).toHaveBeenCalledWith(testQuerySpec, callback);
+      expect(mockDataSource.subscribe).toHaveBeenCalledWith(testQuerySpec, callback);
       expect(subscription).toBeDefined();
       expect(typeof subscription.unsubscribe).toBe('function');
     });
 
     it('should create subscription with querySpec and callback', () => {
       const mockSubscription = { id: 'sub1', unsubscribe: jest.fn() };
-      mockResourceManager.subscribe.mockReturnValue(mockSubscription);
+      mockDataSource.subscribe.mockReturnValue(mockSubscription);
       const customQuerySpec = {
         find: ['?e'],
         where: [['?e', ':status', 'active']]
@@ -271,7 +271,7 @@ describe('StreamProxy Unit Tests', () => {
 
       const subscription = streamProxy.subscribe(customQuerySpec, callback);
 
-      expect(mockResourceManager.subscribe).toHaveBeenCalledWith(customQuerySpec, callback);
+      expect(mockDataSource.subscribe).toHaveBeenCalledWith(customQuerySpec, callback);
       expect(subscription).toBeDefined();
       expect(typeof subscription.unsubscribe).toBe('function');
     });
@@ -292,7 +292,7 @@ describe('StreamProxy Unit Tests', () => {
 
     it('should track subscriptions for cleanup', () => {
       const mockSubscription = { id: 'sub1', unsubscribe: jest.fn() };
-      mockResourceManager.subscribe.mockReturnValue(mockSubscription);
+      mockDataSource.subscribe.mockReturnValue(mockSubscription);
       const callback = jest.fn();
 
       streamProxy.subscribe(callback);
@@ -311,24 +311,24 @@ describe('StreamProxy Unit Tests', () => {
 
   describe('StreamProxy Filtered Subscription Operations', () => {
     beforeEach(() => {
-      streamProxy = new StreamProxy(mockResourceManager, testQuerySpec);
+      streamProxy = new StreamProxy(mockDataSource, testQuerySpec);
     });
 
     it('should create filtered subscription that wraps callback', () => {
       const mockSubscription = { id: 'sub1', unsubscribe: jest.fn() };
-      mockResourceManager.subscribe.mockReturnValue(mockSubscription);
+      mockDataSource.subscribe.mockReturnValue(mockSubscription);
       const filterPredicate = (item) => item[0] === 'entity1';
       const callback = jest.fn();
 
       const filteredProxy = streamProxy.filter(filterPredicate);
       const subscription = filteredProxy.subscribe(callback);
 
-      expect(mockResourceManager.subscribe).toHaveBeenCalled();
+      expect(mockDataSource.subscribe).toHaveBeenCalled();
       expect(subscription).toBeDefined();
       expect(typeof subscription.unsubscribe).toBe('function');
 
       // Simulate subscription callback with filtered results
-      const subscriptionCallback = mockResourceManager.subscribe.mock.calls[0][1];
+      const subscriptionCallback = mockDataSource.subscribe.mock.calls[0][1];
       const mockData = [['entity1'], ['entity2'], ['entity3']];
       subscriptionCallback(mockData);
 
@@ -337,7 +337,7 @@ describe('StreamProxy Unit Tests', () => {
 
     it('should handle filtered subscription with custom querySpec', () => {
       const mockSubscription = { id: 'sub1', unsubscribe: jest.fn() };
-      mockResourceManager.subscribe.mockReturnValue(mockSubscription);
+      mockDataSource.subscribe.mockReturnValue(mockSubscription);
       const filterPredicate = (item) => item[0] === 'entity1';
       const callback = jest.fn();
       const customQuerySpec = {
@@ -348,20 +348,20 @@ describe('StreamProxy Unit Tests', () => {
       const filteredProxy = streamProxy.filter(filterPredicate);
       const subscription = filteredProxy.subscribe(customQuerySpec, callback);
 
-      expect(mockResourceManager.subscribe).toHaveBeenCalledWith(customQuerySpec, expect.any(Function));
+      expect(mockDataSource.subscribe).toHaveBeenCalledWith(customQuerySpec, expect.any(Function));
       expect(subscription).toBeDefined();
     });
   });
 
   describe('StreamProxy Destruction and Cleanup', () => {
     beforeEach(() => {
-      streamProxy = new StreamProxy(mockResourceManager, testQuerySpec);
+      streamProxy = new StreamProxy(mockDataSource, testQuerySpec);
     });
 
     it('should cleanup subscriptions when destroyed', () => {
       const mockSubscription1 = { id: 'sub1', unsubscribe: jest.fn() };
       const mockSubscription2 = { id: 'sub2', unsubscribe: jest.fn() };
-      mockResourceManager.subscribe
+      mockDataSource.subscribe
         .mockReturnValueOnce(mockSubscription1)
         .mockReturnValueOnce(mockSubscription2);
 
@@ -384,7 +384,7 @@ describe('StreamProxy Unit Tests', () => {
           throw new Error('Unsubscribe error');
         })
       };
-      mockResourceManager.subscribe.mockReturnValue(mockSubscription);
+      mockDataSource.subscribe.mockReturnValue(mockSubscription);
 
       streamProxy.subscribe(jest.fn());
 
@@ -413,19 +413,19 @@ describe('StreamProxy Unit Tests', () => {
 
   describe('StreamProxy Edge Cases', () => {
     beforeEach(() => {
-      streamProxy = new StreamProxy(mockResourceManager, testQuerySpec);
+      streamProxy = new StreamProxy(mockDataSource, testQuerySpec);
     });
 
-    it('should handle ResourceManager query returning non-array', () => {
-      mockResourceManager.query.mockReturnValue(null);
+    it('should handle DataSource query returning non-array', () => {
+      mockDataSource.query.mockReturnValue(null);
 
       const result = streamProxy.value();
 
       expect(result).toBeNull();
     });
 
-    it('should handle ResourceManager query throwing error', () => {
-      mockResourceManager.query.mockImplementation(() => {
+    it('should handle DataSource query throwing error', () => {
+      mockDataSource.query.mockImplementation(() => {
         throw new Error('Query failed');
       });
 
@@ -436,7 +436,7 @@ describe('StreamProxy Unit Tests', () => {
 
     it('should handle empty filter results', () => {
       const mockResults = [['entity1'], ['entity2']];
-      mockResourceManager.query.mockReturnValue(mockResults);
+      mockDataSource.query.mockReturnValue(mockResults);
       const filterPredicate = () => false; // Filter out everything
 
       const filteredProxy = streamProxy.filter(filterPredicate);

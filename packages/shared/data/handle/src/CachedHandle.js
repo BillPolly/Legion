@@ -2,7 +2,7 @@
  * CachedHandle - Universal base class for handles with caching capabilities
  * 
  * Provides common caching patterns, validation utilities, and cache invalidation
- * subscription management for all Handle types. Works with any ResourceManager implementation.
+ * subscription management for all Handle types. Works with any DataSource implementation.
  * 
  * CRITICAL: All operations are synchronous - NO await, NO promises in Handle infrastructure!
  */
@@ -135,7 +135,7 @@ export class CachedHandle extends Handle {
   }
   
   /**
-   * Get data from cache or ResourceManager with caching
+   * Get data from cache or DataSource with caching
    * Template method pattern - subclasses override _fetchFreshData()
    * CRITICAL: Must be synchronous - no await!
    * 
@@ -179,7 +179,7 @@ export class CachedHandle extends Handle {
   }
   
   /**
-   * Fetch fresh data from ResourceManager
+   * Fetch fresh data from DataSource
    * Must be implemented by subclasses
    * CRITICAL: Must be synchronous - no await!
    * 

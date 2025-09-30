@@ -9,33 +9,33 @@ import { createTestStore, createSampleData, assertions, validators, errorHelpers
 
 describe('ProxyTypeDetector', () => {
   let store;
-  let resourceManager;
+  let dataSource;
   let sampleData;
   let detector;
   
   beforeEach(() => {
     store = createTestStore();
-    resourceManager = new DataStoreDataSource(store);
+    dataSource = new DataStoreDataSource(store);
     sampleData = createSampleData(store);
-    detector = new ProxyTypeDetector(resourceManager);
+    detector = new ProxyTypeDetector(dataSource);
   });
   
   describe('Constructor', () => {
-    test('should require resourceManager parameter', () => {
-      expect(() => new ProxyTypeDetector()).toThrow('ResourceManager is required');
-      expect(() => new ProxyTypeDetector(null)).toThrow('ResourceManager is required');
-      expect(() => new ProxyTypeDetector({})).toThrow('ResourceManager is required');
+    test('should require dataSource parameter', () => {
+      expect(() => new ProxyTypeDetector()).toThrow('DataSource is required');
+      expect(() => new ProxyTypeDetector(null)).toThrow('DataSource is required');
+      expect(() => new ProxyTypeDetector({})).toThrow('DataSource is required');
     });
     
-    test('should validate resourceManager has required methods', () => {
-      const invalidResourceManager = { query: 'not a function' };
-      expect(() => new ProxyTypeDetector(invalidResourceManager)).toThrow('ResourceManager is required');
+    test('should validate dataSource has required methods', () => {
+      const invalidDataSource = { query: 'not a function' };
+      expect(() => new ProxyTypeDetector(invalidDataSource)).toThrow('DataSource is required');
     });
     
-    test('should accept valid ResourceManager', () => {
-      expect(() => new ProxyTypeDetector(resourceManager)).not.toThrow();
-      const detector = new ProxyTypeDetector(resourceManager);
-      expect(detector.resourceManager).toBe(resourceManager);
+    test('should accept valid DataSource', () => {
+      expect(() => new ProxyTypeDetector(dataSource)).not.toThrow();
+      const detector = new ProxyTypeDetector(dataSource);
+      expect(detector.dataSource).toBe(dataSource);
       expect(detector.store).toBe(store); // Should have backward compatibility
     });
   });
@@ -137,7 +137,7 @@ describe('ProxyTypeDetector', () => {
       };
       
       // Execute query to get actual results
-      const results = resourceManager.query(entityQuery);
+      const results = dataSource.query(entityQuery);
       const analysis = detector.analyzeQueryResults(entityQuery, results);
       
       expect(analysis.resultCount).toBe(1);
@@ -152,7 +152,7 @@ describe('ProxyTypeDetector', () => {
         where: [['?e', ':user/name', 'NonExistent']]
       };
       
-      const results = resourceManager.query(emptyQuery);
+      const results = dataSource.query(emptyQuery);
       const analysis = detector.analyzeQueryResults(emptyQuery, results);
       
       expect(analysis.resultCount).toBe(0);
@@ -167,7 +167,7 @@ describe('ProxyTypeDetector', () => {
         where: [['?e', ':user/name', '?name']]
       };
       
-      const results = resourceManager.query(multiQuery);
+      const results = dataSource.query(multiQuery);
       const analysis = detector.analyzeQueryResults(multiQuery, results);
       
       expect(analysis.resultCount).toBe(3); // Alice, Bob, Charlie
@@ -182,7 +182,7 @@ describe('ProxyTypeDetector', () => {
         where: [['?e', ':user/name', '?name']]
       };
       
-      const results = resourceManager.query(valueQuery);
+      const results = dataSource.query(valueQuery);
       const analysis = detector.analyzeQueryResults(valueQuery, results);
       
       expect(analysis.resultCount).toBe(3);
@@ -308,7 +308,7 @@ describe('ProxyTypeDetector', () => {
     });
     
     test('should not have fallback behavior', () => {
-      const invalidDetector = new ProxyTypeDetector(resourceManager);
+      const invalidDetector = new ProxyTypeDetector(dataSource);
       
       // Should throw immediately, not return default values
       errorHelpers.expectNoFallback(() => invalidDetector.detectProxyType());
@@ -316,8 +316,8 @@ describe('ProxyTypeDetector', () => {
     });
   });
   
-  describe('Integration with ResourceManager', () => {
-    test('should work with real ResourceManager queries', () => {
+  describe('Integration with DataSource', () => {
+    test('should work with real DataSource queries', () => {
       const queries = [
         {
           spec: { find: ['?e'], where: [['?e', ':user/name', 'Alice']] },

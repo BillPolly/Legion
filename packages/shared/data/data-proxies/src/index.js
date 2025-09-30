@@ -9,7 +9,7 @@
  * 
  * All proxy classes extend the Handle base class, providing:
  * - Actor System Integration: receive(), call(), query() methods
- * - Resource Manager Pattern: Synchronous data access through ResourceManager interface  
+ * - Resource Manager Pattern: Synchronous data access through DataSource interface  
  * - Lifecycle Management: Proper subscription cleanup and cascading destruction
  * - Error Handling: Consistent "Handle has been destroyed" error handling
  * 
@@ -19,7 +19,7 @@
  * - **CollectionProxy**: Collection operations with iteration, filtering, and bulk updates
  * - **StreamProxy**: Continuous query result streaming with filtering and subscriptions
  * - **DataStoreProxy**: Factory for creating and managing different proxy types
- * - **DataStoreResourceManager**: Adapter bridging DataStore to ResourceManager interface
+ * - **DataStoreDataSource**: Adapter bridging DataStore to DataSource interface
  * 
  * ## Cross-Proxy Integration
  * 
@@ -33,17 +33,17 @@
  *   CollectionProxy, 
  *   StreamProxy,
  *   DataStoreProxy,
- *   DataStoreResourceManager 
+ *   DataStoreDataSource 
  * } from '@legion/data-proxies';
  * 
  * // Create resource manager
  * const store = createDataStore(schema);
- * const resourceManager = new DataStoreResourceManager(store);
+ * const dataSource = new DataStoreDataSource(store);
  * 
  * // Create proxies
- * const entityProxy = new EntityProxy(resourceManager, entityId);
- * const collectionProxy = new CollectionProxy(resourceManager, querySpec);
- * const streamProxy = new StreamProxy(resourceManager, querySpec);
+ * const entityProxy = new EntityProxy(dataSource, entityId);
+ * const collectionProxy = new CollectionProxy(dataSource, querySpec);
+ * const streamProxy = new StreamProxy(dataSource, querySpec);
  * 
  * // Or use factory
  * const dataStoreProxy = new DataStoreProxy(store);
@@ -106,10 +106,10 @@ export { StreamProxy } from './StreamProxy.js';
 // ============================================================================
 
 /**
- * ResourceManager adapter that bridges DataStore to Handle interface
- * @see {@link DataStoreResourceManager}
+ * DataSource adapter that bridges DataStore to Handle interface
+ * @see {@link DataStoreDataSource}
  */
-export { DataStoreResourceManager } from './DataStoreResourceManager.js';
+export { DataStoreDataSource } from './DataStoreDataSource.js';
 
 // ============================================================================
 // UTILITIES

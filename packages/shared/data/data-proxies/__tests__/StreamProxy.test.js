@@ -10,34 +10,34 @@ import { createTestStore, createSampleData, assertions, validators, errorHelpers
 
 describe('StreamProxy', () => {
   let store;
-  let resourceManager;
+  let dataSource;
   let sampleData;
   
   beforeEach(() => {
     store = createTestStore();
-    resourceManager = new DataStoreDataSource(store);
+    dataSource = new DataStoreDataSource(store);
     sampleData = createSampleData(store);
   });
   
   describe('Constructor', () => {
-    test('should require resourceManager and querySpec parameters', () => {
-      expect(() => new StreamProxy()).toThrow('ResourceManager must be a non-null object');
-      expect(() => new StreamProxy(null)).toThrow('ResourceManager must be a non-null object');
-      expect(() => new StreamProxy(resourceManager)).toThrow('Query specification is required');
-      expect(() => new StreamProxy(resourceManager, null)).toThrow('Query specification is required');
+    test('should require dataSource and querySpec parameters', () => {
+      expect(() => new StreamProxy()).toThrow('DataSource must be a non-null object');
+      expect(() => new StreamProxy(null)).toThrow('DataSource must be a non-null object');
+      expect(() => new StreamProxy(dataSource)).toThrow('Query specification is required');
+      expect(() => new StreamProxy(dataSource, null)).toThrow('Query specification is required');
     });
     
-    test('should validate resourceManager has required methods', () => {
-      const invalidResourceManager = { query: 'not a function' };
+    test('should validate dataSource has required methods', () => {
+      const invalidDataSource = { query: 'not a function' };
       const querySpec = { find: ['?e'], where: [['?e', ':user/name', '?name']] };
-      expect(() => new StreamProxy(invalidResourceManager, querySpec)).toThrow('ResourceManager must implement query() method');
+      expect(() => new StreamProxy(invalidDataSource, querySpec)).toThrow('DataSource must implement query() method');
     });
     
     test('should validate query specification structure', () => {
-      expect(() => new StreamProxy(resourceManager, {})).toThrow('Query specification must have find clause');
-      expect(() => new StreamProxy(resourceManager, { find: [] })).toThrow('Query specification must have find clause');
-      expect(() => new StreamProxy(resourceManager, { find: ['?e'] })).toThrow('Query specification must have where clause');
-      expect(() => new StreamProxy(resourceManager, { find: ['?e'], where: 'invalid' })).toThrow('Where clause must be an array');
+      expect(() => new StreamProxy(dataSource, {})).toThrow('Query specification must have find clause');
+      expect(() => new StreamProxy(dataSource, { find: [] })).toThrow('Query specification must have find clause');
+      expect(() => new StreamProxy(dataSource, { find: ['?e'] })).toThrow('Query specification must have where clause');
+      expect(() => new StreamProxy(dataSource, { find: ['?e'], where: 'invalid' })).toThrow('Where clause must be an array');
     });
     
     test('should accept valid parameters', () => {
@@ -46,9 +46,9 @@ describe('StreamProxy', () => {
         where: [['?e', ':user/name', '?name']]
       };
       
-      expect(() => new StreamProxy(resourceManager, querySpec)).not.toThrow();
-      const proxy = new StreamProxy(resourceManager, querySpec);
-      expect(proxy.resourceManager).toBe(resourceManager);
+      expect(() => new StreamProxy(dataSource, querySpec)).not.toThrow();
+      const proxy = new StreamProxy(dataSource, querySpec);
+      expect(proxy.dataSource).toBe(dataSource);
       expect(proxy.querySpec).toEqual(querySpec);
     });
     
@@ -58,7 +58,7 @@ describe('StreamProxy', () => {
         where: [['?e', ':user/active', true]]
       };
       
-      const proxy = new StreamProxy(resourceManager, querySpec);
+      const proxy = new StreamProxy(dataSource, querySpec);
       expect(proxy).toBeInstanceOf(Handle);
       expect(typeof proxy.subscribe).toBe('function');
       expect(typeof proxy.destroy).toBe('function');
@@ -72,7 +72,7 @@ describe('StreamProxy', () => {
         where: [['?e', ':user/name', '?name']]
       };
       
-      const proxy = new StreamProxy(resourceManager, querySpec);
+      const proxy = new StreamProxy(dataSource, querySpec);
       const value = proxy.value();
       
       expect(Array.isArray(value)).toBe(true);
@@ -91,11 +91,11 @@ describe('StreamProxy', () => {
         where: [['?e', ':user/age', '?age']]
       };
       
-      const proxy = new StreamProxy(resourceManager, querySpec);
+      const proxy = new StreamProxy(dataSource, querySpec);
       const value1 = proxy.value();
       
-      // Update an entity through resourceManager
-      resourceManager.update(sampleData.users.alice, { ':user/age': 31 });
+      // Update an entity through dataSource
+      dataSource.update(sampleData.users.alice, { ':user/age': 31 });
       
       const value2 = proxy.value();
       
@@ -113,7 +113,7 @@ describe('StreamProxy', () => {
         where: [['?e', ':nonexistent/attribute', 'impossible-value']]
       };
       
-      const proxy = new StreamProxy(resourceManager, querySpec);
+      const proxy = new StreamProxy(dataSource, querySpec);
       const value = proxy.value();
       
       expect(Array.isArray(value)).toBe(true);
@@ -126,7 +126,7 @@ describe('StreamProxy', () => {
         where: [['?e', ':user/name', '?name']]
       };
       
-      const proxy = new StreamProxy(resourceManager, querySpec);
+      const proxy = new StreamProxy(dataSource, querySpec);
       proxy.destroy();
       
       expect(() => proxy.value()).toThrow('Handle has been destroyed');
@@ -141,7 +141,7 @@ describe('StreamProxy', () => {
         where: [['?e', ':user/active', true]]
       };
       
-      const proxy = new StreamProxy(resourceManager, activeUsersSpec);
+      const proxy = new StreamProxy(dataSource, activeUsersSpec);
       
       // Query for names of active users
       const nameQuery = {
@@ -159,7 +159,7 @@ describe('StreamProxy', () => {
     });
     
     test('should validate query specification', () => {
-      const proxy = new StreamProxy(resourceManager, {
+      const proxy = new StreamProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':user/name', '?name']]
       });
@@ -171,7 +171,7 @@ describe('StreamProxy', () => {
     });
     
     test('should handle complex queries with multiple conditions', () => {
-      const proxy = new StreamProxy(resourceManager, {
+      const proxy = new StreamProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':user/name', '?name']]
       });
@@ -191,7 +191,7 @@ describe('StreamProxy', () => {
     });
     
     test('should fail fast when destroyed', () => {
-      const proxy = new StreamProxy(resourceManager, {
+      const proxy = new StreamProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':user/name', '?name']]
       });
@@ -214,7 +214,7 @@ describe('StreamProxy', () => {
         where: [['?e', ':user/name', '?name']]
       };
       
-      const proxy = new StreamProxy(resourceManager, querySpec);
+      const proxy = new StreamProxy(dataSource, querySpec);
       
       const sub1 = proxy.subscribe(querySpec, () => {});
       const sub2 = proxy.subscribe(querySpec, () => {});
@@ -233,19 +233,19 @@ describe('StreamProxy', () => {
   
   describe('Error Handling', () => {
     test('should fail fast with clear error messages', () => {
-      expect(() => new StreamProxy()).toThrow('ResourceManager must be a non-null object');
-      expect(() => new StreamProxy(resourceManager)).toThrow('Query specification is required');
-      expect(() => new StreamProxy(resourceManager, {})).toThrow('Query specification must have find clause');
+      expect(() => new StreamProxy()).toThrow('DataSource must be a non-null object');
+      expect(() => new StreamProxy(dataSource)).toThrow('Query specification is required');
+      expect(() => new StreamProxy(dataSource, {})).toThrow('Query specification must have find clause');
     });
     
     test('should not have fallback behavior', () => {
       errorHelpers.expectNoFallback(() => new StreamProxy());
       errorHelpers.expectNoFallback(() => new StreamProxy(null));
-      errorHelpers.expectNoFallback(() => new StreamProxy(resourceManager, null));
+      errorHelpers.expectNoFallback(() => new StreamProxy(dataSource, null));
     });
     
     test('should handle destroyed state consistently', () => {
-      const proxy = new StreamProxy(resourceManager, {
+      const proxy = new StreamProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':user/name', '?name']]
       });
@@ -265,7 +265,7 @@ describe('StreamProxy', () => {
         where: [['?e', ':user/name', '?name']]
       };
       
-      const proxy = new StreamProxy(resourceManager, querySpec);
+      const proxy = new StreamProxy(dataSource, querySpec);
       
       // Create multiple subscriptions
       const sub1 = proxy.subscribe(querySpec, () => {});
@@ -281,7 +281,7 @@ describe('StreamProxy', () => {
     });
     
     test('should prevent new subscriptions after destroy', () => {
-      const proxy = new StreamProxy(resourceManager, {
+      const proxy = new StreamProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':user/name', '?name']]
       });
@@ -304,7 +304,7 @@ describe('StreamProxy', () => {
         ]
       };
       
-      const proxy = new StreamProxy(resourceManager, querySpec);
+      const proxy = new StreamProxy(dataSource, querySpec);
       const results = proxy.value();
       
       expect(results.length).toBe(2); // Active users
@@ -319,11 +319,11 @@ describe('StreamProxy', () => {
         where: [['?e', ':user/age', '?count']]
       };
       
-      const proxy = new StreamProxy(resourceManager, querySpec);
+      const proxy = new StreamProxy(dataSource, querySpec);
       const proxyResults = proxy.value();
       
-      // Execute same query directly on resourceManager
-      const storeResults = resourceManager.query(querySpec);
+      // Execute same query directly on dataSource
+      const storeResults = dataSource.query(querySpec);
       
       expect(proxyResults).toEqual(storeResults);
     });
@@ -334,13 +334,13 @@ describe('StreamProxy', () => {
         where: [['?e', ':user/profession', 'Engineer']]
       };
       
-      const proxy = new StreamProxy(resourceManager, querySpec);
+      const proxy = new StreamProxy(dataSource, querySpec);
       
       // Initially no results
       expect(proxy.value().length).toBe(0);
       
-      // Add profession to Alice through resourceManager
-      resourceManager.update(sampleData.users.alice, { ':user/profession': 'Engineer' });
+      // Add profession to Alice through dataSource
+      dataSource.update(sampleData.users.alice, { ':user/profession': 'Engineer' });
       
       // Should now return Alice
       const results = proxy.value();

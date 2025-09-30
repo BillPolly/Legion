@@ -10,14 +10,14 @@ import { CollectionProxy } from '../../src/CollectionProxy.js';
 
 describe('CollectionProxy Integration Tests', () => {
   let dataStore;
-  let resourceManager;
+  let dataSource;
 
   beforeEach(async () => {
     // Create new DataStore instance for each test
     dataStore = new DataStore();
     
-    // Create ResourceManager adapter
-    resourceManager = new DataStoreDataSource(dataStore);
+    // Create DataSource adapter
+    dataSource = new DataStoreDataSource(dataStore);
   });
 
   afterEach(() => {
@@ -26,7 +26,7 @@ describe('CollectionProxy Integration Tests', () => {
       // DataStore doesn't have a destroy method, so we just clear the reference
       dataStore = null;
     }
-    resourceManager = null;
+    dataSource = null;
   });
 
   describe('Basic Collection Operations with Real DataStore', () => {
@@ -43,7 +43,7 @@ describe('CollectionProxy Integration Tests', () => {
         ['+', 3, ':title', 'Hello World'],
       ];
       
-      const transactionResult = await resourceManager.transact(transactionData);
+      const transactionResult = await dataSource.transact(transactionData);
       expect(transactionResult.success).toBe(true);
       
       // Create collection spec to find all users
@@ -53,7 +53,7 @@ describe('CollectionProxy Integration Tests', () => {
       };
       
       // Create CollectionProxy
-      const collection = new CollectionProxy(resourceManager, collectionSpec);
+      const collection = new CollectionProxy(dataSource, collectionSpec);
       
       // Test collection length
       const length = await collection.getLength();
@@ -79,7 +79,7 @@ describe('CollectionProxy Integration Tests', () => {
         where: [['?e', ':type', 'nonexistent']]
       };
       
-      const collection = new CollectionProxy(resourceManager, collectionSpec);
+      const collection = new CollectionProxy(dataSource, collectionSpec);
       
       // Test empty collection
       const length = await collection.getLength();
@@ -112,14 +112,14 @@ describe('CollectionProxy Integration Tests', () => {
         ['+', 3, ':name', 'Third'],
       ];
       
-      await resourceManager.transact(transactionData);
+      await dataSource.transact(transactionData);
       
       const collectionSpec = {
         find: ['?e'],
         where: [['?e', ':type', 'item']]
       };
       
-      const collection = new CollectionProxy(resourceManager, collectionSpec);
+      const collection = new CollectionProxy(dataSource, collectionSpec);
       
       // Get first entity
       const first = await collection.getFirst();
@@ -157,7 +157,7 @@ describe('CollectionProxy Integration Tests', () => {
         ['+', 3, ':active', true],
       ];
       
-      await resourceManager.transact(transactionData);
+      await dataSource.transact(transactionData);
     });
 
     it('should support forEach iteration', async () => {
@@ -166,7 +166,7 @@ describe('CollectionProxy Integration Tests', () => {
         where: [['?e', ':type', 'person']]
       };
       
-      const collection = new CollectionProxy(resourceManager, collectionSpec);
+      const collection = new CollectionProxy(dataSource, collectionSpec);
       
       const names = [];
       await collection.forEach(entity => {
@@ -183,7 +183,7 @@ describe('CollectionProxy Integration Tests', () => {
         where: [['?e', ':type', 'person']]
       };
       
-      const collection = new CollectionProxy(resourceManager, collectionSpec);
+      const collection = new CollectionProxy(dataSource, collectionSpec);
       
       const names = await collection.map(entity => entity[':name']);
       
@@ -197,7 +197,7 @@ describe('CollectionProxy Integration Tests', () => {
         where: [['?e', ':type', 'person']]
       };
       
-      const collection = new CollectionProxy(resourceManager, collectionSpec);
+      const collection = new CollectionProxy(dataSource, collectionSpec);
       
       const activePersons = await collection.filter(entity => entity[':active'] === true);
       
@@ -212,7 +212,7 @@ describe('CollectionProxy Integration Tests', () => {
         where: [['?e', ':type', 'person']]
       };
       
-      const collection = new CollectionProxy(resourceManager, collectionSpec);
+      const collection = new CollectionProxy(dataSource, collectionSpec);
       
       const bob = await collection.find(entity => entity[':name'] === 'Bob');
       
@@ -241,7 +241,7 @@ describe('CollectionProxy Integration Tests', () => {
         ['+', 3, ':status', 'completed'],
       ];
       
-      await resourceManager.transact(transactionData);
+      await dataSource.transact(transactionData);
     });
 
     it('should support updateAll operations', async () => {
@@ -250,7 +250,7 @@ describe('CollectionProxy Integration Tests', () => {
         where: [['?e', ':type', 'task']]
       };
       
-      const collection = new CollectionProxy(resourceManager, collectionSpec);
+      const collection = new CollectionProxy(dataSource, collectionSpec);
       
       // Update all tasks
       const result = await collection.updateAll({ ':priority': 'high' });
@@ -273,7 +273,7 @@ describe('CollectionProxy Integration Tests', () => {
         where: [['?e', ':type', 'task']]
       };
       
-      const collection = new CollectionProxy(resourceManager, collectionSpec);
+      const collection = new CollectionProxy(dataSource, collectionSpec);
       
       // Update only pending tasks
       const result = await collection.updateWhere(
@@ -326,7 +326,7 @@ describe('CollectionProxy Integration Tests', () => {
         ['+', 5, ':owner', 2],
       ];
       
-      await resourceManager.transact(transactionData);
+      await dataSource.transact(transactionData);
     });
 
     it('should handle collections with multiple where clauses', async () => {
@@ -340,7 +340,7 @@ describe('CollectionProxy Integration Tests', () => {
         ]
       };
       
-      const collection = new CollectionProxy(resourceManager, collectionSpec);
+      const collection = new CollectionProxy(dataSource, collectionSpec);
       
       const length = await collection.getLength();
       expect(length).toBe(1); // Only Alice matches all criteria
@@ -362,13 +362,13 @@ describe('CollectionProxy Integration Tests', () => {
         ]
       };
       
-      const collection = new CollectionProxy(resourceManager, collectionSpec);
+      const collection = new CollectionProxy(dataSource, collectionSpec);
       
       const results = await collection.toArray();
       expect(results).toHaveLength(2); // Two projects
       
       // Results should be arrays with [project, owner] pairs
-      // Note: The exact format depends on how our ResourceManager handles multi-variable finds
+      // Note: The exact format depends on how our DataSource handles multi-variable finds
     });
   });
 
@@ -379,7 +379,7 @@ describe('CollectionProxy Integration Tests', () => {
         where: [['?e', ':type', 'document']]
       };
       
-      const collection = new CollectionProxy(resourceManager, collectionSpec);
+      const collection = new CollectionProxy(dataSource, collectionSpec);
       
       // Create subscription
       const callbacks = [];
@@ -406,7 +406,7 @@ describe('CollectionProxy Integration Tests', () => {
         where: [['?e', ':type', 'user']]
       };
       
-      expect(() => new CollectionProxy(resourceManager, invalidSpec)).toThrow('Collection specification must have find clause');
+      expect(() => new CollectionProxy(dataSource, invalidSpec)).toThrow('Collection specification must have find clause');
       
       // Test another type of invalid spec
       const noWhereSpec = {
@@ -414,7 +414,7 @@ describe('CollectionProxy Integration Tests', () => {
         // Missing where clause
       };
       
-      expect(() => new CollectionProxy(resourceManager, noWhereSpec)).toThrow('Collection specification must have where clause');
+      expect(() => new CollectionProxy(dataSource, noWhereSpec)).toThrow('Collection specification must have where clause');
     });
 
     it('should handle DataStore query errors gracefully', async () => {
@@ -428,7 +428,7 @@ describe('CollectionProxy Integration Tests', () => {
         ]
       };
       
-      const collection = new CollectionProxy(resourceManager, problematicSpec);
+      const collection = new CollectionProxy(dataSource, problematicSpec);
       
       // The query should either work (returning empty results) or throw an error we can catch
       try {
@@ -452,7 +452,7 @@ describe('CollectionProxy Integration Tests', () => {
         ['+', 2, ':email', 'bob@example.com'],
       ];
       
-      await resourceManager.transact(transactionData);
+      await dataSource.transact(transactionData);
     });
 
     it('should provide entity proxies for collection entities', async () => {
@@ -461,14 +461,14 @@ describe('CollectionProxy Integration Tests', () => {
         where: [['?e', ':type', 'user']]
       };
       
-      const collection = new CollectionProxy(resourceManager, collectionSpec);
+      const collection = new CollectionProxy(dataSource, collectionSpec);
       
       // Get entity proxy for first user
       const entityProxy = collection.getEntityProxy(1);
       
       expect(entityProxy).toBeDefined();
       expect(entityProxy.entityId).toBe(1);
-      expect(entityProxy.resourceManager).toBe(resourceManager);
+      expect(entityProxy.dataSource).toBe(dataSource);
     });
 
     it('should cache entity proxies', async () => {
@@ -477,7 +477,7 @@ describe('CollectionProxy Integration Tests', () => {
         where: [['?e', ':type', 'user']]
       };
       
-      const collection = new CollectionProxy(resourceManager, collectionSpec);
+      const collection = new CollectionProxy(dataSource, collectionSpec);
       
       // Get same entity proxy twice
       const proxy1 = collection.getEntityProxy(1);
@@ -495,7 +495,7 @@ describe('CollectionProxy Integration Tests', () => {
         where: [['?e', ':type', 'user']]
       };
       
-      const collection = new CollectionProxy(resourceManager, collectionSpec);
+      const collection = new CollectionProxy(dataSource, collectionSpec);
       
       // Create some entity proxies to cache
       collection.getEntityProxy(1);

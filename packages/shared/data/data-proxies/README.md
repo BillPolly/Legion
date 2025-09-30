@@ -157,7 +157,7 @@ const streamResults = userStream.value(); // Array of tuples
 All proxy classes provide consistent error handling:
 
 ```javascript
-const proxy = new EntityProxy(resourceManager, entityId);
+const proxy = new EntityProxy(dataSource, entityId);
 proxy.destroy();
 
 // All operations throw after destruction
@@ -174,7 +174,7 @@ Proper cleanup and cascading destruction:
 
 ```javascript
 // CollectionProxy cleans up entity proxies
-const collection = new CollectionProxy(resourceManager, querySpec);
+const collection = new CollectionProxy(dataSource, querySpec);
 const entity = collection.get(entityId); // Creates cached entity proxy
 
 collection.destroy(); // Automatically destroys all cached entity proxies

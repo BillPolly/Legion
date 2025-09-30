@@ -7,6 +7,7 @@
 
 import { Actor } from '@legion/actors';
 import { ResourceManager } from '@legion/resource-manager';
+import { AssetHandle } from '../../handles/AssetHandle.js';
 
 export class ShowMeServerActor extends Actor {
   constructor(actorSpace, config = {}) {
@@ -21,6 +22,17 @@ export class ShowMeServerActor extends Actor {
 
     // ResourceManager for Handle resolution
     this.resourceManager = null;
+
+    // Remote client actor reference (set by ActorSpaceManager)
+    this.remoteActor = null;
+  }
+
+  /**
+   * Set the remote client actor
+   */
+  setRemoteActor(remoteActor) {
+    this.remoteActor = remoteActor;
+    console.log('ShowMeServerActor: Remote actor set');
   }
 
   /**
@@ -149,19 +161,21 @@ export class ShowMeServerActor extends Actor {
    */
   async handleClientConnect({ clientId, timestamp }) {
     this.connectedClients.add(clientId);
-    
+
     this.updateState({
       connectedClients: this.connectedClients.size
     });
-    
+
     console.log(`Client connected: ${clientId}`);
-    
+
     // Send current server status to new client
-    await this.send('server-status', {
-      running: true,
-      connectedClients: this.connectedClients.size,
-      assetsStored: this.state.assetsStored
-    });
+    if (this.remoteActor) {
+      this.remoteActor.receive('server-status', {
+        running: true,
+        connectedClients: this.connectedClients.size,
+        assetsStored: this.state.assetsStored
+      });
+    }
   }
 
   /**
@@ -183,25 +197,27 @@ export class ShowMeServerActor extends Actor {
   async handleDisplayAsset({ assetId, assetType, title, asset }) {
     console.log(`Displaying asset: ${assetId} (${assetType})`);
 
-    // Store asset if server reference available
+    // Create AssetHandle - this is an Actor!
+    const assetHandle = new AssetHandle({
+      id: assetId,
+      assetType,
+      title,
+      asset,
+      timestamp: Date.now()
+    });
+
+    // Store the handle if server reference available
     if (this.server && this.server.assetStorage) {
-      this.server.assetStorage.set(assetId, {
-        id: assetId,
-        asset,
-        assetType,
-        title,
-        timestamp: Date.now()
-      });
+      this.server.assetStorage.set(assetId, assetHandle);
 
       this.updateState({
         assetsStored: this.server.assetStorage.size
       });
     }
 
-    // Notify all connected clients that asset is ready
-    await this.broadcast('asset-ready', {
-      assetId,
-      assetType,
+    // Send the Handle Actor to client - it will be serialized as RemoteActor!
+    await this.broadcast('display-asset', {
+      asset: assetHandle,  // This is an Actor - will become RemoteActor on client side!
       title
     });
   }
@@ -318,10 +334,15 @@ export class ShowMeServerActor extends Actor {
 
   /**
    * Broadcast message to all connected clients
+   * For now, sends to the remote actor if available
+   * TODO: Support multiple clients per server actor
    */
   async broadcast(messageType, data) {
-    for (const clientId of this.connectedClients) {
-      await this.sendToClient(clientId, messageType, data);
+    if (this.remoteActor) {
+      this.remoteActor.receive(messageType, data);
+      console.log(`Broadcast ${messageType} to remote actor`);
+    } else {
+      console.warn('No remote actor available for broadcast');
     }
   }
 
@@ -329,18 +350,16 @@ export class ShowMeServerActor extends Actor {
    * Send message to specific client
    */
   async sendToClient(clientId, messageType, data) {
-    await this.send(messageType, {
-      ...data,
-      targetClient: clientId
-    });
+    if (this.remoteActor) {
+      this.remoteActor.receive(messageType, data);
+    }
   }
 
   /**
-   * Update state and emit change
+   * Update state
    */
   updateState(updates) {
     this.state = { ...this.state, ...updates };
-    this.emitStateChange();
   }
 
   /**

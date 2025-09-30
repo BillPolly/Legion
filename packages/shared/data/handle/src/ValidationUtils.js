@@ -509,7 +509,7 @@ export const validateDataScriptAttributeName = (attributeName, context = 'Attrib
  * Standard DataSource interface validation (legacy name for backward compatibility)
  * @deprecated Use validateDataSourceInterface instead
  */
-export const validateStandardResourceManagerInterface = (dataSource, context = 'DataSource') => {
+export const validateStandardDataSourceInterface = (dataSource, context = 'DataSource') => {
   ValidationUtils.validateDataSourceInterface(dataSource, context, [
     'query', 'subscribe', 'getSchema'
   ]);

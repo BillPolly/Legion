@@ -2,8 +2,8 @@
  * Integration tests for DefaultQueryBuilder
  * 
  * Tests the default query builder implementation with:
- * - Plain object ResourceManagers
- * - API-based ResourceManagers
+ * - Plain object DataSources
+ * - API-based DataSources
  * - Handle hierarchy query flow
  * - All query combinator operations
  */

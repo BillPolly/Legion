@@ -16,7 +16,7 @@ import * as d from '@legion/datascript';
 
 describe('EntityProxy Integration with Real DataStore', () => {
   let dataStore;
-  let resourceManager;
+  let dataSource;
   let testEntityId;
   
   beforeEach(() => {
@@ -34,7 +34,7 @@ describe('EntityProxy Integration with Real DataStore', () => {
     dataStore = new DataStore(schema);
     
     // Create DataStoreDataSource adapter
-    resourceManager = new DataStoreDataSource(dataStore);
+    dataSource = new DataStoreDataSource(dataStore);
     
     // Create test entity in DataStore
     const transactionResult = dataStore.createEntities([
@@ -55,8 +55,8 @@ describe('EntityProxy Integration with Real DataStore', () => {
   });
   
   describe('Constructor and BaseHandle Integration', () => {
-    test('should create EntityProxy extending BaseHandle with real ResourceManager', () => {
-      const entityProxy = new EntityProxy(resourceManager, testEntityId, {
+    test('should create EntityProxy extending BaseHandle with real DataSource', () => {
+      const entityProxy = new EntityProxy(dataSource, testEntityId, {
         cacheTTL: 2000
       });
       
@@ -65,7 +65,7 @@ describe('EntityProxy Integration with Real DataStore', () => {
       expect(entityProxy).toBeInstanceOf(EntityProxy);
       
       // Verify properties
-      expect(entityProxy.resourceManager).toBe(resourceManager);
+      expect(entityProxy.dataSource).toBe(dataSource);
       expect(entityProxy.entityId).toBe(testEntityId);
       expect(entityProxy.handleType).toBe('EntityProxy');
       
@@ -80,14 +80,14 @@ describe('EntityProxy Integration with Real DataStore', () => {
     test('should validate constructor parameters with real components', () => {
       expect(() => {
         new EntityProxy(null, testEntityId);
-      }).toThrow('ResourceManager must be a non-null object');
+      }).toThrow('DataSource must be a non-null object');
       
       expect(() => {
-        new EntityProxy(resourceManager, null);
+        new EntityProxy(dataSource, null);
       }).toThrow('Entity ID is required');
       
       expect(() => {
-        new EntityProxy(resourceManager, 'invalid');
+        new EntityProxy(dataSource, 'invalid');
       }).toThrow('Entity ID must be a number');
     });
   });
@@ -96,7 +96,7 @@ describe('EntityProxy Integration with Real DataStore', () => {
     let entityProxy;
     
     beforeEach(() => {
-      entityProxy = new EntityProxy(resourceManager, testEntityId, {
+      entityProxy = new EntityProxy(dataSource, testEntityId, {
         cacheTTL: 1000
       });
     });
@@ -107,7 +107,7 @@ describe('EntityProxy Integration with Real DataStore', () => {
       }
     });
     
-    test('should retrieve complete entity data through ResourceManager', () => {
+    test('should retrieve complete entity data through DataSource', () => {
       const entity = entityProxy.value();
       
       expect(entity).toEqual({
@@ -121,10 +121,10 @@ describe('EntityProxy Integration with Real DataStore', () => {
     });
     
     test('should use BaseHandle caching on subsequent value() calls', () => {
-      // Spy on ResourceManager query method (EntityProxy uses query, not getEntity)
-      const querySpy = jest.spyOn(resourceManager, 'query');
+      // Spy on DataSource query method (EntityProxy uses query, not getEntity)
+      const querySpy = jest.spyOn(dataSource, 'query');
       
-      // First call should fetch from ResourceManager
+      // First call should fetch from DataSource
       const entity1 = entityProxy.value();
       expect(querySpy).toHaveBeenCalledTimes(1);
       
@@ -163,7 +163,7 @@ describe('EntityProxy Integration with Real DataStore', () => {
     let entityProxy;
     
     beforeEach(() => {
-      entityProxy = new EntityProxy(resourceManager, testEntityId);
+      entityProxy = new EntityProxy(dataSource, testEntityId);
     });
     
     afterEach(() => {
@@ -214,8 +214,8 @@ describe('EntityProxy Integration with Real DataStore', () => {
       // Prime the cache
       entityProxy.value();
       
-      // Spy on ResourceManager to track cache invalidation
-      const querySpy = jest.spyOn(resourceManager, 'query');
+      // Spy on DataSource to track cache invalidation
+      const querySpy = jest.spyOn(dataSource, 'query');
       
       // Update should invalidate cache
       entityProxy.update({ ':status': 'cache-test' });
@@ -239,7 +239,7 @@ describe('EntityProxy Integration with Real DataStore', () => {
     let entityProxy;
     
     beforeEach(() => {
-      entityProxy = new EntityProxy(resourceManager, testEntityId);
+      entityProxy = new EntityProxy(dataSource, testEntityId);
       
       // Add additional test data to make queries meaningful
       dataStore.updateEntity(testEntityId, {
@@ -282,7 +282,7 @@ describe('EntityProxy Integration with Real DataStore', () => {
     let entityProxy;
     
     beforeEach(() => {
-      entityProxy = new EntityProxy(resourceManager, testEntityId);
+      entityProxy = new EntityProxy(dataSource, testEntityId);
     });
     
     afterEach(() => {
@@ -297,7 +297,7 @@ describe('EntityProxy Integration with Real DataStore', () => {
     });
     
     test('should return false for non-existent entity', () => {
-      const nonExistentProxy = new EntityProxy(resourceManager, 99999);
+      const nonExistentProxy = new EntityProxy(dataSource, 99999);
       
       const exists = nonExistentProxy.exists();
       expect(exists).toBe(false);
@@ -310,7 +310,7 @@ describe('EntityProxy Integration with Real DataStore', () => {
     let entityProxy;
     
     beforeEach(() => {
-      entityProxy = new EntityProxy(resourceManager, testEntityId);
+      entityProxy = new EntityProxy(dataSource, testEntityId);
     });
     
     afterEach(() => {
@@ -422,7 +422,7 @@ describe('EntityProxy Integration with Real DataStore', () => {
     let entityProxy;
     
     beforeEach(() => {
-      entityProxy = new EntityProxy(resourceManager, testEntityId);
+      entityProxy = new EntityProxy(dataSource, testEntityId);
     });
     
     afterEach(() => {
@@ -445,7 +445,7 @@ describe('EntityProxy Integration with Real DataStore', () => {
       // Try to update with invalid transaction data
       const invalidUpdate = { ':invalid-attribute': null };
       
-      // This should fail at the ResourceManager level
+      // This should fail at the DataSource level
       expect(() => entityProxy.update(invalidUpdate)).toThrow();
     });
     
@@ -463,7 +463,7 @@ describe('EntityProxy Integration with Real DataStore', () => {
     let entityProxy;
     
     beforeEach(() => {
-      entityProxy = new EntityProxy(resourceManager, testEntityId, {
+      entityProxy = new EntityProxy(dataSource, testEntityId, {
         cacheTTL: 5000
       });
     });
@@ -480,7 +480,7 @@ describe('EntityProxy Integration with Real DataStore', () => {
       expect(initialEntity[':name']).toBe('Integration Test User');
       
       // Create second proxy for same entity
-      const entityProxy2 = new EntityProxy(resourceManager, testEntityId);
+      const entityProxy2 = new EntityProxy(dataSource, testEntityId);
       
       // Update through second proxy
       entityProxy2.update({ ':name': 'Updated By Other Proxy' });
@@ -494,15 +494,15 @@ describe('EntityProxy Integration with Real DataStore', () => {
     
     test('should handle cache TTL expiration', async () => {
       // Create proxy with very short TTL
-      const shortTTLProxy = new EntityProxy(resourceManager, testEntityId, {
+      const shortTTLProxy = new EntityProxy(dataSource, testEntityId, {
         cacheTTL: 10 // 10ms
       });
       
       // Prime cache
       shortTTLProxy.value();
       
-      // Spy on ResourceManager
-      const querySpy = jest.spyOn(resourceManager, 'query');
+      // Spy on DataSource
+      const querySpy = jest.spyOn(dataSource, 'query');
       querySpy.mockClear(); // Clear previous calls from value()
       
       // Wait for cache to expire
@@ -519,7 +519,7 @@ describe('EntityProxy Integration with Real DataStore', () => {
   
   describe('Resource Cleanup with Real DataStore', () => {
     test('should clean up all resources on destroy', () => {
-      const entityProxy = new EntityProxy(resourceManager, testEntityId);
+      const entityProxy = new EntityProxy(dataSource, testEntityId);
       
       // Use the proxy to create some cached data and subscriptions
       entityProxy.value();
@@ -536,7 +536,7 @@ describe('EntityProxy Integration with Real DataStore', () => {
     });
     
     test('should be safe to call destroy multiple times', () => {
-      const entityProxy = new EntityProxy(resourceManager, testEntityId);
+      const entityProxy = new EntityProxy(dataSource, testEntityId);
       
       entityProxy.destroy();
       expect(entityProxy.isDestroyed()).toBe(true);
@@ -549,7 +549,7 @@ describe('EntityProxy Integration with Real DataStore', () => {
   
   describe('Non-Existent Entity Handling', () => {
     test('should handle non-existent entity gracefully', () => {
-      const nonExistentProxy = new EntityProxy(resourceManager, 99999);
+      const nonExistentProxy = new EntityProxy(dataSource, 99999);
       
       // value() should throw for non-existent entity
       expect(() => nonExistentProxy.value()).toThrow('Entity not found');

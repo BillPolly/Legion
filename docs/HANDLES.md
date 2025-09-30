@@ -2,17 +2,17 @@
 
 ## Overview
 
-Handles are the universal proxy pattern in Legion that provide a consistent interface for accessing any type of resource - whether local or remote, synchronous or asynchronous, simple or complex. A Handle appears to be a local object with direct property access and methods, but it's actually a facade that properly transacts with the underlying resource through the ResourceManager hierarchy.
+Handles are the universal proxy pattern in Legion that provide a consistent interface for accessing any type of resource - whether local or remote, synchronous or asynchronous, simple or complex. A Handle appears to be a local object with direct property access and methods, but it's actually a facade that properly transacts with the underlying resource through the DataSource hierarchy.
 
 ## Core Principles
 
 ### 1. Handles are Never Created Directly by Client Code
 ```javascript
 // ❌ WRONG - Never do this
-const handle = new Handle(resourceManager);
+const handle = new Handle(dataSource);
 
-// ✅ CORRECT - Handles are created by ResourceManagers or through projection
-const handle = resourceManager.createHandle();
+// ✅ CORRECT - Handles are created by DataSources or through projection
+const handle = dataSource.createHandle();
 const projectedHandle = parentHandle.project(querySpec);
 ```
 
@@ -24,7 +24,7 @@ Each Handle type has a prototype that provides:
 - Direct property access (`gitRepo.branches`, `entity.name`)
 - Convenient methods (`gitRepo.commit()`, `entity.update()`)
 - Introspection capabilities
-- All while routing operations through the proper ResourceManager
+- All while routing operations through the proper DataSource
 
 ## Architecture
 
@@ -42,12 +42,12 @@ Specific Handle Types (with custom prototypes)
   - etc.
 ```
 
-## ResourceManager Interface
+## DataSource Interface
 
-Every Handle requires a ResourceManager that implements these REQUIRED methods:
+Every Handle requires a DataSource that implements these REQUIRED methods:
 
 ```javascript
-const ResourceManagerInterface = {
+const DataSourceInterface = {
   // REQUIRED - Execute query against the resource (MUST be synchronous!)
   query: (querySpec) => Array,
   
@@ -68,7 +68,7 @@ const ResourceManagerInterface = {
 };
 ```
 
-**CRITICAL**: All ResourceManager operations MUST be synchronous - NO await, NO promises! The synchronous dispatcher pattern eliminates race conditions.
+**CRITICAL**: All DataSource operations MUST be synchronous - NO await, NO promises! The synchronous dispatcher pattern eliminates race conditions.
 
 ## Prototype Factory Pattern
 
@@ -77,22 +77,22 @@ The PrototypeFactory creates dynamic prototypes based on resource schemas to pro
 ```javascript
 // Example: Git Repository Handle
 class GitRepoHandle extends Handle {
-  constructor(resourceManager) {
-    super(resourceManager);
+  constructor(dataSource) {
+    super(dataSource);
     
     // Enable prototype factory with schema
-    const schema = resourceManager.getSchema();
+    const schema = dataSource.getSchema();
     this._enablePrototypeFactory(schema, 'git-schema');
   }
 }
 
-// Usage appears local but goes through ResourceManager
-const repo = gitResourceManager.createRepoHandle();
+// Usage appears local but goes through DataSource
+const repo = gitDataSource.createRepoHandle();
 console.log(repo.branches);        // Appears like direct property access
 await repo.commit('message');      // Appears like direct method call
 repo.currentBranch = 'develop';    // Appears like direct property setting
 
-// But actually all operations go through ResourceManager hierarchy
+// But actually all operations go through DataSource hierarchy
 ```
 
 ## Handle Projection Pattern
@@ -103,25 +103,25 @@ Handles can create projected handles (sub-handles) that provide specialized view
 class DataStoreProxy extends Handle {
   // Parent handle creates projected child handles
   entity(entityId) {
-    // Create specialized ResourceManager for entity operations
-    const entityResourceManager = new EntityResourceManager(
-      this.resourceManager, 
+    // Create specialized DataSource for entity operations
+    const entityDataSource = new EntityDataSource(
+      this.dataSource, 
       entityId
     );
     
     // Return projected handle with entity-specific prototype
-    return new EntityProxy(entityResourceManager);
+    return new EntityProxy(entityDataSource);
   }
   
   stream(querySpec) {
-    // Create specialized ResourceManager for streaming
-    const streamResourceManager = new StreamResourceManager(
-      this.resourceManager,
+    // Create specialized DataSource for streaming
+    const streamDataSource = new StreamDataSource(
+      this.dataSource,
       querySpec
     );
     
     // Return projected handle with stream-specific prototype
-    return new StreamProxy(streamResourceManager);
+    return new StreamProxy(streamDataSource);
   }
 }
 ```
@@ -130,13 +130,13 @@ class DataStoreProxy extends Handle {
 
 ```javascript
 class EntityProxy extends Handle {
-  constructor(resourceManager, entityId) {
-    super(resourceManager);
+  constructor(dataSource, entityId) {
+    super(dataSource);
     
     this.entityId = entityId;
     
     // Get schema for this entity type
-    const schema = resourceManager.getSchema();
+    const schema = dataSource.getSchema();
     
     // Enable prototype factory to add entity-specific properties
     this._enablePrototypeFactory(schema, 'datastore-entity');
@@ -147,8 +147,8 @@ class EntityProxy extends Handle {
   }
   
   // The prototype factory automatically adds getters/setters that:
-  // - Get: calls this.resourceManager.query() 
-  // - Set: calls this.resourceManager.update()
+  // - Get: calls this.dataSource.query() 
+  // - Set: calls this.dataSource.update()
 }
 
 // Usage
@@ -160,10 +160,10 @@ await user.save();                 // Explicit save if needed
 
 ## Handle Lifecycle
 
-1. **Creation**: ResourceManager or parent Handle creates the Handle
+1. **Creation**: DataSource or parent Handle creates the Handle
 2. **Prototype Application**: PrototypeFactory applies schema-based prototype
 3. **Usage**: Client code uses Handle like a local object
-4. **Operations**: All operations route through ResourceManager hierarchy
+4. **Operations**: All operations route through DataSource hierarchy
 5. **Cleanup**: Handle.destroy() cleans up subscriptions and resources
 
 ## Key Handle Methods
@@ -192,14 +192,14 @@ class Handle extends Actor {
     };
   }
   
-  // Query through ResourceManager
+  // Query through DataSource
   query(querySpec) {
-    return this.resourceManager.query(querySpec);
+    return this.dataSource.query(querySpec);
   }
   
   // Subscribe to changes
   subscribe(querySpec, callback) {
-    return this.resourceManager.subscribe(querySpec, callback);
+    return this.dataSource.subscribe(querySpec, callback);
   }
   
   // Clean up resources
@@ -216,7 +216,7 @@ class Handle extends Actor {
 ```javascript
 class FileHandle extends Handle {
   constructor(path, fileSystem) {
-    const fileResourceManager = {
+    const fileDataSource = {
       path: path,
       fileSystem: fileSystem,
       
@@ -244,7 +244,7 @@ class FileHandle extends Handle {
       })
     };
     
-    super(fileResourceManager);
+    super(fileDataSource);
   }
 }
 ```
@@ -254,35 +254,35 @@ class FileHandle extends Handle {
 class CollectionProxy extends Handle {
   filter(predicate) {
     // Create projected handle with filtered view
-    const filteredResourceManager = {
-      ...this.resourceManager,
+    const filteredDataSource = {
+      ...this.dataSource,
       query: (querySpec) => {
-        const results = this.resourceManager.query(querySpec);
+        const results = this.dataSource.query(querySpec);
         return results.filter(predicate);
       }
     };
     
-    return new CollectionProxy(filteredResourceManager);
+    return new CollectionProxy(filteredDataSource);
   }
 }
 ```
 
 ## Best Practices
 
-1. **Always validate ResourceManager interface** in Handle constructor
-2. **Use synchronous operations** in ResourceManager for consistency
+1. **Always validate DataSource interface** in Handle constructor
+2. **Use synchronous operations** in DataSource for consistency
 3. **Enable PrototypeFactory** for rich object interface when schema is available
 4. **Cache prototypes** to avoid recreating them
 5. **Clean up subscriptions** in destroy() method
 6. **Use projection** for creating specialized child handles
-7. **Never expose ResourceManager directly** to client code
+7. **Never expose DataSource directly** to client code
 
 ## Testing Handles
 
-When testing Handles, create mock ResourceManagers with the required interface:
+When testing Handles, create mock DataSources with the required interface:
 
 ```javascript
-function createMockResourceManager(data) {
+function createMockDataSource(data) {
   return {
     query: (querySpec) => [data],
     subscribe: (querySpec, callback) => ({
@@ -297,7 +297,7 @@ function createMockResourceManager(data) {
 }
 
 // Test
-const mockRM = createMockResourceManager({ foo: 'bar' });
+const mockRM = createMockDataSource({ foo: 'bar' });
 const handle = new TestHandle(mockRM);
 expect(handle.query({})).toEqual([{ foo: 'bar' }]);
 ```
@@ -403,9 +403,9 @@ context
   .update({ $inc: { loginCount: 1 } });
 ```
 
-### Implementation in ContextResourceManager
+### Implementation in ContextDataSource
 
-The ContextResourceManager wraps ExecutionContext to enable this delegation:
+The ContextDataSource wraps ExecutionContext to enable this delegation:
 
 ```javascript
 _queryResource(resourceName, resourceQuery) {
@@ -475,6 +475,6 @@ When migrating from old handle patterns:
 
 1. Replace `@legion/data-handle` with `@legion/handle`
 2. Remove any direct `this.handleType = 'TypeName'` assignments (it's now a getter)
-3. Ensure ResourceManager implements required methods
+3. Ensure DataSource implements required methods
 4. Use projection pattern instead of direct instantiation for child handles
 5. Enable PrototypeFactory for schema-based properties

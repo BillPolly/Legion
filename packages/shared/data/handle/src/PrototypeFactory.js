@@ -2,7 +2,7 @@
  * PrototypeFactory - Universal prototype manufacturing for introspection capabilities
  * 
  * Creates cached prototype objects based on resource schemas to provide universal knowledge layer.
- * Unlike the DataScript-specific version, this factory works with any Handle type and ResourceManager.
+ * Unlike the DataScript-specific version, this factory works with any Handle type and DataSource.
  * 
  * The factory analyzes schemas to detect entity types and relationships, then manufactures 
  * dynamic prototypes that extend Handle subclasses with schema-based properties and methods.
@@ -551,7 +551,7 @@ export class PrototypeFactory {
    * @private
    */
   _detectSchemaFormat(schema) {
-    // Check if schema has explicit type field (custom format from DataStoreResourceManager)
+    // Check if schema has explicit type field (custom format from DataStoreDataSource)
     if (schema.type === 'datascript' && schema.attributes) {
       // This is actually our custom format, not real DataScript
       return 'custom';

@@ -187,13 +187,13 @@ describe('Error Handling and Recovery', () => {
   
   describe('StreamProxy Error Handling', () => {
     test('should handle invalid query specifications gracefully', () => {
-      const resourceManager = new DataStoreDataSource(mockStore);
-      expect(() => new StreamProxy(resourceManager, null)).toThrow('Query specification is required');
-      expect(() => new StreamProxy(resourceManager, 'not-object')).toThrow('Query specification must be an object');
-      expect(() => new StreamProxy(resourceManager, {})).toThrow('Query specification must have find clause');
-      expect(() => new StreamProxy(resourceManager, { find: [] })).toThrow('Query specification must have find clause');
-      expect(() => new StreamProxy(resourceManager, { find: ['?e'] })).toThrow('Query specification must have where clause');
-      expect(() => new StreamProxy(resourceManager, { find: ['?e'], where: 'not-array' })).toThrow('Where clause must be an array');
+      const dataSource = new DataStoreDataSource(mockStore);
+      expect(() => new StreamProxy(dataSource, null)).toThrow('Query specification is required');
+      expect(() => new StreamProxy(dataSource, 'not-object')).toThrow('Query specification must be an object');
+      expect(() => new StreamProxy(dataSource, {})).toThrow('Query specification must have find clause');
+      expect(() => new StreamProxy(dataSource, { find: [] })).toThrow('Query specification must have find clause');
+      expect(() => new StreamProxy(dataSource, { find: ['?e'] })).toThrow('Query specification must have where clause');
+      expect(() => new StreamProxy(dataSource, { find: ['?e'], where: 'not-array' })).toThrow('Where clause must be an array');
     });
     
     test('should handle store errors during streaming gracefully', () => {
@@ -210,8 +210,8 @@ describe('Error Handling and Recovery', () => {
         subscribe: mockStore.subscribe
       };
       
-      const errorResourceManager = new DataStoreDataSource(errorStore);
-      const streamProxy = new StreamProxy(errorResourceManager, querySpec);
+      const errorDataSource = new DataStoreDataSource(errorStore);
+      const streamProxy = new StreamProxy(errorDataSource, querySpec);
       
       // Should handle errors gracefully during value access
       expect(() => streamProxy.value()).toThrow('Stream query failed');
@@ -230,8 +230,8 @@ describe('Error Handling and Recovery', () => {
         subscribe: null // No subscription support
       };
       
-      const noSubResourceManager = new DataStoreDataSource(noSubStore);
-      const streamProxy = new StreamProxy(noSubResourceManager, querySpec);
+      const noSubDataSource = new DataStoreDataSource(noSubStore);
+      const streamProxy = new StreamProxy(noSubDataSource, querySpec);
       
       try {
         // Should still work for value access
@@ -239,7 +239,7 @@ describe('Error Handling and Recovery', () => {
         expect(Array.isArray(results)).toBe(true);
         
         // Subscription attempt when store.subscribe is null will fail
-        // StreamProxy checks if resourceManager has subscribe method
+        // StreamProxy checks if dataSource has subscribe method
         const callback = jest.fn();
         try {
           streamProxy.subscribe(querySpec, callback);
@@ -258,15 +258,15 @@ describe('Error Handling and Recovery', () => {
   
   describe('CollectionProxy Error Handling', () => {
     test('should handle invalid collection specifications gracefully', () => {
-      const resourceManager = new DataStoreDataSource(mockStore);
-      expect(() => new CollectionProxy(resourceManager, null)).toThrow('Collection specification is required');
-      expect(() => new CollectionProxy(resourceManager, 'not-object')).toThrow('Collection specification must be an object');
-      expect(() => new CollectionProxy(resourceManager, {})).toThrow('Collection specification must have find clause');
-      expect(() => new CollectionProxy(resourceManager, { find: [] })).toThrow('Collection specification must have find clause');
-      expect(() => new CollectionProxy(resourceManager, { find: ['?e'] })).toThrow('Collection specification must have where clause');
-      expect(() => new CollectionProxy(resourceManager, { find: ['?e'], where: 'not-array' })).toThrow('Where clause must be an array');
+      const dataSource = new DataStoreDataSource(mockStore);
+      expect(() => new CollectionProxy(dataSource, null)).toThrow('Collection specification is required');
+      expect(() => new CollectionProxy(dataSource, 'not-object')).toThrow('Collection specification must be an object');
+      expect(() => new CollectionProxy(dataSource, {})).toThrow('Collection specification must have find clause');
+      expect(() => new CollectionProxy(dataSource, { find: [] })).toThrow('Collection specification must have find clause');
+      expect(() => new CollectionProxy(dataSource, { find: ['?e'] })).toThrow('Collection specification must have where clause');
+      expect(() => new CollectionProxy(dataSource, { find: ['?e'], where: 'not-array' })).toThrow('Where clause must be an array');
       // entityKey is now auto-detected from where clause, so these should work
-      const spec1 = new CollectionProxy(resourceManager, { find: ['?e'], where: [['?e', ':attr', 'value']] });
+      const spec1 = new CollectionProxy(dataSource, { find: ['?e'], where: [['?e', ':attr', 'value']] });
       expect(spec1).toBeDefined();
     });
     
@@ -300,7 +300,7 @@ describe('Error Handling and Recovery', () => {
       // Invalid update operations
       expect(() => collection.updateAll(null)).toThrow('Update data must be an object');
       expect(() => collection.updateAll({})).not.toThrow(); // Empty object is allowed
-      // Validation happens at the ResourceManager level, not in CollectionProxy
+      // Validation happens at the DataSource level, not in CollectionProxy
       const result = collection.updateAll({ 'no-colon': 'value' });
       expect(result.success).toBe(false); // Should fail but not throw
       

@@ -17,7 +17,7 @@ import { EntityProxy } from '../../src/EntityProxy.js';
 
 describe('DataStoreQueryBuilder Integration Tests', () => {
   let dataStore;
-  let resourceManager;
+  let dataSource;
   let queryBuilder;
 
   beforeEach(() => {
@@ -89,7 +89,7 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
     dataStore.addEntity({ ':entity/type': 'project', name: 'Project Gamma', ownerId: 1, status: 'active', priority: 'low' });
     dataStore.addEntity({ ':entity/type': 'project', name: 'Project Delta', ownerId: 3, status: 'planning', priority: 'high' });
 
-    // Create ResourceManager with DataStore
+    // Create DataSource with DataStore
     const schema = {
       ':user/name': { ':db/valueType': ':db.type/string' },
       ':user/age': { ':db/valueType': ':db.type/long' },
@@ -101,17 +101,17 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
       ':project/priority': { ':db/valueType': ':db.type/string' }
     };
     
-    resourceManager = new DataStoreDataSource(dataStore, schema);
+    dataSource = new DataStoreDataSource(dataStore, schema);
   });
 
   describe('Query Builder Creation', () => {
     it('should create query builder from CollectionProxy', () => {
-      const collection = new CollectionProxy(resourceManager, {
+      const collection = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
 
-      queryBuilder = resourceManager.queryBuilder(collection);
+      queryBuilder = dataSource.queryBuilder(collection);
 
       expect(queryBuilder).toBeInstanceOf(DataStoreQueryBuilder);
       expect(queryBuilder.sourceType.type).toBe('collection');
@@ -119,21 +119,21 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
     });
 
     it('should create query builder from StreamProxy', () => {
-      const stream = new StreamProxy(resourceManager, {
+      const stream = new StreamProxy(dataSource, {
         find: ['?e', '?attr', '?value'],
         where: [['?e', ':entity/type', 'event']]
       });
 
-      queryBuilder = resourceManager.queryBuilder(stream);
+      queryBuilder = dataSource.queryBuilder(stream);
 
       expect(queryBuilder).toBeInstanceOf(DataStoreQueryBuilder);
       expect(queryBuilder.sourceType.type).toBe('stream');
     });
 
     it('should create query builder from EntityProxy', () => {
-      const entity = new EntityProxy(resourceManager, 1);
+      const entity = new EntityProxy(dataSource, 1);
 
-      queryBuilder = resourceManager.queryBuilder(entity);
+      queryBuilder = dataSource.queryBuilder(entity);
 
       expect(queryBuilder).toBeInstanceOf(DataStoreQueryBuilder);
       expect(queryBuilder.sourceType.type).toBe('entity');
@@ -142,18 +142,18 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
 
   describe('Where Operations', () => {
     it('should filter entities with where predicate', () => {
-      const collection = new CollectionProxy(resourceManager, {
+      const collection = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
 
-      queryBuilder = resourceManager.queryBuilder(collection);
+      queryBuilder = dataSource.queryBuilder(collection);
       const results = queryBuilder
         .where(user => user.active === true)
         .toArray();
 
       // Manual filtering since our mock doesn't apply predicates
-      const allUsers = resourceManager.query(collection.collectionSpec);
+      const allUsers = dataSource.query(collection.collectionSpec);
       const activeUsers = allUsers.filter(([entityId]) => {
         const entity = dataStore.db.get(entityId);
         return entity && entity.active === true;
@@ -163,12 +163,12 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
     });
 
     it('should support multiple where filters', () => {
-      const collection = new CollectionProxy(resourceManager, {
+      const collection = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
 
-      queryBuilder = resourceManager.queryBuilder(collection);
+      queryBuilder = dataSource.queryBuilder(collection);
       
       // Chain multiple where operations
       const chainedBuilder = queryBuilder
@@ -185,12 +185,12 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
 
   describe('Select Operations', () => {
     it('should transform entities with select mapper', () => {
-      const collection = new CollectionProxy(resourceManager, {
+      const collection = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
 
-      queryBuilder = resourceManager.queryBuilder(collection);
+      queryBuilder = dataSource.queryBuilder(collection);
       const chainedBuilder = queryBuilder
         .select(user => ({ name: user.name, age: user.age }));
 
@@ -199,12 +199,12 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
     });
 
     it('should support chaining select after where', () => {
-      const collection = new CollectionProxy(resourceManager, {
+      const collection = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
 
-      queryBuilder = resourceManager.queryBuilder(collection);
+      queryBuilder = dataSource.queryBuilder(collection);
       const chainedBuilder = queryBuilder
         .where(user => user.active === true)
         .select(user => user.name);
@@ -217,12 +217,12 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
 
   describe('OrderBy Operations', () => {
     it('should add orderBy operation to chain', () => {
-      const collection = new CollectionProxy(resourceManager, {
+      const collection = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
 
-      queryBuilder = resourceManager.queryBuilder(collection);
+      queryBuilder = dataSource.queryBuilder(collection);
       const chainedBuilder = queryBuilder.orderBy('age', 'desc');
 
       expect(chainedBuilder.operations).toHaveLength(1);
@@ -233,12 +233,12 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
     });
 
     it('should support function-based ordering', () => {
-      const collection = new CollectionProxy(resourceManager, {
+      const collection = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
 
-      queryBuilder = resourceManager.queryBuilder(collection);
+      queryBuilder = dataSource.queryBuilder(collection);
       const orderFn = user => user.department + user.name;
       const chainedBuilder = queryBuilder.orderBy(orderFn, 'asc');
 
@@ -250,12 +250,12 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
 
   describe('Limit and Skip Operations', () => {
     it('should add limit operation to chain', () => {
-      const collection = new CollectionProxy(resourceManager, {
+      const collection = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
 
-      queryBuilder = resourceManager.queryBuilder(collection);
+      queryBuilder = dataSource.queryBuilder(collection);
       const chainedBuilder = queryBuilder.limit(3);
 
       expect(chainedBuilder.operations).toHaveLength(1);
@@ -266,12 +266,12 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
     });
 
     it('should add skip operation to chain', () => {
-      const collection = new CollectionProxy(resourceManager, {
+      const collection = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
 
-      queryBuilder = resourceManager.queryBuilder(collection);
+      queryBuilder = dataSource.queryBuilder(collection);
       const chainedBuilder = queryBuilder.skip(2);
 
       expect(chainedBuilder.operations).toHaveLength(1);
@@ -282,12 +282,12 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
     });
 
     it('should support pagination with skip and limit', () => {
-      const collection = new CollectionProxy(resourceManager, {
+      const collection = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
 
-      queryBuilder = resourceManager.queryBuilder(collection);
+      queryBuilder = dataSource.queryBuilder(collection);
       const chainedBuilder = queryBuilder.skip(10).limit(5);
 
       expect(chainedBuilder.operations).toHaveLength(2);
@@ -298,12 +298,12 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
 
   describe('GroupBy Operations', () => {
     it('should add groupBy operation to chain', () => {
-      const collection = new CollectionProxy(resourceManager, {
+      const collection = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
 
-      queryBuilder = resourceManager.queryBuilder(collection);
+      queryBuilder = dataSource.queryBuilder(collection);
       const chainedBuilder = queryBuilder.groupBy('department');
 
       expect(chainedBuilder.operations).toHaveLength(1);
@@ -314,12 +314,12 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
     });
 
     it('should support function-based grouping', () => {
-      const collection = new CollectionProxy(resourceManager, {
+      const collection = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
 
-      queryBuilder = resourceManager.queryBuilder(collection);
+      queryBuilder = dataSource.queryBuilder(collection);
       const groupFn = user => Math.floor(user.age / 10) * 10; // Group by age decade
       const chainedBuilder = queryBuilder.groupBy(groupFn);
 
@@ -331,12 +331,12 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
 
   describe('Aggregate Operations', () => {
     it('should add aggregate operation to chain', () => {
-      const collection = new CollectionProxy(resourceManager, {
+      const collection = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
 
-      queryBuilder = resourceManager.queryBuilder(collection);
+      queryBuilder = dataSource.queryBuilder(collection);
       const chainedBuilder = queryBuilder.aggregate('avg', 'age');
 
       expect(chainedBuilder.operations).toHaveLength(1);
@@ -347,24 +347,24 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
     });
 
     it('should support count aggregation', () => {
-      const collection = new CollectionProxy(resourceManager, {
+      const collection = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
 
-      queryBuilder = resourceManager.queryBuilder(collection);
+      queryBuilder = dataSource.queryBuilder(collection);
       const count = queryBuilder.count();
 
       expect(count).toBe(5); // 5 users in test data
     });
 
     it('should support custom aggregate functions', () => {
-      const collection = new CollectionProxy(resourceManager, {
+      const collection = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
 
-      queryBuilder = resourceManager.queryBuilder(collection);
+      queryBuilder = dataSource.queryBuilder(collection);
       const customAgg = (items, field) => {
         // Custom median calculation
         const values = items.map(item => item[field]).sort((a, b) => a - b);
@@ -380,17 +380,17 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
 
   describe('Join Operations', () => {
     it('should add join operation to chain', () => {
-      const users = new CollectionProxy(resourceManager, {
+      const users = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
       
-      const projects = new CollectionProxy(resourceManager, {
+      const projects = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'project']]
       });
 
-      queryBuilder = resourceManager.queryBuilder(users);
+      queryBuilder = dataSource.queryBuilder(users);
       const chainedBuilder = queryBuilder.join(projects, 'userId');
 
       expect(chainedBuilder.operations).toHaveLength(1);
@@ -400,17 +400,17 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
     });
 
     it('should support function-based join conditions', () => {
-      const users = new CollectionProxy(resourceManager, {
+      const users = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
       
-      const projects = new CollectionProxy(resourceManager, {
+      const projects = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'project']]
       });
 
-      queryBuilder = resourceManager.queryBuilder(users);
+      queryBuilder = dataSource.queryBuilder(users);
       const joinCondition = (user, project) => user.id === project.ownerId;
       const chainedBuilder = queryBuilder.join(projects, joinCondition);
 
@@ -422,12 +422,12 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
   describe('Terminal Methods', () => {
     describe('first()', () => {
       it('should return first entity as EntityProxy', () => {
-        const collection = new CollectionProxy(resourceManager, {
+        const collection = new CollectionProxy(dataSource, {
           find: ['?e'],
           where: [['?e', ':entity/type', 'user']]
         });
 
-        queryBuilder = resourceManager.queryBuilder(collection);
+        queryBuilder = dataSource.queryBuilder(collection);
         const first = queryBuilder.first();
 
         // Should return an EntityProxy for the first user
@@ -436,12 +436,12 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
       });
 
       it('should return null for empty results', () => {
-        const collection = new CollectionProxy(resourceManager, {
+        const collection = new CollectionProxy(dataSource, {
           find: ['?e'],
           where: [['?e', ':entity/type', 'nonexistent']]
         });
 
-        queryBuilder = resourceManager.queryBuilder(collection);
+        queryBuilder = dataSource.queryBuilder(collection);
         const first = queryBuilder.first();
 
         expect(first).toBeNull();
@@ -450,12 +450,12 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
 
     describe('last()', () => {
       it('should return last entity as EntityProxy', () => {
-        const collection = new CollectionProxy(resourceManager, {
+        const collection = new CollectionProxy(dataSource, {
           find: ['?e'],
           where: [['?e', ':entity/type', 'user']]
         });
 
-        queryBuilder = resourceManager.queryBuilder(collection);
+        queryBuilder = dataSource.queryBuilder(collection);
         const last = queryBuilder.last();
 
         // Should return an EntityProxy for the last user
@@ -464,12 +464,12 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
       });
 
       it('should return null for empty results', () => {
-        const collection = new CollectionProxy(resourceManager, {
+        const collection = new CollectionProxy(dataSource, {
           find: ['?e'],
           where: [['?e', ':entity/type', 'nonexistent']]
         });
 
-        queryBuilder = resourceManager.queryBuilder(collection);
+        queryBuilder = dataSource.queryBuilder(collection);
         const last = queryBuilder.last();
 
         expect(last).toBeNull();
@@ -478,30 +478,30 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
 
     describe('count()', () => {
       it('should count all entities in collection', () => {
-        const collection = new CollectionProxy(resourceManager, {
+        const collection = new CollectionProxy(dataSource, {
           find: ['?e'],
           where: [['?e', ':entity/type', 'user']]
         });
 
-        queryBuilder = resourceManager.queryBuilder(collection);
+        queryBuilder = dataSource.queryBuilder(collection);
         const count = queryBuilder.count();
 
         expect(count).toBe(5);
       });
 
       it('should count after filtering', () => {
-        const collection = new CollectionProxy(resourceManager, {
+        const collection = new CollectionProxy(dataSource, {
           find: ['?e'],
           where: [['?e', ':entity/type', 'user']]
         });
 
-        queryBuilder = resourceManager.queryBuilder(collection);
+        queryBuilder = dataSource.queryBuilder(collection);
         
         // Mock the filtering behavior
         const activeBuilder = queryBuilder.where(user => user.active === true);
         
         // Since our mock doesn't actually filter, we manually count
-        const allUsers = resourceManager.query(collection.collectionSpec);
+        const allUsers = dataSource.query(collection.collectionSpec);
         const activeCount = allUsers.filter(([entityId]) => {
           const entity = dataStore.db.get(entityId);
           return entity && entity.active === true;
@@ -511,12 +511,12 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
       });
 
       it('should return 0 for empty results', () => {
-        const collection = new CollectionProxy(resourceManager, {
+        const collection = new CollectionProxy(dataSource, {
           find: ['?e'],
           where: [['?e', ':entity/type', 'nonexistent']]
         });
 
-        queryBuilder = resourceManager.queryBuilder(collection);
+        queryBuilder = dataSource.queryBuilder(collection);
         const count = queryBuilder.count();
 
         expect(count).toBe(0);
@@ -525,12 +525,12 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
 
     describe('toArray()', () => {
       it('should return all entities as array', () => {
-        const collection = new CollectionProxy(resourceManager, {
+        const collection = new CollectionProxy(dataSource, {
           find: ['?e'],
           where: [['?e', ':entity/type', 'user']]
         });
 
-        queryBuilder = resourceManager.queryBuilder(collection);
+        queryBuilder = dataSource.queryBuilder(collection);
         const results = queryBuilder.toArray();
 
         expect(Array.isArray(results)).toBe(true);
@@ -538,12 +538,12 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
       });
 
       it('should return empty array for no results', () => {
-        const collection = new CollectionProxy(resourceManager, {
+        const collection = new CollectionProxy(dataSource, {
           find: ['?e'],
           where: [['?e', ':entity/type', 'nonexistent']]
         });
 
-        queryBuilder = resourceManager.queryBuilder(collection);
+        queryBuilder = dataSource.queryBuilder(collection);
         const results = queryBuilder.toArray();
 
         expect(results).toEqual([]);
@@ -553,12 +553,12 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
 
   describe('Complex Query Chains', () => {
     it('should handle complex query with multiple operations', () => {
-      const collection = new CollectionProxy(resourceManager, {
+      const collection = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
 
-      queryBuilder = resourceManager.queryBuilder(collection);
+      queryBuilder = dataSource.queryBuilder(collection);
       const complexBuilder = queryBuilder
         .where(user => user.active === true)
         .where(user => user.age >= 25)
@@ -573,12 +573,12 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
     });
 
     it('should maintain immutability - each operation creates new builder', () => {
-      const collection = new CollectionProxy(resourceManager, {
+      const collection = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
 
-      const builder1 = resourceManager.queryBuilder(collection);
+      const builder1 = dataSource.queryBuilder(collection);
       const builder2 = builder1.where(user => user.active);
       const builder3 = builder2.orderBy('name');
       const builder4 = builder3.limit(10);
@@ -596,12 +596,12 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
 
   describe('Source Type Analysis', () => {
     it('should correctly analyze CollectionProxy source', () => {
-      const collection = new CollectionProxy(resourceManager, {
+      const collection = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':entity/type', 'user']]
       });
 
-      queryBuilder = new DataStoreQueryBuilder(resourceManager, collection);
+      queryBuilder = new DataStoreQueryBuilder(dataSource, collection);
 
       expect(queryBuilder.sourceType).toEqual({
         type: 'collection',
@@ -614,12 +614,12 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
     });
 
     it('should correctly analyze StreamProxy source', () => {
-      const stream = new StreamProxy(resourceManager, {
+      const stream = new StreamProxy(dataSource, {
         find: ['?e', '?attr', '?value'],
         where: [['?e', ':entity/type', 'event']]
       });
 
-      queryBuilder = new DataStoreQueryBuilder(resourceManager, stream);
+      queryBuilder = new DataStoreQueryBuilder(dataSource, stream);
 
       expect(queryBuilder.sourceType).toEqual({
         type: 'stream',
@@ -632,9 +632,9 @@ describe('DataStoreQueryBuilder Integration Tests', () => {
     });
 
     it('should correctly analyze EntityProxy source', () => {
-      const entity = new EntityProxy(resourceManager, 1);
+      const entity = new EntityProxy(dataSource, 1);
 
-      queryBuilder = new DataStoreQueryBuilder(resourceManager, entity);
+      queryBuilder = new DataStoreQueryBuilder(dataSource, entity);
 
       expect(queryBuilder.sourceType).toEqual({
         type: 'entity',

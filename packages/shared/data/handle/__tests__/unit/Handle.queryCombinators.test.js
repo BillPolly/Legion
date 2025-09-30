@@ -49,7 +49,7 @@ describe('Handle Query Combinator Methods', () => {
       }
     });
 
-    // Create mock DataSource (correct terminology, not ResourceManager!)
+    // Create mock DataSource (correct terminology, not DataSource!)
     mockDataSource = {
       query: jest.fn().mockReturnValue([]),
       subscribe: jest.fn().mockReturnValue({ 

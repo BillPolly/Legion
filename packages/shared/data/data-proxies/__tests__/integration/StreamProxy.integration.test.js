@@ -10,14 +10,14 @@ import { StreamProxy } from '../../src/StreamProxy.js';
 
 describe('StreamProxy Integration Tests', () => {
   let dataStore;
-  let resourceManager;
+  let dataSource;
 
   beforeEach(async () => {
     // Create new DataStore instance for each test
     dataStore = new DataStore();
     
-    // Create ResourceManager adapter
-    resourceManager = new DataStoreDataSource(dataStore);
+    // Create DataSource adapter
+    dataSource = new DataStoreDataSource(dataStore);
   });
 
   afterEach(() => {
@@ -26,7 +26,7 @@ describe('StreamProxy Integration Tests', () => {
       // DataStore doesn't have a destroy method, so we just clear the reference
       dataStore = null;
     }
-    resourceManager = null;
+    dataSource = null;
   });
 
   describe('Basic StreamProxy Operations with Real DataStore', () => {
@@ -44,7 +44,7 @@ describe('StreamProxy Integration Tests', () => {
         ['+', 3, ':status', 'active'],
       ];
       
-      const transactionResult = await resourceManager.transact(transactionData);
+      const transactionResult = await dataSource.transact(transactionData);
       expect(transactionResult.success).toBe(true);
       
       // Create stream query specification
@@ -54,7 +54,7 @@ describe('StreamProxy Integration Tests', () => {
       };
       
       // Create StreamProxy
-      const streamProxy = new StreamProxy(resourceManager, streamQuerySpec);
+      const streamProxy = new StreamProxy(dataSource, streamQuerySpec);
       
       // Test stream value() method
       const results = streamProxy.value();
@@ -73,7 +73,7 @@ describe('StreamProxy Integration Tests', () => {
         where: [['?e', ':type', 'nonexistent-type']]
       };
       
-      const streamProxy = new StreamProxy(resourceManager, streamQuerySpec);
+      const streamProxy = new StreamProxy(dataSource, streamQuerySpec);
       
       // Test empty stream
       const results = streamProxy.value();
@@ -95,7 +95,7 @@ describe('StreamProxy Integration Tests', () => {
         ['+', 3, ':priority', 'medium'],
       ];
       
-      await resourceManager.transact(transactionData);
+      await dataSource.transact(transactionData);
       
       // Create stream for all documents
       const streamQuerySpec = {
@@ -103,7 +103,7 @@ describe('StreamProxy Integration Tests', () => {
         where: [['?e', ':type', 'document']]
       };
       
-      const streamProxy = new StreamProxy(resourceManager, streamQuerySpec);
+      const streamProxy = new StreamProxy(dataSource, streamQuerySpec);
       
       // Test additional query for tech documents only
       const techQuerySpec = {
@@ -146,7 +146,7 @@ describe('StreamProxy Integration Tests', () => {
         ['+', 4, ':completed', true],
       ];
       
-      await resourceManager.transact(transactionData);
+      await dataSource.transact(transactionData);
     });
 
     it('should support filter operations on stream results', async () => {
@@ -155,7 +155,7 @@ describe('StreamProxy Integration Tests', () => {
         where: [['?e', ':type', 'task']]
       };
       
-      const streamProxy = new StreamProxy(resourceManager, streamQuerySpec);
+      const streamProxy = new StreamProxy(dataSource, streamQuerySpec);
       
       // Test filter for high priority items
       // Note: We need to simulate a filter predicate since we can't easily get entity attributes in the filter
@@ -183,7 +183,7 @@ describe('StreamProxy Integration Tests', () => {
         where: [['?e', ':type', 'task']]
       };
       
-      const streamProxy = new StreamProxy(resourceManager, streamQuerySpec);
+      const streamProxy = new StreamProxy(dataSource, streamQuerySpec);
       
       // First filter: entities 1, 2, 3
       const firstFilter = (entityResult) => {
@@ -218,7 +218,7 @@ describe('StreamProxy Integration Tests', () => {
         where: [['?e', ':type', 'monitored-item']]
       };
       
-      const streamProxy = new StreamProxy(resourceManager, streamQuerySpec);
+      const streamProxy = new StreamProxy(dataSource, streamQuerySpec);
       
       // Create subscription with callback only (monitors current stream)
       const callbacks = [];
@@ -261,7 +261,7 @@ describe('StreamProxy Integration Tests', () => {
         where: [['?e', ':type', 'notification']]
       };
       
-      const streamProxy = new StreamProxy(resourceManager, streamQuerySpec);
+      const streamProxy = new StreamProxy(dataSource, streamQuerySpec);
       
       // Create filtered stream
       const importantFilter = (entityResult) => {
@@ -320,7 +320,7 @@ describe('StreamProxy Integration Tests', () => {
         ['+', 6, ':status', 'inactive'],
       ];
       
-      await resourceManager.transact(transactionData);
+      await dataSource.transact(transactionData);
     });
 
     it('should handle complex multi-variable query streams', async () => {
@@ -334,7 +334,7 @@ describe('StreamProxy Integration Tests', () => {
         ]
       };
       
-      const streamProxy = new StreamProxy(resourceManager, complexQuerySpec);
+      const streamProxy = new StreamProxy(dataSource, complexQuerySpec);
       
       const results = streamProxy.value();
       expect(Array.isArray(results)).toBe(true);
@@ -360,7 +360,7 @@ describe('StreamProxy Integration Tests', () => {
         ]
       };
       
-      const streamProxy = new StreamProxy(resourceManager, multiConstraintSpec);
+      const streamProxy = new StreamProxy(dataSource, multiConstraintSpec);
       
       const results = streamProxy.value();
       expect(Array.isArray(results)).toBe(true);
@@ -381,7 +381,7 @@ describe('StreamProxy Integration Tests', () => {
         ]
       };
       
-      const streamProxy = new StreamProxy(resourceManager, malformedQuerySpec);
+      const streamProxy = new StreamProxy(dataSource, malformedQuerySpec);
       
       // The query should either work (returning empty results) or throw an error we can catch
       try {
@@ -394,7 +394,7 @@ describe('StreamProxy Integration Tests', () => {
       }
     });
 
-    it('should handle ResourceManager query errors', async () => {
+    it('should handle DataSource query errors', async () => {
       // Create a problematic query specification
       const problematicSpec = {
         find: ['?e'],
@@ -404,7 +404,7 @@ describe('StreamProxy Integration Tests', () => {
         ]
       };
       
-      const streamProxy = new StreamProxy(resourceManager, problematicSpec);
+      const streamProxy = new StreamProxy(dataSource, problematicSpec);
       
       try {
         const results = streamProxy.value();
@@ -424,7 +424,7 @@ describe('StreamProxy Integration Tests', () => {
         where: [['?e', ':type', 'cleanup-test']]
       };
       
-      const streamProxy = new StreamProxy(resourceManager, streamQuerySpec);
+      const streamProxy = new StreamProxy(dataSource, streamQuerySpec);
       
       // Create some subscriptions
       const subscription1 = streamProxy.subscribe(jest.fn());
@@ -448,7 +448,7 @@ describe('StreamProxy Integration Tests', () => {
         where: [['?e', ':type', 'error-test']]
       };
       
-      const streamProxy = new StreamProxy(resourceManager, streamQuerySpec);
+      const streamProxy = new StreamProxy(dataSource, streamQuerySpec);
       
       // Mock a subscription that throws on unsubscribe
       const mockSubscription = {
@@ -477,7 +477,7 @@ describe('StreamProxy Integration Tests', () => {
         where: [['?e', ':type', 'transaction-test']]
       };
       
-      const streamProxy = new StreamProxy(resourceManager, streamQuerySpec);
+      const streamProxy = new StreamProxy(dataSource, streamQuerySpec);
       
       // Initially empty
       let results = streamProxy.value();
@@ -491,7 +491,7 @@ describe('StreamProxy Integration Tests', () => {
         ['+', 11, ':data', 'second'],
       ];
       
-      const transactionResult = await resourceManager.transact(transactionData);
+      const transactionResult = await dataSource.transact(transactionData);
       expect(transactionResult.success).toBe(true);
       
       // Now stream should see the new entities
@@ -511,14 +511,14 @@ describe('StreamProxy Integration Tests', () => {
         ['+', 21, ':status', 'published'],
       ];
       
-      await resourceManager.transact(initialData);
+      await dataSource.transact(initialData);
       
       const streamQuerySpec = {
         find: ['?e'],
         where: [['?e', ':type', 'mutable-test']]
       };
       
-      const streamProxy = new StreamProxy(resourceManager, streamQuerySpec);
+      const streamProxy = new StreamProxy(dataSource, streamQuerySpec);
       
       // Should see both entities
       let results = streamProxy.value();
@@ -530,7 +530,7 @@ describe('StreamProxy Integration Tests', () => {
         ['-', 21, ':status', 'published'],
       ];
       
-      await resourceManager.transact(retractionData);
+      await dataSource.transact(retractionData);
       
       // Stream should now see only one entity
       results = streamProxy.value();

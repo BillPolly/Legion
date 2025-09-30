@@ -85,7 +85,7 @@ export function toHaveBeenCalledWith(mockFn, ...expectedArgs) {
 /**
  * Create a mock DataSource for testing
  * 
- * CRITICAL: The correct terminology is DataSource, not ResourceManager!
+ * CRITICAL: The correct terminology is DataSource, not DataSource!
  * Handle constructor takes a DataSource parameter.
  */
 export function createMockDataSource() {
@@ -120,6 +120,6 @@ export function createMockDataSource() {
  * Legacy alias for backward compatibility with existing tests
  * @deprecated Use createMockDataSource() instead
  */
-export function createMockResourceManager() {
+export function createMockDataSource() {
   return createMockDataSource();
 }

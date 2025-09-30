@@ -11,7 +11,7 @@
  */
 
 import { Handle } from '../src/Handle.js';
-import { DataStoreQueryBuilder, DataStoreResourceManager } from '../../data-proxies/examples/DataStoreQueryBuilder.js';
+import { DataStoreQueryBuilder, DataStoreDataSource } from '../../data-proxies/examples/DataStoreQueryBuilder.js';
 import { CollectionProxy } from '../../data-proxies/src/CollectionProxy.js';
 
 /**

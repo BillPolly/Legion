@@ -10,43 +10,43 @@ import { createTestStore, createSampleData, assertions, validators, errorHelpers
 
 describe('CollectionProxy', () => {
   let store;
-  let resourceManager;
+  let dataSource;
   let sampleData;
   
   beforeEach(() => {
     store = createTestStore();
-    resourceManager = new DataStoreDataSource(store);
+    dataSource = new DataStoreDataSource(store);
     sampleData = createSampleData(store);
   });
   
   describe('Constructor', () => {
-    test('should require resourceManager and collectionSpec parameters', () => {
-      expect(() => new CollectionProxy()).toThrow('ResourceManager must be a non-null object');
-      expect(() => new CollectionProxy(null)).toThrow('ResourceManager must be a non-null object');
-      expect(() => new CollectionProxy(resourceManager)).toThrow('Collection specification is required');
-      expect(() => new CollectionProxy(resourceManager, null)).toThrow('Collection specification is required');
+    test('should require dataSource and collectionSpec parameters', () => {
+      expect(() => new CollectionProxy()).toThrow('DataSource must be a non-null object');
+      expect(() => new CollectionProxy(null)).toThrow('DataSource must be a non-null object');
+      expect(() => new CollectionProxy(dataSource)).toThrow('Collection specification is required');
+      expect(() => new CollectionProxy(dataSource, null)).toThrow('Collection specification is required');
     });
     
-    test('should validate resourceManager has required methods', () => {
-      const invalidResourceManager = { query: 'not a function' };
+    test('should validate dataSource has required methods', () => {
+      const invalidDataSource = { query: 'not a function' };
       const collectionSpec = { 
         find: ['?e'], 
         where: [['?e', ':user/name', '?name']],
         entityKey: '?e'
       };
-      expect(() => new CollectionProxy(invalidResourceManager, collectionSpec)).toThrow('ResourceManager must implement query() method');
+      expect(() => new CollectionProxy(invalidDataSource, collectionSpec)).toThrow('DataSource must implement query() method');
     });
     
     test('should validate collection specification structure', () => {
-      expect(() => new CollectionProxy(resourceManager, {})).toThrow('Collection specification must have find clause');
-      expect(() => new CollectionProxy(resourceManager, { find: [] })).toThrow('Collection specification must have find clause');
-      expect(() => new CollectionProxy(resourceManager, { find: ['?e'] })).toThrow('Collection specification must have where clause');
-      expect(() => new CollectionProxy(resourceManager, { 
+      expect(() => new CollectionProxy(dataSource, {})).toThrow('Collection specification must have find clause');
+      expect(() => new CollectionProxy(dataSource, { find: [] })).toThrow('Collection specification must have find clause');
+      expect(() => new CollectionProxy(dataSource, { find: ['?e'] })).toThrow('Collection specification must have where clause');
+      expect(() => new CollectionProxy(dataSource, { 
         find: ['?e'], 
         where: 'invalid' 
       })).toThrow('Where clause must be an array');
       // Note: entityKey is now auto-detected, so this test should pass
-      const proxy = new CollectionProxy(resourceManager, { 
+      const proxy = new CollectionProxy(dataSource, { 
         find: ['?e'], 
         where: [['?e', ':user/name', '?name']] 
       });
@@ -60,8 +60,8 @@ describe('CollectionProxy', () => {
         entityKey: '?e'
       };
       
-      expect(() => new CollectionProxy(resourceManager, collectionSpec)).not.toThrow();
-      const proxy = new CollectionProxy(resourceManager, collectionSpec);
+      expect(() => new CollectionProxy(dataSource, collectionSpec)).not.toThrow();
+      const proxy = new CollectionProxy(dataSource, collectionSpec);
       expect(proxy.store).toBe(store);
       expect(proxy.collectionSpec).toEqual(collectionSpec);
       expect(proxy.entityKey).toBe('?e');
@@ -74,7 +74,7 @@ describe('CollectionProxy', () => {
         entityKey: '?e'
       };
       
-      const proxy = new CollectionProxy(resourceManager, collectionSpec);
+      const proxy = new CollectionProxy(dataSource, collectionSpec);
       expect(proxy).toBeInstanceOf(Handle);
       expect(typeof proxy.subscribe).toBe('function');
       expect(typeof proxy.destroy).toBe('function');
@@ -89,7 +89,7 @@ describe('CollectionProxy', () => {
         entityKey: '?e'
       };
       
-      const proxy = new CollectionProxy(resourceManager, collectionSpec);
+      const proxy = new CollectionProxy(dataSource, collectionSpec);
       const value = proxy.value();
       
       expect(Array.isArray(value)).toBe(true);
@@ -109,11 +109,11 @@ describe('CollectionProxy', () => {
         entityKey: '?e'
       };
       
-      const proxy = new CollectionProxy(resourceManager, collectionSpec);
+      const proxy = new CollectionProxy(dataSource, collectionSpec);
       const value1 = proxy.value();
       
-      // Deactivate Bob through resourceManager
-      resourceManager.update(sampleData.users.bob, { ':user/active': false });
+      // Deactivate Bob through dataSource
+      dataSource.update(sampleData.users.bob, { ':user/active': false });
       
       const value2 = proxy.value();
       
@@ -133,7 +133,7 @@ describe('CollectionProxy', () => {
         entityKey: '?e'
       };
       
-      const proxy = new CollectionProxy(resourceManager, collectionSpec);
+      const proxy = new CollectionProxy(dataSource, collectionSpec);
       const value = proxy.value();
       
       expect(Array.isArray(value)).toBe(true);
@@ -147,7 +147,7 @@ describe('CollectionProxy', () => {
         entityKey: '?e'
       };
       
-      const proxy = new CollectionProxy(resourceManager, collectionSpec);
+      const proxy = new CollectionProxy(dataSource, collectionSpec);
       proxy.destroy();
       
       expect(() => proxy.value()).toThrow('Handle has been destroyed');
@@ -162,7 +162,7 @@ describe('CollectionProxy', () => {
         entityKey: '?e'
       };
       
-      const proxy = new CollectionProxy(resourceManager, collectionSpec);
+      const proxy = new CollectionProxy(dataSource, collectionSpec);
       
       // Query for names of active users
       const nameQuery = {
@@ -182,7 +182,7 @@ describe('CollectionProxy', () => {
     });
     
     test('should validate query specification', () => {
-      const proxy = new CollectionProxy(resourceManager, {
+      const proxy = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':user/name', '?name']],
         entityKey: '?e'
@@ -195,7 +195,7 @@ describe('CollectionProxy', () => {
     });
     
     test('should fail fast when destroyed', () => {
-      const proxy = new CollectionProxy(resourceManager, {
+      const proxy = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':user/name', '?name']],
         entityKey: '?e'
@@ -216,7 +216,7 @@ describe('CollectionProxy', () => {
         entityKey: '?e'
       };
       
-      const proxy = new CollectionProxy(resourceManager, collectionSpec);
+      const proxy = new CollectionProxy(dataSource, collectionSpec);
       
       // Filter for active users
       const activeUsers = proxy.filter(entity => {
@@ -236,7 +236,7 @@ describe('CollectionProxy', () => {
         entityKey: '?e'
       };
       
-      const proxy = new CollectionProxy(resourceManager, collectionSpec);
+      const proxy = new CollectionProxy(dataSource, collectionSpec);
       
       // Map to user names (mapper receives entity objects)
       const userNames = proxy.map(entity => {
@@ -256,7 +256,7 @@ describe('CollectionProxy', () => {
         entityKey: '?e'
       };
       
-      const proxy = new CollectionProxy(resourceManager, collectionSpec);
+      const proxy = new CollectionProxy(dataSource, collectionSpec);
       
       // Find Alice by name
       const alice = proxy.find(entity => {
@@ -275,7 +275,7 @@ describe('CollectionProxy', () => {
         entityKey: '?e'
       };
       
-      const proxy = new CollectionProxy(resourceManager, collectionSpec);
+      const proxy = new CollectionProxy(dataSource, collectionSpec);
       
       const visitedIds = [];
       proxy.forEach(entity => {
@@ -300,8 +300,8 @@ describe('CollectionProxy', () => {
         entityKey: '?e'
       };
       
-      const activeProxy = new CollectionProxy(resourceManager, activeUsersSpec);
-      const allProxy = new CollectionProxy(resourceManager, allUsersSpec);
+      const activeProxy = new CollectionProxy(dataSource, activeUsersSpec);
+      const allProxy = new CollectionProxy(dataSource, allUsersSpec);
       
       expect(activeProxy.length).toBe(2);
       expect(allProxy.length).toBe(3);
@@ -316,7 +316,7 @@ describe('CollectionProxy', () => {
         entityKey: '?e'
       };
       
-      const proxy = new CollectionProxy(resourceManager, collectionSpec);
+      const proxy = new CollectionProxy(dataSource, collectionSpec);
       
       // Get entity proxy for Alice
       const aliceProxy = proxy.get(sampleData.users.alice);
@@ -332,7 +332,7 @@ describe('CollectionProxy', () => {
     });
     
     test('should validate entity ID for get() method', () => {
-      const proxy = new CollectionProxy(resourceManager, {
+      const proxy = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':user/name', '?name']],
         entityKey: '?e'
@@ -344,7 +344,7 @@ describe('CollectionProxy', () => {
     });
     
     test('should cache entity proxies for performance', () => {
-      const proxy = new CollectionProxy(resourceManager, {
+      const proxy = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':user/name', '?name']],
         entityKey: '?e'
@@ -366,7 +366,7 @@ describe('CollectionProxy', () => {
         entityKey: '?e'
       };
       
-      const proxy = new CollectionProxy(resourceManager, collectionSpec);
+      const proxy = new CollectionProxy(dataSource, collectionSpec);
       
       // Update all active users
       const results = proxy.updateAll({ ':user/status': 'online' });
@@ -384,7 +384,7 @@ describe('CollectionProxy', () => {
     });
     
     test('should validate update data for updateAll()', () => {
-      const proxy = new CollectionProxy(resourceManager, {
+      const proxy = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':user/name', '?name']],
         entityKey: '?e'
@@ -393,7 +393,7 @@ describe('CollectionProxy', () => {
       expect(() => proxy.updateAll()).toThrow('Update data must be an object');
       expect(() => proxy.updateAll(null)).toThrow('Update data must be an object');
       expect(() => proxy.updateAll({})).not.toThrow(); // Empty object is allowed
-      expect(() => proxy.updateAll({ invalidAttr: 'value' })).not.toThrow(); // Validation happens in ResourceManager
+      expect(() => proxy.updateAll({ invalidAttr: 'value' })).not.toThrow(); // Validation happens in DataSource
     });
     
     test('should support conditional updates with updateWhere() method', () => {
@@ -403,7 +403,7 @@ describe('CollectionProxy', () => {
         entityKey: '?e'
       };
       
-      const proxy = new CollectionProxy(resourceManager, collectionSpec);
+      const proxy = new CollectionProxy(dataSource, collectionSpec);
       
       // Update users with age > 30
       const results = proxy.updateWhere(
@@ -417,7 +417,7 @@ describe('CollectionProxy', () => {
       expect(results.updated).toBe(1); // Only Charlie (35)
       
       // Verify Charlie was updated
-      const charlieCategory = resourceManager.query({
+      const charlieCategory = dataSource.query({
         find: ['?category'],
         where: [[sampleData.users.charlie, ':user/category', '?category']]
       });
@@ -434,7 +434,7 @@ describe('CollectionProxy', () => {
         entityKey: '?e'
       };
       
-      const proxy = new CollectionProxy(resourceManager, collectionSpec);
+      const proxy = new CollectionProxy(dataSource, collectionSpec);
       
       // Test that subscription is created and returns proper object
       const subscription = proxy.subscribe(collectionSpec, (results) => {
@@ -453,7 +453,7 @@ describe('CollectionProxy', () => {
     });
     
     test('should handle subscription cleanup properly', () => {
-      const proxy = new CollectionProxy(resourceManager, {
+      const proxy = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':user/name', '?name']],
         entityKey: '?e'
@@ -480,19 +480,19 @@ describe('CollectionProxy', () => {
   
   describe('Error Handling', () => {
     test('should fail fast with clear error messages', () => {
-      expect(() => new CollectionProxy()).toThrow('ResourceManager must be a non-null object');
-      expect(() => new CollectionProxy(resourceManager)).toThrow('Collection specification is required');
-      expect(() => new CollectionProxy(resourceManager, {})).toThrow('Collection specification must have find clause');
+      expect(() => new CollectionProxy()).toThrow('DataSource must be a non-null object');
+      expect(() => new CollectionProxy(dataSource)).toThrow('Collection specification is required');
+      expect(() => new CollectionProxy(dataSource, {})).toThrow('Collection specification must have find clause');
     });
     
     test('should not have fallback behavior', () => {
       errorHelpers.expectNoFallback(() => new CollectionProxy());
       errorHelpers.expectNoFallback(() => new CollectionProxy(null));
-      errorHelpers.expectNoFallback(() => new CollectionProxy(resourceManager, null));
+      errorHelpers.expectNoFallback(() => new CollectionProxy(dataSource, null));
     });
     
     test('should handle destroyed state consistently', () => {
-      const proxy = new CollectionProxy(resourceManager, {
+      const proxy = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':user/name', '?name']],
         entityKey: '?e'
@@ -510,7 +510,7 @@ describe('CollectionProxy', () => {
   
   describe('Memory Management', () => {
     test('should cleanup entity proxies on destroy', () => {
-      const proxy = new CollectionProxy(resourceManager, {
+      const proxy = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':user/name', '?name']],
         entityKey: '?e'
@@ -550,7 +550,7 @@ describe('CollectionProxy', () => {
         entityKey: '?e'
       };
       
-      const proxy = new CollectionProxy(resourceManager, collectionSpec);
+      const proxy = new CollectionProxy(dataSource, collectionSpec);
       const projectMembers = proxy.value();
       
       // Should find users who are project members
@@ -567,7 +567,7 @@ describe('CollectionProxy', () => {
         entityKey: '?e'
       };
       
-      const proxy = new CollectionProxy(resourceManager, collectionSpec);
+      const proxy = new CollectionProxy(dataSource, collectionSpec);
       
       // Initial state
       expect(proxy.length).toBe(2);

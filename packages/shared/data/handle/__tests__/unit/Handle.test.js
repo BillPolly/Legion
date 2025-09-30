@@ -2,7 +2,7 @@
  * Handle.test.js - Unit tests for the core Handle class
  * 
  * Tests the synchronous dispatcher pattern, Actor integration, and core functionality
- * without external dependencies (uses mock ResourceManager).
+ * without external dependencies (uses mock DataSource).
  */
 
 import { Handle } from '../../src/Handle.js';
@@ -14,7 +14,7 @@ describe('Handle', () => {
   let handle;
 
   beforeEach(() => {
-    // Create mock ResourceManager that implements interface
+    // Create mock DataSource that implements interface
     mockDataSource = createMockDataSource();
     
     // Create test handle instance
@@ -310,13 +310,13 @@ describe('Handle', () => {
       const callback = createMockFunction();
       const querySpec = { find: ['?e'], where: [['?e', ':test/attr', '?value']] };
       
-      // Create a custom ResourceManager with a failing unsubscribe
+      // Create a custom DataSource with a failing unsubscribe
       const failingUnsubscribe = createMockFunction();
       failingUnsubscribe.mockImplementation(() => {
         throw new Error('Unsubscribe failed');
       });
       
-      const customResourceManager = {
+      const customDataSource = {
         query: createMockFunction([]),
         getSchema: createMockFunction(null),
         subscribe: createMockFunction({
@@ -333,8 +333,8 @@ describe('Handle', () => {
         })
       };
       
-      // Create handle with custom ResourceManager
-      const handleWithFailure = new TestHandle(customResourceManager);
+      // Create handle with custom DataSource
+      const handleWithFailure = new TestHandle(customDataSource);
       
       // Mock console.warn
       const originalWarn = console.warn;

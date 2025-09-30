@@ -15,7 +15,7 @@ describe('PrototypeFactory', () => {
   beforeEach(() => {
     factory = new PrototypeFactory();
     
-    // Mock ResourceManager for prototype testing
+    // Mock DataSource for prototype testing
     mockDataSource = createMockDataSource();
   });
 

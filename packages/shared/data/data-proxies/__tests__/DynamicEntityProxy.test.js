@@ -7,7 +7,7 @@ import { DynamicDataStore, createDynamicDataStore } from '@legion/data-store';
 
 describe('DynamicEntityProxy', () => {
   let dataStore;
-  let resourceManager;
+  let dataSource;
   
   beforeEach(() => {
     // Create DynamicDataStore with initial schema
@@ -20,7 +20,7 @@ describe('DynamicEntityProxy', () => {
     
     // Create a resource manager that wraps the data store
     // Must implement all methods required by Handle validation
-    resourceManager = {
+    dataSource = {
       dataStore,
       query: (spec) => dataStore.query(spec),
       update: (entityId, data) => {
@@ -54,7 +54,7 @@ describe('DynamicEntityProxy', () => {
       });
       
       // Create proxy for entity
-      const proxy = new DynamicEntityProxy(resourceManager, result.entityId);
+      const proxy = new DynamicEntityProxy(dataSource, result.entityId);
       
       expect(proxy).toBeDefined();
       expect(proxy.entityId).toBe(result.entityId);
@@ -68,7 +68,7 @@ describe('DynamicEntityProxy', () => {
       });
       
       // Create proxy
-      const proxy = createDynamicEntityProxy(resourceManager, result.entityId);
+      const proxy = createDynamicEntityProxy(dataSource, result.entityId);
       
       // Access attributes through standard methods
       expect(proxy.get(':user/name')).toBe('Bob');
@@ -88,7 +88,7 @@ describe('DynamicEntityProxy', () => {
       });
       
       // Create proxy
-      const proxy = new DynamicEntityProxy(resourceManager, result.entityId);
+      const proxy = new DynamicEntityProxy(dataSource, result.entityId);
       
       // Update attribute
       proxy.set(':user/email', 'charlie.new@example.com');
@@ -105,7 +105,7 @@ describe('DynamicEntityProxy', () => {
       });
       
       // Create proxy
-      const proxy = createDynamicEntityProxy(resourceManager, result.entityId);
+      const proxy = createDynamicEntityProxy(dataSource, result.entityId);
       
       // Access via dynamic properties
       expect(proxy.name).toBe('David');
@@ -120,7 +120,7 @@ describe('DynamicEntityProxy', () => {
       });
       
       // Create proxy
-      const proxy = createDynamicEntityProxy(resourceManager, result.entityId);
+      const proxy = createDynamicEntityProxy(dataSource, result.entityId);
       
       // Set via dynamic properties
       proxy.email = 'eve.new@example.com';
@@ -140,7 +140,7 @@ describe('DynamicEntityProxy', () => {
       });
       
       // Create proxy
-      const proxy = createDynamicEntityProxy(resourceManager, result.entityId);
+      const proxy = createDynamicEntityProxy(dataSource, result.entityId);
       
       // Add new attribute to schema
       await dataStore.addAttribute('user', 'age', { valueType: 'number' });
@@ -166,7 +166,7 @@ describe('DynamicEntityProxy', () => {
       });
       
       // Create proxy
-      const proxy = createDynamicEntityProxy(resourceManager, result.entityId);
+      const proxy = createDynamicEntityProxy(dataSource, result.entityId);
       
       // Verify age exists
       expect(proxy.age).toBe(25);
@@ -190,7 +190,7 @@ describe('DynamicEntityProxy', () => {
       });
       
       // Create proxy
-      const proxy = createDynamicEntityProxy(resourceManager, result.entityId);
+      const proxy = createDynamicEntityProxy(dataSource, result.entityId);
       
       // Get entity type
       const entityType = proxy._getEntityType();
@@ -205,7 +205,7 @@ describe('DynamicEntityProxy', () => {
       });
       
       // Create proxy
-      const proxy = createDynamicEntityProxy(resourceManager, result.entityId);
+      const proxy = createDynamicEntityProxy(dataSource, result.entityId);
       
       // Get available attributes
       const attributes = proxy._getAvailableAttributes();
@@ -222,7 +222,7 @@ describe('DynamicEntityProxy', () => {
       });
       
       // Create proxy
-      const proxy = createDynamicEntityProxy(resourceManager, result.entityId);
+      const proxy = createDynamicEntityProxy(dataSource, result.entityId);
       
       // Get schema
       const schema = proxy.getSchema();
@@ -240,7 +240,7 @@ describe('DynamicEntityProxy', () => {
       });
       
       // Create proxy
-      const proxy = createDynamicEntityProxy(resourceManager, result.entityId);
+      const proxy = createDynamicEntityProxy(dataSource, result.entityId);
       
       // Check properties with "in" operator
       expect('name' in proxy).toBe(true);
@@ -257,7 +257,7 @@ describe('DynamicEntityProxy', () => {
       });
       
       // Create proxy
-      const proxy = createDynamicEntityProxy(resourceManager, result.entityId);
+      const proxy = createDynamicEntityProxy(dataSource, result.entityId);
       
       // Get keys
       const keys = Object.keys(proxy);
@@ -275,7 +275,7 @@ describe('DynamicEntityProxy', () => {
       });
       
       // Create proxy
-      const proxy = createDynamicEntityProxy(resourceManager, result.entityId);
+      const proxy = createDynamicEntityProxy(dataSource, result.entityId);
       
       // Get property descriptor
       const descriptor = Object.getOwnPropertyDescriptor(proxy, 'name');
@@ -299,7 +299,7 @@ describe('DynamicEntityProxy', () => {
       const schemaChanges = [];
       
       // Create proxy with schema change handler
-      const proxy = new DynamicEntityProxy(resourceManager, result.entityId, {
+      const proxy = new DynamicEntityProxy(dataSource, result.entityId, {
         onSchemaChange: (change) => {
           schemaChanges.push(change);
         }
@@ -325,7 +325,7 @@ describe('DynamicEntityProxy', () => {
       });
       
       // Create proxy
-      const proxy = createDynamicEntityProxy(resourceManager, result.entityId);
+      const proxy = createDynamicEntityProxy(dataSource, result.entityId);
       
       // Destroy proxy
       proxy.destroy();

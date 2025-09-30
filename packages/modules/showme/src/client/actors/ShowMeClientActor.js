@@ -143,11 +143,67 @@ export class ShowMeClientActor extends Actor {
   }
 
   /**
-   * Handle asset ready notification
+   * Handle display asset request with RemoteActor Handle
+   * asset is a RemoteActor proxy to AssetHandle on server
+   */
+  async handleDisplayAsset({ asset, title }) {
+    console.log(`Display asset received - asset is RemoteActor:`, asset.isRemote);
+
+    // Call methods on the RemoteActor to get data
+    const metadata = await asset.receive('getMetadata');
+    const assetData = await asset.receive('getData');
+    const assetType = await asset.receive('getType');
+
+    console.log(`Asset metadata:`, metadata);
+
+    const assetId = metadata.id;
+
+    // Check if window already exists
+    if (this.openWindows.has(assetId)) {
+      const windowInfo = this.openWindows.get(assetId);
+      if (this.displayManager && this.displayManager.focusWindow) {
+        this.displayManager.focusWindow(windowInfo.windowId);
+      }
+      return;
+    }
+
+    // Display using display manager
+    if (this.displayManager && this.displayManager.createWindow) {
+      try {
+        const window = this.displayManager.createWindow({
+          id: assetId,
+          title: title || metadata.title,
+          type: assetType
+        });
+
+        const renderedContent = this.renderAssetContent(assetData, assetType);
+        window.setContent(renderedContent);
+        window.show();
+
+        this.openWindows.set(assetId, {
+          windowId: window.id,
+          assetType,
+          title: title || metadata.title,
+          openedAt: Date.now(),
+          assetHandle: asset  // Store RemoteActor!
+        });
+
+        this.updateState({
+          windowsOpen: this.openWindows.size
+        });
+
+      } catch (error) {
+        console.error(`Failed to display asset ${assetId}:`, error);
+      }
+    }
+  }
+
+  /**
+   * Handle asset ready notification (DEPRECATED - kept for compatibility)
    */
   async handleAssetReady({ assetId, assetType, title }) {
     console.log(`Asset ready: ${assetId} (${assetType})`);
-    
+
     // Request full asset data from server
     await this.send('request-asset', {
       assetId,

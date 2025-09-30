@@ -12,7 +12,7 @@ import * as d from '@legion/datascript';
 
 describe('DataStoreDataSource Integration', () => {
   let dataStore;
-  let resourceManager;
+  let dataSource;
   
   beforeEach(() => {
     // Create real DataStore with comprehensive schema
@@ -48,7 +48,7 @@ describe('DataStoreDataSource Integration', () => {
     };
     
     dataStore = new DataStore(schema);
-    resourceManager = new DataStoreDataSource(dataStore);
+    dataSource = new DataStoreDataSource(dataStore);
     
     // Add comprehensive test data
     const result = dataStore.createEntities([
@@ -81,7 +81,7 @@ describe('DataStoreDataSource Integration', () => {
         ]
       };
       
-      const results = resourceManager.query(spec);
+      const results = dataSource.query(spec);
       
       expect(results).toBeDefined();
       expect(results.length).toBeGreaterThan(0);
@@ -103,7 +103,7 @@ describe('DataStoreDataSource Integration', () => {
         ]
       };
       
-      const results = resourceManager.query(spec);
+      const results = dataSource.query(spec);
       
       expect(results).toBeDefined();
       expect(results.length).toBeGreaterThan(0);
@@ -121,7 +121,7 @@ describe('DataStoreDataSource Integration', () => {
         where: [['?e', ':user/name', '?name']]
       };
       
-      const results = resourceManager.query(spec);
+      const results = dataSource.query(spec);
       
       expect(results).toBeDefined();
       expect(results).toEqual([3]); // 3 users (returns array with count)
@@ -131,20 +131,20 @@ describe('DataStoreDataSource Integration', () => {
   describe('Transaction and Update Scenarios', () => {
     it('should handle multi-entity updates in single transaction', async () => {
       // Get user IDs
-      const userQuery = resourceManager.query({
+      const userQuery = dataSource.query({
         find: ['?e'],
         where: [['?e', ':user/name', 'Alice']]
       });
       const aliceId = userQuery[0][0];
       
-      const bobQuery = resourceManager.query({
+      const bobQuery = dataSource.query({
         find: ['?e'],
         where: [['?e', ':user/name', 'Bob']]
       });
       const bobId = bobQuery[0][0];
       
       // Update multiple entities
-      const updateResult = await resourceManager.updateMultiple([
+      const updateResult = await dataSource.updateMultiple([
         { ':db/id': aliceId, ':user/age': 31 },
         { ':db/id': bobId, ':user/age': 26 }
       ]);
@@ -152,7 +152,7 @@ describe('DataStoreDataSource Integration', () => {
       expect(updateResult.success).toBe(true);
       
       // Verify updates
-      const verifyQuery = resourceManager.query({
+      const verifyQuery = dataSource.query({
         find: ['?name', '?age'],
         where: [
           ['?e', ':user/name', '?name'],
@@ -169,7 +169,7 @@ describe('DataStoreDataSource Integration', () => {
     
     it('should handle entity creation with references', async () => {
       // Get Alice's ID
-      const aliceQuery = resourceManager.query({
+      const aliceQuery = dataSource.query({
         find: ['?e'],
         where: [['?e', ':user/name', 'Alice']]
       });
@@ -187,14 +187,14 @@ describe('DataStoreDataSource Integration', () => {
         ]
       };
       
-      const results = await resourceManager.executeQueryWithUpdate(spec);
+      const results = await dataSource.executeQueryWithUpdate(spec);
       
       // Should find the new post
       const newPost = results.find(r => r[1] === 'New Post');
       expect(newPost).toBeDefined();
       
       // Verify the author relationship
-      const authorQuery = resourceManager.query({
+      const authorQuery = dataSource.query({
         find: ['?author-name'],
         where: [
           ['?post', ':post/title', 'New Post'],
@@ -216,23 +216,23 @@ describe('DataStoreDataSource Integration', () => {
       };
       
       // Create multiple subscriptions
-      const userSub = resourceManager.subscribe({
+      const userSub = dataSource.subscribe({
         find: ['?e', '?name'],
         where: [['?e', ':user/name', '?name']]
       }, callbacks.users);
       
-      const postSub = resourceManager.subscribe({
+      const postSub = dataSource.subscribe({
         find: ['?e', '?title'],
         where: [['?e', ':post/title', '?title']]
       }, callbacks.posts);
       
-      const commentSub = resourceManager.subscribe({
+      const commentSub = dataSource.subscribe({
         find: ['?e', '?text'],
         where: [['?e', ':comment/text', '?text']]
       }, callbacks.comments);
       
       // Trigger updates
-      resourceManager.update(null, {
+      dataSource.update(null, {
         ':user/name': 'Diana',
         ':user/email': 'diana@test.com'
       });
@@ -253,20 +253,20 @@ describe('DataStoreDataSource Integration', () => {
       const callback = jest.fn();
       
       // Subscribe to posts
-      const subscription = resourceManager.subscribe({
+      const subscription = dataSource.subscribe({
         find: ['?e', '?title'],
         where: [['?e', ':post/title', '?title']]
       }, callback);
       
       // Get a post ID
-      const postQuery = resourceManager.query({
+      const postQuery = dataSource.query({
         find: ['?e'],
         where: [['?e', ':post/title', 'First Post']]
       });
       const postId = postQuery[0][0];
       
       // Delete the post (retract all its attributes)
-      await resourceManager.retractEntity(postId);
+      await dataSource.retractEntity(postId);
       
       // Wait for subscription to fire
       await new Promise(resolve => setTimeout(resolve, 50));
@@ -283,24 +283,24 @@ describe('DataStoreDataSource Integration', () => {
     it('should fail fast on invalid operations', () => {
       // Invalid query - should fail immediately
       expect(() => 
-        resourceManager.query({ find: 'invalid' })
+        dataSource.query({ find: 'invalid' })
       ).toThrow('Query must have find clause');
       
       // Invalid update - should fail immediately
       expect(() => 
-        resourceManager.update('not-a-number', { ':user/name': 'Test' })
+        dataSource.update('not-a-number', { ':user/name': 'Test' })
       ).toThrow('Entity ID must be a number');
       
       // Invalid subscription - should fail immediately
       expect(() => 
-        resourceManager.subscribe({ find: [] }, 'not-a-function')
+        dataSource.subscribe({ find: [] }, 'not-a-function')
       ).toThrow('Callback must be a function');
     });
     
     it('should propagate DataStore errors', () => {
       // Try to update with invalid attribute format
       expect(() => 
-        resourceManager.update(1, { 'invalid-attr': 'value' })
+        dataSource.update(1, { 'invalid-attr': 'value' })
       ).toThrow("Attributes must start with ':'. Found: invalid-attr");
     });
   });
@@ -317,10 +317,10 @@ describe('DataStoreDataSource Integration', () => {
         });
       }
       
-      await resourceManager.updateMultiple(entities);
+      await dataSource.updateMultiple(entities);
       
       // Query all users
-      const results = resourceManager.query({
+      const results = dataSource.query({
         find: ['?e', '?name'],
         where: [['?e', ':user/name', '?name']]
       });
@@ -332,7 +332,7 @@ describe('DataStoreDataSource Integration', () => {
       // Operations should complete immediately
       const startTime = Date.now();
       
-      const results = resourceManager.query({
+      const results = dataSource.query({
         find: ['?e', '?name'],
         where: [['?e', ':user/name', '?name']]
       });
@@ -355,14 +355,14 @@ describe('DataStoreDataSource Integration', () => {
         { ':someattr': 'NoType' }  // No namespace, should be null
       ];
       
-      const result = await resourceManager.updateMultiple(testEntities);
+      const result = await dataSource.updateMultiple(testEntities);
       
       // Test type detection for each pattern
       for (let i = 0; i < testEntities.length; i++) {
         const entityId = result.tempids.get(-1 - i);
         if (!entityId) continue; // Skip if tempid wasn't resolved
-        const entity = await resourceManager.getEntity(entityId);
-        const type = await resourceManager.detectEntityType(entity);
+        const entity = await dataSource.getEntity(entityId);
+        const type = await dataSource.detectEntityType(entity);
         
         if (i === 0) expect(type).toBe('User');
         else if (i === 1) expect(type).toBe('user');

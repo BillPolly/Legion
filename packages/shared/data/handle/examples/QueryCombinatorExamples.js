@@ -8,7 +8,7 @@
  * - DOMElementProxy: DOM elements as proxies
  * 
  * All examples use the universal Handle projection pattern where:
- * - Each query operation creates a new proxy through ResourceManager.queryBuilder()
+ * - Each query operation creates a new proxy through DataSource.queryBuilder()
  * - Query builders analyze source Handle type and create appropriate projections
  * - Terminal methods return appropriate Handle types (collections, entities, streams, scalars)
  * - All operations are synchronous following the synchronous dispatcher pattern
@@ -449,49 +449,49 @@ export function returnTypeExamples() {
 
 // Helper functions to simulate getting different Handle types
 function getCollectionProxy(entityType) {
-  // Mock implementation - real code would get from ResourceManager
-  return new CollectionProxy(mockResourceManager, {
+  // Mock implementation - real code would get from DataSource
+  return new CollectionProxy(mockDataSource, {
     find: ['?e'],
     where: [['?e', ':entity/type', entityType]]
   });
 }
 
 function getStreamProxy(streamName) {
-  // Mock implementation - real code would get from ResourceManager
-  return new StreamProxy(mockResourceManager, {
+  // Mock implementation - real code would get from DataSource
+  return new StreamProxy(mockDataSource, {
     find: ['?e', '?attr', '?value'],
     where: [['?e', '?attr', '?value']]
   });
 }
 
 function getEntityProxy(entityType, entityId) {
-  // Mock implementation - real code would get from ResourceManager
-  return new EntityProxy(mockResourceManager, entityId);
+  // Mock implementation - real code would get from DataSource
+  return new EntityProxy(mockDataSource, entityId);
 }
 
 function getDOMElementProxy(selector) {
-  // Mock implementation - real code would get from DOM ResourceManager
+  // Mock implementation - real code would get from DOM DataSource
   const element = document.querySelector(selector);
-  return new DOMElementProxy(mockDOMResourceManager, element);
+  return new DOMElementProxy(mockDOMDataSource, element);
 }
 
 function getCurrentUserId() {
   return 12345; // Mock current user ID
 }
 
-// Mock ResourceManager for examples
-const mockResourceManager = {
+// Mock DataSource for examples
+const mockDataSource = {
   query: () => [],
   subscribe: () => ({ unsubscribe: () => {} }),
   getSchema: () => ({}),
   queryBuilder: (sourceHandle) => ({
-    where: () => mockResourceManager.queryBuilder(sourceHandle),
-    select: () => mockResourceManager.queryBuilder(sourceHandle),
-    join: () => mockResourceManager.queryBuilder(sourceHandle),
-    orderBy: () => mockResourceManager.queryBuilder(sourceHandle),
-    limit: () => mockResourceManager.queryBuilder(sourceHandle),
-    skip: () => mockResourceManager.queryBuilder(sourceHandle),
-    groupBy: () => mockResourceManager.queryBuilder(sourceHandle),
+    where: () => mockDataSource.queryBuilder(sourceHandle),
+    select: () => mockDataSource.queryBuilder(sourceHandle),
+    join: () => mockDataSource.queryBuilder(sourceHandle),
+    orderBy: () => mockDataSource.queryBuilder(sourceHandle),
+    limit: () => mockDataSource.queryBuilder(sourceHandle),
+    skip: () => mockDataSource.queryBuilder(sourceHandle),
+    groupBy: () => mockDataSource.queryBuilder(sourceHandle),
     aggregate: () => 0,
     first: () => null,
     last: () => null,
@@ -500,8 +500,8 @@ const mockResourceManager = {
   })
 };
 
-const mockDOMResourceManager = {
-  ...mockResourceManager,
+const mockDOMDataSource = {
+  ...mockDataSource,
   // DOM-specific query builder implementation would go here
 };
 

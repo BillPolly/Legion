@@ -12,8 +12,8 @@ import { Handle } from '@legion/handle';
 // Import jest for spies and mocks
 import { jest } from '@jest/globals';
 
-// Mock ResourceManager for testing
-class MockResourceManager {
+// Mock DataSource for testing
+class MockDataSource {
   constructor() {
     this.entities = new Map();
     this.subscribers = [];
@@ -125,13 +125,13 @@ class MockResourceManager {
 }
 
 describe('EntityProxy extending Handle', () => {
-  let mockResourceManager;
+  let mockDataSource;
   let entityProxy;
   const testEntityId = 123;
   
   beforeEach(() => {
-    mockResourceManager = new MockResourceManager();
-    entityProxy = new EntityProxy(mockResourceManager, testEntityId, {
+    mockDataSource = new MockDataSource();
+    entityProxy = new EntityProxy(mockDataSource, testEntityId, {
       cacheTTL: 1000
     });
   });
@@ -147,8 +147,8 @@ describe('EntityProxy extending Handle', () => {
       expect(entityProxy).toBeInstanceOf(Handle);
     });
     
-    test('should initialize with resourceManager and entityId', () => {
-      expect(entityProxy.resourceManager).toBe(mockResourceManager);
+    test('should initialize with dataSource and entityId', () => {
+      expect(entityProxy.dataSource).toBe(mockDataSource);
       expect(entityProxy.entityId).toBe(testEntityId);
     });
     
@@ -158,18 +158,18 @@ describe('EntityProxy extending Handle', () => {
     
     test('should throw error for invalid entity ID', () => {
       expect(() => {
-        new EntityProxy(mockResourceManager, null);
+        new EntityProxy(mockDataSource, null);
       }).toThrow('Entity ID is required');
       
       expect(() => {
-        new EntityProxy(mockResourceManager, 'invalid');
+        new EntityProxy(mockDataSource, 'invalid');
       }).toThrow('Entity ID must be a number');
     });
     
-    test('should throw error for missing resourceManager', () => {
+    test('should throw error for missing dataSource', () => {
       expect(() => {
         new EntityProxy(null, testEntityId);
-      }).toThrow('ResourceManager must be a non-null object');
+      }).toThrow('DataSource must be a non-null object');
     });
   });
   
@@ -198,7 +198,7 @@ describe('EntityProxy extending Handle', () => {
   describe('Entity-specific Methods', () => {
     beforeEach(() => {
       // Setup test entity data
-      mockResourceManager.setEntity(testEntityId, {
+      mockDataSource.setEntity(testEntityId, {
         ':name': 'Test User',
         ':email': 'test@example.com',
         ':age': 30,
@@ -220,7 +220,7 @@ describe('EntityProxy extending Handle', () => {
       });
       
       test('should use cached value on second call', () => {
-        const spy = jest.spyOn(mockResourceManager, 'query');
+        const spy = jest.spyOn(mockDataSource, 'query');
         
         // First call should fetch from resource manager
         const entity1 = entityProxy.value();
@@ -234,7 +234,7 @@ describe('EntityProxy extending Handle', () => {
       });
       
       test('should throw error if entity not found', () => {
-        const nonExistentProxy = new EntityProxy(mockResourceManager, 999);
+        const nonExistentProxy = new EntityProxy(mockDataSource, 999);
         
         expect(() => nonExistentProxy.value()).toThrow('Entity not found');
         
@@ -307,7 +307,7 @@ describe('EntityProxy extending Handle', () => {
       test('should invalidate cache after update', () => {
         // Prime the cache
         entityProxy.value();
-        const spy = jest.spyOn(mockResourceManager, 'query');
+        const spy = jest.spyOn(mockDataSource, 'query');
         
         // Update should invalidate cache
         entityProxy.update({ ':name': 'Updated' });
@@ -329,7 +329,7 @@ describe('EntityProxy extending Handle', () => {
   
   describe('Actor System Integration', () => {
     beforeEach(() => {
-      mockResourceManager.setEntity(testEntityId, {
+      mockDataSource.setEntity(testEntityId, {
         ':name': 'Test User',
         ':email': 'test@example.com'
       });
@@ -394,7 +394,7 @@ describe('EntityProxy extending Handle', () => {
   
   describe('Error Handling', () => {
     test('should handle resource manager errors gracefully', () => {
-      const errorResourceManager = {
+      const errorDataSource = {
         query() {
           throw new Error('Query failed');
         },
@@ -412,7 +412,7 @@ describe('EntityProxy extending Handle', () => {
         }
       };
       
-      const errorProxy = new EntityProxy(errorResourceManager, testEntityId);
+      const errorProxy = new EntityProxy(errorDataSource, testEntityId);
       
       expect(() => errorProxy.value()).toThrow('Query failed');
       expect(() => errorProxy.get(':name')).toThrow('Query failed');
@@ -433,7 +433,7 @@ describe('EntityProxy extending Handle', () => {
   describe('Cleanup and Destruction', () => {
     beforeEach(() => {
       // Setup test entity data for this describe block
-      mockResourceManager.setEntity(testEntityId, {
+      mockDataSource.setEntity(testEntityId, {
         ':name': 'Test User',
         ':email': 'test@example.com'
       });

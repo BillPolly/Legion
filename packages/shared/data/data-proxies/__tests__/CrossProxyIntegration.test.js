@@ -12,19 +12,19 @@ import { createTestStore, createSampleData } from './setup.js';
 
 describe('Cross-Proxy Integration', () => {
   let store;
-  let resourceManager;
+  let dataSource;
   let sampleData;
   
   beforeEach(() => {
     store = createTestStore();
-    resourceManager = new DataStoreDataSource(store);
+    dataSource = new DataStoreDataSource(store);
     sampleData = createSampleData(store);
   });
   
   describe('Entity-Collection Integration', () => {
     test('should allow accessing individual entities through CollectionProxy', () => {
       // Create collection of all users
-      const userCollection = new CollectionProxy(resourceManager, {
+      const userCollection = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':user/name', '?name']],
         entityKey: '?e'
@@ -47,10 +47,10 @@ describe('Cross-Proxy Integration', () => {
     
     test('should reflect entity updates across different proxy types', () => {
       // Create EntityProxy for Bob
-      const bobEntity = new EntityProxy(resourceManager, sampleData.users.bob);
+      const bobEntity = new EntityProxy(dataSource, sampleData.users.bob);
       
       // Create CollectionProxy for active users (Bob is initially active)
-      const activeUsers = new CollectionProxy(resourceManager, {
+      const activeUsers = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':user/active', true]],
         entityKey: '?e'
@@ -78,7 +78,7 @@ describe('Cross-Proxy Integration', () => {
     
     test('should maintain consistency across bulk operations', () => {
       // Create collection of active users
-      const activeUsers = new CollectionProxy(resourceManager, {
+      const activeUsers = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':user/active', true]],
         entityKey: '?e'
@@ -112,14 +112,14 @@ describe('Cross-Proxy Integration', () => {
   describe('Collection-Stream Integration', () => {
     test('should provide complementary views of the same data', () => {
       // Create collection for all users (static view)
-      const userCollection = new CollectionProxy(resourceManager, {
+      const userCollection = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':user/name', '?name']],
         entityKey: '?e'
       });
       
       // Create stream for user names (query result stream)
-      const nameStream = new StreamProxy(resourceManager, {
+      const nameStream = new StreamProxy(dataSource, {
         find: ['?e', '?name'],
         where: [['?e', ':user/name', '?name']]
       });
@@ -144,14 +144,14 @@ describe('Cross-Proxy Integration', () => {
     
     test('should both reflect data changes consistently', () => {
       // Create collection for users with age data
-      const ageCollection = new CollectionProxy(resourceManager, {
+      const ageCollection = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':user/age', '?age']],
         entityKey: '?e'
       });
       
       // Create stream for age query results
-      const ageStream = new StreamProxy(resourceManager, {
+      const ageStream = new StreamProxy(dataSource, {
         find: ['?e', '?age'],
         where: [['?e', ':user/age', '?age']]
       });
@@ -196,10 +196,10 @@ describe('Cross-Proxy Integration', () => {
   describe('Entity-Stream Integration', () => {
     test('should provide different perspectives on entity data', () => {
       // Create EntityProxy for Alice
-      const aliceEntity = new EntityProxy(resourceManager, sampleData.users.alice);
+      const aliceEntity = new EntityProxy(dataSource, sampleData.users.alice);
       
       // Create StreamProxy for Alice's attributes
-      const aliceAttributeStream = new StreamProxy(resourceManager, {
+      const aliceAttributeStream = new StreamProxy(dataSource, {
         find: ['?attr', '?value'],
         where: [[sampleData.users.alice, '?attr', '?value']]
       });
@@ -238,17 +238,17 @@ describe('Cross-Proxy Integration', () => {
   describe('Three-Way Integration', () => {
     test('should demonstrate complete proxy ecosystem working together', () => {
       // Create EntityProxy for specific user management
-      const aliceEntity = new EntityProxy(resourceManager, sampleData.users.alice);
+      const aliceEntity = new EntityProxy(dataSource, sampleData.users.alice);
       
       // Create CollectionProxy for bulk operations and iteration
-      const activeUsers = new CollectionProxy(resourceManager, {
+      const activeUsers = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':user/active', true]],
         entityKey: '?e'
       });
       
       // Create StreamProxy for monitoring specific query results
-      const userAgeStream = new StreamProxy(resourceManager, {
+      const userAgeStream = new StreamProxy(dataSource, {
         find: ['?name', '?age'],
         where: [
           ['?e', ':user/name', '?name'],
@@ -285,7 +285,7 @@ describe('Cross-Proxy Integration', () => {
       expect(aliceEntity.get(':user/department')).toBe('Engineering');
       
       // StreamProxy with additional query should see departments
-      const deptStream = new StreamProxy(resourceManager, {
+      const deptStream = new StreamProxy(dataSource, {
         find: ['?name', '?dept'],
         where: [
           ['?e', ':user/name', '?name'],
@@ -308,13 +308,13 @@ describe('Cross-Proxy Integration', () => {
   
   describe('Error Handling Across Proxies', () => {
     test('should maintain error handling consistency', () => {
-      const entityProxy = new EntityProxy(resourceManager, sampleData.users.alice);
-      const collectionProxy = new CollectionProxy(resourceManager, {
+      const entityProxy = new EntityProxy(dataSource, sampleData.users.alice);
+      const collectionProxy = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':user/name', '?name']],
         entityKey: '?e'
       });
-      const streamProxy = new StreamProxy(resourceManager, {
+      const streamProxy = new StreamProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':user/name', '?name']]
       });
@@ -337,7 +337,7 @@ describe('Cross-Proxy Integration', () => {
     
     test('should handle cascading destruction properly', () => {
       // Create collection with cached entity proxies
-      const collection = new CollectionProxy(resourceManager, {
+      const collection = new CollectionProxy(dataSource, {
         find: ['?e'],
         where: [['?e', ':user/name', '?name']],
         entityKey: '?e'
@@ -373,15 +373,15 @@ describe('Cross-Proxy Integration', () => {
       for (let i = 0; i < 10; i++) {
         // Mix of different proxy types
         if (i % 3 === 0) {
-          proxies.push(new EntityProxy(resourceManager, sampleData.users.alice));
+          proxies.push(new EntityProxy(dataSource, sampleData.users.alice));
         } else if (i % 3 === 1) {
-          proxies.push(new CollectionProxy(resourceManager, {
+          proxies.push(new CollectionProxy(dataSource, {
             find: ['?e'],
             where: [['?e', ':user/active', true]],
             entityKey: '?e'
           }));
         } else {
-          proxies.push(new StreamProxy(resourceManager, {
+          proxies.push(new StreamProxy(dataSource, {
             find: ['?e', '?name'],
             where: [['?e', ':user/name', '?name']]
           }));

@@ -9,7 +9,7 @@ All notable changes to @legion/data-proxies will be documented in this file.
 #### Added
 - **Handle Base Class Integration**: All proxy classes now extend `Handle` from `@legion/km-data-handle`
 - **Actor System Capabilities**: All proxies now support `receive()`, `call()`, `query()` methods from Actor base class
-- **DataStoreResourceManager**: New adapter bridging DataStore to ResourceManager interface for Handle integration
+- **DataStoreDataSource**: New adapter bridging DataStore to DataSource interface for Handle integration
 - **Cross-Proxy Integration Tests**: Comprehensive test suite verifying different proxy types work together seamlessly
 - **Comprehensive Documentation**: Complete README and JSDoc documentation for new architecture
 
@@ -22,7 +22,7 @@ All notable changes to @legion/data-proxies will be documented in this file.
 - **Error Handling**: Consistent "Handle has been destroyed" error handling across all proxy classes
 
 #### Technical Changes
-- **Synchronous Resource Manager**: All ResourceManager operations are synchronous to eliminate race conditions
+- **Synchronous Resource Manager**: All DataSource operations are synchronous to eliminate race conditions
 - **Uniform Interface**: All proxy classes follow the same Handle-based lifecycle and error patterns
 - **Backward Compatibility**: Maintained existing API surface while adding Handle capabilities
 - **Performance Optimized**: Enhanced memory management with proper cleanup and subscription tracking
@@ -54,7 +54,7 @@ No migration required - all existing code continues to work unchanged while gain
 
 ```javascript
 // Existing code continues to work
-const proxy = new EntityProxy(resourceManager, entityId);
+const proxy = new EntityProxy(dataSource, entityId);
 const data = proxy.value();
 
 // New Actor capabilities now available

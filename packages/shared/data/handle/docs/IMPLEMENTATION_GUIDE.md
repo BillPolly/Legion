@@ -382,7 +382,7 @@ query(querySpec) {
   this._validateQuerySpec(querySpec); // May throw
   
   try {
-    return this.resourceManager.query(querySpec); // May throw
+    return this.dataSource.query(querySpec); // May throw
   } catch (error) {
     // Re-throw with additional context
     throw new Error(`Query failed: ${error.message}`);
