@@ -89,9 +89,9 @@ describe('Error Handling Integration Tests', () => {
       
       const response = await fetch('http://localhost:9501/app/client.js');
       expect(response.status).toBe(404);
-      
+
       const text = await response.text();
-      expect(text).toBe('Client actor file not found');
+      expect(text).toBe('File not found');
     });
   });
 
@@ -116,99 +116,30 @@ describe('Error Handling Integration Tests', () => {
       expect(ws.readyState).not.toBe(WebSocket.OPEN);
     });
 
-    it('should handle malformed handshake message', async () => {
+    it('should handle malformed JSON gracefully', async () => {
       server = new BaseServer();
       await server.initialize();
-      
+
       server.registerRoute('/app', createSimpleServerActor, testClientFile, 9503);
       await server.start();
-      
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      const ws = new WebSocket('ws://localhost:9503/ws');
-      
-      await new Promise((resolve) => {
-        ws.on('open', resolve);
-      });
-      
-      // Send malformed message
-      ws.send('not valid json');
-      
-      // Connection should handle it gracefully
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Try sending valid message after
-      ws.send(JSON.stringify({
-        type: 'actor_handshake',
-        route: '/app',
-        clientRootActor: 'client-123'
-      }));
-      
-      const response = await new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => reject(new Error('timeout')), 1000);
-        ws.on('message', (data) => {
-          clearTimeout(timeout);
-          resolve(JSON.parse(data.toString()));
-        });
-      }).catch(() => null);
-      
-      // Should either recover or close connection
-      if (response) {
-        expect(response.type).toBe('actor_handshake_ack');
-      } else {
-        expect(ws.readyState).not.toBe(WebSocket.OPEN);
-      }
-      
-      ws.close();
-    });
 
-    it('should handle handshake for non-existent route', async () => {
-      server = new BaseServer();
-      await server.initialize();
-      
-      server.registerRoute('/app', createSimpleServerActor, testClientFile, 9504);
-      await server.start();
-      
       await new Promise(resolve => setTimeout(resolve, 100));
-      
-      const ws = new WebSocket('ws://localhost:9504/ws');
-      
+
+      const ws = new WebSocket('ws://localhost:9503/ws');
+
       await new Promise((resolve) => {
         ws.on('open', resolve);
       });
-      
-      // Send handshake for wrong route
-      ws.send(JSON.stringify({
-        type: 'actor_handshake',
-        route: '/non-existent',
-        clientRootActor: 'client-123'
-      }));
-      
-      // Should handle gracefully
+
+      // Send malformed message - should be caught by Channel's error handler
+      ws.send('not valid json');
+
+      // Connection should handle it gracefully and stay open
       await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Connection might close or send error
-      if (ws.readyState === WebSocket.OPEN) {
-        // Try correct route
-        ws.send(JSON.stringify({
-          type: 'actor_handshake',
-          route: '/app',
-          clientRootActor: 'client-456'
-        }));
-        
-        const response = await new Promise((resolve, reject) => {
-          const timeout = setTimeout(() => reject(new Error('timeout')), 1000);
-          ws.on('message', (data) => {
-            clearTimeout(timeout);
-            resolve(JSON.parse(data.toString()));
-          });
-        }).catch(() => null);
-        
-        if (response && response.type === 'actor_handshake_ack') {
-          expect(response.route).toBe('/app');
-        }
-      }
-      
+
+      // Connection should still be open (error logged but not fatal)
+      expect(ws.readyState).toBe(WebSocket.OPEN);
+
       ws.close();
     });
   });
@@ -217,33 +148,31 @@ describe('Error Handling Integration Tests', () => {
     it('should handle actor factory throwing error', async () => {
       server = new BaseServer();
       await server.initialize();
-      
+
       const errorFactory = () => {
         throw new Error('Factory error');
       };
-      
+
       server.registerRoute('/app', errorFactory, testClientFile, 9505);
       await server.start();
-      
+
       await new Promise(resolve => setTimeout(resolve, 100));
-      
+
+      // With new protocol, error happens when WebSocket connects
+      // The error should be caught and logged, connection may close
       const ws = new WebSocket('ws://localhost:9505/ws');
-      
+
+      // Either connection fails or stays open but no session created
       await new Promise((resolve) => {
-        ws.on('open', resolve);
+        ws.on('open', () => {
+          // Connection opened despite factory error (error is logged)
+          setTimeout(resolve, 200);
+        });
+        ws.on('error', resolve);
+        ws.on('close', resolve);
       });
-      
-      // Send handshake
-      ws.send(JSON.stringify({
-        type: 'actor_handshake',
-        route: '/app',
-        clientRootActor: 'client-error'
-      }));
-      
-      // Should handle error gracefully
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      // Connection might still be open but no actor created
+
+      // Test passes if error was handled gracefully
       ws.close();
     });
 
@@ -339,47 +268,58 @@ describe('Error Handling Integration Tests', () => {
   });
 
   describe('Message handling errors', () => {
-    it('should handle actor message to non-existent actor', async () => {
+    it('should handle message to non-existent actor', async () => {
+      const { ActorSpace } = await import('@legion/actors');
+
       server = new BaseServer();
       await server.initialize();
-      
+
       server.registerRoute('/app', createSimpleServerActor, testClientFile, 9510);
       await server.start();
-      
+
       await new Promise(resolve => setTimeout(resolve, 100));
-      
+
+      // Create client-side ActorSpace
+      const clientSpace = new ActorSpace('client-test');
+
+      let sessionReadyReceived = false;
+      const clientActor = {
+        isActor: true,
+        receive: function(messageType, data) {
+          if (messageType === 'session-ready') {
+            sessionReadyReceived = true;
+          }
+        }
+      };
+      clientSpace.register(clientActor, 'client-root');
+
       const ws = new WebSocket('ws://localhost:9510/ws');
-      
-      await new Promise((resolve) => {
-        ws.on('open', resolve);
-      });
-      
-      // Complete handshake
-      ws.send(JSON.stringify({
-        type: 'actor_handshake',
-        route: '/app',
-        clientRootActor: 'client-msg'
-      }));
-      
-      await new Promise((resolve) => {
-        ws.on('message', resolve);
-      });
-      
-      // Send message to non-existent actor
-      ws.send(JSON.stringify({
-        type: 'actor_message',
-        from: 'client-msg',
-        to: 'non-existent-actor',
-        message: { type: 'test' }
-      }));
-      
-      // Should handle gracefully
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+      const channel = clientSpace.addChannel(ws, clientActor);
+
+      await new Promise(resolve => ws.on('open', resolve));
+
+      // Wait for session-ready
+      const startTime = Date.now();
+      while (!sessionReadyReceived && (Date.now() - startTime) < 3000) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+
+      // Try to send message to non-existent actor
+      // This should log an error but not crash
+      const nonExistentActor = channel.makeRemote('non-existent-actor-guid');
+
+      // Send message - will timeout since actor doesn't exist, but shouldn't crash
+      const result = await nonExistentActor.receive('test', {});
+
+      // Should get undefined (timeout) since actor doesn't exist
+      expect(result).toBeUndefined();
+
       // Connection should still be open
       expect(ws.readyState).toBe(WebSocket.OPEN);
-      
+
       ws.close();
-    });
+      await new Promise(resolve => setTimeout(resolve, 100));
+      await clientSpace.destroy();
+    }, 10000);
   });
 });

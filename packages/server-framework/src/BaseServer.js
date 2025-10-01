@@ -1017,8 +1017,15 @@ export class BaseServer {
         if (messageType === 'channel_connected') {
           console.log(`Space actor: Channel connected for route ${this.routePath}`);
 
-          // Create session actor
-          const sessionActor = this.sessionActorFactory(this.services);
+          // Create session actor with error handling
+          let sessionActor;
+          try {
+            sessionActor = this.sessionActorFactory(this.services);
+          } catch (error) {
+            console.error(`Error creating session actor for route ${this.routePath}:`, error.message);
+            data.channel.close();
+            return;
+          }
 
           // Handle actor creation failure
           if (!sessionActor) {

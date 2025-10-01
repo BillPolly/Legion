@@ -245,6 +245,15 @@ export class ActorSpace {
         if (targetActor) {
             const msgType = Array.isArray(payload) ? payload[0] : 'unknown';
             console.log(`ACTORSPACE ${this.spaceId}: Dispatching type="${msgType}" to actor ${targetGuid}`);
+
+            // Check if this is a RemoteActor receiving a response
+            if (targetActor.isRemote && typeof targetActor._handleResponse === 'function') {
+                // This is a response to a RemoteActor's call
+                console.log(`ACTORSPACE ${this.spaceId}: RemoteActor ${targetGuid} receiving response`);
+                targetActor._handleResponse(payload);
+                return; // Don't send response to a response
+            }
+
             let response;
             if(Array.isArray(payload)){
                 response = await targetActor.receive(...payload);
@@ -256,7 +265,8 @@ export class ActorSpace {
             }
 
             // Phase 7: If receive() returns a response and message has sourceGuid, send response back
-            if (response && sourceGuid) {
+            if (response !== undefined && sourceGuid) {
+                console.log(`ACTORSPACE ${this.spaceId}: Sending response back to ${sourceGuid}`);
                 channel.send(sourceGuid, response);
             }
         } else {

@@ -57,17 +57,37 @@ export class Channel {
 
     /**
      * Sends pre-encoded data over the communication endpoint.
-     * Called by the ActorSpace.
-     * @param {string} encodedData - The JSON string to send.
+     * Called by the ActorSpace or RemoteActor.
+     * @param {string} targetGuid - The GUID of the target actor.
+     * @param {*} payload - The payload to send.
+     * @param {...*} args - Additional arguments (will be combined with payload in array).
+     * @param {string} [sourceGuid] - Optional source GUID for response routing.
      */
-    send(targetGuid, payload,...args) {
+    send(targetGuid, payload, ...args) {
+        // Extract sourceGuid if it was passed as last arg AND is a string starting with expected pattern
+        let sourceGuid = undefined;
+        if (args.length > 0) {
+            const lastArg = args[args.length - 1];
+            // Check if last arg looks like a GUID (contains '-' and is a string)
+            if (typeof lastArg === 'string' && lastArg.includes('-')) {
+                sourceGuid = lastArg;
+                args.pop(); // Remove sourceGuid from args
+            }
+        }
+
         if(args.length > 0){
             payload = [payload,...args];
         }
-        const encodedData = this.actorSpace.encode({targetGuid,payload})
+
+        const message = { targetGuid, payload };
+        if (sourceGuid) {
+            message.sourceGuid = sourceGuid;
+        }
+
+        const encodedData = this.actorSpace.encode(message);
         const msgType = Array.isArray(payload) ? payload[0] : 'unknown';
-        console.log("CHANNEL SEND: target=", targetGuid, "type=", msgType, "bytes=", encodedData.length);
-        // it will not be encoded! the
+        console.log("CHANNEL SEND: target=", targetGuid, "type=", msgType, "source=", sourceGuid || 'none', "bytes=", encodedData.length);
+
         try {
             // TODO: Check endpoint readyState before sending?
             // The underlying endpoint (e.g. WebSocket) might handle this.

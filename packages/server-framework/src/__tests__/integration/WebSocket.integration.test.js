@@ -11,7 +11,7 @@ import path from 'path';
 describe('WebSocket Integration Tests', () => {
   let server;
   let testClientFile;
-  const testPort = 9877;
+  const testPort = 9920; // Changed to avoid conflicts with other tests
 
   beforeAll(async () => {
     // Create test client file
@@ -181,19 +181,15 @@ describe('WebSocket Integration Tests', () => {
 
       await new Promise(resolve => ws.on('open', resolve));
 
-      // Wait for session-ready
-      await new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => reject(new Error('Timeout waiting for session-ready')), 3000);
-        const check = () => {
-          if (sessionReadyReceived) {
-            clearTimeout(timeout);
-            resolve();
-          } else {
-            setTimeout(check, 50);
-          }
-        };
-        check();
-      });
+      // Wait for session-ready with simpler approach
+      const startTime = Date.now();
+      while (!sessionReadyReceived && (Date.now() - startTime) < 3000) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+
+      if (!sessionReadyReceived) {
+        throw new Error('Timeout waiting for session-ready');
+      }
 
       // Server should have sent session-ready
       expect(sessionReadyReceived).toBeDefined();
@@ -201,7 +197,9 @@ describe('WebSocket Integration Tests', () => {
       expect(sessionReadyReceived.data.sessionId).toBeDefined();
       expect(sessionReadyReceived.data.serverActor).toBeDefined();
 
+      // Clean up
       ws.close();
+      await new Promise(resolve => setTimeout(resolve, 100)); // Wait for close
       await clientSpace.destroy();
     }, 10000);
 
@@ -248,19 +246,15 @@ describe('WebSocket Integration Tests', () => {
 
       await new Promise(resolve => ws.on('open', resolve));
 
-      // Wait for session-ready
-      await new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => reject(new Error('Timeout waiting for session-ready')), 3000);
-        const check = () => {
-          if (serverActorId) {
-            clearTimeout(timeout);
-            resolve();
-          } else {
-            setTimeout(check, 50);
-          }
-        };
-        check();
-      });
+      // Wait for session-ready with simpler approach
+      const startTime = Date.now();
+      while (!serverActorId && (Date.now() - startTime) < 3000) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+
+      if (!serverActorId) {
+        throw new Error('Timeout waiting for session-ready');
+      }
 
       // Now we can communicate with server actor
       const serverActorRef = channel.makeRemote(serverActorId);
@@ -271,7 +265,9 @@ describe('WebSocket Integration Tests', () => {
       expect(result).toBeDefined();
       expect(result.pong).toBe(true);
 
+      // Clean up
       ws.close();
+      await new Promise(resolve => setTimeout(resolve, 100)); // Wait for close
       await clientSpace.destroy();
     }, 10000);
   });
