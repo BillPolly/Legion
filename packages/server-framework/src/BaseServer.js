@@ -309,6 +309,11 @@ export class BaseServer {
       try {
         // Add middleware to rewrite imports in JS files
         app.use(routePath, async (req, res, next) => {
+          // Skip WebSocket paths
+          if (req.path === '/ws' || req.path.startsWith('/ws/')) {
+            return next();
+          }
+
           // Only process .js and .mjs files
           if (req.path.endsWith('.js') || req.path.endsWith('.mjs')) {
             try {
@@ -609,11 +614,12 @@ export class BaseServer {
    */
   setupLegionPackageRoutes(app) {
     console.log('📦 Setting up Legion package routes with dynamic imports...');
-    
+    console.log('📦 MonorepoRoot at setup time:', this.monorepoRoot);
+
     // Cache for resolved packages and files
     this.packageCache = new Map();
     this.fileCache = new Map();
-    
+
     // Single route handler for all /legion/* requests
     app.use('/legion', async (req, res, next) => {
       try {
@@ -621,9 +627,11 @@ export class BaseServer {
         const pathParts = req.path.substring(1).split('/'); // Remove leading /
         const packageName = pathParts[0];
         const filePath = pathParts.slice(1).join('/') || 'index.js';
-        
+
+        console.log(`📦 /legion request: ${packageName}/${filePath}, monorepoRoot=${this.monorepoRoot}`);
+
         const cacheKey = `${packageName}:${filePath}`;
-        
+
         // Check file cache first
         if (this.fileCache.has(cacheKey)) {
           const cached = this.fileCache.get(cacheKey);
@@ -631,16 +639,17 @@ export class BaseServer {
           res.send(cached.content);
           return;
         }
-        
+
         // Get or resolve package using simple path mapping (like aiur-ui server)
         let packageInfo = this.packageCache.get(packageName);
         if (!packageInfo) {
           try {
             // Use simple path mapping - no complex module resolution needed
             const fullPackageName = `@legion/${packageName}`;
-            
+
             // Map to monorepo packages directory
             if (!this.monorepoRoot) {
+              console.error('❌ Monorepo root not configured! this.monorepoRoot =', this.monorepoRoot);
               throw new Error('Monorepo root not configured');
             }
             
@@ -650,6 +659,7 @@ export class BaseServer {
             // Try different possible locations for the package
             const possiblePaths = [
               path.join(this.monorepoRoot, 'packages', packageName), // packages/resource-manager
+              path.join(this.monorepoRoot, 'packages', 'modules', packageName), // packages/modules/showme
               path.join(this.monorepoRoot, 'packages', 'frontend', packageName), // packages/frontend/declarative-components
               path.join(this.monorepoRoot, 'packages', 'shared', packageName), // packages/shared/data
               path.join(this.monorepoRoot, 'packages', 'shared', 'data', packageName), // packages/shared/data/handle
@@ -685,23 +695,28 @@ export class BaseServer {
           }
         }
         
-        // Resolve file path within package - map to src/ directory if not already there
-        let actualFilePath;
-        
-        // If filePath already includes src/, use it directly, otherwise add src/
-        if (filePath.startsWith('src/')) {
-          actualFilePath = path.join(packageInfo.path, filePath);
-        } else {
-          actualFilePath = path.join(packageInfo.path, 'src', filePath);
-        }
-        
-        if (!actualFilePath) {
-          console.warn(`File not found: ${cacheKey}`);
-          return next();
-        }
-        
-        // Read and serve file
+        // Resolve file path within package
+        // Try direct path first, then src/ subdirectory
+        let actualFilePath = path.join(packageInfo.path, filePath);
+
         const fs = await import('fs');
+
+        // Check if file exists, if not try src/ subdirectory
+        try {
+          await fs.promises.access(actualFilePath);
+        } catch (err) {
+          // Try src/ subdirectory
+          const srcPath = path.join(packageInfo.path, 'src', filePath);
+          try {
+            await fs.promises.access(srcPath);
+            actualFilePath = srcPath;
+          } catch (err2) {
+            console.warn(`File not found: ${cacheKey} (tried ${actualFilePath} and ${srcPath})`);
+            return next();
+          }
+        }
+
+        // Read and serve file
         const content = await fs.promises.readFile(actualFilePath, 'utf8');
         
         let finalContent = content;

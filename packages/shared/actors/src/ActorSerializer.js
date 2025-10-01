@@ -28,6 +28,9 @@ export class ActorSerializer {
   serialize(obj) {
     const visited = new Set(); // Track visited objects to detect cycles
 
+    // Capture actorSpace reference for use in replacer
+    const actorSpace = this.actorSpace;
+
     const replacer = (key, value) => {
       // Handle non-object types or null directly
       if (typeof value !== 'object' || value === null) {
@@ -46,16 +49,16 @@ export class ActorSerializer {
       // --- Actor Handling (MUST check BEFORE serialize() for Handles) ---
       if (value?.isActor === true) {
         // Is it an actor *already known* to this space?
-        let guid = this.actorSpace.objectToGuid.get(value);
+        let guid = actorSpace.objectToGuid.get(value);
         if (!guid) {
           // If not known, should we assign a GUID? Only if it's a LocalActor belonging to this space.
           if (!value.isRemote) { // local
-            guid = this.actorSpace._generateGuid();
-            this.actorSpace.objectToGuid.set(value, guid);
-            this.actorSpace.guidToObject.set(guid, value);
+            guid = actorSpace._generateGuid();
+            actorSpace.objectToGuid.set(value, guid);
+            actorSpace.guidToObject.set(guid, value);
           } else if (value.isRemote) {
             // It's a RemoteActorPlaceholder not in our map. This is an error state.
-            const logPrefix = `[${this.actorSpace.spaceId} Serialize Replacer Key: "${key}"]`;
+            const logPrefix = `[${actorSpace.spaceId} Serialize Replacer Key: "${key}"]`;
             console.error(`${logPrefix} Error: Encountered unknown RemoteActorPlaceholder! Should have been mapped during deserialize.`, value);
             return null; // Or throw?
           }
@@ -103,7 +106,7 @@ export class ActorSerializer {
       const encoded = JSON.stringify(obj, replacer);
       return encoded;
     } catch (error) {
-      console.error(`ActorSerializer (for ${this.actorSpace.spaceId}): Serialization failed:`, error);
+      console.error(`ActorSerializer (for ${actorSpace.spaceId}): Serialization failed:`, error);
       throw error;
     } finally {
       visited.clear(); // Clear after top-level stringify finishes

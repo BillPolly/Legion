@@ -11,11 +11,11 @@
   },
   "keywords": ["graph", "rag", "handles", "semantic", "ontology", "legion"],
   "dependencies": {
-    "@legion/handle": "workspace:*",
-    "@legion/rdf": "workspace:*",
-    "@legion/semantic-search": "workspace:*",
-    "@legion/resource-manager": "workspace:*",
-    "@legion/schema": "workspace:*"
+    "@legion/handle": "*",
+    "@legion/rdf": "*",
+    "@legion/semantic-search": "*",
+    "@legion/resource-manager": "*",
+    "@legion/schema": "*"
   },
   "devDependencies": {
     "jest": "^29.7.0"

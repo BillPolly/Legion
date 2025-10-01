@@ -53,20 +53,30 @@ export class ShowMeServerActor extends Actor {
    */
   async sendTestImage() {
     try {
-      console.log('[SERVER] Creating FileHandle for test image...');
+      console.log('[SERVER] Loading test image data...');
 
-      // Get test image
-      const imagePath = '/Users/maxximus/Documents/max-projects/pocs/Legion/packages/modules/showme/__tests__/__tmp/test-image.jpg';
+      // Get test image - use an actual file that exists
+      const fs = await import('fs');
+      const path = await import('path');
+      const imagePath = '/Users/maxximus/Documents/max-projects/pocs/Legion/artifacts/dalle3-2025-09-08T12-11-12.png';
 
-      // Create FileHandle using ResourceManager
-      const resourceManager = await ResourceManager.getInstance();
-      const fileHandle = await resourceManager.createHandleFromURI(`legion://local/filesystem/${imagePath}`);
+      // Read image file and convert to base64
+      const imageBuffer = fs.readFileSync(imagePath);
+      const base64Image = imageBuffer.toString('base64');
+      const dataUrl = `data:image/png;base64,${base64Image}`;
 
-      console.log('[SERVER] Sending display-asset with FileHandle to client...');
-      // ActorSerializer will automatically register the Handle
+      console.log('[SERVER] Sending display-asset with image data to client...');
+      console.log(`[SERVER] Image size: ${(imageBuffer.length / 1024).toFixed(2)} KB`);
+
+      // Send the image data directly
       this.remoteActor.receive('display-asset', {
-        asset: fileHandle,
-        title: '🐱 Test Cat Image'
+        asset: {
+          data: dataUrl,
+          type: 'image/png',
+          width: 1024,
+          height: 1024
+        },
+        title: '🎨 Beautiful AI-Generated Art'
       });
       console.log('[SERVER] Display-asset message sent');
     } catch (error) {

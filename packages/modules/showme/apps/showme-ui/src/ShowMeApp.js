@@ -1,10 +1,12 @@
 /**
  * ShowMeApp
- * 
+ *
  * Main application class for ShowMe UI
  * Uses ShowMeClientActor for handle-based asset display communication
  */
 
+import { ActorSpace, ActorSerializer } from '@legion/actors';
+import { RemoteHandle } from '@legion/handle';
 import { BrowserShowMeClientActor } from './client/BrowserShowMeClientActor.js';
 import { AssetDisplayManager } from './services/AssetDisplayManager.js';
 import { WebSocketService } from './services/WebSocketService.js';

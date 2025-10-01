@@ -26,6 +26,17 @@
 </head>
 <body>
   <div id="app"></div>
+
+  <!-- ShowMe Browser Agent for monitoring/debugging -->
+  <script>
+    // Configuration for browser agent
+    window.__SHOWME_WS_PORT__ = window.location.port || '3700';
+    window.__SHOWME_WS_HOST__ = window.location.hostname || 'localhost';
+    window.__SHOWME_WINDOW_ID__ = 'window-' + Date.now();
+    window.__SHOWME_SESSION_ID__ = 'session-' + Date.now();
+  </script>
+  <script src="/showme-src/showme-browser-agent.js"></script>
+
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

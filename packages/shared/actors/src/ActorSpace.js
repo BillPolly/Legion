@@ -85,7 +85,7 @@ export class ActorSpace {
      * @param {Channel} sourceChannel - The channel the message arrived on.
      */
     async handleIncomingMessage(decodedMessage, channel) {
-        const { targetGuid, payload } = decodedMessage;
+        const { targetGuid, payload, sourceGuid } = decodedMessage;
 
         let targetActor = this.guidToObject.get(targetGuid);
 
@@ -102,9 +102,9 @@ export class ActorSpace {
                 console.log(`ACTORSPACE ${this.spaceId}: Actor ${targetGuid} returned response`);
             }
 
-            // Phase 7: If receive() returns a response and payload has sourceGuid, send response back
-            if (response && payload && payload.sourceGuid) {
-                channel.send(payload.sourceGuid, response);
+            // Phase 7: If receive() returns a response and message has sourceGuid, send response back
+            if (response && sourceGuid) {
+                channel.send(sourceGuid, response);
             }
         } else {
             // Unknown GUID claims to be from *this* space, but we don't know it. Error.

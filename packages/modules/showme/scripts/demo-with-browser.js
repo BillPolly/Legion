@@ -35,7 +35,7 @@ async function demo() {
 
   // Open browser
   console.log('Opening browser...');
-  await open(`http://localhost:${PORT}/simple-demo.html`);
+  await open(`http://localhost:${PORT}/test-actor-showme.html`);
   console.log('✅ Browser opened\n');
 
   // Wait for client to connect

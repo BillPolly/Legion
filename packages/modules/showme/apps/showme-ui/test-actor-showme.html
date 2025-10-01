@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShowMe Actor Test</title>
+  <style>
+    :root {
+      --bg-primary: #1e1e1e;
+      --bg-secondary: #2d2d2d;
+      --text-primary: #e0e0e0;
+      --text-secondary: #a0a0a0;
+      --accent: #0ea5e9;
+      --success: #10b981;
+      --error: #ef4444;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .status {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status.connected {
+      background: var(--success);
+      color: white;
+    }
+
+    .status.disconnected {
+      background: var(--error);
+      color: white;
+    }
+
+    .status::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .container {
+      max-width: 800px;
+      width: 100%;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .asset-display {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 30px;
+      min-height: 400px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #asset-container {
+      width: 100%;
+    }
+
+    .asset-item {
+      margin: 20px 0;
+      padding: 20px;
+      background: var(--bg-primary);
+      border-radius: 8px;
+      border: 2px solid var(--accent);
+    }
+
+    .asset-title {
+      font-size: 1.2rem;
+      margin-bottom: 15px;
+      color: var(--accent);
+    }
+
+    .asset-image {
+      max-width: 100%;
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .loading {
+      color: var(--text-secondary);
+      text-align: center;
+      padding: 40px;
+    }
+
+    .error-message {
+      color: var(--error);
+      padding: 20px;
+      background: rgba(239, 68, 68, 0.1);
+      border-radius: 8px;
+      border-left: 4px solid var(--error);
+    }
+  </style>
+</head>
+<body>
+  <div class="status disconnected" id="status">Disconnected</div>
+
+  <div class="container">
+    <h1>ShowMe Actor Test</h1>
+    <p class="subtitle">Testing ActorSpace-based image display</p>
+
+    <div class="asset-display">
+      <div id="asset-container">
+        <div class="loading">Connecting to server...</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { ActorSpace, ActorSerializer } from '/legion/actors/index.js';
+    import { RemoteHandle } from '/legion/handle/index.js';
+
+    // Register RemoteHandle with ActorSerializer
+    ActorSerializer.registerRemoteHandle(RemoteHandle);
+
+    console.log('[CLIENT] Starting ShowMe Actor Test');
+
+    // Get server URL from current page
+    const port = window.location.port || '3700';
+    const host = window.location.hostname || 'localhost';
+    const serverUrl = `ws://${host}:${port}/ws?route=/showme`;
+    console.log('[CLIENT] Server URL:', serverUrl);
+
+    // Create ActorSpace
+    const actorSpace = new ActorSpace('client');
+    console.log('[CLIENT] ActorSpace created');
+
+    // Track status
+    let isConnected = false;
+    const statusEl = document.getElementById('status');
+    const assetContainer = document.getElementById('asset-container');
+
+    // Create a simple client actor to receive messages
+    const clientActor = {
+      isActor: true,
+      receive(messageType, data) {
+        console.log('[CLIENT ACTOR] Received:', messageType, data);
+
+        if (messageType === 'ready') {
+          console.log('[CLIENT] Server is ready');
+          return;
+        }
+
+        if (messageType === 'display-asset') {
+          handleDisplayAsset(data);
+        }
+      }
+    };
+
+    // Register the client actor
+    actorSpace.register(clientActor, 'client-root');
+    console.log('[CLIENT] Client actor registered as client-root');
+
+    // Create WebSocket connection
+    const ws = new WebSocket(serverUrl);
+    console.log('[CLIENT] WebSocket created, connecting...');
+
+    function updateStatus(connected) {
+      isConnected = connected;
+      statusEl.className = `status ${connected ? 'connected' : 'disconnected'}`;
+      statusEl.textContent = connected ? 'Connected' : 'Disconnected';
+    }
+
+    function showError(message) {
+      assetContainer.innerHTML = `<div class="error-message">${message}</div>`;
+    }
+
+    function displayAsset(title, data) {
+      console.log('[CLIENT] Displaying asset:', title);
+      const assetDiv = document.createElement('div');
+      assetDiv.className = 'asset-item';
+      assetDiv.innerHTML = `
+        <div class="asset-title">${title}</div>
+        <img src="${data}" alt="${title}" class="asset-image" />
+      `;
+      assetContainer.appendChild(assetDiv);
+    }
+
+    async function handleDisplayAsset(data) {
+      console.log('[CLIENT] handleDisplayAsset:', data);
+
+      if (!data.asset) {
+        console.error('[CLIENT] No asset in data');
+        return;
+      }
+
+      // Clear loading message on first asset
+      if (assetContainer.querySelector('.loading')) {
+        assetContainer.innerHTML = '';
+      }
+
+      // Check if it's a RemoteHandle
+      if (data.asset.isActor && data.asset.isRemote) {
+        console.log('[CLIENT] Asset is RemoteHandle, calling getData()');
+        try {
+          const imageData = await data.asset.getData();
+          console.log('[CLIENT] Got image data:', imageData.data ? imageData.data.substring(0, 100) + '...' : imageData);
+          displayAsset(data.title || 'Untitled', imageData.data || imageData);
+        } catch (error) {
+          console.error('[CLIENT] Error getting data from RemoteHandle:', error);
+          showError(`Failed to load asset: ${error.message}`);
+        }
+      } else if (data.asset.data) {
+        // Direct data with .data property
+        console.log('[CLIENT] Asset has direct data in .data property');
+        displayAsset(data.title || 'Untitled', data.asset.data);
+      } else if (typeof data.asset === 'string') {
+        // Direct data as string
+        console.log('[CLIENT] Asset is direct string data');
+        displayAsset(data.title || 'Untitled', data.asset);
+      } else {
+        console.error('[CLIENT] Unknown asset format:', data.asset);
+        showError('Unknown asset format');
+      }
+    }
+
+    // WebSocket event handlers
+    ws.onopen = () => {
+      console.log('[CLIENT] WebSocket connected to', serverUrl);
+
+      // Send actor handshake
+      const handshake = {
+        type: 'actor_handshake',
+        clientRootActor: 'client-root',
+        route: '/showme'
+      };
+      console.log('[CLIENT] Sending handshake:', handshake);
+      ws.send(JSON.stringify(handshake));
+    };
+
+    ws.onmessage = async (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        console.log('[CLIENT] Received message:', message.type || message);
+
+        // Handle handshake acknowledgment
+        if (message.type === 'actor_handshake_ack') {
+          console.log('[CLIENT] Handshake acknowledged, server actor:', message.serverRootActor);
+
+          // Set up ActorSpace with channel
+          const channel = actorSpace.addChannel(ws);
+          console.log('[CLIENT] Channel created');
+
+          // Create remote reference to server actor
+          const serverActor = channel.makeRemote(message.serverRootActor);
+          console.log('[CLIENT] Remote server actor created');
+
+          updateStatus(true);
+          assetContainer.innerHTML = '<div class="loading">Waiting for assets...</div>';
+
+          // Store for handling messages
+          window.serverActor = serverActor;
+          window.actorSpace = actorSpace;
+          window.channel = channel;
+
+          return;
+        }
+
+        // For actor protocol messages, the Channel already handled them
+        // and routed them to clientActor.receive() automatically
+      } catch (error) {
+        console.error('[CLIENT] Error handling message:', error);
+        showError(`Error: ${error.message}`);
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error('[CLIENT] WebSocket error:', error);
+      updateStatus(false);
+      showError('WebSocket connection error');
+    };
+
+    ws.onclose = () => {
+      console.log('[CLIENT] WebSocket closed');
+      updateStatus(false);
+    };
+  </script>
+</body>
+</html>

@@ -18,55 +18,62 @@ export class ActorSpaceManager {
    * @param {Request} req - HTTP request object
    */
   handleConnection(ws, req) {
-    console.log(`New WebSocket connection from ${req.url}`);
-    
-    // Extract route from query parameters
-    const url = new URL(req.url, 'http://localhost');
-    const route = url.searchParams.get('route') || '/counter'; // fallback to counter for backward compatibility
-    console.log(`[SERVER] Extracted route from WebSocket connection: ${route}`);
-    
-    // Create unique ActorSpace for this connection
-    const actorSpace = new ActorSpace(`server-${Date.now()}-${Math.random()}`);
-    
-    // Store connection info
-    const connectionInfo = {
-      actorSpace,
-      serverActor: null,
-      channel: null,
-      route: route // Store the extracted route
-    };
-    this.connections.set(ws, connectionInfo);
-    
-    // Set up message handler to handle handshake protocol
-    ws.on('message', async (data) => {
-      try {
-        const message = JSON.parse(data.toString());
-        
-        // Handle actor handshake
-        if (message.type === 'actor_handshake') {
-          console.log('[SERVER] Received actor handshake:', message);
-          await this.handleHandshake(ws, message);
-        } else {
-          // Let ActorSpace handle other messages
-          console.log('[SERVER] Received non-handshake message:', message.type);
+    try {
+      console.log(`New WebSocket connection from ${req.url}`);
+      console.log(`[SERVER] WebSocket readyState:`, ws.readyState);
+      console.log(`[SERVER] Request headers:`, req.headers);
+
+      // Extract route from query parameters
+      const url = new URL(req.url, 'http://localhost');
+      const route = url.searchParams.get('route') || '/counter'; // fallback to counter for backward compatibility
+      console.log(`[SERVER] Extracted route from WebSocket connection: ${route}`);
+
+      // Create unique ActorSpace for this connection
+      const actorSpace = new ActorSpace(`server-${Date.now()}-${Math.random()}`);
+
+      // Store connection info
+      const connectionInfo = {
+        actorSpace,
+        serverActor: null,
+        channel: null,
+        route: route // Store the extracted route
+      };
+      this.connections.set(ws, connectionInfo);
+
+      // Set up message handler to handle handshake protocol
+      ws.on('message', async (data) => {
+        try {
+          const message = JSON.parse(data.toString());
+
+          // Handle actor handshake
+          if (message.type === 'actor_handshake') {
+            console.log('[SERVER] Received actor handshake:', message);
+            await this.handleHandshake(ws, message);
+          } else {
+            // Let ActorSpace handle other messages
+            console.log('[SERVER] Received non-handshake message:', message.type);
+          }
+        } catch (error) {
+          console.error('[SERVER] Error handling message:', error);
         }
-      } catch (error) {
-        // Not a JSON message, let ActorSpace handle it normally
-        console.log('[SERVER] Received non-JSON message, ignoring');
-      }
-    });
-    
-    // Set up close handler
-    ws.on('close', () => {
-      console.log('WebSocket connection closed');
-      this.cleanup(ws);
-    });
-    
-    // Set up error handler
-    ws.on('error', (error) => {
-      console.error('WebSocket error:', error);
-      // Connection will be cleaned up on close
-    });
+      });
+
+      // Set up close handler
+      ws.on('close', (code, reason) => {
+        console.log(`WebSocket connection closed - code: ${code}, reason: ${reason}`);
+        console.log('[SERVER] Close stack trace:', new Error().stack);
+        this.cleanup(ws);
+      });
+
+      // Set up error handler
+      ws.on('error', (error) => {
+        console.error('WebSocket error:', error);
+        // Connection will be cleaned up on close
+      });
+    } catch (error) {
+      console.error('[SERVER] Error in handleConnection:', error);
+      ws.close();
+    }
   }
 
   /**

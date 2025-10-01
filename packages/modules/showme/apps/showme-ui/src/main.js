@@ -47,10 +47,17 @@ async function initialize() {
  */
 function getServerUrl() {
   const params = new URLSearchParams(window.location.search);
-  const serverUrl = params.get('server') ||
-                   window.SHOWME_SERVER_URL ||
-                   'ws://localhost:3700/ws?route=/showme';
-  return serverUrl;
+
+  // Check for explicit server URL in query params or environment
+  const explicitUrl = params.get('server') || window.SHOWME_SERVER_URL;
+  if (explicitUrl) {
+    return explicitUrl;
+  }
+
+  // Default: use the port from current page URL
+  const port = window.location.port || '3700';
+  const host = window.location.hostname || 'localhost';
+  return `ws://${host}:${port}/ws?route=/showme`;
 }
 
 /**

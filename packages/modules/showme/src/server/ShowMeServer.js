@@ -7,8 +7,10 @@
 
 import { ConfigurableActorServer } from '@legion/server-framework';
 import { ResourceManager } from '@legion/resource-manager';
+import { WebSocketServer } from 'ws';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { readFileSync } from 'fs';
 import open from 'open';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -48,6 +50,10 @@ export class ShowMeServer extends ConfigurableActorServer {
       width: 1200,
       height: 800
     };
+
+    // Browser agent tracking
+    this.browserAgentWss = null;
+    this.browserAgents = new Map(); // clientId -> WebSocket
   }
 
   /**
@@ -77,8 +83,13 @@ export class ShowMeServer extends ConfigurableActorServer {
       if (!this.assets) {
         this.assets = new Map();
       }
-      
+
       await super.start();
+
+      // Set up browser agent WebSocket server on /browser path
+      // TEMPORARILY DISABLED FOR DEBUGGING
+      // this.setupBrowserAgentWebSocket();
+
       this.isRunning = true;
       console.log(`ShowMeServer started on port ${this.config.port}`);
     } catch (error) {
@@ -92,14 +103,21 @@ export class ShowMeServer extends ConfigurableActorServer {
    */
   async stop() {
     if (this.isRunning) {
+      // Close browser agent connections
+      if (this.browserAgentWss) {
+        this.browserAgentWss.close();
+        this.browserAgentWss = null;
+      }
+      this.browserAgents.clear();
+
       await super.stop();
       this.isRunning = false;
-      
+
       // Clear assets on stop
       if (this.assets) {
         this.assets.clear();
       }
-      
+
       console.log('ShowMeServer stopped');
     }
   }
@@ -168,6 +186,107 @@ export class ShowMeServer extends ConfigurableActorServer {
   }
 
   /**
+   * Set up browser agent WebSocket server
+   * @private
+   */
+  setupBrowserAgentWebSocket() {
+    const server = this.servers.get(this.config.port);
+    if (!server) {
+      console.error('Cannot setup browser agent WebSocket - no HTTP server found');
+      return;
+    }
+
+    // Create WebSocket server for browser agents on /browser path
+    this.browserAgentWss = new WebSocketServer({
+      server,
+      path: '/browser'
+    });
+
+    console.log(`Browser agent WebSocket server listening on /browser`);
+
+    // Handle browser agent connections
+    this.browserAgentWss.on('connection', (ws, req) => {
+      const clientId = `browser-agent-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      this.browserAgents.set(clientId, ws);
+
+      console.log(`🌐 Browser agent connected: ${clientId}`);
+
+      // Handle messages from browser agent
+      ws.on('message', async (data) => {
+        try {
+          const message = JSON.parse(data.toString());
+          await this.handleBrowserAgentMessage(message, clientId, ws);
+        } catch (error) {
+          console.error('Failed to process browser agent message:', error);
+        }
+      });
+
+      // Handle disconnection
+      ws.on('close', () => {
+        this.browserAgents.delete(clientId);
+        console.log(`🌐 Browser agent disconnected: ${clientId}`);
+      });
+
+      ws.on('error', (error) => {
+        console.error(`Browser agent error (${clientId}):`, error);
+      });
+
+      // Send welcome message
+      ws.send(JSON.stringify({
+        type: 'connected',
+        clientId,
+        timestamp: Date.now()
+      }));
+    });
+  }
+
+  /**
+   * Handle messages from browser agents
+   * @private
+   */
+  async handleBrowserAgentMessage(message, clientId, ws) {
+    // Log all browser agent messages
+    console.log(`[Browser Agent ${clientId}] ${message.type}:`, message);
+
+    switch (message.type) {
+      case 'browser-agent-identify':
+        console.log(`Browser agent ${clientId} identified:`, {
+          windowId: message.windowId,
+          sessionId: message.sessionId,
+          url: message.pageUrl
+        });
+        break;
+
+      case 'console':
+        // Log console messages from browser
+        const logPrefix = `[Browser ${message.windowId}] console.${message.method}:`;
+        console.log(logPrefix, ...message.args);
+        break;
+
+      case 'error':
+        // Log errors from browser
+        console.error(`[Browser ${message.windowId}] ERROR:`, message.message);
+        if (message.stack) {
+          console.error(message.stack);
+        }
+        break;
+
+      case 'unhandledrejection':
+        // Log unhandled promise rejections
+        console.error(`[Browser ${message.windowId}] UNHANDLED REJECTION:`, message.reason);
+        break;
+
+      case 'visibility':
+        // Log visibility changes
+        console.log(`[Browser ${message.windowId}] Visibility: ${message.visibilityState}`);
+        break;
+
+      default:
+        console.log(`[Browser Agent ${clientId}] Unknown message type: ${message.type}`);
+    }
+  }
+
+  /**
    * Get server status
    */
   getStatus() {
@@ -175,7 +294,8 @@ export class ShowMeServer extends ConfigurableActorServer {
       running: this.isRunning,
       port: this.config.port,
       url: this.isRunning ? `http://localhost:${this.config.port}` : null,
-      browserLaunched: this.browserLaunched
+      browserLaunched: this.browserLaunched,
+      browserAgents: this.browserAgents.size
     };
   }
 }
