@@ -1,10 +1,10 @@
 /**
  * CLI Web UI Application Entry Point
  *
- * Main application that connects to CLI server and provides terminal interface
+ * Bootstraps the MainPageActor which controls the entire page
  */
 
-import { CLIWebApp } from './CLIWebApp.js';
+import { MainPageActor } from './client/MainPageActor.js';
 
 // Initialize application when DOM is ready
 if (document.readyState === 'loading') {
@@ -15,7 +15,7 @@ if (document.readyState === 'loading') {
 
 async function initialize() {
   try {
-    console.log('Initializing CLI Web UI...');
+    console.log('Initializing Legion CLI Web UI...');
 
     // Get app container
     const container = document.getElementById('app');
@@ -26,18 +26,18 @@ async function initialize() {
     // Get server URL from query params or use default
     const serverUrl = getServerUrl();
 
-    // Create and initialize app
-    const app = new CLIWebApp({
+    // Create and initialize MainPageActor
+    const mainPageActor = new MainPageActor({
       container,
       serverUrl
     });
 
-    await app.initialize();
+    await mainPageActor.initialize();
 
-    console.log('CLI Web UI initialized successfully');
+    console.log('Legion CLI Web UI initialized successfully');
 
-    // Store app reference for debugging
-    window.cliApp = app;
+    // Store reference for debugging
+    window.mainPageActor = mainPageActor;
 
   } catch (error) {
     console.error('Failed to initialize CLI Web UI:', error);

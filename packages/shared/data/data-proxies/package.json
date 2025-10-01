@@ -8,7 +8,7 @@
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest"
   },
   "dependencies": {
-    "@legion/data-handle": "*"
+    "@legion/handle": "*"
   },
   "peerDependencies": {
     "@legion/datascript": "*",

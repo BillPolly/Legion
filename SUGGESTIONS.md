@@ -1,3 +1,39 @@
+# Legion Framework Suggestions
+
+---
+
+## Import Naming Convention Simplification
+
+**Current:** `@legion/packagename`
+```javascript
+import { ActorSpace } from '@legion/actors';
+import { jsonSchemaToZod } from '@legion/schema';
+```
+
+**Proposed:** `@packagename`
+```javascript
+import { ActorSpace } from '@actors';
+import { jsonSchemaToZod } from '@schema';
+```
+
+**Rationale:**
+- Less verbose, easier to read and type
+- Still namespaced (@ prevents conflicts with npm packages)
+- We already know we're in Legion monorepo, @legion prefix is redundant
+
+**Implementation Required:**
+1. Update all import maps in browser index.html files
+2. Update package.json imports field for Node/build tools
+3. Global find/replace across codebase for all @legion/ imports
+4. Update documentation
+
+**Benefits:**
+- Cleaner code
+- Faster development
+- Reduced cognitive overhead
+
+---
+
 # UI Accessibility Improvements for Tool Integration
 
 ## Problem Statement

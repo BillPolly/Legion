@@ -6,3 +6,4 @@ export { Channel } from './Channel.js';
 export { Query } from './Query.js';
 export { ActorSerializer } from './ActorSerializer.js';
 export { CustomActorSerializer } from './CustomActorSerializer.js';
+export { ProtocolActor } from './ProtocolActor.js';

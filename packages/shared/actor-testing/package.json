@@ -1,0 +1,36 @@
+{
+  "name": "@legion/actor-testing",
+  "version": "1.0.0",
+  "description": "Generic testing framework for Actor-based systems with MockWebSocket and JSDOM utilities",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./mocks": "./src/mocks/index.js",
+    "./harness": "./src/harness/index.js",
+    "./utils": "./src/utils/index.js"
+  },
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand"
+  },
+  "keywords": [
+    "testing",
+    "actor",
+    "websocket",
+    "jsdom",
+    "mock"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@legion/actors": "*"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "jest": "^29.7.0",
+    "jsdom": "^25.0.1"
+  },
+  "peerDependencies": {
+    "jsdom": "^25.0.1"
+  }
+}

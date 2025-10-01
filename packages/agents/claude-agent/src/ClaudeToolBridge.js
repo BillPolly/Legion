@@ -35,12 +35,20 @@ export class ClaudeToolBridge {
   /**
    * Convert Legion tool registry to array of Claude SDK tools
    * @param {Array<string>} toolNames - Optional array of tool names to include
-   * @returns {Array<Object>} Array of Claude SDK compatible tools
+   * @returns {Promise<Array<Object>>} Array of Claude SDK compatible tools
    */
-  legionToolsToClaudeTools(toolNames = null) {
-    const tools = toolNames
-      ? toolNames.map(name => this.toolRegistry.getTool(name)).filter(Boolean)
-      : this.toolRegistry.getAllTools();
+  async legionToolsToClaudeTools(toolNames = null) {
+    let tools;
+
+    if (toolNames) {
+      // Get specific tools by name
+      const toolPromises = toolNames.map(name => this.toolRegistry.getTool(name));
+      tools = (await Promise.all(toolPromises)).filter(Boolean);
+    } else {
+      // Get all tools - handle both sync and async getAllTools
+      const allTools = this.toolRegistry.getAllTools();
+      tools = allTools instanceof Promise ? await allTools : allTools;
+    }
 
     return tools.map(tool => this.legionToClaudeTool(tool));
   }

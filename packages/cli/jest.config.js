@@ -13,5 +13,6 @@ export default {
   ],
   coverageDirectory: 'coverage',
   testTimeout: 30000,
-  verbose: true
+  verbose: true,
+  globalTeardown: './__tests__/globalTeardown.js'
 };

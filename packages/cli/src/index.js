@@ -84,6 +84,11 @@ async function main() {
     // Get ResourceManager singleton
     const resourceManager = await ResourceManager.getInstance();
 
+    // Initialize ToolRegistry and register it - NO FALLBACKS!
+    const { getToolRegistry } = await import('@legion/tools-registry');
+    const toolRegistry = await getToolRegistry();
+    resourceManager.set('toolRegistry', toolRegistry);
+
     // Mode 1: Interactive
     if (options.mode === 'interactive') {
       instance = new CLI(resourceManager, {

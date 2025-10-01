@@ -19,7 +19,8 @@
   "author": "Legion Framework",
   "license": "MIT",
   "dependencies": {
-    "ws": "^8.18.3"
+    "ws": "^8.18.3",
+    "@legion/schema": "*"
   },
   "devDependencies": {
     "jest": "^29.7.0"

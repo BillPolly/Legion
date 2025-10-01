@@ -102,8 +102,8 @@ export const ClaudeAgentStrategy = {
     // Enhance request with Legion context (system prompt, artifacts, messages)
     const claudeRequest = this.contextAdapter.enhanceClaudeRequest(task, baseRequest);
 
-    // Add tools from Legion ToolRegistry
-    const tools = this.toolBridge.legionToolsToClaudeTools();
+    // Add tools from Legion ToolRegistry - ASYNC!
+    const tools = await this.toolBridge.legionToolsToClaudeTools();
     if (tools && tools.length > 0) {
       claudeRequest.tools = tools;
     }

@@ -45,8 +45,9 @@ describe('CLI Unit Tests', () => {
     expect(cli.isInitialized).toBe(false);
     expect(cli.isRunning).toBe(false);
     expect(cli.showme).toBeNull();
-    expect(cli.displayEngine).toBeNull();
-    expect(cli.commandProcessor).toBeNull();
+    expect(cli.sessionActor).toBeNull();
+    expect(cli.inputHandler).toBeNull();
+    expect(cli.outputHandler).toBeNull();
   });
 
   test('initialize() should set isInitialized to true', async () => {
@@ -57,8 +58,9 @@ describe('CLI Unit Tests', () => {
   test('initialize() should create required components', async () => {
     await cli.initialize();
     expect(cli.showme).toBeDefined();
-    expect(cli.displayEngine).toBeDefined();
-    expect(cli.commandProcessor).toBeDefined();
+    expect(cli.sessionActor).toBeDefined();
+    expect(cli.inputHandler).toBeDefined();
+    expect(cli.outputHandler).toBeDefined();
   });
 
   test('initialize() should fail if already initialized', async () => {
@@ -98,11 +100,11 @@ describe('CLI Unit Tests', () => {
   test('getStatus() should return current CLI state', () => {
     const status = cli.getStatus();
     expect(status).toEqual({
+      mode: 'interactive',
       initialized: false,
       running: false,
       hasShowMe: false,
-      hasDisplayEngine: false,
-      hasCommandProcessor: false,
+      hasSessionActor: false,
       hasInputHandler: false,
       hasOutputHandler: false
     });
@@ -113,8 +115,7 @@ describe('CLI Unit Tests', () => {
     const status = cli.getStatus();
     expect(status.initialized).toBe(true);
     expect(status.hasShowMe).toBe(true);
-    expect(status.hasDisplayEngine).toBe(true);
-    expect(status.hasCommandProcessor).toBe(true);
+    expect(status.hasSessionActor).toBe(true);
     expect(status.hasInputHandler).toBe(true);
     expect(status.hasOutputHandler).toBe(true);
   });
