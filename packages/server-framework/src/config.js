@@ -12,9 +12,8 @@ let resourceManager = null;
  * @returns {ResourceManager} The initialized ResourceManager instance
  */
 export async function initializeConfig() {
-  // Get singleton instance - NEVER create a new one
-  resourceManager = ResourceManager.getInstance();
-  await resourceManager.initialize();
+  // Get singleton instance (auto-initializes on first call)
+  resourceManager = await ResourceManager.getInstance();
   return resourceManager;
 }
 

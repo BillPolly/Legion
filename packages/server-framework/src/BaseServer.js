@@ -8,7 +8,7 @@ import cors from 'cors';
 import { WebSocketServer } from 'ws';
 import path from 'path';
 import { ResourceManager } from '@legion/resource-manager';
-import { ActorSpaceManager } from './ActorSpaceManager.js';
+import { ActorSpace } from '@legion/actors';
 import { PackageDiscovery } from './utils/PackageDiscovery.js';
 import { ImportRewriter } from './utils/ImportRewriter.js';
 import { DefaultResourceProvider, CompositeResourceProvider } from './resources/index.js';
@@ -17,14 +17,14 @@ export class BaseServer {
   constructor() {
     // Initialize Express app
     this.app = express();
-    
+
     // Core properties
     this.resourceManager = null;  // Will be initialized with singleton
-    this.routes = new Map();      // route -> { factory, clientFile, port }
+    this.routes = new Map();      // route -> { factory, clientFile, port, spaceActorFactory }
     this.services = new Map();    // Shared services for actors
     this.servers = new Map();     // port -> HTTP server instance
     this.wssInstances = new Map(); // port -> WebSocket server instance
-    this.actorManagers = new Map(); // port -> ActorSpaceManager instance  
+    this.actorSpaces = new Map(); // port -> ActorSpace instance
     this.staticRoutes = new Map(); // path -> directory
     this.host = null;
     this.monorepoRoot = null;
@@ -380,20 +380,48 @@ export class BaseServer {
     
     // Store WSS instance
     this.wssInstances.set(port, wss);
-    
-    // Create ActorSpaceManager for this port
-    // Pass only routes for this specific port
-    const portRoutes = new Map();
-    for (const route of routes) {
-      portRoutes.set(route.route, route);
-    }
-    
-    const actorManager = new ActorSpaceManager(this.services, portRoutes);
-    this.actorManagers.set(port, actorManager);
-    
-    // Handle WebSocket connections with ActorSpaceManager
-    wss.on('connection', (ws, req) => {
-      actorManager.handleConnection(ws, req);
+
+    // Create ActorSpace for this port
+    const actorSpace = new ActorSpace(`server-port-${port}`);
+    this.actorSpaces.set(port, actorSpace);
+
+    // Create space actor factory that handles routing based on query params
+    // This factory will be called for EACH WebSocket connection
+    const spaceActorFactory = () => {
+      // Create a routing space actor that handles different routes
+      return this.createRoutingSpaceActor(routes, port);
+    };
+
+    // Use ActorSpace.listen() - it handles WebSocket internally
+    // Note: We already have a WebSocket server, so we'll use manual connection handling
+    // and call actorSpace.connect manually for each connection
+    wss.on('connection', async (ws, req) => {
+      try {
+        // Extract route from query parameters
+        const url = new URL(req.url, `http://localhost:${port}`);
+        const routePath = url.searchParams.get('route') || routes[0]?.route;
+
+        // Find matching route config
+        const routeConfig = routes.find(r => r.route === routePath);
+        if (!routeConfig) {
+          console.error(`No route found for ${routePath}`);
+          ws.close();
+          return;
+        }
+
+        // Create space actor for this connection using the route's space actor factory
+        const spaceActor = routeConfig.spaceActorFactory
+          ? routeConfig.spaceActorFactory(this.services, routeConfig)
+          : this.createDefaultSpaceActor(routeConfig, this.services);
+
+        // Add channel to actor space with space actor
+        const channel = actorSpace.addChannel(ws, spaceActor);
+
+        console.log(`WebSocket connected for route ${routePath} on port ${port}`);
+      } catch (error) {
+        console.error('Error handling WebSocket connection:', error);
+        ws.close();
+      }
     });
   }
   
@@ -970,12 +998,87 @@ export class BaseServer {
   /**
    * Stop all servers
    */
+  /**
+   * Create a default space actor for a route
+   * This handles the connection protocol and creates session actors
+   * @private
+   */
+  createDefaultSpaceActor(routeConfig, services) {
+    const { factory: sessionActorFactory, route: routePath } = routeConfig;
+
+    return {
+      isActor: true,
+      sessionActorFactory,
+      services,
+      routePath,
+      sessions: new Map(), // Track sessions for this space actor
+
+      receive(messageType, data) {
+        if (messageType === 'channel_connected') {
+          console.log(`Space actor: Channel connected for route ${this.routePath}`);
+
+          // Create session actor
+          const sessionActor = this.sessionActorFactory(this.services);
+
+          // Handle actor creation failure
+          if (!sessionActor) {
+            console.error(`Failed to create session actor for route ${this.routePath}`);
+            data.channel.close();
+            return;
+          }
+
+          const sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+          // Register session actor in the ActorSpace
+          const actorSpace = data.channel.actorSpace;
+          actorSpace.register(sessionActor, sessionId);
+
+          // Track session
+          this.sessions.set(sessionId, {
+            actor: sessionActor,
+            channel: data.channel
+          });
+
+          // Create remote actor for client (assume client has 'client-root' actor)
+          const remoteClient = data.channel.makeRemote('client-root');
+
+          // Give remote reference to session actor if it needs it
+          if (typeof sessionActor.setRemoteActor === 'function') {
+            sessionActor.setRemoteActor(remoteClient);
+          }
+
+          // SERVER MUST SEND FIRST (protocol requirement)
+          // Send session-ready message to client
+          remoteClient.receive('session-ready', {
+            sessionId,
+            serverActor: sessionId,
+            timestamp: Date.now()
+          });
+
+          console.log(`Session created: ${sessionId} for route ${this.routePath}`);
+        } else if (messageType === 'channel_closed') {
+          console.log(`Space actor: Channel closed for route ${this.routePath}`);
+          // Cleanup sessions associated with this channel
+          for (const [sessionId, session] of this.sessions.entries()) {
+            if (session.channel === data.channel) {
+              this.sessions.delete(sessionId);
+              console.log(`Session removed: ${sessionId}`);
+            }
+          }
+        } else if (messageType === 'channel_error') {
+          console.error(`Space actor: Channel error for route ${this.routePath}:`, data.error);
+        }
+      }
+    };
+  }
+
   async stop() {
-    // Close all active WebSocket connections first
-    for (const [port, actorManager] of this.actorManagers) {
-      actorManager.closeAllConnections();
+    // Close all actor spaces
+    for (const [port, actorSpace] of this.actorSpaces) {
+      await actorSpace.destroy();
+      console.log(`Destroyed ActorSpace on port ${port}`);
     }
-    this.actorManagers.clear();
+    this.actorSpaces.clear();
 
     // Close WebSocket servers
     for (const [port, wss] of this.wssInstances) {
@@ -994,10 +1097,10 @@ export class BaseServer {
         });
       }));
     }
-    
+
     await Promise.all(closePromises);
     this.servers.clear();
-    
+
     console.log('All servers stopped');
   }
 }

@@ -32,11 +32,12 @@ export class ConfigurableActorServer extends BaseServer {
         throw new Error('Each route must have a path');
       }
       if (!route.serverActor) {
-        throw new Error(`Route ${route.path} must have a serverActor`);
+        throw new Error(`Route ${route.path} must have a serverActor (session actor)`);
       }
       if (!route.clientActor) {
         throw new Error(`Route ${route.path} must have a clientActor`);
       }
+      // spaceActor is optional - if not provided, default space actor will be used
     }
   }
 
@@ -133,22 +134,28 @@ export class ConfigurableActorServer extends BaseServer {
     for (const routeConfig of this.config.routes) {
       try {
         console.log(`Registering route: ${routeConfig.path}`);
-        
-        // Load server actor module
+
+        // Load server actor module (session actor)
         const serverActorModule = await this.loadActorModule(routeConfig.serverActor, 'server');
-        
+
+        // Load space actor module if provided
+        let spaceActorModule = null;
+        if (routeConfig.spaceActor) {
+          spaceActorModule = await this.loadActorModule(routeConfig.spaceActor, 'space');
+        }
+
         // Resolve client actor path
         const clientActorPath = await this.resolveActorPath(routeConfig.clientActor, 'client');
-        
-        // Create factory function that instantiates the server actor
-        const serverActorFactory = (services) => {
+
+        // Create factory function that instantiates the session actor
+        const sessionActorFactory = (services) => {
           // Get actor class/function
           const ServerActor = serverActorModule.default || serverActorModule;
-          
+
           // Check if specific services are requested
           const requestedServices = routeConfig.services || [];
           const actorServices = {};
-          
+
           // Provide requested services
           for (const serviceName of requestedServices) {
             if (services.has(serviceName)) {
@@ -157,7 +164,7 @@ export class ConfigurableActorServer extends BaseServer {
               console.warn(`Service ${serviceName} not found for route ${routeConfig.path}`);
             }
           }
-          
+
           // Create actor instance
           if (typeof ServerActor === 'function') {
             // Class or constructor function
@@ -173,20 +180,54 @@ export class ConfigurableActorServer extends BaseServer {
             return ServerActor;
           }
         };
-        
+
+        // Create space actor factory if space actor was provided
+        let spaceActorFactory = null;
+        if (spaceActorModule) {
+          spaceActorFactory = (services, config) => {
+            const SpaceActor = spaceActorModule.default || spaceActorModule;
+
+            // Check if specific services are requested
+            const requestedServices = routeConfig.services || [];
+            const actorServices = {};
+
+            // Provide requested services
+            for (const serviceName of requestedServices) {
+              if (services.has(serviceName)) {
+                actorServices[serviceName] = services.get(serviceName);
+              }
+            }
+
+            // Create space actor instance with config
+            if (typeof SpaceActor === 'function') {
+              if (SpaceActor.prototype && SpaceActor.prototype.constructor === SpaceActor) {
+                // It's a class
+                return new SpaceActor(actorServices, config);
+              } else {
+                // It's a factory function
+                return SpaceActor(actorServices, config);
+              }
+            } else {
+              return SpaceActor;
+            }
+          };
+        }
+
+
         // Prepare route config with context for resource provider
         const fullRouteConfig = {
           ...routeConfig,
-          factory: serverActorFactory,
+          factory: sessionActorFactory,  // This is the session actor factory (old serverActorFactory)
+          spaceActorFactory,             // Optional space actor factory
           clientFile: clientActorPath,
           port: routeConfig.port || this.config.port || 8080,
           __dirname: this.config.__dirname // Pass config directory for relative path resolution
         };
 
         // Register with base server, passing the full config
-        this.registerRoute(fullRouteConfig.path, serverActorFactory, clientActorPath, fullRouteConfig.port, fullRouteConfig);
-        
-        console.log(`✅ Route registered: ${routeConfig.path} on port ${fullRouteConfig.port}`);
+        this.registerRoute(fullRouteConfig.path, sessionActorFactory, clientActorPath, fullRouteConfig.port, fullRouteConfig);
+
+        console.log(`✅ Route registered: ${routeConfig.path} on port ${fullRouteConfig.port}${spaceActorFactory ? ' (with custom space actor)' : ''}`);
       } catch (error) {
         console.error(`Failed to register route ${routeConfig.path}:`, error);
         throw new Error(`Cannot register route ${routeConfig.path}: ${error.message}`);

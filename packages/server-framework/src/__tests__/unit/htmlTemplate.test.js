@@ -42,10 +42,10 @@ describe('HTML Template Generation', () => {
         route: '/test'
       });
 
-      expect(html).toContain("const ws = new WebSocket('ws://localhost:9090/ws')");
+      expect(html).toContain("new WebSocket('ws://localhost:9090/ws?route=/test')");
     });
 
-    it('should inject route correctly in handshake', () => {
+    it('should inject route correctly in WebSocket URL', () => {
       const html = generateHTML({
         title: 'Test',
         clientActorPath: '/test/client.js',
@@ -53,10 +53,10 @@ describe('HTML Template Generation', () => {
         route: '/database'
       });
 
-      expect(html).toContain("route: '/database'");
+      expect(html).toContain("?route=/database");
     });
 
-    it('should include ActorSpace import', () => {
+    it('should include ActorSpace import with @legion', () => {
       const html = generateHTML({
         title: 'Test',
         clientActorPath: '/test/client.js',
@@ -64,7 +64,20 @@ describe('HTML Template Generation', () => {
         route: '/test'
       });
 
-      expect(html).toContain("import { ActorSpace } from '/legion/actors/ActorSpace.js'");
+      expect(html).toContain("import { ActorSpace } from '@legion/actors'");
+    });
+
+    it('should include import map for @legion packages', () => {
+      const html = generateHTML({
+        title: 'Test',
+        clientActorPath: '/test/client.js',
+        wsEndpoint: 'ws://localhost:8080/ws',
+        route: '/test'
+      });
+
+      expect(html).toContain('<script type="importmap">');
+      expect(html).toContain('"@legion/actors"');
+      expect(html).toContain('"/legion/actors/src/index.js"');
     });
 
     it('should include WebSocket connection setup', () => {
@@ -76,11 +89,11 @@ describe('HTML Template Generation', () => {
       });
 
       expect(html).toContain('ws.onopen');
-      expect(html).toContain('ws.onmessage');
       expect(html).toContain('ws.onerror');
+      expect(html).toContain('ws.onclose');
     });
 
-    it('should include actor handshake logic', () => {
+    it('should include session-ready handler (new protocol)', () => {
       const html = generateHTML({
         title: 'Test',
         clientActorPath: '/test/client.js',
@@ -88,9 +101,10 @@ describe('HTML Template Generation', () => {
         route: '/test'
       });
 
-      expect(html).toContain("type: 'actor_handshake'");
-      expect(html).toContain("clientRootActor: 'client-root'");
-      expect(html).toContain("type === 'actor_handshake_ack'");
+      // New protocol: server sends session-ready first
+      expect(html).toContain("messageType === 'session-ready'");
+      expect(html).toContain("actorSpace.register(clientActor, 'client-root')");
+      expect(html).toContain('actorSpace.addChannel(ws)');
     });
 
     it('should create client actor instance', () => {
@@ -105,7 +119,7 @@ describe('HTML Template Generation', () => {
       expect(html).toContain("actorSpace.register(clientActor, 'client-root')");
     });
 
-    it('should handle remote actor setup', () => {
+    it('should handle remote actor setup with new protocol', () => {
       const html = generateHTML({
         title: 'Test',
         clientActorPath: '/test/client.js',
@@ -113,8 +127,10 @@ describe('HTML Template Generation', () => {
         route: '/test'
       });
 
-      expect(html).toContain('channel.makeRemote(message.serverRootActor)');
-      expect(html).toContain('clientActor.setRemoteActor(remoteActor)');
+      // New protocol: server sends session-ready first
+      expect(html).toContain("messageType === 'session-ready'");
+      expect(html).toContain('this.__channel.makeRemote(serverActor)');
+      expect(html).toContain('this.setRemoteActor(remoteServerActor)');
     });
 
     it('should be a valid ES module script', () => {

@@ -13,10 +13,9 @@ describe('PackageDiscovery Integration Tests', () => {
   let resourceManager;
 
   beforeEach(async () => {
-    // Use real ResourceManager
-    resourceManager = ResourceManager.getInstance();
-    await resourceManager.initialize();
-    
+    // Use real ResourceManager (auto-initializes, must await)
+    resourceManager = await ResourceManager.getInstance();
+
     discovery = new PackageDiscovery(resourceManager);
   });
 

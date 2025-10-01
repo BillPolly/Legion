@@ -59,31 +59,30 @@ describe('HTML Template Integration Tests', () => {
 
     it('should include all required JavaScript in script', () => {
       const scriptContent = document.querySelector('script[type="module"]').textContent;
-      
+
       // Check imports
       expect(scriptContent).toContain("import ClientActor from '/integration/client.js'");
-      expect(scriptContent).toContain("import { ActorSpace } from '/legion/actors/ActorSpace.js'");
-      
-      // Check WebSocket setup
-      expect(scriptContent).toContain("new WebSocket('ws://localhost:8888/ws')");
+      expect(scriptContent).toContain("import { ActorSpace } from '@legion/actors'");
+
+      // Check WebSocket setup (includes route parameter in new protocol)
+      expect(scriptContent).toContain("new WebSocket('ws://localhost:8888/ws?route=/integration')");
       
       // Check actor creation
       expect(scriptContent).toContain("new ClientActor()");
       expect(scriptContent).toContain("new ActorSpace('client')");
-      
-      // Check handshake
-      expect(scriptContent).toContain("actor_handshake");
-      expect(scriptContent).toContain("route: '/integration'");
+
+      // Check new protocol (server sends first)
+      expect(scriptContent).toContain("messageType === 'session-ready'");
+      expect(scriptContent).toContain("actorSpace.addChannel(ws)");
     });
 
     it('should structure WebSocket event handlers correctly', () => {
       const scriptContent = document.querySelector('script[type="module"]').textContent;
-      
-      // Check all event handlers are present
-      expect(scriptContent).toContain('ws.onopen = ');
-      expect(scriptContent).toContain('ws.onmessage = ');
-      expect(scriptContent).toContain('ws.onerror = ');
-      expect(scriptContent).toContain('ws.onclose = ');
+
+      // Check event handlers (no ws.onmessage in new protocol - Channel handles it)
+      expect(scriptContent).toContain('ws.onopen');
+      expect(scriptContent).toContain('ws.onerror');
+      expect(scriptContent).toContain('ws.onclose');
     });
 
     it('should handle different routes correctly', () => {
@@ -101,11 +100,12 @@ describe('HTML Template Integration Tests', () => {
         route: '/database'
       });
 
-      expect(html1).toContain("route: '/tools'");
+      // Route is in query parameter now
+      expect(html1).toContain("?route=/tools");
       expect(html1).toContain("/tools/client.js");
       expect(html1).toContain("8090");
 
-      expect(html2).toContain("route: '/database'");
+      expect(html2).toContain("?route=/database");
       expect(html2).toContain("/database/client.js");
       expect(html2).toContain("8080");
     });
@@ -125,9 +125,8 @@ describe('HTML Template Integration Tests', () => {
 
     it('should maintain consistent actor naming', () => {
       const scriptContent = document.querySelector('script[type="module"]').textContent;
-      
+
       // Client actor should always be 'client-root'
-      expect(scriptContent).toContain("clientRootActor: 'client-root'");
       expect(scriptContent).toContain("actorSpace.register(clientActor, 'client-root')");
     });
 

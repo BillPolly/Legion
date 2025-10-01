@@ -24,17 +24,19 @@ describe('Configuration Integration Tests', () => {
   describe('Full initialization with real ResourceManager', () => {
     it('should initialize with real ResourceManager singleton', async () => {
       const rm = await initializeConfig();
-      
-      expect(rm).toBe(ResourceManager.getInstance());
+      const singleton = await ResourceManager.getInstance();
+
+      expect(rm).toBe(singleton);
       expect(rm).toBeDefined();
     });
 
     it('should read configuration from real .env file', async () => {
       await initializeConfig();
       const config = getConfig();
-      
+
       // Test with actual values from the real .env file
-      expect(config.monorepoRoot).toBe('/Users/williampearson/Documents/p/agents/Legion-copy');
+      expect(config.monorepoRoot).toBeDefined();
+      expect(config.monorepoRoot).toContain('Legion'); // Should contain Legion in path
       expect(config.env).toBe('development'); // or whatever is in the actual .env
       expect(config.logLevel).toBe('info'); // default value
       expect(config.corsOrigins).toEqual(['http://localhost:3000']); // default value
@@ -53,17 +55,17 @@ describe('Configuration Integration Tests', () => {
 
     it('should use proper defaults for unset values', async () => {
       // Test that defaults work with real ResourceManager
-      await initializeConfig();
+      const rm = await initializeConfig();
       const config = getConfig();
-      
+
       // These use defaults if not in .env
       expect(config.host).toBe('localhost');
-      
+
       // If these aren't in .env, they get defaults
-      if (!ResourceManager.getInstance().get('env.LOG_LEVEL')) {
+      if (!rm.get('env.LOG_LEVEL')) {
         expect(config.logLevel).toBe('info');
       }
-      if (!ResourceManager.getInstance().get('env.CORS_ORIGINS')) {
+      if (!rm.get('env.CORS_ORIGINS')) {
         expect(config.corsOrigins).toEqual(['http://localhost:3000']);
       }
     });
@@ -84,8 +86,9 @@ describe('Configuration Integration Tests', () => {
     it('should handle ResourceManager initialization properly', async () => {
       // ResourceManager handles missing files gracefully
       const rm = await initializeConfig();
+      const singleton = await ResourceManager.getInstance();
       expect(rm).toBeDefined();
-      expect(rm).toBe(ResourceManager.getInstance());
+      expect(rm).toBe(singleton);
     });
   });
 });

@@ -142,96 +142,138 @@ describe('WebSocket Integration Tests', () => {
   });
 
   describe('WebSocket message handling', () => {
-    it('should handle actor handshake message', async () => {
+    it('should receive session-ready message from server on connect', async () => {
+      const { ActorSpace } = await import('@legion/actors');
+
       server = new BaseServer();
       await server.initialize();
-      
-      const factory = () => ({ name: 'TestActor' });
+
+      const factory = () => ({
+        isActor: true,
+        name: 'TestActor',
+        receive: () => {},
+        setRemoteActor: () => {}
+      });
       server.registerRoute('/test', factory, testClientFile, testPort);
       await server.start();
-      
-      const ws = new WebSocket(`ws://localhost:${testPort}/ws`);
-      await new Promise(resolve => ws.on('open', resolve));
-      
-      // Send handshake
-      const handshakePromise = new Promise((resolve) => {
-        ws.on('message', (data) => {
-          const message = JSON.parse(data.toString());
-          if (message.type === 'actor_handshake_ack') {
-            resolve(message);
-          }
-        });
-      });
-      
-      ws.send(JSON.stringify({
-        type: 'actor_handshake',
-        clientRootActor: 'client-root',
-        route: '/test'
-      }));
-      
-      const response = await handshakePromise;
-      expect(response.type).toBe('actor_handshake_ack');
-      expect(response.serverRootActor).toBeDefined();
-      
-      ws.close();
-    });
 
-    it('should handle messages after handshake', async () => {
-      server = new BaseServer();
-      await server.initialize();
-      
-      const factory = () => ({
-        name: 'TestActor',
-        handleMessage: async (msg) => {
-          if (msg.type === 'ping') {
-            return { type: 'pong', timestamp: Date.now() };
+      // Create client-side ActorSpace and actor
+      const clientSpace = new ActorSpace('client-test');
+
+      // Track if session-ready was received
+      let sessionReadyReceived = null;
+
+      const clientActor = {
+        isActor: true,
+        receive: function(messageType, data) {
+          console.log('[TEST CLIENT] Received message:', messageType, data);
+          if (messageType === 'session-ready') {
+            sessionReadyReceived = { messageType, data };
           }
         }
+      };
+      clientSpace.register(clientActor, 'client-root');
+
+      const ws = new WebSocket(`ws://localhost:${testPort}/ws`);
+
+      // CRITICAL: Create Channel BEFORE WebSocket opens so messages can be received!
+      const channel = clientSpace.addChannel(ws, clientActor);
+
+      await new Promise(resolve => ws.on('open', resolve));
+
+      // Wait for session-ready
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('Timeout waiting for session-ready')), 3000);
+        const check = () => {
+          if (sessionReadyReceived) {
+            clearTimeout(timeout);
+            resolve();
+          } else {
+            setTimeout(check, 50);
+          }
+        };
+        check();
       });
-      
+
+      // Server should have sent session-ready
+      expect(sessionReadyReceived).toBeDefined();
+      expect(sessionReadyReceived.messageType).toBe('session-ready');
+      expect(sessionReadyReceived.data.sessionId).toBeDefined();
+      expect(sessionReadyReceived.data.serverActor).toBeDefined();
+
+      ws.close();
+      await clientSpace.destroy();
+    }, 10000);
+
+    it('should support actor communication after session-ready', async () => {
+      const { ActorSpace } = await import('@legion/actors');
+
+      server = new BaseServer();
+      await server.initialize();
+
+      const factory = () => ({
+        isActor: true,
+        name: 'TestActor',
+        receive: (messageType, data) => {
+          console.log('[TEST SERVER ACTOR] Received:', messageType, data);
+          if (messageType === 'ping') {
+            return { pong: true, timestamp: Date.now() };
+          }
+        },
+        setRemoteActor: () => {}
+      });
+
       server.registerRoute('/test', factory, testClientFile, testPort);
       await server.start();
-      
-      const ws = new WebSocket(`ws://localhost:${testPort}/ws`);
-      await new Promise(resolve => ws.on('open', resolve));
-      
-      // Complete handshake first
-      ws.send(JSON.stringify({
-        type: 'actor_handshake',
-        clientRootActor: 'client-root',
-        route: '/test'
-      }));
-      
-      await new Promise(resolve => {
-        ws.once('message', resolve);
-      });
-      
-      // Now send a real message
-      const responsePromise = new Promise((resolve) => {
-        ws.on('message', (data) => {
-          const message = JSON.parse(data.toString());
-          if (message.type === 'pong') {
-            resolve(message);
+
+      // Create client-side ActorSpace
+      const clientSpace = new ActorSpace('client-test');
+
+      let serverActorId = null;
+      const clientActor = {
+        isActor: true,
+        receive: function(messageType, data) {
+          console.log('[TEST CLIENT] Received:', messageType, data);
+          if (messageType === 'session-ready') {
+            serverActorId = data.serverActor;
           }
-        });
+        }
+      };
+      clientSpace.register(clientActor, 'client-root');
+
+      const ws = new WebSocket(`ws://localhost:${testPort}/ws`);
+
+      // CRITICAL: Create Channel BEFORE WebSocket opens so messages can be received!
+      const channel = clientSpace.addChannel(ws, clientActor);
+
+      await new Promise(resolve => ws.on('open', resolve));
+
+      // Wait for session-ready
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('Timeout waiting for session-ready')), 3000);
+        const check = () => {
+          if (serverActorId) {
+            clearTimeout(timeout);
+            resolve();
+          } else {
+            setTimeout(check, 50);
+          }
+        };
+        check();
       });
-      
-      ws.send(JSON.stringify({
-        type: 'ping'
-      }));
-      
-      const response = await Promise.race([
-        responsePromise,
-        new Promise((_, reject) => setTimeout(() => reject('Timeout'), 1000))
-      ]).catch(() => null);
-      
-      // May not be implemented yet in Phase 3.1
-      if (response) {
-        expect(response.type).toBe('pong');
-      }
-      
+
+      // Now we can communicate with server actor
+      const serverActorRef = channel.makeRemote(serverActorId);
+
+      // Send ping
+      const result = await serverActorRef.receive('ping', {});
+
+      expect(result).toBeDefined();
+      expect(result.pong).toBe(true);
+
       ws.close();
-    });
+      await clientSpace.destroy();
+    }, 10000);
   });
 
   describe('Connection lifecycle', () => {

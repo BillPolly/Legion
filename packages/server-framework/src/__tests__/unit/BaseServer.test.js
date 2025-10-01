@@ -60,10 +60,11 @@ describe('BaseServer', () => {
       expect(server.resourceManager).toBe(mockResourceManager);
     });
 
-    it('should initialize ResourceManager', async () => {
+    it('should get ResourceManager (auto-initializes)', async () => {
       await server.initialize();
-      
-      expect(mockResourceManager.initialize).toHaveBeenCalled();
+
+      // ResourceManager auto-initializes, so we just check it was retrieved
+      expect(ResourceManager.getInstance).toHaveBeenCalled();
     });
 
     it('should get monorepo root from ResourceManager', async () => {
@@ -95,11 +96,12 @@ describe('BaseServer', () => {
       expect(server.monorepoRoot).toBeUndefined();
     });
 
-    it('should only initialize once', async () => {
+    it('should only get ResourceManager once', async () => {
       await server.initialize();
       await server.initialize();
-      
-      expect(mockResourceManager.initialize).toHaveBeenCalledTimes(1);
+
+      // getInstance should only be called once (cached after first call)
+      expect(ResourceManager.getInstance).toHaveBeenCalledTimes(1);
     });
   });
 

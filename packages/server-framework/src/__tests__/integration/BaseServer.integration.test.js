@@ -21,8 +21,9 @@ describe('BaseServer Integration Tests', () => {
     it('should initialize with real ResourceManager singleton', async () => {
       server = new BaseServer();
       await server.initialize();
-      
-      expect(server.resourceManager).toBe(ResourceManager.getInstance());
+      const singleton = await ResourceManager.getInstance();
+
+      expect(server.resourceManager).toBe(singleton);
       expect(server.resourceManager).toBeDefined();
     });
 
@@ -38,8 +39,9 @@ describe('BaseServer Integration Tests', () => {
     it('should set up services correctly', async () => {
       server = new BaseServer();
       await server.initialize();
-      
-      expect(server.services.get('resourceManager')).toBe(ResourceManager.getInstance());
+      const singleton = await ResourceManager.getInstance();
+
+      expect(server.services.get('resourceManager')).toBe(singleton);
       expect(server.host).toBe('localhost');
     });
 
@@ -101,21 +103,22 @@ describe('BaseServer Integration Tests', () => {
       expect(route.port).toBe(8090);
     });
 
-    it('should create server actor instance from factory', () => {
+    it('should create server actor instance from factory', async () => {
       const factory = (services) => {
         return {
           name: 'TestServerActor',
           resourceManager: services.get('resourceManager')
         };
       };
-      
+
       server.registerRoute('/test', factory, testClientFile);
-      
+
       const route = server.routes.get('/test');
       const actorInstance = route.factory(server.services);
-      
+      const singleton = await ResourceManager.getInstance();
+
       expect(actorInstance.name).toBe('TestServerActor');
-      expect(actorInstance.resourceManager).toBe(ResourceManager.getInstance());
+      expect(actorInstance.resourceManager).toBe(singleton);
     });
 
     it('should handle multiple route registrations', () => {

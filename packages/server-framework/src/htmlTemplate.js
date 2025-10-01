@@ -1,6 +1,12 @@
 /**
  * HTML template generation for Legion applications
  * Generates HTML with embedded WebSocket and actor initialization
+ *
+ * NEW PROTOCOL (Server sends first):
+ * 1. Client creates ActorSpace with 'client-root' actor
+ * 2. Client creates Channel with WebSocket
+ * 3. Server sends 'session-ready' message first (via channel_connected event)
+ * 4. Client receives session-ready and can start communicating
  */
 
 /**
@@ -50,10 +56,10 @@ export function getTemplateVariables(options) {
  */
 export function generateHTML(options) {
   const vars = getTemplateVariables(options);
-  
+
   // Escape title for HTML but not paths in JavaScript
   const safeTitle = escapeHtml(vars.title);
-  
+
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -61,6 +67,16 @@ export function generateHTML(options) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${safeTitle}</title>
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <script type="importmap">
+  {
+    "imports": {
+      "@legion/actors": "/legion/actors/src/index.js",
+      "@legion/actors/": "/legion/actors/src/",
+      "@legion/components": "/legion/components/src/index.js",
+      "@legion/components/": "/legion/components/src/"
+    }
+  }
+  </script>
   <style>
     * {
       margin: 0;
@@ -102,8 +118,8 @@ export function generateHTML(options) {
   <script type="module">
     // Import the client actor (must export as default)
     import ClientActor from '${vars.clientActorPath}';
-    import { ActorSpace } from '/legion/actors/ActorSpace.js';
-    
+    import { ActorSpace } from '@legion/actors';
+
     // Connection status indicator
     function updateConnectionStatus(status) {
       let statusEl = document.getElementById('connection-status');
@@ -113,101 +129,89 @@ export function generateHTML(options) {
         statusEl.className = 'connection-status';
         document.body.appendChild(statusEl);
       }
-      
+
       statusEl.className = 'connection-status ' + status;
       statusEl.textContent = status.charAt(0).toUpperCase() + status.slice(1);
     }
-    
+
     // Initialize on DOM ready
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log('[CLIENT] HTML Template Version: 2.0 - Fixed handshake');
+    document.addEventListener('DOMContentLoaded', async () => {
+      console.log('[CLIENT] HTML Template Version: 3.0 - New Protocol (Server sends first)');
       updateConnectionStatus('connecting');
-      
-      // Establish WebSocket connection
-      const ws = new WebSocket('${vars.wsEndpoint}');
-      
+
       // Create client actor instance
       const clientActor = new ClientActor();
-      const actorSpace = new ActorSpace('client');
-      actorSpace.register(clientActor, 'client-root');
-      
-      // Store references for actor to use
-      clientActor.__actorSpace = actorSpace;
-      clientActor.__channel = null;
-      
-      let channel = null;
-      let handshakeCompleted = false;
-      
-      // Set up channel when connected
-      ws.onopen = () => {
-        console.log('[CLIENT] WebSocket connected to ${vars.wsEndpoint}');
-        updateConnectionStatus('connected');
-        
-        // Send handshake BEFORE creating channel
-        const handshake = {
-          type: 'actor_handshake',
-          clientRootActor: 'client-root',
-          route: '${vars.route}'
-        };
-        console.log('[CLIENT] Sending handshake:', handshake);
-        ws.send(JSON.stringify(handshake));
-      };
-      
-      // Handle incoming messages - ONLY for handshake protocol
-      ws.onmessage = (event) => {
-        // Only process messages until handshake is complete
-        if (!handshakeCompleted) {
-          try {
-            const message = JSON.parse(event.data);
-            
-            // Handle handshake acknowledgment
-            if (message.type === 'actor_handshake_ack') {
-              console.log('[CLIENT] Received handshake ack:', message);
-              handshakeCompleted = true;
-              
-              // NOW create the channel after handshake is complete
-              channel = actorSpace.addChannel(ws);
-              clientActor.__channel = channel;
-              console.log('[CLIENT] ActorSpace channel created after handshake');
-              
-              if (message.serverRootActor && channel) {
-                // Create remote reference to server actor
-                const remoteServerActor = channel.makeRemote(message.serverRootActor);
-                
-                // Set the remote actor on the client actor
-                if (typeof clientActor.setRemoteActor === 'function') {
-                  console.log('[CLIENT] Setting remote server actor...');
-                  clientActor.setRemoteActor(remoteServerActor);
-                  console.log('[CLIENT] Remote server actor set successfully');
-                }
-              }
-              
-              // Channel now owns the WebSocket - it will handle all further messages
+
+      // Add session-ready handler to receive server's first message
+      const originalReceive = clientActor.receive?.bind(clientActor);
+      clientActor.receive = function(messageType, data) {
+        if (messageType === 'session-ready') {
+          console.log('[CLIENT] Received session-ready from server:', data);
+          updateConnectionStatus('connected');
+
+          // Server sent us the session ID and server actor ID
+          const { sessionId, serverActor } = data;
+
+          // Create remote reference to server actor
+          if (this.__channel) {
+            const remoteServerActor = this.__channel.makeRemote(serverActor);
+
+            // Set the remote actor on the client actor
+            if (typeof this.setRemoteActor === 'function') {
+              console.log('[CLIENT] Setting remote server actor:', serverActor);
+              this.setRemoteActor(remoteServerActor);
+              console.log('[CLIENT] Connection established, session:', sessionId);
             }
-          } catch (error) {
-            console.error('[CLIENT] Error processing handshake message:', error);
           }
         }
-        // After handshake, the Channel's handler processes all messages
+
+        // Call original receive if it exists
+        if (originalReceive) {
+          return originalReceive(messageType, data);
+        }
       };
-      
-      // Handle errors
+
+      // Create ActorSpace and register client actor
+      const actorSpace = new ActorSpace('client');
+      actorSpace.register(clientActor, 'client-root');
+
+      // Create WebSocket connection
+      const ws = new WebSocket('${vars.wsEndpoint}?route=${vars.route}');
+
+      // CRITICAL: Create Channel BEFORE WebSocket opens so messages can be received!
+      // Server will send session-ready immediately when connection opens
+      const channel = actorSpace.addChannel(ws);
+      clientActor.__channel = channel;
+      clientActor.__actorSpace = actorSpace;
+
+      console.log('[CLIENT] Channel created, waiting for WebSocket to connect...');
+
+      // Handle connection errors
       ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        console.error('[CLIENT] WebSocket error:', error);
         updateConnectionStatus('disconnected');
       };
-      
+
       // Handle connection close
       ws.onclose = () => {
-        console.log('WebSocket connection closed');
+        console.log('[CLIENT] WebSocket connection closed');
         updateConnectionStatus('disconnected');
-        
-        // Could implement reconnection logic here
       };
-      
+
+      // Wait for WebSocket to open
+      await new Promise((resolve, reject) => {
+        ws.onopen = () => {
+          console.log('[CLIENT] WebSocket connected to ${vars.wsEndpoint}');
+          console.log('[CLIENT] Waiting for session-ready from server...');
+          resolve();
+        };
+        ws.onerror = reject;
+      });
+
       // Make actor available globally for debugging
       window.__legionActor = clientActor;
       window.__legionActorSpace = actorSpace;
+      window.__legionChannel = channel;
     });
   </script>
 </head>

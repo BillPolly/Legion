@@ -31,10 +31,11 @@ describe('Configuration Module', () => {
       expect(ResourceManager.getInstance).toHaveBeenCalled();
     });
 
-    it('should initialize ResourceManager', async () => {
+    it('should get ResourceManager (auto-initializes)', async () => {
       await initializeConfig();
-      
-      expect(mockResourceManager.initialize).toHaveBeenCalled();
+
+      // ResourceManager auto-initializes on getInstance()
+      expect(ResourceManager.getInstance).toHaveBeenCalled();
     });
 
     it('should return the ResourceManager instance', async () => {
