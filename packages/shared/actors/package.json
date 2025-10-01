@@ -18,15 +18,21 @@
   ],
   "author": "Legion Framework",
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "ws": "^8.18.3"
+  },
   "devDependencies": {
     "jest": "^29.7.0"
   },
   "jest": {
     "transform": {},
     "testEnvironment": "node",
-    "testMatch": ["**/__tests__/**/*.test.js"],
-    "setupFilesAfterEnv": ["<rootDir>/__tests__/setup.js"],
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/__tests__/setup.js"
+    ],
     "collectCoverageFrom": [
       "src/**/*.js",
       "!src/**/*.test.js"

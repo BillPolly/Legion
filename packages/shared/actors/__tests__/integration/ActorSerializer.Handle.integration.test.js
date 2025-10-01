@@ -130,10 +130,10 @@ describe('ActorSerializer.Handle - Integration', () => {
       const serialized = serverSerializer.serialize({ handle: serverHandle });
 
       // Attempt to deserialize on client
-      // Should throw error since RemoteHandle not implemented yet
+      // Should throw error since RemoteHandle class not registered
       expect(() => {
         clientSerializer.deserialize(serialized, clientChannel);
-      }).toThrow(/RemoteHandle deserialization not yet implemented/);
+      }).toThrow(/RemoteHandle class not available/);
     });
 
     it('should throw clear error message with Handle metadata', () => {
@@ -154,9 +154,8 @@ describe('ActorSerializer.Handle - Integration', () => {
         throw new Error('Should have thrown');
       } catch (error) {
         // Verify error message contains helpful information
-        expect(error.message).toMatch(/RemoteHandle deserialization not yet implemented/);
+        expect(error.message).toMatch(/RemoteHandle class not available/);
         expect(error.message).toMatch(/DataStoreHandle/);
-        expect(error.message).toMatch(/Phase 3/);
       }
     });
 

@@ -1,10 +1,19 @@
 import { RemoteActor } from "./RemoteActor.js";
+import { generateGuid } from '../../utils/src/index.js';
+
 /**
- * Represents a communication channel (e.g., wrapping a WebSocket)
- * connecting an ActorSpace to another endpoint.
- * 
- * it could provide a port for status messages, it could try to reconnect
- * 
+ * Channel - Represents a communication channel connecting two ActorSpaces
+ *
+ * Wraps a WebSocket and provides space-to-space messaging.
+ * If a spaceActor is provided, it receives connection lifecycle events:
+ *
+ * LIFECYCLE EVENTS:
+ * - 'channel_connected' { channel } - Fired when WebSocket opens (may be immediate on server)
+ * - 'channel_error' { channel, error } - Fired on WebSocket errors
+ * - 'channel_closed' { channel } - Fired when WebSocket closes
+ *
+ * IMPORTANT: On server side, WebSocket is already open when Channel is created,
+ * so 'channel_connected' fires immediately in the constructor.
  */
 export class Channel {
     /**
@@ -12,18 +21,33 @@ export class Channel {
      * @param {ActorSpace} actorSpace - The parent ActorSpace this channel belongs to.
      * @param {object} endpoint - The underlying communication endpoint (e.g., WebSocket instance or mock).
      *                            Must have `send(data)` method and `onmessage`, `onclose`, `onerror`, `onopen` properties.
+     * @param {Object} [spaceActor] - Optional actor that manages this channel and receives lifecycle events
      */
-    constructor(actorSpace, endpoint) {
-
+    constructor(actorSpace, endpoint, spaceActor = null) {
+        this.id = generateGuid();
         this.actorSpace = actorSpace;
         this.endpoint = endpoint;
+        this.spaceActor = spaceActor;
+
         // Attach handlers to the underlying endpoint
         this.endpoint.onmessage = this._handleEndpointMessage.bind(this);
         this.endpoint.onerror = this._handleEndpointError.bind(this);
         this.endpoint.onclose = this._handleEndpointClose.bind(this);
         this.endpoint.onopen = this._handleEndpointOpen.bind(this);
 
-        console.log(`Channel  created for ActorSpace ${this.actorSpace.spaceId}.`);
+        console.log(`Channel ${this.id} created for ActorSpace ${this.actorSpace.spaceId}`);
+
+        // On server side, WebSocket is already open when we create the Channel
+        // Fire 'channel_connected' immediately if WebSocket is in OPEN state
+        if (endpoint.readyState === 1) { // WebSocket.OPEN === 1
+            console.log(`Channel ${this.id}: WebSocket already open, firing channel_connected immediately`);
+            if (this.spaceActor && typeof this.spaceActor.receive === 'function') {
+                // Use setImmediate/setTimeout to ensure constructor completes first
+                setImmediate(() => {
+                    this.spaceActor.receive('channel_connected', { channel: this });
+                });
+            }
+        }
     }
 
     makeRemote(guid){ // decoder has delegated to you 
@@ -84,21 +108,33 @@ export class Channel {
     }
 
     _handleEndpointError(error) {
-        console.error(`Channel ${this.channelId}: Endpoint error:`, error);
-        // Notify ActorSpace? Trigger cleanup?
-        // this.actorSpace.handleChannelError(this, error);
+        console.error(`Channel ${this.id}: Endpoint error:`, error);
+
+        // Notify space actor if present
+        if (this.spaceActor && typeof this.spaceActor.receive === 'function') {
+            this.spaceActor.receive('channel_error', { channel: this, error });
+        }
     }
 
     _handleEndpointClose() {
-        console.log(`Channel ${this.channelId}: Endpoint closed.`);
-        // Notify ActorSpace so it can remove the channel and associated remote actors
-        //this.actorSpace.removeChannel(this.channelId);
+        console.log(`Channel ${this.id}: Endpoint closed.`);
+
+        // Notify space actor if present
+        if (this.spaceActor && typeof this.spaceActor.receive === 'function') {
+            this.spaceActor.receive('channel_closed', { channel: this });
+        }
+
+        // Remove from ActorSpace
+        this.actorSpace.channels.delete(this.id);
     }
 
     _handleEndpointOpen() {
-        console.log(`Channel ${this.channelId}: Endpoint opened.`);
-        // Notify ActorSpace?
-        // this.actorSpace.handleChannelOpen(this);
+        console.log(`Channel ${this.id}: Endpoint opened.`);
+
+        // Notify space actor if present
+        if (this.spaceActor && typeof this.spaceActor.receive === 'function') {
+            this.spaceActor.receive('channel_connected', { channel: this });
+        }
     }
 }
 
