@@ -251,6 +251,10 @@ export class Terminal {
         color: #569cd6;
       }
 
+      .terminal-line-response {
+        color: #ce9178;
+      }
+
       .terminal-input-line {
         display: flex;
         align-items: center;

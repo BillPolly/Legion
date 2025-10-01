@@ -94,8 +94,26 @@ export class RemoteCLIClient {
    * Handle messages from server
    */
   handleMessage(message) {
-    // Handle Actor protocol messages
-    if (message.targetGuid && message.payload) {
+    // Handle handshake acknowledgment
+    if (message.type === 'actor_handshake_ack') {
+      this.remoteActor = message.serverRootActor;
+      console.log(`Handshake ack received, server actor: ${this.remoteActor}`);
+      return;
+    }
+
+    // Handle command responses - targetGuid matches our sourceGuid (message ID)
+    if (message.targetGuid && !Array.isArray(message.payload)) {
+      const pendingMsg = this.pendingMessages.get(message.targetGuid);
+      if (pendingMsg) {
+        clearTimeout(pendingMsg.timeout);
+        pendingMsg.resolve(message.payload);
+        this.pendingMessages.delete(message.targetGuid);
+      }
+      return;
+    }
+
+    // Handle Actor protocol messages with array payloads [messageType, data]
+    if (message.targetGuid && message.payload && Array.isArray(message.payload)) {
       const [messageType, data] = message.payload;
 
       switch (messageType) {
@@ -104,16 +122,11 @@ export class RemoteCLIClient {
           console.log(`Session ready: ${this.sessionId}`);
           break;
 
-        default:
-          // Handle message responses
-          if (message.sourceGuid) {
-            const pendingMsg = this.pendingMessages.get(message.sourceGuid);
-            if (pendingMsg) {
-              clearTimeout(pendingMsg.timeout);
-              pendingMsg.resolve(data);
-              this.pendingMessages.delete(message.sourceGuid);
-            }
-          }
+        case 'display-response':
+          // Server pushed a response (not solicited by our request)
+          // Could display this in real-time if we had a UI
+          console.log(`Claude: ${data.content}`);
+          break;
       }
     }
   }
@@ -126,12 +139,16 @@ export class RemoteCLIClient {
       throw new Error('Not connected to server');
     }
 
+    if (!this.remoteActor) {
+      throw new Error('Handshake not completed - no remote actor GUID');
+    }
+
     // Generate message ID
     const messageId = `msg-${++this.messageIdCounter}`;
 
     // Send via Actor protocol
     const message = {
-      targetGuid: 'server',  // Will be routed to server actor
+      targetGuid: this.remoteActor,  // Use actual server actor GUID from handshake
       payload: ['execute-command', { command }],
       sourceGuid: messageId
     };

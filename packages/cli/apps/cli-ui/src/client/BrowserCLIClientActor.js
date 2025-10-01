@@ -112,6 +112,10 @@ export class BrowserCLIClientActor {
             this.handleSessionReady(data);
             break;
 
+          case 'display-response':
+            this.handleDisplayResponse(data);
+            break;
+
           case 'display-asset':
             this.handleDisplayAsset(data);
             break;
@@ -144,6 +148,17 @@ export class BrowserCLIClientActor {
       this.terminal.writeLine(`Connected to CLI server`, 'success');
       this.terminal.writeLine(`Session: ${this.sessionId}`, 'info');
       this.terminal.writeLine('');
+    }
+  }
+
+  /**
+   * Handle display-response message (Claude's responses)
+   */
+  handleDisplayResponse(data) {
+    console.log('Display response:', data);
+
+    if (this.terminal && data.content) {
+      this.terminal.writeLine(data.content, 'response');
     }
   }
 

@@ -12,6 +12,8 @@ import { HelpCommand } from '../commands/HelpCommand.js';
 import { WindowsCommand } from '../commands/WindowsCommand.js';
 import { DisplayEngine } from '../display/DisplayEngine.js';
 import { OutputHandler } from '../handlers/OutputHandler.js';
+import { ClaudeAgentStrategy } from '@legion/claude-agent';
+import { Task, ExecutionContext } from '@legion/tasks';
 
 export class CLISessionActor extends Actor {
   constructor(services = {}) {
@@ -35,6 +37,9 @@ export class CLISessionActor extends Actor {
     // Session state
     this.commandHistory = [];
     this.contextVariables = new Map(); // For future: $var support
+
+    // Claude task for non-slash commands (lazily initialized)
+    this.claudeTask = null;
 
     // Initialize components
     this.outputHandler = new OutputHandler({
@@ -69,6 +74,54 @@ export class CLISessionActor extends Actor {
 
     const windowsCommand = new WindowsCommand(this.showme, this.outputHandler);
     this.commandProcessor.register(windowsCommand);
+  }
+
+  /**
+   * Initialize Claude task for this session (lazy initialization)
+   * @private
+   */
+  async _initializeClaudeTask() {
+    if (this.claudeTask) {
+      return; // Already initialized
+    }
+
+    // Get toolRegistry from ResourceManager (or create minimal one if missing)
+    let toolRegistry = this.resourceManager.get('toolRegistry');
+    if (!toolRegistry) {
+      // Create minimal toolRegistry when none exists
+      // Claude can work without tools - they're optional
+      toolRegistry = {
+        getTool: () => null,
+        getAllTools: () => []
+      };
+    }
+
+    // Create context object for ClaudeAgentStrategy.initialize()
+    // Note: ClaudeAgentStrategy expects direct properties, not ExecutionContext
+    const initContext = {
+      toolRegistry: toolRegistry,
+      resourceManager: this.resourceManager
+    };
+
+    // Create strategy and initialize (will FAIL FAST if API key missing)
+    const strategy = Object.create(ClaudeAgentStrategy);
+    await strategy.initialize(initContext);
+
+    // Create ExecutionContext for Task
+    const taskContext = new ExecutionContext({
+      toolRegistry: toolRegistry,
+      resourceManager: this.resourceManager,
+      sessionId: this.sessionId
+    });
+
+    // Create Task with Claude strategy
+    this.claudeTask = new Task(`CLI Session ${this.sessionId}`, null, {
+      strategy: strategy,
+      context: taskContext
+    });
+
+    // Mark task as started
+    this.claudeTask.start();
   }
 
   /**
@@ -151,10 +204,36 @@ export class CLISessionActor extends Actor {
           sessionId: this.sessionId
         };
       } else {
-        // Non-slash commands - for future natural language processing
+        // Non-slash commands - Route to Claude
+        await this._initializeClaudeTask();
+
+        // Add user message to conversation
+        this.claudeTask.addConversationEntry('user', command);
+
+        // Send message to Claude strategy (fire-and-forget actor model)
+        await this.claudeTask.strategy.onMessage(this.claudeTask, null, { type: 'work' });
+
+        // Get Claude's response from conversation
+        const responses = this.claudeTask.conversation.filter(
+          entry => entry.role === 'assistant' && entry.metadata?.responseType === 'claude-sdk'
+        );
+        const latestResponse = responses[responses.length - 1];
+
+        // Stream response to client if remote actor exists
+        if (this.remoteActor && latestResponse) {
+          this.remoteActor.receive('display-response', {
+            content: latestResponse.content,
+            sessionId: this.sessionId,
+            timestamp: latestResponse.timestamp
+          });
+        }
+
         return {
-          success: false,
-          error: 'Natural language processing not yet implemented. Use slash commands like /show <uri>',
+          success: true,
+          result: {
+            message: latestResponse?.content || 'No response from Claude',
+            conversationLength: this.claudeTask.conversation.length
+          },
           sessionId: this.sessionId
         };
       }
@@ -271,6 +350,11 @@ export class CLISessionActor extends Actor {
     // Close any open windows
     const windows = this.showme.getWindows();
     await Promise.all(windows.map(w => w.close()));
+
+    // Complete Claude task if exists and is still in progress
+    if (this.claudeTask && this.claudeTask.status === 'in-progress') {
+      this.claudeTask.complete({ reason: 'Session ended' });
+    }
   }
 }
 

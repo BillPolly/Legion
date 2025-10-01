@@ -1,0 +1,50 @@
+{
+  "name": "@legion/claude-agent",
+  "version": "1.0.0",
+  "description": "Integration of Anthropic's Claude Agent SDK with Legion's task and agent framework",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch --runInBand",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage --runInBand",
+    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/unit --runInBand",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/integration --runInBand"
+  },
+  "keywords": [
+    "claude",
+    "agent",
+    "sdk",
+    "anthropic",
+    "adapter",
+    "legion",
+    "task",
+    "strategy"
+  ],
+  "author": "Legion Framework",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.1.0",
+    "@anthropic-ai/sdk": "^0.24.3",
+    "@legion/resource-manager": "*",
+    "@legion/schema": "*",
+    "@legion/tasks": "*",
+    "@legion/tools-registry": "*"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/**/*.test.js"
+    ],
+    "coverageDirectory": "__tests__/coverage",
+    "testTimeout": 30000
+  }
+}
