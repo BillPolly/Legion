@@ -178,29 +178,11 @@ export class CLISessionActor extends ProtocolActor {
       'todowrite'
     ];
 
-    // Load the specific tools we need
-    const loadedTools = [];
-    for (const toolName of cliToolNames) {
-      try {
-        const tool = await this.toolRegistry.getTool(toolName);
-        if (tool) {
-          loadedTools.push(tool);
-        }
-      } catch (error) {
-        // Tool not found - continue with others
-        console.log(`Tool ${toolName} not available:`, error.message);
-      }
-    }
-
-    // Create adapter for toolRegistry with the loaded tools
-    const toolRegistryAdapter = {
-      getTool: async (name) => await this.toolRegistry.getTool(name),
-      getAllTools: () => loadedTools
-    };
-
+    // Store tool names so ClaudeAgentStrategy can request specific tools
     const initContext = {
-      toolRegistry: toolRegistryAdapter,
-      resourceManager: this.resourceManager
+      toolRegistry: this.toolRegistry,
+      resourceManager: this.resourceManager,
+      toolNames: cliToolNames  // Pass specific tool names
     };
 
     this.claudeStrategy = Object.create(ClaudeAgentStrategy);

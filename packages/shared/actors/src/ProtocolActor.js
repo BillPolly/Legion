@@ -12,9 +12,24 @@
  * - Contract-based development
  * - Protocol introspection
  * - Automated testing via ProtocolTestSuite
+ *
+ * Note: Schema validation is optional and only enabled in Node.js environment.
+ * In browser, validation is skipped to avoid zod dependency.
  */
 
-import { jsonSchemaToZod } from '@legion/schema';
+// Detect if we're in browser environment
+const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'undefined';
+
+// Only import schema in Node.js environment
+let jsonSchemaToZod = null;
+if (!isBrowser) {
+  try {
+    const schemaModule = await import('@legion/schema');
+    jsonSchemaToZod = schemaModule.jsonSchemaToZod;
+  } catch (error) {
+    console.warn('Schema validation disabled: @legion/schema not available');
+  }
+}
 
 export class ProtocolActor {
   // Static validator cache - one per class
@@ -77,6 +92,11 @@ export class ProtocolActor {
    * Get cached validator for protocol structure
    */
   static getValidator() {
+    // If schema validation not available (browser), return null
+    if (!jsonSchemaToZod) {
+      return null;
+    }
+
     if (!this._validator) {
       const schema = this.getProtocolSchema();
       this._validator = jsonSchemaToZod(schema);
@@ -90,8 +110,13 @@ export class ProtocolActor {
    * @returns {object} Validation result with valid boolean and errors array
    */
   static validateProtocol(protocolData) {
+    // Skip validation if schema validation not available
+    const validator = this.getValidator();
+    if (!validator) {
+      return { valid: true, errors: [], skipped: true };
+    }
+
     try {
-      const validator = this.getValidator();
       validator.parse(protocolData);
       return { valid: true, errors: [] };
     } catch (error) {
@@ -132,6 +157,11 @@ export class ProtocolActor {
    * Create validators for all message types
    */
   setupMessageValidators() {
+    // Skip validation setup if schema validation not available
+    if (!jsonSchemaToZod) {
+      return;
+    }
+
     const receives = this.protocol.messages.receives || {};
     const sends = this.protocol.messages.sends || {};
 

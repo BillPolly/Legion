@@ -43,6 +43,9 @@ export const ClaudeAgentStrategy = {
     // Get ResourceManager (already a reference from context)
     this.resourceManager = context.resourceManager;
 
+    // Store tool names if provided (optional - for specific tool loading)
+    this.toolNames = context.toolNames || null;
+
     // Extract ANTHROPIC_API_KEY from ResourceManager (FAIL FAST if missing)
     this.apiKey = this.resourceManager.get('env.ANTHROPIC_API_KEY');
     if (!this.apiKey) {
@@ -103,7 +106,8 @@ export const ClaudeAgentStrategy = {
     const claudeRequest = this.contextAdapter.enhanceClaudeRequest(task, baseRequest);
 
     // Add tools from Legion ToolRegistry - ASYNC!
-    const tools = await this.toolBridge.legionToolsToClaudeTools();
+    // If toolNames specified, load only those tools. Otherwise load all.
+    const tools = await this.toolBridge.legionToolsToClaudeTools(this.toolNames);
     if (tools && tools.length > 0) {
       claudeRequest.tools = tools;
     }
