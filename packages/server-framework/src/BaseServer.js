@@ -401,10 +401,14 @@ export class BaseServer {
         const url = new URL(req.url, `http://localhost:${port}`);
         const routePath = url.searchParams.get('route') || routes[0]?.route;
 
+        console.log(`[WebSocket] Connecting to route: "${routePath}"`);
+        console.log(`[WebSocket] Available routes:`, routes.map(r => r.route));
+
         // Find matching route config
         const routeConfig = routes.find(r => r.route === routePath);
         if (!routeConfig) {
-          console.error(`No route found for ${routePath}`);
+          console.error(`No route found for "${routePath}"`);
+          console.error(`Available routes:`, routes.map(r => r.route));
           ws.close();
           return;
         }
@@ -449,11 +453,11 @@ export class BaseServer {
    * @private
    */
   createDefaultResourceProvider(routeConfig) {
-    const { route, clientFile, port } = routeConfig;
-    
+    const { route, clientFile, port, importMap } = routeConfig;
+
     // Generate title from route name
     const title = route.substring(1).charAt(0).toUpperCase() + route.substring(2) || 'Legion App';
-    
+
     return new DefaultResourceProvider({
       title: title,
       clientActorFile: clientFile,
@@ -461,7 +465,8 @@ export class BaseServer {
       wsEndpoint: `ws://${this.host}:${port}/ws?route=${encodeURIComponent(route)}`,
       route: route,
       // Allow configuration customization
-      clientContainer: routeConfig.clientContainer || 'app'
+      clientContainer: routeConfig.clientContainer || 'app',
+      importMap: importMap || {}
     });
   }
 

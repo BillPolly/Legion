@@ -1,0 +1,34 @@
+New class: {{newClassName}} - {{newClassDescription}}
+
+Domain: {{domain}}
+
+Existing classes in ontology:
+{{#if existingClasses}}
+{{#each existingClasses}}
+- {{this}}
+{{/each}}
+{{else}}
+(No existing classes - ontology is empty)
+{{/if}}
+
+Which class should be the parent (rdfs:subClassOf) for this new class?
+
+Choose the most specific appropriate parent based on IS-A relationship.
+- If ontology is empty, return "owl:Thing"
+- If none of the existing classes fit, return "owl:Thing"
+- Only return a class that exists in the list above or "owl:Thing"
+
+Examples:
+
+1. New class: "Pump", Existing: ["kg:Equipment", "kg:PhysicalObject"]
+   → Parent: "kg:Equipment" (Pump IS-A Equipment)
+
+2. New class: "CentrifugalPump", Existing: ["kg:Pump", "kg:Equipment"]
+   → Parent: "kg:Pump" (CentrifugalPump IS-A Pump)
+
+3. New class: "Equipment", Existing: []
+   → Parent: "owl:Thing" (first class in ontology)
+
+Return JSON with:
+- parentClass: The URI of the parent class (e.g., "kg:Equipment" or "owl:Thing")
+- reasoning: Brief explanation of why this parent was chosen

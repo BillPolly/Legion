@@ -27,14 +27,17 @@ export class OntologyExtractor {
       domainFilter = null
     } = options;
 
-    try {
-      // For now, return a hardcoded schema since we don't have KG integration yet
-      // This will be replaced with actual KG queries once we integrate with the KG package
-      return this.getHardcodedSchema(text, { maxClasses, maxProperties, maxExamples, domainFilter });
-    } catch (error) {
-      console.warn('Failed to extract schema from KG, using fallback:', error.message);
-      return this.getFallbackSchema();
-    }
+    // TODO: Replace with real dataSource queries to knowledge graph
+    // For Phase 1, using hardcoded schemas to prove the pipeline works
+    // Phase 2 will query actual ontologies from the triplestore via dataSource
+    //
+    // if (this.dataSource) {
+    //   const schema = await this.queryDataSourceForSchema(text, options);
+    //   return schema;
+    // }
+    //
+    // FAIL FAST: No fallbacks! If KG integration fails, throw error
+    return this.getHardcodedSchema(text, { maxClasses, maxProperties, maxExamples, domainFilter });
   }
 
   /**
@@ -393,39 +396,6 @@ export class OntologyExtractor {
 
     const examples = domainExamples[domain] || [];
     return examples.slice(0, maxExamples);
-  }
-
-  /**
-   * Get fallback schema when KG is not available
-   * @returns {Object} - Minimal fallback schema
-   */
-  getFallbackSchema() {
-    return {
-      domain: 'general',
-      entityClasses: [
-        {
-          name: 'Entity',
-          uid: 'entity',
-          description: 'Generic entity',
-          properties: ['name', 'type']
-        }
-      ],
-      relationshipTypes: [
-        {
-          name: 'related_to',
-          uid: 'related_to',
-          description: 'Generic relationship',
-          domain: 'Entity',
-          range: 'Entity'
-        }
-      ],
-      properties: [
-        { name: 'name', type: 'string', required: true },
-        { name: 'type', type: 'string', required: false }
-      ],
-      constraints: [],
-      examples: []
-    };
   }
 
   /**

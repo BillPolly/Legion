@@ -153,16 +153,9 @@ describe('OntologyExtractor', () => {
     });
   });
 
-  describe('getFallbackSchema', () => {
-    test('should return minimal fallback schema', () => {
-      const schema = extractor.getFallbackSchema();
-      
-      expect(schema.domain).toBe('general');
-      expect(schema.entityClasses).toHaveLength(1);
-      expect(schema.relationshipTypes).toHaveLength(1);
-      expect(schema.entityClasses[0].name).toBe('Entity');
-    });
-  });
+  // getFallbackSchema removed - NO FALLBACKS, FAIL FAST!
+  // Schema extraction uses hardcoded schemas in Phase 1
+  // Phase 2 will query actual KG via dataSource
 
   describe('clearCache', () => {
     test('should clear the cache', () => {

@@ -1,0 +1,132 @@
+New relationship: {{newRelationshipName}} - {{newRelationshipDescription}}
+Connects: {{domain}} → {{range}}
+
+Domain: {{domainContext}}
+
+**IMPORTANT: The relationships below are SUBSUMPTION-COMPATIBLE with the new relationship.**
+This means they ALREADY satisfy the mathematical constraint: {{domain}} ⊆ their domain AND {{range}} ⊆ their range.
+You are only choosing abstraction strategy from valid supertype candidates.
+
+Existing compatible relationships:
+{{#if existingRelationships}}
+{{#each existingRelationships}}
+- URI: {{this.uri}}
+  Label: {{this.label}}
+  {{#if this.description}}Description: {{this.description}}{{/if}}
+  Connects: {{this.domain}} → {{this.range}}
+  Current supertype: {{this.parent}}
+{{/each}}
+{{else}}
+(Only kg:relatesTo exists - no specialized relationships yet)
+{{/if}}
+
+Determine the best supertype for this new relationship. You have TWO options:
+
+**Option A: USE_EXISTING** - Choose an existing relationship as direct supertype
+**Option B: CREATE_PARENT** - Create a new intermediate supertype relationship
+
+Guidelines:
+1. If an appropriate specific supertype exists, USE_EXISTING
+2. If you see 2+ relationships that are semantically similar (same type of action/connection), CREATE_PARENT to group them
+3. Look for semantic patterns based on MEANING not just domain/range:
+   - **Worker actions**: installs, repairs, clears → "performs" or "workerAction"
+   - **Spatial placement**: locatedIn, installedIn, positionedIn → "spatialRelation"
+   - **Physical connection**: connectsTo, feeds, supplies → "connects" or "links"
+   - **Flow relationships**: flowsThrough, circulates, pumps → "conveys" or "transfers"
+   - **Structural composition**: hasPart, contains, includes → "structuralRelation"
+4. **Domain/range patterns matter**: Even if two relationships have similar names, they might need different supertypes based on their domain/range:
+   - "tightens" by Worker → Object = action (under "performs")
+   - "tightens" by Tool → Object = tool effect (different supertype)
+5. Default to kg:relatesTo only if no better supertype exists
+
+Examples:
+
+**Example 1: USE_EXISTING (first relationship, use kg:relatesTo)**
+New relationship: "installs" - "Worker installs equipment"
+Connects: Plumber → Pipe
+Existing: [{"uri": "kg:relatesTo", "label": "relatesTo", "parent": null}]
+Decision:
+{
+  "action": "USE_EXISTING",
+  "parent": "kg:relatesTo",
+  "reasoning": "First specialized relationship, should inherit from universal kg:relatesTo"
+}
+
+**Example 2: CREATE_PARENT (siblings detected, need action abstraction)**
+New relationship: "repairs" - "Worker repairs fixture"
+Connects: Plumber → Faucet
+Existing: [
+  {"uri": "kg:relatesTo", "label": "relatesTo", "parent": null},
+  {"uri": "kg:installs", "label": "installs", "domain": "kg:Plumber", "range": "kg:Pipe", "parent": "kg:relatesTo"},
+  {"uri": "kg:locatedIn", "label": "locatedIn", "domain": "kg:Faucet", "range": "kg:Bathroom", "parent": "kg:relatesTo"}
+]
+Decision:
+{
+  "action": "CREATE_PARENT",
+  "parentName": "performs",
+  "parentDescription": "Actions performed by workers on objects",
+  "grandparent": "kg:relatesTo",
+  "reasoning": "Both 'installs' and 'repairs' are actions performed by workers (Plumber). Creating 'performs' parent to group worker actions separately from spatial relations like 'locatedIn'."
+}
+
+**Example 3: CREATE_PARENT (tool relations pattern detected)**
+New relationship: "tightens" - "Tool tightens connection"
+Connects: PipeWrench → PipeConnection
+Existing: [
+  {"uri": "kg:relatesTo", "label": "relatesTo", "parent": null},
+  {"uri": "kg:usesTool", "label": "usesTool", "domain": "kg:Plumber", "range": "kg:DrainSnake", "parent": "kg:relatesTo"},
+  {"uri": "kg:clearedWith", "label": "clearedWith", "domain": "kg:Drain", "range": "kg:DrainSnake", "parent": "kg:relatesTo"},
+  {"uri": "kg:installs", "label": "installs", "parent": "kg:performs"}
+]
+Decision:
+{
+  "action": "CREATE_PARENT",
+  "parentName": "toolRelation",
+  "parentDescription": "Relationships involving tools and their use",
+  "grandparent": "kg:relatesTo",
+  "reasoning": "Three relationships involve tools: 'usesTool', 'clearedWith', 'tightens'. All describe tool-related actions. Creating 'toolRelation' parent to group them."
+}
+
+**Example 4: USE_EXISTING (parent already exists)**
+New relationship: "clears" - "Worker clears blockage"
+Connects: Plumber → Drain
+Existing: [
+  {"uri": "kg:performs", "label": "performs", "parent": "kg:relatesTo"},
+  {"uri": "kg:installs", "label": "installs", "parent": "kg:performs"},
+  {"uri": "kg:repairs", "label": "repairs", "parent": "kg:performs"}
+]
+Decision:
+{
+  "action": "USE_EXISTING",
+  "parent": "kg:performs",
+  "reasoning": "'clears' is an action performed by worker (Plumber). 'performs' abstraction already exists for worker actions."
+}
+
+**Example 5: CREATE_PARENT (spatial relations detected)**
+New relationship: "connectsTo" - "Pipe connects to appliance"
+Connects: PEXPipe → GasWaterHeater
+Existing: [
+  {"uri": "kg:relatesTo", "label": "relatesTo", "parent": null},
+  {"uri": "kg:installedIn", "label": "installedIn", "domain": "kg:Pipe", "range": "kg:Wall", "parent": "kg:relatesTo"},
+  {"uri": "kg:locatedIn", "label": "locatedIn", "domain": "kg:Faucet", "range": "kg:Bathroom", "parent": "kg:relatesTo"},
+  {"uri": "kg:installs", "label": "installs", "parent": "kg:performs"}
+]
+Decision:
+{
+  "action": "CREATE_PARENT",
+  "parentName": "spatialRelation",
+  "parentDescription": "Spatial and physical location relationships",
+  "grandparent": "kg:relatesTo",
+  "reasoning": "Three relationships describe spatial positioning: 'installedIn', 'locatedIn', 'connectsTo'. All indicate where things are physically located or connected. Different from action relationships like 'installs' under 'performs'."
+}
+
+Return JSON:
+- action: "USE_EXISTING" or "CREATE_PARENT"
+- If USE_EXISTING:
+  - parent: URI of existing relationship (e.g., "kg:performs" or "kg:relatesTo")
+  - reasoning: Why this parent was chosen
+- If CREATE_PARENT:
+  - parentName: Name of new intermediate relationship (e.g., "performs", "toolRelation", "spatialRelation")
+  - parentDescription: Description of the abstract parent relationship
+  - grandparent: What the new parent should inherit from (existing relationship URI or "kg:relatesTo")
+  - reasoning: Why abstraction is needed (mention sibling relationships and semantic pattern)

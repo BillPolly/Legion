@@ -1,5 +1,5 @@
-import { NLPSystem, RealLLMClient } from '../../src/index.js';
-import { ResourceManager } from '../../../../resource-manager/src/index.js';
+import { NLPSystem } from '../../src/index.js';
+import { ResourceManager } from '@legion/resource-manager';
 
 describe('NLPSystem Integration Tests', () => {
   let nlpSystem;
@@ -26,11 +26,12 @@ describe('NLPSystem Integration Tests', () => {
       expect(nlpSystem.llmClient).toBeDefined();
     });
 
-    test('should use custom LLM client when provided', async () => {
-      const customClient = new RealLLMClient();
-      await customClient.initialize();
-      const customSystem = new NLPSystem({ llmClient: customClient });
-      expect(customSystem.llmClient).toBe(customClient);
+    test('should initialize with LLM client from ResourceManager', async () => {
+      const customSystem = new NLPSystem();
+      await customSystem.initialize();
+      expect(customSystem.llmClient).toBeDefined();
+      expect(customSystem.entityExtractionService).toBeDefined();
+      expect(customSystem.relationshipExtractionService).toBeDefined();
     });
   });
 
@@ -178,25 +179,20 @@ describe('NLPSystem Integration Tests', () => {
   });
 
   describe('processText - Error Handling', () => {
-    test('should handle processing errors gracefully', async () => {
-      // Create a system with a client that throws errors
-      const errorClient = new RealLLMClient();
-      await errorClient.initialize();
-      
-      // Override method to simulate error
-      errorClient.extractEntities = async () => {
-        // Add a small delay to ensure processing time > 0
-        await new Promise(resolve => setTimeout(resolve, 1));
-        throw new Error('LLM Error');
-      };
-      
-      const errorSystem = new NLPSystem({ llmClient: errorClient });
-      const result = await errorSystem.processText('Test text');
+    test('should handle edge case inputs gracefully', async () => {
+      // Null/undefined are handled by TextPreprocessor
+      const result1 = await nlpSystem.processText(null);
+      expect(result1.success).toBe(true); // Preprocessor normalizes to empty string
+      expect(result1.extractions.entities).toBe(0);
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
-      expect(result.processingTime).toBeGreaterThan(0);
-      expect(result.metadata.timestamp).toBeDefined();
+      const result2 = await nlpSystem.processText(undefined);
+      expect(result2.success).toBe(true); // Preprocessor normalizes to empty string
+      expect(result2.extractions.entities).toBe(0);
+
+      // Empty string succeeds with no entities
+      const result3 = await nlpSystem.processText('');
+      expect(result3.success).toBe(true);
+      expect(result3.extractions.entities).toBe(0);
     });
   });
 

@@ -1,0 +1,28 @@
+Sentence: "{{sentence}}"
+
+Implied {{type}}: {{impliedName}}
+Existing in hierarchy: {{existingLabel}} (defined in {{definedIn}}, {{inheritanceDistance}} levels up)
+
+Should we:
+A) REUSE the inherited concept (sufficient for this use case)
+B) SPECIALIZE by creating a sub{{type}} (if domain-specific semantics needed)
+
+Only specialize if the domain requires specific semantics not captured by the parent.
+
+Examples:
+
+1. REUSE case:
+   Sentence: "The pump is located in Building A"
+   Implied: locatedIn
+   Existing: locatedIn (defined in PhysicalObject)
+   Decision: REUSE - generic location property is sufficient
+
+2. SPECIALIZE case:
+   Sentence: "The pump installation location must meet safety requirements"
+   Implied: installationLocation
+   Existing: locatedIn (defined in PhysicalObject)
+   Decision: SPECIALIZE - installation-specific location has different semantics (safety requirements, regulatory compliance)
+
+Return JSON with:
+- action: "REUSE" or "SPECIALIZE"
+- reasoning: Brief explanation of why

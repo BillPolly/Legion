@@ -50,11 +50,43 @@ describe('CLI Web UI E2E Integration', () => {
     // WebSocket endpoint existence is verified by successful connections in other tests
   });
 
-  test('should serve static files for web UI', async () => {
-    // Test that the main HTML file would be served
-    const url = `http://localhost:${TEST_CLI_PORT}`;
-    expect(url).toBe(`http://localhost:${TEST_CLI_PORT}`);
-    // Actual HTTP fetch testing would require additional setup
+  test('should serve HTML with import map', async () => {
+    const response = await fetch(`http://localhost:${TEST_CLI_PORT}/cli`);
+    expect(response.status).toBe(200);
+
+    const html = await response.text();
+
+    // Verify HTML contains import map
+    expect(html).toContain('<script type="importmap">');
+    expect(html).toContain('@legion/actors');
+    expect(html).toContain('@cli-ui/');
+    expect(html).toContain('/src/');
+
+    // Verify import map is valid JSON
+    const importMapMatch = html.match(/<script type="importmap">\s*(\{[\s\S]*?\})\s*<\/script>/);
+    expect(importMapMatch).toBeTruthy();
+    const importMapJson = JSON.parse(importMapMatch[1]);
+    expect(importMapJson.imports).toBeDefined();
+    expect(importMapJson.imports['@cli-ui/']).toBe('/src/');
+  });
+
+  test('should serve static files from /src', async () => {
+    const response = await fetch(`http://localhost:${TEST_CLI_PORT}/src/components/Terminal.js`);
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toContain('javascript');
+
+    const content = await response.text();
+    expect(content).toContain('export');
+  });
+
+  test('should serve client actor file', async () => {
+    const response = await fetch(`http://localhost:${TEST_CLI_PORT}/cli/client.js`);
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toContain('javascript');
+
+    const content = await response.text();
+    expect(content).toContain('BrowserCLIClientActor');
+    expect(content).toContain('@cli-ui/');
   });
 
   test('should have /cli route configured', async () => {

@@ -6,15 +6,16 @@
 import { BaseCommand } from './BaseCommand.js';
 
 export class ShowCommand extends BaseCommand {
-  constructor(displayEngine, resourceManager) {
+  constructor(displayEngine, resourceManager, sessionActor) {
     super(
       'show',
       'Display a Handle (browser or terminal)',
-      'show <uri> [--format <format>] [--width <width>] [--height <height>] [--title <title>]'
+      'show <uri|number> [--format <format>] [--width <width>] [--height <height>] [--title <title>]'
     );
 
     this.displayEngine = displayEngine;
     this.resourceManager = resourceManager;
+    this.sessionActor = sessionActor;
   }
 
   /**
@@ -69,6 +70,31 @@ export class ShowCommand extends BaseCommand {
   async execute(args) {
     // Parse arguments
     const { uri, options } = this.parseArgs(args);
+
+    // Check if URI is a number (handle index from /list)
+    const handleIndex = parseInt(uri);
+    if (!isNaN(handleIndex) && this.sessionActor && this.sessionActor.handles) {
+      const index = handleIndex - 1; // Convert to 0-based index
+      if (index >= 0 && index < this.sessionActor.handles.length) {
+        const storedHandle = this.sessionActor.handles[index];
+        // Re-render the stored handle
+        const result = await this.displayEngine.render(storedHandle.handle, options);
+
+        return {
+          success: result.success,
+          message: `Displaying handle #${handleIndex}: ${storedHandle.title}`,
+          window: result.window,
+          format: result.format,
+          rendered: result.rendered,
+          handle: result.handle,
+          assetData: result.assetData,
+          title: result.title,
+          assetType: result.assetType
+        };
+      } else {
+        throw new Error(`Handle #${handleIndex} not found. Use /list to see available handles.`);
+      }
+    }
 
     // Get Handle - supports Legion URIs, HTTP/HTTPS URLs, and file:// URLs
     let handle;
@@ -233,10 +259,11 @@ export class ShowCommand extends BaseCommand {
 /show - Display a Handle (browser or terminal)
 
 Usage:
-  /show <uri> [options]
+  /show <uri|number> [options]
 
 Arguments:
-  <uri>          Legion Handle URI (e.g., legion://local/file/path/to/file.txt)
+  <uri|number>   Handle URI (e.g., legion://..., file://..., http://...)
+                 OR handle number from /list output (e.g., 1, 2, 3)
 
 Options:
   --format <fmt> Display format: auto (default), browser, table, tree, json, summary

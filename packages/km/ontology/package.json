@@ -1,0 +1,47 @@
+{
+  "name": "@legion/ontology",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Incremental ontology creation service for Legion knowledge management",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch --runInBand",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage --runInBand"
+  },
+  "keywords": [
+    "ontology",
+    "owl",
+    "rdf",
+    "knowledge-graph",
+    "semantic-web",
+    "nlp",
+    "llm"
+  ],
+  "author": "Legion Team",
+  "license": "MIT",
+  "dependencies": {
+    "@legion/rdf": "^1.0.0",
+    "@legion/semantic-search": "^0.1.0",
+    "@legion/resource-manager": "^1.0.0",
+    "@legion/prompting-manager": "^1.0.0",
+    "@legion/nlp": "^1.0.0",
+    "remark": "^15.0.1",
+    "remark-parse": "^11.0.0",
+    "remark-docx": "^4.0.3",
+    "unified": "^11.0.4",
+    "to-vfile": "^8.0.0",
+    "@md2docx/remark-docx": "^1.0.0",
+    "remark-gfm": "^4.0.0",
+    "remark-frontmatter": "^5.0.0",
+    "docx": "^9.5.1",
+    "marked": "^12.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,70 @@
+Analyze this sentence and extract TYPE-LEVEL information (not instances):
+
+Sentence: "{{sentence}}"
+
+Extract:
+1. Entity types (e.g., "compressor", "heat exchanger")
+2. Properties implied (e.g., "operates at pressure" → operatingPressure property)
+3. Relationships (e.g., "connects to" → connectsTo relationship)
+
+UPPER-LEVEL CATEGORIES:
+All entities must be categorized as one of:
+- PhysicalEntity: Physical objects (equipment, components, materials) - things you can touch
+- State: Conditions, configurations, situations (temperature=150°F, valve open, pressure level)
+- Process: Natural or industrial transformations (heating, cooling, pumping, mixing)
+- Task: Planned activities (maintenance, inspection, calibration, repair)
+
+Return JSON with:
+- classes: Array of {name, suggestedSupertype, definition, supertypeDescription, usageDescription, synonyms} for entity types
+- properties: Array of {name, domain, type} for datatype properties
+- relationships: Array of {name, domain, range, definition, supertypeDescription, usageDescription, synonyms} for object properties
+
+For each class, include:
+- suggestedSupertype: One of "PhysicalEntity", "State", "Process", or "Task" (REQUIRED)
+  * Use PhysicalEntity for tangible objects (pump, tank, valve, pipe)
+  * Use State for conditions/situations (temperature, pressure, valve position, operational mode)
+  * Use Process for transformations/operations (heating, pumping, mixing, flowing)
+  * Use Task for planned activities (maintenance, inspection, calibration)
+
+For each entity/relationship, generate 4 perspectives:
+1. definition: Primary formal definition (2-3 sentences, detailed)
+2. supertypeDescription: Description in terms of supertype category (e.g., "A type of {supertype} that...")
+3. usageDescription: Purpose or usage context (e.g., "Used for...", "Performs...", "Enables...")
+4. synonyms: Comma-separated list of alternative phrasings, variations, and ways this concept might be mentioned
+
+Example:
+Sentence: "The centrifugal pump operates at 150 PSI and connects to the tank"
+{
+  "classes": [
+    {
+      "name": "CentrifugalPump",
+      "suggestedSupertype": "PhysicalEntity",
+      "definition": "A mechanical device that uses centrifugal force to move fluids by rotating an impeller. Commonly used in industrial and commercial applications for fluid transfer and pressure generation.",
+      "supertypeDescription": "A type of PhysicalEntity that specifically uses rotational energy and centrifugal force to increase fluid velocity and pressure.",
+      "usageDescription": "Used for moving liquids through piping systems, increasing fluid pressure, and transferring fluids between containers or process stages.",
+      "synonyms": "pump, centrifugal pump, rotary pump, impeller pump, fluid pump, pumping device"
+    },
+    {
+      "name": "Tank",
+      "suggestedSupertype": "PhysicalEntity",
+      "definition": "A container designed to hold liquids, gases, or other substances. Typically constructed from metal, plastic, or composite materials with specific capacity and pressure ratings.",
+      "supertypeDescription": "A type of PhysicalEntity designed for holding fluids or materials.",
+      "usageDescription": "Used for storing liquids or gases, providing buffer capacity in systems, and enabling fluid management in industrial processes.",
+      "synonyms": "tank, storage tank, vessel, container, reservoir, holding tank"
+    }
+  ],
+  "properties": [
+    {"name": "operatingPressure", "domain": "Pump", "type": "decimal"}
+  ],
+  "relationships": [
+    {
+      "name": "connectsTo",
+      "domain": "Pump",
+      "range": "Tank",
+      "definition": "A physical connection or interface between two components that allows fluid, gas, or material transfer. May involve piping, fittings, or direct coupling.",
+      "supertypeDescription": "A type of spatial relationship indicating physical attachment or joining between components in a system.",
+      "usageDescription": "Used to describe how components are physically joined or interfaced to enable material flow, energy transfer, or structural integration.",
+      "synonyms": "connects to, connects, linked to, attached to, joined to, coupled to, interfaced with"
+    }
+  ]
+}

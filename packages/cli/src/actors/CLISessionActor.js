@@ -10,6 +10,7 @@ import { CommandProcessor } from '../commands/CommandProcessor.js';
 import { ShowCommand } from '../commands/ShowCommand.js';
 import { HelpCommand } from '../commands/HelpCommand.js';
 import { WindowsCommand } from '../commands/WindowsCommand.js';
+import { ListCommand } from '../commands/ListCommand.js';
 import { DisplayEngine } from '../display/DisplayEngine.js';
 import { OutputHandler } from '../handlers/OutputHandler.js';
 import { ClaudeAgentStrategy } from '@legion/claude-agent';
@@ -37,6 +38,7 @@ export class CLISessionActor extends Actor {
     // Session state
     this.commandHistory = [];
     this.contextVariables = new Map(); // For future: $var support
+    this.handles = []; // Track handles displayed in this session
 
     // Claude task for non-slash commands (lazily initialized)
     this.claudeTask = null;
@@ -66,7 +68,7 @@ export class CLISessionActor extends Actor {
    * Register CLI commands
    */
   registerCommands() {
-    const showCommand = new ShowCommand(this.displayEngine, this.resourceManager);
+    const showCommand = new ShowCommand(this.displayEngine, this.resourceManager, this);
     this.commandProcessor.register(showCommand);
 
     const helpCommand = new HelpCommand(this.commandProcessor);
@@ -74,6 +76,9 @@ export class CLISessionActor extends Actor {
 
     const windowsCommand = new WindowsCommand(this.showme, this.outputHandler);
     this.commandProcessor.register(windowsCommand);
+
+    const listCommand = new ListCommand(this, this.showme);
+    this.commandProcessor.register(listCommand);
   }
 
   /**
@@ -92,7 +97,7 @@ export class CLISessionActor extends Actor {
       // Claude can work without tools - they're optional
       toolRegistry = {
         getTool: () => null,
-        getAllTools: () => []
+        listTools: async () => []
       };
     }
 
@@ -129,10 +134,49 @@ export class CLISessionActor extends Actor {
    */
   async setRemoteActor(remoteActor) {
     this.remoteActor = remoteActor;
+    // Note: Framework already sends session-ready, no need to send it again
 
-    // Send welcome message
+    // Auto-load sample images for demo
+    await this.loadSampleImages();
+  }
+
+  /**
+   * Load sample images into context on startup
+   */
+  async loadSampleImages() {
+    const sampleImages = [
+      'file:///Users/maxximus/Documents/max-projects/pocs/Legion/artifacts/dalle3-2025-08-05T08-39-42.png',
+      'file:///Users/maxximus/Documents/max-projects/pocs/Legion/artifacts/test-circle-1756463651316.png',
+      'file:///Users/maxximus/Documents/max-projects/pocs/Legion/artifacts/test-garden-1756463664107.png',
+      'file:///Users/maxximus/Documents/max-projects/pocs/Legion/artifacts/test-panorama-1756463698384.png',
+      'file:///Users/maxximus/Documents/max-projects/pocs/Legion/artifacts/test-waterfall-1756463716083.png'
+    ];
+
+    // Temporarily disable remote actor to prevent display messages
+    const tempRemote = this.remoteActor;
+    this.remoteActor = null;
+
+    for (const imageUrl of sampleImages) {
+      try {
+        // Execute show command to load the image (silently)
+        const result = await this.handleExecuteCommand({ command: `/show ${imageUrl}` });
+        console.log(`[LoadSampleImages] Loaded ${imageUrl}, result:`, result.success, result.message);
+      } catch (error) {
+        console.error(`Failed to load sample image: ${imageUrl}`, error);
+      }
+    }
+
+    // Restore remote actor
+    this.remoteActor = tempRemote;
+
+    // Check how many windows exist
+    const windows = this.showme.getWindows();
+    console.log(`[LoadSampleImages] Total windows after loading: ${windows.length}`);
+
+    // Send notification to client
     if (this.remoteActor) {
-      this.remoteActor.receive('session-ready', {
+      this.remoteActor.receive('display-response', {
+        content: `\nLoaded ${sampleImages.length} sample images into context.\nType /list to see them.\n`,
         sessionId: this.sessionId,
         timestamp: Date.now()
       });
@@ -188,12 +232,31 @@ export class CLISessionActor extends Actor {
       if (command.startsWith('/')) {
         const result = await this.commandProcessor.execute(command);
 
+        // Track handles in session context
+        if (result.handle) {
+          this.handles.push({
+            handle: result.handle,
+            title: result.title || result.handle.title || 'Untitled',
+            type: result.assetType || result.handle.resourceType || 'unknown',
+            timestamp: Date.now()
+          });
+        }
+
         // If result has browser rendering with asset data, send to client for display
         if (result.rendered === 'browser' && result.assetData && this.remoteActor) {
           this.remoteActor.receive('display-asset', {
             asset: result.assetData,
             title: result.title || 'Asset',
             assetType: result.assetType || 'unknown'
+          });
+        }
+
+        // Send text response to client
+        if (this.remoteActor && result.message) {
+          this.remoteActor.receive('display-response', {
+            content: result.message,
+            sessionId: this.sessionId,
+            timestamp: Date.now()
           });
         }
 

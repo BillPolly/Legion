@@ -5,7 +5,7 @@
  * that contains the terminal interface. It's draggable and closable.
  */
 
-import { Terminal } from './Terminal.js';
+import { Terminal } from '@cli-ui/components/Terminal.js';
 
 export class CLIWindow {
   constructor(config = {}) {
@@ -24,6 +24,11 @@ export class CLIWindow {
     this.isDragging = false;
     this.dragStartX = 0;
     this.dragStartY = 0;
+    this.isResizing = false;
+    this.resizeStartX = 0;
+    this.resizeStartY = 0;
+    this.resizeStartWidth = 0;
+    this.resizeStartHeight = 0;
   }
 
   /**
@@ -32,6 +37,7 @@ export class CLIWindow {
   initialize() {
     this.windowElement = this.createWindow();
     this.setupDragging();
+    this.setupResizing();
 
     return this.windowElement;
   }
@@ -60,6 +66,7 @@ export class CLIWindow {
         <button class="cli-window-close" title="Close">×</button>
       </div>
       <div class="cli-window-content"></div>
+      <div class="cli-window-resize-handle"></div>
     `;
 
     // Inject CSS
@@ -152,6 +159,21 @@ export class CLIWindow {
         overflow: hidden;
         background: #1e1e1e;
       }
+
+      .cli-window-resize-handle {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 16px;
+        height: 16px;
+        cursor: nwse-resize;
+        background: linear-gradient(135deg, transparent 50%, #606060 50%);
+        border-bottom-right-radius: 8px;
+      }
+
+      .cli-window-resize-handle:hover {
+        background: linear-gradient(135deg, transparent 50%, #808080 50%);
+      }
     `;
 
     document.head.appendChild(style);
@@ -190,6 +212,46 @@ export class CLIWindow {
     document.addEventListener('mouseup', () => {
       if (this.isDragging) {
         this.isDragging = false;
+        this.windowElement.style.zIndex = '1000';
+      }
+    });
+  }
+
+  /**
+   * Setup resizing functionality
+   */
+  setupResizing() {
+    const resizeHandle = this.windowElement.querySelector('.cli-window-resize-handle');
+
+    resizeHandle.addEventListener('mousedown', (e) => {
+      e.stopPropagation(); // Prevent dragging when resizing
+      this.isResizing = true;
+      this.resizeStartX = e.clientX;
+      this.resizeStartY = e.clientY;
+      this.resizeStartWidth = this.config.width;
+      this.resizeStartHeight = this.config.height;
+
+      // Bring to front
+      this.windowElement.style.zIndex = '1001';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!this.isResizing) return;
+
+      const deltaX = e.clientX - this.resizeStartX;
+      const deltaY = e.clientY - this.resizeStartY;
+
+      // Calculate new dimensions (minimum 400x300)
+      this.config.width = Math.max(400, this.resizeStartWidth + deltaX);
+      this.config.height = Math.max(300, this.resizeStartHeight + deltaY);
+
+      this.windowElement.style.width = `${this.config.width}px`;
+      this.windowElement.style.height = `${this.config.height}px`;
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (this.isResizing) {
+        this.isResizing = false;
         this.windowElement.style.zIndex = '1000';
       }
     });

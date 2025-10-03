@@ -45,12 +45,23 @@ export class ClaudeToolBridge {
       const toolPromises = toolNames.map(name => this.toolRegistry.getTool(name));
       tools = (await Promise.all(toolPromises)).filter(Boolean);
     } else {
-      // Get all tools - handle both sync and async getAllTools
-      const allTools = this.toolRegistry.getAllTools();
-      tools = allTools instanceof Promise ? await allTools : allTools;
+      // Get all tools using listTools() - ToolRegistry API
+      tools = await this.toolRegistry.listTools();
     }
 
-    return tools.map(tool => this.legionToClaudeTool(tool));
+    // Deduplicate tools by name (Claude requires unique tool names)
+    // Keep the first occurrence of each tool name
+    const uniqueTools = [];
+    const seenNames = new Set();
+
+    for (const tool of tools) {
+      if (!seenNames.has(tool.name)) {
+        uniqueTools.push(tool);
+        seenNames.add(tool.name);
+      }
+    }
+
+    return uniqueTools.map(tool => this.legionToClaudeTool(tool));
   }
 
   /**

@@ -28,13 +28,15 @@ export class CLIServer extends ConfigurableActorServer {
         {
           path: '/cli',
           serverActor: '../actors/CLISessionActor.js',
-          clientActor: '../../client/CLIClientActor.js', // For future web UI
-          services: ['showme', 'resourceManager'] // Services required by CLISessionActor
+          clientActor: '../../apps/cli-ui/src/client/BrowserCLIClientActor.js',
+          services: ['showme', 'resourceManager'], // Services required by CLISessionActor
+          importMap: {
+            '@cli-ui/': '/src/'
+          }
         }
       ],
       static: {
-        // Serve web terminal UI
-        '/': path.join(__dirname, '../../apps/cli-ui')
+        '/src': path.resolve(__dirname, '../../apps/cli-ui/src')
       },
       __dirname // Pass our directory for relative path resolution
     };

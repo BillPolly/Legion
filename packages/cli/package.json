@@ -11,7 +11,9 @@
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest --config jest.config.js --runInBand",
     "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest --config jest.config.js __tests__/unit --runInBand",
     "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest --config jest.config.js __tests__/integration --runInBand",
-    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --config jest.config.js --watch --runInBand"
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --config jest.config.js --watch --runInBand",
+    "test:browser": "node --experimental-vm-modules scripts/test-cli-puppeteer.js",
+    "dev": "node --experimental-vm-modules src/index.js --server --port 4000"
   },
   "dependencies": {
     "@legion/resource-manager": "*",

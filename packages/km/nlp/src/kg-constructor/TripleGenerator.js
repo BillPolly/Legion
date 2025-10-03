@@ -392,19 +392,22 @@ export class TripleGenerator {
     let confidenceCount = 0;
     
     for (const triple of this.generatedTriples) {
-      // Classify triple type
-      if (triple[1] === 'rdf:type') {
+      // Classify triple type - ensure predicate is a string
+      const predicate = String(triple[1] || '');
+      const subject = String(triple[0] || '');
+
+      if (predicate === 'rdf:type') {
         stats.entityTriples++;
-      } else if (triple[1].startsWith('gellish:') || triple[1].includes('relatedTo')) {
+      } else if (predicate.startsWith('gellish:') || predicate.includes('relatedTo')) {
         stats.relationshipTriples++;
-      } else if (triple[1].startsWith('kg:')) {
-        if (triple[0].startsWith('extraction:')) {
+      } else if (predicate.startsWith('kg:')) {
+        if (subject.startsWith('extraction:')) {
           stats.metadataTriples++;
         } else {
           stats.propertyTriples++;
         }
       }
-      
+
       // Calculate average confidence
       if (triple.confidence) {
         confidenceSum += triple.confidence;

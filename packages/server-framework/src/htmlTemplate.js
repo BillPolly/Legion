@@ -52,6 +52,7 @@ export function getTemplateVariables(options) {
  * @param {string} options.clientActorPath - Path to client actor JavaScript file
  * @param {string} options.wsEndpoint - WebSocket endpoint URL
  * @param {string} options.route - Route path for this application
+ * @param {Object} options.importMap - Custom import map entries to merge with defaults
  * @returns {string} Generated HTML
  */
 export function generateHTML(options) {
@@ -59,6 +60,17 @@ export function generateHTML(options) {
 
   // Escape title for HTML but not paths in JavaScript
   const safeTitle = escapeHtml(vars.title);
+
+  // Build import map with defaults and custom entries
+  const importMapEntries = {
+    "@legion/actors": "/legion/actors/src/index.js",
+    "@legion/actors/": "/legion/actors/src/",
+    "@legion/components": "/legion/components/src/index.js",
+    "@legion/components/": "/legion/components/src/",
+    ...(options.importMap || {})
+  };
+
+  const importMapJson = JSON.stringify({ imports: importMapEntries }, null, 4);
 
   return `<!DOCTYPE html>
 <html>
@@ -68,14 +80,7 @@ export function generateHTML(options) {
   <title>${safeTitle}</title>
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
   <script type="importmap">
-  {
-    "imports": {
-      "@legion/actors": "/legion/actors/src/index.js",
-      "@legion/actors/": "/legion/actors/src/",
-      "@legion/components": "/legion/components/src/index.js",
-      "@legion/components/": "/legion/components/src/"
-    }
-  }
+  ${importMapJson}
   </script>
   <style>
     * {
@@ -176,7 +181,7 @@ export function generateHTML(options) {
       actorSpace.register(clientActor, 'client-root');
 
       // Create WebSocket connection
-      const ws = new WebSocket('${vars.wsEndpoint}?route=${vars.route}');
+      const ws = new WebSocket('${vars.wsEndpoint}');
 
       // CRITICAL: Create Channel BEFORE WebSocket opens so messages can be received!
       // Server will send session-ready immediately when connection opens

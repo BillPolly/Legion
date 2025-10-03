@@ -1,16 +1,26 @@
 /**
  * NLP-to-KG Processing System
  * Main entry point for the NLP processing system
+ *
+ * Refactored to use Legion standard patterns:
+ * - ResourceManager for LLM client
+ * - Service layer for domain logic
+ * - TemplatedPrompt for LLM interactions
  */
+
+import { ResourceManager } from '@legion/resource-manager';
 
 // Text Input Layer
 import { TextPreprocessor } from './text-input/TextPreprocessor.js';
 export { TextPreprocessor };
 
-// LLM Integration
-import { LLMClient } from './llm-integration/LLMClient.js';
-import { RealLLMClient } from './llm-integration/RealLLMClient.js';
-export { LLMClient, RealLLMClient };
+// Services (domain logic)
+import { EntityExtractionService } from './services/EntityExtractionService.js';
+import { RelationshipExtractionService } from './services/RelationshipExtractionService.js';
+import { QualityAssessmentService } from './services/QualityAssessmentService.js';
+import { SemanticComparisonService } from './services/SemanticComparisonService.js';
+import { DisambiguationService } from './services/DisambiguationService.js';
+export { EntityExtractionService, RelationshipExtractionService, QualityAssessmentService, SemanticComparisonService, DisambiguationService };
 
 // Ontology Pipeline
 import { OntologyExtractor } from './ontology-pipeline/OntologyExtractor.js';
@@ -20,27 +30,31 @@ export { OntologyExtractor };
 import { TripleGenerator } from './kg-constructor/TripleGenerator.js';
 export { TripleGenerator };
 
-// Main system class - Phase 1 implementation
+// Main system class - Refactored implementation
 export class NLPSystem {
   constructor(options = {}) {
     this.options = {
-      llmClient: null,
-      dataSource: null, // Using dataSource instead of kgEngine
+      resourceManager: options.resourceManager || null,
+      dataSource: options.dataSource || null,
       ...options
     };
-    
+
     // Initialize components
     this.textPreprocessor = new TextPreprocessor();
     this.ontologyExtractor = new OntologyExtractor(this.options.dataSource);
     this.tripleGenerator = new TripleGenerator();
-    
-    // Use provided LLM client or create real one (NO FALLBACK TO MOCK)
-    this.llmClient = this.options.llmClient || null;
+
+    // Service instances (initialized in initialize())
+    this.entityExtractionService = null;
+    this.relationshipExtractionService = null;
+
+    this.resourceManager = null;
+    this.llmClient = null;
     this.initialized = false;
   }
 
   /**
-   * Initialize the NLP system with real LLM client
+   * Initialize the NLP system with LLM client from ResourceManager
    * Must be called before processing text
    * @returns {Promise<void>}
    */
@@ -49,12 +63,23 @@ export class NLPSystem {
       return;
     }
 
-    // If no LLM client provided, create real one
+    // Get ResourceManager
+    this.resourceManager = this.options.resourceManager || await ResourceManager.getInstance();
+
+    // Get LLM client from ResourceManager
+    this.llmClient = await this.resourceManager.get('llmClient');
+
     if (!this.llmClient) {
-      this.llmClient = new RealLLMClient();
-      await this.llmClient.initialize();
+      throw new Error('Failed to get LLM client from ResourceManager - no LLM available');
     }
-    
+
+    // Initialize services with LLM client
+    this.entityExtractionService = new EntityExtractionService(this.llmClient);
+    await this.entityExtractionService.initialize();
+
+    this.relationshipExtractionService = new RelationshipExtractionService(this.llmClient);
+    await this.relationshipExtractionService.initialize();
+
     this.initialized = true;
   }
 
@@ -77,15 +102,15 @@ export class NLPSystem {
       const schema = await this.ontologyExtractor.extractRelevantSchema(preprocessed.normalizedText);
       const llmSchema = this.ontologyExtractor.generateLLMSchema(schema);
       
-      // Step 3: Extract entities using LLM with schema guidance
-      const entityResult = await this.llmClient.extractEntities(
-        preprocessed.normalizedText, 
-        llmSchema, 
+      // Step 3: Extract entities using EntityExtractionService
+      const entityResult = await this.entityExtractionService.extractEntities(
+        preprocessed.normalizedText,
+        llmSchema,
         { domain: schema.domain }
       );
-      
-      // Step 4: Extract relationships using LLM
-      const relationshipResult = await this.llmClient.extractRelationships(
+
+      // Step 4: Extract relationships using RelationshipExtractionService
+      const relationshipResult = await this.relationshipExtractionService.extractRelationships(
         preprocessed.normalizedText,
         entityResult.entities,
         llmSchema.relationshipTypes
@@ -167,7 +192,7 @@ export class NLPSystem {
         textPreprocessor: 'active',
         ontologyExtractor: 'active',
         tripleGenerator: 'active',
-        llmClient: this.llmClient ? this.llmClient.constructor.name : 'not initialized'
+        llmClient: this.llmClient ? 'active' : 'not initialized'
       },
       capabilities: [
         'text_preprocessing',

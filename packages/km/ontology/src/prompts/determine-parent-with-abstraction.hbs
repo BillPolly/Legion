@@ -1,0 +1,104 @@
+New class: {{newClassName}} - {{newClassDescription}}
+
+Domain: {{domain}}
+
+Existing classes in ontology:
+{{#if existingClasses}}
+{{#each existingClasses}}
+- URI: {{this.uri}}
+  Label: {{this.label}}
+  {{#if this.description}}Description: {{this.description}}{{/if}}
+  Parent: {{this.parent}}
+{{/each}}
+{{else}}
+(No existing classes - ontology is empty)
+{{/if}}
+
+Determine the best parent for this new class. You have TWO options:
+
+**Option A: USE_EXISTING** - Choose an existing class as parent
+**Option B: CREATE_PARENT** - Create a new intermediate parent class
+
+Guidelines:
+1. If an appropriate specific parent exists, USE_EXISTING
+2. If you see 2+ classes that would be siblings (same level of abstraction), CREATE_PARENT for them
+3. Look for patterns: classes ending in same word (e.g., "CentrifugalPump", "ReciprocatingPump" → need "Pump" parent)
+4. Prefer specific over general (e.g., "Pump" over "Equipment" if both fit)
+5. If ontology is empty, USE_EXISTING with parent="owl:Thing"
+
+Examples:
+
+**Example 1: USE_EXISTING (appropriate parent exists)**
+New class: "Pump"
+Existing: [{"uri": "kg:Equipment", "label": "Equipment", "parent": "owl:Thing"}]
+Decision:
+{
+  "action": "USE_EXISTING",
+  "parent": "kg:Equipment",
+  "reasoning": "Pump IS-A Equipment, appropriate parent exists"
+}
+
+**Example 2: CREATE_PARENT (siblings detected, need abstraction)**
+New class: "ReciprocatingPump" - "Pump using reciprocating motion"
+Existing: [
+  {"uri": "kg:CentrifugalPump", "label": "CentrifugalPump", "parent": "owl:Thing"},
+  {"uri": "kg:Equipment", "label": "Equipment", "parent": "owl:Thing"}
+]
+Decision:
+{
+  "action": "CREATE_PARENT",
+  "parentName": "Pump",
+  "parentDescription": "Device for moving fluids",
+  "grandparent": "kg:Equipment",
+  "reasoning": "CentrifugalPump and ReciprocatingPump are both types of Pump. Need intermediate Pump class as their common parent."
+}
+
+**Example 3: CREATE_PARENT (third sibling, triggers abstraction)**
+New class: "RotaryPump" - "Pump using rotary motion"
+Existing: [
+  {"uri": "kg:CentrifugalPump", "label": "CentrifugalPump", "parent": "owl:Thing"},
+  {"uri": "kg:ReciprocatingPump", "label": "ReciprocatingPump", "parent": "owl:Thing"},
+  {"uri": "kg:Tank", "label": "Tank", "parent": "owl:Thing"}
+]
+Decision:
+{
+  "action": "CREATE_PARENT",
+  "parentName": "Pump",
+  "parentDescription": "Device for moving fluids",
+  "grandparent": "owl:Thing",
+  "reasoning": "Three pump types (Centrifugal, Reciprocating, Rotary) all share common abstraction. Create Pump parent and restructure all three as children."
+}
+
+**Example 4: USE_EXISTING (parent already created)**
+New class: "AxialPump" - "Pump using axial flow"
+Existing: [
+  {"uri": "kg:Pump", "label": "Pump", "parent": "owl:Thing"},
+  {"uri": "kg:CentrifugalPump", "label": "CentrifugalPump", "parent": "kg:Pump"}
+]
+Decision:
+{
+  "action": "USE_EXISTING",
+  "parent": "kg:Pump",
+  "reasoning": "Pump abstraction already exists, AxialPump IS-A Pump"
+}
+
+**Example 5: Empty ontology**
+New class: "Equipment"
+Existing: []
+Decision:
+{
+  "action": "USE_EXISTING",
+  "parent": "owl:Thing",
+  "reasoning": "First class in ontology, must be child of owl:Thing"
+}
+
+Return JSON:
+- action: "USE_EXISTING" or "CREATE_PARENT"
+- If USE_EXISTING:
+  - parent: URI of existing class (e.g., "kg:Equipment" or "owl:Thing")
+  - reasoning: Why this parent was chosen
+- If CREATE_PARENT:
+  - parentName: Name of new intermediate class (e.g., "Pump")
+  - parentDescription: Description of the abstract parent
+  - grandparent: What the new parent should inherit from (existing class URI or "owl:Thing")
+  - reasoning: Why abstraction is needed (mention sibling classes)

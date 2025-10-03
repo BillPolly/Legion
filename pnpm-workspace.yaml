@@ -1,0 +1,12 @@
+packages:
+  - 'packages/*'
+  - 'packages/agents/*'
+  - 'packages/apps/*'
+  - 'packages/frontend/*'
+  - 'packages/planning/*'
+  - 'packages/shared/*'
+  - 'packages/shared/data/*'
+  - 'packages/modules/*'
+  - 'packages/prompting/*'
+  - 'packages/data/*'
+  - 'packages/km/*'

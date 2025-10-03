@@ -79,9 +79,12 @@ export class Terminal {
       }
     });
 
-    // Keep focus on input
-    this.container.addEventListener('click', () => {
-      this.inputElement.focus();
+    // Keep focus on input (but allow text selection in output)
+    this.container.addEventListener('click', (e) => {
+      // Only focus input if NOT clicking on the output area at all
+      if (!this.outputElement.contains(e.target)) {
+        this.inputElement.focus();
+      }
     });
   }
 
@@ -221,6 +224,8 @@ export class Terminal {
         overflow-y: auto;
         overflow-x: hidden;
         word-wrap: break-word;
+        user-select: text;
+        cursor: text;
       }
 
       .terminal-line {
@@ -228,6 +233,7 @@ export class Terminal {
         margin: 0;
         white-space: pre-wrap;
         word-break: break-word;
+        user-select: text;
       }
 
       .terminal-line-command {
