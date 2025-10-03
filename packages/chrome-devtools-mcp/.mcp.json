@@ -3,7 +3,7 @@
     "chrome-devtools-mcp": {
       "command": "node",
       "args": [
-        "/Users/maxximus/Documents/max-projects/pocs/Legion/packages/chrome-devtools-mcp/build/src/index.js"
+        "build/src/index.js"
       ],
       "cwd": "/Users/maxximus/Documents/max-projects/pocs/Legion/packages/chrome-devtools-mcp"
     }

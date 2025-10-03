@@ -1,14 +1,11 @@
 {
   "mcpServers": {
-    "fullstack-monitor": {
+    "chrome-devtools-mcp": {
       "command": "node",
-      "args": ["packages/mcps/mcp-monitor/mcp-server.js"],
-      "cwd": "/Users/maxximus/Documents/max-projects/pocs/Legion",
-      "env": {
-        "MCP_SERVER_NAME": "fullstack-monitor",
-        "MCP_SERVER_VERSION": "1.0.0",
-        "MONOREPO_ROOT": "/Users/maxximus/Documents/max-projects/pocs/Legion"
-      }
+      "args": [
+        "/Users/maxximus/Documents/max-projects/pocs/Legion/packages/chrome-devtools-mcp/build/src/index.js"
+      ],
+      "cwd": "/Users/maxximus/Documents/max-projects/pocs/Legion/packages/chrome-devtools-mcp"
     }
   }
 }
