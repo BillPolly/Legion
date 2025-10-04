@@ -9,7 +9,7 @@
  * 4. Periodic - full consistency check
  */
 
-import { OntologyVerifier } from '@legion/neurosymbolic-reasoning';
+import { OntologyVerifier } from '../../../../ai/neurosymbolic-reasoning/src/ontology/OntologyVerifier.js';
 
 export class OntologyVerificationService {
   constructor(tripleStore, config = {}) {

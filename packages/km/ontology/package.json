@@ -28,6 +28,7 @@
     "@legion/resource-manager": "^1.0.0",
     "@legion/prompting-manager": "^1.0.0",
     "@legion/nlp": "^1.0.0",
+    "@legion/neurosymbolic-reasoning": "*",
     "remark": "^15.0.1",
     "remark-parse": "^11.0.0",
     "remark-docx": "^4.0.3",

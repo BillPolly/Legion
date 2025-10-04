@@ -15,9 +15,9 @@
   },
   "dependencies": {
     "mongodb": "^6.0.0",
-    "@legion/resource-manager": "workspace:*",
-    "@legion/semantic-search": "workspace:*",
-    "@legion/schema": "workspace:*"
+    "@legion/resource-manager": "*",
+    "@legion/semantic-search": "*",
+    "@legion/schema": "*"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

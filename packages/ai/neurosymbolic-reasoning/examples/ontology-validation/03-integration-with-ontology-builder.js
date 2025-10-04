@@ -13,7 +13,7 @@
  * Run: node examples/ontology-validation/03-integration-with-ontology-builder.js
  */
 
-import { OntologyBuilder } from '../../../km/ontology/src/OntologyBuilder.js';
+import { OntologyBuilder } from '../../../../km/ontology/src/OntologyBuilder.js';
 import { TripleStore } from '@legion/triplestore';
 import { SemanticSearch } from '@legion/semantic-search';
 import { ResourceManager } from '@legion/resource-manager';

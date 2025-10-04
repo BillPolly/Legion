@@ -10,8 +10,8 @@
     "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/integration --runInBand"
   },
   "dependencies": {
-    "@legion/handle": "workspace:*",
-    "@legion/actors": "workspace:*"
+    "@legion/handle": "*",
+    "@legion/actors": "*"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
