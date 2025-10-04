@@ -1,0 +1,265 @@
+[
+  {
+    "qid": "q1",
+    "question": "Are more people today related to Genghis Khan than Julius Caesar?",
+    "answer": true,
+    "term": "Genghis Khan",
+    "facts": [
+      "Julius Caesar had three children",
+      "Genghis Khan had sixteen children",
+      "1 in 200 men today have DNA traced to Genghis Khan",
+      "Genghis Khan lived from 1162 to 1227",
+      "Julius Caesar lived from 100 BC to 44 BC"
+    ]
+  },
+  {
+    "qid": "q2",
+    "question": "Could the members of The Police perform lawful arrests?",
+    "answer": false,
+    "term": "The Police",
+    "facts": [
+      "The Police is a rock band from England",
+      "The Police formed in London in 1977",
+      "Only law enforcement officers can perform lawful arrests",
+      "Band members are musicians, not police officers"
+    ]
+  },
+  {
+    "qid": "q3",
+    "question": "Would a Monoamine Oxidase candy bar cheer up a depressed friend?",
+    "answer": false,
+    "term": "Depression (mood)",
+    "facts": [
+      "Depression is caused by low levels of neurotransmitters like serotonin",
+      "Monoamine Oxidase (MAO) is an enzyme that breaks down neurotransmitters",
+      "MAO breaks down monoamines including serotonin, dopamine, and norepinephrine",
+      "Increasing MAO would lower neurotransmitter levels",
+      "Lower neurotransmitter levels worsen depression"
+    ]
+  },
+  {
+    "qid": "q4",
+    "question": "Would a dog respond to bell before Grey seal?",
+    "answer": true,
+    "term": "Grey seal",
+    "facts": [
+      "Dogs have external ear flaps (pinnae) that help funnel sound",
+      "Dogs can hear frequencies from 67 Hz to 45,000 Hz",
+      "Grey seals have no external ear flaps",
+      "Grey seals have internal ear structures adapted for underwater hearing",
+      "In air, grey seals rely more on visual and tactile senses than hearing"
+    ]
+  },
+  {
+    "qid": "q5",
+    "question": "Is a pound sterling valuable?",
+    "answer": false,
+    "term": "Pound sterling",
+    "facts": [
+      "Pound sterling is fiat currency",
+      "Fiat currency has no intrinsic value",
+      "The value of fiat currency comes from government backing, not physical material",
+      "The paper and metal in currency is worth less than face value",
+      "One pound sterling is worth approximately 1.24 US dollars"
+    ]
+  },
+  {
+    "qid": "q6",
+    "question": "Is shrimp scampi definitely free of plastic?",
+    "answer": false,
+    "term": "Shrimp",
+    "facts": [
+      "Shrimp scampi is a dish made with shrimp",
+      "Microplastics are small plastic particles less than 5mm",
+      "Studies have found microplastics in ocean shrimp",
+      "Shrimp can ingest microplastics from ocean water",
+      "Microplastics accumulate in seafood tissue"
+    ]
+  },
+  {
+    "qid": "q7",
+    "question": "Do the anchors on Rede Globo speak Chinese?",
+    "answer": false,
+    "term": "Rede Globo",
+    "facts": [
+      "Rede Globo is a Brazilian television network",
+      "Brazil's official language is Portuguese",
+      "Rede Globo broadcasts in Portuguese",
+      "TV news anchors speak in their network's broadcasting language",
+      "Chinese is primarily spoken in China and Chinese-speaking communities"
+    ]
+  },
+  {
+    "qid": "q8",
+    "question": "Would a vegan eat a hamburger made from impossible meat?",
+    "answer": true,
+    "term": "Veganism",
+    "facts": [
+      "Vegans do not consume animal products",
+      "Impossible meat is plant-based meat substitute",
+      "Impossible meat is made from soy protein, coconut oil, and heme from plants",
+      "Impossible meat contains no animal-derived ingredients",
+      "Many vegans consume plant-based meat alternatives"
+    ]
+  },
+  {
+    "qid": "q9",
+    "question": "Can you write a book in a single day?",
+    "answer": false,
+    "term": "Writing",
+    "facts": [
+      "Average book length is 50,000 to 100,000 words",
+      "Average typing speed is 40 words per minute",
+      "A day has 24 hours or 1,440 minutes",
+      "Sustained writing requires breaks for rest",
+      "Writing quality requires planning, drafting, editing",
+      "At 40 words/minute for 24 hours straight = 57,600 words maximum",
+      "This is unrealistic without breaks and would produce poor quality"
+    ]
+  },
+  {
+    "qid": "q10",
+    "question": "Could a llama birth twice during the same year?",
+    "answer": true,
+    "term": "Llama",
+    "facts": [
+      "Llama gestation period is 11-12 months",
+      "Llamas can conceive again shortly after giving birth",
+      "A year is 12 months",
+      "If a llama gives birth in January, it could conceive in February",
+      "11-12 month gestation would result in birth in December-January",
+      "This allows for two births in the same calendar year"
+    ]
+  },
+  {
+    "qid": "q11",
+    "question": "Would a Vampire avoid a garlic bread restaurant?",
+    "answer": true,
+    "term": "Vampire",
+    "facts": [
+      "In vampire folklore, vampires are repelled by garlic",
+      "Garlic is considered a protective charm against vampires",
+      "Garlic bread is made with significant amounts of garlic",
+      "A garlic bread restaurant would have garlic throughout the premises",
+      "According to vampire mythology, vampires avoid places with garlic"
+    ]
+  },
+  {
+    "qid": "q12",
+    "question": "Is the tibia necessary for you to swallow?",
+    "answer": false,
+    "term": "Tibia",
+    "facts": [
+      "The tibia is the shinbone in the lower leg",
+      "Swallowing is controlled by throat and esophagus muscles",
+      "The tibia is part of the skeletal system in the leg",
+      "Swallowing involves the pharynx, epiglottis, and esophagus",
+      "Leg bones have no role in the swallowing mechanism"
+    ]
+  },
+  {
+    "qid": "q13",
+    "question": "Could a Bengal cat survive in the wild?",
+    "answer": true,
+    "term": "Bengal cat",
+    "facts": [
+      "Bengal cats are bred from Asian leopard cats and domestic cats",
+      "Bengal cats retain strong hunting instincts",
+      "Bengal cats are athletic and agile climbers",
+      "Their wild cat ancestry provides survival skills",
+      "Bengal cats can hunt small prey like rodents and birds"
+    ]
+  },
+  {
+    "qid": "q14",
+    "question": "Would a pescatarian take a vitamin D supplement?",
+    "answer": true,
+    "term": "Pescetarianism",
+    "facts": [
+      "Pescatarians eat fish but not other meat",
+      "Vitamin D is primarily obtained from sun exposure and certain foods",
+      "Fish is a good source of vitamin D",
+      "However, many people don't get enough vitamin D from diet alone",
+      "Vitamin D supplements are commonly recommended for most people",
+      "Pescatarians, like others, may need vitamin D supplements in low-sun climates"
+    ]
+  },
+  {
+    "qid": "q15",
+    "question": "Would a hippo survive in the Amazon River?",
+    "answer": true,
+    "term": "Hippopotamus",
+    "facts": [
+      "Hippos are semi-aquatic mammals that live in rivers and lakes",
+      "Hippos need water deep enough to submerge their bodies",
+      "The Amazon River has suitable water depth for hippos",
+      "Hippos are herbivores that graze on grass and plants",
+      "The Amazon region has abundant vegetation",
+      "Hippos can tolerate warm climates similar to the Amazon"
+    ]
+  },
+  {
+    "qid": "q16",
+    "question": "Is 7 a prime number?",
+    "answer": true,
+    "term": "Prime number",
+    "facts": [
+      "A prime number is only divisible by 1 and itself",
+      "7 divided by 1 equals 7",
+      "7 divided by 7 equals 1",
+      "7 divided by 2, 3, 4, 5, 6 results in non-integer values",
+      "7 has exactly two divisors: 1 and 7"
+    ]
+  },
+  {
+    "qid": "q17",
+    "question": "Can a number be both even and odd?",
+    "answer": false,
+    "term": "Parity",
+    "facts": [
+      "Even numbers are divisible by 2 with no remainder",
+      "Odd numbers have a remainder of 1 when divided by 2",
+      "A number either has a remainder of 0 or 1 when divided by 2, not both",
+      "Even and odd are mutually exclusive properties",
+      "By definition, a number cannot simultaneously be both even and odd"
+    ]
+  },
+  {
+    "qid": "q18",
+    "question": "Is the square root of 16 equal to 4?",
+    "answer": true,
+    "term": "Square root",
+    "facts": [
+      "The square root of a number x is a value that, when multiplied by itself, equals x",
+      "4 multiplied by 4 equals 16",
+      "Therefore, 4 is the positive square root of 16",
+      "While -4 is also a square root, the principal (positive) square root of 16 is 4"
+    ]
+  },
+  {
+    "qid": "q19",
+    "question": "Would a Democrat politician publicly denounce abortion?",
+    "answer": false,
+    "term": "Democratic Party",
+    "facts": [
+      "The Democratic Party platform supports reproductive rights",
+      "Democrats generally support legal access to abortion",
+      "Democratic politicians typically align with their party's platform",
+      "Publicly denouncing abortion would contradict party position",
+      "While individual politicians may vary, party alignment is strong on this issue"
+    ]
+  },
+  {
+    "qid": "q20",
+    "question": "Is -5 greater than 0?",
+    "answer": false,
+    "term": "Negative numbers",
+    "facts": [
+      "Negative numbers are less than zero",
+      "-5 is five units below zero on the number line",
+      "0 is the neutral point between positive and negative",
+      "Any negative number is less than zero",
+      "-5 < 0 by definition"
+    ]
+  }
+]

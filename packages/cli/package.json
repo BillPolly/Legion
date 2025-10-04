@@ -23,6 +23,7 @@
     "@legion/server-framework": "*",
     "@legion/actors": "*",
     "@legion/components": "*",
+    "@legion/neurosymbolic-reasoning": "*",
     "chalk": "^5.3.0",
     "readline": "^1.3.0",
     "ws": "^8.14.2"

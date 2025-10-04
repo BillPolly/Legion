@@ -1,0 +1,30 @@
+{
+  "name": "@legion/neurosymbolic-reasoning",
+  "version": "0.1.0",
+  "description": "Neurosymbolic reasoning with Z3 theorem prover for Legion",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand --no-coverage",
+    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/unit --runInBand --no-coverage",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/integration --runInBand --no-coverage",
+    "example:simple": "node examples/01-simple-usage.js",
+    "example:constraints": "node examples/02-constraint-verification.js",
+    "example:actor": "node examples/03-decision-making.js",
+    "example:strategyqa": "node examples/04-strategyqa-questions.js",
+    "example:batch": "node examples/05-batch-evaluation.js",
+    "example:cli": "node examples/06-cli-integration.js",
+    "examples": "npm run example:simple && npm run example:constraints && npm run example:actor && npm run example:strategyqa && npm run example:batch && npm run example:cli"
+  },
+  "keywords": ["reasoning", "z3", "theorem-prover", "neurosymbolic"],
+  "author": "Legion",
+  "license": "MIT",
+  "dependencies": {
+    "z3-solver": "^4.15.3",
+    "@legion/resource-manager": "*",
+    "@legion/schema": "*"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  }
+}

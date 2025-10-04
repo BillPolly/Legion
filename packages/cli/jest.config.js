@@ -6,6 +6,7 @@ export default {
     '^@cli-ui/components/(.*)$': '<rootDir>/apps/cli-ui/src/components/$1',
     '^@cli-ui/utils/(.*)$': '<rootDir>/apps/cli-ui/src/utils/$1',
     '^@legion/components/(.*)$': '<rootDir>/../frontend/components/src/$1',
+    '^@legion/neurosymbolic-reasoning$': '<rootDir>/../ai/neurosymbolic-reasoning/src/index.js',
     '^@legion/handle/remote$': '<rootDir>/../shared/data/handle/src/remote/RemoteHandle.js',
     '^@lib/codemirror/view$': '@codemirror/view',
     '^@lib/codemirror/state$': '@codemirror/state',
