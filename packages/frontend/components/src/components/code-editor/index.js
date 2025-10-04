@@ -5,7 +5,7 @@
  * externally and uses MVVM pattern internally. Features CodeMirror 6 with
  * syntax highlighting, themes, animation support, and extensive customization.
  */
-import { UmbilicalUtils, UmbilicalError } from '@legion/components/index.js';
+import { UmbilicalUtils, UmbilicalError } from '@legion/components';
 import { CodeEditorModel } from './model/CodeEditorModel.js';
 import { CodeEditorView } from './view/CodeEditorView.js';
 import { CodeEditorViewModel } from './viewmodel/CodeEditorViewModel.js';

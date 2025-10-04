@@ -57,7 +57,8 @@ export class CNLParser {
       entity: ast.parameter || 'data',
       structure: {},
       bindings: [],
-      events: []
+      events: [],
+      methods: {}
     };
 
     // Process the body to extract structure, bindings, and events
@@ -133,7 +134,22 @@ export class CNLParser {
 
     // Process all body nodes
     if (ast.body && Array.isArray(ast.body)) {
-      ast.body.forEach(node => processNode(node, null, 0));
+      ast.body.forEach(node => {
+        // Handle methods node
+        if (node.type === 'methods') {
+          // Convert methods array to methods object with correct format
+          node.methods.forEach(method => {
+            const methodBody = method.body.map(stmt => stmt.code).join('\n');
+            json.methods[method.name] = {
+              params: method.params || [],
+              body: methodBody
+            };
+          });
+        } else {
+          // Process other nodes (elements, etc.)
+          processNode(node, null, 0);
+        }
+      });
     }
 
     return json;
@@ -238,7 +254,17 @@ export class CNLParser {
       }
       return node;
     }
-    
+
+    // Check for methods block
+    if (this.grammar.isMethodBlock(text)) {
+      this.currentLine++;
+      const methodsNode = {
+        type: 'methods',
+        methods: this.parseMethodsBlock(this.getNextIndentLevel())
+      };
+      return methodsNode;
+    }
+
     // Check for element with event
     const eventMatch = text.match(/^(.+?)\s+that\s+(.+?)\s+on\s+(\w+)$/);
     if (eventMatch) {
@@ -368,6 +394,61 @@ export class CNLParser {
     }
     
     return { ast, errors };
+  }
+
+  /**
+   * Parse a methods block
+   */
+  parseMethodsBlock(expectedIndent) {
+    const methods = [];
+
+    while (this.currentLine < this.lines.length) {
+      const line = this.lines[this.currentLine];
+
+      // Stop if we've dedented
+      if (line.indent < expectedIndent) {
+        break;
+      }
+
+      // Parse method definition
+      const text = line.text.trim();
+      const methodDef = this.grammar.parseMethodDefinition(text);
+
+      if (methodDef) {
+        this.currentLine++;
+
+        // Parse method body
+        const bodyIndent = this.getNextIndentLevel();
+        const body = [];
+
+        while (this.currentLine < this.lines.length) {
+          const bodyLine = this.lines[this.currentLine];
+
+          // Stop if we've dedented back to method level or less
+          if (bodyLine.indent < bodyIndent) {
+            break;
+          }
+
+          // Parse method statement
+          const bodyText = bodyLine.text.trim();
+          const statement = this.grammar.parseMethodStatement(bodyText);
+
+          if (statement) {
+            body.push(statement);
+          }
+
+          this.currentLine++;
+        }
+
+        methodDef.body = body;
+        methods.push(methodDef);
+      } else {
+        // Skip unknown lines
+        this.currentLine++;
+      }
+    }
+
+    return methods;
   }
 
   /**

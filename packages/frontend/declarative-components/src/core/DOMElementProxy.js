@@ -1,12 +1,12 @@
 /**
  * DOMElementProxy - Proxy wrapper for DOM elements extending Handle
- * 
+ *
  * Provides projection-based element creation and event streams.
  * Elements are projected from parents, not created directly.
  */
 
 import { Handle } from '@legion/handle';
-import { EventStream } from '@legion/declarative-components/core/EventStream.js';
+import { EventStream } from './EventStream.js';
 
 export class DOMElementProxy extends Handle {
   constructor(resourceManager, element) {

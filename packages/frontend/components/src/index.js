@@ -35,4 +35,5 @@ export { TextField, NumericField, BooleanField } from './components/field-editor
 // Advanced Components
 export { GraphEditor } from './components/graph-editor/index.js';
 export { HierarchyEditor } from './components/hierarchy-editor/index.js';
-export { TreeScribe } from './components/tree-scribe/index.js';
+// export { TreeScribe } from './components/tree-scribe/index.js';  // TEMP: disabled - has broken dependencies
+export { ComponentEditor } from './components/component-editor/index.js';

@@ -1,18 +1,7 @@
 import { ITripleStore } from '../core/ITripleStore.js';
 import { StorageError, ValidationError } from '../core/StorageError.js';
-// Import directly from npm package, not local wrapper
-import datascript from 'datascript/datascript.js';
-
-const {
-  create_conn,
-  transact,
-  q,
-  pull,
-  entity,
-  listen,
-  unlisten,
-  db
-} = datascript;
+// Import from Legion datascript package
+import { createConn as create_conn, transact, q, pull, entity, listen, unlisten, db } from '@legion/datascript';
 
 /**
  * DataScriptProvider - DataScript-backed triple store implementation

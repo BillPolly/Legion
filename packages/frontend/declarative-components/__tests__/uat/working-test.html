@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Component Browser E2E Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .component-output {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            min-height: 100px;
+        }
+        .log {
+            margin-top: 10px;
+            padding: 10px;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px;
+        }
+        .log-success { color: #28a745; }
+        .log-error { color: #dc3545; }
+        .log-info { color: #333; }
+        .counter {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .counter h2 {
+            font-size: 48px;
+            margin: 10px 0;
+        }
+    </style>
+
+    <!-- Import map for @legion/* dependencies -->
+    <script type="importmap">
+    {
+        "imports": {
+            "@legion/handle": "../../../../../shared/data/handle/src/index.js",
+            "@legion/data-store": "../../../../../shared/data/data-store/src/index.js",
+            "@legion/declarative-components/core/EventStream.js": "../../src/core/EventStream.js"
+        }
+    }
+    </script>
+</head>
+<body>
+    <h1>🧪 Component Browser E2E Test</h1>
+
+    <div class="test-section">
+        <h2>Test 1: Create Simple Counter Component</h2>
+        <button onclick="testCreateCounter()">Create Counter Component</button>
+        <button onclick="clearOutput('counter-output')">Clear</button>
+        <div id="counter-output" class="component-output"></div>
+        <div id="counter-log" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: DSL Compilation</h2>
+        <button onclick="testDSLCompilation()">Compile DSL to JSON</button>
+        <button onclick="clearOutput('dsl-output')">Clear</button>
+        <div id="dsl-output" class="component-output"></div>
+        <div id="dsl-log" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: CNL Compilation</h2>
+        <button onclick="testCNLCompilation()">Compile CNL to JSON</button>
+        <button onclick="clearOutput('cnl-output')">Clear</button>
+        <div id="cnl-output" class="component-output"></div>
+        <div id="cnl-log" class="log"></div>
+    </div>
+
+    <script type="module">
+        // Import from relative path (../../src/index.js from __tests__/uat/)
+        import {
+            ComponentCompiler,
+            CNLParser,
+            CNLTranspiler,
+            ComponentLifecycle,
+            EquationSolver,
+            DataStoreAdapter
+        } from '../../src/index.js';
+
+        // Make available globally
+        window.DeclarativeComponents = {
+            ComponentCompiler,
+            CNLParser,
+            CNLTranspiler,
+            ComponentLifecycle,
+            EquationSolver,
+            DataStoreAdapter
+        };
+
+        addLog('counter-log', '✅ Modules loaded successfully', 'success');
+        console.log('Declarative Components loaded:', window.DeclarativeComponents);
+    </script>
+
+    <script>
+        function addLog(logId, message, type = 'info') {
+            const log = document.getElementById(logId);
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${timestamp}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function clearOutput(outputId) {
+            document.getElementById(outputId).innerHTML = '';
+            const logId = outputId.replace('-output', '-log');
+            document.getElementById(logId).innerHTML = '';
+        }
+
+        function testCreateCounter() {
+            try {
+                addLog('counter-log', 'Creating counter component...', 'info');
+
+                const container = document.getElementById('counter-output');
+                container.innerHTML = '';
+
+                // Create simple counter HTML
+                const counterDiv = document.createElement('div');
+                counterDiv.className = 'counter';
+                counterDiv.innerHTML = `
+                    <h2 id="count-display">0</h2>
+                    <button onclick="incrementCounter()">Increment</button>
+                    <button onclick="decrementCounter()">Decrement</button>
+                    <button onclick="resetCounter()">Reset</button>
+                `;
+                container.appendChild(counterDiv);
+
+                // Initialize counter state
+                window.counterValue = 0;
+
+                addLog('counter-log', '✅ Counter component created successfully!', 'success');
+                addLog('counter-log', '✅ Try clicking the buttons above', 'info');
+
+            } catch (error) {
+                addLog('counter-log', `❌ Error: ${error.message}`, 'error');
+                console.error('Counter creation error:', error);
+            }
+        }
+
+        // Counter button handlers
+        window.incrementCounter = function() {
+            window.counterValue++;
+            document.getElementById('count-display').textContent = window.counterValue;
+            addLog('counter-log', `Counter incremented to ${window.counterValue}`, 'info');
+        };
+
+        window.decrementCounter = function() {
+            window.counterValue--;
+            document.getElementById('count-display').textContent = window.counterValue;
+            addLog('counter-log', `Counter decremented to ${window.counterValue}`, 'info');
+        };
+
+        window.resetCounter = function() {
+            window.counterValue = 0;
+            document.getElementById('count-display').textContent = window.counterValue;
+            addLog('counter-log', 'Counter reset to 0', 'info');
+        };
+
+        function testDSLCompilation() {
+            try {
+                addLog('dsl-log', 'Starting DSL compilation...', 'info');
+
+                const dsl = 'Counter :: state => div.counter[h2 "{state.count}"][button@click=increment "+" ][button@click=decrement "-"]';
+                addLog('dsl-log', `DSL: ${dsl}`, 'info');
+
+                const { ComponentCompiler } = window.DeclarativeComponents;
+                const compiler = new ComponentCompiler();
+                const result = compiler.compile(dsl);
+
+                addLog('dsl-log', '✅ DSL compiled successfully!', 'success');
+                addLog('dsl-log', `Component name: ${result.name}`, 'info');
+                addLog('dsl-log', `Root element: ${result.template.element}`, 'info');
+
+                const output = document.getElementById('dsl-output');
+                output.innerHTML = `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+
+            } catch (error) {
+                addLog('dsl-log', `❌ Error: ${error.message}`, 'error');
+                console.error('DSL compilation error:', error);
+            }
+        }
+
+        function testCNLCompilation() {
+            try {
+                addLog('cnl-log', 'Starting CNL compilation...', 'info');
+
+                const cnl = `Define UserCard with user:
+  A container with class "profile-card" containing:
+    A heading showing the name
+    A paragraph with class "bio" showing the bio`;
+
+                addLog('cnl-log', 'CNL input received', 'info');
+
+                const { CNLParser, CNLTranspiler } = window.DeclarativeComponents;
+
+                addLog('cnl-log', 'Parsing CNL...', 'info');
+                const parser = new CNLParser();
+                const ast = parser.parse(cnl);
+
+                addLog('cnl-log', 'Transpiling to JSON...', 'info');
+                const transpiler = new CNLTranspiler();
+                const json = transpiler.transpile(ast);
+
+                addLog('cnl-log', '✅ CNL compiled successfully!', 'success');
+                addLog('cnl-log', `Component name: ${json.name}`, 'info');
+
+                const output = document.getElementById('cnl-output');
+                output.innerHTML = `<pre>${JSON.stringify(json, null, 2)}</pre>`;
+
+            } catch (error) {
+                addLog('cnl-log', `❌ Error: ${error.message}`, 'error');
+                console.error('CNL compilation error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -20,6 +20,7 @@ export { CodeGenerator } from './compiler/CodeGenerator.js';
 export { CNLParser } from './cnl/CNLParser.js';
 export { CNLTranspiler } from './cnl/CNLTranspiler.js';
 export { cnlToJSON, cnlToDSL } from './cnl/CNLTranspiler.js';
+export { DSLParser } from './cnl/DSLParser.js';
 
 // Bidirectional converters (JSON ↔ DSL ↔ CNL)
 export { DSLToCNLConverter, dslToCNL } from './cnl/DSLToCNLConverter.js';
@@ -38,6 +39,9 @@ export { SubscriptionManager } from './solver/SubscriptionManager.js';
 
 // Data store adapter
 export { DataStoreAdapter } from './adapters/DataStoreAdapter.js';
+
+// Component editor
+export { ComponentEditorViewModel } from './editor/ComponentEditorViewModel.js';
 
 // Version
 export const VERSION = '1.0.0';

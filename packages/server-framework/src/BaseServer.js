@@ -284,7 +284,13 @@ export class BaseServer {
         timestamp: new Date().toISOString()
       });
     });
-    
+
+    // Serve Legion favicon
+    const faviconPath = path.join(path.dirname(new URL(import.meta.url).pathname), 'assets', 'favicon.ico');
+    app.get('/favicon.ico', (req, res) => {
+      res.sendFile(faviconPath);
+    });
+
     // Set up routes for this port
     for (const route of routes) {
       try {

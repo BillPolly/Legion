@@ -99,6 +99,18 @@ export class CNLGrammar {
       update: /^updates?\s+(?:the\s+)?(.+)\s+(?:to|with)\s+(.+)$/i
     };
 
+    // Method patterns
+    this.methodPatterns = {
+      methodBlock: /^(?:With\s+)?methods:?$/i,
+      methodDef: /^(?:When\s+)?(\w+)\s+is\s+called:?$/i,
+      setStatement: /^Set\s+(?:the\s+)?(.+?)\s+to\s+(.+)$/i,
+      incrementStatement: /^Increment\s+(?:the\s+)?(.+)$/i,
+      decrementStatement: /^Decrement\s+(?:the\s+)?(.+)$/i,
+      addStatement: /^Add\s+(.+?)\s+to\s+(?:the\s+)?(.+)$/i,
+      subtractStatement: /^Subtract\s+(.+?)\s+from\s+(?:the\s+)?(.+)$/i,
+      callStatement: /^Call\s+(?:the\s+)?(.+?)(?:\s+with\s+(.+))?$/i
+    };
+
     // Natural language keywords that map to DSL
     this.keywords = {
       elements: {
@@ -442,5 +454,114 @@ export class CNLGrammar {
   getIndentLevel(line) {
     const match = line.match(/^(\s*)/);
     return match ? match[1].length : 0;
+  }
+
+  /**
+   * Check if a line is a methods block start
+   */
+  isMethodBlock(line) {
+    return this.methodPatterns.methodBlock.test(line.trim());
+  }
+
+  /**
+   * Parse a method definition line
+   */
+  parseMethodDefinition(line) {
+    const match = line.match(this.methodPatterns.methodDef);
+    if (match) {
+      return {
+        type: 'method',
+        name: match[1],
+        body: []
+      };
+    }
+    return null;
+  }
+
+  /**
+   * Parse a method body statement
+   */
+  parseMethodStatement(line) {
+    // Try each method statement pattern
+    for (const [key, pattern] of Object.entries(this.methodPatterns)) {
+      if (key === 'methodBlock' || key === 'methodDef') continue;
+
+      const match = line.match(pattern);
+      if (match) {
+        return this.buildMethodStatement(key, match);
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Convert CNL property path to JavaScript property path
+   * "state count" -> "state.count"
+   */
+  convertPropertyPath(path) {
+    return path.trim().replace(/\s+/g, '.');
+  }
+
+  /**
+   * Convert expressions in method statements (property paths with operators)
+   * "state count + 1" -> "state.count + 1"
+   */
+  convertExpression(expr) {
+    // Match property paths (words separated by spaces) and convert them to dot notation
+    // But preserve operators and literals
+    return expr.replace(/(\w+)(\s+\w+)+/g, (match) => {
+      return this.convertPropertyPath(match);
+    });
+  }
+
+  /**
+   * Build method statement from pattern match
+   */
+  buildMethodStatement(patternType, match) {
+    switch (patternType) {
+      case 'setStatement':
+        return {
+          type: 'statement',
+          code: `${this.convertPropertyPath(match[1])} = ${this.convertExpression(match[2])}`
+        };
+
+      case 'incrementStatement':
+        const incProp = this.convertPropertyPath(match[1]);
+        return {
+          type: 'statement',
+          code: `${incProp} = ${incProp} + 1`
+        };
+
+      case 'decrementStatement':
+        const decProp = this.convertPropertyPath(match[1]);
+        return {
+          type: 'statement',
+          code: `${decProp} = ${decProp} - 1`
+        };
+
+      case 'addStatement':
+        const addProp = this.convertPropertyPath(match[2]);
+        return {
+          type: 'statement',
+          code: `${addProp} = ${addProp} + ${this.convertExpression(match[1])}`
+        };
+
+      case 'subtractStatement':
+        const subProp = this.convertPropertyPath(match[2]);
+        return {
+          type: 'statement',
+          code: `${subProp} = ${subProp} - ${this.convertExpression(match[1])}`
+        };
+
+      case 'callStatement':
+        const args = match[2] ? this.convertExpression(match[2]) : '';
+        return {
+          type: 'statement',
+          code: `${match[1]}(${args})`
+        };
+
+      default:
+        return null;
+    }
   }
 }

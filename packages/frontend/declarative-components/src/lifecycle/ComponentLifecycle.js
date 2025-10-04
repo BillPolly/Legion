@@ -61,28 +61,37 @@ export class ComponentLifecycle {
 
   /**
    * Mount a component to the DOM
-   * @param {string} dsl - Component DSL definition
+   * @param {string|object} dslOrJson - Component DSL definition or JSON object
    * @param {HTMLElement} container - Container element
    * @param {Object} initialData - Initial component data
    * @returns {Promise<ComponentInstance>} Mounted component instance
    */
-  async mount(dsl, container, initialData = {}) {
-    if (!dsl || typeof dsl !== 'string') {
-      throw new Error('DSL is required and must be a string');
+  async mount(dslOrJson, container, initialData = {}) {
+    if (!dslOrJson) {
+      throw new Error('DSL or JSON component definition is required');
     }
-    
+
     if (!container || !(container instanceof HTMLElement)) {
       throw new Error('Container must be a valid HTMLElement');
     }
 
     const componentId = `component_${++this.componentCounter}`;
-    
+
     try {
       // Execute beforeMount hooks
-      await this.executeHooks('beforeMount', { componentId, dsl, container, initialData });
-      
-      // Compile DSL to component definition
-      const componentDef = this.compiler.compile(dsl);
+      await this.executeHooks('beforeMount', { componentId, dsl: dslOrJson, container, initialData });
+
+      // Compile DSL to component definition, or use JSON directly
+      let componentDef;
+      if (typeof dslOrJson === 'string') {
+        // It's DSL, compile it
+        componentDef = this.compiler.compile(dslOrJson);
+      } else if (typeof dslOrJson === 'object') {
+        // It's already a JSON component definition, use it directly
+        componentDef = dslOrJson;
+      } else {
+        throw new Error('Component definition must be a DSL string or JSON object');
+      }
       
       // Initialize entity data in DataStore
       if (componentDef.entity && Object.keys(initialData).length > 0) {
@@ -191,7 +200,12 @@ export class ComponentLifecycle {
           }
         }
       }
-      
+
+      // Set static textContent (for button labels, etc.)
+      if (def.textContent !== undefined && def.textContent !== null) {
+        element.textContent = def.textContent;
+      }
+
       createdElements.set(key, element);
       elements.set(key, element);
     }

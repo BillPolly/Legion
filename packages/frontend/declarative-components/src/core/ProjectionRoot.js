@@ -6,7 +6,7 @@
  * complete hierarchy.
  */
 
-import { DOMElementProxy } from '@legion/declarative-components/core/DOMElementProxy.js';
+import { DOMElementProxy } from './DOMElementProxy.js';
 
 export class ProjectionRoot extends DOMElementProxy {
   constructor(resourceManager, element) {

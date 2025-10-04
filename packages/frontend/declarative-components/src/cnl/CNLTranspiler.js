@@ -31,7 +31,8 @@ export class CNLTranspiler {
       entity: ast.parameter,
       structure: {},
       bindings: [],
-      events: []
+      events: [],
+      methods: {}
     };
     
     // Process the body statements
@@ -56,23 +57,28 @@ export class CNLTranspiler {
       case 'element':
         this.processElement(node, componentDef, elementKey, parentKey);
         break;
-      
+
       case 'conditional':
         // For now, we'll create a wrapper div for conditionals
         // Future improvement: handle conditional rendering properly
         this.processConditional(node, componentDef, elementKey, parentKey);
         break;
-      
+
       case 'iteration':
         // For now, we'll create a wrapper div for iterations
         // Future improvement: handle iteration properly
         this.processIteration(node, componentDef, elementKey, parentKey);
         break;
-      
+
+      case 'methods':
+        // Process methods block
+        this.processMethods(node, componentDef);
+        break;
+
       case 'text':
         // Text nodes are handled as part of their parent element
         break;
-      
+
       default:
         console.warn('Unknown node type:', node.type);
     }
@@ -189,6 +195,21 @@ export class CNLTranspiler {
     }
     
     // Note: Iteration logic would need to be handled by the runtime
+  }
+
+  /**
+   * Process a methods node
+   */
+  processMethods(node, componentDef) {
+    if (!node.methods || !Array.isArray(node.methods)) {
+      return;
+    }
+
+    // Convert methods array to methods object
+    node.methods.forEach(method => {
+      const methodBody = method.body.map(stmt => stmt.code).join('\n      ');
+      componentDef.methods[method.name] = `function() {\n      ${methodBody}\n    }`;
+    });
   }
 }
 

@@ -65,15 +65,15 @@ export class ImportRewriter {
     const commentPlaceholders = [];
     let result = content;
 
-    // Replace multi-line comments with placeholders
-    result = result.replace(/\/\*[\s\S]*?\*\//g, (match) => {
+    // CRITICAL: Replace single-line comments FIRST to avoid multi-line regex matching /* inside //
+    result = result.replace(/\/\/.*$/gm, (match) => {
       const placeholder = `__COMMENT_${commentPlaceholders.length}__`;
       commentPlaceholders.push(match);
       return placeholder;
     });
 
-    // Replace single-line comments with placeholders
-    result = result.replace(/\/\/.*$/gm, (match) => {
+    // Replace multi-line comments with placeholders
+    result = result.replace(/\/\*[\s\S]*?\*\//g, (match) => {
       const placeholder = `__COMMENT_${commentPlaceholders.length}__`;
       commentPlaceholders.push(match);
       return placeholder;
@@ -86,7 +86,7 @@ export class ImportRewriter {
 
     // Restore comments
     commentPlaceholders.forEach((comment, index) => {
-      result = result.replace(`__COMMENT_${index}__`, comment);
+      result = result.replaceAll(`__COMMENT_${index}__`, comment);
     });
 
     return result;

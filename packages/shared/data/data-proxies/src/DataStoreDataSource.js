@@ -396,14 +396,14 @@ export class DataStoreDataSource {
     };
     
     // Trigger initial callback with current data (async but non-blocking)
-    setImmediate(async () => {
+    setTimeout(async () => {
       try {
         const results = this.query(querySpec);
         callback(results);
       } catch (error) {
         console.warn('Initial subscription callback failed:', error.message);
       }
-    });
+    }, 0);
     
     return subscription;
   }

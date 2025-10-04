@@ -112,6 +112,9 @@ export const navigatePage = defineTool({
   handler: async (request, response, context) => {
     const page = context.getSelectedPage();
 
+    // Use page.setCacheEnabled to disable cache completely
+    await page.setCacheEnabled(false);
+
     await context.waitForEventsAfterAction(async () => {
       await page.goto(request.params.url, {
         timeout: request.params.timeout,

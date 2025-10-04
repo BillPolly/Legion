@@ -11,6 +11,8 @@ import { ShowCommand } from '../commands/ShowCommand.js';
 import { HelpCommand } from '../commands/HelpCommand.js';
 import { WindowsCommand } from '../commands/WindowsCommand.js';
 import { ListCommand } from '../commands/ListCommand.js';
+import { ComponentsCommand } from '../commands/ComponentsCommand.js';
+import { RenderCommand } from '../commands/RenderCommand.js';
 import { DisplayEngine } from '../display/DisplayEngine.js';
 import { OutputHandler } from '../handlers/OutputHandler.js';
 import { ClaudeAgentStrategy } from '@legion/claude-agent';
@@ -35,6 +37,7 @@ export class CLISessionActor extends Actor {
     this.commandHistory = [];
     this.contextVariables = new Map(); // For future: $var support
     this.handles = []; // Track handles displayed in this session
+    this.components = []; // Track declarative components
 
     // Claude task for non-slash commands (lazily initialized)
     this.claudeTask = null;
@@ -69,6 +72,12 @@ export class CLISessionActor extends Actor {
 
     const listCommand = new ListCommand(this);
     this.commandProcessor.register(listCommand);
+
+    const componentsCommand = new ComponentsCommand(this);
+    this.commandProcessor.register(componentsCommand);
+
+    const renderCommand = new RenderCommand(this);
+    this.commandProcessor.register(renderCommand);
 
     const helpCommand = new HelpCommand(this.commandProcessor);
     this.commandProcessor.register(helpCommand);
@@ -164,6 +173,9 @@ export class CLISessionActor extends Actor {
 
     console.log(`[LoadSampleImages] Loaded ${sampleImages.length} sample images`);
 
+    // Load sample declarative components
+    await this.loadSampleComponents();
+
     // Send notification to client
     if (this.remoteActor) {
       this.remoteActor.receive('display-response', {
@@ -171,6 +183,76 @@ export class CLISessionActor extends Actor {
         sessionId: this.sessionId,
         timestamp: Date.now()
       });
+    }
+  }
+
+  /**
+   * Load sample declarative components into context on startup
+   */
+  async loadSampleComponents() {
+    try {
+      // Import declarative components package
+      const { ComponentCompiler, CNLParser, CNLTranspiler } = await import('@legion/declarative-components');
+
+      // Create sample components using DSL
+      const sampleComponents = [
+        {
+          name: 'Counter',
+          dsl: `Counter :: state =>
+  methods: {
+    increment() {
+      state.count = state.count + 1
+    },
+    decrement() {
+      state.count = state.count - 1
+    }
+  }
+  div.counter [
+    h2 { state.count }
+    button @click="increment()" { "+" }
+    button @click="decrement()" { "-" }
+  ]`
+        },
+        {
+          name: 'TodoList',
+          dsl: 'TodoList :: state => div.todos[h3 "My Tasks"][ul[li@each=state.items "{item.text}"]][input@enter=addItem]'
+        },
+        {
+          name: 'UserCard',
+          dsl: 'UserCard :: props => div.card[img.avatar@src=props.avatar][h4 "{props.name}"][p.bio "{props.bio}"]'
+        }
+      ];
+
+      const compiler = new ComponentCompiler();
+      this.components = [];
+
+      for (const { name, dsl } of sampleComponents) {
+        try {
+          const compiledComponent = compiler.compile(dsl);
+          this.components.push({
+            name: compiledComponent.name,
+            type: 'component',
+            source: dsl,
+            compiled: compiledComponent
+          });
+          console.log(`[LoadSampleComponents] Loaded component: ${name}`);
+        } catch (error) {
+          console.error(`[LoadSampleComponents] Failed to compile ${name}:`, error.message);
+        }
+      }
+
+      console.log(`[LoadSampleComponents] Loaded ${this.components.length} declarative components`);
+
+      // Send notification to client if in server mode
+      if (this.remoteActor) {
+        this.remoteActor.receive('display-response', {
+          content: `\nLoaded ${this.components.length} sample components.\nType /components to see them.\n`,
+          sessionId: this.sessionId,
+          timestamp: Date.now()
+        });
+      }
+    } catch (error) {
+      console.error('[LoadSampleComponents] Failed to load declarative components:', error);
     }
   }
 
