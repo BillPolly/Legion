@@ -69,6 +69,19 @@ export function generateHTML(options) {
     "@legion/components/": "/legion/components/src/",
     "@legion/handle/remote": "/legion/handle/src/remote/RemoteHandle.js",
     "@legion/handle/": "/legion/handle/src/",
+    // Browser-only libraries mapped to npm package names
+    "@lib/codemirror/view": "@codemirror/view",
+    "@lib/codemirror/state": "@codemirror/state",
+    "@lib/codemirror/commands": "@codemirror/commands",
+    "@lib/codemirror/language": "@codemirror/language",
+    "@lib/codemirror/search": "@codemirror/search",
+    "@lib/codemirror/autocomplete": "@codemirror/autocomplete",
+    "@lib/codemirror/lang-javascript": "@codemirror/lang-javascript",
+    "@lib/codemirror/theme-one-dark": "@codemirror/theme-one-dark",
+    "@lib/markdown-it": "markdown-it",
+    "@lib/highlight.js": "highlight.js",
+    "@lib/yaml": "yaml",
+    "@lib/fast-diff": "fast-diff",
     ...(options.importMap || {})
   };
 

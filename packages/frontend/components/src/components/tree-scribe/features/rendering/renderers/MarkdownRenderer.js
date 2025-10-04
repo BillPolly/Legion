@@ -2,8 +2,8 @@
  * MarkdownRenderer - Renders markdown content with syntax highlighting and interactive features
  */
 
-import MarkdownIt from '/lib/markdown-it';
-import hljs from '/lib/highlight.js';
+import MarkdownIt from '@lib/markdown-it';
+import hljs from '@lib/highlight.js';
 import { BaseRenderer } from './PlaintextRenderer.js';
 
 export class MarkdownRenderer extends BaseRenderer {

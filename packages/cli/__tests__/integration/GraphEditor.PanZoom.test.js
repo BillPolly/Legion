@@ -82,6 +82,11 @@ describe('GraphEditor Pan/Zoom Integration', () => {
   test('should render graph with pan and zoom via actor framework', async () => {
     console.log('[TEST] Setting up actors with MockWebSocket');
 
+    // Create #app element for BrowserCLIClientActor
+    const appContainer = document.createElement('div');
+    appContainer.id = 'app';
+    document.body.appendChild(appContainer);
+
     // Create MockWebSocket pair
     const { serverWs, clientWs } = MockWebSocket.createPair();
 
@@ -162,6 +167,24 @@ describe('GraphEditor Pan/Zoom Integration', () => {
       await new Promise(resolve => setTimeout(resolve, 500));
 
       console.log('[TEST] Verifying graph rendered in JSDOM');
+
+      // Debug: What's in the canvas?
+      console.log('[TEST] Canvas exists:', !!clientActor.canvas);
+      console.log('[TEST] Canvas element exists:', !!clientActor.canvas.canvasElement);
+      if (clientActor.canvas.canvasElement) {
+        const canvasHTML = clientActor.canvas.canvasElement.innerHTML;
+        console.log('[TEST] Canvas HTML length:', canvasHTML.length);
+        console.log('[TEST] Canvas HTML:', canvasHTML.substring(0, 500));
+      }
+
+      // Debug: Find asset windows
+      const assetWindows = document.querySelectorAll('.asset-window');
+      console.log('[TEST] Asset windows found:', assetWindows.length);
+      if (assetWindows.length > 0) {
+        const assetHTML = assetWindows[0].innerHTML;
+        console.log('[TEST] First asset window HTML length:', assetHTML.length);
+        console.log('[TEST] First asset window HTML:', assetHTML.substring(0, 500));
+      }
 
       // Verify SVG graph exists
       const svg = document.querySelector('svg');

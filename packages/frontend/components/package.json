@@ -23,6 +23,8 @@
   "author": "Legion Contributors",
   "license": "MIT",
   "devDependencies": {
+    "@legion/actor-testing": "*",
+    "@legion/actors": "*",
     "esbuild": "^0.25.8",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^30.0.5"

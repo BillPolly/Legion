@@ -2,7 +2,7 @@
  * YamlProcessor - Handles YAML parsing and normalization
  */
 
-import { parse as parseYaml } from '/lib/yaml';
+import { parse as parseYaml } from '@lib/yaml';
 
 export class YamlProcessor {
   /**

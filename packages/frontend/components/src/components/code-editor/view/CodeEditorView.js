@@ -5,48 +5,61 @@
  * and visual presentation. Maintains separation between presentation and business logic.
  */
 
-// Import everything from our single bundled file
-import * as CM from '/lib/codemirror/view';
-
-// Destructure what we need
-const {
+// Import from CodeMirror packages using import map
+import {
   EditorView,
   keymap,
   lineNumbers,
   drawSelection,
   dropCursor,
-  EditorState,
-  EditorSelection,
-  StateEffect,
-  StateField,
-  defaultKeymap,
-  historyKeymap,
-  foldGutter,
-  foldKeymap,
-  openSearchPanel,
-  searchKeymap,
-  autocompletion,
-  completionKeymap,
-  closeBrackets,
-  javascript,
-  oneDark,
-  syntaxHighlighting,
-  defaultHighlightStyle,
-  bracketMatching,
   highlightActiveLineGutter,
   highlightSpecialChars,
-  history,
   rectangularSelection,
   crosshairCursor,
   highlightActiveLine,
-  closeBracketsKeymap,
+  Decoration
+} from '@lib/codemirror/view';
+
+import {
+  EditorState,
+  EditorSelection,
+  StateEffect,
+  StateField
+} from '@lib/codemirror/state';
+
+import {
+  defaultKeymap,
+  historyKeymap,
   undo,
   redo,
   undoDepth,
   redoDepth,
-  Decoration,
-  fastDiff
-} = CM;
+  history
+} from '@lib/codemirror/commands';
+
+import {
+  foldGutter,
+  foldKeymap,
+  syntaxHighlighting,
+  defaultHighlightStyle,
+  bracketMatching
+} from '@lib/codemirror/language';
+
+import {
+  openSearchPanel,
+  searchKeymap
+} from '@lib/codemirror/search';
+
+import {
+  autocompletion,
+  completionKeymap,
+  closeBrackets,
+  closeBracketsKeymap
+} from '@lib/codemirror/autocomplete';
+
+import { javascript } from '@lib/codemirror/lang-javascript';
+import { oneDark } from '@lib/codemirror/theme-one-dark';
+import fastDiff from '@lib/fast-diff';
 
 export class CodeEditorView {
   constructor(container, config = {}) {
