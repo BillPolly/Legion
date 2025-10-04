@@ -16,6 +16,7 @@ import { GapAnalysisService } from './services/GapAnalysisService.js';
 import { SpecializationDecisionService } from './services/SpecializationDecisionService.js';
 import { OntologyExtensionService } from './services/OntologyExtensionService.js';
 import { SentenceAnnotator } from './services/SentenceAnnotator.js';
+import { OntologyVerificationService } from './services/OntologyVerificationService.js';
 import { getBootstrapTriples } from './bootstrap/upper-level-ontology.js';
 
 export class OntologyBuilder {
@@ -42,6 +43,9 @@ export class OntologyBuilder {
     this.specializationDecision = new SpecializationDecisionService(this.llmClient);
     this.ontologyExtension = new OntologyExtensionService(this.tripleStore, this.semanticSearch, this.llmClient, this.hierarchyTraversal);
     this.sentenceAnnotator = new SentenceAnnotator();
+
+    // Initialize verification service (Z3 theorem proving)
+    this.verification = new OntologyVerificationService(this.tripleStore, config.verification || {});
 
     this.bootstrapLoaded = false;
   }
@@ -82,6 +86,10 @@ export class OntologyBuilder {
 
     // Index bootstrap classes in semantic search
     await this._indexBootstrapClasses();
+
+    // Initialize and verify bootstrap ontology
+    await this.verification.initialize();
+    await this.verification.verifyBootstrap();
 
     this.bootstrapLoaded = true;
     console.log(`✅ Bootstrap ontology loaded: ${bootstrapTriples.length} triples`);
@@ -194,6 +202,9 @@ export class OntologyBuilder {
         const extensions = await this.ontologyExtension.extendFromGaps(gaps, domain);
         console.log(`  ✅ Extended: +${extensions.addedClasses} classes, +${extensions.addedProperties} properties`);
         console.log(`  ♻️  Reused: ${extensions.reusedFromHierarchy} inherited concepts`);
+
+        // Verify ontology remains consistent after extension
+        await this.verification.verifyAfterExtension();
       }
 
       // Phase 5: ANNOTATION
@@ -211,6 +222,14 @@ export class OntologyBuilder {
     console.log(`   Total properties: ${await this.countProperties()}`);
     console.log(`   Total relationships: ${await this.countRelationships()}`);
 
+    // Log verification stats
+    const verificationStats = this.verification.getStats();
+    if (verificationStats.enabled) {
+      console.log(`   Verifications run: ${verificationStats.verificationsRun}`);
+      console.log(`   Violations detected: ${verificationStats.violationsDetected}`);
+      console.log(`   Violations prevented: ${verificationStats.violationsPrevented}`);
+    }
+
     return {
       success: true,
       sentences: annotatedSentences,
@@ -218,7 +237,8 @@ export class OntologyBuilder {
         classes: await this.countClasses(),
         properties: await this.countProperties(),
         relationships: await this.countRelationships()
-      }
+      },
+      verificationStats
     };
   }
 
