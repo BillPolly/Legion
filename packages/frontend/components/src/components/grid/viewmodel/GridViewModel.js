@@ -4,9 +4,9 @@
  * Coordinates between Model and View, handles user interactions,
  * and manages the application logic following MVVM pattern.
  */
-import { TextField } from '../../field-editors/text-field/index.js';
-import { NumericField } from '../../field-editors/numeric-field/index.js';
-import { BooleanField } from '../../field-editors/boolean-field/index.js';
+import { TextField } from '@legion/components';
+import { NumericField } from '@legion/components';
+import { BooleanField } from '@legion/components';
 
 export class GridViewModel {
   constructor(model, view, config) {

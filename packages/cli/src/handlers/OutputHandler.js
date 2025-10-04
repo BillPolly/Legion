@@ -4,6 +4,7 @@
  */
 
 import chalk from 'chalk';
+import { formatJSONSafely } from '../utils/logger.js';
 
 export class OutputHandler {
   constructor(options = {}) {
@@ -118,13 +119,13 @@ export class OutputHandler {
   }
 
   /**
-   * Format data as JSON
+   * Format data as JSON (with base64 sanitization)
    * @param {any} data - Data to format
    * @param {number} indent - Indentation spaces
    * @returns {string} Formatted JSON
    */
   formatJSON(data, indent = 2) {
-    return JSON.stringify(data, null, indent);
+    return formatJSONSafely(data, indent);
   }
 
   /**

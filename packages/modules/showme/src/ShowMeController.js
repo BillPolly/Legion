@@ -95,7 +95,9 @@ export class ShowMeController {
     this.windows.set(windowId, window);
 
     // Launch browser if this is the first window or newWindow requested
-    if (this.windows.size === 1 || options.newWindow) {
+    // BUT only if there's no client already connected (e.g., CLI web UI)
+    const hasConnectedClient = this.getServerActor() !== null;
+    if ((this.windows.size === 1 || options.newWindow) && !hasConnectedClient) {
       await this.server.launchBrowser(window.url, {
         app: this.browserOptions.app,
         width: window.width,
@@ -113,6 +115,52 @@ export class ShowMeController {
 
     console.log(`Opened window ${windowId}: ${window.title}`);
     return window;
+  }
+
+  /**
+   * Render a Handle (DisplayEngine interface)
+   * This is the standard interface called by ShowCommand
+   * @param {Handle} handle - The Handle to display
+   * @param {Object} options - Rendering options (format, width, height, title)
+   * @returns {Promise<Object>} Render result with window object
+   */
+  async render(handle, options = {}) {
+    // Open window with the handle
+    const window = await this.openWindow(handle, options);
+
+    // Extract asset data from handle
+    // ImageHandle and TextFileHandle store data in .imageData/.fileData
+    let assetData, assetType;
+
+    if (handle.imageData) {
+      // ImageHandle
+      assetData = handle.imageData.data;
+      assetType = handle.imageData.type || 'image';
+    } else if (handle.fileData) {
+      // TextFileHandle
+      assetData = handle.fileData.content;
+      assetType = handle.fileData.language || 'text';
+    } else if (handle.data) {
+      // Generic Handle with direct data property
+      assetData = handle.data;
+      assetType = handle.type || handle.resourceType || 'unknown';
+    } else {
+      // Try async getData() method
+      assetData = await handle.getData?.();
+      assetType = await handle.getType?.() || handle.resourceType || 'unknown';
+    }
+
+    // Return formatted result matching DisplayEngine interface
+    return {
+      success: true,
+      window: window,
+      rendered: 'browser',
+      format: 'browser',
+      handle: handle,
+      title: window.title,
+      assetType: assetType,
+      assetData: assetData
+    };
   }
 
   /**

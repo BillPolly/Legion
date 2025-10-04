@@ -5,7 +5,7 @@
  * search functionality, and drag/drop operations.
  */
 
-import { BaseModel } from '../../base/index.js';
+import { BaseModel } from '@legion/components';
 
 export class ModernTreeModel extends BaseModel {
   constructor(data, config) {

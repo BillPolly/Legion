@@ -1,6 +1,6 @@
 /**
  * Integration test for CLI lifecycle
- * Tests full CLI lifecycle with real ResourceManager and ShowMe
+ * Tests full CLI lifecycle with real ResourceManager
  * NO MOCKS - real components as per implementation plan
  */
 
@@ -36,11 +36,9 @@ describe('CLI Lifecycle Integration Test', () => {
     // Initialize
     await cli.initialize();
     expect(cli.isInitialized).toBe(true);
-    expect(cli.showme).toBeDefined();
-    expect(cli.showme.isInitialized).toBe(true);
-    expect(cli.showme.isRunning).toBe(true);
-    expect(cli.displayEngine).toBeDefined();
-    expect(cli.commandProcessor).toBeDefined();
+    expect(cli.sessionActor).toBeDefined();
+    expect(cli.inputHandler).toBeDefined();
+    expect(cli.outputHandler).toBeDefined();
 
     // Start
     await cli.start();
@@ -49,25 +47,6 @@ describe('CLI Lifecycle Integration Test', () => {
     // Shutdown
     await cli.shutdown();
     expect(cli.isRunning).toBe(false);
-    expect(cli.showme.isRunning).toBe(false);
-  }, 15000);
-
-  test('should handle ShowMe lifecycle correctly', async () => {
-    const port = 5000 + Math.floor(Math.random() * 1000);
-    cli = new CLI(resourceManager, { port });
-
-    await cli.initialize();
-
-    // Verify ShowMe is running
-    expect(cli.showme.isRunning).toBe(true);
-    expect(cli.showme.server).toBeDefined();
-
-    // Verify ShowMe port
-    expect(cli.showme.port).toBe(port);
-
-    // Shutdown should stop ShowMe
-    await cli.shutdown();
-    expect(cli.showme.isRunning).toBe(false);
   }, 15000);
 
   test('should maintain component references through lifecycle', async () => {
@@ -76,16 +55,16 @@ describe('CLI Lifecycle Integration Test', () => {
 
     await cli.initialize();
 
-    const showmeRef = cli.showme;
-    const displayEngineRef = cli.displayEngine;
-    const commandProcessorRef = cli.commandProcessor;
+    const sessionActorRef = cli.sessionActor;
+    const inputHandlerRef = cli.inputHandler;
+    const outputHandlerRef = cli.outputHandler;
 
     await cli.start();
 
     // References should remain the same
-    expect(cli.showme).toBe(showmeRef);
-    expect(cli.displayEngine).toBe(displayEngineRef);
-    expect(cli.commandProcessor).toBe(commandProcessorRef);
+    expect(cli.sessionActor).toBe(sessionActorRef);
+    expect(cli.inputHandler).toBe(inputHandlerRef);
+    expect(cli.outputHandler).toBe(outputHandlerRef);
 
     await cli.shutdown();
   }, 15000);
@@ -98,16 +77,15 @@ describe('CLI Lifecycle Integration Test', () => {
     let status = cli.getStatus();
     expect(status.initialized).toBe(false);
     expect(status.running).toBe(false);
-    expect(status.hasShowMe).toBe(false);
 
     // After initialize
     await cli.initialize();
     status = cli.getStatus();
     expect(status.initialized).toBe(true);
     expect(status.running).toBe(false);
-    expect(status.hasShowMe).toBe(true);
-    expect(status.hasDisplayEngine).toBe(true);
-    expect(status.hasCommandProcessor).toBe(true);
+    expect(status.hasSessionActor).toBe(true);
+    expect(status.hasInputHandler).toBe(true);
+    expect(status.hasOutputHandler).toBe(true);
 
     // After start
     await cli.start();

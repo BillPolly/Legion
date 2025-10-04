@@ -4,7 +4,7 @@
  * Handles DOM rendering for the demo interface
  */
 
-import { BaseView } from '../../base/index.js';
+import { BaseView } from '@legion/components';
 
 export class HierarchyEditorDemoView extends BaseView {
   constructor(container, config = {}) {

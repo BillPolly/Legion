@@ -38,6 +38,56 @@ require('dotenv').config();  // WRONG!
 - It is a singleton - only ONE instance exists across the entire application
 - It self-initializes on first access - no manual initialization needed
 
+## Actor Framework Testing with MockWebSocket (CRITICAL - READ THIS!)
+
+**NEVER wire actors directly in tests! ALWAYS use MockWebSocket!**
+
+### ❌ WRONG - Direct Actor Wiring (BYPASSES EVERYTHING!)
+```javascript
+// This tests NOTHING about real browser flow!
+const browserActor = new BrowserCLIClientActor();
+cli.sessionActor.remoteActor = browserActor;  // ❌ WRONG!
+browserActor.setRemoteActor(cli.sessionActor); // ❌ WRONG!
+```
+
+**Why this is wrong:**
+- Bypasses WebSocket layer completely
+- No message serialization/deserialization
+- No ConfigurableActorServer routing
+- Tests pass but real browser fails
+- Wastes time debugging wrong things
+
+### ✅ CORRECT - Use MockWebSocket
+```javascript
+// Create mock WebSocket pair
+const { serverWs, clientWs } = MockWebSocket.createPair();
+
+// Server side - ConfigurableActorServer uses serverWs
+// Framework handles serialization, routing, actor creation
+
+// Client side - BrowserCLIClientActor uses clientWs
+// Receives serialized messages via WebSocket
+// Deserializes and renders to JSDOM
+
+// This tests FULL STACK:
+// ✅ WebSocket message flow
+// ✅ Message serialization/deserialization
+// ✅ ConfigurableActorServer routing
+// ✅ CLISessionActor logic
+// ✅ BrowserCLIClientActor rendering
+```
+
+**Use MockWebSocket from:** `__tests__/helpers/MockWebSocket.js`
+
+**When testing browser UI with JSDOM:**
+1. Use MockWebSocket.createPair()
+2. Wire serverWs to ConfigurableActorServer
+3. Wire clientWs to BrowserCLIClientActor
+4. Send messages through WebSocket
+5. Verify JSDOM is updated correctly
+
+This is the ONLY way to test the real flow!
+
 NO tests must ever skip, they must fail!
 
 ALL resources are available, real llm, mon
@@ -127,16 +177,203 @@ All ResourceManagers MUST implement these synchronous methods:
 
 See `/docs/HANDLES.md` for complete architectural documentation.
 
-## Testing
-FOR tests there must be NO skipping and NO fallback under any circumstance, they must just FAIL in thoes circumstances.
+## Testing (CRITICAL)
 
-unless you are speicifically testing their functionality Resource manager and tool registry singletons should be got onece at the beginning of the test suite with no timeout and then just reused.
+### Actor Framework Testing (CRITICAL - READ THIS FIRST!)
+**ALL CLI/Server integration tests MUST use the actor framework via CLI class!**
 
-NOTHING should be setting anything on resoruce mangeer! it provides values it does nothing else
+**NEVER EVER create raw WebSocket connections in tests! The actor framework handles ALL messaging!**
 
+```javascript
+// ✅ CORRECT - Use CLI class with actor framework
+import { CLI } from '../../src/CLI.js';
+import { ResourceManager } from '@legion/resource-manager';
 
-ALWAYS run tests with nmp test ....selection to run
+test('should execute command via actor framework', async () => {
+  const resourceManager = await ResourceManager.getInstance();
+  const cli = new CLI(resourceManager, { port: 6500 });
+  await cli.initialize();
+  await cli.start();
 
+  // Mock browser launch
+  cli.showme.server.launchBrowser = async () => { return; };
+  cli.showme._waitForConnection = async () => { return; };
+
+  // Execute command via ACTOR FRAMEWORK
+  const result = await cli.sessionActor.receive('execute-command', {
+    command: '/show legion://test/image'
+  });
+
+  expect(result.success).toBe(true);
+  await cli.shutdown();
+});
+```
+
+```javascript
+// ❌ WRONG - NEVER DO THIS! NO RAW WEBSOCKETS!
+import WebSocket from 'ws';
+
+test('should execute command', async () => {
+  // ❌ WRONG! Don't create raw WebSocket connections!
+  const ws = new WebSocket('ws://localhost:5500/ws?route=/cli');
+  ws.on('message', (data) => {
+    const message = JSON.parse(data.toString());
+    // ❌ WRONG! Don't manually handle actor protocol messages!
+  });
+});
+```
+
+**WHY?**
+1. The actor framework handles ALL message routing and serialization
+2. Raw WebSockets bypass the actor framework completely
+3. You end up reimplementing what CLI class already does
+4. Tests become complex, fragile, and wrong
+
+**ALWAYS:**
+- Use `CLI` class
+- Call `cli.sessionActor.receive('execute-command', { command: '...' })`
+- Let the actor framework handle everything
+
+### JSDOM Testing for Web UIs (CRITICAL - READ CAREFULLY!)
+
+**JSDOM IS THE BROWSER ENVIRONMENT - USE THE REAL BROWSER CLIENT CODE IN IT!**
+
+**CRITICAL MISTAKE TO AVOID**: DO NOT create a mock remoteActor that simulates what BrowserCLIClientActor does. This doesn't test the actual browser client code!
+
+```javascript
+// ❌ ABSOLUTELY WRONG - NEVER DO THIS! MOCKING THE BROWSER CLIENT!
+import { JSDOM } from 'jsdom';
+import { CLI } from '../../src/CLI.js';
+
+test('should display image in DOM', async () => {
+  const dom = new JSDOM(`<!DOCTYPE html><body><div id="app"></div></body>`);
+  global.document = dom.window.document;
+  global.window = dom.window;
+
+  const cli = new CLI(resourceManager, { port: 6500 });
+  await cli.initialize();
+  await cli.start();
+
+  // ❌ WRONG! This is a mock that simulates BrowserCLIClientActor!
+  const mockRemoteActor = {
+    receive: (messageType, data) => {
+      if (messageType === 'display-asset') {
+        const container = document.getElementById('asset-container');
+        const img = document.createElement('img');
+        img.src = data.assetData;
+        container.appendChild(img);
+      }
+    }
+  };
+
+  // ❌ WRONG! This doesn't test the REAL browser client code!
+  cli.sessionActor.remoteActor = mockRemoteActor;
+
+  // This test passes but doesn't guarantee the real BrowserCLIClientActor works!
+  const result = await cli.sessionActor.receive('execute-command', {
+    command: '/show legion://test'
+  });
+
+  const img = document.querySelector('img');
+  expect(img).toBeTruthy();  // Test passes but means nothing!
+});
+```
+
+**WHY IS THIS WRONG?**
+1. JSDOM provides the DOM environment for testing browser code
+2. The REAL BrowserCLIClientActor should run in that JSDOM environment
+3. Mocking what the actor "should do" doesn't test the actual implementation
+4. If BrowserCLIClientActor has bugs, the mock won't catch them!
+
+```javascript
+// ✅ CORRECT - Use the ACTUAL BrowserCLIClientActor in JSDOM
+import { JSDOM } from 'jsdom';
+import { CLI } from '../../src/CLI.js';
+import { BrowserCLIClientActor } from '../../apps/cli-ui/src/client/BrowserCLIClientActor.js';
+
+test('should display image in DOM with REAL browser client', async () => {
+  // Set up JSDOM environment
+  const dom = new JSDOM(`
+    <!DOCTYPE html>
+    <body><div id="app"></div></body>
+  `);
+  global.document = dom.window.document;
+  global.window = dom.window;
+
+  // Create CLI server
+  const cli = new CLI(resourceManager, { port: 6500 });
+  await cli.initialize();
+  await cli.start();
+
+  // Create REAL BrowserCLIClientActor with JSDOM container
+  const container = document.getElementById('app');
+  const browserActor = new BrowserCLIClientActor({
+    container: container,
+    serverUrl: `ws://localhost:${cli.port}/ws?route=/cli`
+  });
+
+  // Initialize the REAL actor
+  await browserActor.initialize();
+
+  // Set it as the remote actor - this is the REAL browser client!
+  cli.sessionActor.remoteActor = browserActor;
+
+  // Execute command - the REAL BrowserCLIClientActor handles it
+  const result = await cli.sessionActor.receive('execute-command', {
+    command: '/show legion://test'
+  });
+
+  // VERIFY the REAL actor updated JSDOM correctly
+  const img = container.querySelector('img');
+  expect(img).toBeTruthy();
+  expect(img.src).toContain('data:image');
+
+  // This actually tests the real browser client code!
+  await cli.shutdown();
+});
+```
+
+**THE CORRECT PATTERN:**
+1. JSDOM provides the browser DOM environment
+2. Import and instantiate the ACTUAL BrowserCLIClientActor
+3. Pass JSDOM container to the actor
+4. Set the real actor as cli.sessionActor.remoteActor
+5. Execute commands - the REAL actor code runs in JSDOM
+6. Verify the REAL actor updated JSDOM correctly
+
+**This tests the actual code path that runs in the real browser!**
+
+**Tests must verify:**
+1. The REAL BrowserCLIClientActor receives `display-asset` messages
+2. The REAL actor's code correctly updates the DOM
+3. Images appear with correct src, classes, and structure
+4. Any bugs in the actual actor implementation will cause test failures
+
+**Important Discovery - JSDOM Limitations**:
+When testing with the REAL BrowserCLIClientActor in JSDOM, we discovered that some components have browser-specific dependencies:
+
+```javascript
+// The @legion/components package eagerly loads ALL components when imported
+await import('@legion/components');
+// This triggers CodeEditor to load CodeMirror, which fails in JSDOM:
+// "Cannot find module '/lib/codemirror/view'"
+```
+
+**Key Insight**: Using the REAL browser actor instead of mocks revealed this architectural issue:
+- The components package should use lazy loading or separate entry points
+- JSDOM tests have inherent limitations with browser-specific libraries (CodeMirror, etc.)
+- For full E2E testing with real browser dependencies, use Playwright or MCP chrome-devtools
+
+**This is a GOOD outcome** - the test revealed real issues that mocks would have hidden!
+
+### General Testing Rules
+FOR tests there must be NO skipping and NO fallback under any circumstance, they must just FAIL in those circumstances.
+
+unless you are specifically testing their functionality Resource manager and tool registry singletons should be got once at the beginning of the test suite with no timeout and then just reused.
+
+NOTHING should be setting anything on resource manager! it provides values it does nothing else
+
+ALWAYS run tests with npm test ....selection to run
 
 THERE is no problem getting real llm clients for testing!!!! always use them in integration tests when required.
 

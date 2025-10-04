@@ -6,42 +6,9 @@
 export class ImportRewriter {
   constructor() {
     // Patterns for different import types
+    // NOTE: @legion/* imports are NOT rewritten - the browser's importmap handles those!
+    // We only rewrite relative imports (./..., ../..) to absolute URLs
     this.patterns = [
-      // import { X } from '@legion/...'
-      {
-        regex: /(\bimport\s+(?:{[^}]+}|\*\s+as\s+\w+|\w+)\s+from\s+)(['"])@legion\/([^'"]+)\2/g,
-        replacement: (match, prefix, quote, path) => {
-          return `${prefix}${quote}${this.rewritePath('@legion/' + path)}${quote}`;
-        }
-      },
-      // import '@legion/...'
-      {
-        regex: /(\bimport\s+)(['"])@legion\/([^'"]+)\2/g,
-        replacement: (match, prefix, quote, path) => {
-          return `${prefix}${quote}${this.rewritePath('@legion/' + path)}${quote}`;
-        }
-      },
-      // export { X } from '@legion/...'
-      {
-        regex: /(\bexport\s+(?:{[^}]+}|\*)\s+from\s+)(['"])@legion\/([^'"]+)\2/g,
-        replacement: (match, prefix, quote, path) => {
-          return `${prefix}${quote}${this.rewritePath('@legion/' + path)}${quote}`;
-        }
-      },
-      // dynamic import('@legion/...')
-      {
-        regex: /(\bimport\s*\(\s*)(['"])@legion\/([^'"]+)\2/g,
-        replacement: (match, prefix, quote, path) => {
-          return `${prefix}${quote}${this.rewritePath('@legion/' + path)}${quote}`;
-        }
-      },
-      // require('@legion/...')
-      {
-        regex: /(\brequire\s*\(\s*)(['"])@legion\/([^'"]+)\2/g,
-        replacement: (match, prefix, quote, path) => {
-          return `${prefix}${quote}${this.rewritePath('@legion/' + path)}${quote}`;
-        }
-      },
       // Relative imports to other Legion packages: '../../utils/src/index.js'
       {
         regex: /(\bimport\s+(?:{[^}]+}|\*\s+as\s+\w+|\w+)\s+from\s+)(['"])\.\.\/\.\.\/([^'"\/]+)\/([^'"]+)\2/g,
@@ -62,6 +29,20 @@ export class ImportRewriter {
         replacement: (match, prefix, quote, path, offset, string) => {
           return `${prefix}${quote}${this.rewriteLocalRelative('../' + path, this.currentContext)}${quote}`;
         }
+      },
+      // Local relative exports within same directory: export { X } from './Component.js'
+      {
+        regex: /(\bexport\s+(?:{[^}]+}|\*)\s+from\s+)(['"]).\/([^'"]+)\2/g,
+        replacement: (match, prefix, quote, path, offset, string) => {
+          return `${prefix}${quote}${this.rewriteLocalRelative('./' + path, this.currentContext)}${quote}`;
+        }
+      },
+      // Local relative exports to parent directories: export { X } from '../Component.js'
+      {
+        regex: /(\bexport\s+(?:{[^}]+}|\*)\s+from\s+)(['"])\.\.\/([^'"]+)\2/g,
+        replacement: (match, prefix, quote, path, offset, string) => {
+          return `${prefix}${quote}${this.rewriteLocalRelative('../' + path, this.currentContext)}${quote}`;
+        }
       }
     ];
   }
@@ -79,13 +60,35 @@ export class ImportRewriter {
 
     // Store context for pattern replacements
     this.currentContext = context;
+
+    // Strip out comments temporarily to avoid rewriting imports in JSDoc examples
+    const commentPlaceholders = [];
     let result = content;
-    
+
+    // Replace multi-line comments with placeholders
+    result = result.replace(/\/\*[\s\S]*?\*\//g, (match) => {
+      const placeholder = `__COMMENT_${commentPlaceholders.length}__`;
+      commentPlaceholders.push(match);
+      return placeholder;
+    });
+
+    // Replace single-line comments with placeholders
+    result = result.replace(/\/\/.*$/gm, (match) => {
+      const placeholder = `__COMMENT_${commentPlaceholders.length}__`;
+      commentPlaceholders.push(match);
+      return placeholder;
+    });
+
     // Apply each pattern
     for (const pattern of this.patterns) {
       result = result.replace(pattern.regex, pattern.replacement);
     }
-    
+
+    // Restore comments
+    commentPlaceholders.forEach((comment, index) => {
+      result = result.replace(`__COMMENT_${index}__`, comment);
+    });
+
     return result;
   }
 
@@ -152,10 +155,10 @@ export class ImportRewriter {
     // Add appropriate extension if missing
     if (!this.hasExtension(urlPath)) {
       const segments = urlPath.split('/').filter(s => s); // Remove empty segments
-      
-      // If it's just legion/packagename (2 segments), add /index.js
+
+      // If it's just legion/packagename (2 segments), add /src/index.js
       if (segments.length === 2 && segments[0] === 'legion') {
-        urlPath += '/index.js';
+        urlPath += '/src/index.js';
       } else if (urlPath.endsWith('/')) {
         // Path ends with /, add index.js
         urlPath += 'index.js';

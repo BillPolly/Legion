@@ -3,7 +3,7 @@
  * Manages the interaction between data state and DOM rendering
  */
 
-import { BaseViewModel } from '../../base/BaseViewModel.js';
+import { BaseViewModel } from '@legion/components';
 
 export class MarkdownViewModel extends BaseViewModel {
   constructor(options = {}) {

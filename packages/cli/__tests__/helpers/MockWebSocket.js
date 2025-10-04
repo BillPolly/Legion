@@ -36,6 +36,18 @@ export class MockWebSocket {
   }
 
   /**
+   * Manually trigger the open event for testing
+   */
+  simulateOpen() {
+    this.readyState = 1; // OPEN
+    if (this.onopen) {
+      setTimeout(() => {
+        this.onopen();
+      }, 0);
+    }
+  }
+
+  /**
    * Create a connected pair of mock WebSockets
    */
   static createPair() {

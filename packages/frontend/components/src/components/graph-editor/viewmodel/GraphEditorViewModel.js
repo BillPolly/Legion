@@ -741,8 +741,10 @@ export class GraphEditorViewModel {
    * @private
    */
   _setupViewListeners() {
-    // Event coordinator will handle view events
-    // This method is kept for backwards compatibility
+    // Register render callback with the view
+    if (this.view && typeof this.view.onRender === 'function') {
+      this.view.onRender(() => this.render());
+    }
   }
 
   /**

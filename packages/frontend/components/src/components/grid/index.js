@@ -5,7 +5,7 @@
  * externally and uses MVVM pattern internally. Supports both table and attribute modes
  * with drag & drop, resizing, and inline editing capabilities.
  */
-import { UmbilicalUtils, UmbilicalError } from '../../umbilical/index.js';
+import { UmbilicalUtils, UmbilicalError } from '@legion/components';
 import { GridModel } from './model/GridModel.js';
 import { GridView } from './view/GridView.js';
 import { GridViewModel } from './viewmodel/GridViewModel.js';

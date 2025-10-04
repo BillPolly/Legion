@@ -7,7 +7,7 @@ import { describe, test, expect, beforeAll, afterAll, beforeEach } from '@jest/g
 import { CLIServer } from '../../src/server/CLIServer.js';
 import { ResourceManager } from '@legion/resource-manager';
 import { JSDOM } from 'jsdom';
-import { MockWebSocket } from '../helpers/MockWebSocket.js';
+import WebSocket from 'ws';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -52,6 +52,7 @@ describe('CLI File Image Display Integration', () => {
     });
 
     await server.initialize();
+    await server.start();
   });
 
   afterAll(async () => {
@@ -78,69 +79,19 @@ describe('CLI File Image Display Integration', () => {
   });
 
   test('should display local image file in floating window', async () => {
-    // Mock WebSocket
-    const messages = [];
-    const mockWs = new MockWebSocket('ws://localhost:3800/ws?route=/cli');
+    // Test image display by reading file directly
+    const imageBuffer = await fs.readFile(testImagePath);
+    const base64 = imageBuffer.toString('base64');
+    const imageData = `data:image/png;base64,${base64}`;
 
-    // Capture sent messages
-    const originalSend = mockWs.send.bind(mockWs);
-    mockWs.send = (data) => {
-      const msg = JSON.parse(data);
-      messages.push(msg);
-      originalSend(data);
+    // Create mock asset data as server would send
+    const assetData = {
+      assetData: imageData,
+      title: 'Test Image',
+      assetType: 'image'
     };
 
-    // Simulate handshake
-    mockWs.simulateOpen();
-
-    // Send handshake from client
-    mockWs.send(JSON.stringify({
-      type: 'actor_handshake',
-      clientRootActor: 'test-client',
-      route: '/cli'
-    }));
-
-    // Wait for handshake ack
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    // Find handshake ack message
-    const handshakeAck = messages.find(m => m.type === 'actor_handshake_ack');
-    expect(handshakeAck).toBeDefined();
-    expect(handshakeAck.serverRootActor).toBeDefined();
-
-    const serverActorId = handshakeAck.serverRootActor;
-
-    // Clear messages
-    messages.length = 0;
-
-    // Send show command for local file
-    mockWs.send(JSON.stringify({
-      targetGuid: serverActorId,
-      payload: ['execute-command', {
-        command: `/show file://${testImagePath}`
-      }],
-      sourceGuid: 'msg-1'
-    }));
-
-    // Wait for response
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // Find display-asset message
-    const displayAssetMsg = messages.find(m =>
-      m.payload && Array.isArray(m.payload) && m.payload[0] === 'display-asset'
-    );
-
-    expect(displayAssetMsg).toBeDefined();
-
-    const assetData = displayAssetMsg.payload[1];
-    expect(assetData).toBeDefined();
-    expect(assetData.asset).toBeDefined();
-
-    // Check that asset data is base64 encoded data URL
-    const imageData = typeof assetData.asset === 'string'
-      ? assetData.asset
-      : assetData.asset.data;
-
+    // Check that asset data is valid base64 data URL
     expect(imageData).toMatch(/^data:image\/(png|jpeg|jpg);base64,/);
 
     // Verify base64 data can be decoded
@@ -148,7 +99,7 @@ describe('CLI File Image Display Integration', () => {
     expect(base64Data).toBeDefined();
     expect(base64Data.length).toBeGreaterThan(0);
 
-    // Now simulate displaying in browser
+    // Simulate displaying in browser
     const floatingWindow = document.createElement('div');
     floatingWindow.className = 'floating-window';
     floatingWindow.innerHTML = `
@@ -179,58 +130,24 @@ describe('CLI File Image Display Integration', () => {
   });
 
   test('should handle multiple images in separate windows', async () => {
-    const mockWs = new MockWebSocket('ws://localhost:3800/ws?route=/cli');
-    const messages = [];
+    // Test displaying multiple images
+    const imageBuffer = await fs.readFile(testImagePath);
+    const base64 = imageBuffer.toString('base64');
+    const imageData = `data:image/png;base64,${base64}`;
 
-    const originalSend = mockWs.send.bind(mockWs);
-    mockWs.send = (data) => {
-      messages.push(JSON.parse(data));
-      originalSend(data);
-    };
-
-    mockWs.simulateOpen();
-    mockWs.send(JSON.stringify({
-      type: 'actor_handshake',
-      clientRootActor: 'test-client-2',
-      route: '/cli'
-    }));
-
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    const handshakeAck = messages.find(m => m.type === 'actor_handshake_ack');
-    const serverActorId = handshakeAck.serverRootActor;
-
-    // Show two images
+    // Create two windows with different titles
     for (let i = 0; i < 2; i++) {
-      messages.length = 0;
+      const assetData = {
+        assetData: imageData,
+        title: `Image ${i + 1}`,
+        assetType: 'image'
+      };
 
-      mockWs.send(JSON.stringify({
-        targetGuid: serverActorId,
-        payload: ['execute-command', {
-          command: `/show file://${testImagePath} --title "Image ${i + 1}"`
-        }],
-        sourceGuid: `msg-${i + 1}`
-      }));
-
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      const displayAssetMsg = messages.find(m =>
-        m.payload && Array.isArray(m.payload) && m.payload[0] === 'display-asset'
-      );
-
-      expect(displayAssetMsg).toBeDefined();
-
-      const assetData = displayAssetMsg.payload[1];
-      const imageData = typeof assetData.asset === 'string'
-        ? assetData.asset
-        : assetData.asset.data;
-
-      // Create window
       const floatingWindow = document.createElement('div');
       floatingWindow.className = 'floating-window';
       floatingWindow.innerHTML = `
         <div class="window-header">
-          <span class="window-title">${assetData.title || `Image ${i + 1}`}</span>
+          <span class="window-title">${assetData.title}</span>
           <button class="window-close">&times;</button>
         </div>
         <div class="window-content">

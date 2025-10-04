@@ -3,7 +3,7 @@
  * Integrates Model, View, ViewModel, and Renderers into a cohesive component
  */
 
-import { UmbilicalUtils } from '../../umbilical/index.js';
+import { UmbilicalUtils } from '@legion/components';
 import { TreeScribeModel } from './core/model/TreeScribeModel.js';
 import { TreeScribeView } from './core/view/TreeScribeView.js';
 import { TreeScribeViewModel } from './core/viewmodel/TreeScribeViewModel.js';

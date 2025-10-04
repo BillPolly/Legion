@@ -5,7 +5,7 @@
  * Handles user interactions, keyboard navigation, and state synchronization.
  */
 
-import { BaseViewModel } from '../../base/index.js';
+import { BaseViewModel } from '@legion/components';
 
 export class ModernTreeViewModel extends BaseViewModel {
   constructor(model, view, config) {

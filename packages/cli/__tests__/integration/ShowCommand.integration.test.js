@@ -1,7 +1,7 @@
 /**
  * Integration test for /show command
  * Tests end-to-end command execution with real Handle display
- * NO MOCKS - real CLI, real Handle, real ShowMe
+ * Uses actor framework with mock remoteActor for display
  */
 
 import { describe, test, expect, beforeAll, afterEach } from '@jest/globals';
@@ -40,38 +40,40 @@ describe('ShowCommand Integration Test', () => {
       height: 5
     });
 
-    // Get the show command
-    const showCommand = cli.commandProcessor.getCommand('show');
-    expect(showCommand).toBeDefined();
-
-    // Mock browser launch and connection for testing
-    cli.showme.server.launchBrowser = async () => { return; };
-    cli.showme._waitForConnection = async () => { return; };
-
-    // Mock server actor for display
-    const mockServerActor = {
-      handleDisplayAsset: async () => { return; }
+    // Create mock remoteActor to receive display-asset messages
+    const displayedAssets = [];
+    const mockRemoteActor = {
+      receive: (messageType, data) => {
+        if (messageType === 'display-asset') {
+          displayedAssets.push(data);
+        }
+        return { success: true };
+      }
     };
-    cli.showme.getServerActor = () => mockServerActor;
+
+    // Set the mock remoteActor (simulates browser connection)
+    cli.sessionActor.remoteActor = mockRemoteActor;
 
     // Mock ResourceManager.createHandleFromURI to return our test handle
     const originalCreate = resourceManager.createHandleFromURI;
     resourceManager.createHandleFromURI = async (uri) => imageHandle;
 
     try {
-      // Execute the command
-      const result = await cli.commandProcessor.execute('/show legion://test/image');
+      // Execute the command via sessionActor
+      const result = await cli.sessionActor.receive('execute-command', {
+        command: '/show legion://test/image'
+      });
 
       // Verify result
       expect(result.success).toBe(true);
-      expect(result.message).toContain('Displaying');
-      expect(result.window).toBeDefined();
-      expect(result.window.isOpen).toBe(true);
+      expect(result.message).toContain('Displayed');
+      expect(result.handle).toBeDefined();
+      expect(result.assetData).toBeDefined();
 
-      // Verify window was tracked
-      const windows = cli.showme.getWindows();
-      expect(windows.length).toBe(1);
-      expect(windows[0]).toBe(result.window);
+      // Verify display-asset message was sent to remoteActor
+      expect(displayedAssets.length).toBe(1);
+      expect(displayedAssets[0].assetData).toBeDefined();
+      expect(displayedAssets[0].assetType).toBe('image/png');
 
     } finally {
       // Restore original method
@@ -94,15 +96,18 @@ describe('ShowCommand Integration Test', () => {
       height: 10
     });
 
-    // Mock browser launch and connection for testing
-    cli.showme.server.launchBrowser = async () => { return; };
-    cli.showme._waitForConnection = async () => { return; };
-
-    // Mock server actor for display
-    const mockServerActor = {
-      handleDisplayAsset: async () => { return; }
+    // Create mock remoteActor
+    const displayedAssets = [];
+    const mockRemoteActor = {
+      receive: (messageType, data) => {
+        if (messageType === 'display-asset') {
+          displayedAssets.push(data);
+        }
+        return { success: true };
+      }
     };
-    cli.showme.getServerActor = () => mockServerActor;
+
+    cli.sessionActor.remoteActor = mockRemoteActor;
 
     // Mock createHandleFromURI
     const originalCreate = resourceManager.createHandleFromURI;
@@ -110,15 +115,17 @@ describe('ShowCommand Integration Test', () => {
 
     try {
       // Execute with options (MVP: simple parsing, no quote handling)
-      const result = await cli.commandProcessor.execute(
-        '/show legion://test/image --width 1200 --height 900 --title MyTestImage'
-      );
+      const result = await cli.sessionActor.receive('execute-command', {
+        command: '/show legion://test/image --title MyTestImage'
+      });
 
       expect(result.success).toBe(true);
-      expect(result.window).toBeDefined();
-      expect(result.window.width).toBe(1200);
-      expect(result.window.height).toBe(900);
-      expect(result.window.title).toBe('MyTestImage');
+      expect(result.handle).toBeDefined();
+      expect(result.title).toBe('MyTestImage');
+
+      // Verify display-asset was sent
+      expect(displayedAssets.length).toBe(1);
+      expect(displayedAssets[0].title).toBe('MyTestImage');
 
     } finally {
       resourceManager.createHandleFromURI = originalCreate;
@@ -131,10 +138,13 @@ describe('ShowCommand Integration Test', () => {
     await cli.initialize();
     await cli.start();
 
-    // Test with empty args
-    await expect(
-      cli.commandProcessor.execute('/show')
-    ).rejects.toThrow('URI is required');
+    // Test with empty args - sessionActor returns error instead of throwing
+    const result = await cli.sessionActor.receive('execute-command', {
+      command: '/show'
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('URI is required');
   }, 15000);
 
   test('should fail gracefully with invalid width', async () => {
@@ -143,8 +153,12 @@ describe('ShowCommand Integration Test', () => {
     await cli.initialize();
     await cli.start();
 
-    await expect(
-      cli.commandProcessor.execute('/show legion://test/image --width abc')
-    ).rejects.toThrow('Invalid width');
+    // sessionActor returns error instead of throwing
+    const result = await cli.sessionActor.receive('execute-command', {
+      command: '/show legion://test/image --width abc'
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Invalid width');
   }, 15000);
 });

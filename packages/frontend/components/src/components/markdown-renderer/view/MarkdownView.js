@@ -3,7 +3,7 @@
  * Handles actual HTML generation, syntax highlighting, and user interactions
  */
 
-import { BaseView } from '../../base/BaseView.js';
+import { BaseView } from '@legion/components';
 
 export class MarkdownView extends BaseView {
   constructor(options = {}) {

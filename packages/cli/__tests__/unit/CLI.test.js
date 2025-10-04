@@ -1,7 +1,6 @@
 /**
  * Unit tests for CLI class
  * Tests basic construction, lifecycle, and state management
- * Uses real ShowMeController as per NO MOCKS rule in implementation plan
  */
 
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
@@ -44,7 +43,6 @@ describe('CLI Unit Tests', () => {
   test('should have correct initial state', () => {
     expect(cli.isInitialized).toBe(false);
     expect(cli.isRunning).toBe(false);
-    expect(cli.showme).toBeNull();
     expect(cli.sessionActor).toBeNull();
     expect(cli.inputHandler).toBeNull();
     expect(cli.outputHandler).toBeNull();
@@ -57,7 +55,6 @@ describe('CLI Unit Tests', () => {
 
   test('initialize() should create required components', async () => {
     await cli.initialize();
-    expect(cli.showme).toBeDefined();
     expect(cli.sessionActor).toBeDefined();
     expect(cli.inputHandler).toBeDefined();
     expect(cli.outputHandler).toBeDefined();
@@ -103,7 +100,6 @@ describe('CLI Unit Tests', () => {
       mode: 'interactive',
       initialized: false,
       running: false,
-      hasShowMe: false,
       hasSessionActor: false,
       hasInputHandler: false,
       hasOutputHandler: false
@@ -114,7 +110,6 @@ describe('CLI Unit Tests', () => {
     await cli.initialize();
     const status = cli.getStatus();
     expect(status.initialized).toBe(true);
-    expect(status.hasShowMe).toBe(true);
     expect(status.hasSessionActor).toBe(true);
     expect(status.hasInputHandler).toBe(true);
     expect(status.hasOutputHandler).toBe(true);

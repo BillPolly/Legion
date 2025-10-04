@@ -5,7 +5,7 @@
  * externally and uses MVVM pattern internally. Supports multiple themes, 
  * drag & drop reordering, keyboard navigation, and extensive customization.
  */
-import { UmbilicalUtils, UmbilicalError } from '../../umbilical/index.js';
+import { UmbilicalUtils, UmbilicalError } from '@legion/components';
 import { TabsModel } from './model/TabsModel.js';
 import { TabsView } from './view/TabsView.js';
 import { TabsViewModel } from './viewmodel/TabsViewModel.js';

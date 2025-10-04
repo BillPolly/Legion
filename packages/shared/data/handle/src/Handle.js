@@ -57,7 +57,20 @@ export class Handle extends Actor {
   get handleType() {
     return this.constructor.name;
   }
-  
+
+  /**
+   * Get resource type from schema
+   * Self-describing type based on DataSource schema
+   * Returns 'unknown' if schema not available
+   */
+  get resourceType() {
+    try {
+      return this.dataSource?.getSchema()?.type || 'unknown';
+    } catch (error) {
+      return 'unknown';
+    }
+  }
+
   /**
    * Get current value - must be implemented by subclasses
    * CRITICAL: Must be synchronous - no await!

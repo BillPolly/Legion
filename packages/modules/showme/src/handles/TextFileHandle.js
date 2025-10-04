@@ -55,7 +55,7 @@ export class TextFileHandle extends Handle {
       },
 
       getSchema: () => ({
-        type: 'text-file',
+        type: fileData.viewerType,  // Dynamic: 'code', 'markup', or 'style'
         properties: {
           id: { type: 'string' },
           title: { type: 'string' },
@@ -63,6 +63,7 @@ export class TextFileHandle extends Handle {
           viewerType: { type: 'string', enum: ['code', 'markup', 'style'] },
           content: { type: 'string' },
           lineCount: { type: 'number' },
+          filePath: { type: 'string' },
           metadata: { type: 'object' }
         }
       })
@@ -75,11 +76,18 @@ export class TextFileHandle extends Handle {
   }
 
   /**
-   * Get file content asynchronously
-   * @returns {Promise<string>} File content
+   * Get file data asynchronously
+   * Returns complete data object for client rendering
+   * @returns {Promise<Object>} File data with content, language, filePath, etc.
    */
   async getData() {
-    return this.fileData.content;
+    return {
+      content: this.fileData.content,
+      language: this.fileData.language,
+      filePath: this.fileData.filePath,
+      lineCount: this.fileData.lineCount,
+      viewerType: this.fileData.viewerType
+    };
   }
 
   /**

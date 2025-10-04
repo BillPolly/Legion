@@ -1,7 +1,7 @@
 /**
  * HierarchyView - Main view controller for hierarchy display
  */
-import { BaseView } from '../../base/index.js';
+import { BaseView } from '@legion/components';
 import { NodeViewMapping } from './NodeViewMapping.js';
 import { HierarchyTreeView } from './HierarchyTreeView.js';
 import { SourceView } from './SourceView.js';

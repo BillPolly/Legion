@@ -7,10 +7,7 @@
 import chalk from 'chalk';
 
 export class DisplayEngine {
-  constructor(showme, outputHandler, resourceManager) {
-    if (!showme) {
-      throw new Error('ShowMeController is required');
-    }
+  constructor(outputHandler, resourceManager) {
     if (!outputHandler) {
       throw new Error('OutputHandler is required');
     }
@@ -18,10 +15,17 @@ export class DisplayEngine {
       throw new Error('ResourceManager is required');
     }
 
-    this.showme = showme;
     this.outputHandler = outputHandler;
     this.resourceManager = resourceManager;
-    this.mode = 'auto'; // 'terminal', 'browser', 'auto'
+    this.sessionActor = null; // Set by ShowCommand
+    this.mode = 'auto'; // Default display mode
+  }
+
+  /**
+   * Set session actor reference for browser rendering detection
+   */
+  setSessionActor(sessionActor) {
+    this.sessionActor = sessionActor;
   }
 
   /**
@@ -33,13 +37,19 @@ export class DisplayEngine {
   async render(handle, options = {}) {
     const format = options.format || 'auto';
 
-    // Determine rendering mode
-    if (this.shouldUseTerminal(handle, format)) {
+    // Explicit terminal formats
+    if (['table', 'tree', 'json', 'summary'].includes(format)) {
       return await this.renderTerminal(handle, format);
     }
 
-    // Browser rendering
-    return await this.renderBrowser(handle, options);
+    // If sessionActor has a remoteActor (browser client connected), use browser rendering
+    // for visual assets (images, graphs, code, etc.)
+    if (this.sessionActor?.remoteActor) {
+      return await this.renderBrowser(handle, options);
+    }
+
+    // Otherwise use terminal rendering
+    return await this.renderTerminal(handle, format === 'auto' ? 'summary' : format);
   }
 
   /**
@@ -158,32 +168,48 @@ export class DisplayEngine {
    * Render Handle in browser
    * @param {Handle} handle - Handle to render
    * @param {Object} options - Browser options
-   * @returns {Promise<Object>} Render result with Handle data
+   * @returns {Promise<Object>} Render result with asset data for CLI client
    */
   async renderBrowser(handle, options = {}) {
-    // Extract Handle data for browser client
-    let assetData;
+    // Extract asset data from handle WITHOUT opening browser windows
+    // The CLI actor framework will send this data to the browser client via WebSocket
+    let assetData, assetType;
 
-    // Try getData() method first (for ImageHandle, etc.)
-    if (typeof handle.getData === 'function') {
-      try {
-        assetData = await handle.getData();
-      } catch (error) {
-        console.error('Error calling getData():', error);
-        assetData = this.extractHandleData(handle);
-      }
+    if (handle.imageData) {
+      // ImageHandle
+      assetData = handle.imageData.data;
+      assetType = handle.imageData.type || 'image';
+    } else if (handle.fileData) {
+      // TextFileHandle
+      assetData = handle.fileData.content;
+      assetType = handle.fileData.language || 'text';
+    } else if (handle.resourceType === 'graph' || handle._handleType === 'GraphHandle') {
+      // GraphHandle - get nodes and edges
+      const nodes = await handle.getNodes();
+      const edges = await handle.getEdges();
+      assetData = { nodes, edges };
+      assetType = 'graph';
+    } else if (handle.data) {
+      // Generic Handle with direct data property
+      assetData = handle.data;
+      assetType = handle.type || handle.resourceType || 'unknown';
     } else {
-      assetData = this.extractHandleData(handle);
+      // Try async getData() method
+      assetData = await handle.getData?.();
+      assetType = await handle.getType?.() || handle.resourceType || 'unknown';
     }
 
+    const title = options.title || handle.title || handle.id || 'Asset';
+
+    // Return formatted result for CLI actor to send to browser client
     return {
       success: true,
-      format: 'browser',
       rendered: 'browser',
+      format: 'browser',
       handle: handle,
-      assetData: assetData,
-      title: options.title || handle.title || handle.toURI?.() || handle.id || 'Handle',
-      assetType: handle.resourceType || handle.type || 'unknown'
+      title: title,
+      assetType: assetType,
+      assetData: assetData
     };
   }
 
@@ -207,7 +233,7 @@ export class DisplayEngine {
     // Auto mode - check handle type
     if (format === 'auto') {
       // Use browser for complex types
-      const complexTypes = ['strategy', 'image', 'visual', 'code', 'markup', 'style', 'data'];
+      const complexTypes = ['strategy', 'image', 'visual', 'code', 'markup', 'style', 'data', 'graph'];
       if (handle.resourceType && complexTypes.includes(handle.resourceType)) {
         return false;
       }

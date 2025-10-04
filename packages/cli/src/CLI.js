@@ -11,7 +11,6 @@
  * 4. shutdown() - cleans up resources
  */
 
-import { ShowMeController } from '@legion/showme';
 import { CLISessionActor } from './actors/CLISessionActor.js';
 import { InputHandler } from './handlers/InputHandler.js';
 import { OutputHandler } from './handlers/OutputHandler.js';
@@ -28,14 +27,13 @@ export class CLI {
     this.isRunning = false;
 
     // Components (initialized in initialize())
-    this.showme = null;
     this.sessionActor = null;
     this.inputHandler = null;
     this.outputHandler = null;
   }
 
   /**
-   * Initialize CLI - sets up ShowMe and CLISessionActor
+   * Initialize CLI - sets up CLISessionActor
    */
   async initialize() {
     if (this.isInitialized) {
@@ -48,15 +46,8 @@ export class CLI {
       showStackTrace: this.options.showStackTrace !== false
     });
 
-    // Create ShowMeController for browser-based Handle visualization
-    const port = this.options.port || 3700;
-    this.showme = new ShowMeController({ port });
-    await this.showme.initialize();
-    await this.showme.start();
-
     // Create CLISessionActor - handles all command processing
     this.sessionActor = new CLISessionActor({
-      showme: this.showme,
       resourceManager: this.resourceManager,
       sessionId: `interactive-${Date.now()}`,
       useColors: this.options.useColors !== false
@@ -147,11 +138,6 @@ export class CLI {
       await this.sessionActor.cleanup();
     }
 
-    // Stop ShowMe if initialized
-    if (this.showme && this.showme.isRunning) {
-      await this.showme.stop();
-    }
-
     // Clean up other components
     this.sessionActor = null;
     this.inputHandler = null;
@@ -167,7 +153,6 @@ export class CLI {
       mode: 'interactive',
       initialized: this.isInitialized,
       running: this.isRunning,
-      hasShowMe: this.showme !== null,
       hasSessionActor: this.sessionActor !== null,
       hasInputHandler: this.inputHandler !== null,
       hasOutputHandler: this.outputHandler !== null

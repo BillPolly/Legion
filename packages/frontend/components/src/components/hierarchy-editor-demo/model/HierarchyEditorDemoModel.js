@@ -4,7 +4,7 @@
  * Manages state for multiple editor instances and demo features
  */
 
-import { BaseModel } from '../../base/index.js';
+import { BaseModel } from '@legion/components';
 
 export class HierarchyEditorDemoModel extends BaseModel {
   constructor(config = {}) {

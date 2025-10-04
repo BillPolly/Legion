@@ -9,7 +9,7 @@
  * @version 1.0.0
  */
 
-import { UmbilicalUtils } from '../../umbilical/index.js';
+import { UmbilicalUtils } from '@legion/components';
 import { TreeScribeInstance } from './TreeScribe.js';
 
 export const TreeScribe = {

@@ -7,6 +7,8 @@
 
 import { InfiniteCanvas } from '@cli-ui/components/InfiniteCanvas.js';
 import { CLIWindow } from '@cli-ui/components/CLIWindow.js';
+import { AssetWindow } from '@cli-ui/components/AssetWindow.js';
+import { logSafely, errorSafely } from '@cli-ui/utils/logger.js';
 
 export default class BrowserCLIClientActor {
   constructor() {
@@ -20,6 +22,10 @@ export default class BrowserCLIClientActor {
     this.canvas = null;
     this.cliWindow = null;
     this.terminal = null;
+
+    // Asset windows tracking
+    this.assetWindows = [];
+    this.nextWindowPosition = { x: 200, y: 150 };
 
     // Create UI
     this.createUI();
@@ -73,7 +79,7 @@ export default class BrowserCLIClientActor {
    * Actor protocol method - called by framework
    */
   async receive(messageType, data) {
-    console.log('[BrowserCLIClientActor] Received:', messageType, data);
+    logSafely('[BrowserCLIClientActor] Received:', messageType, data);
 
     switch (messageType) {
       case 'session-ready':
@@ -160,16 +166,115 @@ export default class BrowserCLIClientActor {
   /**
    * Handle display-asset message
    */
-  handleDisplayAsset(data) {
-    console.log('Display asset:', data);
+  async handleDisplayAsset(data) {
+    logSafely('Display asset:', data);
 
-    // TODO: Implement proper asset display windows
-    // For now, just show in terminal
-    if (this.terminal) {
-      this.terminal.writeLine(`[Asset: ${data.title || 'Untitled'} (${data.assetType || 'unknown'})]`, 'info');
-      this.terminal.writeLine('');
+    try {
+      console.log('[BrowserCLIClientActor] handleDisplayAsset - step 1: calculating position');
+      // Calculate window position (cascade new windows)
+      const position = this.getNextWindowPosition();
+      console.log('[BrowserCLIClientActor] handleDisplayAsset - step 2: position =', position);
+
+      // Create asset window
+      console.log('[BrowserCLIClientActor] handleDisplayAsset - step 3: creating AssetWindow');
+      const assetWindow = new AssetWindow(data, {
+        title: data.title || 'Asset',
+        x: position.x,
+        y: position.y,
+        width: 900,
+        height: 700,
+        onClose: () => this.handleAssetWindowClose(assetWindow),
+        onSave: async (saveData) => this.handleAssetSave(saveData)
+      });
+      console.log('[BrowserCLIClientActor] handleDisplayAsset - step 4: AssetWindow created');
+
+      // Initialize window
+      console.log('[BrowserCLIClientActor] handleDisplayAsset - step 5: initializing window');
+      const windowElement = assetWindow.initialize();
+      console.log('[BrowserCLIClientActor] handleDisplayAsset - step 6: adding to canvas');
+      this.canvas.addComponent(windowElement, position.x, position.y);
+
+      // Initialize renderer AFTER window is in DOM
+      console.log('[BrowserCLIClientActor] handleDisplayAsset - step 7: initializing renderer');
+      await assetWindow.initializeRenderer();
+      console.log('[BrowserCLIClientActor] handleDisplayAsset - step 8: renderer initialized');
+
+      // Track window
+      this.assetWindows.push(assetWindow);
+
+      // Show confirmation in terminal
+      if (this.terminal) {
+        this.terminal.writeLine(`Opened: ${data.title || 'Asset'} (${data.assetType || 'unknown'})`, 'info');
+        this.terminal.writeLine('');
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('[BrowserCLIClientActor] handleDisplayAsset - ERROR at line:', error);
+      errorSafely('Failed to display asset:', error);
+
+      if (this.terminal) {
+        this.terminal.writeLine(`Error displaying asset: ${error.message}`, 'error');
+        this.terminal.writeLine('');
+      }
+
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Get next window position (cascade effect)
+   */
+  getNextWindowPosition() {
+    const position = { ...this.nextWindowPosition };
+
+    // Increment position for next window
+    this.nextWindowPosition.x += 30;
+    this.nextWindowPosition.y += 30;
+
+    // Reset if off screen
+    if (this.nextWindowPosition.x > window.innerWidth - 400) {
+      this.nextWindowPosition.x = 200;
+    }
+    if (this.nextWindowPosition.y > window.innerHeight - 300) {
+      this.nextWindowPosition.y = 150;
     }
 
-    return { success: true };
+    return position;
+  }
+
+  /**
+   * Handle asset window close
+   */
+  handleAssetWindowClose(assetWindow) {
+    // Remove from tracking
+    const index = this.assetWindows.indexOf(assetWindow);
+    if (index !== -1) {
+      this.assetWindows.splice(index, 1);
+    }
+  }
+
+  /**
+   * Handle asset save
+   */
+  async handleAssetSave(saveData) {
+    logSafely('Save asset:', saveData);
+
+    if (!this.remoteActor) {
+      throw new Error('Not connected to server');
+    }
+
+    // Send save request to server
+    try {
+      await this.remoteActor.receive('save-asset', saveData);
+
+      if (this.terminal) {
+        this.terminal.writeLine(`Saved: ${saveData.filePath || 'asset'}`, 'success');
+        this.terminal.writeLine('');
+      }
+    } catch (error) {
+      errorSafely('Save failed:', error);
+      throw error;
+    }
   }
 }

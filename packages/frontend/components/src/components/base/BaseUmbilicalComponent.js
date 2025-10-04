@@ -9,7 +9,7 @@
  * This class eliminates boilerplate and ensures consistency across components.
  */
 
-import { UmbilicalUtils } from '../../umbilical/index.js';
+import { UmbilicalUtils } from '@legion/components';
 
 /**
  * ID Management for Components

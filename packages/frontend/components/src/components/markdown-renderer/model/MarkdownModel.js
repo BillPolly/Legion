@@ -3,7 +3,7 @@
  * Manages markdown content, theme state, and rendering options
  */
 
-import { BaseModel } from '../../base/BaseModel.js';
+import { BaseModel } from '@legion/components';
 
 export class MarkdownModel extends BaseModel {
   constructor(options = {}) {

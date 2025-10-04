@@ -109,9 +109,6 @@ export class ShowCommand extends BaseCommand {
         width: 0,
         height: 0
       });
-
-      // Set resourceType so DisplayEngine knows to use browser
-      handle.resourceType = 'image';
     } else if (uri.startsWith('file://')) {
       // Handle file:// URLs by reading the file
       const fs = await import('fs/promises');
@@ -176,24 +173,56 @@ export class ShowCommand extends BaseCommand {
 
       if (textFileTypes[ext]) {
         // Handle as text file (code, markup, or style)
-        const { TextFileHandle } = await import('@legion/showme/src/handles/TextFileHandle.js');
         const fileType = textFileTypes[ext];
 
         // Read file as text
         const fileContent = await fs.readFile(filePath, 'utf-8');
-        const lineCount = fileContent.split('\n').length;
 
-        handle = new TextFileHandle({
-          id: `file-${Date.now()}`,
-          title: options.title || path.basename(filePath),
-          language: fileType.language,
-          viewerType: fileType.viewerType,
-          content: fileContent,
-          lineCount: lineCount,
-          filePath: filePath // Include file path for saving
-        });
+        // Special handling for JSON files - detect if it's a graph
+        let isGraph = false;
+        if (ext === '.json') {
+          console.log('[ShowCommand] Detected JSON file, checking if it\'s a graph...');
+          try {
+            const jsonData = JSON.parse(fileContent);
+            console.log('[ShowCommand] JSON parsed, keys:', Object.keys(jsonData));
 
-        handle.resourceType = fileType.viewerType; // 'code', 'markup', or 'style'
+            // Check if JSON contains graph data (nodes and edges arrays)
+            if (jsonData.nodes && Array.isArray(jsonData.nodes) &&
+                jsonData.edges && Array.isArray(jsonData.edges)) {
+              // This is graph data! Create GraphHandle
+              console.log('[ShowCommand] Graph detected! Creating GraphHandle...');
+              // Use relative path to graph package (monorepo workspace)
+              const { GraphDataSource } = await import('../../../shared/data/graph/src/GraphDataSource.js');
+              const { GraphHandle } = await import('../../../shared/data/graph/src/GraphHandle.js');
+
+              const graphDataSource = new GraphDataSource(jsonData);
+              handle = new GraphHandle(graphDataSource);
+              console.log('[ShowCommand] GraphHandle created, resourceType:', handle.resourceType, '_handleType:', handle._handleType);
+              isGraph = true;
+            } else {
+              console.log('[ShowCommand] Not a graph (no nodes/edges arrays)');
+            }
+          } catch (e) {
+            // Not valid JSON or not graph data, fall through to TextFileHandle
+            console.log('[ShowCommand] JSON parse error:', e.message);
+          }
+        }
+
+        // Only create TextFileHandle if not a graph
+        if (!isGraph) {
+          const { TextFileHandle } = await import('@legion/showme/src/handles/TextFileHandle.js');
+          const lineCount = fileContent.split('\n').length;
+
+          handle = new TextFileHandle({
+            id: `file-${Date.now()}`,
+            title: options.title || path.basename(filePath),
+            language: fileType.language,
+            viewerType: fileType.viewerType,
+            content: fileContent,
+            lineCount: lineCount,
+            filePath: filePath // Include file path for saving
+          });
+        }
       } else if (imageExtensions[ext]) {
         // Handle as image file
         const { ImageHandle } = await import('@legion/showme/src/handles/ImageHandle.js');
@@ -214,8 +243,6 @@ export class ShowCommand extends BaseCommand {
           width: 0,
           height: 0
         });
-
-        handle.resourceType = 'image';
       } else {
         throw new Error(`Unsupported file type: ${ext}`);
       }
@@ -230,7 +257,9 @@ export class ShowCommand extends BaseCommand {
     // Format success message based on rendering mode
     let message;
     if (result.rendered === 'browser' && result.window) {
-      message = `Displaying ${uri} in browser window ${result.window.id}`;
+      message = `Displayed ${uri} in browser window ${result.window.id}`;
+    } else if (result.rendered === 'browser') {
+      message = `Displayed ${uri}`;
     } else if (result.rendered === 'terminal') {
       message = `Displayed ${uri} as ${result.format} in terminal`;
     } else {

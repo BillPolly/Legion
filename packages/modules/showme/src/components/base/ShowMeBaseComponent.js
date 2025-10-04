@@ -5,7 +5,7 @@
  * and utilities for consistent component behavior across the module.
  */
 
-import { BaseUmbilicalComponent } from '../../../../../frontend/components/src/components/base/BaseUmbilicalComponent.js';
+import { BaseUmbilicalComponent } from '@legion/components';
 
 export class ShowMeBaseComponent extends BaseUmbilicalComponent {
   /**

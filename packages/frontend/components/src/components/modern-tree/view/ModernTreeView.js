@@ -5,7 +5,7 @@
  * Supports virtual scrolling, custom renderers, and accessibility.
  */
 
-import { BaseView } from '../../base/index.js';
+import { BaseView } from '@legion/components';
 
 export class ModernTreeView extends BaseView {
   constructor(dom, config) {

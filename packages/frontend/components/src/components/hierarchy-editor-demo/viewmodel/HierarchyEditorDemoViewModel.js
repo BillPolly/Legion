@@ -4,7 +4,7 @@
  * Coordinates between Model and View, handling user interactions
  */
 
-import { BaseViewModel } from '../../base/index.js';
+import { BaseViewModel } from '@legion/components';
 import { HierarchyEditor } from '../../hierarchy-editor/index.js';
 
 // Mock HierarchyEditor for fallback (remove this once real component is working)

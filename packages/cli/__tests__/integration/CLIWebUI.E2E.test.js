@@ -13,7 +13,6 @@ describe('CLI Web UI E2E Integration', () => {
   let server;
   let resourceManager;
   const TEST_CLI_PORT = 5000;
-  const TEST_SHOWME_PORT = 5001;
 
   beforeAll(async () => {
     resourceManager = await ResourceManager.getInstance();
@@ -21,7 +20,6 @@ describe('CLI Web UI E2E Integration', () => {
     // Create and start CLI server
     server = new CLIServer({
       port: TEST_CLI_PORT,
-      showmePort: TEST_SHOWME_PORT,
       resourceManager
     });
 
@@ -98,11 +96,5 @@ describe('CLI Web UI E2E Integration', () => {
     const cliRoute = server.config.routes.find(r => r.path === '/cli');
     expect(cliRoute).toBeDefined();
     expect(cliRoute.serverActor).toContain('CLISessionActor');
-  });
-
-  test('should have ShowMe controller initialized', async () => {
-    // Verify ShowMe is properly initialized for handle display
-    expect(server.showme).toBeDefined();
-    expect(server.showme.isRunning).toBe(true);
   });
 });

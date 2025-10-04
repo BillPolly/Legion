@@ -6,8 +6,9 @@
  */
 
 import { ProtocolActor, ActorSpace } from '@legion/actors';
-import { InfiniteCanvas } from '../components/InfiniteCanvas.js';
-import { CLIWindow } from '../components/CLIWindow.js';
+import { InfiniteCanvas } from '@cli-ui/components/InfiniteCanvas.js';
+import { CLIWindow } from '@cli-ui/components/CLIWindow.js';
+import { logSafely } from '@cli-ui/utils/logger.js';
 
 export class MainPageActor extends ProtocolActor {
   constructor(config = {}) {
@@ -291,7 +292,7 @@ export class MainPageActor extends ProtocolActor {
    * Handle display-asset message (for displaying handles/assets)
    */
   handleDisplayAsset(data) {
-    console.log('Display asset:', data);
+    logSafely('Display asset:', data);
     // TODO: Create floating window for asset display
     // This will be used by ShowMe integration
     return { success: true };

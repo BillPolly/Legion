@@ -1,7 +1,7 @@
 /**
  * HierarchyModel - Core data model for hierarchy editing
  */
-import { BaseModel } from '../../base/index.js';
+import { BaseModel } from '@legion/components';
 import { HierarchyNode } from './HierarchyNode.js';
 
 export class HierarchyModel extends BaseModel {

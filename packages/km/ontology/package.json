@@ -8,7 +8,8 @@
   "scripts": {
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand",
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch --runInBand",
-    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage --runInBand"
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage --runInBand",
+    "convert:pdf": "node scripts/convert-to-pdf.js"
   },
   "keywords": [
     "ontology",

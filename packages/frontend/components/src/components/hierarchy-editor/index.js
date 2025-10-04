@@ -6,7 +6,7 @@
  * representation with full editing capabilities.
  */
 
-import { UmbilicalUtils, UmbilicalError } from '../../umbilical/index.js';
+import { UmbilicalUtils, UmbilicalError } from '@legion/components';
 import { HierarchyEditorInstance } from './HierarchyEditorInstance.js';
 
 export const HierarchyEditor = {

@@ -9,7 +9,7 @@
  * - Integration testing patterns
  */
 
-import { UmbilicalUtils } from '../../umbilical/index.js';
+import { UmbilicalUtils } from '@legion/components';
 
 export class MVVMTestHelpers {
   /**

@@ -121,7 +121,7 @@ export class CLISessionActor extends ProtocolActor {
           },
           'display-asset': {
             schema: {
-              asset: { type: 'object', required: true },
+              assetData: { type: 'object', required: true },
               title: { type: 'string', required: false },
               assetType: { type: 'string', required: false }
             },
@@ -263,7 +263,7 @@ export class CLISessionActor extends ProtocolActor {
         // Send asset display if needed
         if (result.rendered === 'browser' && result.assetData && this.remoteActor) {
           await this.send('display-asset', {
-            asset: result.assetData,
+            assetData: result.assetData,  // Changed from 'asset' to match ImageViewer expectations
             title: result.title || 'Asset',
             assetType: result.assetType || 'unknown'
           });

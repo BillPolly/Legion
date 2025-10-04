@@ -1,4 +1,4 @@
-import { UmbilicalUtils, UmbilicalError } from '../../umbilical/index.js';
+import { UmbilicalUtils, UmbilicalError } from '@legion/components';
 
 /**
  * Display Component

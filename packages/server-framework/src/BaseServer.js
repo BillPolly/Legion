@@ -731,6 +731,7 @@ export class BaseServer {
         // Resolve file path within package
         // Try direct path first, then src/ subdirectory
         let actualFilePath = path.join(packageInfo.path, filePath);
+        let actualRequestPath = `/legion/${packageName}/${filePath}`;
 
         const fs = await import('fs');
 
@@ -743,6 +744,7 @@ export class BaseServer {
           try {
             await fs.promises.access(srcPath);
             actualFilePath = srcPath;
+            actualRequestPath = `/legion/${packageName}/src/${filePath}`;
           } catch (err2) {
             console.warn(`File not found: ${cacheKey} (tried ${actualFilePath} and ${srcPath})`);
             return next();
@@ -751,15 +753,15 @@ export class BaseServer {
 
         // Read and serve file
         const content = await fs.promises.readFile(actualFilePath, 'utf8');
-        
+
         let finalContent = content;
         let contentType = 'text/plain';
-        
+
         // For JavaScript files, rewrite imports
         if (filePath.endsWith('.js') || filePath.endsWith('.mjs')) {
           finalContent = this.importRewriter.rewrite(content, {
             legionPackage: packageName,
-            requestPath: `/legion${req.path}`,
+            requestPath: actualRequestPath,
             baseUrl: `/legion/${packageName}`
           });
           contentType = 'application/javascript; charset=utf-8';

@@ -5,7 +5,7 @@
  * externally and uses MVVM pattern internally. Supports expand/collapse,
  * selection, drag & drop reordering, and keyboard navigation.
  */
-import { UmbilicalUtils, UmbilicalError } from '../../umbilical/index.js';
+import { UmbilicalUtils, UmbilicalError } from '@legion/components';
 import { TreeModel } from './model/TreeModel.js';
 import { TreeView } from './view/TreeView.js';
 import { TreeViewModel } from './viewmodel/TreeViewModel.js';

@@ -190,25 +190,15 @@ async function convertToPDF(inputPath, outputPath) {
     console.log('   ✅ Professional typography');
     console.log('   ✅ Proper spacing and layout');
 
-    // Try to use weasyprint, fall back to pdflatex
-    let pdfCreated = false;
+    // Use Chrome headless to convert HTML to PDF (preserves all CSS styling!)
+    console.log('   ℹ️  Using Chrome headless for PDF conversion...');
 
-    try {
-      execSync(
-        `pandoc "${htmlPath}" -f html -o "${resolve(outputPath)}" --pdf-engine=weasyprint`,
-        { stdio: 'pipe' }
-      );
-      pdfCreated = true;
-    } catch (e) {
-      console.log('   ℹ️  weasyprint not available, using direct markdown conversion...');
+    const chromePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
-      // Fall back to direct markdown → PDF with good styling
-      execSync(
-        `pandoc "${resolve(inputPath)}" -f markdown -o "${resolve(outputPath)}" --pdf-engine=pdflatex -V geometry:margin=1in -V fontsize=11pt -V colorlinks=true -V linkcolor=blue -V urlcolor=blue`,
-        { stdio: 'pipe' }
-      );
-      pdfCreated = true;
-    }
+    execSync(
+      `"${chromePath}" --headless --disable-gpu --print-to-pdf="${resolve(outputPath)}" "${htmlPath}"`,
+      { stdio: 'pipe' }
+    );
 
     console.log(`\n✅ PDF created with beautiful formatting!`);
 

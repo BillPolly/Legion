@@ -5,7 +5,7 @@
  * graph editor with MVVM architecture, custom scene graph, and pluggable layout system.
  */
 
-import { UmbilicalUtils } from '../../umbilical/index.js';
+import { UmbilicalUtils } from '@legion/components';
 import { GraphEditorModel } from './model/GraphEditorModel.js';
 import { GraphEditorViewModel } from './viewmodel/GraphEditorViewModel.js';
 import { GraphEditorView } from './view/GraphEditorView.js';
@@ -179,7 +179,7 @@ class GraphEditorInstance {
       onError: (error) => this._handleError(error)
     });
 
-    // Create ViewModel
+    // Create ViewModel (this wires up Model -> View listeners)
     this.viewModel = new GraphEditorViewModel(this.model, this.view, {
       onSelectionChange: this.umbilical.onSelectionChange,
       onNodeClick: this.umbilical.onNodeClick,
@@ -188,6 +188,12 @@ class GraphEditorInstance {
       onBackgroundClick: this.umbilical.onBackgroundClick,
       onHistoryChange: this.umbilical.onHistoryChange
     });
+
+    // Load initial graph data AFTER ViewModel is set up
+    // This ensures the Model->ViewModel->View pipeline is active
+    if (this.umbilical.graphData) {
+      this.model.fromJSON(this.umbilical.graphData);
+    }
   }
 
   /**

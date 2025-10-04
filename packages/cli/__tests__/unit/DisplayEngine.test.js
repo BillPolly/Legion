@@ -3,56 +3,35 @@
  * Tests unified rendering interface for terminal and browser
  */
 
-import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, test, expect, beforeEach } from '@jest/globals';
 import { DisplayEngine } from '../../src/display/DisplayEngine.js';
-import { ShowMeController } from '@legion/showme';
 import { OutputHandler } from '../../src/handlers/OutputHandler.js';
 import { ResourceManager } from '@legion/resource-manager';
 
 describe('DisplayEngine Unit Tests', () => {
   let displayEngine;
-  let showme;
   let outputHandler;
   let resourceManager;
 
   beforeEach(async () => {
     resourceManager = await ResourceManager.getInstance();
-
-    const port = 8000 + Math.floor(Math.random() * 500);
-    showme = new ShowMeController({ port });
-    await showme.initialize();
-    await showme.start();
-
     outputHandler = new OutputHandler({ useColors: false });
-
-    displayEngine = new DisplayEngine(showme, outputHandler, resourceManager);
-  });
-
-  afterEach(async () => {
-    if (showme && showme.isRunning) {
-      await showme.stop();
-    }
+    displayEngine = new DisplayEngine(outputHandler, resourceManager);
   });
 
   test('should create DisplayEngine with required dependencies', () => {
     expect(displayEngine).toBeDefined();
-    expect(displayEngine.showme).toBe(showme);
     expect(displayEngine.outputHandler).toBe(outputHandler);
     expect(displayEngine.resourceManager).toBe(resourceManager);
   });
 
-  test('should fail without ShowMeController', () => {
-    expect(() => new DisplayEngine(null, outputHandler, resourceManager))
-      .toThrow('ShowMeController is required');
-  });
-
   test('should fail without OutputHandler', () => {
-    expect(() => new DisplayEngine(showme, null, resourceManager))
+    expect(() => new DisplayEngine(null, resourceManager))
       .toThrow('OutputHandler is required');
   });
 
   test('should fail without ResourceManager', () => {
-    expect(() => new DisplayEngine(showme, outputHandler, null))
+    expect(() => new DisplayEngine(outputHandler, null))
       .toThrow('ResourceManager is required');
   });
 

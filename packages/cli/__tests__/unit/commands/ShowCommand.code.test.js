@@ -46,16 +46,28 @@ console.log(result);
       render: async (handle, options) => {
         // Extract Handle data - mimics real DisplayEngine.renderBrowser()
         let assetData;
+        let title = options.title || 'Handle';
+
         if (typeof handle.getData === 'function') {
           try {
-            // getData() returns string directly for CodeHandle
+            // getData() returns data object for TextFileHandle
             assetData = await handle.getData();
           } catch (error) {
             console.error('Error calling getData():', error);
-            assetData = handle.codeData?.data || handle.data;
+            assetData = handle.data;
           }
         } else {
-          assetData = handle.codeData?.data || handle.data;
+          assetData = handle.data;
+        }
+
+        // Get title from metadata if not provided in options
+        if (!options.title && typeof handle.getMetadata === 'function') {
+          try {
+            const metadata = await handle.getMetadata();
+            title = metadata.title || 'Handle';
+          } catch (error) {
+            console.error('Error getting metadata:', error);
+          }
         }
 
         return {
@@ -64,7 +76,7 @@ console.log(result);
           rendered: 'browser',
           handle: handle,
           assetData: assetData,
-          title: options.title || handle.codeData?.title || handle.title || 'Handle',
+          title: title,
           assetType: handle.resourceType || handle.type || 'unknown'
         };
       }
@@ -95,12 +107,11 @@ console.log(result);
     expect(result.rendered).toBe('browser');
     expect(result.assetData).toBeDefined();
 
-    // assetData IS the code string directly (not an object)
-    const codeData = result.assetData;
-    expect(typeof codeData).toBe('string');
-    expect(codeData).toContain('function greet');
-    expect(codeData).toContain('Hello, ');
-    expect(codeData).toContain('export { greet }');
+    // assetData is now an object with {content, language, filePath, lineCount, viewerType}
+    expect(typeof result.assetData).toBe('object');
+    expect(result.assetData.content).toContain('function greet');
+    expect(result.assetData.content).toContain('Hello, ');
+    expect(result.assetData.content).toContain('export { greet }');
   });
 
   test('should detect JavaScript language from extension', async () => {
@@ -108,7 +119,10 @@ console.log(result);
 
     expect(result.success).toBe(true);
     expect(result.handle.resourceType).toBe('code');
-    expect(result.handle.codeData.language).toBe('javascript');
+
+    // Get language via async method
+    const language = await result.handle.getLanguage();
+    expect(language).toBe('javascript');
   });
 
   test('should handle different JavaScript extensions', async () => {
@@ -122,7 +136,10 @@ console.log(result);
 
       expect(result.success).toBe(true);
       expect(result.handle.resourceType).toBe('code');
-      expect(result.handle.codeData.language).toBe('javascript');
+
+      // Get language via async method
+      const language = await result.handle.getLanguage();
+      expect(language).toBe('javascript');
       expect(result.assetType).toBe('code');
 
       await fs.unlink(testPath);
@@ -150,8 +167,11 @@ console.log(user);
 
     expect(result.success).toBe(true);
     expect(result.handle.resourceType).toBe('code');
-    expect(result.handle.codeData.language).toBe('typescript');
-    expect(result.assetData).toContain('interface User');
+
+    // Get language via async method
+    const language = await result.handle.getLanguage();
+    expect(language).toBe('typescript');
+    expect(result.assetData.content).toContain('interface User');
 
     await fs.unlink(tsPath);
   });
@@ -181,7 +201,9 @@ console.log(user);
   test('should count line numbers correctly', async () => {
     const result = await showCommand.execute([`file://${testCodePath}`]);
 
-    expect(result.handle.codeData.lineCount).toBe(testJavaScript.split('\n').length);
+    // Get metadata via async method
+    const metadata = await result.handle.getMetadata();
+    expect(metadata.lineCount).toBe(testJavaScript.split('\n').length);
   });
 
   test('should handle Python files', async () => {
@@ -202,8 +224,11 @@ if __name__ == "__main__":
 
     expect(result.success).toBe(true);
     expect(result.handle.resourceType).toBe('code');
-    expect(result.handle.codeData.language).toBe('python');
-    expect(result.assetData).toContain('def greet');
+
+    // Get language via async method
+    const language = await result.handle.getLanguage();
+    expect(language).toBe('python');
+    expect(result.assetData.content).toContain('def greet');
 
     await fs.unlink(pyPath);
   });

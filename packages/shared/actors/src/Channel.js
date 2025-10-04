@@ -29,6 +29,10 @@ export class Channel {
         this.endpoint = endpoint;
         this.spaceActor = spaceActor;
 
+        // Message chunking support for large messages
+        this.chunkBuffers = new Map(); // Stores incomplete chunked messages: messageId -> {chunks: [], totalChunks: N}
+        this.CHUNK_SIZE = 200 * 1024;  // 200KB chunks (safe for all WebSocket implementations)
+
         // Attach handlers to the underlying endpoint
         this.endpoint.onmessage = this._handleEndpointMessage.bind(this);
         this.endpoint.onerror = this._handleEndpointError.bind(this);
@@ -89,9 +93,14 @@ export class Channel {
         console.log("CHANNEL SEND: target=", targetGuid, "type=", msgType, "source=", sourceGuid || 'none', "bytes=", encodedData.length);
 
         try {
-            // TODO: Check endpoint readyState before sending?
-            // The underlying endpoint (e.g. WebSocket) might handle this.
-            this.endpoint.send(encodedData);
+            // Check if message needs chunking
+            if (encodedData.length > this.CHUNK_SIZE) {
+                console.log(`[CHUNK] Message too large (${encodedData.length} bytes), splitting into chunks`);
+                this._sendChunked(encodedData);
+            } else {
+                // Send normally for small messages
+                this.endpoint.send(encodedData);
+            }
         } catch (error) {
             console.log(`Channel ${this.channelId}: Error sending data:`, error);
             // Optionally notify ActorSpace or attempt to close
@@ -115,6 +124,30 @@ export class Channel {
         // console.log(`Channel ${this.channelId}: Received raw message:`, event.data);
         try {
             const input = event.data;
+
+            // Try to parse as JSON to check if it's a chunk
+            let parsedInput;
+            try {
+                parsedInput = JSON.parse(input);
+            } catch (e) {
+                // Not JSON, treat as regular message
+                parsedInput = null;
+            }
+
+            // Check if this is a chunked message
+            if (parsedInput && parsedInput.isChunk) {
+                console.log(`[CHUNK] Received chunk ${parsedInput.chunkIndex + 1}/${parsedInput.totalChunks} (${input.length} bytes)`);
+                const reassembledData = this._handleChunk(parsedInput);
+                if (reassembledData) {
+                    // All chunks received, process the complete message
+                    const decodedMessage = this.actorSpace.decode(reassembledData, this);
+                    const msgType = Array.isArray(decodedMessage.payload) ? decodedMessage.payload[0] : 'unknown';
+                    console.log("CHANNEL RECEIVE: target=", decodedMessage.targetGuid, "type=", msgType, "bytes=", reassembledData.length, "(reassembled from chunks)");
+                    this.actorSpace.handleIncomingMessage(decodedMessage, this);
+                }
+                return; // Don't process chunk as normal message
+            }
+
             // Decode using the ActorSpace's decoder, passing this channel as context
             const decodedMessage = this.actorSpace.decode(event.data, this);
             const msgType = Array.isArray(decodedMessage.payload) ? decodedMessage.payload[0] : 'unknown';
@@ -155,6 +188,66 @@ export class Channel {
         if (this.spaceActor && typeof this.spaceActor.receive === 'function') {
             this.spaceActor.receive('channel_connected', { channel: this });
         }
+    }
+
+    /**
+     * Splits large message into chunks and sends them sequentially
+     * @param {string} data - The encoded message data to chunk
+     */
+    _sendChunked(data) {
+        const messageId = generateGuid();
+        const totalChunks = Math.ceil(data.length / this.CHUNK_SIZE);
+
+        for (let i = 0; i < totalChunks; i++) {
+            const start = i * this.CHUNK_SIZE;
+            const end = Math.min(start + this.CHUNK_SIZE, data.length);
+            const chunkData = data.substring(start, end);
+
+            const chunk = {
+                isChunk: true,
+                messageId,
+                chunkIndex: i,
+                totalChunks,
+                data: chunkData
+            };
+
+            const chunkStr = JSON.stringify(chunk);
+            console.log(`[CHUNK] Sending chunk ${i + 1}/${totalChunks} (${chunkStr.length} bytes)`);
+            this.endpoint.send(chunkStr);
+        }
+    }
+
+    /**
+     * Handles incoming chunk and reassembles message when complete
+     * @param {object} chunk - The chunk object {messageId, chunkIndex, totalChunks, data}
+     * @returns {string|null} - The reassembled message if complete, null otherwise
+     */
+    _handleChunk(chunk) {
+        const { messageId, chunkIndex, totalChunks, data } = chunk;
+
+        // Initialize buffer for this message if needed
+        if (!this.chunkBuffers.has(messageId)) {
+            this.chunkBuffers.set(messageId, {
+                chunks: new Array(totalChunks),
+                receivedCount: 0
+            });
+        }
+
+        const buffer = this.chunkBuffers.get(messageId);
+
+        // Store chunk
+        buffer.chunks[chunkIndex] = data;
+        buffer.receivedCount++;
+
+        // Check if all chunks received
+        if (buffer.receivedCount === totalChunks) {
+            console.log(`[CHUNK] All ${totalChunks} chunks received for message ${messageId}, reassembling...`);
+            const reassembled = buffer.chunks.join('');
+            this.chunkBuffers.delete(messageId); // Clean up
+            return reassembled;
+        }
+
+        return null; // Not complete yet
     }
 }
 

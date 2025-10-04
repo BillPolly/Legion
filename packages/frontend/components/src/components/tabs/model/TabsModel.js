@@ -4,7 +4,7 @@
  * Handles tab data, selection state, validation, and provides controlled
  * access to tab operations. Maintains immutable state patterns.
  */
-import { UmbilicalError } from '../../../umbilical/index.js';
+import { UmbilicalError } from '@legion/components';
 
 export class TabsModel {
   constructor(initialTabs = [], config = {}) {

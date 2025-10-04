@@ -15,24 +15,32 @@ export class CodeHandle extends Handle {
    * @param {string} codeData.id - Code identifier
    * @param {string} codeData.title - Code title (usually filename)
    * @param {string} codeData.language - Programming language (javascript, python, etc.)
-   * @param {string} codeData.data - Code content as string
+   * @param {string} codeData.content - Code content as string
+   * @param {string} codeData.data - Code content as string (alias for content)
    * @param {number} [codeData.lineCount] - Number of lines in code
+   * @param {string} [codeData.viewerType='code'] - Viewer type: 'code', 'markup', or 'style'
+   * @param {string} [codeData.filePath] - Original file path for saving
    */
   constructor(codeData) {
+    // Support both 'content' and 'data' field names
+    const content = codeData.content || codeData.data;
+    const viewerType = codeData.viewerType || 'code';
+
     // Create a simple DataSource that serves this code's data
     const dataSource = {
       // Query returns the code data
       query: (querySpec) => {
         if (querySpec?.read) {
           // Return code data for read operations
-          return Promise.resolve([codeData.data]);
+          return Promise.resolve([content]);
         }
         // Return metadata for other queries
         return Promise.resolve([{
           id: codeData.id,
           title: codeData.title,
           language: codeData.language,
-          lineCount: codeData.lineCount
+          lineCount: codeData.lineCount,
+          filePath: codeData.filePath
         }]);
       },
 
@@ -46,15 +54,16 @@ export class CodeHandle extends Handle {
         throw new Error('CodeHandle does not support queryBuilder');
       },
 
-      // Schema describes the code structure
+      // Schema describes the code structure with dynamic type
       getSchema: () => ({
-        type: 'code',
+        type: viewerType,  // Dynamic: 'code', 'markup', or 'style'
         properties: {
           id: { type: 'string' },
           title: { type: 'string' },
           language: { type: 'string' },
-          data: { type: 'string' },
-          lineCount: { type: 'number' }
+          content: { type: 'string' },
+          lineCount: { type: 'number' },
+          filePath: { type: 'string' }
         }
       })
     };
@@ -63,19 +72,28 @@ export class CodeHandle extends Handle {
     super(dataSource);
 
     // Store code information
-    this.codeData = codeData;
+    this.codeData = {
+      ...codeData,
+      content: content,  // Normalize to 'content' field
+      viewerType: viewerType
+    };
     this._handleType = 'CodeHandle';
   }
 
   /**
-   * Get code data asynchronously
+   * Get code content asynchronously
    * This method will be callable on RemoteHandle via Proxy
-   * @returns {Promise<string>} Code content as string
+   * @returns {Promise<Object>} Code data object with content, language, filePath
    */
   async getData() {
     // On server: return data directly
     // On client (RemoteHandle): this call is proxied via _callRemote()
-    return this.codeData.data;
+    return {
+      content: this.codeData.content,
+      language: this.codeData.language,
+      filePath: this.codeData.filePath,
+      lineCount: this.codeData.lineCount
+    };
   }
 
   /**

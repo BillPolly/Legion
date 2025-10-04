@@ -36,25 +36,25 @@ describe('CLI End-to-End Integration Test', () => {
     // Initialize - sets up all components
     await cli.initialize();
     expect(cli.isInitialized).toBe(true);
-    expect(cli.showme).toBeDefined();
-    expect(cli.displayEngine).toBeDefined();
-    expect(cli.commandProcessor).toBeDefined();
+    expect(cli.sessionActor).toBeDefined();
     expect(cli.inputHandler).toBeDefined();
     expect(cli.outputHandler).toBeDefined();
-
-    // Verify DisplayEngine is ShowMe (no duplication)
-    expect(cli.displayEngine).toBe(cli.showme);
 
     // Start CLI
     await cli.start();
     expect(cli.isRunning).toBe(true);
 
-    // Mock browser for testing
-    cli.showme.server.launchBrowser = async () => { return; };
-    cli.showme._waitForConnection = async () => { return; };
-    cli.showme.getServerActor = () => ({
-      handleDisplayAsset: async () => { return; }
-    });
+    // Mock remoteActor for browser display
+    const displayedAssets = [];
+    const mockRemoteActor = {
+      receive: (messageType, data) => {
+        if (messageType === 'display-asset') {
+          displayedAssets.push(data);
+        }
+        return { success: true };
+      }
+    };
+    cli.sessionActor.remoteActor = mockRemoteActor;
 
     // Create test Handle
     const imageHandle = new ImageHandle({
@@ -71,20 +71,18 @@ describe('CLI End-to-End Integration Test', () => {
     resourceManager.createHandleFromURI = async (uri) => imageHandle;
 
     try {
-      // Execute /show command directly via commandProcessor
-      const result = await cli.commandProcessor.execute('/show legion://test/image');
+      // Execute /show command directly via sessionActor
+      const result = await cli.sessionActor.receive('execute-command', { command: '/show legion://test/image' });
       expect(result.success).toBe(true);
 
-      // Verify window was created
-      const windows = cli.showme.getWindows();
-      expect(windows.length).toBe(1);
-      expect(windows[0].isOpen).toBe(true);
+      // Verify display-asset was sent
+      expect(displayedAssets.length).toBe(1);
+      expect(displayedAssets[0].assetData).toBeDefined();
 
-      // Test invalid command error handling - processInput catches and logs, doesn't throw
-      // So we test the commandProcessor directly
-      await expect(
-        cli.commandProcessor.execute('/nonexistent command')
-      ).rejects.toThrow('Unknown command');
+      // Test invalid command error handling
+      const errorResult = await cli.sessionActor.receive('execute-command', { command: '/nonexistent command' });
+      expect(errorResult.success).toBe(false);
+      expect(errorResult.error).toContain('Unknown command');
 
     } finally {
       resourceManager.createHandleFromURI = originalCreate;
@@ -93,7 +91,6 @@ describe('CLI End-to-End Integration Test', () => {
     // Shutdown
     await cli.shutdown();
     expect(cli.isRunning).toBe(false);
-    expect(cli.showme.isRunning).toBe(false);
 
   }, 20000);
 
@@ -104,12 +101,17 @@ describe('CLI End-to-End Integration Test', () => {
     await cli.initialize();
     await cli.start();
 
-    // Mock browser
-    cli.showme.server.launchBrowser = async () => { return; };
-    cli.showme._waitForConnection = async () => { return; };
-    cli.showme.getServerActor = () => ({
-      handleDisplayAsset: async () => { return; }
-    });
+    // Mock remoteActor for browser display
+    const displayedAssets = [];
+    const mockRemoteActor = {
+      receive: (messageType, data) => {
+        if (messageType === 'display-asset') {
+          displayedAssets.push(data);
+        }
+        return { success: true };
+      }
+    };
+    cli.sessionActor.remoteActor = mockRemoteActor;
 
     // Create multiple test Handles
     const handle1 = new ImageHandle({
@@ -140,18 +142,17 @@ describe('CLI End-to-End Integration Test', () => {
 
     try {
       // Execute first command
-      const result1 = await cli.commandProcessor.execute('/show legion://test/image1');
+      const result1 = await cli.sessionActor.receive('execute-command', { command: '/show legion://test/image1' });
       expect(result1.success).toBe(true);
 
       // Execute second command
-      const result2 = await cli.commandProcessor.execute('/show legion://test/image2');
+      const result2 = await cli.sessionActor.receive('execute-command', { command: '/show legion://test/image2' });
       expect(result2.success).toBe(true);
 
-      // Verify both windows created
-      const windows = cli.showme.getWindows();
-      expect(windows.length).toBe(2);
-      expect(windows[0].isOpen).toBe(true);
-      expect(windows[1].isOpen).toBe(true);
+      // Verify both assets were displayed
+      expect(displayedAssets.length).toBe(2);
+      expect(displayedAssets[0].assetData).toBeDefined();
+      expect(displayedAssets[1].assetData).toBeDefined();
 
     } finally {
       resourceManager.createHandleFromURI = originalCreate;
@@ -166,15 +167,15 @@ describe('CLI End-to-End Integration Test', () => {
     await cli.initialize();
     await cli.start();
 
-    // Test error handling with invalid command - commandProcessor throws
-    await expect(
-      cli.commandProcessor.execute('/invalid')
-    ).rejects.toThrow('Unknown command');
+    // Test error handling with invalid command
+    const invalidResult = await cli.sessionActor.receive('execute-command', { command: '/invalid' });
+    expect(invalidResult.success).toBe(false);
+    expect(invalidResult.error).toContain('Unknown command');
 
     // Test error handling with invalid arguments
-    await expect(
-      cli.commandProcessor.execute('/show')
-    ).rejects.toThrow('URI is required');
+    const showResult = await cli.sessionActor.receive('execute-command', { command: '/show' });
+    expect(showResult.success).toBe(false);
+    expect(showResult.error).toContain('URI is required');
 
     // CLI should still be operational
     expect(cli.isRunning).toBe(true);
@@ -197,9 +198,7 @@ describe('CLI End-to-End Integration Test', () => {
     status = cli.getStatus();
     expect(status.initialized).toBe(true);
     expect(status.running).toBe(false);
-    expect(status.hasShowMe).toBe(true);
-    expect(status.hasDisplayEngine).toBe(true);
-    expect(status.hasCommandProcessor).toBe(true);
+    expect(status.hasSessionActor).toBe(true);
     expect(status.hasInputHandler).toBe(true);
     expect(status.hasOutputHandler).toBe(true);
 

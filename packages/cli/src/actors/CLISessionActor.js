@@ -21,12 +21,8 @@ export class CLISessionActor extends Actor {
     super();
 
     // Required services
-    this.showme = services.showme;
     this.resourceManager = services.resourceManager;
 
-    if (!this.showme) {
-      throw new Error('ShowMeController is required');
-    }
     if (!this.resourceManager) {
       throw new Error('ResourceManager is required');
     }
@@ -50,10 +46,10 @@ export class CLISessionActor extends Actor {
     });
 
     this.displayEngine = new DisplayEngine(
-      this.showme,
       this.outputHandler,
       this.resourceManager
     );
+    this.displayEngine.setSessionActor(this);
 
     this.commandProcessor = new CommandProcessor();
 
@@ -71,14 +67,11 @@ export class CLISessionActor extends Actor {
     const showCommand = new ShowCommand(this.displayEngine, this.resourceManager, this);
     this.commandProcessor.register(showCommand);
 
+    const listCommand = new ListCommand(this);
+    this.commandProcessor.register(listCommand);
+
     const helpCommand = new HelpCommand(this.commandProcessor);
     this.commandProcessor.register(helpCommand);
-
-    const windowsCommand = new WindowsCommand(this.showme, this.outputHandler);
-    this.commandProcessor.register(windowsCommand);
-
-    const listCommand = new ListCommand(this, this.showme);
-    this.commandProcessor.register(listCommand);
   }
 
   /**
@@ -169,9 +162,7 @@ export class CLISessionActor extends Actor {
     // Restore remote actor
     this.remoteActor = tempRemote;
 
-    // Check how many windows exist
-    const windows = this.showme.getWindows();
-    console.log(`[LoadSampleImages] Total windows after loading: ${windows.length}`);
+    console.log(`[LoadSampleImages] Loaded ${sampleImages.length} sample images`);
 
     // Send notification to client
     if (this.remoteActor) {
@@ -245,7 +236,7 @@ export class CLISessionActor extends Actor {
         // If result has browser rendering with asset data, send to client for display
         if (result.rendered === 'browser' && result.assetData && this.remoteActor) {
           this.remoteActor.receive('display-asset', {
-            asset: result.assetData,
+            assetData: result.assetData,  // Changed from 'asset' to match ImageViewer expectations
             title: result.title || 'Asset',
             assetType: result.assetType || 'unknown'
           });
@@ -260,10 +251,9 @@ export class CLISessionActor extends Actor {
           });
         }
 
+        // Flatten result to top level (preserve window, handle, etc.)
         return {
-          success: true,
-          result,
-          message: result.message || null,
+          ...result,
           sessionId: this.sessionId
         };
       } else {
@@ -318,7 +308,6 @@ export class CLISessionActor extends Actor {
       success: true,
       status: {
         sessionId: this.sessionId,
-        showme: this.showme.getStatus(),
         commandsRegistered: this.commandProcessor.getCommandNames(),
         historyLength: this.commandHistory.length
       }
@@ -329,7 +318,7 @@ export class CLISessionActor extends Actor {
    * Handle list-windows message
    */
   handleListWindows() {
-    const windows = this.showme.getWindows();
+    const windows = [];
 
     return {
       success: true,
@@ -385,7 +374,7 @@ export class CLISessionActor extends Actor {
         {
           name: 'get-status',
           description: 'Get current session status',
-          returns: 'Object with sessionId, showme status, commands, history'
+          returns: 'Object with sessionId, commands, history'
         },
         {
           name: 'list-windows',
@@ -410,9 +399,7 @@ export class CLISessionActor extends Actor {
    * Clean up session resources
    */
   async cleanup() {
-    // Close any open windows
-    const windows = this.showme.getWindows();
-    await Promise.all(windows.map(w => w.close()));
+    // Clean up session resources
 
     // Complete Claude task if exists and is still in progress
     if (this.claudeTask && this.claudeTask.status === 'in-progress') {

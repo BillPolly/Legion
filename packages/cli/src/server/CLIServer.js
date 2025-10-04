@@ -11,7 +11,6 @@
  */
 
 import { ConfigurableActorServer } from '@legion/server-framework';
-import { ShowMeController } from '@legion/showme';
 import { ResourceManager } from '@legion/resource-manager';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -29,9 +28,11 @@ export class CLIServer extends ConfigurableActorServer {
           path: '/cli',
           serverActor: '../actors/CLISessionActor.js',
           clientActor: '../../apps/cli-ui/src/client/BrowserCLIClientActor.js',
-          services: ['showme', 'resourceManager'], // Services required by CLISessionActor
+          services: ['resourceManager'], // Services required by CLISessionActor
           importMap: {
-            '@cli-ui/': '/src/'
+            '@cli-ui/': '/src/',
+            '@legion/components': '/legion/components',
+            '@legion/components/': '/legion/components/'
           }
         }
       ],
@@ -45,10 +46,6 @@ export class CLIServer extends ConfigurableActorServer {
 
     this.isRunning = false;
 
-    // ShowMe controller for all sessions
-    this.showme = null;
-    this.showmePort = config.showmePort || 3700;
-
     // Resource manager
     this.resourceManager = null;
   }
@@ -60,16 +57,7 @@ export class CLIServer extends ConfigurableActorServer {
     // Initialize parent FIRST - this sets up resourceManager and monorepoRoot
     await super.initialize();
 
-    // Create ShowMeController - shared by all CLI sessions
-    this.showme = new ShowMeController({ port: this.showmePort });
-    await this.showme.initialize();
-    await this.showme.start();
-
-    // Add showme to services Map (resourceManager already added by super.initialize())
-    this.services.set('showme', this.showme);
-
     console.log(`CLIServer initialized on port ${this.config.port}`);
-    console.log(`ShowMe running on port ${this.showmePort}`);
   }
 
   /**
@@ -101,11 +89,6 @@ export class CLIServer extends ConfigurableActorServer {
     if (this.isRunning) {
       await super.stop();
       this.isRunning = false;
-
-      // Stop ShowMe
-      if (this.showme && this.showme.isRunning) {
-        await this.showme.stop();
-      }
 
       console.log('CLIServer stopped');
     }
@@ -163,7 +146,6 @@ export class CLIServer extends ConfigurableActorServer {
       running: this.isRunning,
       port: this.config.port,
       url: this.isRunning ? `http://localhost:${this.config.port}` : null,
-      showme: this.showme ? this.showme.getStatus() : null,
       activeSessions: this.actorManagers.get(this.config.port)?.connections.size || 0
     };
   }

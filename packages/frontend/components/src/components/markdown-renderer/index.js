@@ -3,7 +3,7 @@
  * Follows Legion umbilical protocol for maximum reusability
  */
 
-import { UmbilicalUtils, UmbilicalError } from '../../umbilical/index.js';
+import { UmbilicalUtils, UmbilicalError } from '@legion/components';
 import { MarkdownModel } from './model/MarkdownModel.js';
 import { MarkdownView } from './view/MarkdownView.js';
 import { MarkdownViewModel } from './viewmodel/MarkdownViewModel.js';

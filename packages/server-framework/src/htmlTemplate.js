@@ -67,6 +67,8 @@ export function generateHTML(options) {
     "@legion/actors/": "/legion/actors/src/",
     "@legion/components": "/legion/components/src/index.js",
     "@legion/components/": "/legion/components/src/",
+    "@legion/handle/remote": "/legion/handle/src/remote/RemoteHandle.js",
+    "@legion/handle/": "/legion/handle/src/",
     ...(options.importMap || {})
   };
 
@@ -123,7 +125,11 @@ export function generateHTML(options) {
   <script type="module">
     // Import the client actor (must export as default)
     import ClientActor from '${vars.clientActorPath}';
-    import { ActorSpace } from '@legion/actors';
+    import { ActorSpace, ActorSerializer } from '@legion/actors';
+    import { RemoteHandle } from '@legion/handle/remote';
+
+    // Register RemoteHandle class globally for ActorSerializer
+    ActorSerializer.registerRemoteHandle(RemoteHandle);
 
     // Connection status indicator
     function updateConnectionStatus(status) {

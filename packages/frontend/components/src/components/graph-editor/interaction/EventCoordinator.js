@@ -11,17 +11,24 @@ export class EventCoordinator {
     this.view = view;
     this.viewModel = viewModel;
     this.stateMachine = new InteractionStateMachine();
-    
+
     // Tool registry
     this.tools = new Map();
     this.activeTool = null;
-    
+
     // Event listeners
     this.listeners = {
       interaction: [],
       toolChange: []
     };
-    
+
+    // Pan state (for middle-button or space+drag pan)
+    this.panState = {
+      active: false,
+      startPosition: null,
+      startViewportPan: null
+    };
+
     // Setup view event listeners
     this._setupEventListeners();
   }
@@ -129,12 +136,31 @@ export class EventCoordinator {
   _handleViewEvent(event) {
     // Find what element is under the cursor
     const hitResult = this._performHitTest(event.screenPosition);
-    
+
+    // Check for background drag pan (dragging on empty space or SVG background)
+    const isBackground = !hitResult || (hitResult && hitResult.type === 'background');
+    if (event.type === 'mousedown' && isBackground && event.button === 0) {
+      this._startPan(event);
+      return; // Don't process as normal interaction
+    }
+
+    // Handle pan drag
+    if (event.type === 'mousemove' && this.panState.active) {
+      this._updatePan(event);
+      return; // Don't process as normal interaction
+    }
+
+    // Handle pan end
+    if (event.type === 'mouseup' && this.panState.active) {
+      this._endPan();
+      return; // Don't process as normal interaction
+    }
+
     // Update hover state for mousemove events
     if (event.type === 'mousemove') {
       this._updateHoverState(hitResult);
     }
-    
+
     // Update state machine based on event type
     switch (event.type) {
       case 'mousedown':
@@ -145,44 +171,116 @@ export class EventCoordinator {
           event.modifiers
         );
         break;
-        
+
       case 'mousemove':
         this.stateMachine.handleMouseMove(event.position);
         break;
-        
+
       case 'mouseup':
         this.stateMachine.handleMouseUp(event.position);
         break;
-        
+
       case 'touchstart':
         this.stateMachine.handleTouchStart(
           event.position,
           hitResult ? hitResult.element : null
         );
         break;
-        
+
       case 'touchmove':
         this.stateMachine.handleTouchMove(event.position);
         break;
-        
+
       case 'touchend':
         this.stateMachine.handleTouchEnd(event.position);
         break;
-        
+
       case 'wheel':
         // Wheel events don't need state machine processing
+        // Handle zoom directly
+        this._handleWheelZoom(event);
         break;
     }
-    
+
     // Create interaction event
     const interaction = this._createInteractionEvent(event, hitResult);
-    
+
     // Notify listeners
     this._notifyInteraction(interaction);
-    
+
     // Let active tool handle the interaction
     if (this.activeTool) {
       this.activeTool.handleInteraction(interaction);
+    }
+  }
+
+  /**
+   * Start panning
+   * @private
+   */
+  _startPan(event) {
+    const viewport = this.view.getViewport();
+    if (!viewport) return;
+
+    this.panState.active = true;
+    this.panState.startPosition = { ...event.screenPosition };
+    this.panState.startViewportPan = viewport.getPan();
+
+    // Change cursor to indicate panning
+    this.view.setCursor('grabbing');
+  }
+
+  /**
+   * Update pan position
+   * @private
+   */
+  _updatePan(event) {
+    const viewport = this.view.getViewport();
+    if (!viewport || !this.panState.active) return;
+
+    // Calculate delta from start position
+    const dx = event.screenPosition.x - this.panState.startPosition.x;
+    const dy = event.screenPosition.y - this.panState.startPosition.y;
+
+    // Update viewport pan
+    viewport.setPan(
+      this.panState.startViewportPan.x + dx,
+      this.panState.startViewportPan.y + dy
+    );
+
+    this.view.requestRender();
+  }
+
+  /**
+   * End panning
+   * @private
+   */
+  _endPan() {
+    this.panState.active = false;
+    this.panState.startPosition = null;
+    this.panState.startViewportPan = null;
+
+    // Restore cursor
+    this.view.setCursor('default');
+  }
+
+  /**
+   * Handle wheel zoom
+   * @private
+   */
+  _handleWheelZoom(event) {
+    const viewport = this.view.getViewport();
+    if (!viewport) return;
+
+    // Calculate zoom factor from wheel delta
+    // Negative deltaY = zoom in, positive = zoom out
+    const zoomFactor = event.deltaY < 0 ? 1.1 : 0.9;
+
+    // Zoom at mouse position
+    const applied = viewport.zoom(zoomFactor, event.screenPosition);
+
+    if (applied) {
+      this.view.requestRender();
     }
   }
 

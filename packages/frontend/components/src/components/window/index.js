@@ -1,4 +1,4 @@
-import { UmbilicalUtils, UmbilicalError } from '/legion/components/src/umbilical/index.js';
+import { UmbilicalUtils, UmbilicalError } from '@legion/components/index.js';
 
 /**
  * Window Component

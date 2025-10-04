@@ -6,6 +6,7 @@
  */
 
 import { Terminal } from '@cli-ui/components/Terminal.js';
+import { WindowZIndexManager } from '@cli-ui/utils/WindowZIndexManager.js';
 
 export class CLIWindow {
   constructor(config = {}) {
@@ -38,6 +39,7 @@ export class CLIWindow {
     this.windowElement = this.createWindow();
     this.setupDragging();
     this.setupResizing();
+    this.setupClickHandler();
 
     return this.windowElement;
   }
@@ -180,6 +182,16 @@ export class CLIWindow {
   }
 
   /**
+   * Setup click handler to bring window to front
+   */
+  setupClickHandler() {
+    this.windowElement.addEventListener('mousedown', (e) => {
+      // Bring window to front on any click
+      WindowZIndexManager.bringToFront(this.windowElement);
+    });
+  }
+
+  /**
    * Setup dragging functionality
    */
   setupDragging() {
@@ -194,9 +206,6 @@ export class CLIWindow {
       this.isDragging = true;
       this.dragStartX = e.clientX - this.config.x;
       this.dragStartY = e.clientY - this.config.y;
-
-      // Bring to front
-      this.windowElement.style.zIndex = '1001';
     });
 
     document.addEventListener('mousemove', (e) => {
@@ -212,7 +221,6 @@ export class CLIWindow {
     document.addEventListener('mouseup', () => {
       if (this.isDragging) {
         this.isDragging = false;
-        this.windowElement.style.zIndex = '1000';
       }
     });
   }
@@ -230,9 +238,6 @@ export class CLIWindow {
       this.resizeStartY = e.clientY;
       this.resizeStartWidth = this.config.width;
       this.resizeStartHeight = this.config.height;
-
-      // Bring to front
-      this.windowElement.style.zIndex = '1001';
     });
 
     document.addEventListener('mousemove', (e) => {
@@ -252,7 +257,6 @@ export class CLIWindow {
     document.addEventListener('mouseup', () => {
       if (this.isResizing) {
         this.isResizing = false;
-        this.windowElement.style.zIndex = '1000';
       }
     });
   }
