@@ -31,7 +31,7 @@ export class CodeGenerator {
   /**
    * Generate a component definition from AST
    * @param {Object} ast - Abstract syntax tree
-   * @returns {Object} Component definition with structure, bindings, and events
+   * @returns {Object} Component definition with structure, bindings, events, methods, and computed
    */
   generate(ast) {
     if (ast.type !== 'Component') {
@@ -40,21 +40,42 @@ export class CodeGenerator {
 
     // Reset element counter for each component
     this.elementCounter = 0;
-    
+
     // Generate component definition
     const componentDef = {
       name: ast.name,
       entity: ast.entityParam,
       structure: {},
       bindings: [],
-      events: []
+      events: [],
+      methods: {},
+      computed: {}
     };
-    
+
+    // Process methods if present
+    if (ast.methods && ast.methods.length > 0) {
+      for (const method of ast.methods) {
+        componentDef.methods[method.name] = {
+          params: method.params,
+          body: method.body
+        };
+      }
+    }
+
+    // Process computed properties if present
+    if (ast.computed && ast.computed.length > 0) {
+      for (const prop of ast.computed) {
+        componentDef.computed[prop.name] = {
+          body: prop.body
+        };
+      }
+    }
+
     // Process the body to extract structure, bindings, and events
     if (ast.body) {
       this.processNode(ast.body, componentDef, 'root', ast.entityParam, null);
     }
-    
+
     return componentDef;
   }
   
@@ -121,6 +142,20 @@ export class CodeGenerator {
           if (node.content.object && node.content.object.name === entityParam) {
             componentDef.bindings.push({
               source: `${entityParam}.${node.content.property}`,
+              target: `${elementKey}.textContent`,
+              transform: 'identity'
+            });
+          } else if (node.content.object && node.content.object.name === 'computed') {
+            // Computed property reference
+            componentDef.bindings.push({
+              source: `computed.${node.content.property}`,
+              target: `${elementKey}.textContent`,
+              transform: 'identity'
+            });
+          } else if (node.content.object && node.content.object.name === 'helpers') {
+            // Helper function reference (for simple property-like helpers)
+            componentDef.bindings.push({
+              source: `helpers.${node.content.property}`,
               target: `${elementKey}.textContent`,
               transform: 'identity'
             });

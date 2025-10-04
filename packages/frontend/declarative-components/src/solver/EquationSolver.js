@@ -6,14 +6,49 @@
  */
 
 export class EquationSolver {
-  constructor(dataStore) {
+  constructor(dataStore, options = {}) {
     if (!dataStore) {
       throw new Error('DataStore is required');
     }
-    
+
     this.dataStore = dataStore;
     this.subscriptions = new Map(); // property -> callback
     this.elements = new Map(); // elementKey -> HTMLElement
+    this.methods = new Map(); // methodName -> function
+    this.computed = new Map(); // propertyName -> function
+    this.computedCache = new Map(); // propertyName -> cached value
+    this.computedDependencies = new Map(); // propertyName -> array of dependencies
+    this.helpers = options.helpers || {}; // Global helper functions
+    this.entityParam = options.entityParam; // Store entity parameter name for subscriptions
+
+    // Create a computed proxy for accessing computed values
+    this.computedProxy = new Proxy({}, {
+      get: (target, prop) => {
+        return this.getComputedValue(String(prop));
+      }
+    });
+
+    // Create a helpers proxy for validating helper function access
+    this.helpersProxy = new Proxy({}, {
+      get: (target, prop) => {
+        if (typeof prop === 'symbol') return undefined;
+        const propName = String(prop);
+        if (!this.helpers[propName]) {
+          throw new Error(`Helper function "${propName}" is not defined`);
+        }
+        return this.helpers[propName];
+      }
+    });
+
+    // Initialize methods
+    if (options.methods) {
+      this.initializeMethods(options.methods, options.entityParam);
+    }
+
+    // Initialize computed properties
+    if (options.computed) {
+      this.initializeComputed(options.computed, options.entityParam);
+    }
   }
 
   /**
@@ -94,11 +129,7 @@ export class EquationSolver {
       }
       
       // Execute action
-      try {
-        this.executeAction(action);
-      } catch (error) {
-        throw new Error('Failed to execute action');
-      }
+      this.executeAction(action);
     };
     
     element.addEventListener(eventType, eventHandler);
@@ -128,10 +159,130 @@ export class EquationSolver {
         this.dataStore.off(property, callback);
       }
     });
-    
+
     // Clear all internal state
     this.subscriptions.clear();
     this.elements.clear();
+    this.methods.clear();
+    this.computed.clear();
+    this.computedCache.clear();
+  }
+
+  /**
+   * Initialize component methods
+   * Creates executable functions from method definitions
+   */
+  initializeMethods(methodsConfig, entityParam) {
+    // Create a proxy for the entity that intercepts property access
+    const entityProxy = new Proxy({}, {
+      get: (target, prop) => {
+        return this.getNestedProperty(`${entityParam}.${String(prop)}`);
+      },
+      set: (target, prop, value) => {
+        this.setNestedProperty(`${entityParam}.${String(prop)}`, value);
+        return true;
+      }
+    });
+
+    for (const [methodName, methodDef] of Object.entries(methodsConfig)) {
+      try {
+        // Create context object with state access
+        const functionBody = `
+          const helpers = this.helpersProxy;
+          const computed = this.computedProxy;
+          ${methodDef.body}
+        `;
+
+        // Create function with proper context and bind with entity proxy
+        const method = new Function(entityParam, ...methodDef.params, functionBody).bind(this, entityProxy);
+        this.methods.set(methodName, method);
+      } catch (error) {
+        console.error(`Failed to create method "${methodName}":`, error);
+        throw new Error(`Invalid method definition for "${methodName}": ${error.message}`);
+      }
+    }
+  }
+
+  /**
+   * Initialize computed properties
+   * Creates reactive computed values
+   */
+  initializeComputed(computedConfig, entityParam) {
+    // Create a proxy for the entity that intercepts property access
+    const entityProxy = new Proxy({}, {
+      get: (target, prop) => {
+        return this.getNestedProperty(`${entityParam}.${String(prop)}`);
+      },
+      set: (target, prop, value) => {
+        this.setNestedProperty(`${entityParam}.${String(prop)}`, value);
+        return true;
+      }
+    });
+
+    // Store computed refs for dependency resolution
+    const computedRefs = new Map();
+
+    for (const [propName, propDef] of Object.entries(computedConfig)) {
+      try {
+        // Extract dependencies from computed body
+        const { dependencies, referencedComputed } = this.extractComputedDependencies(propDef.body, entityParam);
+        this.computedDependencies.set(propName, dependencies);
+        computedRefs.set(propName, referencedComputed);
+
+        // Create computed function
+        const functionBody = `
+          const helpers = this.helpersProxy;
+          const computed = this.computedProxy;
+          ${propDef.body}
+        `;
+
+        const computedFn = new Function(entityParam, functionBody).bind(this, entityProxy);
+        this.computed.set(propName, computedFn);
+
+        // Initialize cache
+        this.computedCache.set(propName, undefined);
+      } catch (error) {
+        console.error(`Failed to create computed property "${propName}":`, error);
+        throw new Error(`Invalid computed definition for "${propName}": ${error.message}`);
+      }
+    }
+
+    // Resolve transitive dependencies after all computed properties are initialized
+    this.resolveComputedDependencies(computedRefs);
+  }
+
+  /**
+   * Execute a component method
+   */
+  executeMethod(methodName, ...args) {
+    const method = this.methods.get(methodName);
+    if (!method) {
+      throw new Error(`Method "${methodName}" is not defined`);
+    }
+
+    try {
+      return method(...args);
+    } catch (error) {
+      throw new Error(`Error executing method "${methodName}": ${error.message}`);
+    }
+  }
+
+  /**
+   * Get computed property value
+   */
+  getComputedValue(propName) {
+    const computedFn = this.computed.get(propName);
+    if (!computedFn) {
+      throw new Error(`Computed property "${propName}" is not defined`);
+    }
+
+    try {
+      const value = computedFn();
+      this.computedCache.set(propName, value);
+      return value;
+    } catch (error) {
+      throw new Error(`Error computing "${propName}": ${error.message}`);
+    }
   }
 
   // Private helper methods
@@ -143,23 +294,47 @@ export class EquationSolver {
     // Handle multi-property sources (comma-separated)
     if (source.includes(',')) {
       const properties = source.split(',').map(p => p.trim());
-      const values = properties.map(prop => this.getNestedProperty(prop));
-      
+      const values = properties.map(prop => this.evaluateSourceProperty(prop));
+
       if (transform === 'identity') {
         return values[0]; // For single property, return the value
       }
-      
+
       return this.applyTransform(transform, values, properties);
     }
-    
+
     // Single property source
-    const value = this.getNestedProperty(source);
-    
+    const value = this.evaluateSourceProperty(source);
+
     if (transform === 'identity') {
       return value;
     }
-    
+
     return this.applyTransform(transform, [value], [source]);
+  }
+
+  /**
+   * Evaluate a single source property (data, computed, or helper)
+   */
+  evaluateSourceProperty(source) {
+    // Check for computed property reference
+    if (source.startsWith('computed.')) {
+      const propName = source.substring('computed.'.length);
+      return this.getComputedValue(propName);
+    }
+
+    // Check for helper function reference
+    if (source.startsWith('helpers.')) {
+      const helperName = source.substring('helpers.'.length);
+      if (!this.helpers[helperName]) {
+        throw new Error(`Helper function "${helperName}" is not defined`);
+      }
+      // For now, call helper with no arguments - in the future could parse args from DSL
+      return this.helpers[helperName]();
+    }
+
+    // Regular data property
+    return this.getNestedProperty(source);
   }
 
   /**
@@ -233,6 +408,27 @@ export class EquationSolver {
    * Setup reactive subscription for property changes
    */
   setupReactiveSubscription(source, callback) {
+    // Handle computed property sources - subscribe to dependencies
+    if (source.startsWith('computed.')) {
+      const propName = source.substring('computed.'.length);
+      const dependencies = this.computedDependencies.get(propName);
+
+      if (dependencies && dependencies.length > 0) {
+        // Subscribe to each dependency
+        dependencies.forEach(dep => {
+          this.subscribeToProperty(dep, callback);
+        });
+        this.subscriptions.set(source, callback);
+      }
+      return;
+    }
+
+    // Handle helper function sources - these don't typically need subscriptions
+    if (source.startsWith('helpers.')) {
+      // Helpers are static functions, no subscription needed
+      return;
+    }
+
     // Handle multi-property sources
     if (source.includes(',')) {
       const properties = source.split(',').map(p => p.trim());
@@ -255,10 +451,27 @@ export class EquationSolver {
   }
 
   /**
-   * Execute action string (e.g., 'user.active = false')
+   * Execute action string (e.g., 'user.active = false' or 'increment()')
    */
   executeAction(action) {
     try {
+      // Check for method call: methodName(...args)
+      const methodCallMatch = action.match(/^(\w+)\s*\((.*)\)$/);
+      if (methodCallMatch) {
+        const methodName = methodCallMatch[1];
+        const argsString = methodCallMatch[2].trim();
+
+        // Parse arguments
+        const args = argsString ? argsString.split(',').map(arg => {
+          const trimmed = arg.trim();
+          // Evaluate each argument
+          return this.evaluateExpression(trimmed);
+        }) : [];
+
+        // Execute method
+        return this.executeMethod(methodName, ...args);
+      }
+
       // Handle simple assignments and increments
       if (action.includes('=') && !action.includes('==')) {
         // Assignment: 'user.active = false'
@@ -283,37 +496,65 @@ export class EquationSolver {
    */
   evaluateExpression(expression) {
     const trimmed = expression.trim();
-    
+
     // Boolean literals
     if (trimmed === 'true') return true;
     if (trimmed === 'false') return false;
-    
+
     // String literals
     if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
       return trimmed.slice(1, -1);
     }
-    
+
     // Ternary operator
     if (trimmed.includes('?')) {
       const [condition, branches] = trimmed.split('?').map(s => s.trim());
       const [trueBranch, falseBranch] = branches.split(':').map(s => s.trim());
-      
+
       const conditionValue = this.evaluateCondition(condition);
-      return conditionValue ? 
-        this.evaluateExpression(trueBranch) : 
+      return conditionValue ?
+        this.evaluateExpression(trueBranch) :
         this.evaluateExpression(falseBranch);
     }
-    
+
+    // Computed property reference: computed.propName
+    if (trimmed.startsWith('computed.')) {
+      const propName = trimmed.substring('computed.'.length);
+      return this.getComputedValue(propName);
+    }
+
+    // Helper function call: helpers.functionName(args)
+    if (trimmed.startsWith('helpers.')) {
+      const helperCall = trimmed.substring('helpers.'.length);
+      const methodMatch = helperCall.match(/^(\w+)\s*\((.*)\)$/);
+
+      if (methodMatch) {
+        const functionName = methodMatch[1];
+        const argsString = methodMatch[2].trim();
+
+        if (!this.helpers[functionName]) {
+          throw new Error(`Helper function "${functionName}" is not defined`);
+        }
+
+        // Parse and evaluate arguments
+        const args = argsString ? argsString.split(',').map(arg => {
+          return this.evaluateExpression(arg.trim());
+        }) : [];
+
+        return this.helpers[functionName](...args);
+      }
+    }
+
     // Property reference
     if (trimmed.includes('.')) {
       return this.getNestedProperty(trimmed);
     }
-    
+
     // Numeric literal
     if (!isNaN(trimmed)) {
       return Number(trimmed);
     }
-    
+
     throw new Error(`Cannot evaluate expression: ${expression}`);
   }
 
@@ -389,13 +630,76 @@ export class EquationSolver {
   }
 
   /**
+   * Extract dependencies from computed property body
+   * @param {string} body - The computed function body
+   * @param {string} entityParam - The entity parameter name
+   * @returns {Object} Object with dependencies and referencedComputed arrays
+   */
+  extractComputedDependencies(body, entityParam) {
+    const dependencies = [];
+    const referencedComputed = [];
+
+    // Find all references to entity properties
+    // Matches patterns like: entityParam.property
+    const entityRegex = new RegExp(`${entityParam}\\.(\\w+)`, 'g');
+    let match;
+
+    while ((match = entityRegex.exec(body)) !== null) {
+      const propertyName = match[1];
+      const fullPath = `${entityParam}.${propertyName}`;
+
+      if (!dependencies.includes(fullPath)) {
+        dependencies.push(fullPath);
+      }
+    }
+
+    // Find all references to other computed properties
+    // Matches patterns like: computed.property
+    const computedRegex = /computed\.(\w+)/g;
+    while ((match = computedRegex.exec(body)) !== null) {
+      const computedName = match[1];
+      if (!referencedComputed.includes(computedName)) {
+        referencedComputed.push(computedName);
+      }
+    }
+
+    return { dependencies, referencedComputed };
+  }
+
+  /**
+   * Resolve transitive dependencies for computed properties
+   * Call this after all computed properties have been initialized
+   * @param {Map<string, Array<string>>} computedRefs - Map of property names to referenced computed properties
+   */
+  resolveComputedDependencies(computedRefs) {
+    // For each computed property, resolve transitive dependencies
+    for (const [propName, deps] of this.computedDependencies.entries()) {
+      const allDeps = new Set(deps);
+
+      // Get the computed refs for this property
+      const refs = computedRefs.get(propName) || [];
+
+      // For each referenced computed property, add its dependencies
+      for (const computedRef of refs) {
+        const refDeps = this.computedDependencies.get(computedRef);
+        if (refDeps) {
+          refDeps.forEach(dep => allDeps.add(dep));
+        }
+      }
+
+      // Update dependencies with transitive closure
+      this.computedDependencies.set(propName, Array.from(allDeps));
+    }
+  }
+
+  /**
    * Convert value to string representation
    */
   convertToString(value) {
     if (value === null || value === undefined) {
       return '';
     }
-    
+
     return String(value);
   }
 }

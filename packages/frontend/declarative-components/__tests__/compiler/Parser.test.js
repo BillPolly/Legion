@@ -16,6 +16,8 @@ describe('Parser', () => {
         type: 'Component',
         name: 'UserCard',
         entityParam: 'data',
+        methods: null,
+        computed: null,
         body: {
           type: 'Element',
           tagName: 'div',

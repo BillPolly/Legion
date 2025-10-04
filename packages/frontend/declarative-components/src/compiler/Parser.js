@@ -25,19 +25,41 @@ export class Parser {
    * @returns {Object} Component AST node
    */
   parseComponent() {
-    // ComponentName :: entityParam => body
+    // ComponentName :: entityParam => [methods: {...}] [computed: {...}] body
     const name = this.consume('IDENTIFIER', 'Expected component name');
     this.consume('DOUBLE_COLON', 'Expected :: after component name');
     const entityParam = this.consume('IDENTIFIER', 'Expected entity parameter');
     this.consume('ARROW', 'Expected => after entity parameter');
-    const body = this.parseElement();
-    
-    return {
+
+    const component = {
       type: 'Component',
       name: name.value,
       entityParam: entityParam.value,
-      body
+      methods: null,
+      computed: null,
+      body: null
     };
+
+    // Parse optional methods and computed blocks (in any order)
+    while (this.check('IDENTIFIER')) {
+      if (this.peek().value === 'methods' && this.peek(1).value === ':') {
+        this.advance(); // consume 'methods'
+        this.advance(); // consume ':'
+        component.methods = this.parseMethods();
+      } else if (this.peek().value === 'computed' && this.peek(1).value === ':') {
+        this.advance(); // consume 'computed'
+        this.advance(); // consume ':'
+        component.computed = this.parseComputed();
+      } else {
+        // Not a methods or computed block, must be the element body
+        break;
+      }
+    }
+
+    // Parse element body
+    component.body = this.parseElement();
+
+    return component;
   }
 
   /**
@@ -581,13 +603,111 @@ export class Parser {
     this.consume('REPEAT', 'Expected repeat');
     this.consume('COLON', 'Expected : after repeat');
     const repeat = this.consume('STRING', 'Expected string value for repeat');
-    
+
     // Validate repeat directive has valid array path
     if (!repeat.value || repeat.value.trim() === '') {
       throw new Error('Repeat directive must specify valid array path');
     }
-    
+
     return repeat.value;
+  }
+
+  /**
+   * Parse methods block: { methodName() { ...body... }, ... }
+   * @returns {Array} Array of method definitions
+   */
+  parseMethods() {
+    const methods = [];
+    this.consume('LBRACE', 'Expected { to start methods block');
+
+    while (!this.check('RBRACE') && !this.isAtEnd()) {
+      // Parse method: methodName() { body }
+      const methodName = this.consume('IDENTIFIER', 'Expected method name');
+      this.consume('LPAREN', 'Expected ( after method name');
+
+      // Parse parameters
+      const params = [];
+      while (!this.check('RPAREN') && !this.isAtEnd()) {
+        const param = this.consume('IDENTIFIER', 'Expected parameter name');
+        params.push(param.value);
+        if (!this.check('RPAREN')) {
+          this.consume('COMMA', 'Expected , between parameters');
+        }
+      }
+
+      this.consume('RPAREN', 'Expected ) after parameters');
+      this.consume('LBRACE', 'Expected { to start method body');
+
+      // Extract method body as raw string (between braces)
+      const bodyStart = this.current;
+      let braceDepth = 1;
+      while (braceDepth > 0 && !this.isAtEnd()) {
+        if (this.peek().type === 'LBRACE') braceDepth++;
+        if (this.peek().type === 'RBRACE') braceDepth--;
+        if (braceDepth > 0) this.advance();
+      }
+
+      const bodyEnd = this.current;
+      const bodyTokens = this.tokens.slice(bodyStart, bodyEnd);
+      const body = this.reconstructCode(bodyTokens);
+
+      this.consume('RBRACE', 'Expected } to end method body');
+
+      methods.push({
+        name: methodName.value,
+        params: params,
+        body: body
+      });
+
+      // Optional comma between methods
+      this.match('COMMA');
+    }
+
+    this.consume('RBRACE', 'Expected } to end methods block');
+    return methods;
+  }
+
+  /**
+   * Parse computed properties block: { propName() { ...body... }, ... }
+   * @returns {Array} Array of computed property definitions
+   */
+  parseComputed() {
+    const computed = [];
+    this.consume('LBRACE', 'Expected { to start computed block');
+
+    while (!this.check('RBRACE') && !this.isAtEnd()) {
+      // Parse computed: propName() { return expression }
+      const propName = this.consume('IDENTIFIER', 'Expected computed property name');
+      this.consume('LPAREN', 'Expected ( after computed property name');
+      this.consume('RPAREN', 'Expected ) after computed property name (computed properties take no parameters)');
+      this.consume('LBRACE', 'Expected { to start computed body');
+
+      // Extract computed body as raw string
+      const bodyStart = this.current;
+      let braceDepth = 1;
+      while (braceDepth > 0 && !this.isAtEnd()) {
+        if (this.peek().type === 'LBRACE') braceDepth++;
+        if (this.peek().type === 'RBRACE') braceDepth--;
+        if (braceDepth > 0) this.advance();
+      }
+
+      const bodyEnd = this.current;
+      const bodyTokens = this.tokens.slice(bodyStart, bodyEnd);
+      const body = this.reconstructCode(bodyTokens);
+
+      this.consume('RBRACE', 'Expected } to end computed body');
+
+      computed.push({
+        name: propName.value,
+        body: body
+      });
+
+      // Optional comma between computed properties
+      this.match('COMMA');
+    }
+
+    this.consume('RBRACE', 'Expected } to end computed block');
+    return computed;
   }
 
   // Helper methods for token management
@@ -646,11 +766,12 @@ export class Parser {
   }
 
   /**
-   * Peek at current token
+   * Peek at current token or lookahead by offset
+   * @param {number} offset - Lookahead offset (default 0 = current token)
    * @returns {Object}
    */
-  peek() {
-    return this.tokens[this.current];
+  peek(offset = 0) {
+    return this.tokens[this.current + offset];
   }
 
   /**
@@ -659,5 +780,38 @@ export class Parser {
    */
   previous() {
     return this.tokens[this.current - 1];
+  }
+
+  /**
+   * Reconstruct JavaScript code from tokens
+   * Smartly adds spaces only where needed
+   * @param {Array<Object>} tokens - Array of token objects
+   * @returns {string} Reconstructed code
+   */
+  reconstructCode(tokens) {
+    if (tokens.length === 0) return '';
+
+    let code = '';
+    const noSpaceBefore = new Set(['DOT', 'LPAREN', 'RPAREN', 'LBRACKET', 'RBRACKET', 'COMMA', 'COLON', 'SEMICOLON']);
+    const noSpaceAfter = new Set(['DOT', 'LPAREN', 'LBRACKET']);
+
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i];
+      const prevToken = i > 0 ? tokens[i - 1] : null;
+
+      // Add space before token if needed
+      if (i > 0 && !noSpaceBefore.has(token.type) && !noSpaceAfter.has(prevToken.type)) {
+        code += ' ';
+      }
+
+      // Add quotes around string literals
+      if (token.type === 'STRING') {
+        code += '"' + token.value + '"';
+      } else {
+        code += token.value;
+      }
+    }
+
+    return code.trim();
   }
 }

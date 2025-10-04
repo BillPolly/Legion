@@ -10,19 +10,22 @@ import { EquationSolver } from '../solver/EquationSolver.js';
 import { DataStoreAdapter } from '../adapters/DataStoreAdapter.js';
 
 export class ComponentLifecycle {
-  constructor(dataStore) {
+  constructor(dataStore, options = {}) {
     if (!dataStore) {
       throw new Error('DataStore is required');
     }
-    
+
     this.dataStore = dataStore;
     this.dataStoreAdapter = new DataStoreAdapter(dataStore);
     this.compiler = new ComponentCompiler();
-    
+
     // Track mounted components
     this.mountedComponents = new Map(); // componentId -> ComponentInstance
     this.componentCounter = 0;
-    
+
+    // Global helper functions registry
+    this.helpers = options.helpers || {};
+
     // Lifecycle hooks
     this.hooks = {
       beforeMount: new Set(),
@@ -32,6 +35,28 @@ export class ComponentLifecycle {
       beforeUnmount: new Set(),
       afterUnmount: new Set()
     };
+  }
+
+  /**
+   * Register global helper function
+   * @param {string} name - Helper function name
+   * @param {Function} fn - Helper function
+   */
+  registerHelper(name, fn) {
+    if (typeof fn !== 'function') {
+      throw new Error('Helper must be a function');
+    }
+    this.helpers[name] = fn;
+  }
+
+  /**
+   * Register multiple helper functions
+   * @param {Object} helpers - Object mapping names to functions
+   */
+  registerHelpers(helpers) {
+    for (const [name, fn] of Object.entries(helpers)) {
+      this.registerHelper(name, fn);
+    }
   }
 
   /**
@@ -76,32 +101,38 @@ export class ComponentLifecycle {
       }
       
       // Create per-component EquationSolver to avoid element key collisions
-      const solver = new EquationSolver(this.dataStoreAdapter);
-      
+      const solver = new EquationSolver(this.dataStoreAdapter, {
+        methods: componentDef.methods,
+        computed: componentDef.computed,
+        helpers: this.helpers,
+        entityParam: componentDef.entity
+      });
+
       // Create DOM structure
       const domElements = this.createDOMStructure(componentDef.structure, container);
-      
+
       // Register elements with solver
       for (const [elementKey, element] of domElements) {
         solver.registerElement(elementKey, element);
       }
-      
+
       // Setup data bindings
       for (const binding of componentDef.bindings) {
         solver.setupBinding(binding);
       }
-      
+
       // Setup event bindings
       for (const event of componentDef.events) {
         solver.setupEvent(event);
       }
-      
+
       // Create component instance
       const componentInstance = new ComponentInstance({
         id: componentId,
         definition: componentDef,
         container,
         domElements,
+        solver,
         lifecycle: this,
         data: initialData
       });
@@ -349,11 +380,12 @@ export class ComponentLifecycle {
  * ComponentInstance - Represents a mounted component instance
  */
 export class ComponentInstance {
-  constructor({ id, definition, container, domElements, lifecycle, data }) {
+  constructor({ id, definition, container, domElements, solver, lifecycle, data }) {
     this.id = id;
     this.definition = definition;
     this.container = container;
     this.domElements = domElements;
+    this.solver = solver;
     this.lifecycle = lifecycle;
     this.data = { ...data };
     this.isMounted = true;

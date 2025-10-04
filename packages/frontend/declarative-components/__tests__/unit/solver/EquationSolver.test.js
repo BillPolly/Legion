@@ -516,7 +516,7 @@ describe('Equation Solver', () => {
       const eventHandler = eventListeners[0].handler;
       
       expect(() => eventHandler())
-        .toThrow('Failed to execute action');
+        .toThrow('Unsupported action syntax');
     });
   });
 });
