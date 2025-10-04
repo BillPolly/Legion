@@ -9,7 +9,12 @@ export { createDefaultZ3Prompt } from './reasoning/default-prompt.js';
 
 // Solvers
 export { Z3Solver } from './solvers/Z3Solver.js';
+export { Z3DescriptionLogicSolver } from './solvers/Z3DescriptionLogicSolver.js';
 export { AbstractSolver } from './solvers/AbstractSolver.js';
+
+// Ontology Verification
+export { OntologyVerifier } from './ontology/OntologyVerifier.js';
+export { OWLAxiomEncoder } from './ontology/OWLAxiomEncoder.js';
 
 // DSL
 export { Sorts, isValidSort, getSortType } from './dsl/Sorts.js';
