@@ -292,7 +292,7 @@ describe('ReadWriteViewManager', () => {
     it('should write value to read-write view', async () => {
       await viewManager.writeValue('userName', 'Jane Smith');
 
-      expect(mockParentComponent.updateState).toHaveBeenCalledWith({
+      expect(mockDataStore.updateState).toHaveBeenCalledWith({
         'user.name': 'Jane Smith'
       });
     });
@@ -353,7 +353,7 @@ describe('ReadWriteViewManager', () => {
 
     it('should apply optimistic update immediately', async () => {
       // Mock slow update
-      mockParentComponent.updateState.mockImplementation(() => 
+      mockDataStore.updateState.mockImplementation(() => 
         new Promise(resolve => setTimeout(resolve, 100))
       );
 
@@ -367,7 +367,7 @@ describe('ReadWriteViewManager', () => {
     });
 
     it('should rollback optimistic update on write failure', async () => {
-      mockParentComponent.updateState.mockRejectedValue(new Error('Write failed'));
+      mockDataStore.updateState.mockRejectedValue(new Error('Write failed'));
 
       try {
         await viewManager.writeValue('userName', 'Failed Name');
@@ -379,7 +379,7 @@ describe('ReadWriteViewManager', () => {
     });
 
     it('should track optimistic changes separately', async () => {
-      mockParentComponent.updateState.mockImplementation(() => 
+      mockDataStore.updateState.mockImplementation(() => 
         new Promise(resolve => setTimeout(resolve, 100))
       );
 
@@ -409,7 +409,7 @@ describe('ReadWriteViewManager', () => {
       await viewManager.writeValue('userEmail', 'batch@example.com');
 
       // Parent should not be updated yet
-      expect(mockParentComponent.updateState).not.toHaveBeenCalled();
+      expect(mockDataStore.updateState).not.toHaveBeenCalled();
 
       // But batch should contain changes
       expect(viewManager.batchChanges.size).toBe(2);
@@ -424,7 +424,7 @@ describe('ReadWriteViewManager', () => {
 
       await viewManager.commitBatch();
 
-      expect(mockParentComponent.updateState).toHaveBeenCalledWith({
+      expect(mockDataStore.updateState).toHaveBeenCalledWith({
         'user.name': 'Batch Name',
         'user.email': 'batch@example.com',
         'user.settings.theme': 'light'
@@ -444,7 +444,7 @@ describe('ReadWriteViewManager', () => {
       expect(viewManager.getView('theme').value).toBe('dark');
 
       // No state updates should have occurred
-      expect(mockParentComponent.updateState).not.toHaveBeenCalled();
+      expect(mockDataStore.updateState).not.toHaveBeenCalled();
     });
 
     it('should emit batch events', async () => {
@@ -464,7 +464,7 @@ describe('ReadWriteViewManager', () => {
 
     it('should handle batch commit failures gracefully', async () => {
       viewManager.startBatch();
-      mockParentComponent.updateState.mockRejectedValue(new Error('Batch failed'));
+      mockDataStore.updateState.mockRejectedValue(new Error('Batch failed'));
 
       await viewManager.writeValue('userName', 'Batch Name');
 
@@ -485,7 +485,7 @@ describe('ReadWriteViewManager', () => {
       viewManager.enableOptimisticUpdates();
       
       // Start a write operation with slow parent update
-      mockParentComponent.updateState.mockImplementation(() => 
+      mockDataStore.updateState.mockImplementation(() => 
         new Promise(resolve => setTimeout(resolve, 100))
       );
 
@@ -534,7 +534,7 @@ describe('ReadWriteViewManager', () => {
       await viewManager.writeValue('notifications', false); // Local change
 
       // Both changes should be preserved
-      expect(mockParentComponent.updateState).toHaveBeenCalledWith({
+      expect(mockDataStore.updateState).toHaveBeenCalledWith({
         'user.settings.notifications': false
       });
     });
@@ -668,7 +668,7 @@ describe('ReadWriteViewManager', () => {
     });
 
     it('should handle state access errors gracefully', () => {
-      mockParentComponent.getState.mockImplementation(() => {
+      mockDataStore.getState.mockImplementation(() => {
         throw new Error('State access failed');
       });
 
@@ -679,7 +679,7 @@ describe('ReadWriteViewManager', () => {
 
     it('should handle write operation errors gracefully', async () => {
       viewManager.createReadWriteView('user.name', 'userName');
-      mockParentComponent.updateState.mockRejectedValue(new Error('Write failed'));
+      mockDataStore.updateState.mockRejectedValue(new Error('Write failed'));
 
       await expect(
         viewManager.writeValue('userName', 'New Name')

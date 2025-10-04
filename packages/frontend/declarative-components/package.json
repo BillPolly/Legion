@@ -28,7 +28,13 @@
       "^@legion/data-store$": "<rootDir>/../../shared/data/data-store/index.js",
       "^@legion/data-proxies$": "<rootDir>/../../shared/data/data-proxies/src/index.js",
       "^@legion/datascript$": "<rootDir>/../../shared/data/datascript/index.js",
-      "^@legion/resource-manager$": "<rootDir>/../../resource-manager/src/index.js"
+      "^@legion/resource-manager$": "<rootDir>/../../resource-manager/src/index.js",
+      "^@legion/components/index\\.js$": "<rootDir>/../components/src/index.js",
+      "^@legion/components$": "<rootDir>/../components/src/index.js",
+      "^/lib/yaml$": "yaml",
+      "^/lib/markdown-it$": "markdown-it",
+      "^/lib/highlight\\.js$": "highlight.js",
+      "^/lib/codemirror/.*$": "<rootDir>/../components/test/__mocks__/codemirror-bundle.js"
     },
     "testMatch": [
       "**/__tests__/**/*.test.js"

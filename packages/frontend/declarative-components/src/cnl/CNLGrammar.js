@@ -14,10 +14,13 @@ export class CNLGrammar {
 
     // Element creation patterns - ORDER MATTERS! More specific patterns must come first
     this.elementPatterns = {
-      // Heading shorthand with literal text (in quotes) - check FIRST
+      // Heading with class and binding - check FIRST
+      headingClassBinding: /^[Aa]\s+heading\s+with\s+class\s+"?([\w-]+)"?\s+(?:showing|displaying)\s+(?:the\s+)?(\w+)$/,
+
+      // Heading shorthand with literal text (in quotes) - check SECOND
       headingLiteral: /^[Aa]\s+heading\s+(?:showing|displaying|with)\s+"([^"]+)"$/,
-      
-      // Heading shorthand with dynamic binding (no quotes) - check SECOND
+
+      // Heading shorthand with dynamic binding (no quotes) - check THIRD
       headingDynamic: /^[Aa]\s+heading\s+(?:showing|displaying)\s+(?:the\s+)?(\w+)$/,
       
       // Button shorthand - check before generic labeled
@@ -204,14 +207,22 @@ export class CNLGrammar {
           tag: this.normalizeElement(match[1]),
           content: match[2]
         };
-      
+
+      case 'headingClassBinding':
+        return {
+          type: 'element',
+          tag: 'h2',
+          className: match[1],
+          binding: match[2]
+        };
+
       case 'headingLiteral':
         return {
           type: 'element',
           tag: 'h2',
           content: match[1]
         };
-      
+
       case 'headingDynamic':
         return {
           type: 'element',

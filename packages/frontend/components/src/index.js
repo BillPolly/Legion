@@ -21,7 +21,7 @@ export { BaseModel, BaseView, BaseViewModel, BaseUmbilicalComponent } from './co
 // Visual Components
 export { ImageViewer } from './components/image-viewer/index.js';
 export { SimpleImage } from './components/simple-image/index.js';
-// export { CodeEditor } from './components/code-editor/index.js'; // Disabled - requires CodeMirror setup
+export { CodeEditor } from './components/code-editor/index.js';
 export { MarkdownRenderer } from './components/markdown-renderer/index.js';
 
 // Data Components
@@ -34,5 +34,5 @@ export { TextField, NumericField, BooleanField } from './components/field-editor
 
 // Advanced Components
 export { GraphEditor } from './components/graph-editor/index.js';
-// export { HierarchyEditor } from './components/hierarchy-editor/index.js'; // Disabled - requires @legion/features
-// export { TreeScribe } from './components/tree-scribe/index.js'; // Disabled - requires @legion/features
+export { HierarchyEditor } from './components/hierarchy-editor/index.js';
+export { TreeScribe } from './components/tree-scribe/index.js';

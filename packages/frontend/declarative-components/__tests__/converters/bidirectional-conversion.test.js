@@ -330,8 +330,8 @@ describe('Bidirectional Converter Tests', () => {
     A heading showing the count
     A button labeled "Plus" that increments the count on click`;
 
-      const json = cnlParser.parse(cnl);
-      
+      const json = cnlParser.parse(cnl, {toJSON: true});
+
       expect(json.name).toBe('Counter');
       expect(json.entity).toBe('state');
       expect(json.structure.root.element).toBe('div');
@@ -344,7 +344,7 @@ describe('Bidirectional Converter Tests', () => {
   A container with class "card" containing:
     A heading with class "card-title" showing the title`;
 
-      const json = cnlParser.parse(cnl);
+      const json = cnlParser.parse(cnl, {toJSON: true});
       
       expect(json.structure.root.class).toBe('card');
       expect(json.structure.root_child_0.class).toBe('card-title');
@@ -412,8 +412,8 @@ describe('Bidirectional Converter Tests', () => {
       };
 
       const cnl = jsonToCNL(originalJSON);
-      const resultJSON = cnlParser.parse(cnl);
-      
+      const resultJSON = cnlParser.parse(cnl, {toJSON: true});
+
       expect(resultJSON.name).toBe(originalJSON.name);
       expect(resultJSON.entity).toBe(originalJSON.entity);
       expect(resultJSON.structure.root.element).toBe('button');
@@ -487,8 +487,8 @@ describe('Bidirectional Converter Tests', () => {
       
       // Test JSON → CNL → JSON
       const cnl = jsonToCNL(todoJSON);
-      const cnlResult = cnlParser.parse(cnl);
-      
+      const cnlResult = cnlParser.parse(cnl, {toJSON: true});
+
       expect(cnlResult.name).toBe('TodoItem');
       expect(cnlResult.structure.root.class).toBe('todo-item');
     });

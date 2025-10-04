@@ -73,13 +73,18 @@ export class ReadWriteViewManager {
     }
 
     const id = viewId || `view_${++this.viewCounter}`;
-    
+
     if (this.views.has(id)) {
       throw new Error(`View with ID "${id}" already exists`);
     }
 
-    const currentValue = this._getValueFromPath(path);
-    
+    let currentValue;
+    try {
+      currentValue = this._getValueFromPath(path);
+    } catch (error) {
+      throw new Error(`Failed to read state for path "${path}": ${error.message}`);
+    }
+
     const view = {
       id,
       path,

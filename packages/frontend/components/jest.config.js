@@ -13,7 +13,9 @@ export default {
         '^/lib/yaml$': 'yaml',
         '^/lib/markdown-it$': 'markdown-it',
         '^/lib/highlight\\.js$': 'highlight.js',
-        '^/lib/codemirror/(.*)$': '@codemirror/$1',
+        '^/lib/codemirror/.*$': '<rootDir>/test/__mocks__/codemirror-bundle.js',
+        '^@legion/components/index\\.js$': '<rootDir>/src/index.js',
+        '^@legion/components$': '<rootDir>/src/index.js',
         '^/src/(.*)$': '<rootDir>/src/$1'
     }
 };

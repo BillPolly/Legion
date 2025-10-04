@@ -204,6 +204,40 @@ export class HierarchicalComponent extends ComponentInstance {
   }
 
   /**
+   * Mount the component (no-op as component is mounted on construction)
+   * @returns {Promise<void>}
+   */
+  async mount() {
+    // Component is already mounted during construction
+    // This method exists for compatibility with DynamicChildManager
+    this.isMounted = true;
+  }
+
+  /**
+   * Update component state (alias for update)
+   * @param {Object} newData - New data to update
+   * @returns {Promise<void>}
+   */
+  async updateState(newData) {
+    // For dynamically created children, update data directly
+    // since they may not be registered in lifecycle.mountedComponents
+    if (!this.isMounted) {
+      throw new Error('Cannot update unmounted component');
+    }
+
+    // Update the data object
+    Object.assign(this.data, newData);
+
+    // Try to update through lifecycle if registered, otherwise just update data
+    try {
+      await this.lifecycle.update(this.id, newData);
+    } catch (error) {
+      // Component not registered in mountedComponents, that's okay for dynamic children
+      // Data has already been updated above
+    }
+  }
+
+  /**
    * Override unmount to cleanup child components
    * @returns {Promise<void>}
    */

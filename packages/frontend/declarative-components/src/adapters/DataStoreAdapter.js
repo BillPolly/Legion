@@ -1,21 +1,11 @@
 /**
  * DataStoreAdapter - Bridges declarative components with data stores
- * 
+ *
  * Provides a simplified interface for EquationSolver to interact with
  * reactive data systems, handling subscriptions and property access.
  */
 
-// Simple Subscription class for standalone use
-class Subscription {
-  constructor(callback) {
-    this.callback = callback;
-    this.active = true;
-  }
-  
-  unsubscribe() {
-    this.active = false;
-  }
-}
+import { Subscription } from '@legion/data-store';
 
 export class DataStoreAdapter {
   constructor(dataStore, options = {}) {

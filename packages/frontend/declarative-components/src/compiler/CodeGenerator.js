@@ -9,6 +9,26 @@ export class CodeGenerator {
   }
 
   /**
+   * Extract source path from expression for binding
+   * @param {Object} expr - Expression AST node
+   * @param {string} entityParam - Entity parameter name
+   * @returns {string|null} Source path or null
+   */
+  extractSourcePath(expr, entityParam) {
+    if (!expr) return null;
+
+    if (expr.type === 'MemberExpression') {
+      if (expr.object && expr.object.name === entityParam) {
+        return `${entityParam}.${expr.property}`;
+      }
+    } else if (expr.type === 'Identifier') {
+      return `${entityParam}.${expr.name}`;
+    }
+
+    return null;
+  }
+
+  /**
    * Generate a component definition from AST
    * @param {Object} ast - Abstract syntax tree
    * @returns {Object} Component definition with structure, bindings, and events
@@ -53,9 +73,41 @@ export class CodeGenerator {
         class: node.classes ? node.classes.join(' ') : undefined,
         id: node.id,
         parent: parentKey,
-        attributes: node.attributes || {}
+        attributes: {}
       };
-      
+
+      // Process attributes and extract dynamic bindings
+      if (node.attributes) {
+        for (const [attrName, attrValue] of Object.entries(node.attributes)) {
+          if (typeof attrValue === 'object' && attrValue.type === 'DynamicAttribute') {
+            // This is a dynamic attribute binding
+            const expr = attrValue.expression;
+
+            // Extract source path from expression
+            let sourcePath;
+            if (expr.type === 'MemberExpression' && expr.object && expr.object.name === entityParam) {
+              sourcePath = `${entityParam}.${expr.property}`;
+            } else if (expr.type === 'Identifier') {
+              sourcePath = `${entityParam}.${expr.name}`;
+            } else {
+              // For more complex expressions, try to extract the path
+              sourcePath = this.extractSourcePath(expr, entityParam);
+            }
+
+            if (sourcePath) {
+              componentDef.bindings.push({
+                source: sourcePath,
+                target: `${elementKey}.${attrName}`,
+                transform: 'identity'
+              });
+            }
+          } else {
+            // Static attribute value
+            componentDef.structure[elementKey].attributes[attrName] = attrValue;
+          }
+        }
+      }
+
       // Process content/binding
       if (node.content) {
         if (node.content.type === 'DataBinding') {

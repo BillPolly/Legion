@@ -62,10 +62,11 @@ export class JsonToDSLConverter {
     // Check for bindings to this element
     const elementBindings = bindings.filter(b => b.target.startsWith(`${elementKey}.`));
     const textBinding = elementBindings.find(b => b.target === `${elementKey}.textContent`);
-    
+    const attributeBindings = elementBindings.filter(b => b.target !== `${elementKey}.textContent`);
+
     // Check for events on this element
     const elementEvents = events.filter(e => e.element === elementKey);
-    
+
     // Add attributes/events
     const attrs = [];
     for (const event of elementEvents) {
@@ -75,7 +76,13 @@ export class JsonToDSLConverter {
       }
       attrs.push(eventStr);
     }
-    
+
+    // Add attribute bindings
+    for (const binding of attributeBindings) {
+      const attrName = binding.target.split('.').pop(); // Get attribute name from target
+      attrs.push(`${attrName}={${this.formatBinding(binding.source)}}`);
+    }
+
     // Add other attributes
     if (element.attributes) {
       for (const [key, value] of Object.entries(element.attributes)) {
@@ -103,8 +110,9 @@ export class JsonToDSLConverter {
       line += ' { ' + this.formatBinding(textBinding.source) + ' }';
       lines.push(line);
     } else if (element.textContent) {
-      // Has static text content
-      line += ' { "' + element.textContent + '" }';
+      // Has static text content - escape quotes
+      const escapedText = element.textContent.replace(/"/g, '\\"');
+      line += ' { "' + escapedText + '" }';
       lines.push(line);
     } else if (children.length > 0) {
       // Has children

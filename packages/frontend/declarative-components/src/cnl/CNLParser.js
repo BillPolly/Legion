@@ -16,9 +16,11 @@ export class CNLParser {
   /**
    * Parse CNL text into AST
    * @param {string} cnlText - The CNL source text
-   * @returns {Object} AST representation
+   * @param {Object} options - Parse options
+   * @param {boolean} options.toJSON - Convert to JSON format (default: false)
+   * @returns {Object} AST representation or JSON component definition
    */
-  parse(cnlText) {
+  parse(cnlText, options = {}) {
     // Split into lines and filter empty ones
     this.lines = cnlText
       .split('\n')
@@ -27,16 +29,114 @@ export class CNLParser {
         indent: this.grammar.getIndentLevel(line)
       }))
       .filter(line => line.text.trim().length > 0);
-    
+
     this.currentLine = 0;
-    
+
     // Parse the component definition
     const component = this.parseComponent();
     if (!component) {
       throw new Error('CNL must start with a component definition (e.g., "Define ComponentName with data:")');
     }
-    
+
+    // Convert to JSON if requested
+    if (options.toJSON) {
+      return this.astToJSON(component);
+    }
+
     return component;
+  }
+
+  /**
+   * Convert AST to JSON component definition format
+   * @param {Object} ast - The AST component node
+   * @returns {Object} JSON component definition
+   */
+  astToJSON(ast) {
+    const json = {
+      name: ast.name,
+      entity: ast.parameter || 'data',
+      structure: {},
+      bindings: [],
+      events: []
+    };
+
+    // Process the body to extract structure, bindings, and events
+    let elementCounter = 0;
+    let isFirstElement = true;
+
+    const processNode = (node, parentKey = null, depth = 0) => {
+      if (!node) return;
+
+      if (node.type === 'element') {
+        let key;
+
+        if (isFirstElement && depth === 0) {
+          // First top-level element is always 'root'
+          key = 'root';
+          isFirstElement = false;
+        } else if (parentKey) {
+          // Child elements use parent_child_N pattern
+          key = `${parentKey}_child_${elementCounter++}`;
+        } else {
+          // Other top-level elements (shouldn't normally happen)
+          key = `element_${elementCounter++}`;
+        }
+
+        // Build structure entry
+        const structEntry = {
+          element: node.tag || node.element || 'div'
+        };
+
+        if (node.className || node.class) {
+          structEntry.class = node.className || node.class;
+        }
+
+        if (node.id) {
+          structEntry.id = node.id;
+        }
+
+        if (node.label || node.text) {
+          structEntry.text = node.label || node.text;
+        }
+
+        if (node.content) {
+          structEntry.text = node.content;
+        }
+
+        if (node.binding) {
+          structEntry.text = `{${node.binding}}`;
+          // Add to bindings array
+          json.bindings.push({
+            element: key,
+            property: 'textContent',
+            source: node.binding
+          });
+        }
+
+        json.structure[key] = structEntry;
+
+        // Process event
+        if (node.event) {
+          json.events.push({
+            element: key,
+            type: node.event.type,
+            action: node.event.action
+          });
+        }
+
+        // Process children
+        if (node.children && Array.isArray(node.children)) {
+          node.children.forEach(child => processNode(child, key, depth + 1));
+        }
+      }
+    };
+
+    // Process all body nodes
+    if (ast.body && Array.isArray(ast.body)) {
+      ast.body.forEach(node => processNode(node, null, 0));
+    }
+
+    return json;
   }
 
   /**

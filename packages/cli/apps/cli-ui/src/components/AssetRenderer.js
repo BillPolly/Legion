@@ -180,8 +180,7 @@ export class AssetRenderer {
       }
 
       case 'code': {
-        // Import CodeEditor directly - not exported from @legion/components due to CodeMirror dependency
-        const { CodeEditor } = await import('@legion/components/src/components/code-editor/index.js');
+        const { CodeEditor } = await import('@legion/components');
         const codeData = this.extractCodeContent();
 
         return CodeEditor.create({
@@ -203,7 +202,7 @@ export class AssetRenderer {
 
       case 'markup': {
         // HTML/SVG files - use CodeEditor with syntax highlighting
-        const { CodeEditor } = await import('@legion/components/src/components/code-editor/index.js');
+        const { CodeEditor } = await import('@legion/components');
         const codeData = this.extractCodeContent();
 
         return CodeEditor.create({
@@ -221,7 +220,7 @@ export class AssetRenderer {
 
       case 'style': {
         // CSS files - use CodeEditor with CSS highlighting
-        const { CodeEditor } = await import('@legion/components/src/components/code-editor/index.js');
+        const { CodeEditor } = await import('@legion/components');
         const codeData = this.extractCodeContent();
 
         return CodeEditor.create({
@@ -239,7 +238,7 @@ export class AssetRenderer {
 
       case 'table': {
         // Table data - use CodeEditor with JSON highlighting for now
-        const { CodeEditor } = await import('@legion/components/src/components/code-editor/index.js');
+        const { CodeEditor } = await import('@legion/components');
         const content = JSON.stringify(this.assetData, null, 2);
 
         return CodeEditor.create({
@@ -277,7 +276,7 @@ export class AssetRenderer {
 
       default: {
         // Unknown type - display as JSON
-        const { CodeEditor } = await import('@legion/components/src/components/code-editor/index.js');
+        const { CodeEditor } = await import('@legion/components');
         const content = JSON.stringify(this.assetData, null, 2);
 
         return CodeEditor.create({
