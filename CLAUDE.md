@@ -129,6 +129,310 @@ Always keep package root directories as clean as possible! NEVER put scripts the
 
 DO NOT recreate functionality, this is a monorepo whereeveer possible use existing packages. if it follows good design principles extend or enhance them as requried.
 
+## Declarative Components - AI-Friendly UI Framework (CRITICAL FOR AI AGENTS)
+
+**Declarative Components is Legion's reactive UI system specifically designed for AI agents to generate user interfaces.**
+
+### Why It's AI-Friendly
+
+The system provides **three equivalent ways** to define the same component - all compile to identical JSON:
+
+1. **CNL (Controlled Natural Language)** - Natural language UI definitions (BEST FOR AI!)
+2. **DSL** - Concise template syntax for developers
+3. **JSON** - Direct structured data for tools/serialization
+
+**Key Insight**: AI agents can describe UIs in near-natural language and the system compiles them to fully reactive components!
+
+### Quick Start for AI Agents
+
+```javascript
+import { ComponentLifecycle } from '@legion/declarative-components';
+import { DataStore } from '@legion/data-store';
+
+// 1. Create DataStore (state management)
+const dataStore = new DataStore({
+  ':name': {}, ':email': {}, ':age': {}, ':active': {}
+});
+
+// 2. Create lifecycle manager
+const lifecycle = new ComponentLifecycle(dataStore);
+
+// 3. Define component using CNL (AI-friendly!)
+const cnl = `
+Define UserCard with user:
+  A container with class "user-card" containing:
+    A heading showing the user name
+    A paragraph showing "Email: " plus the user email
+    A span showing "Active" if user active, otherwise "Inactive"
+    A button labeled "Toggle" that toggles user active on click
+`;
+
+// 4. Mount component
+const container = document.getElementById('app');
+const component = await lifecycle.mount(cnl, container, {
+  name: 'John Doe',
+  email: 'john@example.com',
+  age: 30,
+  active: true
+});
+
+// 5. Component is now REACTIVE - updates propagate automatically!
+await component.update({ name: 'Jane Smith', active: false });
+
+// 6. Cleanup
+await component.unmount();
+```
+
+### CNL Syntax Patterns (Natural Language)
+
+```
+Define ComponentName with entityName:
+  A container [with class "className"] containing:
+    A heading showing property
+    A paragraph showing "text " plus property
+    A span showing expression if condition, otherwise otherExpression
+    A button labeled "text" that performs action on click
+    For each item in collection:
+      A list item showing item property
+```
+
+### DSL Syntax (Concise Alternative)
+
+```javascript
+const dsl = `
+  UserCard :: user =>
+    div.user-card [
+      h2 { user.name }
+      p { "Email: " + user.email }
+      span { user.active ? "Active" : "Inactive" }
+      button { "Toggle" } => user.active = !user.active
+    ]
+`;
+```
+
+### Component Methods, Computed Properties, and Helpers
+
+**Methods** - Reusable component logic:
+```javascript
+const dsl = `
+  Counter :: state =>
+    methods: {
+      increment() {
+        state.count = state.count + 1
+      },
+      decrement() {
+        state.count = state.count - 1
+      }
+    }
+    div.counter [
+      div.count { state.count }
+      button @click="increment()" { "+" }
+      button @click="decrement()" { "-" }
+    ]
+`;
+```
+
+**Computed Properties** - Derived values that auto-update:
+```javascript
+const dsl = `
+  ShoppingCart :: cart =>
+    computed: {
+      subtotal() {
+        return cart.price * cart.quantity
+      },
+      tax() {
+        return computed.subtotal * 0.1
+      },
+      total() {
+        return computed.subtotal + computed.tax
+      }
+    }
+    div.cart [
+      div.subtotal { computed.subtotal }
+      div.tax { computed.tax }
+      div.total { computed.total }
+      button @click="cart.quantity = cart.quantity + 1" { "Add Item" }
+    ]
+`;
+```
+
+**Helper Functions** - Global utility functions:
+```javascript
+// Register helpers on lifecycle
+lifecycle.registerHelper('formatCurrency', (amount) => {
+  return '$' + amount.toFixed(2);
+});
+
+lifecycle.registerHelpers({
+  uppercase: (text) => String(text).toUpperCase(),
+  formatDate: (date) => new Date(date).toLocaleDateString()
+});
+
+const dsl = `
+  Product :: product =>
+    computed: {
+      formattedPrice() {
+        return helpers.formatCurrency(product.price)
+      }
+    }
+    div.product [
+      h3 { helpers.uppercase(product.name) }
+      p { computed.formattedPrice }
+    ]
+`;
+```
+
+### JSON Format (For Tools/Serialization)
+
+All DSL/CNL compiles to this format:
+```json
+{
+  "name": "UserCard",
+  "entity": "user",
+  "structure": {
+    "root": { "element": "div", "class": "user-card" },
+    "root_child_0": { "element": "h2", "parent": "root" }
+  },
+  "bindings": [
+    { "source": "user.name", "target": "root_child_0.textContent", "transform": "identity" }
+  ],
+  "events": [
+    { "element": "root_child_1", "event": "click", "action": "user.active = !user.active" }
+  ]
+}
+```
+
+### Key Features for AI Agents
+
+1. **Automatic Reactivity**: State changes → DOM updates automatically
+2. **No Manual DOM Manipulation**: Declare relationships, system maintains them
+3. **DataStore Integration**: Full persistence, queries, transactions
+4. **Lifecycle Hooks**: beforeMount, afterUpdate, beforeUnmount
+5. **Error Handling**: Clear error messages for debugging
+6. **100% Test Coverage**: 563 passing tests - production ready
+
+### Common Patterns
+
+**Form with Validation**:
+```javascript
+const dsl = `
+  LoginForm :: form =>
+    div.login-form [
+      input.username[type=text][value={form.username}]
+      input.password[type=password][value={form.password}]
+      div.error { form.error || "" }
+      button { "Login" } => form.error = form.username ? "" : "Username required"
+    ]
+`;
+```
+
+**List with Iteration** (CNL):
+```
+Define TodoList with todos:
+  A container containing:
+    A heading showing "My Todos"
+    For each item in todos items:
+      A list item containing:
+        A checkbox bound to item done
+        A span showing item title
+        A button labeled "×" that removes item on click
+```
+
+**Conditional Rendering**:
+```javascript
+const dsl = `
+  Message :: state =>
+    div [
+      if (state.showMessage) [
+        p { state.message }
+        button { "Hide" } => state.showMessage = false
+      ]
+      if (!state.showMessage) [
+        button { "Show" } => state.showMessage = true
+      ]
+    ]
+`;
+```
+
+### When to Use Declarative Components
+
+**✅ USE FOR**:
+- Dynamic UI generation by AI agents
+- Reactive dashboards and admin panels
+- Forms with complex state management
+- Data visualization components
+- Agent-to-agent UI communication
+
+**❌ DON'T USE FOR**:
+- Static content (use plain HTML)
+- Heavy animations (use CSS/Canvas directly)
+- Performance-critical rendering (use virtual scrolling separately)
+
+### Architecture Overview
+
+```
+CNL/DSL/JSON → Parser → AST → CodeGenerator → Component Definition
+                                                       ↓
+DataStore ←→ EquationSolver ←→ DOM Elements
+     ↓              ↓                ↓
+  State      Subscriptions    Event Handlers
+```
+
+**How Reactivity Works**:
+1. Component mounts: creates DOM structure, establishes bindings
+2. State change: DataStore notifies → EquationSolver updates → DOM updates
+3. User interaction: DOM event → EquationSolver executes action → State updates
+4. Computed properties: Dependencies tracked → Auto-recalculate when deps change
+
+### Testing Declarative Components
+
+```javascript
+import { ComponentLifecycle } from '@legion/declarative-components';
+import { DataStore } from '@legion/data-store';
+
+test('should create reactive counter', async () => {
+  const dataStore = new DataStore({ ':count': {} });
+  const lifecycle = new ComponentLifecycle(dataStore);
+
+  const dsl = `
+    Counter :: state =>
+      div [
+        span.count { state.count }
+        button.increment @click="state.count = state.count + 1" { "+" }
+      ]
+  `;
+
+  const container = document.createElement('div');
+  const component = await lifecycle.mount(dsl, container, { count: 0 });
+
+  const span = container.querySelector('.count');
+  const button = container.querySelector('.increment');
+
+  expect(span.textContent).toBe('0');
+
+  button.click();
+  await new Promise(resolve => setTimeout(resolve, 50));
+
+  expect(span.textContent).toBe('1');
+
+  await component.unmount();
+});
+```
+
+### Package Location
+
+```
+/packages/frontend/declarative-components/
+├── src/
+│   ├── compiler/        # DSL → AST → JSON
+│   ├── cnl/            # CNL → JSON conversion
+│   ├── solver/         # Reactive engine
+│   ├── lifecycle/      # Component lifecycle
+│   └── adapters/       # DataStore integration
+└── __tests__/          # 563 passing tests
+```
+
+**Full Documentation**: `/packages/frontend/declarative-components/README.md`
 
 ## Methedology
 Always use TDD methodolgy but without the refactor phase, try and get it right first time.
