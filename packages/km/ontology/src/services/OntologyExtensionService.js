@@ -17,7 +17,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 export class OntologyExtensionService {
-  constructor(tripleStore, semanticSearch, llmClient, hierarchyTraversal) {
+  constructor(tripleStore, semanticSearch, llmClient, hierarchyTraversal, verification = null) {
     if (!tripleStore) {
       throw new Error('Triple store is required');
     }
@@ -35,6 +35,7 @@ export class OntologyExtensionService {
     this.semanticSearch = semanticSearch;
     this.llmClient = llmClient;
     this.hierarchyTraversal = hierarchyTraversal;
+    this.verification = verification;
     this.determineParentTemplate = null;
     this.determineParentRelTemplate = null;
   }
@@ -174,16 +175,40 @@ export class OntologyExtensionService {
       }
     }
 
-    // 5. Store in triplestore
+    // 5. PRE-VERIFICATION: Verify BEFORE adding to triple store
+    const verifyResult = await this._verifyBeforeAdd(additions);
+
+    if (!verifyResult.valid) {
+      console.warn('⚠️  Extension would violate axioms:', verifyResult.violations);
+
+      if (this.verification && this.verification.config.failOnViolation) {
+        throw new Error(`Z3 verification failed: ${verifyResult.violations.join(', ')}`);
+      }
+
+      // Return failure with violations for caller to handle
+      return {
+        success: false,
+        violations: verifyResult.violations,
+        addedClasses: 0,
+        addedProperties: 0,
+        addedRelationships: 0,
+        reusedFromHierarchy: 0,
+        specialized: 0
+      };
+    }
+
+    // 6. Store in triplestore (ONLY if verified)
     for (const triple of additions) {
       await this.tripleStore.add(...triple);
     }
 
-    // 6. Index new classes and relationships
+    // 7. Index new classes and relationships
     await this.indexNewClasses(additions);
     await this.indexNewRelationships(additions);
 
     return {
+      success: true,
+      violations: [],
       addedClasses: gaps.missingClasses.length,
       addedProperties: gaps.missingProperties.length,
       addedRelationships: gaps.missingRelationships.length,
@@ -204,22 +229,6 @@ export class OntologyExtensionService {
    * @returns {Promise<string>} - Parent class URI (e.g., "kg:Equipment" or "owl:Thing")
    */
   async determineParentClass(newClass, domain, createdParents = new Set()) {
-    // If suggestedSupertype is provided, use upper-level category directly
-    if (newClass.suggestedSupertype) {
-      const categoryMap = {
-        'PhysicalEntity': 'kg:PhysicalEntity',
-        'State': 'kg:State',
-        'Process': 'kg:Process',
-        'Task': 'kg:Task'
-      };
-
-      const categoryURI = categoryMap[newClass.suggestedSupertype];
-      if (categoryURI) {
-        console.log(`  🎯 Using suggested supertype: ${categoryURI}`);
-        return categoryURI;
-      }
-    }
-
     // Load template if not already loaded
     if (!this.determineParentAbstractionTemplate) {
       const templatePath = join(__dirname, '../prompts/determine-parent-with-abstraction.hbs');
@@ -249,6 +258,18 @@ export class OntologyExtensionService {
       });
     }
 
+    // Map suggested supertype to URI (if provided)
+    let suggestedSuperURI = null;
+    if (newClass.suggestedSupertype) {
+      const categoryMap = {
+        'PhysicalEntity': 'kg:PhysicalEntity',
+        'State': 'kg:State',
+        'Process': 'kg:Process',
+        'Task': 'kg:Task'
+      };
+      suggestedSuperURI = categoryMap[newClass.suggestedSupertype];
+    }
+
     // Define response schema
     const responseSchema = {
       type: 'object',
@@ -269,6 +290,13 @@ export class OntologyExtensionService {
         grandparent: {
           type: 'string'
         },
+        siblingClasses: {
+          type: 'array',
+          items: {
+            type: 'string'
+          },
+          description: 'URIs of existing classes that should become children of the new parent'
+        },
         reasoning: {
           type: 'string'
         }
@@ -284,12 +312,13 @@ export class OntologyExtensionService {
       maxRetries: 3
     });
 
-    // Execute with variables
+    // Execute with variables (include suggested supertype as hint)
     const result = await templatedPrompt.execute({
       newClassName: newClass.name,
       newClassDescription: newClass.description || newClass.name,
       domain,
-      existingClasses
+      existingClasses,
+      suggestedSupertype: suggestedSuperURI  // Pass as hint for grandparent
     });
 
     if (!result.success) {
@@ -299,6 +328,8 @@ export class OntologyExtensionService {
     const decision = result.data;
 
     if (decision.action === 'USE_EXISTING') {
+      // Use the parent the LLM chose
+      // (suggestedSupertype was already passed as a hint to the LLM)
       return decision.parent;
     }
 
@@ -319,14 +350,25 @@ export class OntologyExtensionService {
 
       console.log(`  🔨 Creating intermediate parent: ${decision.parentName}`);
 
-      // Recursively determine grandparent (in case it needs abstraction too)
-      const grandparent = decision.grandparent && decision.grandparent !== 'owl:Thing'
-        ? await this.determineParentClass(
-            { name: decision.grandparent.split(':')[1], description: decision.parentDescription },
-            domain,
-            createdParents
-          )
-        : decision.grandparent || 'owl:Thing';
+      // Determine grandparent:
+      // 1. Use suggestedSupertype if provided (from gap analysis)
+      // 2. Use LLM's decision.grandparent
+      // 3. Recursively determine if needed
+      let grandparent;
+      if (suggestedSuperURI) {
+        // Use suggested supertype as grandparent
+        grandparent = suggestedSuperURI;
+        console.log(`  📍 Using suggested supertype as grandparent: ${grandparent}`);
+      } else if (decision.grandparent && decision.grandparent !== 'owl:Thing') {
+        // Recursively determine grandparent (in case it needs abstraction too)
+        grandparent = await this.determineParentClass(
+          { name: decision.grandparent.split(':')[1], description: decision.parentDescription },
+          domain,
+          createdParents
+        );
+      } else {
+        grandparent = decision.grandparent || 'owl:Thing';
+      }
 
       // Add parent class to triplestore
       const parentTriples = [
@@ -355,6 +397,42 @@ export class OntologyExtensionService {
       createdParents.add(parentURI);
 
       console.log(`  ✅ Created parent: ${parentURI} → ${grandparent}`);
+
+      // REFACTORING STEP: Update existing siblings to be children of new parent
+      if (decision.siblingClasses && decision.siblingClasses.length > 0) {
+        console.log(`  🔄 Refactoring ${decision.siblingClasses.length} existing sibling(s)...`);
+
+        for (const siblingURI of decision.siblingClasses) {
+          // Get current parent
+          const currentParents = await this.tripleStore.query(
+            siblingURI,
+            'rdfs:subClassOf',
+            null
+          );
+
+          if (currentParents.length > 0) {
+            const oldParent = currentParents[0][2]; // Triple format: [subject, predicate, object]
+
+            // Remove old parent relationship
+            await this.tripleStore.remove(
+              siblingURI,
+              'rdfs:subClassOf',
+              oldParent
+            );
+
+            // Add new parent relationship
+            await this.tripleStore.add(
+              siblingURI,
+              'rdfs:subClassOf',
+              parentURI
+            );
+
+            console.log(`    ✓ Updated: ${siblingURI} (${oldParent} → ${parentURI})`);
+          }
+        }
+
+        console.log(`  ✅ Refactoring complete`);
+      }
 
       return parentURI;
     }
@@ -756,5 +834,54 @@ export class OntologyExtensionService {
       'date': 'xsd:date'
     };
     return typeMap[type] || 'xsd:string';
+  }
+
+  /**
+   * Verify triples before adding them to triple store
+   *
+   * @param {Array} newTriples - Triples to verify before adding
+   * @returns {Promise<{valid: boolean, violations: Array}>}
+   * @private
+   */
+  async _verifyBeforeAdd(newTriples) {
+    // If verification disabled, always pass
+    if (!this.verification || !this.verification.config.enabled) {
+      return { valid: true, violations: [] };
+    }
+
+    return await this.verification.verifyBeforeExtension(newTriples);
+  }
+
+  /**
+   * Get all axiom triples from triple store for verification
+   *
+   * @returns {Promise<Array>} Array of [subject, predicate, object] triples
+   * @private
+   */
+  async _getAxiomTriples() {
+    const predicates = [
+      'rdf:type',
+      'rdfs:subClassOf',
+      'owl:disjointWith',
+      'rdfs:domain',
+      'rdfs:range',
+      'owl:equivalentClass',
+      'owl:inverseOf'
+    ];
+
+    const triples = [];
+
+    for (const predicate of predicates) {
+      const results = await this.tripleStore.query(null, predicate, null);
+      for (const result of results) {
+        // Triple format: [subject, predicate, object]
+        // Skip if any component is undefined
+        if (result[0] && result[2]) {
+          triples.push([result[0], predicate, result[2]]);
+        }
+      }
+    }
+
+    return triples;
   }
 }

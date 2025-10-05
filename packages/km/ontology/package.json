@@ -31,7 +31,6 @@
     "@legion/neurosymbolic-reasoning": "*",
     "remark": "^15.0.1",
     "remark-parse": "^11.0.0",
-    "remark-docx": "^4.0.3",
     "unified": "^11.0.4",
     "to-vfile": "^8.0.0",
     "@md2docx/remark-docx": "^1.0.0",

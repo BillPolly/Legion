@@ -35,17 +35,17 @@ export class OntologyBuilder {
     this.semanticSearch = config.semanticSearch;
     this.llmClient = config.llmClient;
 
+    // Initialize verification service FIRST (Z3 theorem proving)
+    this.verification = new OntologyVerificationService(this.tripleStore, config.verification || {});
+
     // Initialize services
     this.hierarchyTraversal = new HierarchyTraversalService(this.tripleStore);
     this.subsumptionChecker = new SubsumptionChecker(this.tripleStore, this.hierarchyTraversal);
     this.ontologyQuery = new OntologyQueryService(this.tripleStore, this.hierarchyTraversal, this.semanticSearch);
     this.gapAnalysis = new GapAnalysisService(this.subsumptionChecker, this.llmClient);
     this.specializationDecision = new SpecializationDecisionService(this.llmClient);
-    this.ontologyExtension = new OntologyExtensionService(this.tripleStore, this.semanticSearch, this.llmClient, this.hierarchyTraversal);
+    this.ontologyExtension = new OntologyExtensionService(this.tripleStore, this.semanticSearch, this.llmClient, this.hierarchyTraversal, this.verification);
     this.sentenceAnnotator = new SentenceAnnotator();
-
-    // Initialize verification service (Z3 theorem proving)
-    this.verification = new OntologyVerificationService(this.tripleStore, config.verification || {});
 
     this.bootstrapLoaded = false;
   }
@@ -200,6 +200,15 @@ export class OntologyBuilder {
           gaps.canReuseFromHierarchy.some(c => c.decision?.action === 'SPECIALIZE')) {
 
         const extensions = await this.ontologyExtension.extendFromGaps(gaps, domain);
+
+        // Check if extension was rejected by Z3 verification
+        if (extensions.success === false) {
+          console.warn(`  ⚠️  Extension rejected by Z3 verification`);
+          console.warn(`  Violations:`, extensions.violations);
+          // Skip this sentence - don't add anything
+          continue;
+        }
+
         console.log(`  ✅ Extended: +${extensions.addedClasses} classes, +${extensions.addedProperties} properties`);
         console.log(`  ♻️  Reused: ${extensions.reusedFromHierarchy} inherited concepts`);
 

@@ -6,7 +6,6 @@
   "description": "Legion - A modular framework for building AI agent tools",
   "workspaces": [
     "packages/*",
-    "packages/ai/*",
     "packages/agents/*",
     "packages/apps/*",
     "packages/frontend/*",

@@ -2,6 +2,11 @@ New class: {{newClassName}} - {{newClassDescription}}
 
 Domain: {{domain}}
 
+{{#if suggestedSupertype}}
+Suggested top-level category: {{suggestedSupertype}}
+(This should be the grandparent if you create an intermediate parent)
+
+{{/if}}
 Existing classes in ontology:
 {{#if existingClasses}}
 {{#each existingClasses}}
@@ -50,7 +55,8 @@ Decision:
   "parentName": "Pump",
   "parentDescription": "Device for moving fluids",
   "grandparent": "kg:Equipment",
-  "reasoning": "CentrifugalPump and ReciprocatingPump are both types of Pump. Need intermediate Pump class as their common parent."
+  "siblingClasses": ["kg:CentrifugalPump"],
+  "reasoning": "CentrifugalPump and ReciprocatingPump are both types of Pump. Need intermediate Pump class as their common parent. CentrifugalPump will be refactored to be a child of Pump."
 }
 
 **Example 3: CREATE_PARENT (third sibling, triggers abstraction)**
@@ -66,7 +72,8 @@ Decision:
   "parentName": "Pump",
   "parentDescription": "Device for moving fluids",
   "grandparent": "owl:Thing",
-  "reasoning": "Three pump types (Centrifugal, Reciprocating, Rotary) all share common abstraction. Create Pump parent and restructure all three as children."
+  "siblingClasses": ["kg:CentrifugalPump", "kg:ReciprocatingPump"],
+  "reasoning": "Three pump types (Centrifugal, Reciprocating, Rotary) all share common abstraction. Create Pump parent and restructure all three as children. CentrifugalPump and ReciprocatingPump will be refactored to be children of Pump."
 }
 
 **Example 4: USE_EXISTING (parent already created)**
@@ -101,4 +108,6 @@ Return JSON:
   - parentName: Name of new intermediate class (e.g., "Pump")
   - parentDescription: Description of the abstract parent
   - grandparent: What the new parent should inherit from (existing class URI or "owl:Thing")
-  - reasoning: Why abstraction is needed (mention sibling classes)
+  - siblingClasses: Array of URIs of existing classes that should become children of the new parent
+    (e.g., ["kg:CentrifugalPump", "kg:ReciprocatingPump"])
+  - reasoning: Why abstraction is needed (mention sibling classes that will be refactored)
