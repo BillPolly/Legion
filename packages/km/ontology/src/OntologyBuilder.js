@@ -18,6 +18,7 @@ import { OntologyExtensionService } from './services/OntologyExtensionService.js
 import { SentenceAnnotator } from './services/SentenceAnnotator.js';
 import { OntologyVerificationService } from './services/OntologyVerificationService.js';
 import { TableProcessor } from './services/TableProcessor.js';
+import { CanonicalLabelService } from '../../examples/convfinqa-agent/src/utils/CanonicalLabelService.js';
 import { getBootstrapTriples } from './bootstrap/upper-level-ontology.js';
 
 export class OntologyBuilder {
@@ -284,8 +285,8 @@ export class OntologyBuilder {
 
     console.log(`\n📊 Processing table structure (${table.length} rows)...`);
 
-    // Step 1: Extract table row labels (skip first 2 rows - headers)
-    const dataRows = table.slice(2);
+    // Step 1: Extract table row labels (skip first row - header)
+    const dataRows = table.slice(1);
     const rowLabels = dataRows.map(row => String(row[0]).trim()).filter(label => label);
 
     if (rowLabels.length === 0) {
@@ -368,12 +369,9 @@ export class OntologyBuilder {
     const existingPropNames = new Set(existingProps.map(([uri]) => uri.split(':')[1]?.toLowerCase()));
 
     for (const rowLabel of rowLabels) {
-      // Convert row label to property name
-      const propName = rowLabel
-        .toLowerCase()
-        .replace(/[^a-z0-9\s]/g, '')
-        .replace(/\s+/g, '_')
-        .replace(/_+/g, '_');
+      // Apply deterministic canonicalization (same as instance KG builder)
+      const canonicalLabel = CanonicalLabelService.canonicalize(rowLabel);
+      const propName = CanonicalLabelService.toPropertyName(canonicalLabel);
 
       const propUri = `kg:${propName}`;
 
@@ -383,11 +381,11 @@ export class OntologyBuilder {
         continue;
       }
 
-      // Add property to ontology
+      // Add property to ontology with canonical label
       await this.tripleStore.add(propUri, 'rdf:type', 'owl:DatatypeProperty');
       await this.tripleStore.add(propUri, 'rdfs:domain', entityClass);
-      await this.tripleStore.add(propUri, 'rdfs:label', `"${rowLabel}"`);
-      await this.tripleStore.add(propUri, 'skos:altLabel', `"${rowLabel}"`);
+      await this.tripleStore.add(propUri, 'rdfs:label', `"${canonicalLabel}"`);  // Use canonical form
+      await this.tripleStore.add(propUri, 'skos:altLabel', `"${canonicalLabel}"`);  // Use canonical form
 
       console.log(`     ✓ Added property: ${propUri} → ${entityClass}`);
       propertiesAdded++;

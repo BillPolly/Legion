@@ -21,8 +21,8 @@ import { readFileSync } from 'fs';
 import { ResourceManager } from '@legion/resource-manager';
 import { MongoDBProvider } from '../../src/storage/MongoDBProvider.js';
 import { TurnProcessor } from '../../src/agent/TurnProcessor.js';
-import { KGBuilder } from '../../src/kg/KGBuilder.js';
-import { QueryKGTool, ListEntitiesTool, CalculateTool } from '../../src/tools/index.js';
+import { KGBuilder } from '../../src/utils/KGBuilder.js';
+import { QueryKGTool, ListEntitiesTool, CalculateTool } from '../../src/agent/tools/index.js';
 
 describe('E2E: Full ConvFinQA Pipeline', () => {
   let resourceManager;
@@ -72,15 +72,23 @@ describe('E2E: Full ConvFinQA Pipeline', () => {
       }
     });
 
-    // Verify ontology exists
+    // Verify ontology exists - FAIL FAST if not
     const ontologyTriples = await ontologyProvider.query(null, null, null);
+    if (ontologyTriples.length === 0) {
+      throw new Error(
+        'Ontology not found in MongoDB!\n' +
+        'Run: npm run build-ontology -- 1 5\n' +
+        'This builds the ontology from examples 1-5.'
+      );
+    }
     console.log(`✓ Loaded ${ontologyTriples.length} ontology triples`);
-    expect(ontologyTriples.length).toBeGreaterThan(0);
 
     // Check for expected classes
     const classTriples = await ontologyProvider.query(null, 'rdf:type', 'owl:Class');
+    if (classTriples.length === 0) {
+      throw new Error('No classes found in ontology! Ontology may be corrupted.');
+    }
     console.log(`✓ Found ${classTriples.length} classes in ontology`);
-    expect(classTriples.length).toBeGreaterThan(0);
 
     // ========================================
     // 2. LOAD TEST EXAMPLE
@@ -91,12 +99,15 @@ describe('E2E: Full ConvFinQA Pipeline', () => {
     const datasetPath = resourceManager.get('env.CONVFINQA_DATASET_PATH') ||
                        './data/convfinqa_train.json';
     const dataset = JSON.parse(readFileSync(datasetPath, 'utf-8'));
-    const example = dataset[0]; // First example
+    const example = dataset[0]; // First example (should match ontology built from examples 1-5)
+
+    // Convert QA to array format if it's a single object
+    const qaArray = Array.isArray(example.qa) ? example.qa : [example.qa];
 
     console.log(`✓ Loaded example: ${example.id}`);
-    console.log(`  - Text items: ${example.text.length}`);
-    console.log(`  - Table rows: ${example.table.length}`);
-    console.log(`  - QA turns: ${example.qa.length}`);
+    console.log(`  - Text items: ${example.text?.length || 0}`);
+    console.log(`  - Table rows: ${example.table?.length || 0}`);
+    console.log(`  - QA turns: ${qaArray.length}`);
 
     // ========================================
     // 3. BUILD INSTANCE-LEVEL KG FROM TABLE
@@ -121,7 +132,7 @@ describe('E2E: Full ConvFinQA Pipeline', () => {
     });
 
     await kgBuilder.buildFromTable(example.table, {
-      context: example.text,
+      context: example.text || [],
       conversationId: example.id
     });
 
@@ -145,40 +156,32 @@ describe('E2E: Full ConvFinQA Pipeline', () => {
 
     const results = [];
 
-    for (let i = 0; i < example.qa.length; i++) {
-      const turn = example.qa[i];
-      console.log(`\n[Turn ${i + 1}/${example.qa.length}] "${turn.question}"`);
+    for (let i = 0; i < qaArray.length; i++) {
+      const turn = qaArray[i];
+      console.log(`\n[Turn ${i + 1}/${qaArray.length}] "${turn.question}"`);
 
       try {
-        // Understand question
-        const understanding = await turnProcessor.understandQuestion(turn.question, {
-          previousTurns: example.qa.slice(0, i)
-        });
+        // Process turn using new API
+        const result = await turnProcessor.processTurn(turn.question);
 
-        console.log(`  Understanding:`, JSON.stringify(understanding, null, 2));
-
-        // Answer question using tools
-        const answerResult = await turnProcessor.answerQuestion(turn.question, understanding);
-
-        console.log(`  Answer: ${answerResult.answer}`);
+        console.log(`  Understanding:`, JSON.stringify(result.understanding, null, 2));
+        console.log(`  Answer: ${result.answer}`);
         console.log(`  Gold: ${turn.answer}`);
-        console.log(`  Tool calls: ${answerResult.toolCalls.length}`);
+        console.log(`  Tool calls: ${result.toolCalls.length}`);
 
-        // Check if answer matches gold answer (normalize numbers)
-        const predicted = String(answerResult.answer).trim();
-        const gold = String(turn.answer).trim();
-        const correct = predicted === gold;
+        // Check if answer matches gold answer
+        const correct = turnProcessor.scoreAnswer(result.answer, turn.answer);
 
         console.log(`  ${correct ? '✅ CORRECT' : '❌ INCORRECT'}`);
 
         results.push({
           turnIndex: i,
           question: turn.question,
-          understanding,
-          answer: answerResult.answer,
+          understanding: result.understanding,
+          answer: result.answer,
           goldAnswer: turn.answer,
           correct,
-          toolCalls: answerResult.toolCalls
+          toolCalls: result.toolCalls
         });
 
       } catch (error) {

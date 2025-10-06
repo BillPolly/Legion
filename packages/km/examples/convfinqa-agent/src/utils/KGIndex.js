@@ -19,6 +19,7 @@ export class KGIndex {
     this.yearIndex = new Map();       // year -> [instanceURIs]
     this.categoryIndex = new Map();   // normalized_category -> [instanceURIs]
     this.instanceCache = new Map();   // instanceURI -> { properties }
+    this.propertyLabelMap = new Map(); // instanceURI -> Map(normalized_label -> propertyUri)
 
     // Metadata
     this.isBuilt = false;
@@ -70,28 +71,54 @@ export class KGIndex {
    * @private
    */
   async _indexInstance(instanceUri) {
-    // Get all properties for this instance
-    const label = await this._getProperty(instanceUri, 'kg:label');
+    // Get instance label (rdfs:label)
+    const label = await this._getProperty(instanceUri, 'rdfs:label');
     const year = await this._getProperty(instanceUri, 'kg:year');
-    const category = await this._getProperty(instanceUri, 'kg:category');
-    const value = await this._getProperty(instanceUri, 'kg:value');
-    const rawValue = await this._getProperty(instanceUri, 'kg:rawValue');
-    const rawValueString = await this._getProperty(instanceUri, 'kg:rawValueString');
-    const unit = await this._getProperty(instanceUri, 'kg:unit');
+
+    // Get all properties for this instance
+    const allTriples = await this.kgStore.query(instanceUri, null, null);
+
+    // Extract property values and labels
+    const properties = {};
+    const propertyLabels = [];
+
+    // Map property labels to their URIs for this instance
+    const labelToPropertyUri = new Map();
+
+    for (const [, predicate, object] of allTriples) {
+      // Skip RDF meta properties
+      if (predicate.startsWith('rdf:') || predicate.startsWith('rdfs:')) {
+        continue;
+      }
+
+      // Check if this is a property label triple
+      if (predicate.endsWith('_label')) {
+        const labelValue = object.replace(/^"|"$/g, '');
+        propertyLabels.push(labelValue);
+
+        // Map normalized label to property URI
+        const normLabel = this._normalizeLabel(labelValue);
+        const propertyUri = predicate.slice(0, -6); // Remove '_label' suffix
+        labelToPropertyUri.set(normLabel, propertyUri);
+      } else {
+        // Regular property
+        properties[predicate] = object;
+      }
+    }
+
+    // Store property label mapping for this instance
+    this.propertyLabelMap.set(instanceUri, labelToPropertyUri);
 
     // Cache instance data for fast retrieval
     this.instanceCache.set(instanceUri, {
       uri: instanceUri,
       label,
       year,
-      category,
-      value: value ? parseFloat(value) : null,
-      rawValue: rawValue ? parseFloat(rawValue) : null,
-      rawValueString,
-      unit
+      properties,
+      propertyLabels
     });
 
-    // Index by label (normalized)
+    // Index by instance label (normalized)
     if (label) {
       const normLabel = this._normalizeLabel(label);
       if (!this.labelIndex.has(normLabel)) {
@@ -100,21 +127,24 @@ export class KGIndex {
       this.labelIndex.get(normLabel).push(instanceUri);
     }
 
+    // ✅ INDEX BY PROPERTY LABELS - This is critical for semantic matching!
+    for (const propLabel of propertyLabels) {
+      const normLabel = this._normalizeLabel(propLabel);
+      if (!this.labelIndex.has(normLabel)) {
+        this.labelIndex.set(normLabel, []);
+      }
+      // Avoid duplicates
+      if (!this.labelIndex.get(normLabel).includes(instanceUri)) {
+        this.labelIndex.get(normLabel).push(instanceUri);
+      }
+    }
+
     // Index by year
     if (year) {
       if (!this.yearIndex.has(year)) {
         this.yearIndex.set(year, []);
       }
       this.yearIndex.get(year).push(instanceUri);
-    }
-
-    // Index by category (normalized)
-    if (category) {
-      const normCategory = this._normalizeLabel(category);
-      if (!this.categoryIndex.has(normCategory)) {
-        this.categoryIndex.set(normCategory, []);
-      }
-      this.categoryIndex.get(normCategory).push(instanceUri);
     }
   }
 
@@ -139,7 +169,7 @@ export class KGIndex {
   _normalizeLabel(label) {
     return label
       .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, '')
+      .replace(/[^a-z0-9\s_]/g, '')  // Keep underscores
       .replace(/\s+/g, '_')
       .trim();
   }
@@ -160,12 +190,13 @@ export class KGIndex {
     // Normalize search label
     const normLabel = this._normalizeLabel(label);
 
-    // Get candidates by label (O(1) lookup)
+    // Get candidates by label (O(1) lookup - EXACT MATCH ONLY)
     let candidates = this.labelIndex.get(normLabel) || [];
 
-    // If no exact match, try fuzzy matching
+    // With deterministic canonicalization, we expect exact matches
+    // If no match found, it means the label doesn't exist in the KG
     if (candidates.length === 0) {
-      candidates = this._fuzzyMatchLabel(normLabel);
+      this.logger?.debug('kg_index_no_match', { label, normLabel });
     }
 
     // Filter by year if provided
@@ -181,53 +212,39 @@ export class KGIndex {
       candidates = candidates.filter(uri => categoryInstances.has(uri));
     }
 
-    // Return instance data from cache
-    return candidates.map(uri => this.instanceCache.get(uri)).filter(Boolean);
-  }
+    // Transform candidates into result instances
+    const results = [];
 
-  /**
-   * Fuzzy match a label using token-based similarity
-   * @private
-   */
-  _fuzzyMatchLabel(normLabel) {
-    let bestMatches = [];
-    let bestScore = 0;
+    for (const uri of candidates) {
+      const instance = this.instanceCache.get(uri);
+      if (!instance) continue;
 
-    for (const [indexedLabel, instanceUris] of this.labelIndex.entries()) {
-      const score = this._computeSimilarity(normLabel, indexedLabel);
+      // Check if search label matches a property label
+      const propertyLabelMap = this.propertyLabelMap.get(uri);
+      const propertyUri = propertyLabelMap?.get(normLabel);
 
-      if (score > 0.8 && score > bestScore) {
-        bestScore = score;
-        bestMatches = instanceUris;
+      if (propertyUri) {
+        // This is a property-level match - extract property value
+        const value = instance.properties[propertyUri];
+
+        if (value !== undefined) {
+          // Create virtual instance with property value
+          results.push({
+            uri: `${uri}_${normLabel}`, // Virtual URI
+            label: label, // Use original search label
+            value: value,
+            year: instance.year,
+            propertyUri: propertyUri,
+            entityUri: uri
+          });
+        }
+      } else {
+        // This is an instance-level match - return as-is
+        results.push(instance);
       }
     }
 
-    return bestMatches;
-  }
-
-  /**
-   * Compute similarity between two normalized labels
-   * Uses Jaccard similarity on tokens
-   * @private
-   */
-  _computeSimilarity(label1, label2) {
-    // Exact match
-    if (label1 === label2) return 1.0;
-
-    // Tokenize
-    const tokens1 = new Set(label1.split('_'));
-    const tokens2 = new Set(label2.split('_'));
-
-    // Jaccard similarity: |intersection| / |union|
-    const intersection = new Set([...tokens1].filter(t => tokens2.has(t)));
-    const union = new Set([...tokens1, ...tokens2]);
-
-    const jaccard = intersection.size / union.size;
-
-    // Substring bonus
-    const substring = label1.includes(label2) || label2.includes(label1) ? 0.3 : 0;
-
-    return Math.max(jaccard, substring);
+    return results;
   }
 
   /**

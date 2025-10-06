@@ -131,11 +131,11 @@ Work step-by-step and retrieve all necessary data.`;
     const maxIterations = 10;
 
     for (let iteration = 0; iteration < maxIterations; iteration++) {
-      this.logger.debug('agentic_loop_iteration', { iteration });
+      this.logger.debug('agentic_loop_iteration', { iteration, messagesCount: messages.length });
 
       // Call LLM with native tool support
       const response = await this.llmClient.request({
-        messages,
+        chatHistory: messages,  // Use chatHistory, not messages!
         tools,
         maxTokens: 2000,
         temperature: 0
@@ -143,6 +143,15 @@ Work step-by-step and retrieve all necessary data.`;
 
       // Check if LLM wants to use tools
       if (response.toolUses && response.toolUses.length > 0) {
+        // Add assistant's message with tool uses to conversation
+        messages.push({
+          role: 'assistant',
+          content: response.content
+        });
+
+        // Collect all tool results
+        const toolResultsContent = [];
+
         // Execute each tool call
         for (const toolUse of response.toolUses) {
           const toolResult = await this._executeTool(toolUse.name, toolUse.input);
@@ -166,16 +175,19 @@ Work step-by-step and retrieve all necessary data.`;
             });
           }
 
-          // Build tool result message for Claude
-          messages.push({
-            role: 'user',
-            content: [{
-              type: 'tool_result',
-              tool_use_id: toolUse.id,
-              content: JSON.stringify(toolResult)
-            }]
+          // Add tool result to content array
+          toolResultsContent.push({
+            type: 'tool_result',
+            tool_use_id: toolUse.id,
+            content: JSON.stringify(toolResult)
           });
         }
+
+        // Add all tool results in a SINGLE user message
+        messages.push({
+          role: 'user',
+          content: toolResultsContent
+        });
       } else {
         // No more tool calls - LLM has final answer
         this.logger.info('agentic_loop_complete', {

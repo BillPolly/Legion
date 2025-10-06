@@ -526,6 +526,12 @@ export class LLMClient {
    * Normalize response to unified format
    */
   normalizeResponse(response, originalRequest, adaptedRequest) {
+    // If response is already structured (from native tool calling), return it
+    if (response && typeof response === 'object' && response.toolUses !== undefined) {
+      return response;
+    }
+
+    // Otherwise, treat as text and extract tool calls via regex
     return {
       content: response,
       toolCalls: this.extractToolCalls(response),

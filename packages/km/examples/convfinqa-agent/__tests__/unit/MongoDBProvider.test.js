@@ -243,10 +243,15 @@ describe('MongoDBProvider', () => {
   describe('getMetadata', () => {
     test('should return metadata', () => {
       const metadata = provider.getMetadata();
-      expect(metadata).toEqual({
-        type: 'test',
-        runId: 'test-run-1'
+      expect(metadata).toMatchObject({
+        metadata: {
+          type: 'test',
+          runId: 'test-run-1'
+        },
+        type: 'mongodb'
       });
+      expect(metadata.collectionName).toBeDefined();
+      expect(metadata.dbName).toBeDefined();
     });
   });
 });

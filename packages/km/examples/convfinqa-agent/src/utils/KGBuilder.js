@@ -2,34 +2,52 @@
  * KGBuilder - Builds instance-level knowledge graph from tables and text
  *
  * Takes ConvFinQA table data and text and creates ABox triples using the pre-built ontology.
+ * Uses LLM-driven metadata extraction instead of regex parsing.
  */
 
-import { TableParser } from './TableParser.js';
+import { TableMetadataExtractor } from './TableMetadataExtractor.js';
 import { TextProcessor } from './TextProcessor.js';
 
 export class KGBuilder {
-  constructor(kgStore, ontologyStore, llmClient = null) {
-    this.kgStore = kgStore;
+  constructor({ instanceStore, ontologyStore, llmClient = null, metadataStore = null }) {
+    this.kgStore = instanceStore;
     this.ontologyStore = ontologyStore;
-    this.tableParser = new TableParser(llmClient);
+    this.metadataStore = metadataStore;
+    this.metadataExtractor = llmClient ? new TableMetadataExtractor({ llmClient, logger: console }) : null;
     this.textProcessor = llmClient ? new TextProcessor(llmClient) : null;
   }
 
   /**
    * Build KG instances from table data
    *
-   * @param {Array<Array<string>>} table - Table data (2D array) - use table_ori for clean structure
-   * @param {Array<string>} text - Text data for context
+   * @param {Array<Array<string>>} table - Table data (2D array)
+   * @param {Object} options - Options object
+   * @param {Array<string>} options.context - Text data for context
+   * @param {string} options.conversationId - Conversation ID for tracking
    * @returns {Promise<Object>} Stats about created KG
    */
-  async buildFromTable(table, text) {
-    // Step 1: Parse table structure using specialized TableParser
-    const parsedTable = await this.tableParser.parse(table, text);
+  async buildFromTable(table, options = {}) {
+    const { context = [], conversationId = null } = options;
 
-    console.log(`  Parsed ${parsedTable.yearColumns.length} year columns: ${parsedTable.yearColumns.map(yc => yc.year).join(', ')}`);
+    if (!this.metadataExtractor) {
+      throw new Error('TableMetadataExtractor required - pass llmClient to constructor');
+    }
 
-    // Step 2: Detect entity type from ontology using table and text
-    const entityType = await this._detectEntityType(text, parsedTable.dataRows);
+    // Step 1: Extract table metadata using LLM
+    const metadata = await this.metadataExtractor.getOrExtractMetadata(
+      this.metadataStore,
+      conversationId,
+      table,
+      context
+    );
+
+    console.log(`  Extracted metadata: ${metadata.tableDescription}`);
+    console.log(`  Year columns: ${metadata.yearColumns.map(yc => yc.year).join(', ')}`);
+    console.log(`  Row metadata: ${metadata.rowMetadata.length} rows`);
+
+    // Step 2: Detect entity type from ontology
+    const dataRows = table.slice(1); // Exclude header
+    const entityType = await this._detectEntityType(context, dataRows);
 
     if (!entityType) {
       throw new Error('Could not detect entity type from table and text');
@@ -37,8 +55,8 @@ export class KGBuilder {
 
     console.log(`  Detected entity type: ${entityType}`);
 
-    // Step 3: Build property map from data rows
-    const propertyMap = await this._buildPropertyMap(parsedTable.dataRows, entityType);
+    // Step 3: Build property map using metadata
+    const propertyMap = await this._buildPropertyMapFromMetadata(metadata.rowMetadata, entityType);
 
     console.log(`  Mapped ${Object.keys(propertyMap).length} properties`);
 
@@ -50,7 +68,9 @@ export class KGBuilder {
       textFacts: 0
     };
 
-    for (const { year, colIdx } of parsedTable.yearColumns) {
+    for (const yearCol of metadata.yearColumns) {
+      const year = yearCol.year;
+      const colIdx = yearCol.colIdx;
       const instanceUri = `kg:${entityType.split(':')[1]}_${year}`;
 
       // Create instance type triple
@@ -58,37 +78,55 @@ export class KGBuilder {
       stats.instances++;
       stats.triples++;
 
+      // ✅ CREATE LABEL TRIPLE - This is the critical fix!
+      const instanceLabel = `${metadata.tableDescription} ${year}`;
+      await this.kgStore.addTriple(instanceUri, 'rdfs:label', `"${instanceLabel}"`);
+      stats.triples++;
+
       // Add year property
       await this.kgStore.addTriple(instanceUri, 'kg:year', year);
       stats.triples++;
 
-      // Create property triples for each data row
-      for (const dataRow of parsedTable.dataRows) {
-        const rowLabel = dataRow[0];
+      // Create property triples for each data row using metadata
+      for (const rowMeta of metadata.rowMetadata) {
+        const rowIdx = rowMeta.rowIdx;
+        const dataRow = dataRows[rowIdx];
+
+        if (!dataRow) {
+          console.warn(`    Row ${rowIdx} not found in data`);
+          continue;
+        }
+
         const cellValue = dataRow[colIdx + 1]; // +1 because col 0 is label
 
         if (!cellValue || String(cellValue).trim() === '') {
           continue;
         }
 
-        const propertyUri = propertyMap[rowLabel.toLowerCase()];
+        const propertyUri = propertyMap[rowMeta.canonicalLabel];
         if (!propertyUri) {
-          console.warn(`    No property mapping for: ${rowLabel}`);
+          console.warn(`    No property mapping for: ${rowMeta.canonicalLabel}`);
           continue;
         }
 
-        // Parse value
-        const parsedValue = this._parseValue(cellValue);
+        // Parse value using metadata
+        const parsedValue = this._parseValueWithMetadata(cellValue, rowMeta);
 
+        // Add property value triple
         await this.kgStore.addTriple(instanceUri, propertyUri, parsedValue);
+        stats.triples++;
+
+        // ✅ CREATE PROPERTY LABEL TRIPLE for semantic matching
+        const labelPropertyUri = `${propertyUri}_label`;
+        await this.kgStore.addTriple(instanceUri, labelPropertyUri, `"${rowMeta.canonicalLabel}"`);
         stats.triples++;
       }
     }
 
     // Step 5: Extract facts from text and add to KG
-    if (this.textProcessor && text && text.length > 0) {
+    if (this.textProcessor && context && context.length > 0) {
       try {
-        const years = parsedTable.yearColumns.map(yc => yc.year);
+        const years = metadata.yearColumns.map(yc => yc.year);
         const tableContext = {
           years,
           currentYear: years[years.length - 1],
@@ -97,7 +135,7 @@ export class KGBuilder {
           entityType: entityType.split(':')[1]
         };
 
-        const facts = await this.textProcessor.extractFacts(text, tableContext);
+        const facts = await this.textProcessor.extractFacts(context, tableContext);
 
         if (facts.length > 0) {
           const triples = this.textProcessor.factsToTriples(facts, entityType);
@@ -226,105 +264,52 @@ export class KGBuilder {
   }
 
   /**
-   * Build property map from data row labels and ontology properties
-   * Uses semantic matching with altLabels and definitions
+   * Build property map from metadata using exact canonical label matching
+   *
+   * Since both ontology and instance KG use the same deterministic canonicalization,
+   * we can use exact string matching - no fuzzy logic needed!
    */
-  async _buildPropertyMap(dataRows, entityType) {
+  async _buildPropertyMapFromMetadata(rowMetadata, entityType) {
     const propertyMap = {};
 
     // Get all properties that have this entity as domain
     const properties = await this.ontologyStore.query(null, 'rdfs:domain', entityType);
 
-    // Build property metadata for semantic matching
-    const propertyMetadata = [];
+    // Build lookup map: canonical label → property URI
+    const labelToProperty = new Map();
     for (const [propUri] of properties) {
       const labels = await this.ontologyStore.query(propUri, 'rdfs:label', null);
-      const altLabels = await this.ontologyStore.query(propUri, 'skos:altLabel', null);
-      const definitions = await this.ontologyStore.query(propUri, 'skos:definition', null);
-
-      const propName = propUri.split(':')[1]?.toLowerCase() || '';
-      const label = labels.length > 0 ? labels[0][2].replace(/"/g, '').toLowerCase() : propName;
-      const altLabel = altLabels.length > 0 ? altLabels[0][2].replace(/"/g, '').toLowerCase() : '';
-      const definition = definitions.length > 0 ? definitions[0][2].replace(/"/g, '').toLowerCase() : '';
-
-      propertyMetadata.push({
-        uri: propUri,
-        name: propName,
-        label,
-        altLabel,
-        definition
-      });
+      if (labels.length > 0) {
+        const label = labels[0][2].replace(/"/g, '');  // Remove quotes
+        labelToProperty.set(label, propUri);
+      }
     }
 
-    // Map table row labels to properties using semantic matching
-    for (const dataRow of dataRows) {
-      const rowLabel = String(dataRow[0]).trim();
-      const rowLabelLower = rowLabel.toLowerCase();
+    // Map each row's canonical label to property URI using EXACT match
+    for (const rowMeta of rowMetadata) {
+      const canonicalLabel = rowMeta.canonicalLabel;
 
-      let bestMatch = null;
-      let bestScore = 0;
+      // Exact string match (deterministic canonicalization ensures this works)
+      const propertyUri = labelToProperty.get(canonicalLabel);
 
-      // Score each property based on semantic similarity
-      for (const prop of propertyMetadata) {
-        let score = 0;
-
-        // Exact matches (highest priority)
-        if (rowLabelLower === prop.label) score += 20;
-        if (rowLabelLower === prop.name) score += 20;
-        if (rowLabelLower === prop.altLabel) score += 20;
-
-        // Alt-label contains row label (very high priority)
-        if (prop.altLabel && prop.altLabel.includes(rowLabelLower)) {
-          score += 15;
-        }
-
-        // Row label contains alt-label
-        if (prop.altLabel && rowLabelLower.includes(prop.altLabel)) {
-          score += 12;
-        }
-
-        // Definition contains row label
-        if (prop.definition && prop.definition.includes(rowLabelLower)) {
-          score += 10;
-        }
-
-        // Label partial match
-        if (prop.label && (rowLabelLower.includes(prop.label) || prop.label.includes(rowLabelLower))) {
-          score += 8;
-        }
-
-        // Name partial match
-        if (prop.name && (rowLabelLower.includes(prop.name) || prop.name.includes(rowLabelLower))) {
-          score += 6;
-        }
-
-        if (score > bestScore) {
-          bestScore = score;
-          bestMatch = prop.uri;
-        }
+      if (!propertyUri) {
+        throw new Error(
+          `No exact match for canonical label "${canonicalLabel}" in entity type ${entityType}.\n` +
+          `Available properties: ${Array.from(labelToProperty.keys()).join(', ')}\n` +
+          `This indicates the ontology was not built from training data including this table.`
+        );
       }
 
-      // Use best match if score is good enough (threshold = 8)
-      if (bestMatch && bestScore >= 8) {
-        propertyMap[rowLabelLower] = bestMatch;
-        continue;
-      }
-
-      // No good match - FAIL FAST (do NOT modify ontology!)
-      throw new Error(
-        `No property in ontology matches table row "${rowLabel}" for entity type ${entityType}.\n` +
-        `Available properties: ${propertyMetadata.map(p => p.uri).join(', ')}\n` +
-        `The ontology must be built from training examples that include these table concepts!`
-      );
+      propertyMap[canonicalLabel] = propertyUri;
     }
 
     return propertyMap;
   }
 
   /**
-   * Parse cell value (handle currency, percentages, etc.)
+   * Parse cell value using metadata for canonicalization
    */
-  _parseValue(value) {
+  _parseValueWithMetadata(value, rowMetadata) {
     if (!value) return value;
 
     const str = String(value).trim();
@@ -334,16 +319,29 @@ export class KGBuilder {
       .replace(/\$/g, '')
       .replace(/%/g, '')
       .replace(/,/g, '')
-      .replace(/\(/g, '')
+      .replace(/\(/g, '-')  // Handle parentheses as negative
       .replace(/\)/g, '');
 
     // Try to parse as number
     const num = parseFloat(cleaned);
     if (!isNaN(num)) {
+      // Apply unit scaling if metadata specifies
+      if (rowMetadata.unit) {
+        const unit = rowMetadata.unit.toLowerCase();
+        if (unit.includes('thousand')) {
+          return num * 1000;
+        } else if (unit.includes('million')) {
+          return num * 1000000;
+        } else if (unit.includes('billion')) {
+          return num * 1000000000;
+        }
+      }
+
       return num;
     }
 
     // Return as string
     return str;
   }
+
 }

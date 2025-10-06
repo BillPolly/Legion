@@ -20,7 +20,28 @@ import { SimpleTripleStore } from '@legion/rdf';
 
 async function main() {
   console.log('\n=== ConvFinQA Verified Ontology Builder ===\n');
-  console.log('Building ontology from examples 1-10 with Z3 verification...\n');
+
+  // Parse command line args - default to 1-10
+  const args = process.argv.slice(2);
+  let startIdx, endIdx;
+
+  if (args.length === 0) {
+    // Default: examples 1-10
+    startIdx = 0;
+    endIdx = 10;
+  } else if (args.length === 1) {
+    // Single example
+    startIdx = parseInt(args[0]) - 1;
+    endIdx = startIdx + 1;
+  } else if (args.length === 2) {
+    // Range from-to
+    startIdx = parseInt(args[0]) - 1;
+    endIdx = parseInt(args[1]);
+  } else {
+    throw new Error('Usage: node build-verified-ontology.js [example] OR node build-verified-ontology.js [from] [to]');
+  }
+
+  console.log(`Building ontology from examples ${startIdx + 1}-${endIdx}...\n`);
 
   // Get configuration
   const resourceManager = await ResourceManager.getInstance();
@@ -41,15 +62,19 @@ async function main() {
   await mongoClient.connect();
   console.log('✓ Connected\n');
 
+  // Setup MongoDB connection for incremental saves
+  const db = mongoClient.db('convfinqa_eval');
+  const ontologyCollection = db.collection('ontology');
+
   try {
     // Load dataset
     console.log(`Loading dataset from ${datasetPath}...`);
     const dataset = JSON.parse(readFileSync(datasetPath, 'utf-8'));
     console.log(`✓ Loaded ${dataset.length} conversations\n`);
 
-    // Take first 1 example
-    const examples = dataset.slice(0, 1);
-    console.log(`Processing first ${examples.length} examples\n`);
+    // Take specified range
+    const examples = dataset.slice(startIdx, endIdx);
+    console.log(`Processing ${examples.length} examples (${startIdx + 1} to ${endIdx})\n`);
 
     // Create in-memory triple store for ontology building
     console.log('Creating in-memory triple store...');
@@ -136,33 +161,8 @@ async function main() {
           textItems.push(...example.post_text);
         }
 
-        // Process ALL text items
-        if (textItems.length > 0) {
-          console.log(`  📝 Processing ${textItems.length} text items...`);
-
-          try {
-            for (let j = 0; j < textItems.length; j++) {
-              const textItem = textItems[j];
-              const result = await ontologyBuilder.processText(textItem, {
-                domain: 'finance',
-                conversationId: exampleId
-              });
-
-              if (result.classesAdded > 0 || result.propertiesAdded > 0) {
-                console.log(`    ✓ Added ${result.classesAdded} classes, ${result.propertiesAdded} properties`);
-                totalClasses += result.classesAdded || 0;
-                totalProperties += result.propertiesAdded || 0;
-              }
-
-              if (result.verified) {
-                totalVerifications++;
-              }
-            }
-          } catch (textError) {
-            console.warn(`  ⚠️  Text processing error: ${textError.message}`);
-            console.warn(`  Continuing with table processing...`);
-          }
-        }
+        // SKIP TEXT PROCESSING - TOO SLOW
+        console.log(`  ⏭️  Skipping ${textItems.length} text items (build from tables only)`);
 
         // Process table
         console.log(`  DEBUG: Has table: ${!!example.table}, table length: ${example.table?.length}`);
@@ -187,6 +187,24 @@ async function main() {
         }
 
         console.log(`  ✅ Example ${i + 1} complete`);
+
+        // SAVE TO MONGODB AFTER EACH EXAMPLE
+        console.log(`  💾 Saving to MongoDB...`);
+        const allTriples = tripleStore.query(null, null, null);
+
+        // Clear and reinsert all (incremental build maintains state)
+        await ontologyCollection.deleteMany({ type: 'ontology' });
+
+        const docs = allTriples.map(([s, p, o]) => ({
+          s, p, o,
+          type: 'ontology',
+          createdAt: new Date()
+        }));
+
+        if (docs.length > 0) {
+          await ontologyCollection.insertMany(docs);
+          console.log(`  ✓ Saved ${docs.length} triples to MongoDB\n`);
+        }
 
       } catch (error) {
         console.error(`  ❌ Error processing example ${i + 1}:`, error.message);
@@ -271,58 +289,24 @@ async function main() {
       console.log(`  ... and ${domainProps.length - 15} more properties\n`);
     }
 
-    console.log('='.repeat(80));
-    console.log('Persisting ontology to MongoDB...');
-    console.log('='.repeat(80));
-    console.log();
-
-    // Persist to MongoDB
-    const db = mongoClient.db('convfinqa_eval');
-    const ontologyCollection = db.collection('ontology');
-
-    // Clear existing ontology
-    console.log('Clearing existing ontology in MongoDB...');
-    await ontologyCollection.deleteMany({ type: 'ontology' });
-    console.log('✓ Cleared\n');
-
-    // Create indexes
-    console.log('Creating indexes...');
+    // Create indexes (if not exists)
+    console.log('Ensuring indexes exist...');
     await ontologyCollection.createIndex({ s: 1, p: 1, o: 1, type: 1 });
     await ontologyCollection.createIndex({ type: 1 });
     await ontologyCollection.createIndex({ p: 1, type: 1 });
-    console.log('✓ Indexes created\n');
-
-    // Get all triples from SimpleTripleStore
-    const allTriples = tripleStore.query(null, null, null);
-
-    console.log(`Inserting ${allTriples.length} triples into MongoDB...`);
-
-    // Batch insert
-    const batchSize = 1000;
-    for (let i = 0; i < allTriples.length; i += batchSize) {
-      const batch = allTriples.slice(i, i + batchSize);
-      const docs = batch.map(([s, p, o]) => ({
-        s,
-        p,
-        o,
-        type: 'ontology',
-        createdAt: new Date()
-      }));
-      await ontologyCollection.insertMany(docs);
-      console.log(`  Inserted ${Math.min(i + batchSize, allTriples.length)}/${allTriples.length} triples`);
-    }
-
-    console.log('✓ All triples persisted to MongoDB\n');
+    console.log('✓ Indexes ready\n');
 
     console.log('='.repeat(80));
     console.log('✅ Verified ontology successfully built!');
     console.log('='.repeat(80));
     console.log();
+
+    const savedCount = await ontologyCollection.countDocuments({ type: 'ontology' });
     console.log('Ontology stored in MongoDB: convfinqa_eval.ontology');
     console.log(`  - ${classTriples.length} classes`);
     console.log(`  - ${propertyTriples.length + objectPropertyTriples.length} properties`);
     console.log(`  - ${totalVerifications} Z3 verifications performed`);
-    console.log(`  - ${allTriples.length} total triples`);
+    console.log(`  - ${savedCount} total triples`);
     console.log();
     console.log('Ready for evaluation runs!');
     console.log();

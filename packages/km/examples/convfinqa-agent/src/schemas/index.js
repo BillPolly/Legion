@@ -54,7 +54,7 @@ export const semanticUnderstandingSchema = {
       properties: {
         unit: {
           type: 'string',
-          enum: ['percentage', 'dollars', 'millions', 'billions', 'number'],
+          enum: ['percentage', '%', 'dollars', '$', 'millions', 'billions', 'number'],
           description: 'The unit for the answer'
         },
         precision: {

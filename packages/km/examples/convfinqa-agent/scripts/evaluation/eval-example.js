@@ -9,8 +9,8 @@
 import { MongoClient } from 'mongodb';
 import { readFileSync } from 'fs';
 import { ResourceManager } from '@legion/resource-manager';
-import { MongoDBProvider } from '../src/storage/MongoDBProvider.js';
-import { TurnProcessor } from '../src/agent/TurnProcessor.js';
+import { MongoDBProvider } from '../../src/storage/MongoDBProvider.js';
+import { TurnProcessor } from '../../src/agent/TurnProcessor.js';
 import { SemanticSearchProvider } from '@legion/semantic-search';
 import { OntologyIndexer } from '@legion/ontology/src/services/OntologyIndexer.js';
 

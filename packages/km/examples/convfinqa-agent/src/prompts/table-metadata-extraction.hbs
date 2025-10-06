@@ -1,0 +1,38 @@
+You are analyzing a financial table to extract comprehensive metadata.
+
+{{context}}
+
+Table Structure:
+```
+{{table}}
+```
+
+Your task is to extract detailed metadata about this table:
+
+1. **Table Description**: What does this table represent? (e.g., "Cash flow statement", "Revenue breakdown", "Balance sheet")
+
+2. **Year Columns**: Identify which columns contain yearly data.
+   - The first column (index 0) is typically row labels
+   - Subsequent columns contain data for specific years
+   - Extract: column index, year, and the full semantic label from the header
+
+3. **Row Metadata**: For each data row (excluding headers), extract:
+   - Original label text
+   - Canonical label (MUST preserve the exact wording from original label - only lowercase and replace hyphens with spaces - PRESERVE ampersands (&) and other special chars - DO NOT expand & to "and" - DO NOT abbreviate or change terminology!)
+   - Property name (snake_case identifier for KG triples)
+   - Value type (currency, percentage, number, count, ratio)
+   - Unit (thousands, millions, %, etc.)
+   - Category (what semantic category this metric belongs to)
+
+4. **Domain**: What domain is this table from? (finance, healthcare, sales, etc.)
+
+5. **Table Type**: What specific type of table is this? (cash_flow_statement, income_statement, balance_sheet, etc.)
+
+**Important Guidelines**:
+- For property names, use snake_case and be consistent (e.g., "net_cash_from_operating_activities")
+- For canonical labels, PRESERVE THE EXACT WORDS from the original label - only apply minimal normalization (lowercase, replace hyphens/punctuation with spaces) - DO NOT abbreviate (e.g., "basic earnings per share" NOT "basic eps", "non cash expenses" NOT "noncash")
+- Identify units carefully (look for indicators like "in thousands", "$", "%" in headers or context)
+- Column indices are zero-based, with 0 being the first data column after row labels
+- Row indices are zero-based, counting data rows only (not header rows)
+
+**IMPORTANT: Return ONLY valid JSON. Do NOT include any explanatory text before or after the JSON object.**

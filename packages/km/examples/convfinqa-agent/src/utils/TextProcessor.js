@@ -7,8 +7,10 @@
  * - Temporal references (e.g., "current year", "2012", "prior year")
  * - Relationships between entities
  *
- * These facts are added to the KG to support questions that reference text-based data.
+ * Applies deterministic canonicalization to entity names to match ontology/KG labels.
  */
+
+import { CanonicalLabelService } from './CanonicalLabelService.js';
 
 export class TextProcessor {
   constructor(llmClient) {
@@ -82,11 +84,18 @@ Return ONLY the JSON array, no explanation.`;
         temperature: 0
       });
 
-      const facts = this._parseJSON(response.content);
+      const rawFacts = this._parseJSON(response.content);
 
-      console.log(`  ✓ Extracted ${facts.length} facts from text`);
+      // Apply deterministic canonicalization to entity names
+      const canonicalFacts = rawFacts.map(fact => ({
+        ...fact,
+        entity: fact.entity,  // Keep original for context
+        canonicalEntity: CanonicalLabelService.canonicalize(fact.entity)
+      }));
 
-      return Array.isArray(facts) ? facts : [];
+      console.log(`  ✓ Extracted ${canonicalFacts.length} facts from text`);
+
+      return Array.isArray(canonicalFacts) ? canonicalFacts : [];
 
     } catch (error) {
       console.error(`  ⚠️  Failed to extract facts from text: ${error.message}`);
@@ -107,14 +116,12 @@ Return ONLY the JSON array, no explanation.`;
     for (let i = 0; i < facts.length; i++) {
       const fact = facts[i];
 
-      // Normalize entity name for URI
-      const normalizedEntity = fact.entity
-        .toLowerCase()
-        .replace(/[^a-z0-9\s]/g, '')
-        .replace(/\s+/g, '_');
+      // Use canonical entity name for URI (deterministic)
+      const canonicalEntity = fact.canonicalEntity || CanonicalLabelService.canonicalize(fact.entity);
+      const propertyName = CanonicalLabelService.toPropertyName(canonicalEntity);
 
       const year = fact.year || 'unknown';
-      const instanceUri = `kg:text_${normalizedEntity}_${year}_${i}`;
+      const instanceUri = `kg:text_${propertyName}_${year}_${i}`;
 
       // Create instance
       triples.push({
