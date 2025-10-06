@@ -1,0 +1,137 @@
+[
+  {
+    "conversationId": "Single_MRO/2007/page_134.pdf-1",
+    "correct": 5,
+    "total": 5,
+    "answers": [
+      {
+        "turn": 1,
+        "question": "what was the weighted average exercise price per share in 2007?",
+        "resolvedQuestion": "what was the weighted average exercise price per share in 2007?",
+        "program": "60.94",
+        "answer": 60.94,
+        "expectedAnswer": 60.94,
+        "correct": true
+      },
+      {
+        "turn": 2,
+        "question": "and what was it in 2005?",
+        "resolvedQuestion": "and what was the exercise price in 2005?",
+        "program": "25.14",
+        "answer": 25.14,
+        "expectedAnswer": 25.14,
+        "correct": true
+      },
+      {
+        "turn": 3,
+        "question": "what was, then, the change over the years?",
+        "resolvedQuestion": "what was, then, the change over the years?",
+        "program": "subtract(60.94, 25.14)",
+        "answer": 35.8,
+        "expectedAnswer": 35.8,
+        "correct": true
+      },
+      {
+        "turn": 4,
+        "question": "what was the weighted average exercise price per share in 2005?",
+        "resolvedQuestion": "what was the weighted average exercise price per share in 2005?",
+        "program": "25.14",
+        "answer": 25.14,
+        "expectedAnswer": 25.14,
+        "correct": true
+      },
+      {
+        "turn": 5,
+        "question": "and how much does that change represent in relation to this 2005 weighted average exercise price?",
+        "resolvedQuestion": "and how much does the exercise price change represent in relation to this 2005 weighted average exercise price?",
+        "program": "subtract(60.94, 25.14), divide(#0, 25.14)",
+        "answer": 1.424025457438345,
+        "expectedAnswer": 1.42403,
+        "correct": true
+      }
+    ],
+    "errors": [],
+    "accuracy": 1
+  },
+  {
+    "conversationId": "Double_MRO/2007/page_134.pdf",
+    "correct": 3,
+    "total": 3,
+    "answers": [
+      {
+        "turn": 1,
+        "question": "how much did the weighted average exercise price per share increase between 2005 and 2007?",
+        "resolvedQuestion": "how much did the weighted average exercise price per share increase between 2005 and 2007?",
+        "program": "subtract(60.94, 25.14)",
+        "answer": 35.8,
+        "expectedAnswer": 35.8,
+        "correct": true
+      },
+      {
+        "turn": 2,
+        "question": "so what was the percentage change during this time?",
+        "resolvedQuestion": "so what was the percentage change during this time?",
+        "program": "subtract(60.94, 25.14), divide(#0, 25.14)",
+        "answer": 1.424025457438345,
+        "expectedAnswer": 1.42403,
+        "correct": true
+      },
+      {
+        "turn": 3,
+        "question": "what were the total tax benefits for deductions in 2007 and 2006 in excess of the stock-based compensation expense for options exercised and other stock-based awards vested?",
+        "resolvedQuestion": "what were the total tax benefits for deductions in 2007 and 2006 in excess of the stock-based compensation expense for options exercised and other stock-based awards vested?",
+        "program": "add(30, 36)",
+        "answer": 66,
+        "expectedAnswer": 66,
+        "correct": true
+      }
+    ],
+    "errors": [],
+    "accuracy": 1
+  },
+  {
+    "conversationId": "Single_MRO/2007/page_134.pdf-4",
+    "correct": 4,
+    "total": 4,
+    "answers": [
+      {
+        "turn": 1,
+        "question": "what is the expected annual dividends per share in 2007?",
+        "resolvedQuestion": "what is the expected annual dividends per share in 2007?",
+        "program": "0.96",
+        "answer": 0.96,
+        "expectedAnswer": 0.96,
+        "correct": true
+      },
+      {
+        "turn": 2,
+        "question": "what about in 2006?",
+        "resolvedQuestion": "what about in 2006?",
+        "program": "0.66",
+        "answer": 0.66,
+        "expectedAnswer": 0.66,
+        "correct": true
+      },
+      {
+        "turn": 3,
+        "question": "what is the net change?",
+        "resolvedQuestion": "what is the net change?",
+        "program": "subtract(0.96, 0.66)",
+        "answer": 0.29999999999999993,
+        "expectedAnswer": 0.3,
+        "correct": true
+      },
+      {
+        "turn": 4,
+        "question": "what percentage change does this represent?",
+        "resolvedQuestion": "what percentage change does this represent?",
+        "program": "subtract(0.96, 0.66), divide(#0, 0.66)",
+        "answer": 0.4545454545454544,
+        "expectedAnswer": 0.45455,
+        "correct": true
+      }
+    ],
+    "errors": [],
+    "accuracy": 1
+  }
+]

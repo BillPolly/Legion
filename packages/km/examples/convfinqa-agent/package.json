@@ -1,0 +1,54 @@
+{
+  "name": "@legion/convfinqa-agent",
+  "version": "1.0.0",
+  "description": "ConvFinQA evaluation using Claude agent + ontology + knowledge graphs",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "build-ontology-simple": "NODE_OPTIONS='--experimental-vm-modules' node scripts/ontology/build-ontology.js",
+    "build-ontology": "NODE_OPTIONS='--experimental-vm-modules' node scripts/ontology/build-verified-ontology.js",
+    "build-example-kgs": "NODE_OPTIONS='--experimental-vm-modules' node scripts/ontology/build-example-kgs.js",
+    "process-example": "NODE_OPTIONS='--experimental-vm-modules' node scripts/evaluation/process-example-simple.js",
+    "eval": "NODE_OPTIONS='--experimental-vm-modules' node scripts/evaluation/run-evaluation.js",
+    "eval:example": "NODE_OPTIONS='--experimental-vm-modules' node scripts/evaluation/eval-example.js",
+    "test:understand": "NODE_OPTIONS='--experimental-vm-modules' node scripts/testing/test-understand.js",
+    "test:retrieval": "NODE_OPTIONS='--experimental-vm-modules' node scripts/testing/test-retrieval.js",
+    "test:calculation": "NODE_OPTIONS='--experimental-vm-modules' node scripts/testing/test-calculation.js",
+    "inspect": "NODE_OPTIONS='--experimental-vm-modules' node scripts/analysis/inspect-results.js",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand --no-coverage",
+    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/unit --runInBand --no-coverage",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/integration --runInBand --no-coverage",
+    "test:e2e": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/e2e --runInBand --no-coverage --testTimeout=120000",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch --runInBand"
+  },
+  "keywords": [
+    "convfinqa",
+    "agent",
+    "ontology",
+    "knowledge-graph",
+    "evaluation",
+    "claude"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@legion/ontology": "*",
+    "@legion/rdf": "*",
+    "@legion/resource-manager": "*",
+    "@legion/llm-client": "*",
+    "@legion/triplestore": "*",
+    "@legion/semantic-search": "*",
+    "mongodb": "^6.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "testTimeout": 30000
+  }
+}

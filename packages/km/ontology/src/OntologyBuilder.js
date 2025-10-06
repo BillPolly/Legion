@@ -17,6 +17,7 @@ import { SpecializationDecisionService } from './services/SpecializationDecision
 import { OntologyExtensionService } from './services/OntologyExtensionService.js';
 import { SentenceAnnotator } from './services/SentenceAnnotator.js';
 import { OntologyVerificationService } from './services/OntologyVerificationService.js';
+import { TableProcessor } from './services/TableProcessor.js';
 import { getBootstrapTriples } from './bootstrap/upper-level-ontology.js';
 
 export class OntologyBuilder {
@@ -46,6 +47,7 @@ export class OntologyBuilder {
     this.specializationDecision = new SpecializationDecisionService(this.llmClient);
     this.ontologyExtension = new OntologyExtensionService(this.tripleStore, this.semanticSearch, this.llmClient, this.hierarchyTraversal, this.verification);
     this.sentenceAnnotator = new SentenceAnnotator();
+    this.tableProcessor = new TableProcessor(this.tripleStore, this.verification);
 
     this.bootstrapLoaded = false;
   }
@@ -249,6 +251,224 @@ export class OntologyBuilder {
       },
       verificationStats
     };
+  }
+
+  /**
+   * Process table structure to extract ontology properties (TBox)
+   *
+   * Extracts property definitions from table row labels and adds them to the ontology.
+   * Different from processTableData which creates instances (ABox).
+   *
+   * @param {Array<Array<string>>} table - 2D array of table data
+   * @param {Object} options - Processing options
+   * @param {string} options.domain - Domain name (e.g., 'finance')
+   * @param {string} options.conversationId - Conversation identifier
+   * @param {Array<string>} options.context - Context text items
+   * @returns {Promise<Object>} - Processing results
+   */
+  async processTable(table, options = {}) {
+    // Ensure bootstrap ontology is loaded
+    await this.ensureBootstrapLoaded();
+
+    const { domain = 'finance', context = [] } = options;
+
+    // Skip if table is too small
+    if (!table || table.length < 3) {
+      return {
+        success: false,
+        classesAdded: 0,
+        propertiesAdded: 0,
+        message: 'Table too small (need at least 3 rows)'
+      };
+    }
+
+    console.log(`\n📊 Processing table structure (${table.length} rows)...`);
+
+    // Step 1: Extract table row labels (skip first 2 rows - headers)
+    const dataRows = table.slice(2);
+    const rowLabels = dataRows.map(row => String(row[0]).trim()).filter(label => label);
+
+    if (rowLabels.length === 0) {
+      return {
+        success: false,
+        classesAdded: 0,
+        propertiesAdded: 0,
+        message: 'No row labels found'
+      };
+    }
+
+    console.log(`   Found ${rowLabels.length} row labels`);
+
+    // Step 2: Detect entity type from context + row labels
+    const combinedText = [...context, ...rowLabels].join(' ');
+
+    // Process combined text to detect entity type
+    console.log(`   Detecting entity type from context...`);
+    const textResult = await this.processText(combinedText, {
+      domain,
+      conversationId: options.conversationId
+    });
+
+    if (!textResult.success) {
+      return {
+        success: false,
+        classesAdded: 0,
+        propertiesAdded: 0,
+        message: 'Failed to detect entity type'
+      };
+    }
+
+    // Step 3: Find the most likely entity class from ontology
+    const classes = await this.tripleStore.query(null, 'rdf:type', 'owl:Class');
+    const domainClasses = classes
+      .map(([uri]) => uri)
+      .filter(uri => uri.startsWith('kg:'))
+      .filter(uri => !uri.match(/Continuant|Occurrent|PhysicalEntity|State|Process|Task$/));
+
+    if (domainClasses.length === 0) {
+      return {
+        success: false,
+        classesAdded: 0,
+        propertiesAdded: 0,
+        message: 'No domain classes found in ontology'
+      };
+    }
+
+    // Score classes based on how many row labels appear in their definitions
+    let bestClass = null;
+    let bestScore = 0;
+
+    for (const classUri of domainClasses) {
+      const definitions = await this.tripleStore.query(classUri, 'skos:definition', null);
+      const altLabels = await this.tripleStore.query(classUri, 'skos:altLabel', null);
+
+      const definition = definitions.length > 0 ? definitions[0][2].toLowerCase() : '';
+      const altLabel = altLabels.length > 0 ? altLabels[0][2].toLowerCase() : '';
+
+      let score = 0;
+      for (const label of rowLabels) {
+        const labelLower = label.toLowerCase();
+        if (altLabel.includes(labelLower)) score += 10;
+        if (definition.includes(labelLower)) score += 8;
+      }
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestClass = classUri;
+      }
+    }
+
+    // Use first domain class if no good match
+    const entityClass = bestClass || domainClasses[0];
+    console.log(`   Detected entity class: ${entityClass}`);
+
+    // Step 4: Create properties from row labels
+    let propertiesAdded = 0;
+    const existingProps = await this.tripleStore.query(null, 'rdfs:domain', entityClass);
+    const existingPropNames = new Set(existingProps.map(([uri]) => uri.split(':')[1]?.toLowerCase()));
+
+    for (const rowLabel of rowLabels) {
+      // Convert row label to property name
+      const propName = rowLabel
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, '')
+        .replace(/\s+/g, '_')
+        .replace(/_+/g, '_');
+
+      const propUri = `kg:${propName}`;
+
+      // Skip if property already exists
+      if (existingPropNames.has(propName)) {
+        console.log(`     Skipping ${propUri} (already exists)`);
+        continue;
+      }
+
+      // Add property to ontology
+      await this.tripleStore.add(propUri, 'rdf:type', 'owl:DatatypeProperty');
+      await this.tripleStore.add(propUri, 'rdfs:domain', entityClass);
+      await this.tripleStore.add(propUri, 'rdfs:label', `"${rowLabel}"`);
+      await this.tripleStore.add(propUri, 'skos:altLabel', `"${rowLabel}"`);
+
+      console.log(`     ✓ Added property: ${propUri} → ${entityClass}`);
+      propertiesAdded++;
+    }
+
+    // Step 5: Verify with Z3 (skip for now - can timeout)
+    let verified = false;
+    if (this.verifier && propertiesAdded > 0 && options.verify !== false) {
+      console.log(`\n🔐 Verifying ${propertiesAdded} new properties with Z3...`);
+      try {
+        const allTriples = await this.tripleStore.query(null, null, null);
+        const verificationResult = await this.verifier.verify(allTriples);
+
+        if (!verificationResult.success) {
+          console.warn(`⚠️  Z3 verification failed (continuing anyway):`, verificationResult.violations);
+        } else {
+          verified = true;
+          console.log(`✅ Properties verified successfully`);
+        }
+      } catch (verifyError) {
+        console.warn(`⚠️  Z3 verification error (continuing anyway): ${verifyError.message}`);
+      }
+    }
+
+    console.log(`\n✅ Table structure processed`);
+    console.log(`   Entity class: ${entityClass}`);
+    console.log(`   Properties added: ${propertiesAdded}`);
+
+    return {
+      success: true,
+      classesAdded: 0,
+      propertiesAdded,
+      entityClass,
+      verified
+    };
+  }
+
+  /**
+   * Process table data to generate KG instances (ABox)
+   *
+   * Creates instances of ontology classes from structured table data.
+   * Each instance is verified against the ontology schema using Z3.
+   *
+   * @param {Array<Array<string>>} tableData - 2D array of table data [rows][columns]
+   * @param {Object} metadata - Configuration for instance generation
+   * @param {string} metadata.entityClass - OWL class for instances (e.g., "kg:StockOption")
+   * @param {string} metadata.entityPrefix - Prefix for instance URIs (e.g., "MRO_StockOption")
+   * @param {number} metadata.headerRow - Row index containing column headers (default: 0)
+   * @param {Array<number>} metadata.instanceColumns - Column indices that define instances
+   * @param {Object} metadata.propertyMap - Map row labels to OWL properties
+   *
+   * @returns {Promise<Object>} - Processing results
+   * @returns {boolean} return.success - Whether processing succeeded
+   * @returns {number} return.instancesCreated - Number of instances created
+   * @returns {number} return.propertiesAsserted - Number of property assertions
+   * @returns {number} return.verificationsRun - Number of Z3 verifications
+   * @returns {number} return.violationsDetected - Number of violations found
+   * @returns {Array} return.violations - Violation details (if any)
+   */
+  async processTableData(tableData, metadata) {
+    // Ensure bootstrap ontology is loaded
+    await this.ensureBootstrapLoaded();
+
+    console.log(`\n📊 Processing table data for ${metadata.entityClass}...\n`);
+
+    const result = await this.tableProcessor.processFinancialTable(tableData, metadata);
+
+    if (result.success) {
+      console.log(`\n✅ Table processing complete`);
+      console.log(`   Instances created: ${result.instancesCreated}`);
+      console.log(`   Properties asserted: ${result.propertiesAsserted}`);
+      if (result.verificationsRun > 0) {
+        console.log(`   Verifications run: ${result.verificationsRun}`);
+        console.log(`   Violations detected: ${result.violationsDetected}`);
+      }
+    } else {
+      console.warn(`\n⚠️  Table processing failed`);
+      console.warn(`   Violations:`, result.violations);
+    }
+
+    return result;
   }
 
   /**

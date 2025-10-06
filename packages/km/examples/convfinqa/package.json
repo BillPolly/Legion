@@ -1,0 +1,31 @@
+{
+  "name": "@legion/convfinqa-example",
+  "version": "1.0.0",
+  "description": "ConvFinQA benchmark evaluation example using Legion ontology + KG",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch --runInBand",
+    "eval": "NODE_OPTIONS='--experimental-vm-modules' node scripts/run-evaluation.js"
+  },
+  "keywords": [
+    "convfinqa",
+    "question-answering",
+    "knowledge-graph",
+    "ontology",
+    "benchmark"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@legion/ontology": "*",
+    "@legion/rdf": "*",
+    "@legion/semantic-search": "*",
+    "@legion/resource-manager": "*",
+    "@legion/prompt-manager": "*"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}

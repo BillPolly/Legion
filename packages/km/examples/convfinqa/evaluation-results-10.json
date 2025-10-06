@@ -1,0 +1,416 @@
+[
+  {
+    "conversationId": "Single_MRO/2007/page_134.pdf-1",
+    "correct": 5,
+    "total": 5,
+    "answers": [
+      {
+        "turn": 1,
+        "question": "what was the weighted average exercise price per share in 2007?",
+        "resolvedQuestion": "what was the weighted average exercise price per share in 2007?",
+        "program": "60.94",
+        "answer": 60.94,
+        "expectedAnswer": 60.94,
+        "correct": true
+      },
+      {
+        "turn": 2,
+        "question": "and what was it in 2005?",
+        "resolvedQuestion": "and what was the exercise price in 2005?",
+        "program": "25.14",
+        "answer": 25.14,
+        "expectedAnswer": 25.14,
+        "correct": true
+      },
+      {
+        "turn": 3,
+        "question": "what was, then, the change over the years?",
+        "resolvedQuestion": "what was, then, the change over the years?",
+        "program": "subtract(60.94, 25.14)",
+        "answer": 35.8,
+        "expectedAnswer": 35.8,
+        "correct": true
+      },
+      {
+        "turn": 4,
+        "question": "what was the weighted average exercise price per share in 2005?",
+        "resolvedQuestion": "what was the weighted average exercise price per share in 2005?",
+        "program": "25.14",
+        "answer": 25.14,
+        "expectedAnswer": 25.14,
+        "correct": true
+      },
+      {
+        "turn": 5,
+        "question": "and how much does that change represent in relation to this 2005 weighted average exercise price?",
+        "resolvedQuestion": "and how much does the exercise price change represent in relation to this 2005 weighted average exercise price?",
+        "program": "subtract(60.94, 25.14), divide(#0, 25.14)",
+        "answer": 1.424025457438345,
+        "expectedAnswer": 1.42403,
+        "correct": true
+      }
+    ],
+    "errors": [],
+    "accuracy": 1
+  },
+  {
+    "conversationId": "Double_HII/2017/page_104.pdf",
+    "correct": 4,
+    "total": 4,
+    "answers": [
+      {
+        "turn": 1,
+        "question": "what was the change in the unamortized debt issuance costs associated with the senior notes between 2016 and 2017?",
+        "resolvedQuestion": "what was the change in the unamortized debt issuance costs associated with the senior notes between 2016 and 2017?",
+        "program": "subtract(15, 19)",
+        "answer": -4,
+        "expectedAnswer": -4,
+        "correct": true
+      },
+      {
+        "turn": 2,
+        "question": "so what was the percentage change during this time?",
+        "resolvedQuestion": "so what was the percentage change during this time?",
+        "program": "subtract(15, 19), divide(#0, 19)",
+        "answer": -0.21052631578947367,
+        "expectedAnswer": -0.21053,
+        "correct": true
+      },
+      {
+        "turn": 3,
+        "question": "what was the change associated with credit facilities during that time?",
+        "resolvedQuestion": "what was the change associated with credit facilities during that time?",
+        "program": "subtract(11, 8)",
+        "answer": 3,
+        "expectedAnswer": 3,
+        "correct": true
+      },
+      {
+        "turn": 4,
+        "question": "so what was the percentage change?",
+        "resolvedQuestion": "so what was the percentage change?",
+        "program": "subtract(11, 8), divide(#0, 8)",
+        "answer": 0.375,
+        "expectedAnswer": 0.375,
+        "correct": true
+      }
+    ],
+    "errors": [],
+    "accuracy": 1
+  },
+  {
+    "conversationId": "Single_IPG/2009/page_85.pdf-3",
+    "correct": 2,
+    "total": 2,
+    "answers": [
+      {
+        "turn": 1,
+        "question": "what is the ratio of discretionary company contributions to total expensed amounts for savings plans in 2009?",
+        "resolvedQuestion": "what is the ratio of discretionary company contributions to total expensed amounts for savings plans in 2009?",
+        "program": "divide(3.8, 35.1)",
+        "answer": 0.10826210826210825,
+        "expectedAnswer": 0.10826,
+        "correct": true
+      },
+      {
+        "turn": 2,
+        "question": "what is that times 100?",
+        "resolvedQuestion": "what is that times 100?",
+        "program": "divide(3.8, 35.1), multiply(#0, const_100)",
+        "answer": 10.826210826210826,
+        "expectedAnswer": 10.82621,
+        "correct": true
+      }
+    ],
+    "errors": [],
+    "accuracy": 1
+  },
+  {
+    "conversationId": "Single_UNP/2008/page_77.pdf-2",
+    "correct": 5,
+    "total": 5,
+    "answers": [
+      {
+        "turn": 1,
+        "question": "what was the equipment rents payable in 2008?",
+        "resolvedQuestion": "what was the equipment rents payable in 2008?",
+        "program": "93",
+        "answer": 93,
+        "expectedAnswer": 93,
+        "correct": true
+      },
+      {
+        "turn": 2,
+        "question": "and in 2007?",
+        "resolvedQuestion": "and in 2007?",
+        "program": "103",
+        "answer": 103,
+        "expectedAnswer": 103,
+        "correct": true
+      },
+      {
+        "turn": 3,
+        "question": "so what was the difference between the two years?",
+        "resolvedQuestion": "so what was the difference between the two years?",
+        "program": "subtract(93, 103)",
+        "answer": -10,
+        "expectedAnswer": -10,
+        "correct": true
+      },
+      {
+        "turn": 4,
+        "question": "and the value for 2007 again?",
+        "resolvedQuestion": "and the value for 2007 again?",
+        "program": "103",
+        "answer": 103,
+        "expectedAnswer": 103,
+        "correct": true
+      },
+      {
+        "turn": 5,
+        "question": "so what was the percentage change during this time?",
+        "resolvedQuestion": "so what was the percentage change during this time?",
+        "program": "subtract(93, 103), divide(#0, 103)",
+        "answer": -0.0970873786407767,
+        "expectedAnswer": -0.09709,
+        "correct": true
+      }
+    ],
+    "errors": [],
+    "accuracy": 1
+  },
+  {
+    "conversationId": "Double_RSG/2016/page_144.pdf",
+    "correct": 4,
+    "total": 4,
+    "answers": [
+      {
+        "turn": 1,
+        "question": "how much did the gallons hedged in 2018 represent in relation to the ones hedged in 2017?",
+        "resolvedQuestion": "how much did the gallons hedged in 2018 represent in relation to the ones hedged in 2017?",
+        "program": "divide(12000000, 3000000)",
+        "answer": 4,
+        "expectedAnswer": 4,
+        "correct": true
+      },
+      {
+        "turn": 2,
+        "question": "and in the previous year of this period, what was the aggregate fair value of the outstanding fuel hedges?",
+        "resolvedQuestion": "and in the previous year of this period, what was the aggregate fair value of the outstanding fuel hedges?",
+        "program": "37.8",
+        "answer": 37.8,
+        "expectedAnswer": 37.8,
+        "correct": true
+      },
+      {
+        "turn": 3,
+        "question": "what was it in 2015?",
+        "resolvedQuestion": "what was the fair value in 2015?",
+        "program": "2.7",
+        "answer": 2.7,
+        "expectedAnswer": 2.7,
+        "correct": true
+      },
+      {
+        "turn": 4,
+        "question": "how much, then, did the 2016 fair value represent in relation to this 2015 one?",
+        "resolvedQuestion": "how much, then, did the 2016 fair value represent in relation to this 2015 one?",
+        "program": "divide(37.8, 2.7)",
+        "answer": 13.999999999999998,
+        "expectedAnswer": 14,
+        "correct": true
+      }
+    ],
+    "errors": [],
+    "accuracy": 1
+  },
+  {
+    "conversationId": "Double_MRO/2015/page_18.pdf",
+    "correct": 2,
+    "total": 2,
+    "answers": [
+      {
+        "turn": 1,
+        "question": "what was the total african and us net undeveloped acres expiring in 2016?",
+        "resolvedQuestion": "what was the total african and us net undeveloped acres expiring in 2016?",
+        "program": "add(189, 68)",
+        "answer": 257,
+        "expectedAnswer": 257,
+        "correct": true
+      },
+      {
+        "turn": 2,
+        "question": "what percentage of undeveloped acres were in the us in 2018?",
+        "resolvedQuestion": "what percentage of undeveloped acres were in the us in 2018?",
+        "program": "divide(128, 1018)",
+        "answer": 0.12573673870333987,
+        "expectedAnswer": 0.12574,
+        "correct": true
+      }
+    ],
+    "errors": [],
+    "accuracy": 1
+  },
+  {
+    "conversationId": "Single_UNP/2014/page_35.pdf-3",
+    "correct": 5,
+    "total": 5,
+    "answers": [
+      {
+        "turn": 1,
+        "question": "what was the cash provided by operating activities in 2013?",
+        "resolvedQuestion": "what was the cash provided by operating activities in 2013?",
+        "program": "6823",
+        "answer": 6823,
+        "expectedAnswer": 6823,
+        "correct": true
+      },
+      {
+        "turn": 2,
+        "question": "and in 2012?",
+        "resolvedQuestion": "and in 2012?",
+        "program": "6161",
+        "answer": 6161,
+        "expectedAnswer": 6161,
+        "correct": true
+      },
+      {
+        "turn": 3,
+        "question": "so what was the difference in this value between the years?",
+        "resolvedQuestion": "so what was the difference in this value between the years?",
+        "program": "subtract(6823, 6161)",
+        "answer": 662,
+        "expectedAnswer": 662,
+        "correct": true
+      },
+      {
+        "turn": 4,
+        "question": "and the value for 2012 again?",
+        "resolvedQuestion": "and the value for 2012 again?",
+        "program": "6161",
+        "answer": 6161,
+        "expectedAnswer": 6161,
+        "correct": true
+      },
+      {
+        "turn": 5,
+        "question": "so what was the percentage change during this time?",
+        "resolvedQuestion": "so what was the percentage change during this time?",
+        "program": "subtract(6823, 6161), divide(#0, 6161)",
+        "answer": 0.10745008927122221,
+        "expectedAnswer": 0.10745,
+        "correct": true
+      }
+    ],
+    "errors": [],
+    "accuracy": 1
+  },
+  {
+    "conversationId": "Single_DVN/2007/page_58.pdf-3",
+    "correct": 2,
+    "total": 2,
+    "answers": [
+      {
+        "turn": 1,
+        "question": "what is the amount of oil and gas mmboe from canada divided by the total?",
+        "resolvedQuestion": "what is the amount of oil and gas mmboe from canada divided by the total?",
+        "program": "divide(60, 243)",
+        "answer": 0.24691358024691357,
+        "expectedAnswer": 0.24691,
+        "correct": true
+      },
+      {
+        "turn": 2,
+        "question": "what is that times 100?",
+        "resolvedQuestion": "what is that times 100?",
+        "program": "divide(60, 243), multiply(#0, const_100)",
+        "answer": 24.691358024691358,
+        "expectedAnswer": 24.69136,
+        "correct": true
+      }
+    ],
+    "errors": [],
+    "accuracy": 1
+  },
+  {
+    "conversationId": "Single_AON/2009/page_46.pdf-3",
+    "correct": 4,
+    "total": 4,
+    "answers": [
+      {
+        "turn": 1,
+        "question": "what was the total of risk and insurance brokerage services segment revenue in 2009?",
+        "resolvedQuestion": "what was the total of risk and insurance brokerage services segment revenue in 2009?",
+        "program": "6305",
+        "answer": 6305,
+        "expectedAnswer": 6305,
+        "correct": true
+      },
+      {
+        "turn": 2,
+        "question": "and what was that in 2008?",
+        "resolvedQuestion": "and what was that in 2008?",
+        "program": "6197",
+        "answer": 6197,
+        "expectedAnswer": 6197,
+        "correct": true
+      },
+      {
+        "turn": 3,
+        "question": "what was, then, the change over the year?",
+        "resolvedQuestion": "what was, then, the change over the year?",
+        "program": "subtract(6305, 6197)",
+        "answer": 108,
+        "expectedAnswer": 108,
+        "correct": true
+      },
+      {
+        "turn": 4,
+        "question": "and how much does this change represent in relation to the 2008 total, in percentage?",
+        "resolvedQuestion": "and how much does this change represent in relation to the 2008 total, in percentage?",
+        "program": "subtract(6305, 6197), divide(#0, 6197)",
+        "answer": 0.017427787639180247,
+        "expectedAnswer": 0.01743,
+        "correct": true
+      }
+    ],
+    "errors": [],
+    "accuracy": 1
+  },
+  {
+    "conversationId": "Single_CDNS/2018/page_31.pdf-1",
+    "correct": 3,
+    "total": 3,
+    "answers": [
+      {
+        "turn": 1,
+        "question": "what is the change in price of the s&p 500 from 2015 to 2016?",
+        "resolvedQuestion": "what is the change in price of the s&p 500 from 2015 to 2016?",
+        "program": "subtract(129.05, 110.28)",
+        "answer": 18.77000000000001,
+        "expectedAnswer": 18.77,
+        "correct": true
+      },
+      {
+        "turn": 2,
+        "question": "what is 100000 divided by 100?",
+        "resolvedQuestion": "what is 100000 divided by 100?",
+        "program": "subtract(129.05, 110.28), divide(100000, const_100)",
+        "answer": 1000,
+        "expectedAnswer": 1000,
+        "correct": true
+      },
+      {
+        "turn": 3,
+        "question": "what is the product of the change by the quotient?",
+        "resolvedQuestion": "what is the product of the change by the quotient?",
+        "program": "subtract(129.05, 110.28), divide(100000, const_100), multiply(#1, #0)",
+        "answer": 18770.00000000001,
+        "expectedAnswer": 18770,
+        "correct": true
+      }
+    ],
+    "errors": [],
+    "accuracy": 1
+  }
+]

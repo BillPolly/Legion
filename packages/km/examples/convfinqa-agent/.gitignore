@@ -1,0 +1,22 @@
+# Large dataset files - download separately from https://github.com/czyssrs/ConvFinQA
+data/convfinqa.zip
+data/convfinqa_train.json
+data/convfinqa_train_full.json
+data/data/
+
+# Keep only small example files
+!data/convfinqa_train_2examples.json
+
+# Node modules
+node_modules/
+
+# Environment
+.env
+
+# Test artifacts
+__tests__/tmp/
+__tests__/results/
+
+# Logs
+*.log
+npm-debug.log*

@@ -57,7 +57,7 @@ export class OntologyQueryService {
       );
 
       if (similar.length > 0 && similar[0]._similarity > 0.75) {
-        const classURI = similar[0].id;
+        const classURI = similar[0].payload.metadata.classURI;
 
         // Get full hierarchical context
         const hierarchy = await this.hierarchyTraversal.getHierarchyContext(classURI);

@@ -15,7 +15,8 @@
     "packages/modules/*",
     "packages/prompting/*",
     "packages/data/*",
-    "packages/km/*"
+    "packages/km/*",
+    "packages/km/examples/*"
   ],
   "scripts": {
     "mcp": "node scripts/mcp.js",

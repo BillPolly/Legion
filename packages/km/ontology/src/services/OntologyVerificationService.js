@@ -251,11 +251,22 @@ export class OntologyVerificationService {
     for (const predicate of axiomPredicates) {
       const results = await this.tripleStore.query(null, predicate, null);
       for (const result of results) {
+        // SimpleTripleStore.query() returns arrays [s, p, o]
+        // Need to check if result is array or object
+        let s, p, o;
+        if (Array.isArray(result)) {
+          [s, p, o] = result;
+        } else {
+          s = result.subject;
+          p = result.predicate;
+          o = result.object;
+        }
+
         // Filter out annotation properties (labels, comments, etc.)
-        if (result.predicate === 'rdf:type' && result.object !== 'owl:Class') {
+        if (p === 'rdf:type' && o !== 'owl:Class') {
           continue;
         }
-        triples.push([result.subject, result.predicate, result.object]);
+        triples.push([s, p, o]);
       }
     }
 
