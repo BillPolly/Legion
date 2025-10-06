@@ -7,6 +7,7 @@
 
 import { TableMetadataExtractor } from './TableMetadataExtractor.js';
 import { TextProcessor } from './TextProcessor.js';
+import { CanonicalLabelService } from './CanonicalLabelService.js';
 
 export class KGBuilder {
   constructor({ instanceStore, ontologyStore, llmClient = null, metadataStore = null }) {
@@ -56,11 +57,19 @@ export class KGBuilder {
     console.log(`  Detected entity type: ${entityType}`);
 
     // Step 3: Build property map using metadata
-    const propertyMap = await this._buildPropertyMapFromMetadata(metadata.rowMetadata, entityType);
+    let propertyMap;
+
+    // For categorical tables, build property map from column headers
+    if (metadata.yearColumns.length === 0) {
+      propertyMap = await this._buildPropertyMapFromColumnHeaders(table[0], entityType);
+    } else {
+      // For time-series tables, build from row metadata
+      propertyMap = await this._buildPropertyMapFromMetadata(metadata.rowMetadata, entityType);
+    }
 
     console.log(`  Mapped ${Object.keys(propertyMap).length} properties`);
 
-    // Step 4: Create instances for each year column
+    // Step 4: Create instances for each year column OR row (categorical tables)
     const stats = {
       instances: 0,
       triples: 0,
@@ -68,6 +77,80 @@ export class KGBuilder {
       textFacts: 0
     };
 
+    // Handle categorical tables (no year columns)
+    if (metadata.yearColumns.length === 0) {
+      console.log(`  ⚠️  No year columns detected - treating as categorical table`);
+
+      // For categorical tables, create one instance per row
+      // Row labels become instance identifiers
+      for (let rowIdx = 0; rowIdx < dataRows.length; rowIdx++) {
+        const dataRow = dataRows[rowIdx];
+        const rowLabel = String(dataRow[0]).trim();
+
+        if (!rowLabel) continue;
+
+        // Create instance URI from row label (use toPropertyName for URI-safe format)
+        const canonicalLabel = CanonicalLabelService.canonicalize(rowLabel);
+        const uriSafeLabel = CanonicalLabelService.toPropertyName(canonicalLabel);
+        const instanceUri = `kg:${entityType.split(':')[1]}_${uriSafeLabel}`;
+
+        // Create instance type triple
+        await this.kgStore.addTriple(instanceUri, 'rdf:type', entityType);
+        stats.instances++;
+        stats.triples++;
+
+        // Add label
+        await this.kgStore.addTriple(instanceUri, 'rdfs:label', `"${rowLabel}"`);
+        stats.triples++;
+
+        // Add original_label for exact matching
+        await this.kgStore.addTriple(instanceUri, 'kg:original_label', `"${rowLabel}"`);
+        stats.triples++;
+
+        // For each column (starting from column 1, since column 0 is the row label)
+        for (let colIdx = 1; colIdx < table[0].length; colIdx++) {
+          const columnHeader = String(table[0][colIdx]).trim();
+          const cellValue = dataRow[colIdx];
+
+          if (!cellValue || String(cellValue).trim() === '' || String(cellValue).trim() === '-') {
+            continue;
+          }
+
+          // Canonicalize column header to find property
+          const canonicalHeader = CanonicalLabelService.canonicalize(columnHeader);
+          const propertyUri = propertyMap[canonicalHeader];
+
+          if (!propertyUri) {
+            console.warn(`    No property mapping for column: ${columnHeader}`);
+            continue;
+          }
+
+          // Parse the cell value (detect numbers, percentages, etc.)
+          const parsedValue = this._parseValue(cellValue);
+
+          // Add property value triple
+          await this.kgStore.addTriple(instanceUri, propertyUri, parsedValue);
+          stats.triples++;
+
+          // Add property label triple for semantic matching
+          const labelPropertyUri = `${propertyUri}_label`;
+          await this.kgStore.addTriple(instanceUri, labelPropertyUri, `"${canonicalHeader}"`);
+          stats.triples++;
+
+          // Store precision
+          const precision = CanonicalLabelService.inferPrecision([cellValue]);
+          if (precision !== undefined && precision !== null) {
+            const precisionPropertyUri = `${propertyUri}_precision`;
+            await this.kgStore.addTriple(instanceUri, precisionPropertyUri, precision);
+            stats.triples++;
+          }
+        }
+      }
+
+      console.log(`  ✅ Created ${stats.instances} categorical instances`);
+    }
+
+    // Handle time-series tables (with year columns)
     for (const yearCol of metadata.yearColumns) {
       const year = yearCol.year;
       const colIdx = yearCol.colIdx;
@@ -120,6 +203,13 @@ export class KGBuilder {
         const labelPropertyUri = `${propertyUri}_label`;
         await this.kgStore.addTriple(instanceUri, labelPropertyUri, `"${rowMeta.canonicalLabel}"`);
         stats.triples++;
+
+        // ✅ STORE PRECISION for answer formatting
+        if (rowMeta.precision !== undefined && rowMeta.precision !== null) {
+          const precisionPropertyUri = `${propertyUri}_precision`;
+          await this.kgStore.addTriple(instanceUri, precisionPropertyUri, rowMeta.precision);
+          stats.triples++;
+        }
       }
     }
 
@@ -269,6 +359,49 @@ export class KGBuilder {
    * Since both ontology and instance KG use the same deterministic canonicalization,
    * we can use exact string matching - no fuzzy logic needed!
    */
+  /**
+   * Build property map from column headers (for categorical tables)
+   * @private
+   */
+  async _buildPropertyMapFromColumnHeaders(headerRow, entityType) {
+    const propertyMap = {};
+
+    // Get all properties that have this entity as domain
+    const properties = await this.ontologyStore.query(null, 'rdfs:domain', entityType);
+
+    // Build lookup map: canonical label → property URI
+    const labelToProperty = new Map();
+    for (const [propUri] of properties) {
+      const labels = await this.ontologyStore.query(propUri, 'rdfs:label', null);
+      if (labels.length > 0) {
+        const label = labels[0][2].replace(/"/g, '');  // Remove quotes
+        labelToProperty.set(label, propUri);
+      }
+    }
+
+    // Map each column header (skipping first column which is row labels)
+    for (let colIdx = 1; colIdx < headerRow.length; colIdx++) {
+      const columnHeader = String(headerRow[colIdx]).trim();
+      if (!columnHeader) continue;
+
+      const canonicalHeader = CanonicalLabelService.canonicalize(columnHeader);
+
+      // Try exact match first
+      let propertyUri = labelToProperty.get(canonicalHeader);
+
+      if (!propertyUri) {
+        // If no exact match, create a dynamic property
+        console.warn(`    No property found for "${columnHeader}", using dynamic property`);
+        const propertyName = CanonicalLabelService.toPropertyName(canonicalHeader);
+        propertyUri = `kg:${propertyName}`;
+      }
+
+      propertyMap[canonicalHeader] = propertyUri;
+    }
+
+    return propertyMap;
+  }
+
   async _buildPropertyMapFromMetadata(rowMetadata, entityType) {
     const propertyMap = {};
 
@@ -289,15 +422,14 @@ export class KGBuilder {
     for (const rowMeta of rowMetadata) {
       const canonicalLabel = rowMeta.canonicalLabel;
 
-      // Exact string match (deterministic canonicalization ensures this works)
-      const propertyUri = labelToProperty.get(canonicalLabel);
+      // Try exact string match first
+      let propertyUri = labelToProperty.get(canonicalLabel);
 
       if (!propertyUri) {
-        throw new Error(
-          `No exact match for canonical label "${canonicalLabel}" in entity type ${entityType}.\n` +
-          `Available properties: ${Array.from(labelToProperty.keys()).join(', ')}\n` +
-          `This indicates the ontology was not built from training data including this table.`
-        );
+        // If no exact match, create a dynamic property (same as categorical tables)
+        console.warn(`    No property found for "${canonicalLabel}", using dynamic property`);
+        const propertyName = CanonicalLabelService.toPropertyName(canonicalLabel);
+        propertyUri = `kg:${propertyName}`;
       }
 
       propertyMap[canonicalLabel] = propertyUri;
@@ -309,6 +441,33 @@ export class KGBuilder {
   /**
    * Parse cell value using metadata for canonicalization
    */
+  /**
+   * Parse cell value without metadata (for categorical tables)
+   * @private
+   */
+  _parseValue(value) {
+    if (!value) return value;
+
+    const str = String(value).trim();
+
+    // Remove common formatting
+    const cleaned = str
+      .replace(/\$/g, '')
+      .replace(/%/g, '')
+      .replace(/,/g, '')
+      .replace(/\(/g, '-')  // Handle parentheses as negative
+      .replace(/\)/g, '');
+
+    // Try to parse as number
+    const num = parseFloat(cleaned);
+    if (!isNaN(num)) {
+      return num;
+    }
+
+    // Return as string
+    return str;
+  }
+
   _parseValueWithMetadata(value, rowMetadata) {
     if (!value) return value;
 

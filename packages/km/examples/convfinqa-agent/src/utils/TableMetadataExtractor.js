@@ -179,6 +179,7 @@ export class TableMetadataExtractor {
         propertyName,
         valueType: CanonicalLabelService.inferValueType(values),
         unit: CanonicalLabelService.inferUnit(rawLabel, values),
+        precision: CanonicalLabelService.inferPrecision(values),  // Add precision tracking
         category: null  // Not needed for exact matching
       });
     }

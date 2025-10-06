@@ -18,14 +18,16 @@ The knowledge graph contains financial metrics as instances with properties:
 - value: the numerical value
 - year: the time period (for time-series data)
 - category: the category (for categorical data like "less than 1 year", "1-3 years", "total")
+- entity: the entity name (for property lookups on specific entities)
 
 Examples:
 - query_kg({ label: "United Parcel Service Inc.", year: "2008" }) - for time-series data
 - query_kg({ label: "revenue", year: "2007" }) - for time-series data
 - query_kg({ label: "total", category: "less than 1 year" }) - for categorical data
 - query_kg({ label: "property and casualty obligations", category: "1-3 years" }) - for categorical data
+- query_kg({ label: "shares subject to outstanding awards", entity: "2009 global incentive plan" }) - for entity-specific property lookup
 
-The tool will find metrics matching your search and return the value.`,
+The tool will find metrics matching your search and return the value. If multiple instances match and no filters (year/category/entity) are provided, only the first match is returned.`,
 
   input_schema: {
     type: 'object',
@@ -41,29 +43,48 @@ The tool will find metrics matching your search and return the value.`,
       category: {
         type: 'string',
         description: 'The category to query for (e.g., "less than 1 year", "1-3 years", "total") - use for categorical tables'
+      },
+      entity: {
+        type: 'string',
+        description: 'The entity name to filter by (e.g., "2009 global incentive plan") - use when querying for a property on a specific entity'
       }
     },
     required: ['label']
   },
 
   async execute(params, context) {
-    const { label, year, category } = params;
+    const { label, year, category, entity } = params;
     const { kgIndex, logger } = context;
 
-    logger.debug('query_kg', { label, year, category });
+    logger.debug('query_kg', { label, year, category, entity });
 
     try {
       // O(1) indexed lookup instead of O(n) scan
-      const matches = kgIndex.query(label, year, category);
+      let matches = kgIndex.query(label, year, category);
+
+      // Filter by entity if provided
+      if (entity && matches.length > 0) {
+        const normalizedEntity = entity.toLowerCase().replace(/[^a-z0-9\s_]/g, '').replace(/\s+/g, '_').trim();
+        matches = matches.filter(m => {
+          // Check if entity matches instance label or entityUri
+          if (m.label && m.label.toLowerCase().replace(/[^a-z0-9\s_]/g, '').replace(/\s+/g, '_').trim() === normalizedEntity) {
+            return true;
+          }
+          if (m.entityUri && m.entityUri.includes(normalizedEntity)) {
+            return true;
+          }
+          return false;
+        });
+      }
 
       if (matches.length === 0) {
-        logger.warn('query_kg_not_found', { label, year, category });
+        logger.warn('query_kg_not_found', { label, year, category, entity });
 
         // Get available labels for suggestions
         const allLabels = kgIndex.getAllLabels();
 
         return {
-          error: `No metric found matching "${label}"${year ? ` for year "${year}"` : ''}${category ? ` for category "${category}"` : ''}`,
+          error: `No metric found matching "${label}"${year ? ` for year "${year}"` : ''}${category ? ` for category "${category}"` : ''}${entity ? ` for entity "${entity}"` : ''}`,
           suggestion: 'Try using one of the exact labels from the knowledge graph',
           available_labels: allLabels.slice(0, 10)
         };
@@ -88,6 +109,10 @@ The tool will find metrics matching your search and return the value.`,
 
       if (instance.category) {
         result.category = instance.category;
+      }
+
+      if (instance.precision !== undefined && instance.precision !== null) {
+        result.precision = instance.precision;
       }
 
       logger.info('query_kg_success', {

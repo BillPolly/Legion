@@ -154,6 +154,40 @@ export class CanonicalLabelService {
   }
 
   /**
+   * Infer precision from cell values (number of decimal places)
+   *
+   * @param {Array<string>} values - Cell values from row
+   * @returns {number} Maximum decimal places found (0 for integers)
+   *
+   * @example
+   * inferPrecision(["100", "200"]) → 0
+   * inferPrecision(["9362.2", "9244.9"]) → 1
+   * inferPrecision(["$100.00", "$89.49"]) → 2
+   */
+  static inferPrecision(values) {
+    if (!values || values.length === 0) return 0;
+
+    let maxPrecision = 0;
+
+    for (const value of values) {
+      if (!value) continue;
+
+      const str = String(value).trim();
+      // Remove currency symbols, commas, parentheses
+      const cleaned = str.replace(/[$,()]/g, '').trim();
+
+      // Check for decimal point
+      const decimalMatch = cleaned.match(/\.(\d+)/);
+      if (decimalMatch) {
+        const decimals = decimalMatch[1].length;
+        maxPrecision = Math.max(maxPrecision, decimals);
+      }
+    }
+
+    return maxPrecision;
+  }
+
+  /**
    * Infer unit from label and values
    *
    * @param {string} label - Row label

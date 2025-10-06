@@ -146,6 +146,10 @@ export class TurnProcessor {
       this.logger.debug('phase_4_formatting');
 
       const outputFormat = this.answerFormatter.normalizeOutputFormat(understanding);
+      // Override precision with the value inferred from input data
+      if (calculationResult.precision !== undefined) {
+        outputFormat.precision = calculationResult.precision;
+      }
       const formattedAnswer = this.answerFormatter.format(rawValue, outputFormat);
 
       // Update conversation history

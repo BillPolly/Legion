@@ -81,6 +81,7 @@ export class KGIndex {
     // Extract property values and labels
     const properties = {};
     const propertyLabels = [];
+    const propertyPrecisions = new Map(); // Store precision for each property
 
     // Map property labels to their URIs for this instance
     const labelToPropertyUri = new Map();
@@ -91,8 +92,8 @@ export class KGIndex {
         continue;
       }
 
-      // Check if this is a property label triple
-      if (predicate.endsWith('_label')) {
+      // Check if this is a property label triple (skip kg:original_label - it's instance metadata, not a property)
+      if (predicate.endsWith('_label') && predicate !== 'kg:original_label') {
         const labelValue = object.replace(/^"|"$/g, '');
         propertyLabels.push(labelValue);
 
@@ -100,6 +101,10 @@ export class KGIndex {
         const normLabel = this._normalizeLabel(labelValue);
         const propertyUri = predicate.slice(0, -6); // Remove '_label' suffix
         labelToPropertyUri.set(normLabel, propertyUri);
+      } else if (predicate.endsWith('_precision')) {
+        // Store precision metadata
+        const propertyUri = predicate.slice(0, -10); // Remove '_precision' suffix
+        propertyPrecisions.set(propertyUri, object);
       } else {
         // Regular property
         properties[predicate] = object;
@@ -115,7 +120,8 @@ export class KGIndex {
       label,
       year,
       properties,
-      propertyLabels
+      propertyLabels,
+      propertyPrecisions  // Include precision map
     });
 
     // Index by instance label (normalized)
@@ -228,6 +234,9 @@ export class KGIndex {
         const value = instance.properties[propertyUri];
 
         if (value !== undefined) {
+          // Get precision for this property
+          const precision = instance.propertyPrecisions?.get(propertyUri);
+
           // Create virtual instance with property value
           results.push({
             uri: `${uri}_${normLabel}`, // Virtual URI
@@ -235,7 +244,8 @@ export class KGIndex {
             value: value,
             year: instance.year,
             propertyUri: propertyUri,
-            entityUri: uri
+            entityUri: uri,
+            precision: precision  // Include precision metadata
           });
         }
       } else {

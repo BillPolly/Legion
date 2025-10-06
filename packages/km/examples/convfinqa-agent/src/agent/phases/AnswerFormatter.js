@@ -46,8 +46,12 @@ export class AnswerFormatter {
     switch (unit.toLowerCase()) {
       case 'percentage':
       case '%':
-        // For percentages, assume rawValue is already in percentage form (not 0.0-1.0)
-        formattedValue = rawValue.toFixed(precision);
+        // Convert decimal (0.0-1.0) to percentage (0-100) if needed
+        let percentageValue = rawValue;
+        if (rawValue >= 0 && rawValue <= 1) {
+          percentageValue = rawValue * 100;
+        }
+        formattedValue = percentageValue.toFixed(precision);
         if (includeSymbol || symbol === '%') {
           formattedValue += '%';
         }

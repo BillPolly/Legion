@@ -109,11 +109,30 @@ Understanding:
 Available entities in the knowledge graph:
 ${context.sampleLabels ? context.sampleLabels.slice(0, 20).map(l => `  - "${l}"`).join('\n') : '(none)'}
 
+Available years: ${context.years && context.years.length > 0 ? context.years.sort().join(', ') : 'unknown'}
+
 Your task:
 1. Use the query_kg tool to retrieve each metric value you need
 2. Use EXACT entity labels from the list above (do not paraphrase!)
-3. After retrieving all values, if calculation is needed, use the calculate tool
-4. When you have the final numerical answer, respond with just the number
+3. For "portion" or "percentage of total" questions with categorical data:
+   a. Identify ALL entities from the available list that have the metric
+   b. Query the metric for EACH entity separately (use entity parameter)
+   c. Add all queried values to get the total
+   d. Calculate the portion: specific_value / total
+4. After retrieving all values, if calculation is needed, use the calculate tool
+5. When you have the final numerical answer, respond with just the number
+
+Example for categorical data:
+Question: "what portion of total sales is under product A?"
+Available entities: ["product A", "product B", "sales"]
+Steps:
+  1. Identify entities with sales data: "product A", "product B"
+  2. query_kg({ label: "sales", entity: "product A" }) → 100
+  3. query_kg({ label: "sales", entity: "product B" }) → 200
+  4. calculate({ operation: "add", values: [100, 200] }) → 300 (total)
+  5. calculate({ operation: "divide", values: [100, 300] }) → 0.33 (portion)
+
+IMPORTANT: For portion/percentage questions, you MUST query ALL relevant entities to calculate the total, not just the one mentioned in the question!
 
 Work step-by-step and retrieve all necessary data.`;
 
@@ -171,7 +190,8 @@ Work step-by-step and retrieve all necessary data.`;
               rawValue: toolResult.rawValue,
               unit: toolResult.unit,
               year: toolResult.year,
-              category: toolResult.category
+              category: toolResult.category,
+              precision: toolResult.precision  // Include precision for answer formatting
             });
           }
 

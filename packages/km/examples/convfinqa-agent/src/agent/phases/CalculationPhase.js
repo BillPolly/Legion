@@ -75,18 +75,24 @@ export class CalculationPhase {
         );
       }
 
+      // Infer appropriate precision from inputs
+      const inferredPrecision = this._inferPrecision(retrievedData, toolCalls);
+
       this.logger.info('calculation_phase_complete', {
         rawValue,
-        calculation
+        calculation,
+        inferredPrecision
       });
 
       return {
         success: true,
         rawValue,
         calculation,
+        precision: inferredPrecision,
         inputs: retrievedData.map(d => ({
           label: d.label,
-          value: d.value
+          value: d.value,
+          precision: d.precision
         }))
       };
 
@@ -138,5 +144,47 @@ export class CalculationPhase {
     }
 
     return null;
+  }
+
+  /**
+   * Infer appropriate precision for the answer based on input data
+   *
+   * Rules:
+   * 1. Use max precision from input values (no artificial minimums)
+   * 2. Default to 1 decimal for percentages, 2 for other calculations if no input precision
+   *
+   * @param {Array} retrievedData - Data retrieved from KG
+   * @param {Array} toolCalls - Tool calls made
+   * @returns {number} Number of decimal places
+   * @private
+   */
+  _inferPrecision(retrievedData, toolCalls) {
+    // Get precisions from all retrieved data
+    const precisions = retrievedData
+      .map(d => d.precision)
+      .filter(p => p !== undefined && p !== null);
+
+    // Check if this is a percentage calculation
+    const isPercentageCalc = toolCalls.some(tc =>
+      tc.name === 'calculate' &&
+      (tc.input?.operation === 'percentage_change' ||
+       tc.input?.operation === 'percentage' ||
+       tc.result?.operation === 'percentage_change' ||
+       tc.result?.operation === 'percentage')
+    );
+
+    if (precisions.length > 0) {
+      const maxPrecision = Math.max(...precisions);
+
+      // For percentage calculations, use minimum 1 decimal (percentages rarely show as integers)
+      if (isPercentageCalc && maxPrecision < 1) {
+        return 1;
+      }
+
+      return maxPrecision;
+    }
+
+    // Default fallback only if no input precision available
+    return isPercentageCalc ? 1 : 2;
   }
 }
