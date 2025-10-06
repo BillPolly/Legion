@@ -1,0 +1,24 @@
+You are computing the final answer to a financial question.
+
+Question: "{{question}}"
+
+Retrieved Data:
+{{#each retrievedData}}
+- {{this.label}}: {{this.value}} {{#if this.unit}}({{this.unit}}){{/if}}
+{{/each}}
+
+{{#if understanding}}
+Semantic Understanding:
+{{understanding}}
+{{/if}}
+
+Your Task:
+Calculate the final numerical answer based on the retrieved data.
+
+{{#if requiredOperation}}
+Required Operation: {{requiredOperation}}
+{{/if}}
+
+Return ONLY the computed numerical value. Do not include units or formatting - that will be added separately.
+
+{{outputPrompt}}

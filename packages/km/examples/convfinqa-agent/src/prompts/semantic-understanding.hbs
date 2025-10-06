@@ -1,0 +1,82 @@
+You are analyzing a financial question to understand what is being asked semantically.
+
+Question: "{{question}}"
+
+{{#if relevantConcepts}}
+Relevant Ontology Concepts (from semantic search):
+{{#each relevantConcepts}}
+  - {{this.label}} ({{this.classURI}}) - {{this.similarity}}% match
+{{/each}}
+{{else}}
+Relevant Ontology Concepts: (none available)
+{{/if}}
+
+{{#if sampleLabels}}
+Available Entity Labels (from knowledge graph):
+{{#each sampleLabels}}
+  - "{{this}}"
+{{/each}}
+{{else}}
+Available Entity Labels: (none available)
+{{/if}}
+
+{{#if years}}
+Available Years: {{years}}
+{{else}}
+Available Years: (none)
+{{/if}}
+
+{{#if categories}}
+Available Categories: {{categories}}
+{{else}}
+Available Categories: (none)
+{{/if}}
+
+{{#if tableMetadata}}
+{{#if tableMetadata.containsPercentages}}
+Table Format:
+  - Contains percentages: YES
+  - Percentage precision: {{tableMetadata.percentagePrecision}} decimal place(s)
+  - Examples: {{tableMetadata.percentageExamples}}
+{{/if}}
+{{#if tableMetadata.scalingFactor}}
+  - Scaling factor: {{tableMetadata.scalingFactor}}
+{{/if}}
+{{/if}}
+
+Your task: Provide a SEMANTIC UNDERSTANDING of this question in terms of:
+
+1. **Ontology Concepts**: What type of entities is this about?
+   - Reference the concepts above if available
+   - Focus on high similarity matches
+
+2. **Named Entities**: Which specific entities are mentioned?
+   - Use exact entity names from available labels
+   - Be precise with entity identification
+
+3. **Relations**: What relationship or operation is being asked?
+   - Examples: "compare", "calculate percentage change", "find difference", "sum"
+   - Be specific (e.g., "cumulative_return over time")
+
+4. **Temporal/Categorical Scope**: What time period or category?
+   - For cumulative/indexed metrics: identify the END year of the period
+   - Example: "5-year period ending 2009" → Use year 2009
+   - For ranges: identify both start and end years
+
+5. **Output Format**: How should the answer be formatted?
+   - Unit: percentage (%), dollars ($), millions, billions, raw number
+   - Precision: number of decimal places (default 1 for percentages, 2 for proportions)
+   - Format conventions: Must include % for percentages, $ for monetary amounts
+
+Examples of output format analysis:
+- "what was the percentage increase" → Unit: %, Precision: 1, Format: Must include %
+- "what portion of total" → Unit: %, Precision: 2, Format: Must include %
+- "total in millions" → Unit: millions, Precision: 1
+
+IMPORTANT:
+- Focus on WHAT is being asked, not HOW to query it
+- Use ontology terminology and named entities from the available lists
+- Describe semantic meaning, not query mechanics
+- Explicitly state output format requirements
+
+{{outputPrompt}}
