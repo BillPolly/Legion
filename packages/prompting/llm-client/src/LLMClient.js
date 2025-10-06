@@ -388,25 +388,23 @@ export class LLMClient {
   }
 
   /**
-   * Adapt request for Anthropic provider (partial native support)
+   * Adapt request for Anthropic provider (now with native tool support)
    */
   adaptForAnthropic(requestObj, capabilities, adapted) {
     adapted.messages = [];
 
-    // Build system prompt with tools as XML descriptions
-    let systemContent = requestObj.systemPrompt || '';
-    
-    if (requestObj.tools && Array.isArray(requestObj.tools)) {
-      const toolsXML = requestObj.tools.map(tool => 
-        `<tool name="${tool.name}">\n<description>${tool.description}</description>\n<parameters>${JSON.stringify(tool.parameters, null, 2)}</parameters>\n</tool>`
-      ).join('\n\n');
-      
-      systemContent += `\n\nAvailable tools:\n${toolsXML}\n\nTo use a tool, respond with: <tool_use name="tool_name" parameters='{"param": "value"}'></tool_use>`;
-      adapted.adaptations.push('tools_as_xml');
+    // System prompt (no longer includes tools as XML)
+    if (requestObj.systemPrompt) {
+      adapted.system = requestObj.systemPrompt;
     }
 
-    if (systemContent) {
-      adapted.system = systemContent;
+    // Add tools natively (Anthropic SDK now supports this)
+    if (requestObj.tools && Array.isArray(requestObj.tools)) {
+      adapted.tools = requestObj.tools.map(tool => ({
+        name: tool.name,
+        description: tool.description,
+        input_schema: tool.parameters || tool.input_schema
+      }));
     }
 
     // Add chat history
@@ -417,7 +415,7 @@ export class LLMClient {
     // Handle files by injecting content into messages
     let fileContent = '';
     if (requestObj.files && Array.isArray(requestObj.files)) {
-      fileContent = requestObj.files.map(file => 
+      fileContent = requestObj.files.map(file =>
         `File ${file.name}:\n${file.content}\n`
       ).join('\n');
       adapted.adaptations.push('files_as_text');

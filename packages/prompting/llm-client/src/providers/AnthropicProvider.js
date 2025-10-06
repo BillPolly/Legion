@@ -80,6 +80,7 @@ export class AnthropicProvider {
 
   /**
    * Complete with rich message format and system prompt support
+   * Now supports native tool calling via Anthropic SDK
    */
   async completeMessages(messages, model, options = {}) {
     const requestBody = {
@@ -99,12 +100,34 @@ export class AnthropicProvider {
     // Add other supported parameters
     if (options.temperature !== undefined) requestBody.temperature = options.temperature;
 
+    // Add native tool support
+    if (options.tools && Array.isArray(options.tools) && options.tools.length > 0) {
+      requestBody.tools = options.tools;
+    }
+
     const response = await this.client.messages.create(requestBody);
 
     if (!response || !response.content || response.content.length === 0) {
       throw new Error('Empty or invalid response from Anthropic');
     }
 
+    // If tools were provided, return full response for tool handling
+    if (options.tools && options.tools.length > 0) {
+      return {
+        content: response.content,
+        stopReason: response.stop_reason,
+        usage: response.usage,
+        // Extract tool uses for convenience
+        toolUses: response.content.filter(c => c.type === 'tool_use'),
+        // Extract text blocks for convenience
+        textContent: response.content
+          .filter(c => c.type === 'text')
+          .map(c => c.text)
+          .join('')
+      };
+    }
+
+    // Backward compatibility: return just text if no tools
     const content = response.content[0];
     if (content && content.type === 'text') {
       return content.text;
