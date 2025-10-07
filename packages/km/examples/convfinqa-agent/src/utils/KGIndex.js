@@ -71,8 +71,11 @@ export class KGIndex {
    * @private
    */
   async _indexInstance(instanceUri) {
-    // Get instance label (rdfs:label)
-    const label = await this._getProperty(instanceUri, 'rdfs:label');
+    // Get instance label (rdfs:label for table instances, kg:label for text-derived facts)
+    let label = await this._getProperty(instanceUri, 'rdfs:label');
+    if (!label) {
+      label = await this._getProperty(instanceUri, 'kg:label');
+    }
     const year = await this._getProperty(instanceUri, 'kg:year');
 
     // Get all properties for this instance
@@ -114,11 +117,17 @@ export class KGIndex {
     // Store property label mapping for this instance
     this.propertyLabelMap.set(instanceUri, labelToPropertyUri);
 
+    // Extract value from properties if it exists (for text-derived facts)
+    const value = properties['kg:value'];
+    const unit = properties['kg:unit'];
+
     // Cache instance data for fast retrieval
     this.instanceCache.set(instanceUri, {
       uri: instanceUri,
       label,
       year,
+      value,  // Add value as top-level field for text-derived facts
+      unit,   // Add unit as top-level field
       properties,
       propertyLabels,
       propertyPrecisions  // Include precision map

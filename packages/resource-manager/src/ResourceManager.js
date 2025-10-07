@@ -452,23 +452,39 @@ export class ResourceManager {
    * @returns {Promise<Object>} LLM client instance
    */
   async createLLMClient(config = {}) {
-    // Get API key, base URL, and model from environment
+    // Check for ZAI configuration first, then fall back to Anthropic
+    const zaiKey = this.get('env.ZAI_API_KEY');
+    const zaiBaseURL = this.get('env.ZAI_BASE_URL');
+    const zaiModel = this.get('env.ZAI_MODEL');
+
     const anthropicKey = this.get('env.ANTHROPIC_API_KEY');
     const anthropicBaseURL = this.get('env.ANTHROPIC_BASE_URL');
     const anthropicModel = this.get('env.ANTHROPIC_MODEL');
-    
-    if (!anthropicKey) {
-      throw new Error('ANTHROPIC_API_KEY not found in environment variables. Please set it in your .env file.');
+
+    // Determine which provider to use
+    let apiKey, baseURL, model;
+    if (zaiKey) {
+      apiKey = zaiKey;
+      baseURL = zaiBaseURL;
+      model = zaiModel || 'claude-sonnet-4-5-20250929';
+      console.log('✓ Using ZAI API provider');
+    } else if (anthropicKey) {
+      apiKey = anthropicKey;
+      baseURL = anthropicBaseURL;
+      model = anthropicModel || 'claude-3-5-sonnet-20241022';
+      console.log('✓ Using Anthropic API provider');
+    } else {
+      throw new Error('No LLM API key found. Please set ZAI_API_KEY or ANTHROPIC_API_KEY in your .env file.');
     }
 
     // Import LLMClient dynamically
     const { LLMClient } = await import('@legion/llm-client');
-    
+
     const llmClient = new LLMClient({
       provider: config.provider || 'anthropic',
-      apiKey: anthropicKey,
-      baseURL: anthropicBaseURL,
-      model: config.model || anthropicModel || 'claude-3-5-sonnet-20241022',
+      apiKey: apiKey,
+      baseURL: baseURL,
+      model: config.model || model,
       maxTokens: config.maxTokens || 1000,
       temperature: config.temperature || 0.7,
       ...config
