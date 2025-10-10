@@ -1,7 +1,7 @@
 import { ITripleStore } from '../core/ITripleStore.js';
 import { StorageError, ValidationError } from '../core/StorageError.js';
 // Import from Legion datascript package
-import { createConn as create_conn, transact, q, pull, entity, listen, unlisten, db } from '@legion/datascript';
+import { createConn as create_conn, q } from '@legion/datascript';
 
 /**
  * DataScriptProvider - DataScript-backed triple store implementation
@@ -117,7 +117,7 @@ export class DataScriptProvider extends ITripleStore {
     
     try {
       // Transact the data
-      transact(this.conn, txData);
+      this.conn.transact(txData);
       return true;
     } catch (error) {
       throw new StorageError(`Failed to add triple: ${error.message}`, 'TRANSACTION_ERROR', error);
@@ -135,7 +135,7 @@ export class DataScriptProvider extends ITripleStore {
     const tripleKey = this._tripleKey(subject, predicate, object);
     
     // Find the entity with this triple
-    const currentDb = db(this.conn);
+    const currentDb = this.conn.db();
     const results = q(
       `[:find ?e :where [?e "triple/id" "${tripleKey}"]]`,
       currentDb
@@ -148,7 +148,7 @@ export class DataScriptProvider extends ITripleStore {
     const txData = [[':db.fn/retractEntity', entityId]];
     
     try {
-      transact(this.conn, txData);
+      this.conn.transact(txData);
       this.tripleToEntity.delete(tripleKey);
       return true;
     } catch (error) {
@@ -164,7 +164,7 @@ export class DataScriptProvider extends ITripleStore {
    * @returns {Promise<Array<[subject, predicate, object]>>} - Array of matching triples
    */
   async query(subject, predicate, object) {
-    const currentDb = db(this.conn);
+    const currentDb = this.conn.db();
     
     // Build Datalog query using EDN string format (plain attributes without colons)
     // Basic pattern with variables
@@ -206,7 +206,7 @@ export class DataScriptProvider extends ITripleStore {
    * @returns {Promise<number>} - Count of triples
    */
   async size() {
-    const currentDb = db(this.conn);
+    const currentDb = this.conn.db();
     const results = q(
       '[:find (count ?e) :where [?e "triple/id"]]',
       currentDb
@@ -220,7 +220,7 @@ export class DataScriptProvider extends ITripleStore {
    */
   async clear() {
     // Get all entity IDs
-    const currentDb = db(this.conn);
+    const currentDb = this.conn.db();
     const results = q(
       '[:find ?e :where [?e "triple/id"]]',
       currentDb
@@ -231,7 +231,7 @@ export class DataScriptProvider extends ITripleStore {
       const txData = results.map(([eid]) => [':db.fn/retractEntity', eid]);
       
       try {
-        transact(this.conn, txData);
+        this.conn.transact(txData);
         this.tripleToEntity.clear();
         this.nextEntityId = 1;
       } catch (error) {
@@ -381,7 +381,7 @@ export class DataScriptProvider extends ITripleStore {
    */
   async _tripleExists(subject, predicate, object) {
     const tripleKey = this._tripleKey(subject, predicate, object);
-    const currentDb = db(this.conn);
+    const currentDb = this.conn.db();
     
     try {
       // Use EDN string format for DataScript query (plain attributes without colons)

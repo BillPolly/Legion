@@ -125,14 +125,10 @@ export default class TemplatedPrompt {
         // Call LLM with appropriate method
         let response;
         if (typeof llmClient.complete === 'function') {
-          // Simple complete method
+          // Simple complete method - LLMClient.complete(prompt, maxTokens)
           response = await llmClient.complete(
             messages[messages.length - 1].content,
-            {
-              temperature,
-              maxTokens,
-              systemPrompt: this.systemPrompt
-            }
+            maxTokens
           );
         } else if (typeof llmClient.chat === 'function') {
           // Chat method

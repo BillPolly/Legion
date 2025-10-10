@@ -1,0 +1,126 @@
+You are an ontology design expert. Your task is to determine the best RDF/OWL modeling pattern for a document, considering what already exists in the ontology.
+
+DOCUMENT STRUCTURE:
+Type: {{structure.type}}
+Description: {{structure.description}}
+Has Table: {{structure.hasTable}}
+Has Narrative: {{structure.hasNarrative}}
+Temporal Structure: {{structure.temporalStructure}}
+Quantitative Data: {{structure.quantitativeData}}
+
+Key Entities: {{#each structure.entities}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
+
+Relationships: {{#each structure.relationships}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
+
+{{#if structure.tableStructure}}
+Table Structure:
+- {{structure.tableStructure.rows}} rows × {{structure.tableStructure.columns}} columns
+- Metrics: {{#each structure.tableStructure.metrics}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
+{{/if}}
+
+---
+
+EXISTING ONTOLOGY:
+Domain: {{domain}}
+{{#if existingOntology.patterns}}
+Existing Patterns: {{#each existingOntology.patterns}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
+{{/if}}
+
+{{#if existingOntology.classes}}
+Existing Classes:
+{{#each existingOntology.classes}}
+- {{this}}
+{{/each}}
+{{/if}}
+
+{{#if existingOntology.properties}}
+Existing Properties:
+{{#each existingOntology.properties}}
+- {{this}}
+{{/each}}
+{{/if}}
+
+---
+
+TASK:
+Determine the best modeling pattern for this document. Consider:
+
+1. What is the PRIMARY PATTERN this document requires?
+   Examples:
+   - "Observation Pattern" - for measurements/metrics over time periods
+   - "Event Pattern" - for temporal events with participants
+   - "Classification Pattern" - for taxonomies and categories
+   - "Document Pattern" - for documents with sections and content
+
+2. WHY is this pattern appropriate?
+   - What characteristics of the document drive this choice?
+   - How does it handle the document's structure (table, narrative, temporal, etc.)?
+
+3. What CONCEPTS are required for this pattern?
+   For each concept, specify:
+   - Name: Concept name (e.g., "MetricObservation")
+   - Type: "class", "property", or "relationship"
+   - Purpose: Why this concept is needed
+
+   Example for Observation Pattern:
+   - Organization (class): Represents the entity being measured
+   - Period (class): Represents time periods
+   - FinancialMetric (class): Types of metrics
+   - MetricObservation (class): Individual measurements
+   - forOrganization (relationship): Links observation to organization
+   - forPeriod (relationship): Links observation to period
+   - hasMetricType (relationship): Links observation to metric type
+   - hasValue (property): Stores the numeric value
+
+4. What EXISTING concepts can be REUSED?
+   List URIs of existing classes/properties/relationships that fit this pattern.
+   Examples:
+   - "kg:Organization" (already defined)
+   - "kg:FinancialReport" (already defined)
+
+IMPORTANT GUIDELINES:
+- Tables with metrics × periods → Use Observation Pattern
+- Temporal data → Ensure Period/Time entities
+- Quantitative data → Ensure value properties with xsd:decimal range
+- Multi-dimensional data → Use observation pattern, not flat properties
+- ALWAYS reuse existing concepts when they fit!
+
+Provide your response as a JSON object with this EXACT structure:
+
+{
+  "name": "Observation Pattern",
+  "reason": "This pattern is appropriate because the document contains a financial table with metrics across multiple time periods. The Observation Pattern allows us to represent each cell as a distinct observation linking organization, period, metric type, and value.",
+  "requiredConcepts": [
+    {
+      "name": "Organization",
+      "type": "class",
+      "purpose": "Represents the company being measured"
+    },
+    {
+      "name": "Period",
+      "type": "class",
+      "purpose": "Represents time periods (years)"
+    },
+    {
+      "name": "MetricObservation",
+      "type": "class",
+      "purpose": "Represents individual measurements"
+    },
+    {
+      "name": "forOrganization",
+      "type": "relationship",
+      "purpose": "Links observation to organization"
+    },
+    {
+      "name": "forPeriod",
+      "type": "relationship",
+      "purpose": "Links observation to period"
+    },
+    {
+      "name": "hasValue",
+      "type": "property",
+      "purpose": "Stores numeric value"
+    }
+  ],
+  "reuseExisting": []
+}

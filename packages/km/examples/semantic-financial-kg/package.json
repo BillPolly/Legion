@@ -1,0 +1,26 @@
+{
+  "name": "@legion/semantic-financial-kg",
+  "version": "0.1.0",
+  "description": "Proper RDF semantic knowledge graph implementation for financial data",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand --no-coverage",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch --runInBand --no-coverage",
+    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/unit --runInBand --no-coverage",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/integration --runInBand --no-coverage"
+  },
+  "dependencies": {
+    "@legion/resource-manager": "workspace:*",
+    "@legion/llm-client": "workspace:*",
+    "@legion/prompt-manager": "workspace:*",
+    "@legion/semantic-search": "workspace:*",
+    "@legion/neurosymbolic-reasoning": "workspace:*",
+    "@legion/triplestore": "workspace:*",
+    "@legion/km-entity-store": "workspace:*",
+    "@legion/ontology": "workspace:*"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}

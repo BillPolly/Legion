@@ -1,0 +1,44 @@
+You are analyzing a document to understand its structure and content.
+
+DOCUMENT SUMMARY:
+{{#if document.hasTable}}
+Table Structure:
+- Rows: {{document.tableStructure.rows}}
+- Columns: {{document.tableStructure.columns}}
+- Metrics: {{#each document.tableStructure.metrics}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
+{{/if}}
+
+{{#if document.hasNarrative}}
+Narrative Sample:
+{{document.narrativeSample}}
+{{/if}}
+
+{{#if document.metadata.company}}
+Company: {{document.metadata.company}}
+{{/if}}
+{{#if document.metadata.year}}
+Year: {{document.metadata.year}}
+{{/if}}
+{{#if document.metadata.topic}}
+Topic: {{document.metadata.topic}}
+{{/if}}
+
+TASK:
+Analyze this document and identify:
+
+1. **Type**: What kind of document is this? (e.g., "financial report", "research paper", "technical specification")
+
+2. **Description**: Describe what this document contains in 1-2 sentences.
+
+3. **Entities**: What key entities/objects are discussed? (e.g., companies, people, products, metrics)
+
+4. **Temporal Structure**: Does this document have a temporal/time-based structure? (true/false)
+   - Examples: Data across years, time series, historical progression
+
+5. **Quantitative Data**: Does this document contain numeric/quantitative data? (true/false)
+   - Examples: Measurements, financial figures, statistics
+
+6. **Relationships**: What relationships exist between entities?
+   - Examples: "company produces product", "metric measures performance", "report covers period"
+
+Provide your analysis as a JSON object.

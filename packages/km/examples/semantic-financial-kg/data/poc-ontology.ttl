@@ -1,0 +1,43 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix poc: <http://example.org/poc#> .
+
+# Ontology metadata
+poc:Ontology rdf:type owl:Ontology ;
+    rdfs:label "POC Financial Ontology" ;
+    rdfs:comment "Minimal ontology for proof-of-concept semantic knowledge graph" .
+
+# Classes
+poc:Company rdf:type owl:Class ;
+    rdfs:label "Company" ;
+    rdfs:comment "A business organization" .
+
+poc:Reserve rdf:type owl:Class ;
+    rdfs:label "Reserve" ;
+    rdfs:comment "Financial reserves set aside" .
+
+poc:Unit rdf:type owl:Class ;
+    rdfs:label "Unit" ;
+    rdfs:comment "Measurement unit for amounts" .
+
+# Object Properties
+poc:hasReserve rdf:type owl:ObjectProperty ;
+    rdfs:label "has reserve" ;
+    rdfs:comment "Company has a reserve" ;
+    rdfs:domain poc:Company ;
+    rdfs:range poc:Reserve .
+
+# Data Properties
+poc:amount rdf:type owl:DatatypeProperty ;
+    rdfs:label "amount" ;
+    rdfs:comment "Numerical value" ;
+    rdfs:domain poc:Reserve ;
+    rdfs:range xsd:decimal .
+
+poc:year rdf:type owl:DatatypeProperty ;
+    rdfs:label "year" ;
+    rdfs:comment "Fiscal year" ;
+    rdfs:domain poc:Reserve ;
+    rdfs:range xsd:integer .

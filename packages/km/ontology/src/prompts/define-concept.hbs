@@ -1,0 +1,123 @@
+You are an ontology design expert. Define a concept with full semantic annotations.
+
+CONCEPT TO DEFINE:
+Name: {{concept.name}}
+Type: {{concept.type}}
+Purpose: {{concept.purpose}}
+
+PATTERN CONTEXT:
+Pattern: {{pattern.name}}
+Reason: {{pattern.reason}}
+
+AVAILABLE CLASSES (for domain/range references):
+{{#each availableClasses}}
+- {{this}}
+{{/each}}
+
+DOCUMENT CONTEXT:
+{{#if document.type}}
+Document Type: {{document.type}}
+{{/if}}
+{{#if document.company}}
+Company: {{document.company}}
+{{/if}}
+{{#if document.topic}}
+Topic: {{document.topic}}
+{{/if}}
+
+DOMAIN:
+{{domain}}
+
+---
+
+TASK:
+Provide a complete definition for this concept with the following:
+
+1. **URI**: Full URI for the concept
+   - MUST use the EXACT name provided above: kg:{{concept.name}}
+   - DO NOT change or modify the concept name
+   - The URI must be exactly: "kg:{{concept.name}}"
+
+2. **Label**: Human-readable label
+
+3. **Definition**: Formal definition (2-3 sentences)
+   - What is this concept?
+   - What does it represent in the domain?
+   - Be precise and unambiguous
+
+4. **Supertype Description**: Describe what broader category this belongs to
+   - Example: "A type of financial entity representing..."
+
+5. **Usage Description**: Describe how this concept is used
+   - Example: "Used to record measurements of financial performance metrics for organizations during specific periods"
+
+6. **Synonyms**: Alternative terms (comma-separated)
+   - Example: "measurement, observation, data point"
+
+7. **Parent**: Parent concept URI
+   {{#if concept.type}}
+   {{#if (eq concept.type "class")}}
+   - MUST be one of: kg:PhysicalEntity, kg:State, kg:Process, kg:Task, or owl:Thing
+   - Choose based on: PhysicalEntity (material objects), State (conditions), Process (activities), Task (planned activities)
+   {{else}}
+   - For properties and relationships, use: owl:Thing
+   {{/if}}
+   {{/if}}
+
+{{#if (or (eq concept.type "property") (eq concept.type "relationship"))}}
+8. **Domain**: What class does this property/relationship apply to?
+   - MUST be one of the AVAILABLE CLASSES listed above
+   - Format: "kg:ClassName"
+
+9. **Range**: What is the type/target of this property/relationship?
+   {{#if (eq concept.type "property")}}
+   - For datatype properties: "xsd:string", "xsd:decimal", "xsd:integer", "xsd:boolean", "xsd:date"
+   {{/if}}
+   {{#if (eq concept.type "relationship")}}
+   - For object properties: MUST be one of the AVAILABLE CLASSES listed above
+   - Format: "kg:ClassName"
+   {{/if}}
+{{/if}}
+
+IMPORTANT: The URI field must EXACTLY match kg:{{concept.name}}. Do not modify the concept name in any way.
+
+EXAMPLES:
+
+For class "MetricObservation":
+{
+  "uri": "kg:MetricObservation",
+  "label": "Metric Observation",
+  "definition": "A recorded measurement of a specific financial metric for an organization during a particular period. Represents a single data point in a financial dataset.",
+  "supertypeDescription": "A type of state that captures the condition or performance of an organization at a point in time",
+  "usageDescription": "Used to represent individual cells in financial tables, where each observation links an organization, period, metric type, and numeric value",
+  "synonyms": "measurement, data point, metric value, observation",
+  "parent": "kg:State"
+}
+
+For property "hasValue" (note: URI is exactly kg:hasValue):
+{
+  "uri": "kg:hasValue",
+  "label": "has value",
+  "definition": "Associates a metric observation with its numeric value",
+  "supertypeDescription": "A datatype property that stores quantitative measurements",
+  "usageDescription": "Used to attach the actual numeric value to a metric observation",
+  "synonyms": "value, amount, quantity",
+  "parent": "owl:Thing",
+  "domain": "kg:MetricObservation",
+  "range": "xsd:decimal"
+}
+
+For relationship "forOrganization" (note: URI is exactly kg:forOrganization):
+{
+  "uri": "kg:forOrganization",
+  "label": "for organization",
+  "definition": "Links a metric observation to the organization being measured",
+  "supertypeDescription": "An object property that establishes the subject of a measurement",
+  "usageDescription": "Used to specify which organization a metric observation pertains to",
+  "synonyms": "about organization, pertains to organization, measures organization",
+  "parent": "owl:Thing",
+  "domain": "kg:MetricObservation",
+  "range": "kg:Organization"
+}
+
+Provide your definition as a JSON object.

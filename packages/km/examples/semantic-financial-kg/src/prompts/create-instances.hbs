@@ -1,0 +1,106 @@
+You are a knowledge graph engineer. Your task is to create RDF instances (ABox) from the provided data using the given ontology schema (TBox).
+
+ONTOLOGY SCHEMA (TBox):
+
+CLASSES:
+{{#each ontology.classes}}
+- {{this.uri}} ({{this.label}})
+  Definition: {{this.definition}}
+{{/each}}
+
+PROPERTIES (Datatype):
+{{#each ontology.properties}}
+- {{this.uri}} ({{this.label}})
+  Domain: {{this.domain}}
+  Range: {{this.range}}
+{{/each}}
+
+RELATIONSHIPS (Object Properties):
+{{#each ontology.relationships}}
+- {{this.uri}} ({{this.label}})
+  Domain: {{this.domain}}
+  Range: {{this.range}}
+{{/each}}
+
+DATA TO INSTANTIATE:
+
+Company: {{data.company}}
+
+Periods:
+{{#each data.periods}}
+- {{this}}
+{{/each}}
+
+Metrics with Values:
+{{#each data.data}}
+Metric: {{this.metric}}
+  {{#each this.values}}
+  {{this.period}}: {{this.value}}
+  {{/each}}
+{{/each}}
+
+TASK:
+
+Create RDF instances from this data using the ontology above. You must:
+
+1. Create instances for each entity (organization, periods, metrics, observations)
+2. Use the correct class types from the ontology
+3. Link instances using the relationships defined in the ontology
+4. Use proper RDF URI format (e.g., kg:JKHY, kg:Period_2007, kg:Obs_1)
+5. For literal values, use XSD datatypes (e.g., "104681"^^xsd:decimal)
+
+Return a JSON array of instances with this structure:
+
+{
+  "instances": [
+    {
+      "uri": "kg:JKHY",
+      "type": "kg:Organization",
+      "properties": [
+        {
+          "predicate": "rdfs:label",
+          "object": "\"JKHY\""
+        }
+      ]
+    },
+    {
+      "uri": "kg:Period_2007",
+      "type": "kg:Period",
+      "properties": [
+        {
+          "predicate": "rdfs:label",
+          "object": "\"2007\""
+        }
+      ]
+    },
+    {
+      "uri": "kg:Obs_1",
+      "type": "kg:MetricObservation",
+      "properties": [
+        {
+          "predicate": "kg:hasValue",
+          "object": "\"104681\"^^xsd:decimal"
+        },
+        {
+          "predicate": "kg:observedEntity",
+          "object": "kg:JKHY"
+        },
+        {
+          "predicate": "kg:forPeriod",
+          "object": "kg:Period_2007"
+        },
+        {
+          "predicate": "kg:hasMetricType",
+          "object": "kg:NetIncome"
+        }
+      ]
+    }
+  ]
+}
+
+IMPORTANT:
+- Create instances for ALL data points in the table (every metric × period combination)
+- Use the relationship predicates from the ontology to link observations to organizations, periods, and metrics
+- Sanitize URIs by replacing spaces and special characters with underscores
+- All string literals must be quoted: "value"
+- All numeric values should use xsd:decimal: "123.45"^^xsd:decimal

@@ -6,7 +6,7 @@
  */
 
 import { ConvFinQAEvaluator } from '../src/ConvFinQAEvaluator.js';
-import { SimpleTripleStore } from '@legion/rdf';
+import { TripleStore } from '../../semantic-financial-kg/src/storage/TripleStore.js';
 import { SemanticSearchProvider } from '@legion/semantic-search';
 import { ResourceManager } from '@legion/resource-manager';
 import fs from 'fs';
@@ -14,15 +14,21 @@ import path from 'path';
 
 async function main() {
   console.log('='.repeat(80));
-  console.log('ConvFinQA Evaluation - Legion Ontology + KG Approach');
+  console.log('ConvFinQA Evaluation - Legion Ontology + KG Approach (Phase 7)');
   console.log('='.repeat(80));
   console.log();
 
   // Load dataset
   console.log('📂 Loading ConvFinQA dataset...');
-  const dataPath = path.join(import.meta.dirname, '../data/first-10-conversations.json');
-  const dataset = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
-  console.log(`   Loaded ${dataset.length} conversation(s)\n`);
+  const dataPath = path.join(import.meta.dirname, '../data/convfinqa_dataset.json');
+  const fullDataset = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+
+  // Get number of examples to evaluate from command line (default: 10)
+  const numExamples = parseInt(process.argv[2]) || 10;
+  const dataset = fullDataset.train.slice(0, numExamples);
+
+  console.log(`   Loaded ${fullDataset.train.length} training examples`);
+  console.log(`   Evaluating first ${dataset.length} examples\n`);
 
   // Initialize ResourceManager
   console.log('🔧 Initializing ResourceManager...');
@@ -43,7 +49,7 @@ async function main() {
 
     try {
       // Create fresh triple store and semantic search for each conversation
-      const tripleStore = new SimpleTripleStore();
+      const tripleStore = new TripleStore();
       const semanticSearch = await SemanticSearchProvider.create(resourceManager);
 
       // Create evaluator
@@ -119,9 +125,9 @@ async function main() {
   }
 
   // Save detailed results
-  const outputPath = path.join(import.meta.dirname, '../evaluation-results-10.json');
+  const outputPath = path.join(import.meta.dirname, `../__tests__/tmp/evaluation-results-${numExamples}.json`);
   fs.writeFileSync(outputPath, JSON.stringify(allResults, null, 2));
-  console.log(`\n💾 Detailed results saved to: ${path.basename(outputPath)}`);
+  console.log(`\n💾 Detailed results saved to: ${outputPath}`);
 
   console.log();
   console.log('='.repeat(80));

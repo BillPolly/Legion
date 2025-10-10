@@ -18,6 +18,7 @@ import { OntologyExtensionService } from './services/OntologyExtensionService.js
 import { SentenceAnnotator } from './services/SentenceAnnotator.js';
 import { OntologyVerificationService } from './services/OntologyVerificationService.js';
 import { TableProcessor } from './services/TableProcessor.js';
+import { SemanticModelDesigner } from './services/SemanticModelDesigner.js';
 import { CanonicalLabelService } from '../../examples/convfinqa-agent/src/utils/CanonicalLabelService.js';
 import { getBootstrapTriples } from './bootstrap/upper-level-ontology.js';
 
@@ -49,6 +50,12 @@ export class OntologyBuilder {
     this.ontologyExtension = new OntologyExtensionService(this.tripleStore, this.semanticSearch, this.llmClient, this.hierarchyTraversal, this.verification);
     this.sentenceAnnotator = new SentenceAnnotator();
     this.tableProcessor = new TableProcessor(this.tripleStore, this.verification);
+    this.semanticModelDesigner = new SemanticModelDesigner({
+      tripleStore: this.tripleStore,
+      semanticSearch: this.semanticSearch,
+      llmClient: this.llmClient,
+      hierarchyTraversal: this.hierarchyTraversal
+    });
 
     this.bootstrapLoaded = false;
   }
@@ -144,6 +151,130 @@ export class OntologyBuilder {
         });
       }
     }
+  }
+
+  /**
+   * Design semantic model for document (PHASE 0: Research-Driven Design)
+   *
+   * Holistically analyzes document and designs complete semantic model
+   * BEFORE building ontology incrementally. Reuses existing ontology where possible.
+   *
+   * This is the NEW research-driven approach that solves the "observation pattern" problem.
+   *
+   * @param {Object} document - Document to model
+   * @param {Object} document.table - Table data (if present)
+   * @param {string} document.narrative - Narrative text (if present)
+   * @param {Object} document.metadata - Metadata (company, year, topic, etc.)
+   * @param {Object} options - Design options
+   * @param {string} options.domain - Domain context (default: 'general')
+   * @returns {Promise<Object>} - Semantic model
+   */
+  async designSemanticModel(document, options = {}) {
+    await this.ensureBootstrapLoaded();
+    return await this.semanticModelDesigner.design(document, options);
+  }
+
+  /**
+   * Build ontology from semantic model
+   *
+   * Constructs ontology (TBox) from the designed semantic model.
+   * Adds only the delta (new concepts) to existing ontology.
+   *
+   * @param {Object} semanticModel - Semantic model from designSemanticModel()
+   * @returns {Promise<Object>} - Build results
+   */
+  async buildFromSemanticModel(semanticModel) {
+    console.log('\n🔨 BUILDING ONTOLOGY FROM SEMANTIC MODEL');
+    console.log('='.repeat(60));
+
+    const stats = {
+      classesAdded: 0,
+      propertiesAdded: 0,
+      relationshipsAdded: 0
+    };
+
+    // Add new classes
+    console.log(`\n📦 Adding ${semanticModel.delta.newClasses.length} new classes...`);
+    for (const classDef of semanticModel.delta.newClasses) {
+      await this.tripleStore.add(classDef.uri, 'rdf:type', 'owl:Class');
+      await this.tripleStore.add(classDef.uri, 'rdfs:label', `"${classDef.label}"`);
+      await this.tripleStore.add(classDef.uri, 'rdfs:subClassOf', classDef.parent);
+      await this.tripleStore.add(classDef.uri, 'skos:definition', `"${classDef.definition}"`);
+      await this.tripleStore.add(classDef.uri, 'rdfs:comment', `"${classDef.supertypeDescription}"`);
+      await this.tripleStore.add(classDef.uri, 'skos:scopeNote', `"${classDef.usageDescription}"`);
+      await this.tripleStore.add(classDef.uri, 'skos:altLabel', `"${classDef.synonyms}"`);
+
+      // Index in semantic search
+      await this.semanticSearch.insert('ontology-classes', {
+        text: `${classDef.label}: ${classDef.definition}`,
+        metadata: {
+          classURI: classDef.uri,
+          label: classDef.label,
+          perspectiveType: 'definition'
+        }
+      });
+
+      stats.classesAdded++;
+      console.log(`  ✓ ${classDef.uri}`);
+    }
+
+    // Add new properties
+    console.log(`\n📝 Adding ${semanticModel.delta.newProperties.length} new properties...`);
+    for (const propDef of semanticModel.delta.newProperties) {
+      await this.tripleStore.add(propDef.uri, 'rdf:type', 'owl:DatatypeProperty');
+      await this.tripleStore.add(propDef.uri, 'rdfs:label', `"${propDef.label}"`);
+      await this.tripleStore.add(propDef.uri, 'rdfs:domain', propDef.domain);
+      await this.tripleStore.add(propDef.uri, 'rdfs:range', propDef.range);
+      await this.tripleStore.add(propDef.uri, 'rdfs:subPropertyOf', propDef.parent || 'owl:Thing');
+
+      // Attribute type descriptions (can be inherited and refined by subtypes)
+      await this.tripleStore.add(propDef.uri, 'skos:definition', `"${propDef.definition}"`);
+      await this.tripleStore.add(propDef.uri, 'rdfs:comment', `"${propDef.supertypeDescription}"`);
+      await this.tripleStore.add(propDef.uri, 'skos:scopeNote', `"${propDef.usageDescription}"`);
+      await this.tripleStore.add(propDef.uri, 'skos:altLabel', `"${propDef.synonyms}"`);
+
+      stats.propertiesAdded++;
+      console.log(`  ✓ ${propDef.uri}`);
+    }
+
+    // Add new relationships
+    console.log(`\n🔗 Adding ${semanticModel.delta.newRelationships.length} new relationships...`);
+    for (const relDef of semanticModel.delta.newRelationships) {
+      await this.tripleStore.add(relDef.uri, 'rdf:type', 'owl:ObjectProperty');
+      await this.tripleStore.add(relDef.uri, 'rdfs:label', `"${relDef.label}"`);
+      await this.tripleStore.add(relDef.uri, 'rdfs:domain', relDef.domain);
+      await this.tripleStore.add(relDef.uri, 'rdfs:range', relDef.range);
+      await this.tripleStore.add(relDef.uri, 'rdfs:subPropertyOf', relDef.parent || 'kg:relatesTo');
+
+      // Attribute type descriptions (can be inherited and refined by subtypes)
+      await this.tripleStore.add(relDef.uri, 'skos:definition', `"${relDef.definition}"`);
+      await this.tripleStore.add(relDef.uri, 'rdfs:comment', `"${relDef.supertypeDescription}"`);
+      await this.tripleStore.add(relDef.uri, 'skos:scopeNote', `"${relDef.usageDescription}"`);
+      await this.tripleStore.add(relDef.uri, 'skos:altLabel', `"${relDef.synonyms}"`);
+
+      // Index in semantic search
+      await this.semanticSearch.insert('ontology-relationships', {
+        text: `${relDef.label}: ${relDef.definition}`,
+        metadata: {
+          relURI: relDef.uri,
+          label: relDef.label,
+          domain: relDef.domain,
+          range: relDef.range,
+          perspectiveType: 'definition'
+        }
+      });
+
+      stats.relationshipsAdded++;
+      console.log(`  ✓ ${relDef.uri}`);
+    }
+
+    console.log('\n✅ ONTOLOGY BUILD COMPLETE');
+    console.log(`   Classes added: ${stats.classesAdded}`);
+    console.log(`   Properties added: ${stats.propertiesAdded}`);
+    console.log(`   Relationships added: ${stats.relationshipsAdded}`);
+    console.log('='.repeat(60));
+
+    return stats;
   }
 
   /**
