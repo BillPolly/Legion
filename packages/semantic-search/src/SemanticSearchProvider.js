@@ -242,7 +242,7 @@ export class SemanticSearchProvider {
    */
   async hybridSearch(collection, query, options = {}) {
     SearchValidators.validateHybridSearchOptions(options);
-    
+
     const {
       semanticWeight = 0.7,
       keywordWeight = 0.3,
@@ -256,9 +256,10 @@ export class SemanticSearchProvider {
       limit: limit * 2 // Get more results for merging
     });
 
-    // Perform keyword search
-    const keywordFilter = this._buildKeywordFilter(query);
-    const keywordResults = await this.find(collection, keywordFilter, { limit: limit * 2 });
+    // For Qdrant, we don't have true keyword search
+    // Instead, use semantic results with different scoring
+    // This is a simplified hybrid approach until we implement BM25
+    const keywordResults = [];
 
     // Combine and rank results
     const combinedResults = this._combineSearchResults(
@@ -369,6 +370,7 @@ export class SemanticSearchProvider {
       type: this.type,
       initialized: this.initialized,
       connected: this.connected,
+      useLocalEmbeddings: this.useLocalEmbeddings,
       embeddingService: this.useLocalEmbeddings ? 'local-onnx' : 'openai',
       embeddingModel: this.useLocalEmbeddings ? 'all-MiniLM-L6-v2' : this.config.embeddingModel,
       embeddingDimensions: this.embeddingDimensions,

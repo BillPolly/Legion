@@ -234,22 +234,37 @@ export class QdrantVectorStore {
     if (!this.client) {
       await this._ensureClient();
     }
-    
+
     if (!this.client) {
       throw new Error('Qdrant client not initialized');
     }
-    
+
     // Qdrant doesn't have a direct "find" - use scroll with filter
     const { limit = 100 } = options;
-    
+
+    // Convert filter to Qdrant format
+    let qdrantFilter = undefined;
+    if (Object.keys(filter).length > 0) {
+      qdrantFilter = {
+        must: Object.entries(filter).map(([key, value]) => ({
+          key: key,
+          match: { value: value }
+        }))
+      };
+    }
+
     try {
       const result = await this.client.scroll(collection, {
-        filter: Object.keys(filter).length > 0 ? filter : undefined,
+        filter: qdrantFilter,
         limit,
         with_payload: true
       });
-      
-      return result.points.map(p => p.payload);
+
+      return result.points.map(p => ({
+        ...p.payload,
+        id: p.id,
+        payload: p.payload
+      }));
     } catch (error) {
       if (error.message.includes('Not found')) {
         return [];

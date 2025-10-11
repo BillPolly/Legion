@@ -14,18 +14,9 @@ export default {
       }
     },
     {
-      // JSDOM environment for frontend integration tests
-      testEnvironment: 'jsdom',
-      testMatch: ['**/__tests__/integration/frontend-*.test.js'],
-      setupFilesAfterEnv: ['<rootDir>/__tests__/setup-frontend.js'],
-      moduleNameMapper: {
-        '^(\\.{1,2}/.*)\\.js$': '$1'
-      }
-    },
-    {
-      // Node.js environment for other integration tests
+      // Node.js environment for integration tests
       testEnvironment: 'node',
-      testMatch: ['**/__tests__/integration/!(frontend-*).test.js'],
+      testMatch: ['**/__tests__/integration/**/*.test.js'],
       moduleNameMapper: {
         '^(\\.{1,2}/.*)\\.js$': '$1'
       }

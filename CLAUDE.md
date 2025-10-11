@@ -707,6 +707,31 @@ where apropriate you must use the proper workspace improts ALWAYS so "@legion/ .
 
 ALL inter package imports should use "@legion/...  never relative imports outside a package.
 
+## Workspace Imports (CRITICAL)
+
+**ALWAYS use @legion/... imports! NEVER use relative imports outside a package!**
+
+### ❌ WRONG - Relative imports
+```javascript
+import { ResourceManager } from '../packages/shared/resource-manager/src/ResourceManager.js';
+import { CLI } from '../../packages/cli/src/index.js';
+```
+
+### ✅ CORRECT - Workspace imports
+```javascript
+import { ResourceManager } from '@legion/resource-manager';
+import { CLI } from '@legion/cli';
+```
+
+**If workspace imports don't work, FIX THE WORKSPACE CONFIGURATION!**
+- Check package.json has correct "exports" field
+- Check package.json has correct "name" field
+- DO NOT work around it with relative imports!
+
+Scripts in the /scripts directory that need to import workspace packages must either:
+1. Be run from package.json scripts (which resolve workspaces correctly)
+2. Fix the import resolution by ensuring workspaces are properly configured
+
 Jest must always be configured for ES6 modules.
 
 In general always run jest tests sequentially unless you absolutley know that they can run in parallel.

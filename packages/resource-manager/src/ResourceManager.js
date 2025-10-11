@@ -214,7 +214,10 @@ export class ResourceManager {
       
       // Initialize service management
       this._initializeServiceManagement();
-      
+
+      // Initialize service clients (Qdrant, etc.)
+      await this._initializeServiceClients();
+
       // Auto-start configured services
       if (!isTestEnvironment()) {
         const autoStartServices = this.get('env.AUTO_START_SERVICES');
@@ -326,7 +329,14 @@ export class ResourceManager {
       this._resources.set('handleSemanticSearch', promise);
       return promise;
     }
-    
+
+    // Special handling for semanticSearch - create it if it doesn't exist
+    if (name === 'semanticSearch' && !this._resources.has('semanticSearch')) {
+      const promise = this._initializeSemanticSearch();
+      this._resources.set('semanticSearch', promise);
+      return promise;
+    }
+
     // Handle dot notation (e.g., 'env.ANTHROPIC_API_KEY')
     if (name.includes('.')) {
       const parts = name.split('.');
@@ -845,10 +855,16 @@ export class ResourceManager {
     try {
       // Initialize Qdrant client
       await this._initializeQdrantClient();
-      
+
+      // Initialize MongoDB client
+      await this._initializeMongoClient();
+
+      // Note: Semantic Search is initialized on-demand via get('semanticSearch')
+      // It requires a fully initialized ResourceManager, so we can't init it here
+
       // Initialize Nomic client (already handled by NomicDataSource)
       // Nomic client is created on-demand by NomicDataSource
-      
+
     } catch (error) {
       console.warn('Service client initialization warning:', error.message);
       // Don't fail initialization if services aren't available
@@ -987,6 +1003,73 @@ export class ResourceManager {
     } catch (error) {
       console.warn('Failed to initialize Qdrant client:', error.message);
       // Don't fail - client will be created on-demand if needed
+    }
+  }
+
+  /**
+   * Initialize MongoDB client
+   * @private
+   */
+  async _initializeMongoClient() {
+    const mongoUrl = this.get('env.MONGODB_URL') || 'mongodb://localhost:27017';
+
+    try {
+      // Import MongoDB client
+      const { MongoClient } = await import('mongodb');
+
+      // Create MongoDB client with connection pooling
+      const client = new MongoClient(mongoUrl, {
+        maxPoolSize: 10,
+        minPoolSize: 2,
+        connectTimeoutMS: 5000,
+        serverSelectionTimeoutMS: 5000
+      });
+
+      // Connect
+      await client.connect();
+
+      // Verify connection
+      await client.db('admin').command({ ping: 1 });
+
+      // Store the client in resources
+      this._resources.set('mongoClient', client);
+
+      console.log('MongoDB client initialized successfully');
+    } catch (error) {
+      console.warn('Failed to initialize MongoDB client:', error.message);
+      // Don't fail - client will be created on-demand if needed
+    }
+  }
+
+  /**
+   * Initialize Semantic Search
+   * @private
+   * @returns {Promise<SemanticSearchProvider|undefined>} Semantic Search instance or undefined if failed
+   */
+  async _initializeSemanticSearch() {
+    try {
+      // Check if Qdrant client is available
+      const qdrantClient = this.get('qdrantClient');
+      if (!qdrantClient) {
+        console.warn('Qdrant client not available, skipping Semantic Search initialization');
+        return undefined;
+      }
+
+      // Import Semantic Search
+      const { SemanticSearchProvider } = await import('@legion/semantic-search');
+
+      // Create Semantic Search instance using factory method
+      // Pass resourceManager as first argument, options as second
+      const semanticSearch = await SemanticSearchProvider.create(this, {
+        qdrantClient
+      });
+
+      console.log('Semantic Search initialized successfully');
+      return semanticSearch;
+    } catch (error) {
+      console.warn('Failed to initialize Semantic Search:', error.message);
+      // Return undefined so get() can handle it gracefully
+      return undefined;
     }
   }
 
