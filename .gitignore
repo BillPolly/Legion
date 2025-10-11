@@ -97,6 +97,8 @@ test-results/
 .jester/
 dbs/
 **/dbs/
+junit.xml
+**/junit.xml
 
 # Neo4j database files (Docker volume mount)
 packages/resource-manager/neo4j/data/
