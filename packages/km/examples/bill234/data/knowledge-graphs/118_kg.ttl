@@ -1,0 +1,267 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+entity:entity_Company_Example118 a kg:Company ;
+    kg:hasMetric entity:entity_Metric_AmountAvailable_Nov26_2012,
+        entity:entity_Metric_AmountAvailable_Oct1_2012,
+        entity:entity_Metric_AmountAvailable_Oct29_2012,
+        entity:entity_Metric_AmountAvailable_Total,
+        entity:entity_Metric_AvgPrice_Nov26_2012,
+        entity:entity_Metric_AvgPrice_Oct1_2012,
+        entity:entity_Metric_AvgPrice_Oct29_2012,
+        entity:entity_Metric_AvgPrice_Total,
+        entity:entity_Metric_NumSharesPubliclyAnnounced_Nov26_2012,
+        entity:entity_Metric_NumSharesPubliclyAnnounced_Oct1_2012,
+        entity:entity_Metric_NumSharesPubliclyAnnounced_Oct29_2012,
+        entity:entity_Metric_NumSharesPubliclyAnnounced_Total,
+        entity:entity_Metric_NumShares_Nov26_2012,
+        entity:entity_Metric_NumShares_Oct1_2012,
+        entity:entity_Metric_NumShares_Oct29_2012,
+        entity:entity_Metric_NumShares_Total,
+        entity:entity_Metric_TotalSharesRepurchased_Program,
+        entity:entity_Metric_TotalSharesRepurchased_Quarter_2012,
+        entity:entity_Metric_TotalSpentRepurchases_Program,
+        entity:entity_Metric_TotalSpentRepurchases_Quarter_2012 ;
+    kg:label "Company from Example 118" .
+
+entity:entity_TimePeriod_Quarter_Ended_2012 a kg:TimePeriod ;
+    kg:label "quarter ended december 31, 2012" .
+
+entity:entity_Metric_AmountAvailable_Nov26_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:value_AmountAvailable_Nov26_2012 ;
+    kg:label "amount available for future share repurchases under the program ( b ) ( in millions )" ;
+    kg:tableColumn "november 26 2012 2013 december 31 2012" ;
+    kg:tableRow "amount available for future share repurchases under the program ( b ) ( in millions )" .
+
+entity:entity_Metric_AmountAvailable_Oct1_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:value_AmountAvailable_Oct1_2012 ;
+    kg:label "amount available for future share repurchases under the program ( b ) ( in millions )" ;
+    kg:tableColumn "october 1 2012 2013 october 28 2012" ;
+    kg:tableRow "amount available for future share repurchases under the program ( b ) ( in millions )" .
+
+entity:entity_Metric_AmountAvailable_Oct29_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:value_AmountAvailable_Oct29_2012 ;
+    kg:label "amount available for future share repurchases under the program ( b ) ( in millions )" ;
+    kg:tableColumn "october 29 2012 2013 november 25 2012" ;
+    kg:tableRow "amount available for future share repurchases under the program ( b ) ( in millions )" .
+
+entity:entity_Metric_AmountAvailable_Total a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:value_AmountAvailable_Total ;
+    kg:label "amount available for future share repurchases under the program ( b ) ( in millions )" ;
+    kg:tableColumn "total" ;
+    kg:tableRow "amount available for future share repurchases under the program ( b ) ( in millions )" .
+
+entity:entity_Metric_AvgPrice_Nov26_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:value_AvgPrice_Nov26_2012 ;
+    kg:label "average price paid per share" ;
+    kg:tableColumn "november 26 2012 2013 december 31 2012" ;
+    kg:tableRow "average price paid per share" .
+
+entity:entity_Metric_AvgPrice_Oct1_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:value_AvgPrice_Oct1_2012 ;
+    kg:label "average price paid per share" ;
+    kg:tableColumn "october 1 2012 2013 october 28 2012" ;
+    kg:tableRow "average price paid per share" .
+
+entity:entity_Metric_AvgPrice_Oct29_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:value_AvgPrice_Oct29_2012 ;
+    kg:label "average price paid per share" ;
+    kg:tableColumn "october 29 2012 2013 november 25 2012" ;
+    kg:tableRow "average price paid per share" .
+
+entity:entity_Metric_AvgPrice_Total a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:value_AvgPrice_Total ;
+    kg:label "average price paid per share" ;
+    kg:tableColumn "total" ;
+    kg:tableRow "average price paid per share" .
+
+entity:entity_Metric_NumSharesPubliclyAnnounced_Nov26_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:value_NumSharesPubliclyAnnounced_Nov26_2012 ;
+    kg:label "total number of shares purchased as part of publicly announced program ( a )" ;
+    kg:tableColumn "november 26 2012 2013 december 31 2012" ;
+    kg:tableRow "total number of shares purchased as part of publicly announced program ( a )" .
+
+entity:entity_Metric_NumSharesPubliclyAnnounced_Oct1_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:value_NumSharesPubliclyAnnounced_Oct1_2012 ;
+    kg:label "total number of shares purchased as part of publicly announced program ( a )" ;
+    kg:tableColumn "october 1 2012 2013 october 28 2012" ;
+    kg:tableRow "total number of shares purchased as part of publicly announced program ( a )" .
+
+entity:entity_Metric_NumSharesPubliclyAnnounced_Oct29_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:value_NumSharesPubliclyAnnounced_Oct29_2012 ;
+    kg:label "total number of shares purchased as part of publicly announced program ( a )" ;
+    kg:tableColumn "october 29 2012 2013 november 25 2012" ;
+    kg:tableRow "total number of shares purchased as part of publicly announced program ( a )" .
+
+entity:entity_Metric_NumSharesPubliclyAnnounced_Total a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:value_NumSharesPubliclyAnnounced_Total ;
+    kg:label "total number of shares purchased as part of publicly announced program ( a )" ;
+    kg:tableColumn "total" ;
+    kg:tableRow "total number of shares purchased as part of publicly announced program ( a )" .
+
+entity:entity_Metric_NumShares_Nov26_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:value_NumShares_Nov26_2012 ;
+    kg:label "total number of shares purchased" ;
+    kg:tableColumn "november 26 2012 2013 december 31 2012" ;
+    kg:tableRow "total number of shares purchased" .
+
+entity:entity_Metric_NumShares_Oct1_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:value_NumShares_Oct1_2012 ;
+    kg:label "total number of shares purchased" ;
+    kg:tableColumn "october 1 2012 2013 october 28 2012" ;
+    kg:tableRow "total number of shares purchased" .
+
+entity:entity_Metric_NumShares_Oct29_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:value_NumShares_Oct29_2012 ;
+    kg:label "total number of shares purchased" ;
+    kg:tableColumn "october 29 2012 2013 november 25 2012" ;
+    kg:tableRow "total number of shares purchased" .
+
+entity:entity_Metric_NumShares_Total a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:value_NumShares_Total ;
+    kg:label "total number of shares purchased" ;
+    kg:tableColumn "total" ;
+    kg:tableRow "total number of shares purchased" .
+
+entity:entity_Metric_TotalSharesRepurchased_Program a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:value_TotalSharesRepurchased_Program ;
+    kg:label "total number of shares repurchased under program" .
+
+entity:entity_Metric_TotalSharesRepurchased_Quarter_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:value_TotalSharesRepurchased_Quarter_2012 ;
+    kg:label "total number of shares repurchased during quarter" .
+
+entity:entity_Metric_TotalSpentRepurchases_Program a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:value_TotalSpentRepurchases_Program ;
+    kg:label "total amount spent under share repurchase program" .
+
+entity:entity_Metric_TotalSpentRepurchases_Quarter_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:value_TotalSpentRepurchases_Quarter_2012 ;
+    kg:label "total amount spent for share repurchases during quarter" .
+
+value:value_AmountAvailable_Nov26_2012 a kg:MonetaryValue ;
+    kg:displayValue "2315.0" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2315.0 .
+
+value:value_AmountAvailable_Oct1_2012 a kg:MonetaryValue ;
+    kg:displayValue "2522.0" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2522.0 .
+
+value:value_AmountAvailable_Oct29_2012 a kg:MonetaryValue ;
+    kg:displayValue "2443.0" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2443.0 .
+
+value:value_AmountAvailable_Total a kg:MonetaryValue ;
+    kg:displayValue "2315.0" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2315.0 .
+
+value:value_AvgPrice_Nov26_2012 a kg:MonetaryValue ;
+    kg:displayValue "92.02" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 92.02 .
+
+value:value_AvgPrice_Oct1_2012 a kg:MonetaryValue ;
+    kg:displayValue "93.38" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 93.38 .
+
+value:value_AvgPrice_Oct29_2012 a kg:MonetaryValue ;
+    kg:displayValue "90.86" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 90.86 .
+
+value:value_AvgPrice_Total a kg:MonetaryValue ;
+    kg:displayValue "92.07" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 92.07 .
+
+value:value_NumSharesPubliclyAnnounced_Nov26_2012 a kg:CountValue ;
+    kg:displayValue "1395288.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1395288.0 .
+
+value:value_NumSharesPubliclyAnnounced_Oct1_2012 a kg:CountValue ;
+    kg:displayValue "842445.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 842445.0 .
+
+value:value_NumSharesPubliclyAnnounced_Oct29_2012 a kg:CountValue ;
+    kg:displayValue "872973.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 872973.0 .
+
+value:value_NumSharesPubliclyAnnounced_Total a kg:CountValue ;
+    kg:displayValue "3110706.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 3110706.0 .
+
+value:value_NumShares_Nov26_2012 a kg:CountValue ;
+    kg:displayValue "1395288.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1395288.0 .
+
+value:value_NumShares_Oct1_2012 a kg:CountValue ;
+    kg:displayValue "842445.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 842445.0 .
+
+value:value_NumShares_Oct29_2012 a kg:CountValue ;
+    kg:displayValue "872973.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 872973.0 .
+
+value:value_NumShares_Total a kg:CountValue ;
+    kg:displayValue "3110706.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 3110706.0 .
+
+value:value_TotalSharesRepurchased_Program a kg:CountValue ;
+    kg:displayValue "54.3 million" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 54300000.0 .
+
+value:value_TotalSharesRepurchased_Quarter_2012 a kg:CountValue ;
+    kg:displayValue "3.1 million" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 3100000.0 .
+
+value:value_TotalSpentRepurchases_Program a kg:MonetaryValue ;
+    kg:displayValue "4.2 billion" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 4200.0 .
+
+value:value_TotalSpentRepurchases_Quarter_2012 a kg:MonetaryValue ;
+    kg:displayValue "286 million" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 286.0 .
+
+entity:entity_Year_2012 a kg:Year ;
+    kg:label "2012" ;
+    kg:yearValue 2012 .
+

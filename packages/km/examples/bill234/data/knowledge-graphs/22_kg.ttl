@@ -1,0 +1,483 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-11" ;
+    kg:builtWithOntologyVersion "1.0.3" .
+
+entity:Company_Example22 a kg:Company ;
+    kg:hasMetric entity:Metric_BaselIIIAdvancedCET1Ratio_2013,
+        entity:Metric_BaselIIIAdvancedCET1Ratio_2014,
+        entity:Metric_BaselIIIAdvancedRWAs_2013,
+        entity:Metric_BaselIIIAdvancedRWAs_2014,
+        entity:Metric_CET1_2013,
+        entity:Metric_CET1_2014,
+        entity:Metric_CommonShareholdersEquity_2013,
+        entity:Metric_CommonShareholdersEquity_2014,
+        entity:Metric_DeductionsGoodwillIntangible_2013,
+        entity:Metric_DeductionsGoodwillIntangible_2014,
+        entity:Metric_DeductionsNonconsolidatedFinancialInstitutions_2013,
+        entity:Metric_DeductionsNonconsolidatedFinancialInstitutions_2014,
+        entity:Metric_OtherAdjustments_2013,
+        entity:Metric_OtherAdjustments_2014,
+        entity:Metric_StandardizedCET1Ratio_2013,
+        entity:Metric_StandardizedCET1Ratio_2014,
+        entity:Metric_StandardizedRWAs_2013,
+        entity:Metric_StandardizedRWAs_2014 ;
+    kg:label "Example Company 22" .
+
+entity:Company_GoldmanSachs a kg:Company ;
+    kg:hasMetric entity:Metric_Adjustments_2014,
+        entity:Metric_Buffer,
+        entity:Metric_CET1_2014,
+        entity:Metric_DeferredTaxLiabilities_2013,
+        entity:Metric_DeferredTaxLiabilities_2014,
+        entity:Metric_Goodwill_2013,
+        entity:Metric_Goodwill_2014,
+        entity:Metric_IdentifiableIntangibleAssets_2013,
+        entity:Metric_IdentifiableIntangibleAssets_2014,
+        entity:Metric_MinimumRequirement,
+        entity:Metric_MinimumSupplementaryLeverageRatio,
+        entity:Metric_OtherAdjustments_2014,
+        entity:Metric_PerpetualPreferredStock_2014,
+        entity:Metric_SupplementaryLeverageRatio_2014,
+        entity:Metric_Tier1Capital_2014,
+        entity:Metric_TotalLeverageExposure_2014,
+        entity:Metric_TotalQuarterlyAverageAssets_2014 ;
+    kg:label "Goldman Sachs" .
+
+entity:Metric_Adjustments_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:Adjustments_2014 ;
+    kg:label "Adjustments - December 2014" .
+
+entity:Metric_BaselIIIAdvancedCET1Ratio_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:BaselIIIAdvancedCET1Ratio_2013 ;
+    kg:label "basel iii advanced cet1 ratio" ;
+    kg:tableColumn "as of december 2013" ;
+    kg:tableRow "basel iii advanced cet1 ratio" .
+
+entity:Metric_BaselIIIAdvancedCET1Ratio_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:BaselIIIAdvancedCET1Ratio_2014 ;
+    kg:label "basel iii advanced cet1 ratio" ;
+    kg:tableColumn "as of december 2014" ;
+    kg:tableRow "basel iii advanced cet1 ratio" .
+
+entity:Metric_BaselIIIAdvancedRWAs_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:BaselIIIAdvancedRWAs_2013 ;
+    kg:label "basel iii advanced rwas" ;
+    kg:tableColumn "as of december 2013" ;
+    kg:tableRow "basel iii advanced rwas" .
+
+entity:Metric_BaselIIIAdvancedRWAs_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:BaselIIIAdvancedRWAs_2014 ;
+    kg:label "basel iii advanced rwas" ;
+    kg:tableColumn "as of december 2014" ;
+    kg:tableRow "basel iii advanced rwas" .
+
+entity:Metric_Buffer a kg:FinancialMetric ;
+    kg:hasValue value:Buffer ;
+    kg:label "Buffer portion" .
+
+entity:Metric_CET1_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:CET1_2013 ;
+    kg:label "cet1" ;
+    kg:tableColumn "as of december 2013" ;
+    kg:tableRow "cet1" .
+
+entity:Metric_CommonShareholdersEquity_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:CommonShareholdersEquity_2013 ;
+    kg:label "common shareholders 2019 equity" ;
+    kg:tableColumn "as of december 2013" ;
+    kg:tableRow "common shareholders 2019 equity" .
+
+entity:Metric_CommonShareholdersEquity_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:CommonShareholdersEquity_2014 ;
+    kg:label "common shareholders 2019 equity" ;
+    kg:tableColumn "as of december 2014" ;
+    kg:tableRow "common shareholders 2019 equity" .
+
+entity:Metric_DeductionsGoodwillIntangible_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:DeductionsGoodwillIntangible_2013 ;
+    kg:label "deductions for goodwill and identifiable intangible assets net of deferred tax liabilities" ;
+    kg:tableColumn "as of december 2013" ;
+    kg:tableRow "deductions for goodwill and identifiable intangible assets net of deferred tax liabilities" .
+
+entity:Metric_DeductionsGoodwillIntangible_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:DeductionsGoodwillIntangible_2014 ;
+    kg:label "deductions for goodwill and identifiable intangible assets net of deferred tax liabilities" ;
+    kg:tableColumn "as of december 2014" ;
+    kg:tableRow "deductions for goodwill and identifiable intangible assets net of deferred tax liabilities" .
+
+entity:Metric_DeductionsNonconsolidatedFinancialInstitutions_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:DeductionsNonconsolidatedFinancialInstitutions_2013 ;
+    kg:label "deductions for investments in nonconsolidated financial institutions" ;
+    kg:tableColumn "as of december 2013" ;
+    kg:tableRow "deductions for investments in nonconsolidated financial institutions" .
+
+entity:Metric_DeductionsNonconsolidatedFinancialInstitutions_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:DeductionsNonconsolidatedFinancialInstitutions_2014 ;
+    kg:label "deductions for investments in nonconsolidated financial institutions" ;
+    kg:tableColumn "as of december 2014" ;
+    kg:tableRow "deductions for investments in nonconsolidated financial institutions" .
+
+entity:Metric_DeferredTaxLiabilities_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:DeferredTaxLiabilities_2013 ;
+    kg:label "Deferred tax liabilities - December 2013" .
+
+entity:Metric_DeferredTaxLiabilities_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:DeferredTaxLiabilities_2014 ;
+    kg:label "Deferred tax liabilities - December 2014" .
+
+entity:Metric_Goodwill_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:Goodwill_2013 ;
+    kg:label "Goodwill - December 2013" .
+
+entity:Metric_Goodwill_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:Goodwill_2014 ;
+    kg:label "Goodwill - December 2014" .
+
+entity:Metric_IdentifiableIntangibleAssets_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:IdentifiableIntangibleAssets_2013 ;
+    kg:label "Identifiable intangible assets - December 2013" .
+
+entity:Metric_IdentifiableIntangibleAssets_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:IdentifiableIntangibleAssets_2014 ;
+    kg:label "Identifiable intangible assets - December 2014" .
+
+entity:Metric_MinimumRequirement a kg:FinancialMetric ;
+    kg:hasValue value:MinimumRequirement ;
+    kg:label "Minimum requirement portion" .
+
+entity:Metric_MinimumSupplementaryLeverageRatio a kg:FinancialMetric ;
+    kg:hasValue value:MinimumSupplementaryLeverageRatio ;
+    kg:label "Minimum supplementary leverage ratio requirement" .
+
+entity:Metric_OtherAdjustments_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:OtherAdjustments_2013 ;
+    kg:label "other adjustments" ;
+    kg:tableColumn "as of december 2013" ;
+    kg:tableRow "other adjustments" .
+
+entity:Metric_PerpetualPreferredStock_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:PerpetualPreferredStock_2014 ;
+    kg:label "Perpetual non-cumulative preferred stock - December 2014" .
+
+entity:Metric_StandardizedCET1Ratio_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:StandardizedCET1Ratio_2013 ;
+    kg:label "standardized cet1 ratio" ;
+    kg:tableColumn "as of december 2013" ;
+    kg:tableRow "standardized cet1 ratio" .
+
+entity:Metric_StandardizedCET1Ratio_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:StandardizedCET1Ratio_2014 ;
+    kg:label "standardized cet1 ratio" ;
+    kg:tableColumn "as of december 2014" ;
+    kg:tableRow "standardized cet1 ratio" .
+
+entity:Metric_StandardizedRWAs_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:StandardizedRWAs_2013 ;
+    kg:label "standardized rwas" ;
+    kg:tableColumn "as of december 2013" ;
+    kg:tableRow "standardized rwas" .
+
+entity:Metric_StandardizedRWAs_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:StandardizedRWAs_2014 ;
+    kg:label "standardized rwas" ;
+    kg:tableColumn "as of december 2014" ;
+    kg:tableRow "standardized rwas" .
+
+entity:Metric_SupplementaryLeverageRatio_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:SupplementaryLeverageRatio_2014 ;
+    kg:label "Supplementary leverage ratio - December 2014" .
+
+entity:Metric_Tier1Capital_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:Tier1Capital_2014 ;
+    kg:label "Tier 1 capital (fully phased-in) - December 2014" .
+
+entity:Metric_TotalLeverageExposure_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:TotalLeverageExposure_2014 ;
+    kg:label "Total leverage exposure - December 2014" .
+
+entity:Metric_TotalQuarterlyAverageAssets_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:TotalQuarterlyAverageAssets_2014 ;
+    kg:label "Total quarterly average assets - December 2014" .
+
+value:Adjustments_2014 a kg:MonetaryValue ;
+    kg:displayValue "$579 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 579.0 .
+
+value:BaselIIIAdvancedCET1Ratio_2013 a kg:MonetaryValue ;
+    kg:displayValue "-9.8" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -9.8 .
+
+value:BaselIIIAdvancedCET1Ratio_2014 a kg:MonetaryValue ;
+    kg:displayValue "-11.1" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -11.1 .
+
+value:BaselIIIAdvancedRWAs_2013 a kg:MonetaryValue ;
+    kg:displayValue "594662.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 594662.0 .
+
+value:BaselIIIAdvancedRWAs_2014 a kg:MonetaryValue ;
+    kg:displayValue "577869.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 577869.0 .
+
+value:Buffer a kg:MonetaryValue ;
+    kg:displayValue "2.0%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2.0 .
+
+value:CET1_2013 a kg:MonetaryValue ;
+    kg:displayValue "58219.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 58219.0 .
+
+value:CET1_2014 a kg:MonetaryValue ;
+    kg:displayValue "$64.26 billion",
+        "64260.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions,
+        kg:Units ;
+    kg:numericValue 64.26,
+        64260.0 .
+
+value:CommonShareholdersEquity_2013 a kg:MonetaryValue ;
+    kg:displayValue "71267.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 71267.0 .
+
+value:CommonShareholdersEquity_2014 a kg:MonetaryValue ;
+    kg:displayValue "73597.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 73597.0 .
+
+value:DeductionsGoodwillIntangible_2013 a kg:MonetaryValue ;
+    kg:displayValue "-3468.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -3468.0 .
+
+value:DeductionsGoodwillIntangible_2014 a kg:MonetaryValue ;
+    kg:displayValue "-3196.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -3196.0 .
+
+value:DeductionsNonconsolidatedFinancialInstitutions_2013 a kg:MonetaryValue ;
+    kg:displayValue "-9091.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -9091.0 .
+
+value:DeductionsNonconsolidatedFinancialInstitutions_2014 a kg:MonetaryValue ;
+    kg:displayValue "-4928.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -4928.0 .
+
+value:DeferredTaxLiabilities_2013 a kg:MonetaryValue ;
+    kg:displayValue "$908 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 908.0 .
+
+value:DeferredTaxLiabilities_2014 a kg:MonetaryValue ;
+    kg:displayValue "$964 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 964.0 .
+
+value:Goodwill_2013 a kg:MonetaryValue ;
+    kg:displayValue "$3.71 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 3.71 .
+
+value:Goodwill_2014 a kg:MonetaryValue ;
+    kg:displayValue "$3.65 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 3.65 .
+
+value:IdentifiableIntangibleAssets_2013 a kg:MonetaryValue ;
+    kg:displayValue "$671 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 671.0 .
+
+value:IdentifiableIntangibleAssets_2014 a kg:MonetaryValue ;
+    kg:displayValue "$515 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 515.0 .
+
+value:MinimumRequirement a kg:MonetaryValue ;
+    kg:displayValue "3.0%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 3.0 .
+
+value:MinimumSupplementaryLeverageRatio a kg:MonetaryValue ;
+    kg:displayValue "5.0%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 5.0 .
+
+value:OtherAdjustments_2013 a kg:MonetaryValue ;
+    kg:displayValue "-489.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -489.0 .
+
+value:OtherAdjustments_2014 a kg:MonetaryValue ;
+    kg:displayValue "$290 million",
+        "-1213.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions,
+        kg:Units ;
+    kg:numericValue -1213.0,
+        290.0 .
+
+value:PerpetualPreferredStock_2014 a kg:MonetaryValue ;
+    kg:displayValue "$9.20 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 9.2 .
+
+value:StandardizedCET1Ratio_2013 a kg:MonetaryValue ;
+    kg:displayValue "-9.2" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -9.2 .
+
+value:StandardizedCET1Ratio_2014 a kg:MonetaryValue ;
+    kg:displayValue "-10.2" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -10.2 .
+
+value:StandardizedRWAs_2013 a kg:MonetaryValue ;
+    kg:displayValue "635092.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 635092.0 .
+
+value:StandardizedRWAs_2014 a kg:MonetaryValue ;
+    kg:displayValue "627444.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 627444.0 .
+
+value:SupplementaryLeverageRatio_2014 a kg:MonetaryValue ;
+    kg:displayValue "5.0%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 5.0 .
+
+value:Tier1Capital_2014 a kg:MonetaryValue ;
+    kg:displayValue "$73.17 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 73.17 .
+
+value:TotalLeverageExposure_2014 a kg:MonetaryValue ;
+    kg:displayValue "$1.45 trillion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 1450.0 .
+
+value:TotalQuarterlyAverageAssets_2014 a kg:MonetaryValue ;
+    kg:displayValue "$873 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 873.0 .
+
+entity:Metric_CET1_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:CET1_2014 ;
+    kg:label "CET1 - December 2014",
+        "cet1" ;
+    kg:tableColumn "as of december 2014" ;
+    kg:tableRow "cet1" .
+
+entity:Metric_OtherAdjustments_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:OtherAdjustments_2014 ;
+    kg:label "Other adjustments - December 2014",
+        "other adjustments" ;
+    kg:tableColumn "as of december 2014" ;
+    kg:tableRow "other adjustments" .
+
+entity:Year_2013 a kg:Year ;
+    kg:yearValue 2013 .
+
+entity:Year_2014 a kg:Year ;
+    kg:yearValue 2014 .
+

@@ -1,0 +1,598 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-11" ;
+    kg:builtWithOntologyVersion "1.0.5" .
+
+entity:Company_PNC a kg:Company ;
+    kg:hasMetric entity:Metric_ChargeoffsConsumerLending_2013,
+        entity:Metric_CommercialLendingAllocationPercentage_2014,
+        entity:Metric_CommercialLendingAllocation_2014,
+        entity:Metric_CommercialLoanAllowanceIncrease_2014,
+        entity:Metric_ConsumerLendingAllocationPercentage_2014,
+        entity:Metric_ConsumerLendingAllocation_2014,
+        entity:Metric_ConsumerLoanAllowanceIncrease_2014,
+        entity:Metric_ProvisionForCommercialLendingCreditLossesIncreasePercentage_2014,
+        entity:Metric_ProvisionForCommercialLendingCreditLossesIncrease_2014,
+        entity:Metric_ProvisionForConsumerLendingCreditLossesDecreasePercentage_2014,
+        entity:Metric_ProvisionForConsumerLendingCreditLossesDecrease_2014,
+        entity:Metric_ProvisionForCreditLosses_2013,
+        entity:Metric_ProvisionForCreditLosses_2014,
+        entity:Metric_PurchasedImpairedLoanReserves_2014 ;
+    kg:label "PNC Financial Services Group" .
+
+entity:Company_PNC2014 a kg:Company ;
+    kg:hasMetric entity:Metric_AllowanceToTotalLoans_2013,
+        entity:Metric_AllowanceToTotalLoans_2014,
+        entity:Metric_CommercialLendingNetChargeoffs_2013,
+        entity:Metric_CommercialLendingNetChargeoffs_2014,
+        entity:Metric_CommercialLending_2013,
+        entity:Metric_CommercialLending_2014,
+        entity:Metric_ConsumerLendingNetChargeoffs_2013,
+        entity:Metric_ConsumerLendingNetChargeoffs_2014,
+        entity:Metric_ConsumerLending_2013,
+        entity:Metric_ConsumerLending_2014,
+        entity:Metric_December31_2013,
+        entity:Metric_December31_2014,
+        entity:Metric_January1_2013,
+        entity:Metric_January1_2014,
+        entity:Metric_NetChangeAllowanceUnfunded_2013,
+        entity:Metric_NetChangeAllowanceUnfunded_2014,
+        entity:Metric_NetChargeoffsToAverageLoans_2013,
+        entity:Metric_NetChargeoffsToAverageLoans_2014,
+        entity:Metric_Other_2013,
+        entity:Metric_Other_2014,
+        entity:Metric_ProvisionForCreditLosses_2013,
+        entity:Metric_ProvisionForCreditLosses_2014,
+        entity:Metric_TotalNetChargeoffsA_2013,
+        entity:Metric_TotalNetChargeoffsA_2014,
+        entity:Metric_TotalNetChargeoffs_2013,
+        entity:Metric_TotalNetChargeoffs_2014 ;
+    kg:label "PNC Financial Services Group" .
+
+entity:FinancialTable a kg:Table ;
+    kg:hasColumn entity:TableColumn_0,
+        entity:TableColumn_1 ;
+    kg:hasRow entity:TableRow_0,
+        entity:TableRow_1,
+        entity:TableRow_10,
+        entity:TableRow_11,
+        entity:TableRow_12,
+        entity:TableRow_13,
+        entity:TableRow_2,
+        entity:TableRow_3,
+        entity:TableRow_4,
+        entity:TableRow_5,
+        entity:TableRow_6,
+        entity:TableRow_7,
+        entity:TableRow_8,
+        entity:TableRow_9 ;
+    kg:tableCaption "Credit quality and allowance metrics for commercial and consumer lending" ;
+    kg:tableOrientation "column-first" .
+
+entity:Metric_AllowanceToTotalLoans_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013 ;
+    kg:hasValue value:AllowanceToTotalLoans_2013 ;
+    kg:label "Allowance for loan and lease losses to total loans" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "allowance for loan and lease losses to total loans" .
+
+entity:Metric_AllowanceToTotalLoans_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014 ;
+    kg:hasValue value:AllowanceToTotalLoans_2014 ;
+    kg:label "Allowance for loan and lease losses to total loans" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "allowance for loan and lease losses to total loans" .
+
+entity:Metric_ChargeoffsConsumerLending_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:ChargeoffsConsumerLending_2013 ;
+    kg:label "charge-offs of consumer lending" .
+
+entity:Metric_CommercialLendingAllocationPercentage_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:CommercialLendingAllocationPercentage_2014 ;
+    kg:label "percentage of alll allocated to commercial lending category" .
+
+entity:Metric_CommercialLendingAllocation_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:CommercialLendingAllocation_2014 ;
+    kg:label "allowance allocated to commercial lending category" .
+
+entity:Metric_CommercialLendingNetChargeoffs_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013 ;
+    kg:hasValue value:CommercialLendingNetChargeoffs_2013 ;
+    kg:label "Commercial lending net charge-offs" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "commercial lending net charge-offs" .
+
+entity:Metric_CommercialLendingNetChargeoffs_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014 ;
+    kg:hasValue value:CommercialLendingNetChargeoffs_2014 ;
+    kg:label "Commercial lending net charge-offs" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "commercial lending net charge-offs" .
+
+entity:Metric_CommercialLending_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013 ;
+    kg:hasValue value:CommercialLending_2013 ;
+    kg:label "Commercial lending" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "commercial lending" .
+
+entity:Metric_CommercialLending_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014 ;
+    kg:hasValue value:CommercialLending_2014 ;
+    kg:label "Commercial lending" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "commercial lending" .
+
+entity:Metric_CommercialLoanAllowanceIncrease_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:CommercialLoanAllowanceIncrease_2014 ;
+    kg:label "allowance for commercial loans would increase by approximately" .
+
+entity:Metric_ConsumerLendingAllocationPercentage_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:ConsumerLendingAllocationPercentage_2014 ;
+    kg:label "percentage of alll allocated to consumer lending categories" .
+
+entity:Metric_ConsumerLendingAllocation_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:ConsumerLendingAllocation_2014 ;
+    kg:label "allowance allocated to consumer lending categories" .
+
+entity:Metric_ConsumerLendingNetChargeoffs_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013 ;
+    kg:hasValue value:ConsumerLendingNetChargeoffs_2013 ;
+    kg:label "Consumer lending net charge-offs (a)" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "consumer lending net charge-offs ( a )" .
+
+entity:Metric_ConsumerLendingNetChargeoffs_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014 ;
+    kg:hasValue value:ConsumerLendingNetChargeoffs_2014 ;
+    kg:label "Consumer lending net charge-offs (a)" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "consumer lending net charge-offs ( a )" .
+
+entity:Metric_ConsumerLending_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013 ;
+    kg:hasValue value:ConsumerLending_2013 ;
+    kg:label "Consumer lending (a)" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "consumer lending ( a )" .
+
+entity:Metric_ConsumerLending_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014 ;
+    kg:hasValue value:ConsumerLending_2014 ;
+    kg:label "Consumer lending (a)" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "consumer lending ( a )" .
+
+entity:Metric_ConsumerLoanAllowanceIncrease_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:ConsumerLoanAllowanceIncrease_2014 ;
+    kg:label "allowance for consumer loans would increase by approximately" .
+
+entity:Metric_December31_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013 ;
+    kg:hasValue value:December31_2013 ;
+    kg:label "December 31" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "december 31" .
+
+entity:Metric_December31_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014 ;
+    kg:hasValue value:December31_2014 ;
+    kg:label "December 31" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "december 31" .
+
+entity:Metric_January1_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013 ;
+    kg:hasValue value:January1_2013 ;
+    kg:label "January 1" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "january 1" .
+
+entity:Metric_January1_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014 ;
+    kg:hasValue value:January1_2014 ;
+    kg:label "January 1" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "january 1" .
+
+entity:Metric_NetChangeAllowanceUnfunded_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013 ;
+    kg:hasValue value:NetChangeAllowanceUnfunded_2013 ;
+    kg:label "Net change in allowance for unfunded loan commitments and letters of credit" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "net change in allowance for unfunded loan commitments and letters of credit" .
+
+entity:Metric_NetChangeAllowanceUnfunded_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014 ;
+    kg:hasValue value:NetChangeAllowanceUnfunded_2014 ;
+    kg:label "Net change in allowance for unfunded loan commitments and letters of credit" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "net change in allowance for unfunded loan commitments and letters of credit" .
+
+entity:Metric_NetChargeoffsToAverageLoans_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013 ;
+    kg:hasValue value:NetChargeoffsToAverageLoans_2013 ;
+    kg:label "Net charge-offs to average loans (a)" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "net charge-offs to average loans ( for the year ended ) ( a )" .
+
+entity:Metric_NetChargeoffsToAverageLoans_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014 ;
+    kg:hasValue value:NetChargeoffsToAverageLoans_2014 ;
+    kg:label "Net charge-offs to average loans (a)" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "net charge-offs to average loans ( for the year ended ) ( a )" .
+
+entity:Metric_Other_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013 ;
+    kg:hasValue value:Other_2013 ;
+    kg:label "Other" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "other" .
+
+entity:Metric_Other_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014 ;
+    kg:hasValue value:Other_2014 ;
+    kg:label "Other" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "other" .
+
+entity:Metric_ProvisionForCommercialLendingCreditLossesIncreasePercentage_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:ProvisionForCommercialLendingCreditLossesIncreasePercentage_2014 ;
+    kg:label "provision for commercial lending credit losses increased by percentage" .
+
+entity:Metric_ProvisionForCommercialLendingCreditLossesIncrease_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:ProvisionForCommercialLendingCreditLossesIncrease_2014 ;
+    kg:label "provision for commercial lending credit losses increased by" .
+
+entity:Metric_ProvisionForConsumerLendingCreditLossesDecreasePercentage_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:ProvisionForConsumerLendingCreditLossesDecreasePercentage_2014 ;
+    kg:label "provision for consumer lending credit losses decreased by percentage" .
+
+entity:Metric_ProvisionForConsumerLendingCreditLossesDecrease_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:ProvisionForConsumerLendingCreditLossesDecrease_2014 ;
+    kg:label "provision for consumer lending credit losses decreased" .
+
+entity:Metric_PurchasedImpairedLoanReserves_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:PurchasedImpairedLoanReserves_2014 ;
+    kg:label "reserves for purchased impaired loans" .
+
+entity:Metric_TotalNetChargeoffsA_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013 ;
+    kg:hasValue value:TotalNetChargeoffsA_2013 ;
+    kg:label "Total net charge-offs (a)" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "total net charge-offs ( a )" .
+
+entity:Metric_TotalNetChargeoffsA_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014 ;
+    kg:hasValue value:TotalNetChargeoffsA_2014 ;
+    kg:label "Total net charge-offs (a)" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "total net charge-offs ( a )" .
+
+entity:Metric_TotalNetChargeoffs_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013 ;
+    kg:hasValue value:TotalNetChargeoffs_2013 ;
+    kg:label "Total net charge-offs" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "total net charge-offs" .
+
+entity:Metric_TotalNetChargeoffs_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014 ;
+    kg:hasValue value:TotalNetChargeoffs_2014 ;
+    kg:label "Total net charge-offs" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "total net charge-offs" .
+
+entity:TableColumn_0 a kg:TableColumn ;
+    kg:columnIndex 0 ;
+    kg:label "{'index': 0, 'label': '2014'}" .
+
+entity:TableColumn_1 a kg:TableColumn ;
+    kg:columnIndex 1 ;
+    kg:label "{'index': 1, 'label': '2013'}" .
+
+entity:TableRow_0 a kg:TableRow ;
+    kg:label "{'index': 0, 'label': 'allowance for loan and lease losses to total loans'}" ;
+    kg:rowIndex 0 .
+
+entity:TableRow_1 a kg:TableRow ;
+    kg:label "{'index': 1, 'label': 'commercial lending'}" ;
+    kg:rowIndex 1 .
+
+entity:TableRow_10 a kg:TableRow ;
+    kg:label "{'index': 10, 'label': 'other'}" ;
+    kg:rowIndex 10 .
+
+entity:TableRow_11 a kg:TableRow ;
+    kg:label "{'index': 11, 'label': 'provision for credit losses'}" ;
+    kg:rowIndex 11 .
+
+entity:TableRow_12 a kg:TableRow ;
+    kg:label "{'index': 12, 'label': 'total net charge-offs'}" ;
+    kg:rowIndex 12 .
+
+entity:TableRow_13 a kg:TableRow ;
+    kg:label "{'index': 13, 'label': 'total net charge-offs ( a )'}" ;
+    kg:rowIndex 13 .
+
+entity:TableRow_2 a kg:TableRow ;
+    kg:label "{'index': 2, 'label': 'commercial lending net charge-offs'}" ;
+    kg:rowIndex 2 .
+
+entity:TableRow_3 a kg:TableRow ;
+    kg:label "{'index': 3, 'label': 'consumer lending ( a )'}" ;
+    kg:rowIndex 3 .
+
+entity:TableRow_4 a kg:TableRow ;
+    kg:label "{'index': 4, 'label': 'consumer lending net charge-offs ( a )'}" ;
+    kg:rowIndex 4 .
+
+entity:TableRow_5 a kg:TableRow ;
+    kg:label "{'index': 5, 'label': 'december 31'}" ;
+    kg:rowIndex 5 .
+
+entity:TableRow_6 a kg:TableRow ;
+    kg:label "{'index': 6, 'label': 'january 1'}" ;
+    kg:rowIndex 6 .
+
+entity:TableRow_7 a kg:TableRow ;
+    kg:label "{'index': 7, 'label': 'net change in allowance for unfunded loan commitments and letters of credit'}" ;
+    kg:rowIndex 7 .
+
+entity:TableRow_8 a kg:TableRow ;
+    kg:label "{'index': 8, 'label': 'net charge-offs to average loans ( for the year ended )'}" ;
+    kg:rowIndex 8 .
+
+entity:TableRow_9 a kg:TableRow ;
+    kg:label "{'index': 9, 'label': 'net charge-offs to average loans ( for the year ended ) ( a )'}" ;
+    kg:rowIndex 9 .
+
+value:AllowanceToTotalLoans_2013 a kg:MonetaryValue ;
+    kg:displayValue "1.84" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1.84 .
+
+value:AllowanceToTotalLoans_2014 a kg:MonetaryValue ;
+    kg:displayValue "1.63" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1.63 .
+
+value:ChargeoffsConsumerLending_2013 a kg:MonetaryValue ;
+    kg:displayValue "$134 million" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 134.0 .
+
+value:CommercialLendingAllocationPercentage_2014 a kg:MonetaryValue ;
+    kg:displayValue "47%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 47.0 .
+
+value:CommercialLendingAllocation_2014 a kg:MonetaryValue ;
+    kg:displayValue "$1.6 billion" ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 1.6 .
+
+value:CommercialLendingNetChargeoffs_2013 a kg:MonetaryValue ;
+    kg:displayValue "-249.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -249.0 .
+
+value:CommercialLendingNetChargeoffs_2014 a kg:MonetaryValue ;
+    kg:displayValue "-55.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -55.0 .
+
+value:CommercialLending_2013 a kg:MonetaryValue ;
+    kg:displayValue "-22.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -22.0 .
+
+value:CommercialLending_2014 a kg:MonetaryValue ;
+    kg:displayValue "-4.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -4.0 .
+
+value:CommercialLoanAllowanceIncrease_2014 a kg:MonetaryValue ;
+    kg:displayValue "$35 million" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 35.0 .
+
+value:ConsumerLendingAllocationPercentage_2014 a kg:MonetaryValue ;
+    kg:displayValue "53%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 53.0 .
+
+value:ConsumerLendingAllocation_2014 a kg:MonetaryValue ;
+    kg:displayValue "$1.7 billion" ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 1.7 .
+
+value:ConsumerLendingNetChargeoffs_2013 a kg:MonetaryValue ;
+    kg:displayValue "-828.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -828.0 .
+
+value:ConsumerLendingNetChargeoffs_2014 a kg:MonetaryValue ;
+    kg:displayValue "-476.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -476.0 .
+
+value:ConsumerLending_2013 a kg:MonetaryValue ;
+    kg:displayValue "1.07" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1.07 .
+
+value:ConsumerLending_2014 a kg:MonetaryValue ;
+    kg:displayValue "0.62" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 0.62 .
+
+value:ConsumerLoanAllowanceIncrease_2014 a kg:MonetaryValue ;
+    kg:displayValue "$37 million" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 37.0 .
+
+value:December31_2013 a kg:MonetaryValue ;
+    kg:displayValue "3609.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 3609.0 .
+
+value:December31_2014 a kg:MonetaryValue ;
+    kg:displayValue "3331.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 3331.0 .
+
+value:January1_2013 a kg:MonetaryValue ;
+    kg:displayValue "4036.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 4036.0 .
+
+value:January1_2014 a kg:MonetaryValue ;
+    kg:displayValue "3609.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 3609.0 .
+
+value:NetChangeAllowanceUnfunded_2013 a kg:MonetaryValue ;
+    kg:displayValue "8.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 8.0 .
+
+value:NetChangeAllowanceUnfunded_2014 a kg:MonetaryValue ;
+    kg:displayValue "-17.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -17.0 .
+
+value:NetChargeoffsToAverageLoans_2013 a kg:MonetaryValue ;
+    kg:displayValue "-57.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -57.0 .
+
+value:NetChargeoffsToAverageLoans_2014 a kg:MonetaryValue ;
+    kg:displayValue "-27.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -27.0 .
+
+value:Other_2013 a kg:MonetaryValue ;
+    kg:displayValue "-1.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -1.0 .
+
+value:Other_2014 a kg:MonetaryValue ;
+    kg:displayValue "-3.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -3.0 .
+
+value:ProvisionForCommercialLendingCreditLossesIncreasePercentage_2014 a kg:MonetaryValue ;
+    kg:displayValue "178%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 178.0 .
+
+value:ProvisionForCommercialLendingCreditLossesIncrease_2014 a kg:MonetaryValue ;
+    kg:displayValue "$64 million" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 64.0 .
+
+value:ProvisionForConsumerLendingCreditLossesDecreasePercentage_2014 a kg:MonetaryValue ;
+    kg:displayValue "71%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 71.0 .
+
+value:ProvisionForConsumerLendingCreditLossesDecrease_2014 a kg:MonetaryValue ;
+    kg:displayValue "$434 million" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 434.0 .
+
+value:ProvisionForCreditLosses_2013 a kg:MonetaryValue ;
+    kg:displayValue "$643 million",
+        "643.0" ;
+    kg:hasScale kg:Millions,
+        kg:Units ;
+    kg:numericValue 643.0 .
+
+value:ProvisionForCreditLosses_2014 a kg:MonetaryValue ;
+    kg:displayValue "$273 million",
+        "273.0" ;
+    kg:hasScale kg:Millions,
+        kg:Units ;
+    kg:numericValue 273.0 .
+
+value:PurchasedImpairedLoanReserves_2014 a kg:MonetaryValue ;
+    kg:displayValue "$.9 billion" ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 0.9 .
+
+value:TotalNetChargeoffsA_2013 a kg:MonetaryValue ;
+    kg:displayValue "-1077.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -1077.0 .
+
+value:TotalNetChargeoffsA_2014 a kg:MonetaryValue ;
+    kg:displayValue "-531.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -531.0 .
+
+value:TotalNetChargeoffs_2013 a kg:MonetaryValue ;
+    kg:displayValue "-1077.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -1077.0 .
+
+value:TotalNetChargeoffs_2014 a kg:MonetaryValue ;
+    kg:displayValue "-531.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -531.0 .
+
+entity:Metric_ProvisionForCreditLosses_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:ProvisionForCreditLosses_2013 ;
+    kg:label "Provision for credit losses",
+        "provision for credit losses" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "provision for credit losses" .
+
+entity:Metric_ProvisionForCreditLosses_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:ProvisionForCreditLosses_2014 ;
+    kg:label "Provision for credit losses",
+        "provision for credit losses" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "provision for credit losses" .
+
+entity:Year_2013 a kg:Year ;
+    kg:yearValue 2013 .
+
+entity:Year_2014 a kg:Year ;
+    kg:yearValue 2014 .
+

@@ -1,0 +1,222 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+entity:entity_Company_Example121 a kg:Company ;
+    kg:hasMetric entity:entity_Metric_AveragePricePaidPerShare_December,
+        entity:entity_Metric_AveragePricePaidPerShare_November,
+        entity:entity_Metric_AveragePricePaidPerShare_October,
+        entity:entity_Metric_AveragePricePaidPerShare_Total,
+        entity:entity_Metric_MaximumNumberShares_December,
+        entity:entity_Metric_MaximumNumberShares_November,
+        entity:entity_Metric_MaximumNumberShares_October,
+        entity:entity_Metric_MaximumNumberShares_Total,
+        entity:entity_Metric_TotalNumberSharesPurchasedPublicly_December,
+        entity:entity_Metric_TotalNumberSharesPurchasedPublicly_November,
+        entity:entity_Metric_TotalNumberSharesPurchasedPublicly_October,
+        entity:entity_Metric_TotalNumberSharesPurchasedPublicly_Total,
+        entity:entity_Metric_TotalNumberSharesPurchased_December,
+        entity:entity_Metric_TotalNumberSharesPurchased_November,
+        entity:entity_Metric_TotalNumberSharesPurchased_October,
+        entity:entity_Metric_TotalNumberSharesPurchased_Total ;
+    kg:label "Example ID 121 Company" .
+
+entity:entity_Metric_AveragePricePaidPerShare_December a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_TimePeriod_December ;
+    kg:hasValue value:value_AveragePricePaidPerShare_December ;
+    kg:label "average price paid per share (or unit) 2" ;
+    kg:tableColumn "december 1 - 31" ;
+    kg:tableRow "average price paidper share ( or unit ) 2" .
+
+entity:entity_Metric_AveragePricePaidPerShare_November a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_TimePeriod_November ;
+    kg:hasValue value:value_AveragePricePaidPerShare_November ;
+    kg:label "average price paid per share (or unit) 2" ;
+    kg:tableColumn "november 1 - 30" ;
+    kg:tableRow "average price paidper share ( or unit ) 2" .
+
+entity:entity_Metric_AveragePricePaidPerShare_October a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_TimePeriod_October ;
+    kg:hasValue value:value_AveragePricePaidPerShare_October ;
+    kg:label "average price paid per share (or unit) 2" ;
+    kg:tableColumn "october 1 - 31" ;
+    kg:tableRow "average price paidper share ( or unit ) 2" .
+
+entity:entity_Metric_AveragePricePaidPerShare_Total a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_TimePeriod_Total ;
+    kg:hasValue value:value_AveragePricePaidPerShare_Total ;
+    kg:label "average price paid per share (or unit) 2" ;
+    kg:tableColumn "total" ;
+    kg:tableRow "average price paidper share ( or unit ) 2" .
+
+entity:entity_Metric_MaximumNumberShares_December a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_TimePeriod_December ;
+    kg:hasValue value:value_MaximumNumberShares_December ;
+    kg:label "maximum number (or approximate dollar value) of shares (or units) that may yet be purchased under the plans or programs 3" ;
+    kg:tableColumn "december 1 - 31" ;
+    kg:tableRow "maximum number ( orapproximate dollar value ) of shares ( or units ) that may yet be purchasedunder the plans orprograms3" .
+
+entity:entity_Metric_MaximumNumberShares_November a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_TimePeriod_November ;
+    kg:hasValue value:value_MaximumNumberShares_November ;
+    kg:label "maximum number (or approximate dollar value) of shares (or units) that may yet be purchased under the plans or programs 3" ;
+    kg:tableColumn "november 1 - 30" ;
+    kg:tableRow "maximum number ( orapproximate dollar value ) of shares ( or units ) that may yet be purchasedunder the plans orprograms3" .
+
+entity:entity_Metric_MaximumNumberShares_October a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_TimePeriod_October ;
+    kg:hasValue value:value_MaximumNumberShares_October ;
+    kg:label "maximum number (or approximate dollar value) of shares (or units) that may yet be purchased under the plans or programs 3" ;
+    kg:tableColumn "october 1 - 31" ;
+    kg:tableRow "maximum number ( orapproximate dollar value ) of shares ( or units ) that may yet be purchasedunder the plans orprograms3" .
+
+entity:entity_Metric_MaximumNumberShares_Total a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_TimePeriod_Total ;
+    kg:label "maximum number (or approximate dollar value) of shares (or units) that may yet be purchased under the plans or programs 3" ;
+    kg:tableColumn "total" ;
+    kg:tableRow "maximum number ( orapproximate dollar value ) of shares ( or units ) that may yet be purchasedunder the plans orprograms3" .
+
+entity:entity_Metric_TotalNumberSharesPurchasedPublicly_December a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_TimePeriod_December ;
+    kg:hasValue value:value_TotalNumberSharesPurchasedPublicly_December ;
+    kg:label "total number of shares (or units) purchased as part of publicly announced plans or programs 3" ;
+    kg:tableColumn "december 1 - 31" ;
+    kg:tableRow "total number ofshares ( or units ) purchased as part ofpublicly announcedplans or programs3" .
+
+entity:entity_Metric_TotalNumberSharesPurchasedPublicly_November a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_TimePeriod_November ;
+    kg:hasValue value:value_TotalNumberSharesPurchasedPublicly_November ;
+    kg:label "total number of shares (or units) purchased as part of publicly announced plans or programs 3" ;
+    kg:tableColumn "november 1 - 30" ;
+    kg:tableRow "total number ofshares ( or units ) purchased as part ofpublicly announcedplans or programs3" .
+
+entity:entity_Metric_TotalNumberSharesPurchasedPublicly_October a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_TimePeriod_October ;
+    kg:hasValue value:value_TotalNumberSharesPurchasedPublicly_October ;
+    kg:label "total number of shares (or units) purchased as part of publicly announced plans or programs 3" ;
+    kg:tableColumn "october 1 - 31" ;
+    kg:tableRow "total number ofshares ( or units ) purchased as part ofpublicly announcedplans or programs3" .
+
+entity:entity_Metric_TotalNumberSharesPurchasedPublicly_Total a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_TimePeriod_Total ;
+    kg:hasValue value:value_TotalNumberSharesPurchasedPublicly_Total ;
+    kg:label "total number of shares (or units) purchased as part of publicly announced plans or programs 3" ;
+    kg:tableColumn "total" ;
+    kg:tableRow "total number ofshares ( or units ) purchased as part ofpublicly announcedplans or programs3" .
+
+entity:entity_Metric_TotalNumberSharesPurchased_December a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_TimePeriod_December ;
+    kg:hasValue value:value_TotalNumberSharesPurchased_December ;
+    kg:label "total number of shares (or units) purchased 1" ;
+    kg:tableColumn "december 1 - 31" ;
+    kg:tableRow "total number ofshares ( or units ) purchased1" .
+
+entity:entity_Metric_TotalNumberSharesPurchased_November a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_TimePeriod_November ;
+    kg:hasValue value:value_TotalNumberSharesPurchased_November ;
+    kg:label "total number of shares (or units) purchased 1" ;
+    kg:tableColumn "november 1 - 30" ;
+    kg:tableRow "total number ofshares ( or units ) purchased1" .
+
+entity:entity_Metric_TotalNumberSharesPurchased_October a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_TimePeriod_October ;
+    kg:hasValue value:value_TotalNumberSharesPurchased_October ;
+    kg:label "total number of shares (or units) purchased 1" ;
+    kg:tableColumn "october 1 - 31" ;
+    kg:tableRow "total number ofshares ( or units ) purchased1" .
+
+entity:entity_Metric_TotalNumberSharesPurchased_Total a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_TimePeriod_Total ;
+    kg:hasValue value:value_TotalNumberSharesPurchased_Total ;
+    kg:label "total number of shares (or units) purchased 1" ;
+    kg:tableColumn "total" ;
+    kg:tableRow "total number ofshares ( or units ) purchased1" .
+
+value:value_AveragePricePaidPerShare_December a kg:MonetaryValue ;
+    kg:displayValue "23.93" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 23.93 .
+
+value:value_AveragePricePaidPerShare_November a kg:MonetaryValue ;
+    kg:displayValue "22.79" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 22.79 .
+
+value:value_AveragePricePaidPerShare_October a kg:MonetaryValue ;
+    kg:displayValue "22.28" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 22.28 .
+
+value:value_AveragePricePaidPerShare_Total a kg:MonetaryValue ;
+    kg:displayValue "22.87" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 22.87 .
+
+value:value_MaximumNumberShares_December a kg:CountValue ;
+    kg:displayValue "155371301.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 155371301.0 .
+
+value:value_MaximumNumberShares_November a kg:CountValue ;
+    kg:displayValue "185500851.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 185500851.0 .
+
+value:value_MaximumNumberShares_October a kg:CountValue ;
+    kg:displayValue "218620420.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 218620420.0 .
+
+value:value_TotalNumberSharesPurchasedPublicly_December a kg:CountValue ;
+    kg:displayValue "1258700.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1258700.0 .
+
+value:value_TotalNumberSharesPurchasedPublicly_November a kg:CountValue ;
+    kg:displayValue "1453049.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1453049.0 .
+
+value:value_TotalNumberSharesPurchasedPublicly_October a kg:CountValue ;
+    kg:displayValue "2099169.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2099169.0 .
+
+value:value_TotalNumberSharesPurchasedPublicly_Total a kg:CountValue ;
+    kg:displayValue "4810918.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 4810918.0 .
+
+value:value_TotalNumberSharesPurchased_December a kg:CountValue ;
+    kg:displayValue "1269449.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1269449.0 .
+
+value:value_TotalNumberSharesPurchased_November a kg:CountValue ;
+    kg:displayValue "1454402.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1454402.0 .
+
+value:value_TotalNumberSharesPurchased_October a kg:CountValue ;
+    kg:displayValue "2099169.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2099169.0 .
+
+value:value_TotalNumberSharesPurchased_Total a kg:CountValue ;
+    kg:displayValue "4823020.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 4823020.0 .
+
+entity:entity_TimePeriod_December a kg:TimePeriod ;
+    kg:label "December 1 - 31" .
+
+entity:entity_TimePeriod_November a kg:TimePeriod ;
+    kg:label "November 1 - 30" .
+
+entity:entity_TimePeriod_October a kg:TimePeriod ;
+    kg:label "October 1 - 31" .
+
+entity:entity_TimePeriod_Total a kg:TimePeriod ;
+    kg:label "Total" .
+

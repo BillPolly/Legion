@@ -1,0 +1,336 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-11" ;
+    kg:builtWithOntologyVersion "1.0.3" .
+
+entity:Company_AES a kg:Company ;
+    kg:hasMetric entity:Metric_AnnualMaturities_2012,
+        entity:Metric_AnnualMaturities_2013,
+        entity:Metric_AnnualMaturities_2014,
+        entity:Metric_AnnualMaturities_2015,
+        entity:Metric_AnnualMaturities_2016,
+        entity:Metric_AnnualMaturities_Thereafter,
+        entity:Metric_TotalNonRecourseDebt ;
+    kg:label "The AES Corporation" .
+
+entity:Company_TheAESCorp a kg:Company ;
+    kg:hasMetric entity:Metric_AgreementsExpireEnd,
+        entity:Metric_AgreementsExpireStart,
+        entity:Metric_BorrowingsInterestRate_2011,
+        entity:Metric_FacilitiesUnderConstructionAmount_2011,
+        entity:Metric_FixedRateRangeMax_2011,
+        entity:Metric_FixedRateRangeMin_2011,
+        entity:Metric_InterestRateSwapsNotional_2011,
+        entity:Metric_NonRecourseDebt_2010,
+        entity:Metric_NonRecourseDebt_2011,
+        entity:Metric_OptionRateRangeMax_2011,
+        entity:Metric_OptionRateRangeMin_2011,
+        entity:Metric_OtherFacilitiesAmount_2011,
+        entity:Metric_SeniorNotes2016_Amount,
+        entity:Metric_SeniorNotes2016_Rate,
+        entity:Metric_SeniorNotes2021_Amount,
+        entity:Metric_SeniorNotes2021_Rate ;
+    kg:label "The AES Corporation" .
+
+entity:Metric_AgreementsExpireEnd a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2028,
+        entity:entity_Year_2028 ;
+    kg:hasValue value:AgreementsExpireEnd ;
+    kg:label "Agreements expire - end year" .
+
+entity:Metric_AgreementsExpireStart a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:AgreementsExpireStart ;
+    kg:label "Agreements expire - start year" .
+
+entity:Metric_AnnualMaturities_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:AnnualMaturities_2012 ;
+    kg:label "Annual maturities" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "annual maturities ( in millions )" .
+
+entity:Metric_AnnualMaturities_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:AnnualMaturities_2013 ;
+    kg:label "Annual maturities" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "annual maturities ( in millions )" .
+
+entity:Metric_AnnualMaturities_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:AnnualMaturities_2014 ;
+    kg:label "Annual maturities" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "annual maturities ( in millions )" .
+
+entity:Metric_AnnualMaturities_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:AnnualMaturities_2015 ;
+    kg:label "Annual maturities" ;
+    kg:tableColumn "2015" ;
+    kg:tableRow "annual maturities ( in millions )" .
+
+entity:Metric_AnnualMaturities_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:AnnualMaturities_2016 ;
+    kg:label "Annual maturities" ;
+    kg:tableColumn "2016" ;
+    kg:tableRow "annual maturities ( in millions )" .
+
+entity:Metric_AnnualMaturities_Thereafter a kg:FinancialMetric ;
+    kg:hasValue value:AnnualMaturities_Thereafter ;
+    kg:label "Annual maturities" ;
+    kg:tableColumn "thereafter" ;
+    kg:tableRow "annual maturities ( in millions )" .
+
+entity:Metric_BorrowingsInterestRate_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:BorrowingsInterestRate_2011 ;
+    kg:label "Weighted average interest rate on borrowings from facilities" .
+
+entity:Metric_FacilitiesUnderConstructionAmount_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:FacilitiesUnderConstructionAmount_2011 ;
+    kg:label "Committed but unused credit facilities - facilities under construction" .
+
+entity:Metric_FixedRateRangeMax_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:FixedRateRangeMax_2011 ;
+    kg:label "Fixed rates range - maximum" .
+
+entity:Metric_FixedRateRangeMin_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:FixedRateRangeMin_2011 ;
+    kg:label "Fixed rates range - minimum" .
+
+entity:Metric_InterestRateSwapsNotional_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:InterestRateSwapsNotional_2011 ;
+    kg:label "Interest rate swaps and interest rate option agreements - aggregate notional principal amount" .
+
+entity:Metric_NonRecourseDebt_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2010,
+        entity:entity_Year_2010 ;
+    kg:hasValue value:NonRecourseDebt_2010 ;
+    kg:label "Non-recourse debt excluded from non-recourse debt" .
+
+entity:Metric_NonRecourseDebt_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:NonRecourseDebt_2011 ;
+    kg:label "Non-recourse debt excluded from non-recourse debt" .
+
+entity:Metric_OptionRateRangeMax_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:OptionRateRangeMax_2011 ;
+    kg:label "Option rates range - maximum" .
+
+entity:Metric_OptionRateRangeMin_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:OptionRateRangeMin_2011 ;
+    kg:label "Option rates range - minimum" .
+
+entity:Metric_OtherFacilitiesAmount_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:OtherFacilitiesAmount_2011 ;
+    kg:label "Available but unused committed revolving credit lines - other facilities" .
+
+entity:Metric_SeniorNotes2016_Amount a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:SeniorNotes2016_Amount ;
+    kg:label "6.50% senior notes due 2016 - aggregate principal amount" .
+
+entity:Metric_SeniorNotes2016_Rate a kg:FinancialMetric ;
+    kg:hasValue value:SeniorNotes2016_Rate ;
+    kg:label "6.50% senior notes due 2016 - interest rate" .
+
+entity:Metric_SeniorNotes2021_Amount a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:SeniorNotes2021_Amount ;
+    kg:label "7.25% senior notes due 2021 - aggregate principal amount" .
+
+entity:Metric_SeniorNotes2021_Rate a kg:FinancialMetric ;
+    kg:hasValue value:SeniorNotes2021_Rate ;
+    kg:label "7.25% senior notes due 2021 - interest rate" .
+
+entity:Metric_TotalNonRecourseDebt a kg:FinancialMetric ;
+    kg:hasValue value:TotalNonRecourseDebt ;
+    kg:label "Total non-recourse debt" ;
+    kg:tableColumn "total non-recourse debt" ;
+    kg:tableRow "annual maturities ( in millions )" .
+
+entity:Year_2010 a kg:Year ;
+    kg:yearValue 2010 .
+
+entity:Year_2012 a kg:Year ;
+    kg:yearValue 2012 .
+
+entity:Year_2013 a kg:Year ;
+    kg:yearValue 2013 .
+
+entity:Year_2014 a kg:Year ;
+    kg:yearValue 2014 .
+
+entity:Year_2015 a kg:Year ;
+    kg:yearValue 2015 .
+
+entity:Year_2028 a kg:Year ;
+    kg:yearValue 2028 .
+
+value:AgreementsExpireEnd a kg:MonetaryValue ;
+    kg:displayValue "2028" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2028.0 .
+
+value:AgreementsExpireStart a kg:MonetaryValue ;
+    kg:displayValue "2016" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2016.0 .
+
+value:AnnualMaturities_2012 a kg:MonetaryValue ;
+    kg:displayValue "2152.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2152.0 .
+
+value:AnnualMaturities_2013 a kg:MonetaryValue ;
+    kg:displayValue "1389.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1389.0 .
+
+value:AnnualMaturities_2014 a kg:MonetaryValue ;
+    kg:displayValue "1697.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1697.0 .
+
+value:AnnualMaturities_2015 a kg:MonetaryValue ;
+    kg:displayValue "851.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 851.0 .
+
+value:AnnualMaturities_2016 a kg:MonetaryValue ;
+    kg:displayValue "2301.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2301.0 .
+
+value:AnnualMaturities_Thereafter a kg:MonetaryValue ;
+    kg:displayValue "7698.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 7698.0 .
+
+value:BorrowingsInterestRate_2011 a kg:MonetaryValue ;
+    kg:displayValue "14.75%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 14.75 .
+
+value:FacilitiesUnderConstructionAmount_2011 a kg:MonetaryValue ;
+    kg:displayValue "$1.4 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 1.4 .
+
+value:FixedRateRangeMax_2011 a kg:MonetaryValue ;
+    kg:displayValue "6.98%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 6.98 .
+
+value:FixedRateRangeMin_2011 a kg:MonetaryValue ;
+    kg:displayValue "1.44%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1.44 .
+
+value:InterestRateSwapsNotional_2011 a kg:MonetaryValue ;
+    kg:displayValue "$3.6 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 3.6 .
+
+value:NonRecourseDebt_2010 a kg:MonetaryValue ;
+    kg:displayValue "$945 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 945.0 .
+
+value:NonRecourseDebt_2011 a kg:MonetaryValue ;
+    kg:displayValue "$704 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 704.0 .
+
+value:OptionRateRangeMax_2011 a kg:MonetaryValue ;
+    kg:displayValue "7.00%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 7.0 .
+
+value:OptionRateRangeMin_2011 a kg:MonetaryValue ;
+    kg:displayValue "1.00%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1.0 .
+
+value:OtherFacilitiesAmount_2011 a kg:MonetaryValue ;
+    kg:displayValue "$1.2 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 1.2 .
+
+value:SeniorNotes2016_Amount a kg:MonetaryValue ;
+    kg:displayValue "$450 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 450.0 .
+
+value:SeniorNotes2016_Rate a kg:MonetaryValue ;
+    kg:displayValue "6.50%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 6.5 .
+
+value:SeniorNotes2021_Amount a kg:MonetaryValue ;
+    kg:displayValue "$800 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 800.0 .
+
+value:SeniorNotes2021_Rate a kg:MonetaryValue ;
+    kg:displayValue "7.25%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 7.25 .
+
+value:TotalNonRecourseDebt a kg:MonetaryValue ;
+    kg:displayValue "16088.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 16088.0 .
+
+entity:Year_2016 a kg:Year ;
+    kg:yearValue 2016 .
+
+entity:Year_2011 a kg:Year ;
+    kg:yearValue 2011 .
+

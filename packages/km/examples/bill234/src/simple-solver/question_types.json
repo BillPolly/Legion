@@ -1,0 +1,62 @@
+{
+  "lookup": {
+    "description": "Direct lookup of a value from the table or knowledge base",
+    "identification_hints": [
+      "Question asks for a specific value that exists in data",
+      "No calculation needed, just retrieval",
+      "Simple 'what was' or 'how many' questions"
+    ],
+    "stage2_guidance": "Find the exact value and return it as-is. No calculations needed.",
+    "sign_rules": "Return value as found in table/KB. Respect the sign in the data.",
+    "examples": [
+      "What was the revenue in 2023?",
+      "How many vehicles were converted to CNG?"
+    ]
+  },
+
+  "arithmetic": {
+    "description": "Perform calculation with values (add, subtract, multiply, divide)",
+    "identification_hints": [
+      "Words like 'total', 'sum', 'difference', 'change', 'combined', 'multiply', 'divide'",
+      "NOT asking for percentage or ratio (unless 'how much percent' which is arithmetic result * 100)",
+      "May reference previous answers"
+    ],
+    "stage2_guidance": "Perform the indicated arithmetic operation. Return raw numerical result. For 'change in X used/provided', if table values are negative, the magnitude of change is what increased.",
+    "sign_rules": "CRITICAL for cash flow: When question asks 'change in cash USED' or 'change in cash PROVIDED' and table values are NEGATIVE, return ABSOLUTE MAGNITUDE. Example: -3679 vs -2534 → change in usage = abs(-3679) - abs(-2534) = 3679 - 2534 = 1145 (positive, more was used). For other arithmetic, use natural mathematical result.",
+    "examples": [
+      "What was the change in revenue from 2022 to 2023?",
+      "What is the total across all regions?",
+      "What was the change in net cash used in financing activities?"
+    ]
+  },
+
+  "percentage": {
+    "description": "Calculate percentage change or ratio",
+    "identification_hints": [
+      "Explicitly asks for 'percentage', 'percent', 'proportion', 'ratio'",
+      "Phrases like 'what percentage', 'in relation to', 'as a percentage of'",
+      "May ask for result 'as a decimal' or 'as a number'"
+    ],
+    "stage2_guidance": "Calculate the ratio or percentage. Return as DECIMAL by default (0.25 for 25%) UNLESS question says 'how much percent' or 'in percentage' which wants the number (25 for 25%).",
+    "sign_rules": "Percentage change respects division rules: positive/negative = negative, negative/negative = positive. Do NOT force positive unless question implies magnitude ('by how much did it increase' = positive).",
+    "examples": [
+      "What percentage did revenue increase?",
+      "How much does this represent in relation to the total?",
+      "What is the percentage change from 2022 to 2023?"
+    ]
+  },
+
+  "reference_previous": {
+    "description": "Question asks for same information as a previous question",
+    "identification_hints": [
+      "Same question asked again",
+      "Phrased differently but asking for same value",
+      "May say 'what about' referring to same entity already asked"
+    ],
+    "stage2_guidance": "Find the previous answer that matches this question and return it. This is often used for emphasis or clarification.",
+    "sign_rules": "Return the previous answer as-is.",
+    "examples": [
+      "Q: Revenue in 2004 plan? A: 5923147. Q: What about under the 2004 plan? → 5923147 (same answer)"
+    ]
+  }
+}

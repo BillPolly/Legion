@@ -1,0 +1,279 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+entity:entity_Company_KimcoRealtyCorporation a kg:Company ;
+    kg:hasMetric entity:entity_Metric_EstimatedUnguaranteedResidualValue_2007,
+        entity:entity_Metric_EstimatedUnguaranteedResidualValue_2008,
+        entity:entity_Metric_LeveragedLeaseEquityInvestment,
+        entity:entity_Metric_MortgageDebtPaidDown,
+        entity:entity_Metric_NetInvestmentInLeveragedLease_2007,
+        entity:entity_Metric_NetInvestmentInLeveragedLease_2008,
+        entity:entity_Metric_NonRecourseMortgageDebt_2007,
+        entity:entity_Metric_NonRecourseMortgageDebt_2008,
+        entity:entity_Metric_RelatedExpenses_2006,
+        entity:entity_Metric_RelatedExpenses_2007,
+        entity:entity_Metric_RelatedExpenses_2008,
+        entity:entity_Metric_RemainingNetRentals_2007,
+        entity:entity_Metric_RemainingNetRentals_2008,
+        entity:entity_Metric_RemainingNonRecourseDebt,
+        entity:entity_Metric_RetailStoreLeaseIncome_2006,
+        entity:entity_Metric_RetailStoreLeaseIncome_2007,
+        entity:entity_Metric_RetailStoreLeaseIncome_2008,
+        entity:entity_Metric_SubleaseRevenues_2006,
+        entity:entity_Metric_SubleaseRevenues_2007,
+        entity:entity_Metric_SubleaseRevenues_2008,
+        entity:entity_Metric_UnearnedAndDeferredIncome_2007,
+        entity:entity_Metric_UnearnedAndDeferredIncome_2008 ;
+    kg:label "Kimco Realty Corporation" .
+
+entity:entity_Metric_EstimatedUnguaranteedResidualValue_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2007 ;
+    kg:hasValue value:value_EstimatedUnguaranteedResidualValue_2007 ;
+    kg:label "estimated unguaranteed residual value" ;
+    kg:tableColumn "2007" ;
+    kg:tableRow "estimated unguaranteed residual value" .
+
+entity:entity_Metric_EstimatedUnguaranteedResidualValue_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:value_EstimatedUnguaranteedResidualValue_2008 ;
+    kg:label "estimated unguaranteed residual value" ;
+    kg:tableColumn "2008" ;
+    kg:tableRow "estimated unguaranteed residual value" .
+
+entity:entity_Metric_LeveragedLeaseEquityInvestment a kg:FinancialMetric ;
+    kg:hasValue value:value_LeveragedLeaseEquityInvestment ;
+    kg:label "Leveraged lease equity investment" .
+
+entity:entity_Metric_MortgageDebtPaidDown a kg:FinancialMetric ;
+    kg:hasValue value:value_MortgageDebtPaidDown ;
+    kg:label "Mortgage debt paid down" .
+
+entity:entity_Metric_NetInvestmentInLeveragedLease_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2007 ;
+    kg:hasValue value:value_NetInvestmentInLeveragedLease_2007 ;
+    kg:label "net investment in leveraged lease" ;
+    kg:tableColumn "2007" ;
+    kg:tableRow "net investment in leveraged lease" .
+
+entity:entity_Metric_NetInvestmentInLeveragedLease_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:value_NetInvestmentInLeveragedLease_2008 ;
+    kg:label "net investment in leveraged lease" ;
+    kg:tableColumn "2008" ;
+    kg:tableRow "net investment in leveraged lease" .
+
+entity:entity_Metric_NonRecourseMortgageDebt_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2007 ;
+    kg:hasValue value:value_NonRecourseMortgageDebt_2007 ;
+    kg:label "non-recourse mortgage debt" ;
+    kg:tableColumn "2007" ;
+    kg:tableRow "non-recourse mortgage debt" .
+
+entity:entity_Metric_NonRecourseMortgageDebt_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:value_NonRecourseMortgageDebt_2008 ;
+    kg:label "non-recourse mortgage debt" ;
+    kg:tableColumn "2008" ;
+    kg:tableRow "non-recourse mortgage debt" .
+
+entity:entity_Metric_RelatedExpenses_2006 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2006 ;
+    kg:hasValue value:value_RelatedExpenses_2006 ;
+    kg:label "Related expenses for retail store leases" .
+
+entity:entity_Metric_RelatedExpenses_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2007 ;
+    kg:hasValue value:value_RelatedExpenses_2007 ;
+    kg:label "Related expenses for retail store leases" .
+
+entity:entity_Metric_RelatedExpenses_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:value_RelatedExpenses_2008 ;
+    kg:label "Related expenses for retail store leases" .
+
+entity:entity_Metric_RemainingNetRentals_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2007 ;
+    kg:hasValue value:value_RemainingNetRentals_2007 ;
+    kg:label "remaining net rentals" ;
+    kg:tableColumn "2007" ;
+    kg:tableRow "remaining net rentals" .
+
+entity:entity_Metric_RemainingNetRentals_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:value_RemainingNetRentals_2008 ;
+    kg:label "remaining net rentals" ;
+    kg:tableColumn "2008" ;
+    kg:tableRow "remaining net rentals" .
+
+entity:entity_Metric_RemainingNonRecourseDebt a kg:FinancialMetric ;
+    kg:hasValue value:value_RemainingNonRecourseDebt ;
+    kg:label "Remaining non-recourse debt" .
+
+entity:entity_Metric_RetailStoreLeaseIncome_2006 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2006 ;
+    kg:hasValue value:value_RetailStoreLeaseIncome_2006 ;
+    kg:label "Income from investment in retail store leases" .
+
+entity:entity_Metric_RetailStoreLeaseIncome_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2007 ;
+    kg:hasValue value:value_RetailStoreLeaseIncome_2007 ;
+    kg:label "Income from investment in retail store leases" .
+
+entity:entity_Metric_RetailStoreLeaseIncome_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:value_RetailStoreLeaseIncome_2008 ;
+    kg:label "Income from investment in retail store leases" .
+
+entity:entity_Metric_SubleaseRevenues_2006 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2006 ;
+    kg:hasValue value:value_SubleaseRevenues_2006 ;
+    kg:label "Sublease revenues from retail store leases" .
+
+entity:entity_Metric_SubleaseRevenues_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2007 ;
+    kg:hasValue value:value_SubleaseRevenues_2007 ;
+    kg:label "Sublease revenues from retail store leases" .
+
+entity:entity_Metric_SubleaseRevenues_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:value_SubleaseRevenues_2008 ;
+    kg:label "Sublease revenues from retail store leases" .
+
+entity:entity_Metric_UnearnedAndDeferredIncome_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2007 ;
+    kg:hasValue value:value_UnearnedAndDeferredIncome_2007 ;
+    kg:label "unearned and deferred income" ;
+    kg:tableColumn "2007" ;
+    kg:tableRow "unearned and deferred income" .
+
+entity:entity_Metric_UnearnedAndDeferredIncome_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:value_UnearnedAndDeferredIncome_2008 ;
+    kg:label "unearned and deferred income" ;
+    kg:tableColumn "2008" ;
+    kg:tableRow "unearned and deferred income" .
+
+value:value_EstimatedUnguaranteedResidualValue_2007 a kg:MonetaryValue ;
+    kg:displayValue "36.0" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 36.0 .
+
+value:value_EstimatedUnguaranteedResidualValue_2008 a kg:MonetaryValue ;
+    kg:displayValue "31.7" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 31.7 .
+
+value:value_LeveragedLeaseEquityInvestment a kg:MonetaryValue ;
+    kg:displayValue "4.0" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 4.0 .
+
+value:value_MortgageDebtPaidDown a kg:MonetaryValue ;
+    kg:displayValue "31.2" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 31.2 .
+
+value:value_NetInvestmentInLeveragedLease_2007 a kg:MonetaryValue ;
+    kg:displayValue "3.8" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 3.8 .
+
+value:value_NetInvestmentInLeveragedLease_2008 a kg:MonetaryValue ;
+    kg:displayValue "4.0" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 4.0 .
+
+value:value_NonRecourseMortgageDebt_2007 a kg:MonetaryValue ;
+    kg:displayValue "-43.9" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -43.9 .
+
+value:value_NonRecourseMortgageDebt_2008 a kg:MonetaryValue ;
+    kg:displayValue "-38.5" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -38.5 .
+
+value:value_RelatedExpenses_2006 a kg:MonetaryValue ;
+    kg:displayValue "5.7" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 5.7 .
+
+value:value_RelatedExpenses_2007 a kg:MonetaryValue ;
+    kg:displayValue "5.1" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 5.1 .
+
+value:value_RelatedExpenses_2008 a kg:MonetaryValue ;
+    kg:displayValue "4.4" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 4.4 .
+
+value:value_RemainingNetRentals_2007 a kg:MonetaryValue ;
+    kg:displayValue "55.0" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 55.0 .
+
+value:value_RemainingNetRentals_2008 a kg:MonetaryValue ;
+    kg:displayValue "53.8" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 53.8 .
+
+value:value_RemainingNonRecourseDebt a kg:MonetaryValue ;
+    kg:displayValue "42.8" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 42.8 .
+
+value:value_RetailStoreLeaseIncome_2006 a kg:MonetaryValue ;
+    kg:displayValue "1.3" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1.3 .
+
+value:value_RetailStoreLeaseIncome_2007 a kg:MonetaryValue ;
+    kg:displayValue "1.2" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1.2 .
+
+value:value_RetailStoreLeaseIncome_2008 a kg:MonetaryValue ;
+    kg:displayValue "2.7" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2.7 .
+
+value:value_SubleaseRevenues_2006 a kg:MonetaryValue ;
+    kg:displayValue "8.2" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 8.2 .
+
+value:value_SubleaseRevenues_2007 a kg:MonetaryValue ;
+    kg:displayValue "7.7" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 7.7 .
+
+value:value_SubleaseRevenues_2008 a kg:MonetaryValue ;
+    kg:displayValue "7.1" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 7.1 .
+
+value:value_UnearnedAndDeferredIncome_2007 a kg:MonetaryValue ;
+    kg:displayValue "-43.3" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -43.3 .
+
+value:value_UnearnedAndDeferredIncome_2008 a kg:MonetaryValue ;
+    kg:displayValue "-43.0" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -43.0 .
+
+entity:entity_Year_2006 a kg:Year ;
+    kg:label "2006" ;
+    kg:yearValue 2006 .
+
+entity:entity_Year_2007 a kg:Year ;
+    kg:label "2007" ;
+    kg:yearValue 2007 .
+
+entity:entity_Year_2008 a kg:Year ;
+    kg:label "2008" ;
+    kg:yearValue 2008 .
+

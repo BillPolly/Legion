@@ -1,0 +1,642 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+entity:Company_Example0 a kg:Company ;
+    kg:hasMetric entity:Metric_AcquisitionPayments_2008,
+        entity:Metric_CapitalExpenditures_2008,
+        entity:Metric_CapitalExpenditures_2009,
+        entity:Metric_CashEquivalents_2008,
+        entity:Metric_CashEquivalents_2009,
+        entity:Metric_CashProvidedByOperationsIncrease_2009,
+        entity:Metric_CashUsedInvesting_2008,
+        entity:Metric_CashUsedInvesting_2009,
+        entity:Metric_ChangeInDeferredRevenue_2007,
+        entity:Metric_ChangeInDeferredRevenue_2008,
+        entity:Metric_ChangeInDeferredRevenue_2009,
+        entity:Metric_ChangeInOtherAssetsAndLiabilities_2007,
+        entity:Metric_ChangeInOtherAssetsAndLiabilities_2008,
+        entity:Metric_ChangeInOtherAssetsAndLiabilities_2009,
+        entity:Metric_ChangeInReceivables_2007,
+        entity:Metric_ChangeInReceivables_2008,
+        entity:Metric_ChangeInReceivables_2009,
+        entity:Metric_ContingentConsideration_2008,
+        entity:Metric_ContingentConsideration_2009,
+        entity:Metric_CreditUnionRevenueGrowth_2008,
+        entity:Metric_DividendsPaid_2008,
+        entity:Metric_DividendsPaid_2009,
+        entity:Metric_EFTSupportGrowth_2008,
+        entity:Metric_ExcessTaxBenefits_2008,
+        entity:Metric_ExcessTaxBenefits_2009,
+        entity:Metric_GrossProfitIncrease_2008,
+        entity:Metric_InHouseSupportGrowth_2008,
+        entity:Metric_NetCashFinancing_2008,
+        entity:Metric_NetCashFinancing_2009,
+        entity:Metric_NetCashFromOperatingActivities_2007,
+        entity:Metric_NetCashFromOperatingActivities_2008,
+        entity:Metric_NetCashFromOperatingActivities_2009,
+        entity:Metric_NetIncome_2007,
+        entity:Metric_NetIncome_2008,
+        entity:Metric_NetIncome_2009,
+        entity:Metric_NetRepaymentCredit_2008,
+        entity:Metric_NetRepaymentCredit_2009,
+        entity:Metric_NonCashExpenses_2007,
+        entity:Metric_NonCashExpenses_2008,
+        entity:Metric_NonCashExpenses_2009,
+        entity:Metric_ReceivablesDecrease_2009,
+        entity:Metric_RepurchaseCost_2008,
+        entity:Metric_RepurchaseCost_2009,
+        entity:Metric_SharesRepurchased_2008,
+        entity:Metric_SharesRepurchased_2009,
+        entity:Metric_SoftwareDevelopment_2008,
+        entity:Metric_SoftwareDevelopment_2009,
+        entity:Metric_StockOptionsProceeds_2008,
+        entity:Metric_StockOptionsProceeds_2009 ;
+    kg:label "Company Example 0",
+        "Example Company" .
+
+entity:Year_2007 a kg:Year ;
+    kg:yearValue 2007 .
+
+entity:Metric_AcquisitionPayments_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2008,
+        entity:entity_Year_2008 ;
+    kg:hasValue value:AcquisitionPayments_2008 ;
+    kg:label "Payments for acquisitions" .
+
+entity:Metric_CapitalExpenditures_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2008,
+        entity:entity_Year_2008 ;
+    kg:hasValue value:CapitalExpenditures_2008 ;
+    kg:label "Capital expenditures" .
+
+entity:Metric_CapitalExpenditures_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2009,
+        entity:entity_Year_2009 ;
+    kg:hasValue value:CapitalExpenditures_2009 ;
+    kg:label "Capital expenditures" .
+
+entity:Metric_CashEquivalents_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2008,
+        entity:entity_Year_2008 ;
+    kg:hasValue value:CashEquivalents_2008 ;
+    kg:label "Cash and cash equivalents" .
+
+entity:Metric_CashEquivalents_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2009,
+        entity:entity_Year_2009 ;
+    kg:hasValue value:CashEquivalents_2009 ;
+    kg:label "Cash and cash equivalents" .
+
+entity:Metric_CashProvidedByOperationsIncrease_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2009,
+        entity:entity_Year_2009 ;
+    kg:hasValue value:CashProvidedByOperationsIncrease_2009 ;
+    kg:label "Cash provided by operations increase" .
+
+entity:Metric_CashUsedInvesting_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2008,
+        entity:entity_Year_2008 ;
+    kg:hasValue value:CashUsedInvesting_2008 ;
+    kg:label "Cash used in investing activities" .
+
+entity:Metric_CashUsedInvesting_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2009,
+        entity:entity_Year_2009 ;
+    kg:hasValue value:CashUsedInvesting_2009 ;
+    kg:label "Cash used in investing activities" .
+
+entity:Metric_ChangeInDeferredRevenue_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2007 ;
+    kg:hasValue value:ChangeInDeferredRevenue_2007 ;
+    kg:label "change in deferred revenue" ;
+    kg:tableColumn "2007" ;
+    kg:tableRow "change in deferred revenue" .
+
+entity:Metric_ChangeInDeferredRevenue_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:ChangeInDeferredRevenue_2008 ;
+    kg:label "change in deferred revenue" ;
+    kg:tableColumn "2008" ;
+    kg:tableRow "change in deferred revenue" .
+
+entity:Metric_ChangeInDeferredRevenue_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:ChangeInDeferredRevenue_2009 ;
+    kg:label "change in deferred revenue" ;
+    kg:tableColumn "Year ended June 30, 2009" ;
+    kg:tableRow "change in deferred revenue" .
+
+entity:Metric_ChangeInOtherAssetsAndLiabilities_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2007 ;
+    kg:hasValue value:ChangeInOtherAssetsAndLiabilities_2007 ;
+    kg:label "change in other assets and liabilities" ;
+    kg:tableColumn "2007" ;
+    kg:tableRow "change in other assets and liabilities" .
+
+entity:Metric_ChangeInOtherAssetsAndLiabilities_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:ChangeInOtherAssetsAndLiabilities_2008 ;
+    kg:label "change in other assets and liabilities" ;
+    kg:tableColumn "2008" ;
+    kg:tableRow "change in other assets and liabilities" .
+
+entity:Metric_ChangeInOtherAssetsAndLiabilities_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:ChangeInOtherAssetsAndLiabilities_2009 ;
+    kg:label "change in other assets and liabilities" ;
+    kg:tableColumn "Year ended June 30, 2009" ;
+    kg:tableRow "change in other assets and liabilities" .
+
+entity:Metric_ChangeInReceivables_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2007 ;
+    kg:hasValue value:ChangeInReceivables_2007 ;
+    kg:label "change in receivables" ;
+    kg:tableColumn "2007" ;
+    kg:tableRow "change in receivables" .
+
+entity:Metric_ChangeInReceivables_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:ChangeInReceivables_2008 ;
+    kg:label "change in receivables" ;
+    kg:tableColumn "2008" ;
+    kg:tableRow "change in receivables" .
+
+entity:Metric_ChangeInReceivables_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:ChangeInReceivables_2009 ;
+    kg:label "change in receivables" ;
+    kg:tableColumn "Year ended June 30, 2009" ;
+    kg:tableRow "change in receivables" .
+
+entity:Metric_ContingentConsideration_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2008,
+        entity:entity_Year_2008 ;
+    kg:hasValue value:ContingentConsideration_2008 ;
+    kg:label "Contingent consideration paid on prior year acquisitions" .
+
+entity:Metric_ContingentConsideration_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2009,
+        entity:entity_Year_2009 ;
+    kg:hasValue value:ContingentConsideration_2009 ;
+    kg:label "Contingent consideration paid on prior year acquisitions" .
+
+entity:Metric_CreditUnionRevenueGrowth_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2008,
+        entity:entity_Year_2008 ;
+    kg:hasValue value:CreditUnionRevenueGrowth_2008 ;
+    kg:label "Revenue growth in credit union systems and services business segment" .
+
+entity:Metric_DividendsPaid_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2008,
+        entity:entity_Year_2008 ;
+    kg:hasValue value:DividendsPaid_2008 ;
+    kg:label "Payment of dividends" .
+
+entity:Metric_DividendsPaid_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2009,
+        entity:entity_Year_2009 ;
+    kg:hasValue value:DividendsPaid_2009 ;
+    kg:label "Payment of dividends" .
+
+entity:Metric_EFTSupportGrowth_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2008,
+        entity:entity_Year_2008 ;
+    kg:hasValue value:EFTSupportGrowth_2008 ;
+    kg:label "EFT support revenue growth" .
+
+entity:Metric_ExcessTaxBenefits_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2008,
+        entity:entity_Year_2008 ;
+    kg:hasValue value:ExcessTaxBenefits_2008 ;
+    kg:label "Excess tax benefits from stock option exercises" .
+
+entity:Metric_ExcessTaxBenefits_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2009,
+        entity:entity_Year_2009 ;
+    kg:hasValue value:ExcessTaxBenefits_2009 ;
+    kg:label "Excess tax benefits from stock option exercises" .
+
+entity:Metric_GrossProfitIncrease_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2008,
+        entity:entity_Year_2008 ;
+    kg:hasValue value:GrossProfitIncrease_2008 ;
+    kg:label "Gross profit increase in credit union segment" .
+
+entity:Metric_InHouseSupportGrowth_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2008,
+        entity:entity_Year_2008 ;
+    kg:hasValue value:InHouseSupportGrowth_2008 ;
+    kg:label "In-house support revenue growth" .
+
+entity:Metric_NetCashFinancing_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2008,
+        entity:entity_Year_2008 ;
+    kg:hasValue value:NetCashFinancing_2008 ;
+    kg:label "Net cash used in financing activities" .
+
+entity:Metric_NetCashFinancing_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2009,
+        entity:entity_Year_2009 ;
+    kg:hasValue value:NetCashFinancing_2009 ;
+    kg:label "Net cash used in financing activities" .
+
+entity:Metric_NetCashFromOperatingActivities_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2007 ;
+    kg:hasValue value:NetCashFromOperatingActivities_2007 ;
+    kg:label "net cash from operating activities" ;
+    kg:tableColumn "2007" ;
+    kg:tableRow "net cash from operating activities" .
+
+entity:Metric_NetCashFromOperatingActivities_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:NetCashFromOperatingActivities_2008 ;
+    kg:label "net cash from operating activities" ;
+    kg:tableColumn "2008" ;
+    kg:tableRow "net cash from operating activities" .
+
+entity:Metric_NetCashFromOperatingActivities_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:NetCashFromOperatingActivities_2009 ;
+    kg:label "net cash from operating activities" ;
+    kg:tableColumn "Year ended June 30, 2009" ;
+    kg:tableRow "net cash from operating activities" .
+
+entity:Metric_NetIncome_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2007 ;
+    kg:hasValue value:NetIncome_2007 ;
+    kg:label "net income" ;
+    kg:tableColumn "2007" ;
+    kg:tableRow "net income" .
+
+entity:Metric_NetIncome_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:NetIncome_2008 ;
+    kg:label "net income" ;
+    kg:tableColumn "2008" ;
+    kg:tableRow "net income" .
+
+entity:Metric_NetIncome_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:NetIncome_2009 ;
+    kg:label "net income" ;
+    kg:tableColumn "Year ended June 30, 2009" ;
+    kg:tableRow "net income" .
+
+entity:Metric_NetRepaymentCredit_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2008,
+        entity:entity_Year_2008 ;
+    kg:hasValue value:NetRepaymentCredit_2008 ;
+    kg:label "Net repayment on revolving credit facilities" .
+
+entity:Metric_NetRepaymentCredit_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2009,
+        entity:entity_Year_2009 ;
+    kg:hasValue value:NetRepaymentCredit_2009 ;
+    kg:label "Net repayment on revolving credit facilities" .
+
+entity:Metric_NonCashExpenses_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2007 ;
+    kg:hasValue value:NonCashExpenses_2007 ;
+    kg:label "non-cash expenses" ;
+    kg:tableColumn "2007" ;
+    kg:tableRow "non-cash expenses" .
+
+entity:Metric_NonCashExpenses_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:NonCashExpenses_2008 ;
+    kg:label "non-cash expenses" ;
+    kg:tableColumn "2008" ;
+    kg:tableRow "non-cash expenses" .
+
+entity:Metric_NonCashExpenses_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:NonCashExpenses_2009 ;
+    kg:label "non-cash expenses" ;
+    kg:tableColumn "Year ended June 30, 2009" ;
+    kg:tableRow "non-cash expenses" .
+
+entity:Metric_ReceivablesDecrease_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2009,
+        entity:entity_Year_2009 ;
+    kg:hasValue value:ReceivablesDecrease_2009 ;
+    kg:label "Decrease in receivables" .
+
+entity:Metric_RepurchaseCost_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2008,
+        entity:entity_Year_2008 ;
+    kg:hasValue value:RepurchaseCost_2008 ;
+    kg:label "Cost of common stock repurchased" .
+
+entity:Metric_RepurchaseCost_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2009,
+        entity:entity_Year_2009 ;
+    kg:hasValue value:RepurchaseCost_2009 ;
+    kg:label "Cost of common stock repurchased" .
+
+entity:Metric_SharesRepurchased_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2008,
+        entity:entity_Year_2008 ;
+    kg:hasValue value:SharesRepurchased_2008 ;
+    kg:label "Shares of common stock repurchased" .
+
+entity:Metric_SharesRepurchased_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2009,
+        entity:entity_Year_2009 ;
+    kg:hasValue value:SharesRepurchased_2009 ;
+    kg:label "Shares of common stock repurchased" .
+
+entity:Metric_SoftwareDevelopment_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2008,
+        entity:entity_Year_2008 ;
+    kg:hasValue value:SoftwareDevelopment_2008 ;
+    kg:label "Cash used for software development" .
+
+entity:Metric_SoftwareDevelopment_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2009,
+        entity:entity_Year_2009 ;
+    kg:hasValue value:SoftwareDevelopment_2009 ;
+    kg:label "Cash used for software development" .
+
+entity:Metric_StockOptionsProceeds_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2008,
+        entity:entity_Year_2008 ;
+    kg:hasValue value:StockOptionsProceeds_2008 ;
+    kg:label "Proceeds from exercise of stock options and sale of common stock" .
+
+entity:Metric_StockOptionsProceeds_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2009,
+        entity:entity_Year_2009 ;
+    kg:hasValue value:StockOptionsProceeds_2009 ;
+    kg:label "Proceeds from exercise of stock options and sale of common stock" .
+
+value:AcquisitionPayments_2008 a kg:MonetaryValue ;
+    kg:displayValue "$48109" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 48109.0 .
+
+value:CapitalExpenditures_2008 a kg:MonetaryValue ;
+    kg:displayValue "$31105" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 31105.0 .
+
+value:CapitalExpenditures_2009 a kg:MonetaryValue ;
+    kg:displayValue "$31562" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 31562.0 .
+
+value:CashEquivalents_2008 a kg:MonetaryValue ;
+    kg:displayValue "$65565" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 65565.0 .
+
+value:CashEquivalents_2009 a kg:MonetaryValue ;
+    kg:displayValue "$118251" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 118251.0 .
+
+value:CashProvidedByOperationsIncrease_2009 a kg:MonetaryValue ;
+    kg:displayValue "$25587" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 25587.0 .
+
+value:CashUsedInvesting_2008 a kg:MonetaryValue ;
+    kg:displayValue "$102148" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 102148.0 .
+
+value:CashUsedInvesting_2009 a kg:MonetaryValue ;
+    kg:displayValue "$59227" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 59227.0 .
+
+value:ChangeInDeferredRevenue_2007 a kg:MonetaryValue ;
+    kg:displayValue "24576.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 24576.0 .
+
+value:ChangeInDeferredRevenue_2008 a kg:MonetaryValue ;
+    kg:displayValue "5100.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 5100.0 .
+
+value:ChangeInDeferredRevenue_2009 a kg:MonetaryValue ;
+    kg:displayValue "21943.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 21943.0 .
+
+value:ChangeInOtherAssetsAndLiabilities_2007 a kg:MonetaryValue ;
+    kg:displayValue "17495.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 17495.0 .
+
+value:ChangeInOtherAssetsAndLiabilities_2008 a kg:MonetaryValue ;
+    kg:displayValue "4172.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 4172.0 .
+
+value:ChangeInOtherAssetsAndLiabilities_2009 a kg:MonetaryValue ;
+    kg:displayValue "-14068.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -14068.0 .
+
+value:ChangeInReceivables_2007 a kg:MonetaryValue ;
+    kg:displayValue "-28853.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -28853.0 .
+
+value:ChangeInReceivables_2008 a kg:MonetaryValue ;
+    kg:displayValue "-2913.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -2913.0 .
+
+value:ChangeInReceivables_2009 a kg:MonetaryValue ;
+    kg:displayValue "21214.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 21214.0 .
+
+value:ContingentConsideration_2008 a kg:MonetaryValue ;
+    kg:displayValue "$1215" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1215.0 .
+
+value:ContingentConsideration_2009 a kg:MonetaryValue ;
+    kg:displayValue "$3027" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 3027.0 .
+
+value:CreditUnionRevenueGrowth_2008 a kg:MonetaryValue ;
+    kg:displayValue "14%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 14.0 .
+
+value:DividendsPaid_2008 a kg:MonetaryValue ;
+    kg:displayValue "$24683" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 24683.0 .
+
+value:DividendsPaid_2009 a kg:MonetaryValue ;
+    kg:displayValue "$26903" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 26903.0 .
+
+value:EFTSupportGrowth_2008 a kg:MonetaryValue ;
+    kg:displayValue "34 percent" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 34.0 .
+
+value:ExcessTaxBenefits_2008 a kg:MonetaryValue ;
+    kg:displayValue "$3809" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 3809.0 .
+
+value:ExcessTaxBenefits_2009 a kg:MonetaryValue ;
+    kg:displayValue "$348" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 348.0 .
+
+value:GrossProfitIncrease_2008 a kg:MonetaryValue ;
+    kg:displayValue "$9344" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 9344.0 .
+
+value:InHouseSupportGrowth_2008 a kg:MonetaryValue ;
+    kg:displayValue "10 percent" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 10.0 .
+
+value:NetCashFinancing_2008 a kg:MonetaryValue ;
+    kg:displayValue "$101905" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 101905.0 .
+
+value:NetCashFinancing_2009 a kg:MonetaryValue ;
+    kg:displayValue "$94675" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 94675.0 .
+
+value:NetCashFromOperatingActivities_2007 a kg:MonetaryValue ;
+    kg:displayValue "174247.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 174247.0 .
+
+value:NetCashFromOperatingActivities_2008 a kg:MonetaryValue ;
+    kg:displayValue "181001.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 181001.0 .
+
+value:NetCashFromOperatingActivities_2009 a kg:MonetaryValue ;
+    kg:displayValue "206588.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 206588.0 .
+
+value:NetIncome_2007 a kg:MonetaryValue ;
+    kg:displayValue "104681.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 104681.0 .
+
+value:NetIncome_2008 a kg:MonetaryValue ;
+    kg:displayValue "104222.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 104222.0 .
+
+value:NetIncome_2009 a kg:MonetaryValue ;
+    kg:displayValue "103102.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 103102.0 .
+
+value:NetRepaymentCredit_2008 a kg:MonetaryValue ;
+    kg:displayValue "$429" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 429.0 .
+
+value:NetRepaymentCredit_2009 a kg:MonetaryValue ;
+    kg:displayValue "$13489" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 13489.0 .
+
+value:NonCashExpenses_2007 a kg:MonetaryValue ;
+    kg:displayValue "56348.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 56348.0 .
+
+value:NonCashExpenses_2008 a kg:MonetaryValue ;
+    kg:displayValue "70420.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 70420.0 .
+
+value:NonCashExpenses_2009 a kg:MonetaryValue ;
+    kg:displayValue "74397.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 74397.0 .
+
+value:ReceivablesDecrease_2009 a kg:MonetaryValue ;
+    kg:displayValue "$21214" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 21214.0 .
+
+value:RepurchaseCost_2008 a kg:MonetaryValue ;
+    kg:displayValue "$100996" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 100996.0 .
+
+value:RepurchaseCost_2009 a kg:MonetaryValue ;
+    kg:displayValue "$58405" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 58405.0 .
+
+value:SharesRepurchased_2008 a kg:MonetaryValue ;
+    kg:displayValue "4200" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 4200.0 .
+
+value:SharesRepurchased_2009 a kg:MonetaryValue ;
+    kg:displayValue "3106" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 3106.0 .
+
+value:SoftwareDevelopment_2008 a kg:MonetaryValue ;
+    kg:displayValue "$23736" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 23736.0 .
+
+value:SoftwareDevelopment_2009 a kg:MonetaryValue ;
+    kg:displayValue "$24684" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 24684.0 .
+
+value:StockOptionsProceeds_2008 a kg:MonetaryValue ;
+    kg:displayValue "$20394" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 20394.0 .
+
+value:StockOptionsProceeds_2009 a kg:MonetaryValue ;
+    kg:displayValue "$3773" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 3773.0 .
+
+entity:Year_2009 a kg:Year ;
+    kg:yearValue 2009 .
+
+entity:Year_2008 a kg:Year ;
+    kg:yearValue 2008 .
+

@@ -1,0 +1,690 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-11" ;
+    kg:builtWithOntologyVersion "1.0.3" .
+
+entity:Company_Example9 a kg:Company ;
+    kg:hasMetric entity:Metric_BalanceAtBeginningOfYear_2011,
+        entity:Metric_BalanceAtBeginningOfYear_2012,
+        entity:Metric_BalanceAtBeginningOfYear_2013,
+        entity:Metric_BalanceAtEndOfYear_2011,
+        entity:Metric_BalanceAtEndOfYear_2012,
+        entity:Metric_BalanceAtEndOfYear_2013,
+        entity:Metric_Cancelled_2011,
+        entity:Metric_Cancelled_2012,
+        entity:Metric_Cancelled_2013,
+        entity:Metric_CompensationExpenseRecorded_2011,
+        entity:Metric_CompensationExpenseRecorded_2012,
+        entity:Metric_CompensationExpenseRecorded_2013,
+        entity:Metric_Granted_2011,
+        entity:Metric_Granted_2012,
+        entity:Metric_Granted_2013,
+        entity:Metric_VestedDuringTheYear_2011,
+        entity:Metric_VestedDuringTheYear_2012,
+        entity:Metric_VestedDuringTheYear_2013,
+        entity:Metric_WeightedAverageFairValueOfRestrictedStockGrantedDuringTheYear_2011,
+        entity:Metric_WeightedAverageFairValueOfRestrictedStockGrantedDuringTheYear_2012,
+        entity:Metric_WeightedAverageFairValueOfRestrictedStockGrantedDuringTheYear_2013 ;
+    kg:label "Example Company" .
+
+entity:Company_SLGreen a kg:Company ;
+    kg:hasMetric entity:Metric_CapitalizedCompensationExpense_2011,
+        entity:Metric_CapitalizedCompensationExpense_2012,
+        entity:Metric_CapitalizedCompensationExpense_2013,
+        entity:Metric_CompensationExpenseAwards_2011,
+        entity:Metric_CompensationExpenseAwards_2012,
+        entity:Metric_CompensationExpenseAwards_2013,
+        entity:Metric_CompensationExpense_2011,
+        entity:Metric_CompensationExpense_2012,
+        entity:Metric_CompensationExpense_2013,
+        entity:Metric_FairValueRestrictedStockVested_2011,
+        entity:Metric_FairValueRestrictedStockVested_2012,
+        entity:Metric_FairValueRestrictedStockVested_2013,
+        entity:Metric_LTIPUnitsEarned_2010,
+        entity:Metric_LTIPUnitsEarned_2010_2,
+        entity:Metric_LTIPUnitsFairValue_2011,
+        entity:Metric_LTIPUnitsFairValue_2012,
+        entity:Metric_LTIPUnitsFairValue_2013,
+        entity:Metric_LTIPUnitsMaximum_2010,
+        entity:Metric_LTIPUnitsVested_2010,
+        entity:Metric_LTIPUnitsVested_2011,
+        entity:Metric_LTIPUnitsVested_2012,
+        entity:Metric_MaximumPerformanceAwards_2010,
+        entity:Metric_StockPriceAppreciation_2010,
+        entity:Metric_UnrecognizedCompensationCostRestrictedStock_2013,
+        entity:Metric_UnrecognizedCompensationCost_2013,
+        entity:Metric_UnrecognizedCompensationExpenseAwards_2013,
+        entity:Metric_WeightedAverageFairValueRestrictedStock_2013 ;
+    kg:label "SL Green" .
+
+entity:Metric_BalanceAtBeginningOfYear_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:BalanceAtBeginningOfYear_2011 ;
+    kg:label "Balance at beginning of year" ;
+    kg:tableColumn "2011" ;
+    kg:tableRow "balance at beginning of year" .
+
+entity:Metric_BalanceAtBeginningOfYear_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:BalanceAtBeginningOfYear_2012 ;
+    kg:label "Balance at beginning of year" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "balance at beginning of year" .
+
+entity:Metric_BalanceAtBeginningOfYear_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:BalanceAtBeginningOfYear_2013 ;
+    kg:label "Balance at beginning of year" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "balance at beginning of year" .
+
+entity:Metric_BalanceAtEndOfYear_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:BalanceAtEndOfYear_2011 ;
+    kg:label "Balance at end of year" ;
+    kg:tableColumn "2011" ;
+    kg:tableRow "balance at end of year" .
+
+entity:Metric_BalanceAtEndOfYear_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:BalanceAtEndOfYear_2012 ;
+    kg:label "Balance at end of year" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "balance at end of year" .
+
+entity:Metric_BalanceAtEndOfYear_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:BalanceAtEndOfYear_2013 ;
+    kg:label "Balance at end of year" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "balance at end of year" .
+
+entity:Metric_Cancelled_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:Cancelled_2011 ;
+    kg:label "Cancelled" ;
+    kg:tableColumn "2011" ;
+    kg:tableRow "cancelled" .
+
+entity:Metric_Cancelled_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:Cancelled_2012 ;
+    kg:label "Cancelled" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "cancelled" .
+
+entity:Metric_Cancelled_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:Cancelled_2013 ;
+    kg:label "Cancelled" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "cancelled" .
+
+entity:Metric_CapitalizedCompensationExpense_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:CapitalizedCompensationExpense_2011 ;
+    kg:label "capitalized to assets associated with compensation expense" .
+
+entity:Metric_CapitalizedCompensationExpense_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:CapitalizedCompensationExpense_2012 ;
+    kg:label "capitalized to assets associated with compensation expense" .
+
+entity:Metric_CapitalizedCompensationExpense_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:CapitalizedCompensationExpense_2013 ;
+    kg:label "capitalized to assets associated with compensation expense" .
+
+entity:Metric_CompensationExpenseAwards_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:CompensationExpenseAwards_2011 ;
+    kg:label "recorded compensation expense related to bonus , time-based and performance based awards" .
+
+entity:Metric_CompensationExpenseAwards_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:CompensationExpenseAwards_2012 ;
+    kg:label "recorded compensation expense related to bonus , time-based and performance based awards" .
+
+entity:Metric_CompensationExpenseAwards_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:CompensationExpenseAwards_2013 ;
+    kg:label "recorded compensation expense related to bonus , time-based and performance based awards" .
+
+entity:Metric_CompensationExpenseRecorded_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:CompensationExpenseRecorded_2011 ;
+    kg:label "Compensation expense recorded" ;
+    kg:tableColumn "2011" ;
+    kg:tableRow "compensation expense recorded" .
+
+entity:Metric_CompensationExpenseRecorded_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:CompensationExpenseRecorded_2012 ;
+    kg:label "Compensation expense recorded" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "compensation expense recorded" .
+
+entity:Metric_CompensationExpenseRecorded_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:CompensationExpenseRecorded_2013 ;
+    kg:label "Compensation expense recorded" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "compensation expense recorded" .
+
+entity:Metric_CompensationExpense_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:CompensationExpense_2011 ;
+    kg:label "compensation expense" .
+
+entity:Metric_CompensationExpense_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:CompensationExpense_2012 ;
+    kg:label "compensation expense" .
+
+entity:Metric_CompensationExpense_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:CompensationExpense_2013 ;
+    kg:label "compensation expense" .
+
+entity:Metric_FairValueRestrictedStockVested_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:FairValueRestrictedStockVested_2011 ;
+    kg:label "fair value of restricted stock that vested" .
+
+entity:Metric_FairValueRestrictedStockVested_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:FairValueRestrictedStockVested_2012 ;
+    kg:label "fair value of restricted stock that vested" .
+
+entity:Metric_FairValueRestrictedStockVested_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:FairValueRestrictedStockVested_2013 ;
+    kg:label "fair value of restricted stock that vested" .
+
+entity:Metric_Granted_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:Granted_2011 ;
+    kg:label "Granted" ;
+    kg:tableColumn "2011" ;
+    kg:tableRow "granted" .
+
+entity:Metric_Granted_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:Granted_2012 ;
+    kg:label "Granted" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "granted" .
+
+entity:Metric_Granted_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:Granted_2013 ;
+    kg:label "Granted" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "granted" .
+
+entity:Metric_LTIPUnitsEarned_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2010,
+        entity:entity_Year_2010 ;
+    kg:hasValue value:LTIPUnitsEarned_2010 ;
+    kg:label "2010 long-term compensation plan aggregate ltip units from approximately" .
+
+entity:Metric_LTIPUnitsEarned_2010_2 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2010,
+        entity:entity_Year_2010 ;
+    kg:hasValue value:LTIPUnitsEarned_2010_2 ;
+    kg:label "2010 long-term compensation plan aggregate ltip units earned" .
+
+entity:Metric_LTIPUnitsFairValue_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:LTIPUnitsFairValue_2011 ;
+    kg:label "granted ltip units with a fair value" .
+
+entity:Metric_LTIPUnitsFairValue_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:LTIPUnitsFairValue_2012 ;
+    kg:label "granted ltip units with a fair value" .
+
+entity:Metric_LTIPUnitsFairValue_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:LTIPUnitsFairValue_2013 ;
+    kg:label "granted ltip units with a fair value" .
+
+entity:Metric_LTIPUnitsMaximum_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2010,
+        entity:entity_Year_2010 ;
+    kg:hasValue value:LTIPUnitsMaximum_2010 ;
+    kg:label "2010 long-term compensation plan aggregate ltip units up to approximately" .
+
+entity:Metric_LTIPUnitsVested_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2010,
+        entity:entity_Year_2010 ;
+    kg:hasValue value:LTIPUnitsVested_2010 ;
+    kg:label "ltip units were earned under the 2010 long-term compensation plan in december" .
+
+entity:Metric_LTIPUnitsVested_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:LTIPUnitsVested_2011 ;
+    kg:label "ltip units were earned under the 2010 long-term compensation plan in december" .
+
+entity:Metric_LTIPUnitsVested_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:LTIPUnitsVested_2012 ;
+    kg:label "ltip units were earned under the 2010 long-term compensation plan in december" .
+
+entity:Metric_MaximumPerformanceAwards_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2010,
+        entity:entity_Year_2010 ;
+    kg:hasValue value:MaximumPerformanceAwards_2010 ;
+    kg:label "maximum performance 2010 long-term compensation plan could be earned" .
+
+entity:Metric_StockPriceAppreciation_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2010,
+        entity:entity_Year_2010 ;
+    kg:hasValue value:StockPriceAppreciation_2010 ;
+    kg:label "aggregate stock price appreciation during the performance period had to equal or exceed" .
+
+entity:Metric_UnrecognizedCompensationCostRestrictedStock_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:UnrecognizedCompensationCostRestrictedStock_2013 ;
+    kg:label "total unrecognized compensation cost related to unvested restricted stock" .
+
+entity:Metric_UnrecognizedCompensationCost_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:UnrecognizedCompensationCost_2013 ;
+    kg:label "total unrecognized compensation cost related to unvested stock options" .
+
+entity:Metric_UnrecognizedCompensationExpenseAwards_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:UnrecognizedCompensationExpenseAwards_2013 ;
+    kg:label "total unrecognized compensation expense related to the time-based and performance based awards" .
+
+entity:Metric_VestedDuringTheYear_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:VestedDuringTheYear_2011 ;
+    kg:label "Vested during the year" ;
+    kg:tableColumn "2011" ;
+    kg:tableRow "vested during the year" .
+
+entity:Metric_VestedDuringTheYear_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:VestedDuringTheYear_2012 ;
+    kg:label "Vested during the year" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "vested during the year" .
+
+entity:Metric_VestedDuringTheYear_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:VestedDuringTheYear_2013 ;
+    kg:label "Vested during the year" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "vested during the year" .
+
+entity:Metric_WeightedAverageFairValueOfRestrictedStockGrantedDuringTheYear_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:WeightedAverageFairValueOfRestrictedStockGrantedDuringTheYear_2011 ;
+    kg:label "Weighted average fair value of restricted stock granted during the year" ;
+    kg:tableColumn "2011" ;
+    kg:tableRow "weighted average fair value of restricted stock granted during the year" .
+
+entity:Metric_WeightedAverageFairValueOfRestrictedStockGrantedDuringTheYear_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:WeightedAverageFairValueOfRestrictedStockGrantedDuringTheYear_2012 ;
+    kg:label "Weighted average fair value of restricted stock granted during the year" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "weighted average fair value of restricted stock granted during the year" .
+
+entity:Metric_WeightedAverageFairValueOfRestrictedStockGrantedDuringTheYear_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:WeightedAverageFairValueOfRestrictedStockGrantedDuringTheYear_2013 ;
+    kg:label "Weighted average fair value of restricted stock granted during the year" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "weighted average fair value of restricted stock granted during the year" .
+
+entity:Metric_WeightedAverageFairValueRestrictedStock_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:WeightedAverageFairValueRestrictedStock_2013 ;
+    kg:label "weighted average fair value of restricted stock granted during the year" .
+
+value:BalanceAtBeginningOfYear_2011 a kg:MonetaryValue ;
+    kg:displayValue "2728290.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2728290.0 .
+
+value:BalanceAtBeginningOfYear_2012 a kg:MonetaryValue ;
+    kg:displayValue "2912456.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2912456.0 .
+
+value:BalanceAtBeginningOfYear_2013 a kg:MonetaryValue ;
+    kg:displayValue "2804901.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2804901.0 .
+
+value:BalanceAtEndOfYear_2011 a kg:MonetaryValue ;
+    kg:displayValue "2912456.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2912456.0 .
+
+value:BalanceAtEndOfYear_2012 a kg:MonetaryValue ;
+    kg:displayValue "2804901.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2804901.0 .
+
+value:BalanceAtEndOfYear_2013 a kg:MonetaryValue ;
+    kg:displayValue "2994197.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2994197.0 .
+
+value:Cancelled_2011 a kg:MonetaryValue ;
+    kg:displayValue "-1167.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -1167.0 .
+
+value:Cancelled_2012 a kg:MonetaryValue ;
+    kg:displayValue "-200284.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -200284.0 .
+
+value:Cancelled_2013 a kg:MonetaryValue ;
+    kg:displayValue "-3267.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -3267.0 .
+
+value:CapitalizedCompensationExpense_2011 a kg:MonetaryValue ;
+    kg:displayValue "$3.4 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 3.4 .
+
+value:CapitalizedCompensationExpense_2012 a kg:MonetaryValue ;
+    kg:displayValue "$4.1 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 4.1 .
+
+value:CapitalizedCompensationExpense_2013 a kg:MonetaryValue ;
+    kg:displayValue "$4.5 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 4.5 .
+
+value:CompensationExpenseAwards_2011 a kg:MonetaryValue ;
+    kg:displayValue "$8.5 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 8.5 .
+
+value:CompensationExpenseAwards_2012 a kg:MonetaryValue ;
+    kg:displayValue "$12.6 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 12.6 .
+
+value:CompensationExpenseAwards_2013 a kg:MonetaryValue ;
+    kg:displayValue "$27.3 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 27.3 .
+
+value:CompensationExpenseRecorded_2011 a kg:MonetaryValue ;
+    kg:displayValue "17365401.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 17365401.0 .
+
+value:CompensationExpenseRecorded_2012 a kg:MonetaryValue ;
+    kg:displayValue "6930381.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 6930381.0 .
+
+value:CompensationExpenseRecorded_2013 a kg:MonetaryValue ;
+    kg:displayValue "6713155.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 6713155.0 .
+
+value:CompensationExpense_2011 a kg:MonetaryValue ;
+    kg:displayValue "$4.7 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 4.7 .
+
+value:CompensationExpense_2012 a kg:MonetaryValue ;
+    kg:displayValue "$5.1 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 5.1 .
+
+value:CompensationExpense_2013 a kg:MonetaryValue ;
+    kg:displayValue "$6.5 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 6.5 .
+
+value:FairValueRestrictedStockVested_2011 a kg:MonetaryValue ;
+    kg:displayValue "$4.3 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 4.3 .
+
+value:FairValueRestrictedStockVested_2012 a kg:MonetaryValue ;
+    kg:displayValue "$22.4 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 22.4 .
+
+value:FairValueRestrictedStockVested_2013 a kg:MonetaryValue ;
+    kg:displayValue "$1.6 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1.6 .
+
+value:Granted_2011 a kg:MonetaryValue ;
+    kg:displayValue "185333.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 185333.0 .
+
+value:Granted_2012 a kg:MonetaryValue ;
+    kg:displayValue "92729.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 92729.0 .
+
+value:Granted_2013 a kg:MonetaryValue ;
+    kg:displayValue "192563.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 192563.0 .
+
+value:LTIPUnitsEarned_2010 a kg:MonetaryValue ;
+    kg:displayValue "approximately $15.0 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 15.0 .
+
+value:LTIPUnitsEarned_2010_2 a kg:MonetaryValue ;
+    kg:displayValue "approximately $25.0 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 25.0 .
+
+value:LTIPUnitsFairValue_2011 a kg:MonetaryValue ;
+    kg:displayValue "$8.5 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 8.5 .
+
+value:LTIPUnitsFairValue_2012 a kg:MonetaryValue ;
+    kg:displayValue "zero" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 0.0 .
+
+value:LTIPUnitsFairValue_2013 a kg:MonetaryValue ;
+    kg:displayValue "$27.1 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 27.1 .
+
+value:LTIPUnitsMaximum_2010 a kg:MonetaryValue ;
+    kg:displayValue "approximately $75.0 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 75.0 .
+
+value:LTIPUnitsVested_2010 a kg:MonetaryValue ;
+    kg:displayValue "366815 ltip units" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 366815.0 .
+
+value:LTIPUnitsVested_2011 a kg:MonetaryValue ;
+    kg:displayValue "385583 ltip units" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 385583.0 .
+
+value:LTIPUnitsVested_2012 a kg:MonetaryValue ;
+    kg:displayValue "327416 ltip units" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 327416.0 .
+
+value:MaximumPerformanceAwards_2010 a kg:MonetaryValue ;
+    kg:displayValue "approximately $25.0 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 25.0 .
+
+value:StockPriceAppreciation_2010 a kg:MonetaryValue ;
+    kg:displayValue "50%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 50.0 .
+
+value:UnrecognizedCompensationCostRestrictedStock_2013 a kg:MonetaryValue ;
+    kg:displayValue "$17.8 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 17.8 .
+
+value:UnrecognizedCompensationCost_2013 a kg:MonetaryValue ;
+    kg:displayValue "$20.3 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 20.3 .
+
+value:UnrecognizedCompensationExpenseAwards_2013 a kg:MonetaryValue ;
+    kg:displayValue "$5.0 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 5.0 .
+
+value:VestedDuringTheYear_2011 a kg:MonetaryValue ;
+    kg:displayValue "66299.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 66299.0 .
+
+value:VestedDuringTheYear_2012 a kg:MonetaryValue ;
+    kg:displayValue "408800.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 408800.0 .
+
+value:VestedDuringTheYear_2013 a kg:MonetaryValue ;
+    kg:displayValue "21074.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 21074.0 .
+
+value:WeightedAverageFairValueOfRestrictedStockGrantedDuringTheYear_2011 a kg:MonetaryValue ;
+    kg:displayValue "21768084.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 21768084.0 .
+
+value:WeightedAverageFairValueOfRestrictedStockGrantedDuringTheYear_2012 a kg:MonetaryValue ;
+    kg:displayValue "7023942.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 7023942.0 .
+
+value:WeightedAverageFairValueOfRestrictedStockGrantedDuringTheYear_2013 a kg:MonetaryValue ;
+    kg:displayValue "17386949.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 17386949.0 .
+
+value:WeightedAverageFairValueRestrictedStock_2013 a kg:MonetaryValue ;
+    kg:displayValue "$17.4 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 17.4 .
+
+entity:Year_2010 a kg:Year ;
+    kg:yearValue 2010 .
+
+entity:Year_2011 a kg:Year ;
+    kg:yearValue 2011 .
+
+entity:Year_2012 a kg:Year ;
+    kg:yearValue 2012 .
+
+entity:Year_2013 a kg:Year ;
+    kg:yearValue 2013 .
+

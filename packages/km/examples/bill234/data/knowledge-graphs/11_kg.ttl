@@ -1,0 +1,203 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-11" ;
+    kg:builtWithOntologyVersion "1.0.3" .
+
+entity:Company_EntergyMississippi a kg:Company ;
+    kg:hasMetric entity:Metric_2007NetRevenue,
+        entity:Metric_2008NetRevenue,
+        entity:Metric_AttalaCosts,
+        entity:Metric_BaseRevenue,
+        entity:Metric_NetIncomeDecrease_2008,
+        entity:Metric_NetIncomeIncrease_2007,
+        entity:Metric_NetWholesaleRevenue,
+        entity:Metric_Other,
+        entity:Metric_ReserveEqualization,
+        entity:Metric_RiderRevenue ;
+    kg:label "Entergy Mississippi, Inc." .
+
+entity:FinancialTable a kg:Table ;
+    kg:hasColumn entity:TableColumn_0 ;
+    kg:hasRow entity:TableRow_0,
+        entity:TableRow_1,
+        entity:TableRow_2,
+        entity:TableRow_3,
+        entity:TableRow_4,
+        entity:TableRow_5,
+        entity:TableRow_6,
+        entity:TableRow_7 ;
+    kg:tableCaption "Analysis of the change in net revenue comparing 2008 to 2007" ;
+    kg:tableOrientation "column-first" .
+
+entity:Year_2006 a kg:Year ;
+    kg:yearValue 2006 .
+
+entity:Metric_2007NetRevenue a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2007,
+        entity:entity_Year_2007 ;
+    kg:hasValue value:2007NetRevenue ;
+    kg:label "2007 net revenue" ;
+    kg:tableColumn "amount ( in millions )" ;
+    kg:tableRow "2007 net revenue" .
+
+entity:Metric_2008NetRevenue a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2008,
+        entity:entity_Year_2008 ;
+    kg:hasValue value:2008NetRevenue ;
+    kg:label "2008 net revenue" ;
+    kg:tableColumn "amount ( in millions )" ;
+    kg:tableRow "2008 net revenue" .
+
+entity:Metric_AttalaCosts a kg:FinancialMetric ;
+    kg:hasValue value:AttalaCosts ;
+    kg:label "attala costs" ;
+    kg:tableColumn "amount ( in millions )" ;
+    kg:tableRow "attala costs" .
+
+entity:Metric_BaseRevenue a kg:FinancialMetric ;
+    kg:hasValue value:BaseRevenue ;
+    kg:label "base revenue" ;
+    kg:tableColumn "amount ( in millions )" ;
+    kg:tableRow "base revenue" .
+
+entity:Metric_NetIncomeDecrease_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2008 ;
+    kg:hasValue value:NetIncomeDecrease_2008 ;
+    kg:label "Net income decrease 2008 compared to 2007" .
+
+entity:Metric_NetIncomeIncrease_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2007 ;
+    kg:hasValue value:NetIncomeIncrease_2007 ;
+    kg:label "Net income increase 2007 compared to 2006" .
+
+entity:Metric_NetWholesaleRevenue a kg:FinancialMetric ;
+    kg:hasValue value:NetWholesaleRevenue ;
+    kg:label "net wholesale revenue" ;
+    kg:tableColumn "amount ( in millions )" ;
+    kg:tableRow "net wholesale revenue" .
+
+entity:Metric_Other a kg:FinancialMetric ;
+    kg:hasValue value:Other ;
+    kg:label "other" ;
+    kg:tableColumn "amount ( in millions )" ;
+    kg:tableRow "other" .
+
+entity:Metric_ReserveEqualization a kg:FinancialMetric ;
+    kg:hasValue value:ReserveEqualization ;
+    kg:label "reserve equalization" ;
+    kg:tableColumn "amount ( in millions )" ;
+    kg:tableRow "reserve equalization" .
+
+entity:Metric_RiderRevenue a kg:FinancialMetric ;
+    kg:hasValue value:RiderRevenue ;
+    kg:label "rider revenue" ;
+    kg:tableColumn "amount ( in millions )" ;
+    kg:tableRow "rider revenue" .
+
+entity:TableColumn_0 a kg:TableColumn ;
+    kg:columnIndex 0 ;
+    kg:label "{'index': 0, 'label': 'amount ( in millions )'}" .
+
+entity:TableRow_0 a kg:TableRow ;
+    kg:label "{'index': 0, 'label': '2007 net revenue'}" ;
+    kg:rowIndex 0 .
+
+entity:TableRow_1 a kg:TableRow ;
+    kg:label "{'index': 1, 'label': '2008 net revenue'}" ;
+    kg:rowIndex 1 .
+
+entity:TableRow_2 a kg:TableRow ;
+    kg:label "{'index': 2, 'label': 'attala costs'}" ;
+    kg:rowIndex 2 .
+
+entity:TableRow_3 a kg:TableRow ;
+    kg:label "{'index': 3, 'label': 'base revenue'}" ;
+    kg:rowIndex 3 .
+
+entity:TableRow_4 a kg:TableRow ;
+    kg:label "{'index': 4, 'label': 'net wholesale revenue'}" ;
+    kg:rowIndex 4 .
+
+entity:TableRow_5 a kg:TableRow ;
+    kg:label "{'index': 5, 'label': 'other'}" ;
+    kg:rowIndex 5 .
+
+entity:TableRow_6 a kg:TableRow ;
+    kg:label "{'index': 6, 'label': 'reserve equalization'}" ;
+    kg:rowIndex 6 .
+
+entity:TableRow_7 a kg:TableRow ;
+    kg:label "{'index': 7, 'label': 'rider revenue'}" ;
+    kg:rowIndex 7 .
+
+value:2007NetRevenue a kg:MonetaryValue ;
+    kg:displayValue "486.9" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 486.9 .
+
+value:2008NetRevenue a kg:MonetaryValue ;
+    kg:displayValue "498.8" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 498.8 .
+
+value:AttalaCosts a kg:MonetaryValue ;
+    kg:displayValue "9.9" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 9.9 .
+
+value:BaseRevenue a kg:MonetaryValue ;
+    kg:displayValue "5.1" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 5.1 .
+
+value:NetIncomeDecrease_2008 a kg:MonetaryValue ;
+    kg:displayValue "$12.4 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 12.4 .
+
+value:NetIncomeIncrease_2007 a kg:MonetaryValue ;
+    kg:displayValue "$19.8 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 19.8 .
+
+value:NetWholesaleRevenue a kg:MonetaryValue ;
+    kg:displayValue "-4.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -4.0 .
+
+value:Other a kg:MonetaryValue ;
+    kg:displayValue "-2.7" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -2.7 .
+
+value:ReserveEqualization a kg:MonetaryValue ;
+    kg:displayValue "-2.4" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -2.4 .
+
+value:RiderRevenue a kg:MonetaryValue ;
+    kg:displayValue "6.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 6.0 .
+
+entity:Year_2007 a kg:Year ;
+    kg:yearValue 2007 .
+
+entity:Year_2008 a kg:Year ;
+    kg:yearValue 2008 .
+

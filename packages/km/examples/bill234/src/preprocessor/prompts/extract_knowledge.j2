@@ -1,0 +1,74 @@
+You are analyzing a financial document to extract structured knowledge that will help answer questions about it.
+
+{% if pre_text %}
+DOCUMENT TEXT (BEFORE TABLE):
+{{ pre_text }}
+{% endif %}
+
+TABLE DATA:
+{{ table_json }}
+
+{% if post_text %}
+DOCUMENT TEXT (AFTER TABLE):
+{{ post_text }}
+{% endif %}
+
+Extract the following structured knowledge in JSON format:
+
+{
+  "entities": [
+    {"name": "<entity name>", "type": "<company|stock_class|index|financial_instrument|other>"}
+  ],
+  "key_facts": [
+    "<important fact about the data, entities, context, or relationships>"
+  ],
+  "table_metadata": {
+    "units": "<what units are the table values in (e.g., thousands, millions, billions, dollars, index values)>",
+    "rows_represent": "<what each row represents>",
+    "baseline_year": <year if table is index-style with baseline=100.0, else null>,
+    "columns": ["<list of column names from table>"]
+  },
+  "extracted_values": {
+    "<descriptive_key>": {
+      "value": <number>,
+      "units": "<units (billions, millions, thousands, etc.)>",
+      "context": "<where this came from and what it represents>"
+    }
+  },
+  "financial_terms": {
+    "<term>": "<definition or explanation from the document>"
+  }
+}
+
+IMPORTANT INSTRUCTIONS:
+
+1. **Entities**: Extract ALL entities mentioned in the text or table columns:
+   - Company names (e.g., "JPMorgan Chase", "GE", "Baker Hughes")
+   - Stock classes (e.g., "class a common stock", "class b common stock")
+   - Indices (e.g., "S&P 500", "KBW Bank Index")
+   - Financial instruments mentioned
+
+2. **Key Facts**: Focus on facts that provide context for understanding the data:
+   - What the document/table is about
+   - Special relationships (e.g., "GE owns all class b common stock")
+   - Important context about the time period or data collection
+   - Whether values are cumulative, annual, quarterly, etc.
+   - Any baseline or reference points mentioned
+
+3. **Table Metadata**:
+   - CRITICAL: Identify if this is an INDEX table (one year = 100.0 for all columns)
+   - Extract the units from table headers, footnotes, or text
+   - Describe what the rows represent (transactions, time periods, categories, etc.)
+
+4. **Extracted Values**: ONLY extract numerical values mentioned in PRE_TEXT or POST_TEXT that are NOT in the table:
+   - "authorized to issue X billion shares" → extract X with units "billions" (if NOT in table)
+   - "X million shares outstanding" → extract X with units "millions" (if NOT in table)
+   - DO NOT extract values that are already in the table - the table is already available
+   - ONLY extract values from TEXT that provide additional context beyond the table
+   - Include full context of where value came from and what it means
+
+5. **Financial Terms**: Extract definitions or explanations provided in the document:
+   - If text explains what a term means, include it
+   - Focus on terms specific to this document
+
+Reply with ONLY the JSON object. No explanation.

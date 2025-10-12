@@ -1,0 +1,97 @@
+You are building the exact mathematical formula to answer a financial question.
+
+QUESTION: {{ resolved_question }}
+
+VALUE DEFINITIONS:
+{% for name, info in values.items() %}
+{{ name }}:
+  - Description: {{ info.description }}
+  - Semantic Type: {{ info.semantic_type }}
+  - Source: {{ info.source }}{% if info.turn_reference %} (turn {{ info.turn_reference }}){% endif %}
+
+{% endfor %}
+
+CALCULATION RULES:
+{{ calculation_rules }}
+
+The rules above describe how to interpret financial questions and build formulas.
+Please consult these rules for guidance on operations, sign preservation, and percentage calculations.
+
+TASK:
+Build the formula step-by-step by analyzing the question and consulting the calculation rules.
+
+STEP 1: Identify Key Phrases
+- Extract semantic phrases from the question
+- Examples: "in relation to", "percentage", "change", "total", "difference"
+
+STEP 2: Consult Rules for Each Phrase
+- Look up each phrase in the LINGUISTIC PATTERNS section above
+- Note the recommended operation and formula guidance
+- Pay attention to CRITICAL notes about sign preservation, multiplication by 100, etc.
+
+STEP 3: Check Semantic Types
+- Review the semantic_type of each value:
+  - "change_value" → PRESERVE SIGN (negative = decrease, positive = increase)
+  - "total_value" → Used as base for percentages
+  - Others → Follow calculation rules
+
+STEP 4: Build the Formula
+- Combine operations based on calculation rules
+- Use ONLY the variable names listed in VALUE DEFINITIONS above
+- Apply transformations indicated by rules (multiply by 100, preserve sign, etc.)
+
+FORMULA SYNTAX:
+Write a valid Python expression using:
+- Arithmetic operators: + - * / ( )
+- Available functions:
+  * abs(x) - absolute value
+  * min(x, y) - minimum of two values
+  * max(x, y) - maximum of two values
+  * round(x, digits) - round to decimal places
+  * to_percentage(ratio) - convert decimal ratio to percentage number (multiplies by 100)
+- Variable names: ONLY those listed in VALUE DEFINITIONS above
+- Numeric constants: integers and decimals like 100, 0.5, etc.
+
+CRITICAL: Use to_percentage() when the answer should be a percentage NUMBER (not decimal ratio)
+- If question asks "in percentage" or answer format is "X%" → use to_percentage()
+- Otherwise, return decimal ratio
+
+Examples of valid formulas:
+- change_in_sales / total  (returns decimal ratio like 0.15)
+- to_percentage(change_in_sales / total)  (returns percentage number like 15)
+- to_percentage((revenue_2008 - revenue_2007) / revenue_2007)  (returns percentage like 1.3)
+- abs(new_value - old_value)
+- min(value_a, value_b) / total
+
+CRITICAL RULES:
+- Consult calculation rules for EVERY decision (when to *100, when to preserve sign, etc.)
+- NO hardcoded assumptions - everything must come from the rules above
+- Preserve sign for change_value variables (don't use abs() unless rules specify)
+- When question asks "in percentage", check rules for whether to multiply by 100
+
+EXAMPLE REASONING:
+Question: "how much does this change represent in relation to that total, in percentage?"
+Phrase: "in relation to" → rules say: RatioCalculation, formula X/Y
+Phrase: "in percentage" → answer should be percentage NUMBER, use to_percentage()
+Semantic type: change_in_sales is "change_value" → preserve sign
+Final formula: to_percentage(change_in_sales / total)
+
+OUTPUT (JSON):
+{
+  "formula": "valid Python expression following FORMULA SYNTAX above",
+  "reasoning": "step-by-step explanation showing:
+    1. Which phrases you identified
+    2. What the calculation rules say about each phrase
+    3. How semantic_type affects the formula
+    4. Why you chose this specific formula"
+}
+
+IMPORTANT: The formula must be a valid Python expression using only:
+- The variable names defined above
+- Arithmetic operators: + - * / ( )
+- Functions: abs(), min(), max(), round(), to_percentage()
+- Numeric constants
+
+CRITICAL: When question asks "in percentage" or gold answer is in "X%" format, use to_percentage()
+
+Generate the JSON now:

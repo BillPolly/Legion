@@ -1,0 +1,707 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-11" ;
+    kg:builtWithOntologyVersion "1.0.3" .
+
+entity:Company_Example0 a kg:Company ;
+    kg:hasMetric entity:Metric_BasicEarningsPerShare_2015_Q1,
+        entity:Metric_BasicEarningsPerShare_2015_Q2,
+        entity:Metric_BasicEarningsPerShare_2015_Q3,
+        entity:Metric_BasicEarningsPerShare_2015_Q4,
+        entity:Metric_DilutedEarningsPerShare_2015_Q1,
+        entity:Metric_DilutedEarningsPerShare_2015_Q2,
+        entity:Metric_DilutedEarningsPerShare_2015_Q3,
+        entity:Metric_DilutedEarningsPerShare_2015_Q4,
+        entity:Metric_DividendsPerShare_2015_Q1,
+        entity:Metric_DividendsPerShare_2015_Q2,
+        entity:Metric_DividendsPerShare_2015_Q3,
+        entity:Metric_DividendsPerShare_2015_Q4,
+        entity:Metric_EarningsBeforeIncomeTaxes_2015_Q1,
+        entity:Metric_EarningsBeforeIncomeTaxes_2015_Q2,
+        entity:Metric_EarningsBeforeIncomeTaxes_2015_Q3,
+        entity:Metric_EarningsBeforeIncomeTaxes_2015_Q4,
+        entity:Metric_NetEarnings_2015_Q1,
+        entity:Metric_NetEarnings_2015_Q2,
+        entity:Metric_NetEarnings_2015_Q3,
+        entity:Metric_NetEarnings_2015_Q4,
+        entity:Metric_OperatingIncome_2015_Q1,
+        entity:Metric_OperatingIncome_2015_Q2,
+        entity:Metric_OperatingIncome_2015_Q3,
+        entity:Metric_OperatingIncome_2015_Q4,
+        entity:Metric_SalesAndServiceRevenues_2015_Q1,
+        entity:Metric_SalesAndServiceRevenues_2015_Q2,
+        entity:Metric_SalesAndServiceRevenues_2015_Q3,
+        entity:Metric_SalesAndServiceRevenues_2015_Q4 ;
+    kg:label "Example Company" .
+
+entity:Company_Example18 a kg:Company ;
+    kg:hasMetric entity:Metric_CompensationExpenseStockAwards_2013,
+        entity:Metric_CompensationExpenseStockAwards_2014,
+        entity:Metric_CompensationExpenseStockAwards_2015,
+        entity:Metric_GoodwillImpairmentCharge_2015Q2,
+        entity:Metric_GoodwillImpairment_2015Q4,
+        entity:Metric_IntangibleAssetImpairmentCharges_2015Q4,
+        entity:Metric_OperatingIncomeAonSettlement_2015Q2,
+        entity:Metric_TaxBenefitStockAwardsOptions_2013,
+        entity:Metric_TaxBenefitStockAwardsOptions_2014,
+        entity:Metric_TaxBenefitStockAwardsOptions_2015,
+        entity:Metric_TaxBenefitsStockOptions_2013,
+        entity:Metric_TaxBenefitsStockOptions_2014,
+        entity:Metric_TaxBenefitsStockOptions_2015,
+        entity:Metric_TaxBenefitsStockSettlement_2013,
+        entity:Metric_TaxBenefitsStockSettlement_2014,
+        entity:Metric_TaxBenefitsStockSettlement_2015,
+        entity:Metric_UnrecognizedCompensationExpenseRPSRS_2015,
+        entity:Metric_UnrecognizedCompensationExpenseRSRS_2015 ;
+    kg:label "Example Company" .
+
+entity:Metric_BasicEarningsPerShare_2015_Q1 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:BasicEarningsPerShare_2015_Q1 ;
+    kg:label "basic earnings ( loss ) per share" ;
+    kg:tableColumn "year ended december 31 2015 1st qtr" ;
+    kg:tableRow "basic earnings ( loss ) per share" .
+
+entity:Metric_BasicEarningsPerShare_2015_Q2 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:BasicEarningsPerShare_2015_Q2 ;
+    kg:label "basic earnings ( loss ) per share" ;
+    kg:tableColumn "year ended december 31 2015 2nd qtr ( 1 )" ;
+    kg:tableRow "basic earnings ( loss ) per share" .
+
+entity:Metric_BasicEarningsPerShare_2015_Q3 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:BasicEarningsPerShare_2015_Q3 ;
+    kg:label "basic earnings ( loss ) per share" ;
+    kg:tableColumn "year ended december 31 2015 3rd qtr" ;
+    kg:tableRow "basic earnings ( loss ) per share" .
+
+entity:Metric_BasicEarningsPerShare_2015_Q4 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:BasicEarningsPerShare_2015_Q4 ;
+    kg:label "basic earnings ( loss ) per share" ;
+    kg:tableColumn "year ended december 31 2015 4th qtr ( 2 )" ;
+    kg:tableRow "basic earnings ( loss ) per share" .
+
+entity:Metric_CompensationExpenseStockAwards_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:CompensationExpenseStockAwards_2013 ;
+    kg:label "compensation expense related to stock awards" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "compensation expense related to stock awards" .
+
+entity:Metric_CompensationExpenseStockAwards_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:CompensationExpenseStockAwards_2014 ;
+    kg:label "compensation expense related to stock awards" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "compensation expense related to stock awards" .
+
+entity:Metric_CompensationExpenseStockAwards_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:CompensationExpenseStockAwards_2015 ;
+    kg:label "compensation expense related to stock awards" ;
+    kg:tableColumn "2015" ;
+    kg:tableRow "compensation expense related to stock awards" .
+
+entity:Metric_DilutedEarningsPerShare_2015_Q1 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:DilutedEarningsPerShare_2015_Q1 ;
+    kg:label "diluted earnings ( loss ) per share" ;
+    kg:tableColumn "year ended december 31 2015 1st qtr" ;
+    kg:tableRow "diluted earnings ( loss ) per share" .
+
+entity:Metric_DilutedEarningsPerShare_2015_Q2 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:DilutedEarningsPerShare_2015_Q2 ;
+    kg:label "diluted earnings ( loss ) per share" ;
+    kg:tableColumn "year ended december 31 2015 2nd qtr ( 1 )" ;
+    kg:tableRow "diluted earnings ( loss ) per share" .
+
+entity:Metric_DilutedEarningsPerShare_2015_Q3 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:DilutedEarningsPerShare_2015_Q3 ;
+    kg:label "diluted earnings ( loss ) per share" ;
+    kg:tableColumn "year ended december 31 2015 3rd qtr" ;
+    kg:tableRow "diluted earnings ( loss ) per share" .
+
+entity:Metric_DilutedEarningsPerShare_2015_Q4 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:DilutedEarningsPerShare_2015_Q4 ;
+    kg:label "diluted earnings ( loss ) per share" ;
+    kg:tableColumn "year ended december 31 2015 4th qtr ( 2 )" ;
+    kg:tableRow "diluted earnings ( loss ) per share" .
+
+entity:Metric_DividendsPerShare_2015_Q1 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:DividendsPerShare_2015_Q1 ;
+    kg:label "dividends declared per share" ;
+    kg:tableColumn "year ended december 31 2015 1st qtr" ;
+    kg:tableRow "dividends declared per share" .
+
+entity:Metric_DividendsPerShare_2015_Q2 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:DividendsPerShare_2015_Q2 ;
+    kg:label "dividends declared per share" ;
+    kg:tableColumn "year ended december 31 2015 2nd qtr ( 1 )" ;
+    kg:tableRow "dividends declared per share" .
+
+entity:Metric_DividendsPerShare_2015_Q3 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:DividendsPerShare_2015_Q3 ;
+    kg:label "dividends declared per share" ;
+    kg:tableColumn "year ended december 31 2015 3rd qtr" ;
+    kg:tableRow "dividends declared per share" .
+
+entity:Metric_DividendsPerShare_2015_Q4 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:DividendsPerShare_2015_Q4 ;
+    kg:label "dividends declared per share" ;
+    kg:tableColumn "year ended december 31 2015 4th qtr ( 2 )" ;
+    kg:tableRow "dividends declared per share" .
+
+entity:Metric_EarningsBeforeIncomeTaxes_2015_Q1 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:EarningsBeforeIncomeTaxes_2015_Q1 ;
+    kg:label "earnings ( loss ) before income taxes" ;
+    kg:tableColumn "year ended december 31 2015 1st qtr" ;
+    kg:tableRow "earnings ( loss ) before income taxes" .
+
+entity:Metric_EarningsBeforeIncomeTaxes_2015_Q2 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:EarningsBeforeIncomeTaxes_2015_Q2 ;
+    kg:label "earnings ( loss ) before income taxes" ;
+    kg:tableColumn "year ended december 31 2015 2nd qtr ( 1 )" ;
+    kg:tableRow "earnings ( loss ) before income taxes" .
+
+entity:Metric_EarningsBeforeIncomeTaxes_2015_Q3 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:EarningsBeforeIncomeTaxes_2015_Q3 ;
+    kg:label "earnings ( loss ) before income taxes" ;
+    kg:tableColumn "year ended december 31 2015 3rd qtr" ;
+    kg:tableRow "earnings ( loss ) before income taxes" .
+
+entity:Metric_EarningsBeforeIncomeTaxes_2015_Q4 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:EarningsBeforeIncomeTaxes_2015_Q4 ;
+    kg:label "earnings ( loss ) before income taxes" ;
+    kg:tableColumn "year ended december 31 2015 4th qtr ( 2 )" ;
+    kg:tableRow "earnings ( loss ) before income taxes" .
+
+entity:Metric_GoodwillImpairmentCharge_2015Q2 a kg:FinancialMetric ;
+    kg:hasValue value:GoodwillImpairmentCharge_2015Q2 ;
+    kg:label "goodwill impairment charge" ;
+    kg:tableColumn "2nd qtr 2015" ;
+    kg:tableRow "goodwill impairment charge" .
+
+entity:Metric_GoodwillImpairment_2015Q4 a kg:FinancialMetric ;
+    kg:hasValue value:GoodwillImpairment_2015Q4 ;
+    kg:label "goodwill impairment" ;
+    kg:tableColumn "4th qtr 2015" ;
+    kg:tableRow "goodwill impairment" .
+
+entity:Metric_IntangibleAssetImpairmentCharges_2015Q4 a kg:FinancialMetric ;
+    kg:hasValue value:IntangibleAssetImpairmentCharges_2015Q4 ;
+    kg:label "intangible asset impairment charges" ;
+    kg:tableColumn "4th qtr 2015" ;
+    kg:tableRow "intangible asset impairment charges" .
+
+entity:Metric_NetEarnings_2015_Q1 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:NetEarnings_2015_Q1 ;
+    kg:label "net earnings ( loss )" ;
+    kg:tableColumn "year ended december 31 2015 1st qtr" ;
+    kg:tableRow "net earnings ( loss )" .
+
+entity:Metric_NetEarnings_2015_Q2 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:NetEarnings_2015_Q2 ;
+    kg:label "net earnings ( loss )" ;
+    kg:tableColumn "year ended december 31 2015 2nd qtr ( 1 )" ;
+    kg:tableRow "net earnings ( loss )" .
+
+entity:Metric_NetEarnings_2015_Q3 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:NetEarnings_2015_Q3 ;
+    kg:label "net earnings ( loss )" ;
+    kg:tableColumn "year ended december 31 2015 3rd qtr" ;
+    kg:tableRow "net earnings ( loss )" .
+
+entity:Metric_NetEarnings_2015_Q4 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:NetEarnings_2015_Q4 ;
+    kg:label "net earnings ( loss )" ;
+    kg:tableColumn "year ended december 31 2015 4th qtr ( 2 )" ;
+    kg:tableRow "net earnings ( loss )" .
+
+entity:Metric_OperatingIncomeAonSettlement_2015Q2 a kg:FinancialMetric ;
+    kg:hasValue value:OperatingIncomeAonSettlement_2015Q2 ;
+    kg:label "operating income from aon settlement" ;
+    kg:tableColumn "2nd qtr 2015" ;
+    kg:tableRow "operating income from aon settlement" .
+
+entity:Metric_OperatingIncome_2015_Q1 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:OperatingIncome_2015_Q1 ;
+    kg:label "operating income ( loss )" ;
+    kg:tableColumn "year ended december 31 2015 1st qtr" ;
+    kg:tableRow "operating income ( loss )" .
+
+entity:Metric_OperatingIncome_2015_Q2 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:OperatingIncome_2015_Q2 ;
+    kg:label "operating income ( loss )" ;
+    kg:tableColumn "year ended december 31 2015 2nd qtr ( 1 )" ;
+    kg:tableRow "operating income ( loss )" .
+
+entity:Metric_OperatingIncome_2015_Q3 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:OperatingIncome_2015_Q3 ;
+    kg:label "operating income ( loss )" ;
+    kg:tableColumn "year ended december 31 2015 3rd qtr" ;
+    kg:tableRow "operating income ( loss )" .
+
+entity:Metric_OperatingIncome_2015_Q4 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:OperatingIncome_2015_Q4 ;
+    kg:label "operating income ( loss )" ;
+    kg:tableColumn "year ended december 31 2015 4th qtr ( 2 )" ;
+    kg:tableRow "operating income ( loss )" .
+
+entity:Metric_SalesAndServiceRevenues_2015_Q1 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:SalesAndServiceRevenues_2015_Q1 ;
+    kg:label "sales and service revenues" ;
+    kg:tableColumn "year ended december 31 2015 1st qtr" ;
+    kg:tableRow "sales and service revenues" .
+
+entity:Metric_SalesAndServiceRevenues_2015_Q2 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:SalesAndServiceRevenues_2015_Q2 ;
+    kg:label "sales and service revenues" ;
+    kg:tableColumn "year ended december 31 2015 2nd qtr ( 1 )" ;
+    kg:tableRow "sales and service revenues" .
+
+entity:Metric_SalesAndServiceRevenues_2015_Q3 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:SalesAndServiceRevenues_2015_Q3 ;
+    kg:label "sales and service revenues" ;
+    kg:tableColumn "year ended december 31 2015 3rd qtr" ;
+    kg:tableRow "sales and service revenues" .
+
+entity:Metric_SalesAndServiceRevenues_2015_Q4 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:SalesAndServiceRevenues_2015_Q4 ;
+    kg:label "sales and service revenues" ;
+    kg:tableColumn "year ended december 31 2015 4th qtr ( 2 )" ;
+    kg:tableRow "sales and service revenues" .
+
+entity:Metric_TaxBenefitStockAwardsOptions_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:TaxBenefitStockAwardsOptions_2013 ;
+    kg:label "tax benefit related to stock awards and stock options" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "tax benefit related to stock awards and stock options" .
+
+entity:Metric_TaxBenefitStockAwardsOptions_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:TaxBenefitStockAwardsOptions_2014 ;
+    kg:label "tax benefit related to stock awards and stock options" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "tax benefit related to stock awards and stock options" .
+
+entity:Metric_TaxBenefitStockAwardsOptions_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:TaxBenefitStockAwardsOptions_2015 ;
+    kg:label "tax benefit related to stock awards and stock options" ;
+    kg:tableColumn "2015" ;
+    kg:tableRow "tax benefit related to stock awards and stock options" .
+
+entity:Metric_TaxBenefitsStockOptions_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:TaxBenefitsStockOptions_2013 ;
+    kg:label "tax benefits from exercise of stock options" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "tax benefits from exercise of stock options" .
+
+entity:Metric_TaxBenefitsStockOptions_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:TaxBenefitsStockOptions_2014 ;
+    kg:label "tax benefits from exercise of stock options" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "tax benefits from exercise of stock options" .
+
+entity:Metric_TaxBenefitsStockOptions_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:TaxBenefitsStockOptions_2015 ;
+    kg:label "tax benefits from exercise of stock options" ;
+    kg:tableColumn "2015" ;
+    kg:tableRow "tax benefits from exercise of stock options" .
+
+entity:Metric_TaxBenefitsStockSettlement_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:TaxBenefitsStockSettlement_2013 ;
+    kg:label "tax benefits from issuance of stock in settlement of stock awards" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "tax benefits from issuance of stock in settlement of stock awards" .
+
+entity:Metric_TaxBenefitsStockSettlement_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:TaxBenefitsStockSettlement_2014 ;
+    kg:label "tax benefits from issuance of stock in settlement of stock awards" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "tax benefits from issuance of stock in settlement of stock awards" .
+
+entity:Metric_TaxBenefitsStockSettlement_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:TaxBenefitsStockSettlement_2015 ;
+    kg:label "tax benefits from issuance of stock in settlement of stock awards" ;
+    kg:tableColumn "2015" ;
+    kg:tableRow "tax benefits from issuance of stock in settlement of stock awards" .
+
+entity:Metric_UnrecognizedCompensationExpenseRPSRS_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:UnrecognizedCompensationExpenseRPSRS_2015 ;
+    kg:label "unrecognized compensation expense associated with rpsrs" ;
+    kg:tableColumn "2015" ;
+    kg:tableRow "unrecognized compensation expense associated with rpsrs" .
+
+entity:Metric_UnrecognizedCompensationExpenseRSRS_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:UnrecognizedCompensationExpenseRSRS_2015 ;
+    kg:label "unrecognized compensation expense associated with rsrs" ;
+    kg:tableColumn "2015" ;
+    kg:tableRow "unrecognized compensation expense associated with rsrs" .
+
+value:BasicEarningsPerShare_2015_Q1 a kg:MonetaryValue ;
+    kg:displayValue "1.8" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1.8 .
+
+value:BasicEarningsPerShare_2015_Q2 a kg:MonetaryValue ;
+    kg:displayValue "3.22" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 3.22 .
+
+value:BasicEarningsPerShare_2015_Q3 a kg:MonetaryValue ;
+    kg:displayValue "2.31" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2.31 .
+
+value:BasicEarningsPerShare_2015_Q4 a kg:MonetaryValue ;
+    kg:displayValue "1.07" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1.07 .
+
+value:CompensationExpenseStockAwards_2013 a kg:MonetaryValue ;
+    kg:displayValue "$44 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 44.0 .
+
+value:CompensationExpenseStockAwards_2014 a kg:MonetaryValue ;
+    kg:displayValue "$34 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 34.0 .
+
+value:CompensationExpenseStockAwards_2015 a kg:MonetaryValue ;
+    kg:displayValue "$43 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 43.0 .
+
+value:DilutedEarningsPerShare_2015_Q1 a kg:MonetaryValue ;
+    kg:displayValue "1.79" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1.79 .
+
+value:DilutedEarningsPerShare_2015_Q2 a kg:MonetaryValue ;
+    kg:displayValue "3.2" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 3.2 .
+
+value:DilutedEarningsPerShare_2015_Q3 a kg:MonetaryValue ;
+    kg:displayValue "2.29" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2.29 .
+
+value:DilutedEarningsPerShare_2015_Q4 a kg:MonetaryValue ;
+    kg:displayValue "1.06" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1.06 .
+
+value:DividendsPerShare_2015_Q1 a kg:MonetaryValue ;
+    kg:displayValue "0.4" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 0.4 .
+
+value:DividendsPerShare_2015_Q2 a kg:MonetaryValue ;
+    kg:displayValue "0.4" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 0.4 .
+
+value:DividendsPerShare_2015_Q3 a kg:MonetaryValue ;
+    kg:displayValue "0.4" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 0.4 .
+
+value:DividendsPerShare_2015_Q4 a kg:MonetaryValue ;
+    kg:displayValue "0.5" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 0.5 .
+
+value:EarningsBeforeIncomeTaxes_2015_Q1 a kg:MonetaryValue ;
+    kg:displayValue "133.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 133.0 .
+
+value:EarningsBeforeIncomeTaxes_2015_Q2 a kg:MonetaryValue ;
+    kg:displayValue "244.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 244.0 .
+
+value:EarningsBeforeIncomeTaxes_2015_Q3 a kg:MonetaryValue ;
+    kg:displayValue "175.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 175.0 .
+
+value:EarningsBeforeIncomeTaxes_2015_Q4 a kg:MonetaryValue ;
+    kg:displayValue "80.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 80.0 .
+
+value:GoodwillImpairmentCharge_2015Q2 a kg:MonetaryValue ;
+    kg:displayValue "$59 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 59.0 .
+
+value:GoodwillImpairment_2015Q4 a kg:MonetaryValue ;
+    kg:displayValue "$16 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 16.0 .
+
+value:IntangibleAssetImpairmentCharges_2015Q4 a kg:MonetaryValue ;
+    kg:displayValue "$27 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 27.0 .
+
+value:NetEarnings_2015_Q1 a kg:MonetaryValue ;
+    kg:displayValue "87.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 87.0 .
+
+value:NetEarnings_2015_Q2 a kg:MonetaryValue ;
+    kg:displayValue "156.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 156.0 .
+
+value:NetEarnings_2015_Q3 a kg:MonetaryValue ;
+    kg:displayValue "111.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 111.0 .
+
+value:NetEarnings_2015_Q4 a kg:MonetaryValue ;
+    kg:displayValue "50.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 50.0 .
+
+value:OperatingIncomeAonSettlement_2015Q2 a kg:MonetaryValue ;
+    kg:displayValue "$136 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 136.0 .
+
+value:OperatingIncome_2015_Q1 a kg:MonetaryValue ;
+    kg:displayValue "156.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 156.0 .
+
+value:OperatingIncome_2015_Q2 a kg:MonetaryValue ;
+    kg:displayValue "269.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 269.0 .
+
+value:OperatingIncome_2015_Q3 a kg:MonetaryValue ;
+    kg:displayValue "200.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 200.0 .
+
+value:OperatingIncome_2015_Q4 a kg:MonetaryValue ;
+    kg:displayValue "144.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 144.0 .
+
+value:SalesAndServiceRevenues_2015_Q1 a kg:MonetaryValue ;
+    kg:displayValue "1570.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1570.0 .
+
+value:SalesAndServiceRevenues_2015_Q2 a kg:MonetaryValue ;
+    kg:displayValue "1745.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1745.0 .
+
+value:SalesAndServiceRevenues_2015_Q3 a kg:MonetaryValue ;
+    kg:displayValue "1800.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1800.0 .
+
+value:SalesAndServiceRevenues_2015_Q4 a kg:MonetaryValue ;
+    kg:displayValue "1905.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1905.0 .
+
+value:TaxBenefitStockAwardsOptions_2013 a kg:MonetaryValue ;
+    kg:displayValue "$17 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 17.0 .
+
+value:TaxBenefitStockAwardsOptions_2014 a kg:MonetaryValue ;
+    kg:displayValue "$13 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 13.0 .
+
+value:TaxBenefitStockAwardsOptions_2015 a kg:MonetaryValue ;
+    kg:displayValue "$17 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 17.0 .
+
+value:TaxBenefitsStockOptions_2013 a kg:MonetaryValue ;
+    kg:displayValue "$4 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 4.0 .
+
+value:TaxBenefitsStockOptions_2014 a kg:MonetaryValue ;
+    kg:displayValue "$5 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 5.0 .
+
+value:TaxBenefitsStockOptions_2015 a kg:MonetaryValue ;
+    kg:displayValue "$4 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 4.0 .
+
+value:TaxBenefitsStockSettlement_2013 a kg:MonetaryValue ;
+    kg:displayValue "$32 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 32.0 .
+
+value:TaxBenefitsStockSettlement_2014 a kg:MonetaryValue ;
+    kg:displayValue "$53 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 53.0 .
+
+value:TaxBenefitsStockSettlement_2015 a kg:MonetaryValue ;
+    kg:displayValue "$41 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 41.0 .
+
+value:UnrecognizedCompensationExpenseRPSRS_2015 a kg:MonetaryValue ;
+    kg:displayValue "$25 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 25.0 .
+
+value:UnrecognizedCompensationExpenseRSRS_2015 a kg:MonetaryValue ;
+    kg:displayValue "less than $1 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1.0 .
+
+entity:Year_2013 a kg:Year ;
+    kg:yearValue 2013 .
+
+entity:Year_2014 a kg:Year ;
+    kg:yearValue 2014 .
+
+entity:Year_2015 a kg:Year ;
+    kg:yearValue 2015 .
+

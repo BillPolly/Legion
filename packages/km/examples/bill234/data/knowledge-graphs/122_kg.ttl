@@ -1,0 +1,549 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+entity:entity_Company_122 a kg:Company ;
+    kg:hasMetric entity:entity_Metric_CalendarComparableSalesIncrease_2016,
+        entity:entity_Metric_CalendarComparableSalesIncrease_2017,
+        entity:entity_Metric_CalendarComparableSalesIncrease_2018,
+        entity:entity_Metric_NetSales_2016,
+        entity:entity_Metric_NetSales_2017,
+        entity:entity_Metric_NetSales_2018,
+        entity:entity_Metric_OperatingIncomeAsPercentageOfNetSales_2016,
+        entity:entity_Metric_OperatingIncomeAsPercentageOfNetSales_2017,
+        entity:entity_Metric_OperatingIncomeAsPercentageOfNetSales_2018,
+        entity:entity_Metric_OperatingIncome_2016,
+        entity:entity_Metric_OperatingIncome_2017,
+        entity:entity_Metric_OperatingIncome_2018,
+        entity:entity_Metric_PercentageChangeFromComparablePeriod_2016,
+        entity:entity_Metric_PercentageChangeFromComparablePeriod_2017,
+        entity:entity_Metric_PercentageChangeFromComparablePeriod_2018,
+        entity:entity_Metric_RetailSquareFeetAtPeriodEnd_2016,
+        entity:entity_Metric_RetailSquareFeetAtPeriodEnd_2017,
+        entity:entity_Metric_RetailSquareFeetAtPeriodEnd_2018,
+        entity:entity_Metric_UnitCountsAtPeriodEnd_2016,
+        entity:entity_Metric_UnitCountsAtPeriodEnd_2017,
+        entity:entity_Metric_UnitCountsAtPeriodEnd_2018 ;
+    kg:label "Company for Example ID 122" .
+
+entity:entity_Company_Walmart a kg:Company ;
+    kg:hasMetric entity:entity_Metric_Charges_RealEstate_2017,
+        entity:entity_Metric_Charges_RealEstate_2018,
+        entity:entity_Metric_EPS_2017,
+        entity:entity_Metric_EPS_2018,
+        entity:entity_Metric_Gain_LandSale_2018,
+        entity:entity_Metric_Gain_SaleOfSuburbia_2018,
+        entity:entity_Metric_Loss_ExtinguishmentOfDebt_2018,
+        entity:entity_Metric_MembershipIncomeIncrease_2017,
+        entity:entity_Metric_NetIncomeDecrease_2017,
+        entity:entity_Metric_NetIncomeDecrease_2018,
+        entity:entity_Metric_NetIncome_2017,
+        entity:entity_Metric_NetIncome_2018,
+        entity:entity_Metric_USComparableStoreSalesIncrease_2017,
+        entity:entity_Metric_USComparableStoreSalesIncrease_2018,
+        entity:entity_Metric_USGrossProfitRateChange_2017,
+        entity:entity_Metric_USGrossProfitRateChange_2018,
+        entity:entity_Metric_USNetSalesIncrease_2017,
+        entity:entity_Metric_USNetSalesIncrease_2018,
+        entity:entity_Metric_USOperatingExpensesAsPercentageOfNetSales_2017,
+        entity:entity_Metric_USRetailSquareFeetGrowth_2017,
+        entity:entity_Metric_USRetailSquareFeetGrowth_2018,
+        entity:entity_Metric_USSegmentOperatingIncomeChange_2017,
+        entity:entity_Metric_USSegmentOperatingIncomeChange_2018 ;
+    kg:label "Walmart" .
+
+entity:entity_Metric_CalendarComparableSalesIncrease_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2016 ;
+    kg:hasValue value:value_CalendarComparableSalesIncrease_2016 ;
+    kg:label "Calendar comparable sales increase for fiscal years ended january 31 , 2016" ;
+    kg:tableColumn "fiscal years ended january 31 , 2016" ;
+    kg:tableRow "calendar comparable sales increase" .
+
+entity:entity_Metric_CalendarComparableSalesIncrease_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_CalendarComparableSalesIncrease_2017 ;
+    kg:label "Calendar comparable sales increase for fiscal years ended january 31 , 2017" ;
+    kg:tableColumn "fiscal years ended january 31 , 2017" ;
+    kg:tableRow "calendar comparable sales increase" .
+
+entity:entity_Metric_CalendarComparableSalesIncrease_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2018 ;
+    kg:hasValue value:value_CalendarComparableSalesIncrease_2018 ;
+    kg:label "Calendar comparable sales increase for fiscal years ended january 31 , 2018" ;
+    kg:tableColumn "fiscal years ended january 31 , 2018" ;
+    kg:tableRow "calendar comparable sales increase" .
+
+entity:entity_Metric_Charges_RealEstate_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_Charges_RealEstate_2017 ;
+    kg:label "charges related to discontinued real estate projects for fiscal 2017" .
+
+entity:entity_Metric_Charges_RealEstate_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2018 ;
+    kg:hasValue value:value_Charges_RealEstate_2018 ;
+    kg:label "charges related to discontinued real estate projects for fiscal 2018" .
+
+entity:entity_Metric_EPS_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_EPS_2017 ;
+    kg:label "diluted net income per common share attributable to walmart for fiscal 2017" .
+
+entity:entity_Metric_EPS_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2018 ;
+    kg:hasValue value:value_EPS_2018 ;
+    kg:label "diluted net income per common share attributable to walmart for fiscal 2018" .
+
+entity:entity_Metric_Gain_LandSale_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2018 ;
+    kg:hasValue value:value_Gain_LandSale_2018 ;
+    kg:label "gain from land sale for fiscal 2018" .
+
+entity:entity_Metric_Gain_SaleOfSuburbia_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2018 ;
+    kg:hasValue value:value_Gain_SaleOfSuburbia_2018 ;
+    kg:label "gain from sale of suburbia for fiscal 2018" .
+
+entity:entity_Metric_Loss_ExtinguishmentOfDebt_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2018 ;
+    kg:hasValue value:value_Loss_ExtinguishmentOfDebt_2018 ;
+    kg:label "loss on extinguishment of debt for fiscal 2018" .
+
+entity:entity_Metric_MembershipIncomeIncrease_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_MembershipIncomeIncrease_2017 ;
+    kg:label "membership and other income increase for fiscal 2017" .
+
+entity:entity_Metric_NetIncomeDecrease_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_NetIncomeDecrease_2017 ;
+    kg:label "decrease in consolidated net income for fiscal 2017" .
+
+entity:entity_Metric_NetIncomeDecrease_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2018 ;
+    kg:hasValue value:value_NetIncomeDecrease_2018 ;
+    kg:label "decrease in consolidated net income for fiscal 2018" .
+
+entity:entity_Metric_NetIncome_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_NetIncome_2017 ;
+    kg:label "consolidated net income for fiscal 2017" .
+
+entity:entity_Metric_NetIncome_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2018 ;
+    kg:hasValue value:value_NetIncome_2018 ;
+    kg:label "consolidated net income for fiscal 2018" .
+
+entity:entity_Metric_NetSales_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2016 ;
+    kg:hasValue value:value_NetSales_2016 ;
+    kg:label "Net sales for fiscal years ended january 31 , 2016" ;
+    kg:tableColumn "fiscal years ended january 31 , 2016" ;
+    kg:tableRow "net sales" .
+
+entity:entity_Metric_NetSales_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_NetSales_2017 ;
+    kg:label "Net sales for fiscal years ended january 31 , 2017" ;
+    kg:tableColumn "fiscal years ended january 31 , 2017" ;
+    kg:tableRow "net sales" .
+
+entity:entity_Metric_NetSales_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2018 ;
+    kg:hasValue value:value_NetSales_2018 ;
+    kg:label "Net sales for fiscal years ended january 31 , 2018" ;
+    kg:tableColumn "fiscal years ended january 31 , 2018" ;
+    kg:tableRow "net sales" .
+
+entity:entity_Metric_OperatingIncomeAsPercentageOfNetSales_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2016 ;
+    kg:hasValue value:value_OperatingIncomeAsPercentageOfNetSales_2016 ;
+    kg:label "Operating income as a percentage of net sales for fiscal years ended january 31 , 2016" ;
+    kg:tableColumn "fiscal years ended january 31 , 2016" ;
+    kg:tableRow "operating income as a percentage of net sales" .
+
+entity:entity_Metric_OperatingIncomeAsPercentageOfNetSales_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_OperatingIncomeAsPercentageOfNetSales_2017 ;
+    kg:label "Operating income as a percentage of net sales for fiscal years ended january 31 , 2017" ;
+    kg:tableColumn "fiscal years ended january 31 , 2017" ;
+    kg:tableRow "operating income as a percentage of net sales" .
+
+entity:entity_Metric_OperatingIncomeAsPercentageOfNetSales_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2018 ;
+    kg:hasValue value:value_OperatingIncomeAsPercentageOfNetSales_2018 ;
+    kg:label "Operating income as a percentage of net sales for fiscal years ended january 31 , 2018" ;
+    kg:tableColumn "fiscal years ended january 31 , 2018" ;
+    kg:tableRow "operating income as a percentage of net sales" .
+
+entity:entity_Metric_OperatingIncome_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2016 ;
+    kg:hasValue value:value_OperatingIncome_2016 ;
+    kg:label "Operating income for fiscal years ended january 31 , 2016" ;
+    kg:tableColumn "fiscal years ended january 31 , 2016" ;
+    kg:tableRow "operating income" .
+
+entity:entity_Metric_OperatingIncome_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_OperatingIncome_2017 ;
+    kg:label "Operating income for fiscal years ended january 31 , 2017" ;
+    kg:tableColumn "fiscal years ended january 31 , 2017" ;
+    kg:tableRow "operating income" .
+
+entity:entity_Metric_OperatingIncome_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2018 ;
+    kg:hasValue value:value_OperatingIncome_2018 ;
+    kg:label "Operating income for fiscal years ended january 31 , 2018" ;
+    kg:tableColumn "fiscal years ended january 31 , 2018" ;
+    kg:tableRow "operating income" .
+
+entity:entity_Metric_PercentageChangeFromComparablePeriod_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2016 ;
+    kg:hasValue value:value_PercentageChangeFromComparablePeriod_2016 ;
+    kg:label "Percentage change from comparable period for fiscal years ended january 31 , 2016" ;
+    kg:tableColumn "fiscal years ended january 31 , 2016" ;
+    kg:tableRow "percentage change from comparable period" .
+
+entity:entity_Metric_PercentageChangeFromComparablePeriod_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_PercentageChangeFromComparablePeriod_2017 ;
+    kg:label "Percentage change from comparable period for fiscal years ended january 31 , 2017" ;
+    kg:tableColumn "fiscal years ended january 31 , 2017" ;
+    kg:tableRow "percentage change from comparable period" .
+
+entity:entity_Metric_PercentageChangeFromComparablePeriod_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2018 ;
+    kg:hasValue value:value_PercentageChangeFromComparablePeriod_2018 ;
+    kg:label "Percentage change from comparable period for fiscal years ended january 31 , 2018" ;
+    kg:tableColumn "fiscal years ended january 31 , 2018" ;
+    kg:tableRow "percentage change from comparable period" .
+
+entity:entity_Metric_RetailSquareFeetAtPeriodEnd_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2016 ;
+    kg:hasValue value:value_RetailSquareFeetAtPeriodEnd_2016 ;
+    kg:label "Retail square feet at period end for fiscal years ended january 31 , 2016" ;
+    kg:tableColumn "fiscal years ended january 31 , 2016" ;
+    kg:tableRow "retail square feet at period end" .
+
+entity:entity_Metric_RetailSquareFeetAtPeriodEnd_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_RetailSquareFeetAtPeriodEnd_2017 ;
+    kg:label "Retail square feet at period end for fiscal years ended january 31 , 2017" ;
+    kg:tableColumn "fiscal years ended january 31 , 2017" ;
+    kg:tableRow "retail square feet at period end" .
+
+entity:entity_Metric_RetailSquareFeetAtPeriodEnd_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2018 ;
+    kg:hasValue value:value_RetailSquareFeetAtPeriodEnd_2018 ;
+    kg:label "Retail square feet at period end for fiscal years ended january 31 , 2018" ;
+    kg:tableColumn "fiscal years ended january 31 , 2018" ;
+    kg:tableRow "retail square feet at period end" .
+
+entity:entity_Metric_USComparableStoreSalesIncrease_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_USComparableStoreSalesIncrease_2017 ;
+    kg:label "comparable store sales increase for walmart u.s. segment for fiscal 2017" .
+
+entity:entity_Metric_USComparableStoreSalesIncrease_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2018 ;
+    kg:hasValue value:value_USComparableStoreSalesIncrease_2018 ;
+    kg:label "comparable store sales increase for walmart u.s. segment for fiscal 2018" .
+
+entity:entity_Metric_USGrossProfitRateChange_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_USGrossProfitRateChange_2017 ;
+    kg:label "gross profit rate change for walmart u.s. segment for fiscal 2017" .
+
+entity:entity_Metric_USGrossProfitRateChange_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2018 ;
+    kg:hasValue value:value_USGrossProfitRateChange_2018 ;
+    kg:label "gross profit rate change for walmart u.s. segment for fiscal 2018" .
+
+entity:entity_Metric_USNetSalesIncrease_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_USNetSalesIncrease_2017 ;
+    kg:label "net sales increase for walmart u.s. segment for fiscal 2017" .
+
+entity:entity_Metric_USNetSalesIncrease_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2018 ;
+    kg:hasValue value:value_USNetSalesIncrease_2018 ;
+    kg:label "net sales increase for walmart u.s. segment for fiscal 2018" .
+
+entity:entity_Metric_USOperatingExpensesAsPercentageOfNetSales_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_USOperatingExpensesAsPercentageOfNetSales_2017 ;
+    kg:label "operating expenses as a percentage of segment net sales for fiscal 2017" .
+
+entity:entity_Metric_USRetailSquareFeetGrowth_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_USRetailSquareFeetGrowth_2017 ;
+    kg:label "year-over-year growth in retail square feet for walmart u.s. segment for fiscal 2017" .
+
+entity:entity_Metric_USRetailSquareFeetGrowth_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2018 ;
+    kg:hasValue value:value_USRetailSquareFeetGrowth_2018 ;
+    kg:label "year-over-year growth in retail square feet for walmart u.s. segment for fiscal 2018" .
+
+entity:entity_Metric_USSegmentOperatingIncomeChange_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_USSegmentOperatingIncomeChange_2017 ;
+    kg:label "segment operating income change for walmart u.s. segment for fiscal 2017" .
+
+entity:entity_Metric_USSegmentOperatingIncomeChange_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2018 ;
+    kg:hasValue value:value_USSegmentOperatingIncomeChange_2018 ;
+    kg:label "segment operating income change for walmart u.s. segment for fiscal 2018" .
+
+entity:entity_Metric_UnitCountsAtPeriodEnd_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2016 ;
+    kg:hasValue value:value_UnitCountsAtPeriodEnd_2016 ;
+    kg:label "Unit counts at period end for fiscal years ended january 31 , 2016" ;
+    kg:tableColumn "fiscal years ended january 31 , 2016" ;
+    kg:tableRow "unit counts at period end" .
+
+entity:entity_Metric_UnitCountsAtPeriodEnd_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_UnitCountsAtPeriodEnd_2017 ;
+    kg:label "Unit counts at period end for fiscal years ended january 31 , 2017" ;
+    kg:tableColumn "fiscal years ended january 31 , 2017" ;
+    kg:tableRow "unit counts at period end" .
+
+entity:entity_Metric_UnitCountsAtPeriodEnd_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2018 ;
+    kg:hasValue value:value_UnitCountsAtPeriodEnd_2018 ;
+    kg:label "Unit counts at period end for fiscal years ended january 31 , 2018" ;
+    kg:tableColumn "fiscal years ended january 31 , 2018" ;
+    kg:tableRow "unit counts at period end" .
+
+value:value_CalendarComparableSalesIncrease_2016 a kg:PercentageValue ;
+    kg:displayValue "-1.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -1.0 .
+
+value:value_CalendarComparableSalesIncrease_2017 a kg:PercentageValue ;
+    kg:displayValue "-1.6" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -1.6 .
+
+value:value_CalendarComparableSalesIncrease_2018 a kg:PercentageValue ;
+    kg:displayValue "-2.1" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -2.1 .
+
+value:value_Charges_RealEstate_2017 a kg:MonetaryValue ;
+    kg:displayValue "$ 249 million" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 249.0 .
+
+value:value_Charges_RealEstate_2018 a kg:MonetaryValue ;
+    kg:displayValue "$ 244 million" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 244.0 .
+
+value:value_EPS_2017 a kg:MonetaryValue ;
+    kg:displayValue "$ 4.38" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 4.38 .
+
+value:value_EPS_2018 a kg:MonetaryValue ;
+    kg:displayValue "$ 3.28" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 3.28 .
+
+value:value_Gain_LandSale_2018 a kg:MonetaryValue ;
+    kg:displayValue "$ 47 million" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 47.0 .
+
+value:value_Gain_SaleOfSuburbia_2018 a kg:MonetaryValue ;
+    kg:displayValue "$ 387 million" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 387.0 .
+
+value:value_Loss_ExtinguishmentOfDebt_2018 a kg:MonetaryValue ;
+    kg:displayValue "$ 3.1 billion" ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 3.1 .
+
+value:value_MembershipIncomeIncrease_2017 a kg:MonetaryValue ;
+    kg:displayValue "$ 1.0 billion" ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 1.0 .
+
+value:value_NetIncomeDecrease_2017 a kg:MonetaryValue ;
+    kg:displayValue "$ 0.8 billion" ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 0.8 .
+
+value:value_NetIncomeDecrease_2018 a kg:MonetaryValue ;
+    kg:displayValue "$ 3.8 billion" ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 3.8 .
+
+value:value_NetIncome_2017 a kg:MonetaryValue ;
+    kg:displayValue "$ 14.3 billion" ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 14.3 .
+
+value:value_NetIncome_2018 a kg:MonetaryValue ;
+    kg:displayValue "$ 10.5 billion" ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 10.5 .
+
+value:value_NetSales_2016 a kg:MonetaryValue ;
+    kg:displayValue "298378.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 298378.0 .
+
+value:value_NetSales_2017 a kg:MonetaryValue ;
+    kg:displayValue "307833.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 307833.0 .
+
+value:value_NetSales_2018 a kg:MonetaryValue ;
+    kg:displayValue "318477.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 318477.0 .
+
+value:value_OperatingIncomeAsPercentageOfNetSales_2016 a kg:PercentageValue ;
+    kg:displayValue "-6.4" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -6.4 .
+
+value:value_OperatingIncomeAsPercentageOfNetSales_2017 a kg:PercentageValue ;
+    kg:displayValue "-5.8" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -5.8 .
+
+value:value_OperatingIncomeAsPercentageOfNetSales_2018 a kg:PercentageValue ;
+    kg:displayValue "-5.6" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -5.6 .
+
+value:value_OperatingIncome_2016 a kg:MonetaryValue ;
+    kg:displayValue "19087.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 19087.0 .
+
+value:value_OperatingIncome_2017 a kg:MonetaryValue ;
+    kg:displayValue "17745.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 17745.0 .
+
+value:value_OperatingIncome_2018 a kg:MonetaryValue ;
+    kg:displayValue "17869.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 17869.0 .
+
+value:value_PercentageChangeFromComparablePeriod_2016 a kg:PercentageValue ;
+    kg:displayValue "-3.6" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -3.6 .
+
+value:value_PercentageChangeFromComparablePeriod_2017 a kg:PercentageValue ;
+    kg:displayValue "-3.2" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -3.2 .
+
+value:value_PercentageChangeFromComparablePeriod_2018 a kg:PercentageValue ;
+    kg:displayValue "-3.5" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -3.5 .
+
+value:value_RetailSquareFeetAtPeriodEnd_2016 a kg:CountValue ;
+    kg:displayValue "690.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 690.0 .
+
+value:value_RetailSquareFeetAtPeriodEnd_2017 a kg:CountValue ;
+    kg:displayValue "699.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 699.0 .
+
+value:value_RetailSquareFeetAtPeriodEnd_2018 a kg:CountValue ;
+    kg:displayValue "705.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 705.0 .
+
+value:value_USComparableStoreSalesIncrease_2017 a kg:PercentageValue ;
+    kg:displayValue "1.6%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1.6 .
+
+value:value_USComparableStoreSalesIncrease_2018 a kg:PercentageValue ;
+    kg:displayValue "2.1%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2.1 .
+
+value:value_USGrossProfitRateChange_2017 a kg:CountValue ;
+    kg:displayValue "24 basis points" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 24.0 .
+
+value:value_USGrossProfitRateChange_2018 a kg:CountValue ;
+    kg:displayValue "24 basis points" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 24.0 .
+
+value:value_USNetSalesIncrease_2017 a kg:MonetaryValue ;
+    kg:displayValue "$ 9.5 billion" ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 9.5 .
+
+value:value_USNetSalesIncrease_2018 a kg:MonetaryValue ;
+    kg:displayValue "$ 10.6 billion" ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 10.6 .
+
+value:value_USOperatingExpensesAsPercentageOfNetSales_2017 a kg:CountValue ;
+    kg:displayValue "101 basis points" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 101.0 .
+
+value:value_USRetailSquareFeetGrowth_2017 a kg:PercentageValue ;
+    kg:displayValue "1.4%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1.4 .
+
+value:value_USRetailSquareFeetGrowth_2018 a kg:PercentageValue ;
+    kg:displayValue "0.7%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 0.7 .
+
+value:value_USSegmentOperatingIncomeChange_2017 a kg:MonetaryValue ;
+    kg:displayValue "$ 1.3 billion" ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 1.3 .
+
+value:value_USSegmentOperatingIncomeChange_2018 a kg:MonetaryValue ;
+    kg:displayValue "$ 124 million" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 124.0 .
+
+value:value_UnitCountsAtPeriodEnd_2016 a kg:CountValue ;
+    kg:displayValue "4574.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 4574.0 .
+
+value:value_UnitCountsAtPeriodEnd_2017 a kg:CountValue ;
+    kg:displayValue "4672.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 4672.0 .
+
+value:value_UnitCountsAtPeriodEnd_2018 a kg:CountValue ;
+    kg:displayValue "4761.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 4761.0 .
+
+entity:entity_Year_2016 a kg:Year ;
+    kg:label "2016" ;
+    kg:yearValue 2016 .
+
+entity:entity_Year_2017 a kg:Year ;
+    kg:label "2017" ;
+    kg:yearValue 2017 .
+
+entity:entity_Year_2018 a kg:Year ;
+    kg:label "2018" ;
+    kg:yearValue 2018 .
+

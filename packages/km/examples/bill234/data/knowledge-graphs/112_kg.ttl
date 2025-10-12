@@ -1,0 +1,256 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+entity:entity_Company_112 a kg:Company ;
+    kg:hasMetric entity:entity_Metric_CashCashEquivalentsAndMarketableSecurities_2014,
+        entity:entity_Metric_CashCashEquivalentsAndMarketableSecurities_2015,
+        entity:entity_Metric_CommonStockRepurchased_2014,
+        entity:entity_Metric_CommonStockRepurchased_2015,
+        entity:entity_Metric_CostOfCommonStockRepurchase_2014,
+        entity:entity_Metric_CostOfCommonStockRepurchase_2015,
+        entity:entity_Metric_CurrentPortionOfLongTermDebt_2014,
+        entity:entity_Metric_CurrentPortionOfLongTermDebt_2015,
+        entity:entity_Metric_DecreaseFromForeignExchange_2014,
+        entity:entity_Metric_DecreaseFromForeignExchange_2015,
+        entity:entity_Metric_DividendPayments_2014,
+        entity:entity_Metric_DividendPayments_2015,
+        entity:entity_Metric_LongTermDebt_2014,
+        entity:entity_Metric_LongTermDebt_2015,
+        entity:entity_Metric_PrincipalAmountIssued_420Notes_2014,
+        entity:entity_Metric_PrincipalAmountRedeemed_625Notes_2014,
+        entity:entity_Metric_ShortTermBorrowings_2014,
+        entity:entity_Metric_ShortTermBorrowings_2015,
+        entity:entity_Metric_TotalDebt_2014,
+        entity:entity_Metric_TotalDebt_2015 ;
+    kg:label "Company for Example 112" .
+
+entity:entity_Metric_CashCashEquivalentsAndMarketableSecurities_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:value_CashCashEquivalentsAndMarketableSecurities_2014 ;
+    kg:label "cash cash equivalents and marketable securities" ;
+    kg:tableColumn "december 31 , 2014" ;
+    kg:tableRow "cash cash equivalents and marketable securities" .
+
+entity:entity_Metric_CashCashEquivalentsAndMarketableSecurities_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2015 ;
+    kg:hasValue value:value_CashCashEquivalentsAndMarketableSecurities_2015 ;
+    kg:label "cash cash equivalents and marketable securities" ;
+    kg:tableColumn "december 31 , 2015" ;
+    kg:tableRow "cash cash equivalents and marketable securities" .
+
+entity:entity_Metric_CommonStockRepurchased_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:value_CommonStockRepurchased_2014 ;
+    kg:label "Number of shares of common stock repurchased" .
+
+entity:entity_Metric_CommonStockRepurchased_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2015 ;
+    kg:hasValue value:value_CommonStockRepurchased_2015 ;
+    kg:label "Number of shares of common stock repurchased" .
+
+entity:entity_Metric_CostOfCommonStockRepurchase_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:value_CostOfCommonStockRepurchase_2014 ;
+    kg:label "Aggregate cost, including fees, to repurchase common stock" .
+
+entity:entity_Metric_CostOfCommonStockRepurchase_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2015 ;
+    kg:hasValue value:value_CostOfCommonStockRepurchase_2015 ;
+    kg:label "Aggregate cost, including fees, to repurchase common stock" .
+
+entity:entity_Metric_CurrentPortionOfLongTermDebt_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:value_CurrentPortionOfLongTermDebt_2014 ;
+    kg:label "current portion of long-term debt" ;
+    kg:tableColumn "december 31 , 2014" ;
+    kg:tableRow "current portion of long-term debt" .
+
+entity:entity_Metric_CurrentPortionOfLongTermDebt_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2015 ;
+    kg:hasValue value:value_CurrentPortionOfLongTermDebt_2015 ;
+    kg:label "current portion of long-term debt" ;
+    kg:tableColumn "december 31 , 2015" ;
+    kg:tableRow "current portion of long-term debt" .
+
+entity:entity_Metric_DecreaseFromForeignExchange_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:value_DecreaseFromForeignExchange_2014 ;
+    kg:label "Decrease in cash and cash equivalents due to the effect of foreign exchange rate changes" .
+
+entity:entity_Metric_DecreaseFromForeignExchange_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2015 ;
+    kg:hasValue value:value_DecreaseFromForeignExchange_2015 ;
+    kg:label "Decrease in cash and cash equivalents due to the effect of foreign exchange rate changes" .
+
+entity:entity_Metric_DividendPayments_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:value_DividendPayments_2014 ;
+    kg:label "Amount of dividend payments made on common stock" .
+
+entity:entity_Metric_DividendPayments_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2015 ;
+    kg:hasValue value:value_DividendPayments_2015 ;
+    kg:label "Amount of dividend payments made on common stock" .
+
+entity:entity_Metric_LongTermDebt_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:value_LongTermDebt_2014 ;
+    kg:label "long-term debt" ;
+    kg:tableColumn "december 31 , 2014" ;
+    kg:tableRow "long-term debt" .
+
+entity:entity_Metric_LongTermDebt_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2015 ;
+    kg:hasValue value:value_LongTermDebt_2015 ;
+    kg:label "long-term debt" ;
+    kg:tableColumn "december 31 , 2015" ;
+    kg:tableRow "long-term debt" .
+
+entity:entity_Metric_PrincipalAmountIssued_420Notes_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:value_PrincipalAmountIssued_420Notes_2014 ;
+    kg:label "Aggregate principal amount of the 4.20% notes issued" .
+
+entity:entity_Metric_PrincipalAmountRedeemed_625Notes_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:value_PrincipalAmountRedeemed_625Notes_2014 ;
+    kg:label "Aggregate principal amount of the 6.25% notes redeemed" .
+
+entity:entity_Metric_ShortTermBorrowings_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:value_ShortTermBorrowings_2014 ;
+    kg:label "short-term borrowings" ;
+    kg:tableColumn "december 31 , 2014" ;
+    kg:tableRow "short-term borrowings" .
+
+entity:entity_Metric_ShortTermBorrowings_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2015 ;
+    kg:hasValue value:value_ShortTermBorrowings_2015 ;
+    kg:label "short-term borrowings" ;
+    kg:tableColumn "december 31 , 2015" ;
+    kg:tableRow "short-term borrowings" .
+
+entity:entity_Metric_TotalDebt_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:value_TotalDebt_2014 ;
+    kg:label "total debt" ;
+    kg:tableColumn "december 31 , 2014" ;
+    kg:tableRow "total debt" .
+
+entity:entity_Metric_TotalDebt_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2015 ;
+    kg:hasValue value:value_TotalDebt_2015 ;
+    kg:label "total debt" ;
+    kg:tableColumn "december 31 , 2015" ;
+    kg:tableRow "total debt" .
+
+value:value_CashCashEquivalentsAndMarketableSecurities_2014 a kg:MonetaryValue ;
+    kg:displayValue "1667.2" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1667.2 .
+
+value:value_CashCashEquivalentsAndMarketableSecurities_2015 a kg:MonetaryValue ;
+    kg:displayValue "1509.7" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1509.7 .
+
+value:value_CommonStockRepurchased_2014 a kg:CountValue ;
+    kg:displayValue "14.9" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 14.9 .
+
+value:value_CommonStockRepurchased_2015 a kg:CountValue ;
+    kg:displayValue "13.6" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 13.6 .
+
+value:value_CostOfCommonStockRepurchase_2014 a kg:MonetaryValue ;
+    kg:displayValue "275.1" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 275.1 .
+
+value:value_CostOfCommonStockRepurchase_2015 a kg:MonetaryValue ;
+    kg:displayValue "285.2" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 285.2 .
+
+value:value_CurrentPortionOfLongTermDebt_2014 a kg:MonetaryValue ;
+    kg:displayValue "2.1" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2.1 .
+
+value:value_CurrentPortionOfLongTermDebt_2015 a kg:MonetaryValue ;
+    kg:displayValue "1.9" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1.9 .
+
+value:value_DecreaseFromForeignExchange_2014 a kg:MonetaryValue ;
+    kg:displayValue "101.0" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 101.0 .
+
+value:value_DecreaseFromForeignExchange_2015 a kg:MonetaryValue ;
+    kg:displayValue "156.1" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 156.1 .
+
+value:value_DividendPayments_2014 a kg:MonetaryValue ;
+    kg:displayValue "159.0" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 159.0 .
+
+value:value_DividendPayments_2015 a kg:MonetaryValue ;
+    kg:displayValue "195.5" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 195.5 .
+
+value:value_LongTermDebt_2014 a kg:MonetaryValue ;
+    kg:displayValue "1612.9" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1612.9 .
+
+value:value_LongTermDebt_2015 a kg:MonetaryValue ;
+    kg:displayValue "1610.3" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1610.3 .
+
+value:value_PrincipalAmountIssued_420Notes_2014 a kg:MonetaryValue ;
+    kg:displayValue "500.0" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 500.0 .
+
+value:value_PrincipalAmountRedeemed_625Notes_2014 a kg:MonetaryValue ;
+    kg:displayValue "350.0" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 350.0 .
+
+value:value_ShortTermBorrowings_2014 a kg:MonetaryValue ;
+    kg:displayValue "107.2" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 107.2 .
+
+value:value_ShortTermBorrowings_2015 a kg:MonetaryValue ;
+    kg:displayValue "150.1" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 150.1 .
+
+value:value_TotalDebt_2014 a kg:MonetaryValue ;
+    kg:displayValue "1722.2" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1722.2 .
+
+value:value_TotalDebt_2015 a kg:MonetaryValue ;
+    kg:displayValue "1762.3" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1762.3 .
+
+entity:entity_Year_2015 a kg:Year ;
+    kg:label "2015" ;
+    kg:yearValue 2015 .
+
+entity:entity_Year_2014 a kg:Year ;
+    kg:label "2014" ;
+    kg:yearValue 2014 .
+

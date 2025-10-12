@@ -1,0 +1,204 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+entity:entity_Company_PNC a kg:Company ;
+    kg:hasMetric entity:entity_Metric_AverageInterestEarningAssetsIncrease,
+        entity:entity_Metric_AverageInterestEarningAssetsIncreasePct,
+        entity:entity_Metric_FundCustodyAssets,
+        entity:entity_Metric_FundServicingFees_2007,
+        entity:entity_Metric_FundServicingFees_2008,
+        entity:entity_Metric_NetFundInvestmentAssets,
+        entity:entity_Metric_NetIncome_2007,
+        entity:entity_Metric_NetIncome_2008,
+        entity:entity_Metric_NetInterestIncomeIncreasePct,
+        entity:entity_Metric_NetInterestIncome_2007,
+        entity:entity_Metric_NetInterestIncome_2008,
+        entity:entity_Metric_NetInterestMargin_2007,
+        entity:entity_Metric_NetInterestMargin_2008,
+        entity:entity_Metric_NoninterestExpenseIncreasePct,
+        entity:entity_Metric_NoninterestIncome_2007,
+        entity:entity_Metric_NoninterestIncome_2008,
+        entity:entity_Metric_TotalRevenueIncreasePct ;
+    kg:label "PNC" .
+
+entity:entity_Metric_AverageInterestEarningAssetsIncrease a kg:FinancialMetric ;
+    kg:hasValue value:value_AverageInterestEarningAssetsIncrease ;
+    kg:label "Average interest-earning assets increase" .
+
+entity:entity_Metric_AverageInterestEarningAssetsIncreasePct a kg:FinancialMetric ;
+    kg:hasValue value:value_AverageInterestEarningAssetsIncreasePct ;
+    kg:label "Average interest-earning assets increase percentage" .
+
+entity:entity_Metric_FundCustodyAssets a kg:FinancialMetric ;
+    kg:hasValue value:value_FundCustodyAssets ;
+    kg:label "Fund custody assets" .
+
+entity:entity_Metric_FundServicingFees_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2007 ;
+    kg:hasValue value:value_FundServicingFees_2007 ;
+    kg:label "Fund servicing fees" .
+
+entity:entity_Metric_FundServicingFees_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:value_FundServicingFees_2008 ;
+    kg:label "Fund servicing fees" .
+
+entity:entity_Metric_NetFundInvestmentAssets a kg:FinancialMetric ;
+    kg:hasValue value:value_NetFundInvestmentAssets ;
+    kg:label "Net fund investment assets" .
+
+entity:entity_Metric_NetIncome_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2007 ;
+    kg:hasValue value:value_NetIncome_2007 ;
+    kg:label "Net income" .
+
+entity:entity_Metric_NetIncome_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:value_NetIncome_2008 ;
+    kg:label "Net income" .
+
+entity:entity_Metric_NetInterestIncomeIncreasePct a kg:FinancialMetric ;
+    kg:hasValue value:value_NetInterestIncomeIncreasePct ;
+    kg:label "Net interest income increase percentage" .
+
+entity:entity_Metric_NetInterestIncome_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2007 ;
+    kg:hasValue value:value_NetInterestIncome_2007 ;
+    kg:label "Net interest income" ;
+    kg:tableColumn "2007" ;
+    kg:tableRow "net interest income" .
+
+entity:entity_Metric_NetInterestIncome_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:value_NetInterestIncome_2008 ;
+    kg:label "Net interest income" ;
+    kg:tableColumn "2008" ;
+    kg:tableRow "net interest income" .
+
+entity:entity_Metric_NetInterestMargin_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2007 ;
+    kg:hasValue value:value_NetInterestMargin_2007 ;
+    kg:label "Net interest margin" ;
+    kg:tableColumn "2007" ;
+    kg:tableRow "net interest margin" .
+
+entity:entity_Metric_NetInterestMargin_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:value_NetInterestMargin_2008 ;
+    kg:label "Net interest margin" ;
+    kg:tableColumn "2008" ;
+    kg:tableRow "net interest margin" .
+
+entity:entity_Metric_NoninterestExpenseIncreasePct a kg:FinancialMetric ;
+    kg:hasValue value:value_NoninterestExpenseIncreasePct ;
+    kg:label "Noninterest expense increase percentage" .
+
+entity:entity_Metric_NoninterestIncome_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2007 ;
+    kg:hasValue value:value_NoninterestIncome_2007 ;
+    kg:label "Noninterest income" .
+
+entity:entity_Metric_NoninterestIncome_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:value_NoninterestIncome_2008 ;
+    kg:label "Noninterest income" .
+
+entity:entity_Metric_TotalRevenueIncreasePct a kg:FinancialMetric ;
+    kg:hasValue value:value_TotalRevenueIncreasePct ;
+    kg:label "Total revenue increase percentage" .
+
+value:value_AverageInterestEarningAssetsIncrease a kg:MonetaryValue ;
+    kg:displayValue "16.5" ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 16.5 .
+
+value:value_AverageInterestEarningAssetsIncreasePct a kg:PercentageValue ;
+    kg:displayValue "17%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 17.0 .
+
+value:value_FundCustodyAssets a kg:MonetaryValue ;
+    kg:displayValue "379" ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 379.0 .
+
+value:value_FundServicingFees_2007 a kg:MonetaryValue ;
+    kg:displayValue "835" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 835.0 .
+
+value:value_FundServicingFees_2008 a kg:MonetaryValue ;
+    kg:displayValue "904" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 904.0 .
+
+value:value_NetFundInvestmentAssets a kg:MonetaryValue ;
+    kg:displayValue "839" ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 839.0 .
+
+value:value_NetIncome_2007 a kg:MonetaryValue ;
+    kg:displayValue "1467" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1467.0 .
+
+value:value_NetIncome_2008 a kg:MonetaryValue ;
+    kg:displayValue "882" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 882.0 .
+
+value:value_NetInterestIncomeIncreasePct a kg:PercentageValue ;
+    kg:displayValue "31%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 31.0 .
+
+value:value_NetInterestIncome_2007 a kg:MonetaryValue ;
+    kg:displayValue "2915.0" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2915.0 .
+
+value:value_NetInterestIncome_2008 a kg:MonetaryValue ;
+    kg:displayValue "3823.0" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 3823.0 .
+
+value:value_NetInterestMargin_2007 a kg:PercentageValue ;
+    kg:displayValue "-3.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -3.0 .
+
+value:value_NetInterestMargin_2008 a kg:PercentageValue ;
+    kg:displayValue "-3.37" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -3.37 .
+
+value:value_NoninterestExpenseIncreasePct a kg:PercentageValue ;
+    kg:displayValue "3%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 3.0 .
+
+value:value_NoninterestIncome_2007 a kg:MonetaryValue ;
+    kg:displayValue "3790" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 3790.0 .
+
+value:value_NoninterestIncome_2008 a kg:MonetaryValue ;
+    kg:displayValue "3367" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 3367.0 .
+
+value:value_TotalRevenueIncreasePct a kg:PercentageValue ;
+    kg:displayValue "7%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 7.0 .
+
+entity:entity_Year_2007 a kg:Year ;
+    kg:label "2007" ;
+    kg:yearValue 2007 .
+
+entity:entity_Year_2008 a kg:Year ;
+    kg:label "2008" ;
+    kg:yearValue 2008 .
+

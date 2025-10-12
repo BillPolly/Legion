@@ -1,0 +1,692 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-11" ;
+    kg:builtWithOntologyVersion "1.0.8" .
+
+entity:Company_BrazilianAffiliates a kg:Company ;
+    kg:label "Brazilian equity method affiliates" .
+
+entity:Company_CESCO a kg:Company ;
+    kg:label "Central Electricity Supply Corporation" .
+
+entity:Company_EDC a kg:Company ;
+    kg:hasMetric entity:Metric_AcquisitionCostTPL,
+        entity:Metric_AdditionalInterestSongas,
+        entity:Metric_AdditionalOwnershipInterestNigen,
+        entity:Metric_AssumedLiabilitiesTPL,
+        entity:Metric_BrazilianRealDevaluation,
+        entity:Metric_CommonSharesIssuedNigen,
+        entity:Metric_CostAdditionalSongasInvestment,
+        entity:Metric_CostSongasInvestment,
+        entity:Metric_ForeignCurrencyLosses,
+        entity:Metric_ImpairmentChargeEquityMethod,
+        entity:Metric_InterestSongas,
+        entity:Metric_LossOnSaleOfAssets,
+        entity:Metric_OwnershipInterestNigen,
+        entity:Metric_PurchasePriceExcessCosts,
+        entity:Metric_TotalOwnershipInterestNigen,
+        entity:Metric_ValueSharesIssuedNigen ;
+    kg:label "EDC" .
+
+entity:Company_Example29 a kg:Company ;
+    kg:hasMetric entity:Metric_CurrentAssets_2000,
+        entity:Metric_CurrentAssets_2001,
+        entity:Metric_CurrentAssets_2002,
+        entity:Metric_CurrentLiabilities_2000,
+        entity:Metric_CurrentLiabilities_2001,
+        entity:Metric_CurrentLiabilities_2002,
+        entity:Metric_NetIncome_2000,
+        entity:Metric_NetIncome_2001,
+        entity:Metric_NetIncome_2002,
+        entity:Metric_NoncurrentAssets_2000,
+        entity:Metric_NoncurrentAssets_2001,
+        entity:Metric_NoncurrentAssets_2002,
+        entity:Metric_NoncurrentLiabilities_2000,
+        entity:Metric_NoncurrentLiabilities_2001,
+        entity:Metric_NoncurrentLiabilities_2002,
+        entity:Metric_OperatingIncome_2000,
+        entity:Metric_OperatingIncome_2001,
+        entity:Metric_OperatingIncome_2002,
+        entity:Metric_Revenues_2000,
+        entity:Metric_Revenues_2001,
+        entity:Metric_Revenues_2002,
+        entity:Metric_StockholdersEquity_2000,
+        entity:Metric_StockholdersEquity_2001,
+        entity:Metric_StockholdersEquity_2002 ;
+    kg:label "Company from Example 29" .
+
+entity:Company_Nigen a kg:Company ;
+    kg:label "Nigen" .
+
+entity:Company_SongasLimited a kg:Company ;
+    kg:label "Songas Limited" .
+
+entity:Company_TractebelPowerLtd a kg:Company ;
+    kg:label "Tractebel Power Ltd" .
+
+entity:FinancialTable a kg:Table ;
+    kg:hasColumn entity:TableColumn_0,
+        entity:TableColumn_1,
+        entity:TableColumn_2 ;
+    kg:hasRow entity:TableRow_0,
+        entity:TableRow_1,
+        entity:TableRow_2,
+        entity:TableRow_3,
+        entity:TableRow_4,
+        entity:TableRow_5,
+        entity:TableRow_6,
+        entity:TableRow_7 ;
+    kg:tableCaption "Financial statement line items showing key financial metrics for 2000, 2001, and 2002" ;
+    kg:tableOrientation "column-first" .
+
+entity:Metric_ColumnHeaderValue_0 a kg:FinancialMetric ;
+    kg:hasValue value:ColumnHeaderValue_0 ;
+    kg:label "Column header value: 2002" ;
+    kg:tableColumn "2002" .
+
+entity:Metric_ColumnHeaderValue_1 a kg:FinancialMetric ;
+    kg:hasValue value:ColumnHeaderValue_1 ;
+    kg:label "Column header value: 2001" ;
+    kg:tableColumn "2001" .
+
+entity:Metric_ColumnHeaderValue_2 a kg:FinancialMetric ;
+    kg:hasValue value:ColumnHeaderValue_2 ;
+    kg:label "Column header value: 2000" ;
+    kg:tableColumn "2000" .
+
+entity:Metric_AcquisitionCostTPL a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2000,
+        entity:entity_Year_2000 ;
+    kg:hasValue value:AcquisitionCostTPL ;
+    kg:label "Acquisition cost for Tractebel Power Ltd" .
+
+entity:Metric_AdditionalInterestSongas a kg:FinancialMetric ;
+    kg:hasValue value:AdditionalInterestSongas ;
+    kg:label "Additional interest in Songas" .
+
+entity:Metric_AdditionalOwnershipInterestNigen a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2000,
+        entity:entity_Year_2000 ;
+    kg:hasValue value:AdditionalOwnershipInterestNigen ;
+    kg:label "Additional ownership interest in Nigen" .
+
+entity:Metric_AssumedLiabilitiesTPL a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2000,
+        entity:entity_Year_2000 ;
+    kg:hasValue value:AssumedLiabilitiesTPL ;
+    kg:label "Assumed liabilities for Tractebel Power Ltd" .
+
+entity:Metric_BrazilianRealDevaluation a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2000,
+        entity:entity_Year_2001,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:BrazilianRealDevaluation_2000,
+        value:BrazilianRealDevaluation_2001,
+        value:BrazilianRealDevaluation_2002 ;
+    kg:label "Brazilian real devaluation" .
+
+entity:Metric_CommonSharesIssuedNigen a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2000,
+        entity:entity_Year_2000 ;
+    kg:hasValue value:CommonSharesIssuedNigen ;
+    kg:label "Common shares issued for Nigen" .
+
+entity:Metric_CostAdditionalSongasInvestment a kg:FinancialMetric ;
+    kg:hasValue value:CostAdditionalSongasInvestment ;
+    kg:label "Cost of additional Songas investment" .
+
+entity:Metric_CostSongasInvestment a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2000,
+        entity:entity_Year_2000 ;
+    kg:hasValue value:CostSongasInvestment ;
+    kg:label "Cost of Songas investment" .
+
+entity:Metric_CurrentAssets_2000 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2000,
+        entity:entity_Year_2000 ;
+    kg:hasValue value:CurrentAssets_2000 ;
+    kg:label "current assets" ;
+    kg:tableColumn "2000" ;
+    kg:tableRow "current assets" .
+
+entity:Metric_CurrentAssets_2001 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2001,
+        entity:entity_Year_2001 ;
+    kg:hasValue value:CurrentAssets_2001 ;
+    kg:label "current assets" ;
+    kg:tableColumn "2001" ;
+    kg:tableRow "current assets" .
+
+entity:Metric_CurrentAssets_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:CurrentAssets_2002 ;
+    kg:label "current assets" ;
+    kg:tableColumn "2002" ;
+    kg:tableRow "current assets" .
+
+entity:Metric_CurrentLiabilities_2000 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2000,
+        entity:entity_Year_2000 ;
+    kg:hasValue value:CurrentLiabilities_2000 ;
+    kg:label "current liabilities" ;
+    kg:tableColumn "2000" ;
+    kg:tableRow "current liabilities" .
+
+entity:Metric_CurrentLiabilities_2001 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2001,
+        entity:entity_Year_2001 ;
+    kg:hasValue value:CurrentLiabilities_2001 ;
+    kg:label "current liabilities" ;
+    kg:tableColumn "2001" ;
+    kg:tableRow "current liabilities" .
+
+entity:Metric_CurrentLiabilities_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:CurrentLiabilities_2002 ;
+    kg:label "current liabilities" ;
+    kg:tableColumn "2002" ;
+    kg:tableRow "current liabilities" .
+
+entity:Metric_ForeignCurrencyLosses a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2000,
+        entity:entity_Year_2001,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:ForeignCurrencyLosses_2000,
+        value:ForeignCurrencyLosses_2001,
+        value:ForeignCurrencyLosses_2002 ;
+    kg:label "Pre-tax non-cash foreign currency transaction losses" .
+
+entity:Metric_ImpairmentChargeEquityMethod a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:ImpairmentChargeEquityMethod ;
+    kg:label "Impairment charge on equity method investment" .
+
+entity:Metric_InterestSongas a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2000,
+        entity:entity_Year_2000 ;
+    kg:hasValue value:InterestSongas ;
+    kg:label "Interest in Songas Limited" .
+
+entity:Metric_LossOnSaleOfAssets a kg:FinancialMetric ;
+    kg:hasValue value:LossOnSaleOfAssets ;
+    kg:label "Loss on sale of assets" .
+
+entity:Metric_NetIncome_2000 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2000,
+        entity:entity_Year_2000 ;
+    kg:hasValue value:NetIncome_2000 ;
+    kg:label "net income" ;
+    kg:tableColumn "2000" ;
+    kg:tableRow "net income" .
+
+entity:Metric_NetIncome_2001 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2001,
+        entity:entity_Year_2001 ;
+    kg:hasValue value:NetIncome_2001 ;
+    kg:label "net income" ;
+    kg:tableColumn "2001" ;
+    kg:tableRow "net income" .
+
+entity:Metric_NetIncome_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:NetIncome_2002 ;
+    kg:label "net income" ;
+    kg:tableColumn "2002" ;
+    kg:tableRow "net income" .
+
+entity:Metric_NoncurrentAssets_2000 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2000,
+        entity:entity_Year_2000 ;
+    kg:hasValue value:NoncurrentAssets_2000 ;
+    kg:label "noncurrent assets" ;
+    kg:tableColumn "2000" ;
+    kg:tableRow "noncurrent assets" .
+
+entity:Metric_NoncurrentAssets_2001 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2001,
+        entity:entity_Year_2001 ;
+    kg:hasValue value:NoncurrentAssets_2001 ;
+    kg:label "noncurrent assets" ;
+    kg:tableColumn "2001" ;
+    kg:tableRow "noncurrent assets" .
+
+entity:Metric_NoncurrentAssets_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:NoncurrentAssets_2002 ;
+    kg:label "noncurrent assets" ;
+    kg:tableColumn "2002" ;
+    kg:tableRow "noncurrent assets" .
+
+entity:Metric_NoncurrentLiabilities_2000 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2000,
+        entity:entity_Year_2000 ;
+    kg:hasValue value:NoncurrentLiabilities_2000 ;
+    kg:label "noncurrent liabilities" ;
+    kg:tableColumn "2000" ;
+    kg:tableRow "noncurrent liabilities" .
+
+entity:Metric_NoncurrentLiabilities_2001 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2001,
+        entity:entity_Year_2001 ;
+    kg:hasValue value:NoncurrentLiabilities_2001 ;
+    kg:label "noncurrent liabilities" ;
+    kg:tableColumn "2001" ;
+    kg:tableRow "noncurrent liabilities" .
+
+entity:Metric_NoncurrentLiabilities_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:NoncurrentLiabilities_2002 ;
+    kg:label "noncurrent liabilities" ;
+    kg:tableColumn "2002" ;
+    kg:tableRow "noncurrent liabilities" .
+
+entity:Metric_OperatingIncome_2000 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2000,
+        entity:entity_Year_2000 ;
+    kg:hasValue value:OperatingIncome_2000 ;
+    kg:label "operating income" ;
+    kg:tableColumn "2000" ;
+    kg:tableRow "operating income" .
+
+entity:Metric_OperatingIncome_2001 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2001,
+        entity:entity_Year_2001 ;
+    kg:hasValue value:OperatingIncome_2001 ;
+    kg:label "operating income" ;
+    kg:tableColumn "2001" ;
+    kg:tableRow "operating income" .
+
+entity:Metric_OperatingIncome_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:OperatingIncome_2002 ;
+    kg:label "operating income" ;
+    kg:tableColumn "2002" ;
+    kg:tableRow "operating income" .
+
+entity:Metric_OwnershipInterestNigen a kg:FinancialMetric ;
+    kg:hasValue value:OwnershipInterestNigen ;
+    kg:label "Ownership interest in Nigen" .
+
+entity:Metric_PurchasePriceExcessCosts a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2000,
+        entity:entity_Year_2000 ;
+    kg:hasValue value:PurchasePriceExcessCosts ;
+    kg:label "Purchase price allocated to excess of costs over net assets acquired" .
+
+entity:Metric_Revenues_2000 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2000,
+        entity:entity_Year_2000 ;
+    kg:hasValue value:Revenues_2000 ;
+    kg:label "revenues" ;
+    kg:tableColumn "2000" ;
+    kg:tableRow "revenues" .
+
+entity:Metric_Revenues_2001 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2001,
+        entity:entity_Year_2001 ;
+    kg:hasValue value:Revenues_2001 ;
+    kg:label "revenues" ;
+    kg:tableColumn "2001" ;
+    kg:tableRow "revenues" .
+
+entity:Metric_Revenues_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:Revenues_2002 ;
+    kg:label "revenues" ;
+    kg:tableColumn "2002" ;
+    kg:tableRow "revenues" .
+
+entity:Metric_StockholdersEquity_2000 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2000,
+        entity:entity_Year_2000 ;
+    kg:hasValue value:StockholdersEquity_2000 ;
+    kg:label "stockholder's equity" ;
+    kg:tableColumn "2000" ;
+    kg:tableRow "stockholder's equity" .
+
+entity:Metric_StockholdersEquity_2001 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2001,
+        entity:entity_Year_2001 ;
+    kg:hasValue value:StockholdersEquity_2001 ;
+    kg:label "stockholder's equity" ;
+    kg:tableColumn "2001" ;
+    kg:tableRow "stockholder's equity" .
+
+entity:Metric_StockholdersEquity_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:StockholdersEquity_2002 ;
+    kg:label "stockholder's equity" ;
+    kg:tableColumn "2002" ;
+    kg:tableRow "stockholder's equity" .
+
+entity:Metric_TotalOwnershipInterestNigen a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2000,
+        entity:entity_Year_2000 ;
+    kg:hasValue value:TotalOwnershipInterestNigen ;
+    kg:label "Total ownership interest in Nigen" .
+
+entity:Metric_ValueSharesIssuedNigen a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2000,
+        entity:entity_Year_2000 ;
+    kg:hasValue value:ValueSharesIssuedNigen ;
+    kg:label "Value of shares issued for Nigen" .
+
+entity:TableColumn_0 a kg:TableColumn ;
+    kg:columnIndex 0 ;
+    kg:label "{'index': 0, 'label': '2002', 'numeric_value': 2002.0}" .
+
+entity:TableColumn_1 a kg:TableColumn ;
+    kg:columnIndex 1 ;
+    kg:label "{'index': 1, 'label': '2001', 'numeric_value': 2001.0}" .
+
+entity:TableColumn_2 a kg:TableColumn ;
+    kg:columnIndex 2 ;
+    kg:label "{'index': 2, 'label': '2000', 'numeric_value': 2000.0}" .
+
+entity:TableRow_0 a kg:TableRow ;
+    kg:label "{'index': 0, 'label': 'current assets', 'numeric_value': None}" ;
+    kg:rowIndex 0 .
+
+entity:TableRow_1 a kg:TableRow ;
+    kg:label "{'index': 1, 'label': 'current liabilities', 'numeric_value': None}" ;
+    kg:rowIndex 1 .
+
+entity:TableRow_2 a kg:TableRow ;
+    kg:label "{'index': 2, 'label': 'net income', 'numeric_value': None}" ;
+    kg:rowIndex 2 .
+
+entity:TableRow_3 a kg:TableRow ;
+    kg:label "{'index': 3, 'label': 'noncurrent assets', 'numeric_value': None}" ;
+    kg:rowIndex 3 .
+
+entity:TableRow_4 a kg:TableRow ;
+    kg:label "{'index': 4, 'label': 'noncurrent liabilities', 'numeric_value': None}" ;
+    kg:rowIndex 4 .
+
+entity:TableRow_5 a kg:TableRow ;
+    kg:label "{'index': 5, 'label': 'operating income', 'numeric_value': None}" ;
+    kg:rowIndex 5 .
+
+entity:TableRow_6 a kg:TableRow ;
+    kg:label "{'index': 6, 'label': 'revenues', 'numeric_value': None}" ;
+    kg:rowIndex 6 .
+
+entity:TableRow_7 a kg:TableRow ;
+    kg:label "{'index': 7, 'label': \"stockholder's equity\", 'numeric_value': None}" ;
+    kg:rowIndex 7 .
+
+value:AcquisitionCostTPL a kg:MonetaryValue ;
+    kg:displayValue "$67 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 67.0 .
+
+value:AdditionalInterestSongas a kg:MonetaryValue ;
+    kg:displayValue "16.79%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 16.79 .
+
+value:AdditionalOwnershipInterestNigen a kg:MonetaryValue ;
+    kg:displayValue "6%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 6.0 .
+
+value:AssumedLiabilitiesTPL a kg:MonetaryValue ;
+    kg:displayValue "$200 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 200.0 .
+
+value:BrazilianRealDevaluation_2000 a kg:MonetaryValue ;
+    kg:displayValue "8%" ;
+    kg:forTimePeriod entity:Year_2000 ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 8.0 .
+
+value:BrazilianRealDevaluation_2001 a kg:MonetaryValue ;
+    kg:displayValue "19%" ;
+    kg:forTimePeriod entity:Year_2001 ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 19.0 .
+
+value:BrazilianRealDevaluation_2002 a kg:MonetaryValue ;
+    kg:displayValue "32%" ;
+    kg:forTimePeriod entity:Year_2002 ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 32.0 .
+
+value:ColumnHeaderValue_0 a kg:MonetaryValue ;
+    kg:displayValue "2002" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2002.0 .
+
+value:ColumnHeaderValue_1 a kg:MonetaryValue ;
+    kg:displayValue "2001" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2001.0 .
+
+value:ColumnHeaderValue_2 a kg:MonetaryValue ;
+    kg:displayValue "2000" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2000.0 .
+
+value:CommonSharesIssuedNigen a kg:MonetaryValue ;
+    kg:displayValue "99000" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 99000.0 .
+
+value:CostAdditionalSongasInvestment a kg:MonetaryValue ;
+    kg:displayValue "$12.5 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 12.5 .
+
+value:CostSongasInvestment a kg:MonetaryValue ;
+    kg:displayValue "$40 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 40.0 .
+
+value:CurrentAssets_2000 a kg:MonetaryValue ;
+    kg:displayValue "2423.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2423.0 .
+
+value:CurrentAssets_2001 a kg:MonetaryValue ;
+    kg:displayValue "3700.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 3700.0 .
+
+value:CurrentAssets_2002 a kg:MonetaryValue ;
+    kg:displayValue "1097.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1097.0 .
+
+value:CurrentLiabilities_2000 a kg:MonetaryValue ;
+    kg:displayValue "3370.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 3370.0 .
+
+value:CurrentLiabilities_2001 a kg:MonetaryValue ;
+    kg:displayValue "3510.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 3510.0 .
+
+value:CurrentLiabilities_2002 a kg:MonetaryValue ;
+    kg:displayValue "1418.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1418.0 .
+
+value:ForeignCurrencyLosses_2000 a kg:MonetaryValue ;
+    kg:displayValue "$64 million" ;
+    kg:forTimePeriod entity:Year_2000 ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 64.0 .
+
+value:ForeignCurrencyLosses_2001 a kg:MonetaryValue ;
+    kg:displayValue "$210 million" ;
+    kg:forTimePeriod entity:Year_2001 ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 210.0 .
+
+value:ForeignCurrencyLosses_2002 a kg:MonetaryValue ;
+    kg:displayValue "$83 million" ;
+    kg:forTimePeriod entity:Year_2002 ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 83.0 .
+
+value:ImpairmentChargeEquityMethod a kg:MonetaryValue ;
+    kg:displayValue "$40 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 40.0 .
+
+value:InterestSongas a kg:MonetaryValue ;
+    kg:displayValue "49%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 49.0 .
+
+value:LossOnSaleOfAssets a kg:MonetaryValue ;
+    kg:displayValue "$14 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 14.0 .
+
+value:NetIncome_2000 a kg:MonetaryValue ;
+    kg:displayValue "859.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 859.0 .
+
+value:NetIncome_2001 a kg:MonetaryValue ;
+    kg:displayValue "650.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 650.0 .
+
+value:NetIncome_2002 a kg:MonetaryValue ;
+    kg:displayValue "229.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 229.0 .
+
+value:NoncurrentAssets_2000 a kg:MonetaryValue ;
+    kg:displayValue "13080.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 13080.0 .
+
+value:NoncurrentAssets_2001 a kg:MonetaryValue ;
+    kg:displayValue "14942.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 14942.0 .
+
+value:NoncurrentAssets_2002 a kg:MonetaryValue ;
+    kg:displayValue "6751.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 6751.0 .
+
+value:NoncurrentLiabilities_2000 a kg:MonetaryValue ;
+    kg:displayValue "5927.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 5927.0 .
+
+value:NoncurrentLiabilities_2001 a kg:MonetaryValue ;
+    kg:displayValue "8297.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 8297.0 .
+
+value:NoncurrentLiabilities_2002 a kg:MonetaryValue ;
+    kg:displayValue "3349.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 3349.0 .
+
+value:OperatingIncome_2000 a kg:MonetaryValue ;
+    kg:displayValue "1989.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1989.0 .
+
+value:OperatingIncome_2001 a kg:MonetaryValue ;
+    kg:displayValue "1717.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1717.0 .
+
+value:OperatingIncome_2002 a kg:MonetaryValue ;
+    kg:displayValue "695.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 695.0 .
+
+value:OwnershipInterestNigen a kg:MonetaryValue ;
+    kg:displayValue "46%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 46.0 .
+
+value:PurchasePriceExcessCosts a kg:MonetaryValue ;
+    kg:displayValue "$100 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 100.0 .
+
+value:Revenues_2000 a kg:MonetaryValue ;
+    kg:displayValue "6241.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 6241.0 .
+
+value:Revenues_2001 a kg:MonetaryValue ;
+    kg:displayValue "6147.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 6147.0 .
+
+value:Revenues_2002 a kg:MonetaryValue ;
+    kg:displayValue "2832.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2832.0 .
+
+value:StockholdersEquity_2000 a kg:MonetaryValue ;
+    kg:displayValue "6206.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 6206.0 .
+
+value:StockholdersEquity_2001 a kg:MonetaryValue ;
+    kg:displayValue "6835.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 6835.0 .
+
+value:StockholdersEquity_2002 a kg:MonetaryValue ;
+    kg:displayValue "3081.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 3081.0 .
+
+value:TotalOwnershipInterestNigen a kg:MonetaryValue ;
+    kg:displayValue "98%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 98.0 .
+
+value:ValueSharesIssuedNigen a kg:MonetaryValue ;
+    kg:displayValue "$4.9 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 4.9 .
+
+entity:Year_2001 a kg:Year ;
+    kg:yearValue 2001 .
+
+entity:Year_2002 a kg:Year ;
+    kg:yearValue 2002 .
+
+entity:Year_2000 a kg:Year ;
+    kg:yearValue 2000 .
+

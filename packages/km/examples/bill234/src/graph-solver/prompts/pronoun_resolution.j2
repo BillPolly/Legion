@@ -1,0 +1,56 @@
+You are resolving pronouns and temporal references in a financial question.
+
+QUESTION: {{ question }}
+
+{% if previous_results and previous_results|length > 0 %}
+PREVIOUS RESULTS (from oldest to newest):
+{% for var_name, info in previous_results.items() %}
+[Turn {{ info.turn }}] {{ var_name }}:
+  Question: "{{ info.question }}"
+  Description: "{{ info.description }}"
+  Answer: {{ info.answer }}{% if info.scale %} ({{ info.scale }}){% endif %}
+{%- if loop.last %}
+  ← THIS IS THE MOST RECENT RESULT
+{%- endif %}
+
+{% endfor %}
+{% endif %}
+
+{% if error_context %}
+PREVIOUS ATTEMPT FAILED:
+{% for error in error_context.errors %}
+- {{ error }}
+{% endfor %}
+
+Please fix these issues in your next attempt.
+{% endif %}
+
+TASK: Resolve ALL pronouns and temporal references to explicit values.
+
+PRONOUNS TO RESOLVE:
+- "it" → Replace with what "it" refers to
+- "this", "that" → Replace with what they refer to
+- "they", "them" → Replace with what group they refer to
+- "these", "those" → Replace with what items they refer to
+
+TEMPORAL REFERENCES TO RESOLVE:
+- "this year", "that year" → Replace with actual year number (e.g., 2004)
+- "this period", "that period" → Replace with actual period (e.g., "2004 to 2009")
+- "current year" → Replace with actual year from context
+
+RESOLUTION STRATEGY:
+1. Look at the MOST RECENT RESULT - pronouns usually refer to it
+2. Read the Question and Description to understand what was computed
+3. If "it" refers to the SAME METRIC TYPE for a different entity, explain this clearly
+
+OUTPUT (JSON):
+{
+  "resolved_question": "the question with all pronouns replaced with explicit references",
+  "resolutions": {
+    "it": "what it was replaced with",
+    "this": "what this was replaced with"
+  },
+  "confidence": 0.95
+}
+
+Generate the JSON now:

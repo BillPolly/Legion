@@ -1,0 +1,192 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+entity:entity_Company_123 a kg:Company ;
+    kg:hasMetric entity:entity_Metric_CompetitiveSupply_2000,
+        entity:entity_Metric_CompetitiveSupply_2001,
+        entity:entity_Metric_CompetitiveSupply_PercentChange,
+        entity:entity_Metric_ContractGeneration_2000,
+        entity:entity_Metric_ContractGeneration_2001,
+        entity:entity_Metric_ContractGeneration_PercentChange,
+        entity:entity_Metric_GrowthDistribution_2000,
+        entity:entity_Metric_GrowthDistribution_2001,
+        entity:entity_Metric_GrowthDistribution_PercentChange,
+        entity:entity_Metric_LargeUtilities_2000,
+        entity:entity_Metric_LargeUtilities_2001,
+        entity:entity_Metric_LargeUtilities_PercentChange ;
+    kg:label "Company from Example ID 123" .
+
+entity:entity_Metric_CompetitiveSupply_2000 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2000 ;
+    kg:hasValue value:value_CompetitiveSupply_2000 ;
+    kg:inCategory entity:entity_Category_CompetitiveSupply ;
+    kg:label "competitive supply - 2000" ;
+    kg:tableColumn "2000" ;
+    kg:tableRow "competitive supply" .
+
+entity:entity_Metric_CompetitiveSupply_2001 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2001 ;
+    kg:hasValue value:value_CompetitiveSupply_2001 ;
+    kg:inCategory entity:entity_Category_CompetitiveSupply ;
+    kg:label "competitive supply - 2001" ;
+    kg:tableColumn "2001" ;
+    kg:tableRow "competitive supply" .
+
+entity:entity_Metric_CompetitiveSupply_PercentChange a kg:FinancialMetric ;
+    kg:hasValue value:value_CompetitiveSupply_PercentChange ;
+    kg:inCategory entity:entity_Category_CompetitiveSupply ;
+    kg:label "% ( % ) change - competitive supply" ;
+    kg:tableColumn "% ( % ) change" ;
+    kg:tableRow "competitive supply" .
+
+entity:entity_Metric_ContractGeneration_2000 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2000 ;
+    kg:hasValue value:value_ContractGeneration_2000 ;
+    kg:inCategory entity:entity_Category_ContractGeneration ;
+    kg:label "contract generation - 2000" ;
+    kg:tableColumn "2000" ;
+    kg:tableRow "contract generation" .
+
+entity:entity_Metric_ContractGeneration_2001 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2001 ;
+    kg:hasValue value:value_ContractGeneration_2001 ;
+    kg:inCategory entity:entity_Category_ContractGeneration ;
+    kg:label "contract generation - 2001" ;
+    kg:tableColumn "2001" ;
+    kg:tableRow "contract generation" .
+
+entity:entity_Metric_ContractGeneration_PercentChange a kg:FinancialMetric ;
+    kg:hasValue value:value_ContractGeneration_PercentChange ;
+    kg:inCategory entity:entity_Category_ContractGeneration ;
+    kg:label "% ( % ) change - contract generation" ;
+    kg:tableColumn "% ( % ) change" ;
+    kg:tableRow "contract generation" .
+
+entity:entity_Metric_GrowthDistribution_2000 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2000 ;
+    kg:hasValue value:value_GrowthDistribution_2000 ;
+    kg:inCategory entity:entity_Category_GrowthDistribution ;
+    kg:label "growth distribution - 2000" ;
+    kg:tableColumn "2000" ;
+    kg:tableRow "growth distribution" .
+
+entity:entity_Metric_GrowthDistribution_2001 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2001 ;
+    kg:hasValue value:value_GrowthDistribution_2001 ;
+    kg:inCategory entity:entity_Category_GrowthDistribution ;
+    kg:label "growth distribution - 2001" ;
+    kg:tableColumn "2001" ;
+    kg:tableRow "growth distribution" .
+
+entity:entity_Metric_GrowthDistribution_PercentChange a kg:FinancialMetric ;
+    kg:hasValue value:value_GrowthDistribution_PercentChange ;
+    kg:inCategory entity:entity_Category_GrowthDistribution ;
+    kg:label "% ( % ) change - growth distribution" ;
+    kg:tableColumn "% ( % ) change" ;
+    kg:tableRow "growth distribution" .
+
+entity:entity_Metric_LargeUtilities_2000 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2000 ;
+    kg:hasValue value:value_LargeUtilities_2000 ;
+    kg:inCategory entity:entity_Category_LargeUtilities ;
+    kg:label "large utilities - 2000" ;
+    kg:tableColumn "2000" ;
+    kg:tableRow "large utilities" .
+
+entity:entity_Metric_LargeUtilities_2001 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2001 ;
+    kg:hasValue value:value_LargeUtilities_2001 ;
+    kg:inCategory entity:entity_Category_LargeUtilities ;
+    kg:label "large utilities - 2001" ;
+    kg:tableColumn "2001" ;
+    kg:tableRow "large utilities" .
+
+entity:entity_Metric_LargeUtilities_PercentChange a kg:FinancialMetric ;
+    kg:hasValue value:value_LargeUtilities_PercentChange ;
+    kg:inCategory entity:entity_Category_LargeUtilities ;
+    kg:label "% ( % ) change - large utilities" ;
+    kg:tableColumn "% ( % ) change" ;
+    kg:tableRow "large utilities" .
+
+value:value_CompetitiveSupply_2000 a kg:RatioValue ;
+    kg:displayValue "2.4" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2.4 .
+
+value:value_CompetitiveSupply_2001 a kg:RatioValue ;
+    kg:displayValue "2.7" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2.7 .
+
+value:value_CompetitiveSupply_PercentChange a kg:PercentageValue ;
+    kg:displayValue "-13.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -13.0 .
+
+value:value_ContractGeneration_2000 a kg:RatioValue ;
+    kg:displayValue "1.7" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1.7 .
+
+value:value_ContractGeneration_2001 a kg:RatioValue ;
+    kg:displayValue "2.5" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2.5 .
+
+value:value_ContractGeneration_PercentChange a kg:PercentageValue ;
+    kg:displayValue "-47.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -47.0 .
+
+value:value_GrowthDistribution_2000 a kg:RatioValue ;
+    kg:displayValue "1.3" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1.3 .
+
+value:value_GrowthDistribution_2001 a kg:RatioValue ;
+    kg:displayValue "1.7" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1.7 .
+
+value:value_GrowthDistribution_PercentChange a kg:PercentageValue ;
+    kg:displayValue "-31.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -31.0 .
+
+value:value_LargeUtilities_2000 a kg:RatioValue ;
+    kg:displayValue "2.1" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2.1 .
+
+value:value_LargeUtilities_2001 a kg:RatioValue ;
+    kg:displayValue "2.4" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2.4 .
+
+value:value_LargeUtilities_PercentChange a kg:PercentageValue ;
+    kg:displayValue "-14.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -14.0 .
+
+entity:entity_Category_CompetitiveSupply a kg:Category ;
+    kg:label "competitive supply" .
+
+entity:entity_Category_ContractGeneration a kg:Category ;
+    kg:label "contract generation" .
+
+entity:entity_Category_GrowthDistribution a kg:Category ;
+    kg:label "growth distribution" .
+
+entity:entity_Category_LargeUtilities a kg:Category ;
+    kg:label "large utilities" .
+
+entity:entity_Year_2000 a kg:Year ;
+    kg:label "2000" ;
+    kg:yearValue 2000 .
+
+entity:entity_Year_2001 a kg:Year ;
+    kg:label "2001" ;
+    kg:yearValue 2001 .
+

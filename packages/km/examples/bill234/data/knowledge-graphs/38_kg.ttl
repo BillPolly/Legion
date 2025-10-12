@@ -1,0 +1,489 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-11" ;
+    kg:builtWithOntologyVersion "1.0.2" .
+
+entity:Company_38 a kg:Company ;
+    kg:hasMetric entity:Metric_NetCashProvidedByFinancingActivities_2018,
+        entity:Metric_NetCashProvidedByFinancingActivities_2019,
+        entity:Metric_NetCashProvidedByOperatingActivities_2018,
+        entity:Metric_NetCashProvidedByOperatingActivities_2019,
+        entity:Metric_NetCashUsedForInvestingActivities_2018,
+        entity:Metric_NetCashUsedForInvestingActivities_2019 ;
+    kg:label "Company 38" .
+
+entity:Company_Example a kg:Company ;
+    kg:hasMetric entity:Metric_CapitalExpenditures_2018,
+        entity:Metric_CapitalExpenditures_2019,
+        entity:Metric_CashAndCashEquivalents_2018,
+        entity:Metric_CashAndCashEquivalents_2019,
+        entity:Metric_CashDividendsPaid_2018,
+        entity:Metric_CashDividendsPaid_2019,
+        entity:Metric_CashPaidForBusinesses_2018,
+        entity:Metric_CashPaidForBusinesses_2019,
+        entity:Metric_CashReceiptsOnSoldReceivables_2018,
+        entity:Metric_CreditFacilityAvailability_2019,
+        entity:Metric_CurrentDebt_2018,
+        entity:Metric_CurrentDebt_2019,
+        entity:Metric_InvestmentInGrupoGondi_2018,
+        entity:Metric_LifeInsuranceBenefits_2019,
+        entity:Metric_NetCashInvestingActivitiesAdjustment_2018,
+        entity:Metric_NetCashOperatingActivitiesAdjustment_2018,
+        entity:Metric_NetCashOperatingActivitiesChange_2019,
+        entity:Metric_NetDecreaseWorkingCapital_2019,
+        entity:Metric_NetIncreaseInDebt_2019,
+        entity:Metric_NetRepaymentsOfDebt_2018,
+        entity:Metric_OutstandingLettersOfCredit_2019,
+        entity:Metric_PropertyInsuranceProceeds_2019,
+        entity:Metric_PurchasesOfCommonStock_2018,
+        entity:Metric_PurchasesOfCommonStock_2019,
+        entity:Metric_SaleOfAffiliatesProceeds_2018,
+        entity:Metric_SaleOfPropertyProceeds_2018,
+        entity:Metric_SaleOfPropertyProceeds_2019,
+        entity:Metric_TotalDebt_2018,
+        entity:Metric_TotalDebt_2019 ;
+    kg:label "Company" .
+
+entity:Metric_CapitalExpenditures_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2018,
+        entity:entity_Year_2018 ;
+    kg:hasValue value:CapitalExpenditures_2018 ;
+    kg:label "capital expenditures" .
+
+entity:Metric_CapitalExpenditures_2019 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2019,
+        entity:entity_Year_2019 ;
+    kg:hasValue value:CapitalExpenditures_2019 ;
+    kg:label "capital expenditures" .
+
+entity:Metric_CashAndCashEquivalents_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2018,
+        entity:entity_Year_2018 ;
+    kg:hasValue value:CashAndCashEquivalents_2018 ;
+    kg:label "cash and cash equivalents" .
+
+entity:Metric_CashAndCashEquivalents_2019 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2019,
+        entity:entity_Year_2019 ;
+    kg:hasValue value:CashAndCashEquivalents_2019 ;
+    kg:label "cash and cash equivalents" .
+
+entity:Metric_CashDividendsPaid_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2018,
+        entity:entity_Year_2018 ;
+    kg:hasValue value:CashDividendsPaid_2018 ;
+    kg:label "cash dividends paid to stockholders" .
+
+entity:Metric_CashDividendsPaid_2019 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2019,
+        entity:entity_Year_2019 ;
+    kg:hasValue value:CashDividendsPaid_2019 ;
+    kg:label "cash dividends paid to stockholders" .
+
+entity:Metric_CashPaidForBusinesses_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2018,
+        entity:entity_Year_2018 ;
+    kg:hasValue value:CashPaidForBusinesses_2018 ;
+    kg:label "cash paid for the purchase of businesses" .
+
+entity:Metric_CashPaidForBusinesses_2019 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2019,
+        entity:entity_Year_2019 ;
+    kg:hasValue value:CashPaidForBusinesses_2019 ;
+    kg:label "cash paid for the purchase of businesses" .
+
+entity:Metric_CashReceiptsOnSoldReceivables_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2018,
+        entity:entity_Year_2018 ;
+    kg:hasValue value:CashReceiptsOnSoldReceivables_2018 ;
+    kg:label "cash receipts on sold trade receivables" .
+
+entity:Metric_CreditFacilityAvailability_2019 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2019,
+        entity:entity_Year_2019 ;
+    kg:hasValue value:CreditFacilityAvailability_2019 ;
+    kg:label "availability under committed credit facilities" .
+
+entity:Metric_CurrentDebt_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2018,
+        entity:entity_Year_2018 ;
+    kg:hasValue value:CurrentDebt_2018 ;
+    kg:label "current debt" .
+
+entity:Metric_CurrentDebt_2019 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2019,
+        entity:entity_Year_2019 ;
+    kg:hasValue value:CurrentDebt_2019 ;
+    kg:label "current debt" .
+
+entity:Metric_InvestmentInGrupoGondi_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2018,
+        entity:entity_Year_2018 ;
+    kg:hasValue value:InvestmentInGrupoGondi_2018 ;
+    kg:label "investment in grupo gondi" .
+
+entity:Metric_LifeInsuranceBenefits_2019 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2019,
+        entity:entity_Year_2019 ;
+    kg:hasValue value:LifeInsuranceBenefits_2019 ;
+    kg:label "proceeds from corporate owned life insurance benefits" .
+
+entity:Metric_NetCashInvestingActivitiesAdjustment_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2018,
+        entity:entity_Year_2018 ;
+    kg:hasValue value:NetCashInvestingActivitiesAdjustment_2018 ;
+    kg:label "cash provided by investing activities increase" .
+
+entity:Metric_NetCashOperatingActivitiesAdjustment_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2018,
+        entity:entity_Year_2018 ;
+    kg:hasValue value:NetCashOperatingActivitiesAdjustment_2018 ;
+    kg:label "net cash provided by operating activities reduction" .
+
+entity:Metric_NetCashOperatingActivitiesChange_2019 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2019,
+        entity:entity_Year_2019 ;
+    kg:hasValue value:NetCashOperatingActivitiesChange_2019 ;
+    kg:label "net cash provided by operating activities change" .
+
+entity:Metric_NetCashProvidedByFinancingActivities_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2018,
+        entity:entity_Year_2018 ;
+    kg:hasValue value:NetCashProvidedByFinancingActivities_2018 ;
+    kg:label "net cash provided by ( used for ) financing activities" ;
+    kg:tableColumn "year ended september 30 , 2018" ;
+    kg:tableRow "net cash provided by ( used for ) financing activities" .
+
+entity:Metric_NetCashProvidedByFinancingActivities_2019 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2019,
+        entity:entity_Year_2019 ;
+    kg:hasValue value:NetCashProvidedByFinancingActivities_2019 ;
+    kg:label "net cash provided by ( used for ) financing activities" ;
+    kg:tableColumn "year ended september 30 , 2019" ;
+    kg:tableRow "net cash provided by ( used for ) financing activities" .
+
+entity:Metric_NetCashProvidedByOperatingActivities_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2018,
+        entity:entity_Year_2018 ;
+    kg:hasValue value:NetCashProvidedByOperatingActivities_2018 ;
+    kg:label "net cash provided by operating activities" ;
+    kg:tableColumn "year ended september 30 , 2018" ;
+    kg:tableRow "net cash provided by operating activities" .
+
+entity:Metric_NetCashProvidedByOperatingActivities_2019 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2019,
+        entity:entity_Year_2019 ;
+    kg:hasValue value:NetCashProvidedByOperatingActivities_2019 ;
+    kg:label "net cash provided by operating activities" ;
+    kg:tableColumn "year ended september 30 , 2019" ;
+    kg:tableRow "net cash provided by operating activities" .
+
+entity:Metric_NetCashUsedForInvestingActivities_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2018,
+        entity:entity_Year_2018 ;
+    kg:hasValue value:NetCashUsedForInvestingActivities_2018 ;
+    kg:label "net cash used for investing activities" ;
+    kg:tableColumn "year ended september 30 , 2018" ;
+    kg:tableRow "net cash used for investing activities" .
+
+entity:Metric_NetCashUsedForInvestingActivities_2019 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2019,
+        entity:entity_Year_2019 ;
+    kg:hasValue value:NetCashUsedForInvestingActivities_2019 ;
+    kg:label "net cash used for investing activities" ;
+    kg:tableColumn "year ended september 30 , 2019" ;
+    kg:tableRow "net cash used for investing activities" .
+
+entity:Metric_NetDecreaseWorkingCapital_2019 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2019,
+        entity:entity_Year_2019 ;
+    kg:hasValue value:NetDecreaseWorkingCapital_2019 ;
+    kg:label "net decrease in the use of working capital" .
+
+entity:Metric_NetIncreaseInDebt_2019 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2019,
+        entity:entity_Year_2019 ;
+    kg:hasValue value:NetIncreaseInDebt_2019 ;
+    kg:label "net increase in debt" .
+
+entity:Metric_NetRepaymentsOfDebt_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2018,
+        entity:entity_Year_2018 ;
+    kg:hasValue value:NetRepaymentsOfDebt_2018 ;
+    kg:label "net repayments of debt" .
+
+entity:Metric_OutstandingLettersOfCredit_2019 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2019,
+        entity:entity_Year_2019 ;
+    kg:hasValue value:OutstandingLettersOfCredit_2019 ;
+    kg:label "outstanding letters of credit" .
+
+entity:Metric_PropertyInsuranceProceeds_2019 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2019,
+        entity:entity_Year_2019 ;
+    kg:hasValue value:PropertyInsuranceProceeds_2019 ;
+    kg:label "proceeds from property, plant and equipment insurance proceeds" .
+
+entity:Metric_PurchasesOfCommonStock_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2018,
+        entity:entity_Year_2018 ;
+    kg:hasValue value:PurchasesOfCommonStock_2018 ;
+    kg:label "purchases of common stock" .
+
+entity:Metric_PurchasesOfCommonStock_2019 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2019,
+        entity:entity_Year_2019 ;
+    kg:hasValue value:PurchasesOfCommonStock_2019 ;
+    kg:label "purchases of common stock" .
+
+entity:Metric_SaleOfAffiliatesProceeds_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2018,
+        entity:entity_Year_2018 ;
+    kg:hasValue value:SaleOfAffiliatesProceeds_2018 ;
+    kg:label "proceeds from the sale of certain affiliates as well as our solid waste management brokerage services business" .
+
+entity:Metric_SaleOfPropertyProceeds_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2018,
+        entity:entity_Year_2018 ;
+    kg:hasValue value:SaleOfPropertyProceeds_2018 ;
+    kg:label "proceeds from the sale of property, plant and equipment" .
+
+entity:Metric_SaleOfPropertyProceeds_2019 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2019,
+        entity:entity_Year_2019 ;
+    kg:hasValue value:SaleOfPropertyProceeds_2019 ;
+    kg:label "proceeds from the sale of property, plant and equipment" .
+
+entity:Metric_TotalDebt_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2018,
+        entity:entity_Year_2018 ;
+    kg:hasValue value:TotalDebt_2018 ;
+    kg:label "total debt" .
+
+entity:Metric_TotalDebt_2019 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2019,
+        entity:entity_Year_2019 ;
+    kg:hasValue value:TotalDebt_2019 ;
+    kg:label "total debt" .
+
+value:CapitalExpenditures_2018 a kg:MonetaryValue ;
+    kg:displayValue "$999.9 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 999.9 .
+
+value:CapitalExpenditures_2019 a kg:MonetaryValue ;
+    kg:displayValue "$1369.1 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1369.1 .
+
+value:CashAndCashEquivalents_2018 a kg:MonetaryValue ;
+    kg:displayValue "$636.8 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 636.8 .
+
+value:CashAndCashEquivalents_2019 a kg:MonetaryValue ;
+    kg:displayValue "$151.6 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 151.6 .
+
+value:CashDividendsPaid_2018 a kg:MonetaryValue ;
+    kg:displayValue "$440.9 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 440.9 .
+
+value:CashDividendsPaid_2019 a kg:MonetaryValue ;
+    kg:displayValue "$467.9 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 467.9 .
+
+value:CashPaidForBusinesses_2018 a kg:MonetaryValue ;
+    kg:displayValue "$239.9 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 239.9 .
+
+value:CashPaidForBusinesses_2019 a kg:MonetaryValue ;
+    kg:displayValue "$3374.2 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 3374.2 .
+
+value:CashReceiptsOnSoldReceivables_2018 a kg:MonetaryValue ;
+    kg:displayValue "$461.6 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 461.6 .
+
+value:CreditFacilityAvailability_2019 a kg:MonetaryValue ;
+    kg:displayValue "$2.9 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2900.0 .
+
+value:CurrentDebt_2018 a kg:MonetaryValue ;
+    kg:displayValue "$740.7 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 740.7 .
+
+value:CurrentDebt_2019 a kg:MonetaryValue ;
+    kg:displayValue "$561.1 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 561.1 .
+
+value:InvestmentInGrupoGondi_2018 a kg:MonetaryValue ;
+    kg:displayValue "$108.0 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 108.0 .
+
+value:LifeInsuranceBenefits_2019 a kg:MonetaryValue ;
+    kg:displayValue "$33.2 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 33.2 .
+
+value:NetCashInvestingActivitiesAdjustment_2018 a kg:MonetaryValue ;
+    kg:displayValue "$483.8 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 483.8 .
+
+value:NetCashOperatingActivitiesAdjustment_2018 a kg:MonetaryValue ;
+    kg:displayValue "$489.7 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 489.7 .
+
+value:NetCashOperatingActivitiesChange_2019 a kg:MonetaryValue ;
+    kg:displayValue "$379.0 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 379.0 .
+
+value:NetCashProvidedByFinancingActivities_2018 a kg:MonetaryValue ;
+    kg:displayValue "-755.1" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -755.1 .
+
+value:NetCashProvidedByFinancingActivities_2019 a kg:MonetaryValue ;
+    kg:displayValue "1780.2" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1780.2 .
+
+value:NetCashProvidedByOperatingActivities_2018 a kg:MonetaryValue ;
+    kg:displayValue "1931.2" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1931.2 .
+
+value:NetCashProvidedByOperatingActivities_2019 a kg:MonetaryValue ;
+    kg:displayValue "2310.2" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2310.2 .
+
+value:NetCashUsedForInvestingActivities_2018 a kg:MonetaryValue ;
+    kg:displayValue "-815.1" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -815.1 .
+
+value:NetCashUsedForInvestingActivities_2019 a kg:MonetaryValue ;
+    kg:displayValue "-4579.6" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -4579.6 .
+
+value:NetDecreaseWorkingCapital_2019 a kg:MonetaryValue ;
+    kg:displayValue "$340.3 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 340.3 .
+
+value:NetIncreaseInDebt_2019 a kg:MonetaryValue ;
+    kg:displayValue "$2314.6 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2314.6 .
+
+value:NetRepaymentsOfDebt_2018 a kg:MonetaryValue ;
+    kg:displayValue "$120.1 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 120.1 .
+
+value:OutstandingLettersOfCredit_2019 a kg:MonetaryValue ;
+    kg:displayValue "$129.8 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 129.8 .
+
+value:PropertyInsuranceProceeds_2019 a kg:MonetaryValue ;
+    kg:displayValue "$25.5 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 25.5 .
+
+value:PurchasesOfCommonStock_2018 a kg:MonetaryValue ;
+    kg:displayValue "$195.1 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 195.1 .
+
+value:PurchasesOfCommonStock_2019 a kg:MonetaryValue ;
+    kg:displayValue "$88.6 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 88.6 .
+
+value:SaleOfAffiliatesProceeds_2018 a kg:MonetaryValue ;
+    kg:displayValue "$24.0 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 24.0 .
+
+value:SaleOfPropertyProceeds_2018 a kg:MonetaryValue ;
+    kg:displayValue "$23.3 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 23.3 .
+
+value:SaleOfPropertyProceeds_2019 a kg:MonetaryValue ;
+    kg:displayValue "$119.1 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 119.1 .
+
+value:TotalDebt_2018 a kg:MonetaryValue ;
+    kg:displayValue "$6415.2 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 6415.2 .
+
+value:TotalDebt_2019 a kg:MonetaryValue ;
+    kg:displayValue "$10063.4 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 10063.4 .
+
+entity:Year_2018 a kg:Year ;
+    kg:yearValue 2018 .
+
+entity:Year_2019 a kg:Year ;
+    kg:yearValue 2019 .
+

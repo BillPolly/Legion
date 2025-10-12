@@ -1,0 +1,428 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-11" ;
+    kg:builtWithOntologyVersion "1.0.3" .
+
+entity:Company_Example20 a kg:Company ;
+    kg:hasMetric entity:Metric_Computers_2004,
+        entity:Metric_Computers_2005,
+        entity:Metric_CostBasisEquityWarrants_2004,
+        entity:Metric_CostBasisEquityWarrants_2005,
+        entity:Metric_DepreciationExpense_2003,
+        entity:Metric_DepreciationExpense_2004,
+        entity:Metric_DepreciationExpense_2005,
+        entity:Metric_FurnitureAndEquipment_2004,
+        entity:Metric_FurnitureAndEquipment_2005,
+        entity:Metric_GrossRealizedGains_2003,
+        entity:Metric_GrossRealizedGains_2004,
+        entity:Metric_GrossRealizedGains_2005,
+        entity:Metric_GrossRealizedLosses_2003,
+        entity:Metric_GrossRealizedLosses_2004,
+        entity:Metric_GrossRealizedLosses_2005,
+        entity:Metric_LeaseholdImprovements_2004,
+        entity:Metric_LeaseholdImprovements_2005,
+        entity:Metric_LessAccumulatedDepreciationAndAmortization_2004,
+        entity:Metric_LessAccumulatedDepreciationAndAmortization_2005,
+        entity:Metric_NetLossOnDisposal_2004,
+        entity:Metric_NetLossOnDisposal_2005,
+        entity:Metric_RestrictedCash_2004,
+        entity:Metric_RestrictedCash_2005,
+        entity:Metric_Software_2004,
+        entity:Metric_Software_2005,
+        entity:Metric_TotalPropertyAndEquipmentGross_2004,
+        entity:Metric_TotalPropertyAndEquipmentGross_2005,
+        entity:Metric_TotalPropertyAndEquipmentNet_2004,
+        entity:Metric_TotalPropertyAndEquipmentNet_2005 ;
+    kg:label "Example 20 Company",
+        "Example Company" .
+
+entity:Metric_Computers_2004 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2004,
+        entity:entity_Year_2004 ;
+    kg:hasValue value:Computers_2004 ;
+    kg:label "computers" ;
+    kg:tableColumn "2004" ;
+    kg:tableRow "computers" .
+
+entity:Metric_Computers_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2005,
+        entity:entity_Year_2005 ;
+    kg:hasValue value:Computers_2005 ;
+    kg:label "computers" ;
+    kg:tableColumn "2005" ;
+    kg:tableRow "computers" .
+
+entity:Metric_CostBasisEquityWarrants_2004 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2004,
+        entity:entity_Year_2004 ;
+    kg:hasValue value:CostBasisEquityWarrants_2004 ;
+    kg:label "Cost basis carrying value in equity and warrants" .
+
+entity:Metric_CostBasisEquityWarrants_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2005,
+        entity:entity_Year_2005 ;
+    kg:hasValue value:CostBasisEquityWarrants_2005 ;
+    kg:label "Cost basis carrying value in equity and warrants" .
+
+entity:Metric_DepreciationExpense_2003 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2003,
+        entity:entity_Year_2003 ;
+    kg:hasValue value:DepreciationExpense_2003 ;
+    kg:label "Depreciation expense" .
+
+entity:Metric_DepreciationExpense_2004 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2004,
+        entity:entity_Year_2004 ;
+    kg:hasValue value:DepreciationExpense_2004 ;
+    kg:label "Depreciation expense" .
+
+entity:Metric_DepreciationExpense_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2005,
+        entity:entity_Year_2005 ;
+    kg:hasValue value:DepreciationExpense_2005 ;
+    kg:label "Depreciation expense" .
+
+entity:Metric_FurnitureAndEquipment_2004 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2004,
+        entity:entity_Year_2004 ;
+    kg:hasValue value:FurnitureAndEquipment_2004 ;
+    kg:label "furniture and equipment" ;
+    kg:tableColumn "2004" ;
+    kg:tableRow "furniture and equipment" .
+
+entity:Metric_FurnitureAndEquipment_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2005,
+        entity:entity_Year_2005 ;
+    kg:hasValue value:FurnitureAndEquipment_2005 ;
+    kg:label "furniture and equipment" ;
+    kg:tableColumn "2005" ;
+    kg:tableRow "furniture and equipment" .
+
+entity:Metric_GrossRealizedGains_2003 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2003,
+        entity:entity_Year_2003 ;
+    kg:hasValue value:GrossRealizedGains_2003 ;
+    kg:label "Gross realized gains" .
+
+entity:Metric_GrossRealizedGains_2004 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2004,
+        entity:entity_Year_2004 ;
+    kg:hasValue value:GrossRealizedGains_2004 ;
+    kg:label "Gross realized gains" .
+
+entity:Metric_GrossRealizedGains_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2005,
+        entity:entity_Year_2005 ;
+    kg:hasValue value:GrossRealizedGains_2005 ;
+    kg:label "Gross realized gains" .
+
+entity:Metric_GrossRealizedLosses_2003 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2003,
+        entity:entity_Year_2003 ;
+    kg:hasValue value:GrossRealizedLosses_2003 ;
+    kg:label "Gross realized losses" .
+
+entity:Metric_GrossRealizedLosses_2004 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2004,
+        entity:entity_Year_2004 ;
+    kg:hasValue value:GrossRealizedLosses_2004 ;
+    kg:label "Gross realized losses" .
+
+entity:Metric_GrossRealizedLosses_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2005,
+        entity:entity_Year_2005 ;
+    kg:hasValue value:GrossRealizedLosses_2005 ;
+    kg:label "Gross realized losses" .
+
+entity:Metric_LeaseholdImprovements_2004 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2004,
+        entity:entity_Year_2004 ;
+    kg:hasValue value:LeaseholdImprovements_2004 ;
+    kg:label "leasehold improvements" ;
+    kg:tableColumn "2004" ;
+    kg:tableRow "leasehold improvements" .
+
+entity:Metric_LeaseholdImprovements_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2005,
+        entity:entity_Year_2005 ;
+    kg:hasValue value:LeaseholdImprovements_2005 ;
+    kg:label "leasehold improvements" ;
+    kg:tableColumn "2005" ;
+    kg:tableRow "leasehold improvements" .
+
+entity:Metric_LessAccumulatedDepreciationAndAmortization_2004 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2004,
+        entity:entity_Year_2004 ;
+    kg:hasValue value:LessAccumulatedDepreciationAndAmortization_2004 ;
+    kg:label "less accumulated depreciation and amortization" ;
+    kg:tableColumn "2004" ;
+    kg:tableRow "less accumulated depreciation and amortization" .
+
+entity:Metric_LessAccumulatedDepreciationAndAmortization_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2005,
+        entity:entity_Year_2005 ;
+    kg:hasValue value:LessAccumulatedDepreciationAndAmortization_2005 ;
+    kg:label "less accumulated depreciation and amortization" ;
+    kg:tableColumn "2005" ;
+    kg:tableRow "less accumulated depreciation and amortization" .
+
+entity:Metric_NetLossOnDisposal_2004 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2004,
+        entity:entity_Year_2004 ;
+    kg:hasValue value:NetLossOnDisposal_2004 ;
+    kg:label "Net loss on disposal of assets" .
+
+entity:Metric_NetLossOnDisposal_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2005,
+        entity:entity_Year_2005 ;
+    kg:hasValue value:NetLossOnDisposal_2005 ;
+    kg:label "Net loss on disposal of assets" .
+
+entity:Metric_RestrictedCash_2004 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2004,
+        entity:entity_Year_2004 ;
+    kg:hasValue value:RestrictedCash_2004 ;
+    kg:label "Restricted cash" .
+
+entity:Metric_RestrictedCash_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2005,
+        entity:entity_Year_2005 ;
+    kg:hasValue value:RestrictedCash_2005 ;
+    kg:label "Restricted cash" .
+
+entity:Metric_Software_2004 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2004,
+        entity:entity_Year_2004 ;
+    kg:hasValue value:Software_2004 ;
+    kg:label "software" ;
+    kg:tableColumn "2004" ;
+    kg:tableRow "software" .
+
+entity:Metric_Software_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2005,
+        entity:entity_Year_2005 ;
+    kg:hasValue value:Software_2005 ;
+    kg:label "software" ;
+    kg:tableColumn "2005" ;
+    kg:tableRow "software" .
+
+entity:Metric_TotalPropertyAndEquipmentGross_2004 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2004,
+        entity:entity_Year_2004 ;
+    kg:hasValue value:TotalPropertyAndEquipmentGross_2004 ;
+    kg:label "total property and equipment gross" ;
+    kg:tableColumn "2004" ;
+    kg:tableRow "total property and equipment gross" .
+
+entity:Metric_TotalPropertyAndEquipmentGross_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2005,
+        entity:entity_Year_2005 ;
+    kg:hasValue value:TotalPropertyAndEquipmentGross_2005 ;
+    kg:label "total property and equipment gross" ;
+    kg:tableColumn "2005" ;
+    kg:tableRow "total property and equipment gross" .
+
+entity:Metric_TotalPropertyAndEquipmentNet_2004 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2004,
+        entity:entity_Year_2004 ;
+    kg:hasValue value:TotalPropertyAndEquipmentNet_2004 ;
+    kg:label "total property and equipment net" ;
+    kg:tableColumn "2004" ;
+    kg:tableRow "total property and equipment net" .
+
+entity:Metric_TotalPropertyAndEquipmentNet_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2005,
+        entity:entity_Year_2005 ;
+    kg:hasValue value:TotalPropertyAndEquipmentNet_2005 ;
+    kg:label "total property and equipment net" ;
+    kg:tableColumn "2005" ;
+    kg:tableRow "total property and equipment net" .
+
+value:Computers_2004 a kg:MonetaryValue ;
+    kg:displayValue "18421.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 18421.0 .
+
+value:Computers_2005 a kg:MonetaryValue ;
+    kg:displayValue "18971.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 18971.0 .
+
+value:CostBasisEquityWarrants_2004 a kg:MonetaryValue ;
+    kg:displayValue "$18863000" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 18863.0 .
+
+value:CostBasisEquityWarrants_2005 a kg:MonetaryValue ;
+    kg:displayValue "$18863000" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 18863.0 .
+
+value:DepreciationExpense_2003 a kg:MonetaryValue ;
+    kg:displayValue "$27988000" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 27988.0 .
+
+value:DepreciationExpense_2004 a kg:MonetaryValue ;
+    kg:displayValue "$28353000" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 28353.0 .
+
+value:DepreciationExpense_2005 a kg:MonetaryValue ;
+    kg:displayValue "$26307000" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 26307.0 .
+
+value:FurnitureAndEquipment_2004 a kg:MonetaryValue ;
+    kg:displayValue "90893.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 90893.0 .
+
+value:FurnitureAndEquipment_2005 a kg:MonetaryValue ;
+    kg:displayValue "98387.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 98387.0 .
+
+value:GrossRealizedGains_2003 a kg:MonetaryValue ;
+    kg:displayValue "$1249000" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1249000.0 .
+
+value:GrossRealizedGains_2004 a kg:MonetaryValue ;
+    kg:displayValue "$628000" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 628000.0 .
+
+value:GrossRealizedGains_2005 a kg:MonetaryValue ;
+    kg:displayValue "$15000" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 15000.0 .
+
+value:GrossRealizedLosses_2003 a kg:MonetaryValue ;
+    kg:displayValue "0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 0.0 .
+
+value:GrossRealizedLosses_2004 a kg:MonetaryValue ;
+    kg:displayValue "$205000" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 205000.0 .
+
+value:GrossRealizedLosses_2005 a kg:MonetaryValue ;
+    kg:displayValue "$75000" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 75000.0 .
+
+value:LeaseholdImprovements_2004 a kg:MonetaryValue ;
+    kg:displayValue "65294.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 65294.0 .
+
+value:LeaseholdImprovements_2005 a kg:MonetaryValue ;
+    kg:displayValue "66318.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 66318.0 .
+
+value:LessAccumulatedDepreciationAndAmortization_2004 a kg:MonetaryValue ;
+    kg:displayValue "126794.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 126794.0 .
+
+value:LessAccumulatedDepreciationAndAmortization_2005 a kg:MonetaryValue ;
+    kg:displayValue "147826.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 147826.0 .
+
+value:NetLossOnDisposal_2004 a kg:MonetaryValue ;
+    kg:displayValue "$43000" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 43.0 .
+
+value:NetLossOnDisposal_2005 a kg:MonetaryValue ;
+    kg:displayValue "$344000" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 344.0 .
+
+value:RestrictedCash_2004 a kg:MonetaryValue ;
+    kg:displayValue "$49847000" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 49847.0 .
+
+value:RestrictedCash_2005 a kg:MonetaryValue ;
+    kg:displayValue "$41482000" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 41482.0 .
+
+value:Software_2004 a kg:MonetaryValue ;
+    kg:displayValue "16411.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 16411.0 .
+
+value:Software_2005 a kg:MonetaryValue ;
+    kg:displayValue "18683.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 18683.0 .
+
+value:TotalPropertyAndEquipmentGross_2004 a kg:MonetaryValue ;
+    kg:displayValue "191019.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 191019.0 .
+
+value:TotalPropertyAndEquipmentGross_2005 a kg:MonetaryValue ;
+    kg:displayValue "202359.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 202359.0 .
+
+value:TotalPropertyAndEquipmentNet_2004 a kg:MonetaryValue ;
+    kg:displayValue "64225.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 64225.0 .
+
+value:TotalPropertyAndEquipmentNet_2005 a kg:MonetaryValue ;
+    kg:displayValue "54533.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 54533.0 .
+
+entity:Year_2003 a kg:Year ;
+    kg:yearValue 2003 .
+
+entity:Year_2004 a kg:Year ;
+    kg:yearValue 2004 .
+
+entity:Year_2005 a kg:Year ;
+    kg:yearValue 2005 .
+

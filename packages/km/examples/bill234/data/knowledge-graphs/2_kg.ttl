@@ -1,0 +1,257 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+entity:Company_Example2 a kg:Company ;
+    kg:hasMetric entity:Metric_CostOfSales_2000,
+        entity:Metric_CostOfSales_2001,
+        entity:Metric_CostOfSales_2002,
+        entity:Metric_GrossMarginPercentage_2000,
+        entity:Metric_GrossMarginPercentage_2001,
+        entity:Metric_GrossMarginPercentage_2002,
+        entity:Metric_GrossMargin_2000,
+        entity:Metric_GrossMargin_2001,
+        entity:Metric_GrossMargin_2002,
+        entity:Metric_NetSales_2000,
+        entity:Metric_NetSales_2001,
+        entity:Metric_NetSales_2002 ;
+    kg:label "Example Company" .
+
+entity:Company_Unknown a kg:Company ;
+    kg:hasMetric entity:Metric_GrossMarginPercentage_2000,
+        entity:Metric_GrossMarginPercentage_2001,
+        entity:Metric_GrossMarginPercentage_2002,
+        entity:Metric_GrossMarginPercentage_Q1_2000,
+        entity:Metric_GrossMarginPercentage_Q1_2001,
+        entity:Metric_GrossMarginPercentage_Q1_2002,
+        entity:Metric_GrossMarginPercentage_Q4_2002 ;
+    kg:label "Unknown Company" .
+
+entity:Metric_CostOfSales_2000 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2000,
+        entity:entity_Year_2000 ;
+    kg:hasValue value:CostOfSales_2000 ;
+    kg:label "cost of sales" ;
+    kg:tableColumn "2000" ;
+    kg:tableRow "cost of sales" .
+
+entity:Metric_CostOfSales_2001 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2001,
+        entity:entity_Year_2001 ;
+    kg:hasValue value:CostOfSales_2001 ;
+    kg:label "cost of sales" ;
+    kg:tableColumn "2001" ;
+    kg:tableRow "cost of sales" .
+
+entity:Metric_CostOfSales_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:CostOfSales_2002 ;
+    kg:label "cost of sales" ;
+    kg:tableColumn "2002" ;
+    kg:tableRow "cost of sales" .
+
+entity:Metric_GrossMarginPercentage_Q1_2000 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2000,
+        entity:entity_Year_2000 ;
+    kg:hasValue value:GrossMarginPercentage_Q1_2000 ;
+    kg:label "Gross margin percentage in Q1 2000" .
+
+entity:Metric_GrossMarginPercentage_Q1_2001 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2001,
+        entity:entity_Year_2001 ;
+    kg:hasValue value:GrossMarginPercentage_Q1_2001 ;
+    kg:label "Gross margin percentage in Q1 2001" .
+
+entity:Metric_GrossMarginPercentage_Q1_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:GrossMarginPercentage_Q1_2002 ;
+    kg:label "Gross margin percentage in Q1 2002" .
+
+entity:Metric_GrossMarginPercentage_Q4_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:GrossMarginPercentage_Q4_2002 ;
+    kg:label "Gross margin percentage in Q4 2002" .
+
+entity:Metric_GrossMargin_2000 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2000,
+        entity:entity_Year_2000 ;
+    kg:hasValue value:GrossMargin_2000 ;
+    kg:label "gross margin" ;
+    kg:tableColumn "2000" ;
+    kg:tableRow "gross margin" .
+
+entity:Metric_GrossMargin_2001 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2001,
+        entity:entity_Year_2001 ;
+    kg:hasValue value:GrossMargin_2001 ;
+    kg:label "gross margin" ;
+    kg:tableColumn "2001" ;
+    kg:tableRow "gross margin" .
+
+entity:Metric_GrossMargin_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:GrossMargin_2002 ;
+    kg:label "gross margin" ;
+    kg:tableColumn "2002" ;
+    kg:tableRow "gross margin" .
+
+entity:Metric_NetSales_2000 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2000,
+        entity:entity_Year_2000 ;
+    kg:hasValue value:NetSales_2000 ;
+    kg:label "net sales" ;
+    kg:tableColumn "2000" ;
+    kg:tableRow "net sales" .
+
+entity:Metric_NetSales_2001 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2001,
+        entity:entity_Year_2001 ;
+    kg:hasValue value:NetSales_2001 ;
+    kg:label "net sales" ;
+    kg:tableColumn "2001" ;
+    kg:tableRow "net sales" .
+
+entity:Metric_NetSales_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:NetSales_2002 ;
+    kg:label "net sales" ;
+    kg:tableColumn "2002" ;
+    kg:tableRow "net sales" .
+
+value:CostOfSales_2000 a kg:MonetaryValue ;
+    kg:displayValue "5817.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 5817.0 .
+
+value:CostOfSales_2001 a kg:MonetaryValue ;
+    kg:displayValue "4128.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 4128.0 .
+
+value:CostOfSales_2002 a kg:MonetaryValue ;
+    kg:displayValue "4139.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 4139.0 .
+
+value:GrossMarginPercentage_2000 a kg:MonetaryValue ;
+    kg:displayValue "-27.0",
+        "27%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -27.0,
+        27.0 .
+
+value:GrossMarginPercentage_2001 a kg:MonetaryValue ;
+    kg:displayValue "-23.0",
+        "23%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -23.0,
+        23.0 .
+
+value:GrossMarginPercentage_2002 a kg:MonetaryValue ;
+    kg:displayValue "-28.0",
+        "28%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -28.0,
+        28.0 .
+
+value:GrossMarginPercentage_Q1_2000 a kg:MonetaryValue ;
+    kg:displayValue "26%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 26.0 .
+
+value:GrossMarginPercentage_Q1_2001 a kg:MonetaryValue ;
+    kg:displayValue "-2%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -2.0 .
+
+value:GrossMarginPercentage_Q1_2002 a kg:MonetaryValue ;
+    kg:displayValue "31%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 31.0 .
+
+value:GrossMarginPercentage_Q4_2002 a kg:MonetaryValue ;
+    kg:displayValue "26%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 26.0 .
+
+value:GrossMargin_2000 a kg:MonetaryValue ;
+    kg:displayValue "2166.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2166.0 .
+
+value:GrossMargin_2001 a kg:MonetaryValue ;
+    kg:displayValue "1235.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1235.0 .
+
+value:GrossMargin_2002 a kg:MonetaryValue ;
+    kg:displayValue "1603.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1603.0 .
+
+value:NetSales_2000 a kg:MonetaryValue ;
+    kg:displayValue "7983.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 7983.0 .
+
+value:NetSales_2001 a kg:MonetaryValue ;
+    kg:displayValue "5363.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 5363.0 .
+
+value:NetSales_2002 a kg:MonetaryValue ;
+    kg:displayValue "5742.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 5742.0 .
+
+entity:Metric_GrossMarginPercentage_2000 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2000,
+        entity:entity_Year_2000 ;
+    kg:hasValue value:GrossMarginPercentage_2000 ;
+    kg:label "Gross margin percentage in 2000",
+        "gross margin percentage" ;
+    kg:tableColumn "2000" ;
+    kg:tableRow "gross margin percentage" .
+
+entity:Metric_GrossMarginPercentage_2001 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2001,
+        entity:entity_Year_2001 ;
+    kg:hasValue value:GrossMarginPercentage_2001 ;
+    kg:label "Gross margin percentage in 2001",
+        "gross margin percentage" ;
+    kg:tableColumn "2001" ;
+    kg:tableRow "gross margin percentage" .
+
+entity:Metric_GrossMarginPercentage_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:GrossMarginPercentage_2002 ;
+    kg:label "Gross margin percentage in 2002",
+        "gross margin percentage" ;
+    kg:tableColumn "2002" ;
+    kg:tableRow "gross margin percentage" .
+
+entity:Year_2000 a kg:Year ;
+    kg:yearValue 2000 .
+
+entity:Year_2001 a kg:Year ;
+    kg:yearValue 2001 .
+
+entity:Year_2002 a kg:Year ;
+    kg:yearValue 2002 .
+

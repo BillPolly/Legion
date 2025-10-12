@@ -1,0 +1,626 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-11" ;
+    kg:builtWithOntologyVersion "1.0.5" .
+
+entity:Company_Example8 a kg:Company ;
+    kg:hasMetric entity:Metric_LifeAnnuityDisability_1_3_years,
+        entity:Metric_LifeAnnuityDisability_3_5_years,
+        entity:Metric_LifeAnnuityDisability_LessThan1Year,
+        entity:Metric_LifeAnnuityDisability_MoreThan5Years,
+        entity:Metric_LifeAnnuityDisability_Total,
+        entity:Metric_LongTermDebt_1_3_years,
+        entity:Metric_LongTermDebt_3_5_years,
+        entity:Metric_LongTermDebt_LessThan1Year,
+        entity:Metric_LongTermDebt_MoreThan5Years,
+        entity:Metric_LongTermDebt_Total,
+        entity:Metric_OperatingLease_1_3_years,
+        entity:Metric_OperatingLease_3_5_years,
+        entity:Metric_OperatingLease_LessThan1Year,
+        entity:Metric_OperatingLease_MoreThan5Years,
+        entity:Metric_OperatingLease_Total,
+        entity:Metric_OtherLongTermLiabilities_1_3_years,
+        entity:Metric_OtherLongTermLiabilities_3_5_years,
+        entity:Metric_OtherLongTermLiabilities_LessThan1Year,
+        entity:Metric_OtherLongTermLiabilities_MoreThan5Years,
+        entity:Metric_OtherLongTermLiabilities_Total,
+        entity:Metric_PropertyCasualty_1_3_years,
+        entity:Metric_PropertyCasualty_3_5_years,
+        entity:Metric_PropertyCasualty_LessThan1Year,
+        entity:Metric_PropertyCasualty_MoreThan5Years,
+        entity:Metric_PropertyCasualty_Total,
+        entity:Metric_PurchaseObligations_1_3_years,
+        entity:Metric_PurchaseObligations_3_5_years,
+        entity:Metric_PurchaseObligations_LessThan1Year,
+        entity:Metric_PurchaseObligations_MoreThan5Years,
+        entity:Metric_PurchaseObligations_Total,
+        entity:Metric_Total_1_3_years,
+        entity:Metric_Total_3_5_years,
+        entity:Metric_Total_LessThan1Year,
+        entity:Metric_Total_MoreThan5Years,
+        entity:Metric_Total_Total ;
+    kg:label "Company_8" .
+
+entity:Company_FinancialObligations a kg:Company ;
+    kg:hasMetric entity:Metric_CashCollateral,
+        entity:Metric_CollateralizedLoanObligations,
+        entity:Metric_CommitmentsPurchaseInvestments,
+        entity:Metric_LimitedPartnerships,
+        entity:Metric_LongTermDebtInterestPayments,
+        entity:Metric_LongTermDebtPrincipalPayments,
+        entity:Metric_MortgageLoans,
+        entity:Metric_PayablesSecuritiesPurchased,
+        entity:Metric_PensionPlanContribution_2005,
+        entity:Metric_PropertyCasualtyReserves,
+        entity:Metric_ReserveDiscount ;
+    kg:label "Company (Financial Obligations Report)" .
+
+entity:FinancialTable a kg:Table ;
+    kg:hasColumn entity:TableColumn_0,
+        entity:TableColumn_1,
+        entity:TableColumn_2,
+        entity:TableColumn_3,
+        entity:TableColumn_4 ;
+    kg:hasRow entity:TableRow_0,
+        entity:TableRow_1,
+        entity:TableRow_2,
+        entity:TableRow_3,
+        entity:TableRow_4,
+        entity:TableRow_5,
+        entity:TableRow_6 ;
+    kg:tableCaption "Company's aggregate contractual obligations due by payment period" ;
+    kg:tableOrientation "column-first" .
+
+entity:Metric_CashCollateral a kg:FinancialMetric ;
+    kg:hasValue value:CashCollateral ;
+    kg:label "Cash collateral (securities lending and derivatives)" .
+
+entity:Metric_CollateralizedLoanObligations a kg:FinancialMetric ;
+    kg:hasValue value:CollateralizedLoanObligations ;
+    kg:label "Collateralized loan obligations (CLOs)" .
+
+entity:Metric_CommitmentsPurchaseInvestments a kg:FinancialMetric ;
+    kg:hasValue value:CommitmentsPurchaseInvestments ;
+    kg:label "Commitments to purchase investments" .
+
+entity:Metric_LifeAnnuityDisability_1_3_years a kg:FinancialMetric ;
+    kg:hasValue value:LifeAnnuityDisability_1_3_years ;
+    kg:label "life annuity and disability obligations - 1-3 years" ;
+    kg:tableColumn "1-3 years" ;
+    kg:tableRow "life annuity and disability obligations [2]" .
+
+entity:Metric_LifeAnnuityDisability_3_5_years a kg:FinancialMetric ;
+    kg:hasValue value:LifeAnnuityDisability_3_5_years ;
+    kg:label "life annuity and disability obligations - 3-5 years" ;
+    kg:tableColumn "3-5 years" ;
+    kg:tableRow "life annuity and disability obligations [2]" .
+
+entity:Metric_LifeAnnuityDisability_LessThan1Year a kg:FinancialMetric ;
+    kg:hasValue value:LifeAnnuityDisability_LessThan1Year ;
+    kg:label "life annuity and disability obligations - less than 1 year" ;
+    kg:tableColumn "less than 1 year" ;
+    kg:tableRow "life annuity and disability obligations [2]" .
+
+entity:Metric_LifeAnnuityDisability_MoreThan5Years a kg:FinancialMetric ;
+    kg:hasValue value:LifeAnnuityDisability_MoreThan5Years ;
+    kg:label "life annuity and disability obligations - more than 5 years" ;
+    kg:tableColumn "more than 5 years" ;
+    kg:tableRow "life annuity and disability obligations [2]" .
+
+entity:Metric_LifeAnnuityDisability_Total a kg:FinancialMetric ;
+    kg:hasValue value:LifeAnnuityDisability_Total ;
+    kg:label "life annuity and disability obligations - total" ;
+    kg:tableColumn "total" ;
+    kg:tableRow "life annuity and disability obligations [2]" .
+
+entity:Metric_LimitedPartnerships a kg:FinancialMetric ;
+    kg:hasValue value:LimitedPartnerships ;
+    kg:label "Limited partnerships commitments" .
+
+entity:Metric_LongTermDebtInterestPayments a kg:FinancialMetric ;
+    kg:hasValue value:LongTermDebtInterestPayments ;
+    kg:label "Interest payments of junior subordinated debentures" .
+
+entity:Metric_LongTermDebtPrincipalPayments a kg:FinancialMetric ;
+    kg:hasValue value:LongTermDebtPrincipalPayments ;
+    kg:label "Principal payments of junior subordinated debentures" .
+
+entity:Metric_LongTermDebt_1_3_years a kg:FinancialMetric ;
+    kg:hasValue value:LongTermDebt_1_3_years ;
+    kg:label "long-term debt obligations - 1-3 years" ;
+    kg:tableColumn "1-3 years" ;
+    kg:tableRow "long-term debt obligations [3]" .
+
+entity:Metric_LongTermDebt_3_5_years a kg:FinancialMetric ;
+    kg:hasValue value:LongTermDebt_3_5_years ;
+    kg:label "long-term debt obligations - 3-5 years" ;
+    kg:tableColumn "3-5 years" ;
+    kg:tableRow "long-term debt obligations [3]" .
+
+entity:Metric_LongTermDebt_LessThan1Year a kg:FinancialMetric ;
+    kg:hasValue value:LongTermDebt_LessThan1Year ;
+    kg:label "long-term debt obligations - less than 1 year" ;
+    kg:tableColumn "less than 1 year" ;
+    kg:tableRow "long-term debt obligations [3]" .
+
+entity:Metric_LongTermDebt_MoreThan5Years a kg:FinancialMetric ;
+    kg:hasValue value:LongTermDebt_MoreThan5Years ;
+    kg:label "long-term debt obligations - more than 5 years" ;
+    kg:tableColumn "more than 5 years" ;
+    kg:tableRow "long-term debt obligations [3]" .
+
+entity:Metric_LongTermDebt_Total a kg:FinancialMetric ;
+    kg:hasValue value:LongTermDebt_Total ;
+    kg:label "long-term debt obligations - total" ;
+    kg:tableColumn "total" ;
+    kg:tableRow "long-term debt obligations [3]" .
+
+entity:Metric_MortgageLoans a kg:FinancialMetric ;
+    kg:hasValue value:MortgageLoans ;
+    kg:label "Mortgage loans commitments" .
+
+entity:Metric_OperatingLease_1_3_years a kg:FinancialMetric ;
+    kg:hasValue value:OperatingLease_1_3_years ;
+    kg:label "operating lease obligations - 1-3 years" ;
+    kg:tableColumn "1-3 years" ;
+    kg:tableRow "operating lease obligations" .
+
+entity:Metric_OperatingLease_3_5_years a kg:FinancialMetric ;
+    kg:hasValue value:OperatingLease_3_5_years ;
+    kg:label "operating lease obligations - 3-5 years" ;
+    kg:tableColumn "3-5 years" ;
+    kg:tableRow "operating lease obligations" .
+
+entity:Metric_OperatingLease_LessThan1Year a kg:FinancialMetric ;
+    kg:hasValue value:OperatingLease_LessThan1Year ;
+    kg:label "operating lease obligations - less than 1 year" ;
+    kg:tableColumn "less than 1 year" ;
+    kg:tableRow "operating lease obligations" .
+
+entity:Metric_OperatingLease_MoreThan5Years a kg:FinancialMetric ;
+    kg:hasValue value:OperatingLease_MoreThan5Years ;
+    kg:label "operating lease obligations - more than 5 years" ;
+    kg:tableColumn "more than 5 years" ;
+    kg:tableRow "operating lease obligations" .
+
+entity:Metric_OperatingLease_Total a kg:FinancialMetric ;
+    kg:hasValue value:OperatingLease_Total ;
+    kg:label "operating lease obligations - total" ;
+    kg:tableColumn "total" ;
+    kg:tableRow "operating lease obligations" .
+
+entity:Metric_OtherLongTermLiabilities_1_3_years a kg:FinancialMetric ;
+    kg:hasValue value:OtherLongTermLiabilities_1_3_years ;
+    kg:label "other long-term liabilities reflected onthe balance sheet - 1-3 years" ;
+    kg:tableColumn "1-3 years" ;
+    kg:tableRow "other long-term liabilities reflected onthe balance sheet [6] [7]" .
+
+entity:Metric_OtherLongTermLiabilities_3_5_years a kg:FinancialMetric ;
+    kg:hasValue value:OtherLongTermLiabilities_3_5_years ;
+    kg:label "other long-term liabilities reflected onthe balance sheet - 3-5 years" ;
+    kg:tableColumn "3-5 years" ;
+    kg:tableRow "other long-term liabilities reflected onthe balance sheet [6] [7]" .
+
+entity:Metric_OtherLongTermLiabilities_LessThan1Year a kg:FinancialMetric ;
+    kg:hasValue value:OtherLongTermLiabilities_LessThan1Year ;
+    kg:label "other long-term liabilities reflected onthe balance sheet - less than 1 year" ;
+    kg:tableColumn "less than 1 year" ;
+    kg:tableRow "other long-term liabilities reflected onthe balance sheet [6] [7]" .
+
+entity:Metric_OtherLongTermLiabilities_MoreThan5Years a kg:FinancialMetric ;
+    kg:hasValue value:OtherLongTermLiabilities_MoreThan5Years ;
+    kg:label "other long-term liabilities reflected onthe balance sheet - more than 5 years" ;
+    kg:tableColumn "more than 5 years" ;
+    kg:tableRow "other long-term liabilities reflected onthe balance sheet [6] [7]" .
+
+entity:Metric_OtherLongTermLiabilities_Total a kg:FinancialMetric ;
+    kg:hasValue value:OtherLongTermLiabilities_Total ;
+    kg:label "other long-term liabilities reflected onthe balance sheet - total" ;
+    kg:tableColumn "total" ;
+    kg:tableRow "other long-term liabilities reflected onthe balance sheet [6] [7]" .
+
+entity:Metric_PayablesSecuritiesPurchased a kg:FinancialMetric ;
+    kg:hasValue value:PayablesSecuritiesPurchased ;
+    kg:label "Payables for securities purchased" .
+
+entity:Metric_PensionPlanContribution_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2005,
+        entity:entity_Year_2005 ;
+    kg:hasValue value:PensionPlanContribution_2005 ;
+    kg:label "Estimated contribution to pension plan" .
+
+entity:Metric_PropertyCasualtyReserves a kg:FinancialMetric ;
+    kg:hasValue value:PropertyCasualtyReserves ;
+    kg:label "Total property and casualty reserves" .
+
+entity:Metric_PropertyCasualty_1_3_years a kg:FinancialMetric ;
+    kg:hasValue value:PropertyCasualty_1_3_years ;
+    kg:label "property and casualty obligations - 1-3 years" ;
+    kg:tableColumn "1-3 years" ;
+    kg:tableRow "property and casualty obligations [1]" .
+
+entity:Metric_PropertyCasualty_3_5_years a kg:FinancialMetric ;
+    kg:hasValue value:PropertyCasualty_3_5_years ;
+    kg:label "property and casualty obligations - 3-5 years" ;
+    kg:tableColumn "3-5 years" ;
+    kg:tableRow "property and casualty obligations [1]" .
+
+entity:Metric_PropertyCasualty_LessThan1Year a kg:FinancialMetric ;
+    kg:hasValue value:PropertyCasualty_LessThan1Year ;
+    kg:label "property and casualty obligations - less than 1 year" ;
+    kg:tableColumn "less than 1 year" ;
+    kg:tableRow "property and casualty obligations [1]" .
+
+entity:Metric_PropertyCasualty_MoreThan5Years a kg:FinancialMetric ;
+    kg:hasValue value:PropertyCasualty_MoreThan5Years ;
+    kg:label "property and casualty obligations - more than 5 years" ;
+    kg:tableColumn "more than 5 years" ;
+    kg:tableRow "property and casualty obligations [1]" .
+
+entity:Metric_PropertyCasualty_Total a kg:FinancialMetric ;
+    kg:hasValue value:PropertyCasualty_Total ;
+    kg:label "property and casualty obligations - total" ;
+    kg:tableColumn "total" ;
+    kg:tableRow "property and casualty obligations [1]" .
+
+entity:Metric_PurchaseObligations_1_3_years a kg:FinancialMetric ;
+    kg:hasValue value:PurchaseObligations_1_3_years ;
+    kg:label "purchase obligations - 1-3 years" ;
+    kg:tableColumn "1-3 years" ;
+    kg:tableRow "purchase obligations [4] [5]" .
+
+entity:Metric_PurchaseObligations_3_5_years a kg:FinancialMetric ;
+    kg:hasValue value:PurchaseObligations_3_5_years ;
+    kg:label "purchase obligations - 3-5 years" ;
+    kg:tableColumn "3-5 years" ;
+    kg:tableRow "purchase obligations [4] [5]" .
+
+entity:Metric_PurchaseObligations_LessThan1Year a kg:FinancialMetric ;
+    kg:hasValue value:PurchaseObligations_LessThan1Year ;
+    kg:label "purchase obligations - less than 1 year" ;
+    kg:tableColumn "less than 1 year" ;
+    kg:tableRow "purchase obligations [4] [5]" .
+
+entity:Metric_PurchaseObligations_MoreThan5Years a kg:FinancialMetric ;
+    kg:hasValue value:PurchaseObligations_MoreThan5Years ;
+    kg:label "purchase obligations - more than 5 years" ;
+    kg:tableColumn "more than 5 years" ;
+    kg:tableRow "purchase obligations [4] [5]" .
+
+entity:Metric_PurchaseObligations_Total a kg:FinancialMetric ;
+    kg:hasValue value:PurchaseObligations_Total ;
+    kg:label "purchase obligations - total" ;
+    kg:tableColumn "total" ;
+    kg:tableRow "purchase obligations [4] [5]" .
+
+entity:Metric_ReserveDiscount a kg:FinancialMetric ;
+    kg:hasValue value:ReserveDiscount ;
+    kg:label "Reserve discount" .
+
+entity:Metric_Total_1_3_years a kg:FinancialMetric ;
+    kg:hasValue value:Total_1_3_years ;
+    kg:label "total - 1-3 years" ;
+    kg:tableColumn "1-3 years" ;
+    kg:tableRow "total" .
+
+entity:Metric_Total_3_5_years a kg:FinancialMetric ;
+    kg:hasValue value:Total_3_5_years ;
+    kg:label "total - 3-5 years" ;
+    kg:tableColumn "3-5 years" ;
+    kg:tableRow "total" .
+
+entity:Metric_Total_LessThan1Year a kg:FinancialMetric ;
+    kg:hasValue value:Total_LessThan1Year ;
+    kg:label "total - less than 1 year" ;
+    kg:tableColumn "less than 1 year" ;
+    kg:tableRow "total" .
+
+entity:Metric_Total_MoreThan5Years a kg:FinancialMetric ;
+    kg:hasValue value:Total_MoreThan5Years ;
+    kg:label "total - more than 5 years" ;
+    kg:tableColumn "more than 5 years" ;
+    kg:tableRow "total" .
+
+entity:Metric_Total_Total a kg:FinancialMetric ;
+    kg:hasValue value:Total_Total ;
+    kg:label "total - total" ;
+    kg:tableColumn "total" ;
+    kg:tableRow "total" .
+
+entity:TableColumn_0 a kg:TableColumn ;
+    kg:columnIndex 0 ;
+    kg:label "{'index': 0, 'label': 'total'}" .
+
+entity:TableColumn_1 a kg:TableColumn ;
+    kg:columnIndex 1 ;
+    kg:label "{'index': 1, 'label': 'less than 1 year'}" .
+
+entity:TableColumn_2 a kg:TableColumn ;
+    kg:columnIndex 2 ;
+    kg:label "{'index': 2, 'label': '1-3 years'}" .
+
+entity:TableColumn_3 a kg:TableColumn ;
+    kg:columnIndex 3 ;
+    kg:label "{'index': 3, 'label': '3-5 years'}" .
+
+entity:TableColumn_4 a kg:TableColumn ;
+    kg:columnIndex 4 ;
+    kg:label "{'index': 4, 'label': 'more than 5 years'}" .
+
+entity:TableRow_0 a kg:TableRow ;
+    kg:label "{'index': 0, 'label': 'life annuity and disability obligations [2]'}" ;
+    kg:rowIndex 0 .
+
+entity:TableRow_1 a kg:TableRow ;
+    kg:label "{'index': 1, 'label': 'long-term debt obligations [3]'}" ;
+    kg:rowIndex 1 .
+
+entity:TableRow_2 a kg:TableRow ;
+    kg:label "{'index': 2, 'label': 'operating lease obligations'}" ;
+    kg:rowIndex 2 .
+
+entity:TableRow_3 a kg:TableRow ;
+    kg:label "{'index': 3, 'label': 'other long-term liabilities reflected onthe balance sheet [6] [7]'}" ;
+    kg:rowIndex 3 .
+
+entity:TableRow_4 a kg:TableRow ;
+    kg:label "{'index': 4, 'label': 'property and casualty obligations [1]'}" ;
+    kg:rowIndex 4 .
+
+entity:TableRow_5 a kg:TableRow ;
+    kg:label "{'index': 5, 'label': 'purchase obligations [4] [5]'}" ;
+    kg:rowIndex 5 .
+
+entity:TableRow_6 a kg:TableRow ;
+    kg:label "{'index': 6, 'label': 'total'}" ;
+    kg:rowIndex 6 .
+
+entity:Year_2005 a kg:Year ;
+    kg:yearValue 2005 .
+
+value:CashCollateral a kg:MonetaryValue ;
+    kg:displayValue "$ 1.6 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 1.6 .
+
+value:CollateralizedLoanObligations a kg:MonetaryValue ;
+    kg:displayValue "$ 52" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 52.0 .
+
+value:CommitmentsPurchaseInvestments a kg:MonetaryValue ;
+    kg:displayValue "$ 1.4 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 1.4 .
+
+value:LifeAnnuityDisability_1_3_years a kg:MonetaryValue ;
+    kg:displayValue "37318.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 37318.0 .
+
+value:LifeAnnuityDisability_3_5_years a kg:MonetaryValue ;
+    kg:displayValue "40255.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 40255.0 .
+
+value:LifeAnnuityDisability_LessThan1Year a kg:MonetaryValue ;
+    kg:displayValue "18037.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 18037.0 .
+
+value:LifeAnnuityDisability_MoreThan5Years a kg:MonetaryValue ;
+    kg:displayValue "186388.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 186388.0 .
+
+value:LifeAnnuityDisability_Total a kg:MonetaryValue ;
+    kg:displayValue "281998.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 281998.0 .
+
+value:LimitedPartnerships a kg:MonetaryValue ;
+    kg:displayValue "$ 330" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 330.0 .
+
+value:LongTermDebtInterestPayments a kg:MonetaryValue ;
+    kg:displayValue "$ 2.4 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 2.4 .
+
+value:LongTermDebtPrincipalPayments a kg:MonetaryValue ;
+    kg:displayValue "$ 700" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 700.0 .
+
+value:LongTermDebt_1_3_years a kg:MonetaryValue ;
+    kg:displayValue "1288.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1288.0 .
+
+value:LongTermDebt_3_5_years a kg:MonetaryValue ;
+    kg:displayValue "1613.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1613.0 .
+
+value:LongTermDebt_LessThan1Year a kg:MonetaryValue ;
+    kg:displayValue "536.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 536.0 .
+
+value:LongTermDebt_MoreThan5Years a kg:MonetaryValue ;
+    kg:displayValue "5656.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 5656.0 .
+
+value:LongTermDebt_Total a kg:MonetaryValue ;
+    kg:displayValue "9093.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 9093.0 .
+
+value:MortgageLoans a kg:MonetaryValue ;
+    kg:displayValue "$ 299" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 299.0 .
+
+value:OperatingLease_1_3_years a kg:MonetaryValue ;
+    kg:displayValue "285.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 285.0 .
+
+value:OperatingLease_3_5_years a kg:MonetaryValue ;
+    kg:displayValue "162.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 162.0 .
+
+value:OperatingLease_LessThan1Year a kg:MonetaryValue ;
+    kg:displayValue "175.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 175.0 .
+
+value:OperatingLease_MoreThan5Years a kg:MonetaryValue ;
+    kg:displayValue "101.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 101.0 .
+
+value:OperatingLease_Total a kg:MonetaryValue ;
+    kg:displayValue "723.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 723.0 .
+
+value:OtherLongTermLiabilities_1_3_years a kg:MonetaryValue ;
+    kg:displayValue "2014.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2014.0 .
+
+value:OtherLongTermLiabilities_3_5_years a kg:MonetaryValue ;
+    kg:displayValue "52.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 52.0 .
+
+value:OtherLongTermLiabilities_LessThan1Year a kg:MonetaryValue ;
+    kg:displayValue "1590.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1590.0 .
+
+value:OtherLongTermLiabilities_MoreThan5Years a kg:MonetaryValue ;
+    kg:displayValue "2014.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2014.0 .
+
+value:OtherLongTermLiabilities_Total a kg:MonetaryValue ;
+    kg:displayValue "1642.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1642.0 .
+
+value:PayablesSecuritiesPurchased a kg:MonetaryValue ;
+    kg:displayValue "$ 759" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 759.0 .
+
+value:PensionPlanContribution_2005 a kg:MonetaryValue ;
+    kg:displayValue "$ 200" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 200.0 .
+
+value:PropertyCasualtyReserves a kg:MonetaryValue ;
+    kg:displayValue "$ 21885" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 21885.0 .
+
+value:PropertyCasualty_1_3_years a kg:MonetaryValue ;
+    kg:displayValue "6150.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 6150.0 .
+
+value:PropertyCasualty_3_5_years a kg:MonetaryValue ;
+    kg:displayValue "3016.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 3016.0 .
+
+value:PropertyCasualty_LessThan1Year a kg:MonetaryValue ;
+    kg:displayValue "5777.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 5777.0 .
+
+value:PropertyCasualty_MoreThan5Years a kg:MonetaryValue ;
+    kg:displayValue "6942.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 6942.0 .
+
+value:PropertyCasualty_Total a kg:MonetaryValue ;
+    kg:displayValue "21885.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 21885.0 .
+
+value:PurchaseObligations_1_3_years a kg:MonetaryValue ;
+    kg:displayValue "120.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 120.0 .
+
+value:PurchaseObligations_3_5_years a kg:MonetaryValue ;
+    kg:displayValue "14.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 14.0 .
+
+value:PurchaseObligations_LessThan1Year a kg:MonetaryValue ;
+    kg:displayValue "1614.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1614.0 .
+
+value:PurchaseObligations_MoreThan5Years a kg:MonetaryValue ;
+    kg:displayValue "16.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 16.0 .
+
+value:PurchaseObligations_Total a kg:MonetaryValue ;
+    kg:displayValue "1764.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1764.0 .
+
+value:ReserveDiscount a kg:MonetaryValue ;
+    kg:displayValue "$ 556" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 556.0 .
+
+value:Total_1_3_years a kg:MonetaryValue ;
+    kg:displayValue "45161.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 45161.0 .
+
+value:Total_3_5_years a kg:MonetaryValue ;
+    kg:displayValue "45112.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 45112.0 .
+
+value:Total_LessThan1Year a kg:MonetaryValue ;
+    kg:displayValue "27729.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 27729.0 .
+
+value:Total_MoreThan5Years a kg:MonetaryValue ;
+    kg:displayValue "199103.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 199103.0 .
+
+value:Total_Total a kg:MonetaryValue ;
+    kg:displayValue "317105.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 317105.0 .
+

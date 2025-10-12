@@ -1,0 +1,1173 @@
+@prefix dc1: <http://purl.org/dc/terms/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:Billions a kg:Scale ;
+    rdfs:label "Billions" ;
+    kg:conversionFactor 1000000000 .
+
+kg:ConvFinQAOntology a owl:Ontology ;
+    rdfs:label "ConvFinQA Ontology" ;
+    dc1:modified "2025-10-12" ;
+    rdfs:comment "Ontology for modeling financial documents, tables, and extracted values from ConvFinQA dataset. v1.0.11: Added footnote processing with rdfs:comment support for metrics" ;
+    owl:versionInfo "1.0.11" .
+
+kg:CountValue a owl:Class ;
+    rdfs:label "Count Value" ;
+    rdfs:comment "A count or quantity (e.g., 1,500 vehicles)" ;
+    rdfs:subClassOf kg:FinancialValue .
+
+kg:EUR a kg:Currency ;
+    rdfs:label "Euros" .
+
+kg:EconomicIndex a owl:Class ;
+    rdfs:label "Economic Index" ;
+    rdfs:comment "An economic index or reference rate (e.g., Federal funds rate, S&P 500, inflation index)" .
+
+kg:FinancialInstrument a owl:Class ;
+    rdfs:label "Financial Instrument" ;
+    rdfs:comment "A financial product or security (e.g., bonds, stocks, derivatives, leases)" .
+
+kg:Millions a kg:Scale ;
+    rdfs:label "Millions" ;
+    kg:conversionFactor 1000000 .
+
+kg:OtherEntity a owl:Class ;
+    rdfs:label "Other Entity" ;
+    rdfs:comment "Other entities that don't fit standard categories (e.g., regulations, standards)" .
+
+kg:PercentageValue a owl:Class ;
+    rdfs:label "Percentage Value" ;
+    rdfs:comment "A percentage value (e.g., 25%)" ;
+    rdfs:subClassOf kg:FinancialValue .
+
+kg:RatioValue a owl:Class ;
+    rdfs:label "Ratio Value" ;
+    rdfs:comment "A dimensionless ratio (e.g., 1.73)" ;
+    rdfs:subClassOf kg:FinancialValue .
+
+kg:StockClass a owl:Class ;
+    rdfs:label "Stock Class" ;
+    rdfs:comment "A class or type of stock (e.g., common stock, preferred stock, Class A shares)" .
+
+kg:Thousands a kg:Scale ;
+    rdfs:label "Thousands" ;
+    kg:conversionFactor 1000 .
+
+kg:USD a kg:Currency ;
+    rdfs:label "US Dollars" .
+
+kg:UnitConversion a owl:Class ;
+    rdfs:label "Unit Conversion" ;
+    rdfs:comment """Converts a value from one scale to another based on question requirements.
+    Formula: value × (source_scale.conversionFactor / target_scale.conversionFactor)
+
+    WHEN TO USE:
+    1. Question explicitly specifies target unit: 'in millions', 'in thousands', 'in billions'
+    2. Before arithmetic operations on values with different scales (normalize first)
+    3. When comparing or combining values from different sources
+
+    Examples:
+    - Question: 'net income in 2018, in millions?'
+      KG has: 10.5 with scale Billions
+      Convert: 10.5 × (1000000000 / 1000000) = 10.5 × 1000 = 10500
+
+    - Question: 'net income / net sales'
+      net_income: 10.5 Billions
+      net_sales: 318477 Millions
+      Normalize to same scale first:
+      net_income_millions = 10.5 × (1000000000 / 1000000) = 10500
+      Result: 10500 / 318477 = 0.03297
+
+    Scale conversion factors from ontology:
+    - kg:Billions kg:conversionFactor 1000000000
+    - kg:Millions kg:conversionFactor 1000000
+    - kg:Thousands kg:conversionFactor 1000
+    - kg:Units kg:conversionFactor 1
+
+    Natural language: 'in millions', 'in thousands', 'in billions', 'in dollars' (when comparing different scales)""" ;
+    rdfs:subClassOf kg:SemanticOperation .
+
+kg:UnitConversionPattern a owl:Class ;
+    rdfs:label "Unit Conversion Pattern" ;
+    rdfs:comment "Patterns for converting between units (thousands, millions, billions, etc.)" .
+
+kg:Units a kg:Scale ;
+    rdfs:label "Units" ;
+    kg:conversionFactor 1 ;
+    rdfs:comment "No scaling (actual value)" .
+
+kg:alternatePhrase a owl:DatatypeProperty ;
+    rdfs:label "alternate phrase" ;
+    rdfs:comment "Alternative way this pattern can be expressed" ;
+    rdfs:domain kg:LinguisticPattern ;
+    rdfs:range xsd:string .
+
+kg:appliesWhenLabelContains a owl:DatatypeProperty ;
+    rdfs:label "applies when label contains" ;
+    rdfs:comment """Pattern to match in the metric label or source description (case-insensitive).
+    If a retrieved value's source description contains this pattern, the transformation must be applied.
+    Example: 'net interest margin' matches 'Net Interest Margin for 2007'""" ;
+    rdfs:domain kg:MetricTransformationRule ;
+    rdfs:range xsd:string .
+
+kg:baselineYear a owl:ObjectProperty ;
+    rdfs:label "baseline year" ;
+    rdfs:comment "For index tables, the year where index = 100" ;
+    rdfs:domain kg:IndexValue ;
+    rdfs:range kg:Year .
+
+kg:conversionFactor a owl:DatatypeProperty ;
+    rdfs:label "conversion factor" ;
+    rdfs:comment """Conversion factor from this scale to Units (base unit).
+    To convert a value from one scale to another:
+    result = value × (sourceScale.conversionFactor / targetScale.conversionFactor)
+
+    Example: Convert 10.5 Billions to Millions
+    result = 10.5 × (1000000000 / 1000000) = 10.5 × 1000 = 10500
+    """ ;
+    rdfs:domain kg:Scale ;
+    rdfs:range xsd:integer .
+
+kg:displayValue a owl:DatatypeProperty ;
+    rdfs:label "display value" ;
+    rdfs:comment "How the value was displayed in the original document (e.g., '2,534.0', '25%')" ;
+    rdfs:domain kg:FinancialValue ;
+    rdfs:range xsd:string .
+
+kg:establishesCategoryContext a owl:DatatypeProperty ;
+    rdfs:label "establishes category context" ;
+    rdfs:comment """Indicates if a question establishes a categorical context (segment, region, etc.) for subsequent questions.
+    Example: 'what was the revenue for residential customers?' → true
+    Subsequent questions inherit residential context unless they specify a different category""" ;
+    rdfs:domain owl:Thing ;
+    rdfs:range xsd:boolean .
+
+kg:establishesTemporalContext a owl:DatatypeProperty ;
+    rdfs:label "establishes temporal context" ;
+    rdfs:comment """Indicates if a question establishes a time period context for subsequent questions.
+    Example: 'what was the total value in October?' → true
+    Subsequent questions inherit October context unless they specify a different period""" ;
+    rdfs:domain owl:Thing ;
+    rdfs:range xsd:boolean .
+
+kg:exampleContext a owl:DatatypeProperty ;
+    rdfs:label "example context" ;
+    rdfs:comment "Context or prerequisites for this pattern" ;
+    rdfs:domain kg:LinguisticPattern ;
+    rdfs:range xsd:string .
+
+kg:exampleQuestion a owl:DatatypeProperty ;
+    rdfs:label "example question" ;
+    rdfs:comment "Example question demonstrating this pattern" ;
+    rdfs:domain kg:LinguisticPattern ;
+    rdfs:range xsd:string .
+
+kg:forTimePeriod a owl:ObjectProperty ;
+    rdfs:label "for time period" ;
+    rdfs:comment "Specifies the time period for a metric" ;
+    rdfs:domain kg:FinancialMetric ;
+    rdfs:range kg:TimePeriod .
+
+kg:hasCurrency a owl:ObjectProperty ;
+    rdfs:label "has currency" ;
+    rdfs:comment "The currency for monetary values" ;
+    rdfs:domain kg:MonetaryValue ;
+    rdfs:range kg:Currency .
+
+kg:hasMetric a owl:ObjectProperty ;
+    rdfs:label "has metric" ;
+    rdfs:comment "Links a company to one of its financial metrics" ;
+    rdfs:domain kg:Company ;
+    rdfs:range kg:FinancialMetric .
+
+kg:hasScale a owl:ObjectProperty ;
+    rdfs:label "has scale" ;
+    rdfs:comment "The scale of the value (thousands, millions, billions)" ;
+    rdfs:domain kg:FinancialValue ;
+    rdfs:range kg:Scale .
+
+kg:hasValue a owl:ObjectProperty ;
+    rdfs:label "has value" ;
+    rdfs:comment "Links a metric to its financial value (which has attributes)" ;
+    rdfs:domain kg:FinancialMetric ;
+    rdfs:range kg:FinancialValue .
+
+kg:inCategory a owl:ObjectProperty ;
+    rdfs:label "in category" ;
+    rdfs:comment "Categorizes a metric (e.g., by business segment, region)" ;
+    rdfs:domain kg:FinancialMetric ;
+    rdfs:range kg:Category .
+
+kg:isComparisonQuestion a owl:DatatypeProperty ;
+    rdfs:label "is comparison question" ;
+    rdfs:comment """Indicates if a question is comparing values between categories or periods.
+    Example: 'how does residential compare to commercial?' → true
+    CRITICAL: Comparison questions do NOT establish filtering context for subsequent questions""" ;
+    rdfs:domain owl:Thing ;
+    rdfs:range xsd:boolean .
+
+kg:label a owl:DatatypeProperty ;
+    rdfs:label "label" ;
+    rdfs:comment "Human-readable label" ;
+    rdfs:domain owl:Thing ;
+    rdfs:range xsd:string .
+
+kg:naturalLanguagePhrase a owl:DatatypeProperty ;
+    rdfs:label "natural language phrase" ;
+    rdfs:comment "Primary natural language phrase that indicates this pattern" ;
+    rdfs:domain kg:LinguisticPattern ;
+    rdfs:range xsd:string .
+
+kg:numericValue a owl:DatatypeProperty ;
+    rdfs:label "numeric value" ;
+    rdfs:comment "The raw numeric value (ALWAYS stored, regardless of scale)" ;
+    rdfs:domain kg:FinancialValue ;
+    rdfs:range xsd:decimal .
+
+kg:pattern_amount_with_percentage a kg:LinguisticPattern ;
+    kg:alternatePhrase "number of [X] that [verb] [Y]" ;
+    kg:exampleContext "When 'Y% of fleet operates on CNG' is available, use total_fleet * (Y/100)" ;
+    kg:exampleQuestion "what was the amount of vehicles that were converted to CNG?" ;
+    kg:naturalLanguagePhrase "amount of [X] that were [Y]" ;
+    kg:requiresPreviousResult false ;
+    kg:semanticOperation kg:RatioCalculation ;
+    rdfs:comment """For questions asking 'amount that were X', look for:
+    1. A percentage metric describing CURRENT STATE (e.g., '19% of fleet operates on CNG')
+    2. The TOTAL base quantity (e.g., 'total vehicles' = 15900)
+    3. Formula: total_base * (percentage / 100)
+
+    CRITICAL: Use the BASE total quantity, NOT a category subset.
+    Example: If previous turn compared 'residential vs large-container', that does NOT mean use residential total.
+    Use the overall fleet/total for percentage calculations.
+
+    Look for percentage metrics with verbs like 'operates on', 'is', 'are' (current state), NOT 'purchased' or 'converted' (past action).""" .
+
+kg:pattern_as_percentage_of a kg:LinguisticPattern ;
+    kg:alternatePhrase "what percentage of" ;
+    kg:exampleQuestion "what is X as a percentage of Y?" ;
+    kg:naturalLanguagePhrase "as a percentage of" ;
+    kg:requiresPreviousResult false ;
+    kg:semanticOperation kg:RatioCalculation ;
+    rdfs:comment "Calculate X/Y, return decimal ratio (NOT * 100)" .
+
+kg:pattern_average_per_year a kg:LinguisticPattern ;
+    kg:alternatePhrase "average per year",
+        "average...between" ;
+    kg:exampleContext "Previous turn computed sum of values across years" ;
+    kg:exampleQuestion "what is the average value per year?" ;
+    kg:naturalLanguagePhrase "average value per year" ;
+    kg:requiresPreviousResult true ;
+    kg:semanticOperation kg:AveragePerPeriod ;
+    rdfs:comment "When asked for average per year after a sum, divide sum by number of years" .
+
+kg:pattern_change a kg:LinguisticPattern ;
+    kg:alternatePhrase "what is the change" ;
+    kg:exampleQuestion "what was the change in performance from 2004 to 2009?" ;
+    kg:naturalLanguagePhrase "what was the change" ;
+    kg:requiresPreviousResult false ;
+    kg:semanticOperation kg:Subtraction ;
+    rdfs:comment "CRITICAL: 'change' WITHOUT 'percentage' means simple subtraction: new_value - old_value. DO NOT divide by old_value!" .
+
+kg:pattern_between_time_range a kg:LinguisticPattern ;
+    kg:alternatePhrase "due between",
+        "amount between" ;
+    kg:exampleQuestion "what is the amount due between 1-3 years?" ;
+    kg:naturalLanguagePhrase "between [X]-[Y]" ;
+    kg:requiresPreviousResult false ;
+    kg:semanticOperation kg:DirectTableLookup ;
+    rdfs:comment """CRITICAL: 'between X-Y [time period]' (e.g., '1-3 years', '3-5 years') is a DIRECT TABLE COLUMN REFERENCE, NOT a range calculation!
+
+    DO NOT interpret as: value_at_Y - value_at_X
+    DO interpret as: Look for table column matching 'X-Y [unit]'
+
+    Examples:
+    - 'amount between 1-3 years' → Find column '1-3 years' or '1 - 3 years'
+    - 'obligations due between 3-5 years' → Find column '3-5 years'
+
+    Context: Financial tables often have maturity buckets like 'within 1 year', '1-3 years', '3-5 years', 'after 5 years'
+    These are CATEGORICAL COLUMNS, not calculations.
+
+    The hyphen syntax 'X-Y' in time contexts indicates a pre-defined table column, not a subtraction operation.""" .
+
+kg:pattern_difference_between a kg:LinguisticPattern ;
+    kg:alternatePhrase "what is the difference between" ;
+    kg:exampleQuestion "what is the difference between the ups percentage and this s&p 500 index one?" ;
+    kg:naturalLanguagePhrase "difference between" ;
+    kg:requiresPreviousResult false ;
+    kg:semanticOperation kg:Subtraction ;
+    rdfs:comment "CRITICAL: 'difference between X and Y' means X - Y (first_mentioned - second_mentioned). Preserve the ORDER from the question! Example: 'difference between the ups percentage and the s&p 500 percentage' → ups_percentage - sp_500_percentage (NOT sp_500 - ups!). SPECIAL CASE - Ratio Growth Rate: When X is a ratio (from 'in relation to') and Y is 'one' or '1', the result represents percentage growth and should be converted: to_percentage(ratio - 1). Example: 'difference between ratio (1.3114) and one' → to_percentage(1.3114 - 1) = 31.14%. This captures the semantic meaning: 'How much MORE (as %) is X than Y?'" .
+
+kg:pattern_divided_by_total a kg:LinguisticPattern ;
+    kg:alternatePhrase "X divided by total Y" ;
+    kg:exampleQuestion "what is the sum divided by total obligations due?" ;
+    kg:naturalLanguagePhrase "divided by total" ;
+    kg:requiresPreviousResult false ;
+    kg:semanticOperation kg:RatioCalculation ;
+    rdfs:comment "CRITICAL: When dividing by a 'total' value, return percentage (*100), not decimal ratio. This asks 'what percentage of the total does X represent'. Example: 'what is the sum divided by total obligations?' where sum=72890 and total=317105 → formula is: sum / total * 100 = 22.99%" .
+
+kg:pattern_fluctuation a kg:LinguisticPattern ;
+    kg:alternatePhrase "what is the fluctuation" ;
+    kg:exampleQuestion "what was the fluctuation from 2004 to 2006?" ;
+    kg:naturalLanguagePhrase "what was the fluctuation" ;
+    kg:requiresPreviousResult false ;
+    kg:semanticOperation kg:Subtraction ;
+    rdfs:comment "CRITICAL: 'fluctuation' is synonym for 'change' - simple subtraction: new_value - old_value. DO NOT divide!" .
+
+kg:pattern_in_millions a kg:LinguisticPattern ;
+    kg:alternatePhrase "convert to millions" ;
+    kg:exampleQuestion "what is that number in millions?" ;
+    kg:formula "value / 1000000" ;
+    kg:naturalLanguagePhrase "in millions" ;
+    kg:requiresPreviousResult true ;
+    rdfs:comment """Convert a value to millions by dividing by 1,000,000.
+    CRITICAL: Use constant 1000000, do NOT query for conversion_factor.
+    Example: 78667514.1 / 1000000 = 78.66751""" .
+
+kg:pattern_in_percentage a kg:LinguisticPattern ;
+    kg:alternatePhrase "to a percentage value" ;
+    kg:exampleQuestion "how much is that in percentage?" ;
+    kg:naturalLanguagePhrase "in percentage" ;
+    kg:requiresPreviousResult true ;
+    kg:semanticOperation kg:PercentageConversion ;
+    rdfs:comment "Convert decimal ratio to percentage number by multiplying by 100" .
+
+kg:pattern_in_relation_to a kg:LinguisticPattern ;
+    kg:alternatePhrase "represent in relation to" ;
+    kg:exampleQuestion "how much does X represent in relation to Y?" ;
+    kg:naturalLanguagePhrase "in relation to" ;
+    kg:requiresPreviousResult false ;
+    kg:semanticOperation kg:RatioCalculation ;
+    rdfs:comment "CRITICAL: Calculate X/Y to return RATIO value (NOT multiplied by 100). PRESERVE SIGN when X is a change/fluctuation/difference - do NOT use abs()! Example: 'how much does 240 represent in relation to 183' → formula is: 240 / 183 = 1.3114 (ratio, NOT 131.14%). Example: 'how much does this fluctuation represent in relation to that price' where fluctuation is -8.94 and price is 100 → formula is: fluctuation / price = -0.0894 (NOT -8.94%). To get percentage: multiply result by 100 OR use explicit 'percentage' in question." .
+
+kg:pattern_in_thousands a kg:LinguisticPattern ;
+    kg:alternatePhrase "convert to thousands" ;
+    kg:exampleQuestion "what is that number in thousands?" ;
+    kg:formula "value / 1000" ;
+    kg:naturalLanguagePhrase "in thousands" ;
+    kg:requiresPreviousResult true ;
+    rdfs:comment "Convert a value to thousands by dividing by 1,000. Use constant 1000." .
+
+kg:pattern_net_change_during_period a kg:LinguisticPattern ;
+    kg:alternatePhrase "change during [year]",
+        "change in value during" ;
+    kg:exampleQuestion "what was the net change in value of litigation reserves during 2012?" ;
+    kg:naturalLanguagePhrase "net change during" ;
+    kg:requiresPreviousResult false ;
+    kg:semanticOperation kg:Subtraction ;
+    rdfs:comment "CRITICAL: 'net change DURING [year]' means change that occurred within that year. This requires TWO values: (1) value at END of year (current year), (2) value at START of year (prior year). Formula: value_current_year - value_prior_year. Example: 'net change during 2012' where current_year_2012=3.7 and prior_year_2011=3.2 → formula: 3.7 - 3.2 = 0.5. IMPORTANT: The 'during' preposition indicates we need the difference between the year mentioned and the previous period." .
+
+kg:pattern_percentage_change a kg:LinguisticPattern ;
+    kg:alternatePhrase "what was the percentage change" ;
+    kg:exampleQuestion "what is the percentage change from 2015 to 2016?" ;
+    kg:naturalLanguagePhrase "what is the percentage change" ;
+    kg:requiresPreviousResult false ;
+    kg:semanticOperation kg:PercentageChange ;
+    rdfs:comment "Calculate (new - old) / old, return decimal ratio (NOT * 100)" .
+
+kg:pattern_proportion a kg:LinguisticPattern ;
+    kg:alternatePhrase "proportion does X represent" ;
+    kg:exampleQuestion "what proportion does this represent?" ;
+    kg:naturalLanguagePhrase "what proportion" ;
+    kg:requiresPreviousResult true ;
+    kg:semanticOperation kg:RatioCalculation ;
+    rdfs:comment "CRITICAL: Calculate (X/Y) * 100 to return percentage value. 'Proportion' means percentage representation, not decimal ratio. Example: 'what proportion does this represent?' where X=5923147 and Y=8453601 (total) → formula is: X / Y * 100 = 70.1%" .
+
+kg:pattern_simplified a kg:LinguisticPattern ;
+    kg:alternatePhrase "what is that value simplified" ;
+    kg:exampleQuestion "what is that value simplified?" ;
+    kg:formula "value / 1000000" ;
+    kg:naturalLanguagePhrase "simplified" ;
+    kg:requiresPreviousResult true ;
+    rdfs:comment """In financial contexts, 'simplified' typically means converting large values to millions.
+    This is equivalent to 'in millions' - divide by 1,000,000.
+    Example: 110,302,467.4 simplified = 110.30247 (millions)""" .
+
+kg:pattern_total_across_periods a kg:LinguisticPattern ;
+    kg:alternatePhrase "total...for both",
+        "total...in all" ;
+    kg:exampleContext "Sum values across multiple periods - do NOT divide by number of periods" ;
+    kg:exampleQuestion "what was the total net interest margin in both years?" ;
+    kg:naturalLanguagePhrase "total...in both" ;
+    kg:requiresPreviousResult false ;
+    kg:semanticOperation kg:Sum ;
+    rdfs:comment """CRITICAL: 'Total' means SUM, not AVERAGE.
+    When the question asks for 'total...in both years' or 'total...in all years':
+    - Calculate the SUM of values
+    - Do NOT divide by number of periods
+    - Do NOT calculate average
+    Examples:
+    - 'total in both years' → sum of the two years
+    - 'total in 2007 and 2008' → sum of 2007 + 2008
+    - 'total for all regions' → sum of all regions""" .
+
+kg:pattern_without_baseline a kg:LinguisticPattern ;
+    kg:alternatePhrase "excluding the baseline" ;
+    kg:exampleQuestion "what is this value without the portion equivalent to 2015 expense?" ;
+    kg:naturalLanguagePhrase "without the portion equivalent to" ;
+    kg:requiresPreviousResult true ;
+    kg:semanticOperation kg:BaselineSubtraction ;
+    rdfs:comment "When previous result is a ratio, subtract 1.0 to remove baseline portion" .
+
+kg:pattern_annual_amortization_rate a kg:LinguisticPattern ;
+    kg:alternatePhrase "annual depreciation rate",
+        "annual amortization expense for that segment",
+        "annual expense rate" ;
+    kg:exampleQuestion "what was, then, the average annual amortization expense for that segment?" ;
+    kg:naturalLanguagePhrase "average annual amortization expense" ;
+    kg:requiresPreviousResult true ;
+    kg:semanticOperation kg:AmortizationRateCalculation ;
+    rdfs:comment """Calculate the annual amortization/depreciation rate as a percentage.
+
+    CRITICAL FORMULA: 100 / useful_life_years
+
+    CONTEXT: After retrieving useful life (in years), question asks for "average annual amortization expense"
+    This means: what percentage of the asset is amortized each year?
+
+    Example:
+    - Turn 1: 'what was the weighted average useful life for trademarks?' → 9 years
+    - Turn 2: 'what was, then, the average annual amortization expense for that segment?'
+    - Formula: 100 / 9 = 11.1%
+
+    DOMAIN KNOWLEDGE:
+    - An asset with 9-year useful life is amortized at 100%/9 = 11.1% per year
+    - An asset with 6-year useful life is amortized at 100%/6 = 16.7% per year
+    - This is the straight-line amortization rate
+
+    WHEN TO USE:
+    - Question asks for 'average annual amortization expense'
+    - Question asks for 'annual depreciation rate'
+    - Previous result is a useful life in years
+    - Answer is expected as a percentage
+
+    Formula: 100 / useful_life_years""" .
+
+kg:preservesSign a owl:DatatypeProperty ;
+    rdfs:label "preserves sign" ;
+    rdfs:comment """Indicates that this metric can be negative and sign should be preserved.
+    Example: 'change over the year' can be negative (decrease)
+    Opposite of requiresAbsoluteValue""" ;
+    rdfs:domain kg:FinancialMetric ;
+    rdfs:range xsd:boolean .
+
+kg:ref_it_same_metric a kg:ReferencePattern ;
+    rdfs:label "It Refers to Same Metric" ;
+    kg:naturalLanguagePhrase "what was it in" ;
+    rdfs:comment """'It' refers to the SAME METRIC as the previous turn, for a different time period.
+    Example:
+      Turn 1: 'what was the weighted average grant date fair value per share in 2017?' → 84.53
+      Turn 2: 'what was it in 2016?'
+    Resolution: Query for the same metric (weighted average grant date fair value per share) in 2016
+    CRITICAL: Need NEW query, do NOT use result_0""" .
+
+kg:ref_percentage_change_after_difference a kg:ReferencePattern ;
+    rdfs:label "Percentage Change After Difference" ;
+    kg:naturalLanguagePhrase "percentage change" ;
+    rdfs:comment """When 'percentage change' is asked AFTER a 'difference' was already calculated:
+    SPECIAL CASE: If previous turn calculated a DIFFERENCE, then 'percentage change' means:
+      Formula: difference / base_value
+      NOT: (new - old) / old
+
+    Example:
+      Turn 1: 'what was the difference?' → difference = 2720
+      Turn 2: 'what was the value in 2006?' → base = 996
+      Turn 3: 'what was the percentage change during this time?'
+    Resolution: Use difference / base = 2720 / 996 = 2.73092
+    NOT: (difference - base) / base = (2720 - 996) / 996 = 1.73092""" .
+
+kg:ref_the_value a kg:ReferencePattern ;
+    rdfs:label "The Value Refers to Metric" ;
+    kg:naturalLanguagePhrase "the value" ;
+    rdfs:comment """'The value' or 'the average' refers to the specific metric from the previous question.
+    Example:
+      Turn 1: 'what is the sum of net interest margin in 2007 and 2008?'
+      Turn 2: 'what is the average value per year?'
+    Resolution: 'the value' = net interest margin (from Turn 1)""" .
+
+kg:ref_this_value a kg:ReferencePattern ;
+    rdfs:label "This Value Refers to Recent Result" ;
+    kg:naturalLanguagePhrase "this value" ;
+    rdfs:comment """'This value' or 'that amount' WITHOUT specifying what it is means the MOST RECENT previous result.
+    Example:
+      Turn 2: 'how much did 2016 represent in relation to 2015?' → result_2 = 1.76812
+      Turn 3: 'what is this value without the portion equivalent to 2015 expense?'
+    Resolution: 'this value' = result_2 (the ratio from Turn 2)""" .
+
+kg:ref_total_sum a kg:ReferencePattern ;
+    rdfs:label "Total Sum Refers to Most Recent Sum" ;
+    kg:alternatePhrase "the total sum" ;
+    kg:naturalLanguagePhrase "total sum" ;
+    rdfs:comment """'Total sum' or 'the total sum' refers to the MOST RECENT sum calculation, not earlier partial sums.
+    Example:
+      Turn 3: sum of A and B → result_2 = 5.2
+      Turn 4: sum including C → result_3 = 7.6
+      Turn 5: 'what is the total sum including D?'
+    Resolution: Use result_3 (7.6), NOT result_2 (5.2)
+    The word 'total' indicates the most comprehensive/recent cumulative sum.""" .
+
+kg:requiresAbsoluteValue a owl:DatatypeProperty ;
+    rdfs:label "requires absolute value" ;
+    rdfs:comment """Indicates that this metric's value should be converted to absolute value.
+    Example metrics: Net Interest Margin, Total Cash Used, Total Amount
+    Natural language cues: 'total amount', 'total value', 'total cash used/provided'""" ;
+    rdfs:domain kg:FinancialMetric ;
+    rdfs:range xsd:boolean .
+
+kg:requiresPreviousResult a owl:DatatypeProperty ;
+    rdfs:label "requires previous result" ;
+    rdfs:comment "Indicates if this operation requires using result from a previous conversation turn" ;
+    rdfs:domain kg:SemanticOperation ;
+    rdfs:range xsd:boolean .
+
+kg:requiresTransformation a owl:ObjectProperty ;
+    rdfs:label "requires transformation" ;
+    rdfs:comment "The semantic operation (transformation) that must be applied to values of this metric type" ;
+    rdfs:domain kg:MetricTransformationRule ;
+    rdfs:range kg:SemanticOperation .
+
+kg:rule_date_range_containment a kg:TemporalMatchingRule ;
+    rdfs:label "Date Range Containment" ;
+    rdfs:comment """When matching to a specific period, the column date range must be FULLY contained.
+    Example: 'in October' should match 'october 1 - october 28' (fully in October)
+    Example: 'in October' should NOT match 'october 29 - november 25' (spans two months)""" .
+
+kg:rule_multiple_dates_prefer_earliest a kg:TemporalMatchingRule ;
+    rdfs:label "Multiple Dates Prefer Earliest" ;
+    rdfs:comment """When a year has multiple date columns (e.g., '1/2/2016' and '12/31/2016'), prefer the EARLIEST date.
+    Example: 'in 2016' with columns '1/2/2016' and '12/31/2016' → use '1/2/2016'
+    Rationale: Beginning-of-period values are standard for year comparisons
+    Exception: Use end-of-period only if explicitly requested (e.g., 'at the end of 2016')""" .
+
+kg:rule_net_interest_margin a kg:MetricTransformationRule ;
+    kg:appliesWhenLabelContains "net interest margin" ;
+    kg:requiresTransformation kg:AbsoluteValue ;
+    kg:transformationReason "Net Interest Margin is always reported as a positive percentage by accounting convention, even when stored as negative in some systems" ;
+    rdfs:comment """Apply abs() to Net Interest Margin values.
+    Example: If retrieved value is -3.0, use abs(-3.0) = 3.0 in calculations.""" .
+
+kg:rule_no_metric_substitution a kg:QueryRule ;
+    rdfs:label "Never Substitute Metrics" ;
+    rdfs:comment """When generating SPARQL queries from questions:
+
+    CRITICAL RULES:
+    1. Query for the EXACT metric name mentioned in the question
+    2. NEVER substitute similar metrics as proxies
+    3. Different metrics are NOT interchangeable:
+       - "net income" ≠ "operating income"
+       - "net income" ≠ "income from operations"
+       - "revenue" ≠ "net sales"
+       - "total debt" ≠ "long-term debt"
+
+    If SPARQL query returns empty results:
+    - This is a DATA QUALITY ISSUE
+    - The metric was not extracted into the KG
+    - This is NOT your problem to solve
+    - Do NOT try to be "helpful" by using similar metrics
+
+    Example (Example 122):
+    Question: "what was the net income in 2018?"
+    WRONG: Query for "operating income" as a proxy
+    CORRECT: Query for "net income" exactly
+    If not found → Legitimate failure → Requires KG rebuild
+
+    Why This Matters:
+    - Operating income and net income are different financial concepts
+    - Using one for the other produces wrong answers
+    - Better to fail cleanly than give wrong answer""" .
+
+kg:rule_python_variable_naming a kg:VariableNamingRule ;
+    rdfs:label "Python Variable Naming Conventions" ;
+    rdfs:comment """Variable names in formulas MUST follow Python naming rules:
+
+    CRITICAL RULES:
+    1. Variable names MUST NOT start with a digit
+    2. Use underscores to separate words
+    3. Use lowercase with underscores (snake_case)
+
+    CORRECT PATTERNS:
+    - metric_year (e.g., fair_value_2016, expense_2015)
+    - metric_yyyy (e.g., revenue_2020)
+    - descriptive_name (e.g., previous_ratio, baseline_portion, increase)
+
+    INCORRECT PATTERNS (WILL CAUSE ERRORS):
+    - year_metric (e.g., 2016_fair_value) ❌ STARTS WITH DIGIT!
+    - yyyy_metric (e.g., 2015_expense) ❌ STARTS WITH DIGIT!
+
+    When a question mentions a year + metric:
+    - "2016 fair value" → variable: fair_value_2016 ✓
+    - "the 2016 amount" → variable: amount_2016 ✓
+    - NOT: 2016_fair_value ❌
+    - NOT: 2016_amount ❌
+
+    Example Turn 8 Fix:
+    Question: "what is this increase as a percentage of the 2016 fair value?"
+    WRONG: increase / 2016_fair_value  (SyntaxError: invalid decimal literal)
+    CORRECT: increase / fair_value_2016  (Valid Python)""" .
+
+kg:rule_total_value_calculation a kg:CalculationRule ;
+    rdfs:label "Total Value = Quantity × Unit Price" ;
+    rdfs:comment """When calculating total value (e.g., 'total value of shares repurchased'):
+    Formula: quantity * unit_price
+
+    CRITICAL: Do NOT add additional scale conversions!
+    - If quantity is in shares and price is per-share, the result is already in the correct currency unit
+    - Do NOT multiply by 1,000,000 or other scale factors
+    - The values already have their scales embedded
+
+    Example: 842,445 shares * $93.38/share = $78,667,514.10
+    WRONG: 842,445 * 93.38 * 1,000,000 (creates enormous incorrect value)""" .
+
+kg:semanticOperation a owl:ObjectProperty ;
+    rdfs:label "semantic operation" ;
+    rdfs:comment "The semantic operation this phrase maps to" ;
+    rdfs:domain kg:LinguisticPattern ;
+    rdfs:range kg:SemanticOperation .
+
+kg:sourceText a owl:DatatypeProperty ;
+    rdfs:label "source text" ;
+    rdfs:comment "The original text from which this entity was extracted" ;
+    rdfs:domain owl:Thing ;
+    rdfs:range xsd:string .
+
+kg:tableColumn a owl:DatatypeProperty ;
+    rdfs:label "table column" ;
+    rdfs:comment "The column label in the source table" ;
+    rdfs:domain kg:FinancialMetric ;
+    rdfs:range xsd:string .
+
+kg:tableRow a owl:DatatypeProperty ;
+    rdfs:label "table row" ;
+    rdfs:comment "The row label in the source table" ;
+    rdfs:domain kg:FinancialMetric ;
+    rdfs:range xsd:string .
+
+kg:transformationReason a owl:DatatypeProperty ;
+    rdfs:label "transformation reason" ;
+    rdfs:comment "Explanation of why this transformation is required (accounting convention, business logic, etc.)" ;
+    rdfs:domain kg:MetricTransformationRule ;
+    rdfs:range xsd:string .
+
+kg:yearValue a owl:DatatypeProperty ;
+    rdfs:label "year value" ;
+    rdfs:comment "The integer year value (e.g., 2017)" ;
+    rdfs:domain kg:Year ;
+    rdfs:range xsd:integer .
+
+kg:shareMetricType a owl:DatatypeProperty ;
+    rdfs:label "share metric type" ;
+    rdfs:comment """Indicates the type of share metric: 'authorized', 'issued', 'outstanding', 'repurchased'.
+    - 'authorized': Maximum shares the company is allowed to issue (capacity/limit from corporate charter)
+    - 'issued': Shares that have been sold/distributed to investors (cumulative total including repurchased)
+    - 'outstanding': Shares currently held by shareholders (issued minus repurchased/treasury stock)
+    - 'repurchased': Shares bought back by the company (treasury stock)
+
+    CRITICAL DISTINCTIONS:
+    - Authorized is a CAPACITY limit, not an actual transaction count
+    - Outstanding = Issued - Repurchased
+    - Questions asking for 'shares issued' may refer to EITHER authorized (capacity) OR actual issuances (transactions)
+    - Context from source text determines which interpretation is correct""" ;
+    rdfs:domain kg:FinancialMetric ;
+    rdfs:range xsd:string .
+
+kg:AbsoluteValue a owl:Class ;
+    rdfs:label "Absolute Value" ;
+    rdfs:comment """Takes absolute value of a number or calculation result.
+    Formula: abs(value) or abs(calculation)
+
+    WHEN TO USE:
+    1. When MetricTransformationRule specifies abs() for a metric type
+    2. 'Total cash used/provided' → abs() if value is negative (applies ONLY to cash flow metrics)
+    3. 'Change in net cash used/provided in financing/operating/investing activities':
+       - If BOTH values are negative cash flows → abs(new - old)
+       - Example: change from -2534 to -3679 → abs(-3679 - (-2534)) = abs(-1145) = 1145
+    4. 'Change over the year' (general, not specifically cash) → do NOT use abs() - preserve sign
+
+    WHEN NOT TO USE:
+    - 'Total of gains (losses)' or 'transaction gains (losses)' → do NOT use abs() - sign matters!
+    - 'Total amount', 'total value' (without cash context) → do NOT use abs() - preserve sign
+    - Any metric where positive vs negative has semantic meaning (profit/loss, gain/loss, etc.)
+
+    Natural language: 'total cash used', 'change in net cash'
+
+    NOTE: Specific metric types that always require abs() are defined as MetricTransformationRules (see below)""" ;
+    rdfs:subClassOf kg:SemanticOperation .
+
+kg:AveragePerPeriod a owl:Class ;
+    rdfs:label "Average Per Period" ;
+    rdfs:comment """Divides a sum by the number of time periods.
+    Example: After 'sum of X in 2007 and 2008', the question 'average per year' means: sum / 2
+    Formula: sum_value / num_periods
+    Requires: Previous result must be a sum over multiple periods""" ;
+    rdfs:subClassOf kg:SemanticOperation .
+
+kg:BaselineSubtraction a owl:Class ;
+    rdfs:label "Baseline Subtraction" ;
+    rdfs:comment """Subtracts the baseline portion (1.0) from a ratio.
+    Formula: ratio_value - 1.0
+    Natural language: 'without the portion equivalent to [baseline]', 'excluding the baseline'
+    Example: If ratio is 1.76812, result is 0.76812
+    CRITICAL: Subtract 1.0, NOT the actual baseline value""" ;
+    rdfs:subClassOf kg:SemanticOperation .
+
+kg:AmortizationRateCalculation a owl:Class ;
+    rdfs:label "Amortization Rate Calculation" ;
+    rdfs:comment """Calculates the annual amortization/depreciation rate as a percentage from useful life in years.
+    Formula: 100 / useful_life_years
+
+    CONTEXT:
+    When an asset has a useful life of N years, it is amortized/depreciated at an annual rate of (100/N)%.
+    This is the straight-line depreciation/amortization rate.
+
+    WHEN TO USE:
+    - Previous result is a useful life in years
+    - Question asks for 'average annual amortization expense'
+    - Question asks for 'annual depreciation rate'
+    - Answer is expected as a percentage
+
+    Natural language: 'average annual amortization expense', 'annual depreciation rate', 'annual expense rate'
+
+    Examples:
+    - Useful life: 9 years → Annual rate: 100/9 = 11.1%
+    - Useful life: 6 years → Annual rate: 100/6 = 16.7%
+    - Useful life: 10 years → Annual rate: 100/10 = 10.0%
+
+    DOMAIN KNOWLEDGE:
+    Straight-line amortization allocates equal expense across the asset's useful life.
+    Annual rate = 100% ÷ useful life = percentage of asset value expensed per year""" ;
+    rdfs:subClassOf kg:SemanticOperation .
+
+kg:DirectTableLookup a owl:Class ;
+    rdfs:label "Direct Table Lookup" ;
+    rdfs:comment """Retrieves a value directly from the knowledge graph without calculation.
+    Used when the question asks for a value that exists as-is in the table.
+    Formula: Simply return the retrieved value
+    Natural language: 'what is [metric]', 'amount of [metric]', 'value of [metric]'
+    Example: 'what is the amount due between 1-3 years?' → Find and return the value in the '1-3 years' column""" ;
+    rdfs:subClassOf kg:SemanticOperation .
+
+kg:CalculationRule a owl:Class ;
+    rdfs:label "Calculation Rule" ;
+    rdfs:comment "Rules about when and how to perform calculations" .
+
+kg:Category a owl:Class ;
+    rdfs:label "Category" ;
+    rdfs:comment "A categorical dimension for organizing metrics (e.g., 'Residential', 'Commercial', 'Q1')" .
+
+kg:Company a owl:Class ;
+    rdfs:label "Company" ;
+    rdfs:comment "A business organization mentioned in the financial document" .
+
+kg:IndexValue a owl:Class ;
+    rdfs:label "Index Value" ;
+    rdfs:comment "An indexed value relative to a baseline (e.g., 100.0 = baseline year)" ;
+    rdfs:subClassOf kg:FinancialValue .
+
+kg:MonetaryValue a owl:Class ;
+    rdfs:label "Monetary Value" ;
+    rdfs:comment "A monetary amount (e.g., $150,000)" ;
+    rdfs:subClassOf kg:FinancialValue .
+
+kg:PercentageChange a owl:Class ;
+    rdfs:label "Percentage Change" ;
+    rdfs:comment """Calculates relative change between two values as a decimal ratio.
+    Formula: (new_value - old_value) / old_value
+    CRITICAL: Returns decimal ratio (e.g., 2.73092 for 273% change), NOT multiplied by 100
+    Natural language: 'what is/was the percentage change'""" ;
+    rdfs:subClassOf kg:SemanticOperation .
+
+kg:PercentageConversion a owl:Class ;
+    rdfs:label "Percentage Conversion" ;
+    rdfs:comment """Converts a decimal ratio to a percentage number.
+    Formula: ratio * 100
+    Natural language: 'in percentage', 'to a percentage value', 'converted to percentage'
+    Example: 0.15478 → 15.478""" ;
+    rdfs:subClassOf kg:SemanticOperation .
+
+kg:QueryRule a owl:Class ;
+    rdfs:label "Query Generation Rule" ;
+    rdfs:comment "Rules for generating SPARQL queries from questions" .
+
+kg:VariableNamingRule a owl:Class ;
+    rdfs:label "Variable Naming Rule" ;
+    rdfs:comment "Rules for creating valid Python variable names in formulas" .
+
+kg:TemporalMatchingRule a owl:Class ;
+    rdfs:label "Temporal Matching Rule" ;
+    rdfs:comment "Rules for matching natural language time expressions to table columns" .
+
+kg:TimePeriod a owl:Class ;
+    rdfs:label "Time Period" ;
+    rdfs:comment "A time period (year, quarter, date range)" .
+
+kg:Year a owl:Class ;
+    rdfs:label "Year" ;
+    rdfs:comment "A calendar year" ;
+    rdfs:subClassOf kg:TimePeriod .
+
+kg:Currency a owl:Class ;
+    rdfs:label "Currency" .
+
+kg:MetricTransformationRule a owl:Class ;
+    rdfs:label "Metric Transformation Rule" ;
+    rdfs:comment """Defines automatic transformations that must be applied to specific metric types.
+    These rules are checked when values are retrieved and used in calculations.
+    The transformation is applied based on pattern matching in the metric's label or description.""" .
+
+kg:RatioCalculation a owl:Class ;
+    rdfs:label "Ratio Calculation" ;
+    rdfs:comment """Calculates ratio of X to Y as a decimal.
+    Formula: X / Y
+    CRITICAL: Returns decimal ratio, NOT multiplied by 100
+    CRITICAL: Before division, MUST normalize both values to same scale
+    Natural language: 'as a percentage of', 'in relation to', 'portion of' (WITHOUT 'percentage' keyword)
+    Example: 'X as a percentage of Y' → X/Y = 0.15478 (not 15.478)
+    Unit Example: 10.5 Billions / 318477 Millions → (10.5×1000) Millions / 318477 Millions = 10500/318477 = 0.03297""" ;
+    rdfs:subClassOf kg:SemanticOperation .
+
+kg:ReferencePattern a owl:Class ;
+    rdfs:label "Reference Pattern" ;
+    rdfs:comment "Patterns for resolving pronouns and vague references to previous context" .
+
+kg:Scale a owl:Class ;
+    rdfs:label "Scale" ;
+    rdfs:comment "Numeric scale for monetary values. Each scale has a conversion factor representing the multiplier to convert to Units." .
+
+kg:FinancialMetric a owl:Class ;
+    rdfs:label "Financial Metric" ;
+    rdfs:comment "A specific financial metric or line item (e.g., Net Income, Revenue, Total Assets)" .
+
+kg:FinancialValue a owl:Class ;
+    rdfs:label "Financial Value" ;
+    rdfs:comment "Base class for all financial values - every number must be an entity with explicit attributes" .
+
+kg:SemanticOperation a owl:Class ;
+    rdfs:label "Semantic Operation" ;
+    rdfs:comment "Base class for semantic operations that transform or derive values from retrieved data" .
+
+kg:LinguisticPattern a owl:Class ;
+    rdfs:label "Linguistic Pattern" ;
+    rdfs:comment "Maps natural language phrases to semantic operations" .
+
+# ============================================================================
+# Table Structure Classes (Version 1.0.3)
+# ============================================================================
+
+kg:Table a owl:Class ;
+    rdfs:label "Table" ;
+    rdfs:comment """A structured financial table from a document.
+    Tables are first-class entities with explicit structure (rows, columns, cells).
+    Represents the programmatically extracted structure before semantic enhancement.""" .
+
+kg:TableRow a owl:Class ;
+    rdfs:label "Table Row" ;
+    rdfs:comment """A row in a financial table with its label and index.
+    Rows are extracted deterministically from the table JSON structure.""" .
+
+kg:TableColumn a owl:Class ;
+    rdfs:label "Table Column" ;
+    rdfs:comment """A column in a financial table with its label and index.
+    Columns are extracted deterministically from the table JSON structure.""" .
+
+kg:TableCell a owl:Class ;
+    rdfs:label "Table Cell" ;
+    rdfs:comment """A cell at the intersection of a table row and column.
+    Cells link to FinancialValue entities and preserve table coordinates.""" .
+
+# Table Structure Properties
+
+kg:hasRow a owl:ObjectProperty ;
+    rdfs:label "has row" ;
+    rdfs:comment "Links a table to one of its rows" ;
+    rdfs:domain kg:Table ;
+    rdfs:range kg:TableRow .
+
+kg:hasColumn a owl:ObjectProperty ;
+    rdfs:label "has column" ;
+    rdfs:comment "Links a table to one of its columns" ;
+    rdfs:domain kg:Table ;
+    rdfs:range kg:TableColumn .
+
+kg:hasCell a owl:ObjectProperty ;
+    rdfs:label "has cell" ;
+    rdfs:comment "Links a table to one of its cells" ;
+    rdfs:domain kg:Table ;
+    rdfs:range kg:TableCell .
+
+kg:atRow a owl:ObjectProperty ;
+    rdfs:label "at row" ;
+    rdfs:comment "Links a cell to its row" ;
+    rdfs:domain kg:TableCell ;
+    rdfs:range kg:TableRow .
+
+kg:atColumn a owl:ObjectProperty ;
+    rdfs:label "at column" ;
+    rdfs:comment "Links a cell to its column" ;
+    rdfs:domain kg:TableCell ;
+    rdfs:range kg:TableColumn .
+
+kg:cellValue a owl:ObjectProperty ;
+    rdfs:label "cell value" ;
+    rdfs:comment "Links a cell to its FinancialValue entity" ;
+    rdfs:domain kg:TableCell ;
+    rdfs:range kg:FinancialValue .
+
+kg:fromCell a owl:ObjectProperty ;
+    rdfs:label "from cell" ;
+    rdfs:comment "Links a FinancialMetric to its source table cell" ;
+    rdfs:domain kg:FinancialMetric ;
+    rdfs:range kg:TableCell .
+
+# Table Metadata Properties
+
+kg:rowLabel a owl:DatatypeProperty ;
+    rdfs:label "row label" ;
+    rdfs:comment "The exact label text for this row from the table JSON" ;
+    rdfs:domain kg:TableRow ;
+    rdfs:range xsd:string .
+
+kg:columnLabel a owl:DatatypeProperty ;
+    rdfs:label "column label" ;
+    rdfs:comment "The exact label text for this column from the table JSON" ;
+    rdfs:domain kg:TableColumn ;
+    rdfs:range xsd:string .
+
+kg:rowIndex a owl:DatatypeProperty ;
+    rdfs:label "row index" ;
+    rdfs:comment "Zero-based index of this row in the table" ;
+    rdfs:domain kg:TableRow ;
+    rdfs:range xsd:integer .
+
+kg:columnIndex a owl:DatatypeProperty ;
+    rdfs:label "column index" ;
+    rdfs:comment "Zero-based index of this column in the table" ;
+    rdfs:domain kg:TableColumn ;
+    rdfs:range xsd:integer .
+
+kg:tableCaption a owl:DatatypeProperty ;
+    rdfs:label "table caption" ;
+    rdfs:comment "The caption or title of the table (from surrounding text or LLM-extracted)" ;
+    rdfs:domain kg:Table ;
+    rdfs:range xsd:string .
+
+kg:tableUnits a owl:DatatypeProperty ;
+    rdfs:label "table units" ;
+    rdfs:comment """Default units for values in this table (e.g., 'Thousands', 'Millions', 'Billions').
+    Extracted from table caption or surrounding text (e.g., 'in thousands', 'in millions')""" ;
+    rdfs:domain kg:Table ;
+    rdfs:range xsd:string .
+
+kg:tableOrientation a owl:DatatypeProperty ;
+    rdfs:label "table orientation" ;
+    rdfs:comment """Orientation of the table structure ('column-first' or 'row-first').
+    Column-first: top-level JSON keys are columns, nested keys are rows.
+    Row-first: top-level JSON keys are rows, nested keys are columns.""" ;
+    rdfs:domain kg:Table ;
+    rdfs:range xsd:string .
+
+# Semantic Table Properties (LLM-Enhanced)
+
+kg:columnSemanticType a owl:DatatypeProperty ;
+    rdfs:label "column semantic type" ;
+    rdfs:comment """Semantic type of this column: 'Year', 'Category', 'EntityType', or 'Metric'.
+    Added by LLM semantic enhancement stage.""" ;
+    rdfs:domain kg:TableColumn ;
+    rdfs:range xsd:string .
+
+kg:rowSemanticType a owl:DatatypeProperty ;
+    rdfs:label "row semantic type" ;
+    rdfs:comment """Semantic type of this row: 'DataPoint', 'CalculatedTotal', 'Subtotal', or 'Header'.
+    Added by LLM semantic enhancement stage.""" ;
+    rdfs:domain kg:TableRow ;
+    rdfs:range xsd:string .
+
+kg:semanticDescription a owl:DatatypeProperty ;
+    rdfs:label "semantic description" ;
+    rdfs:comment """LLM's understanding of what this row or column represents.
+    Added by LLM semantic enhancement stage.""" ;
+    rdfs:domain owl:Thing ;
+    rdfs:range xsd:string .
+
+# ============================================================================
+# Extraction Patterns (Version 1.0.4) - Guide LLM extraction from narrative text
+# ============================================================================
+
+kg:ExtractionPattern a owl:Class ;
+    rdfs:label "Extraction Pattern" ;
+    rdfs:comment """Patterns that guide the LLM when extracting entities from narrative text.
+    These patterns are used during knowledge graph construction to identify and extract
+    domain-specific concepts that may not appear in structured tables.""" .
+
+kg:exampleText a owl:DatatypeProperty ;
+    rdfs:label "example text" ;
+    rdfs:comment "Example text demonstrating the pattern" ;
+    rdfs:domain kg:ExtractionPattern ;
+    rdfs:range xsd:string .
+
+kg:pattern_authorized_shares a kg:ExtractionPattern ;
+    rdfs:label "Authorized Shares Pattern" ;
+    kg:naturalLanguagePhrase "authorized to issue" ;
+    kg:alternatePhrase "authorization to issue",
+        "authorized shares" ;
+    kg:exampleText "we are authorized to issue 1.25 billion shares of class b common stock" ;
+    rdfs:comment """Extract authorization/capacity limits for shares from narrative text.
+
+    CRITICAL PATTERN RECOGNITION:
+    - Pattern: '[entity] is/are authorized to issue [number] [unit] shares of [stock class]'
+    - This is a CAPACITY/LIMIT value, NOT an actual transaction
+    - Mark extracted metrics with shareMetricType: 'authorized'
+
+    WHEN TO EXTRACT:
+    - "authorized to issue X billion shares"
+    - "authorization to issue X million shares"
+    - "authorized X shares of [class]"
+
+    HOW TO EXTRACT:
+    1. Identify the numeric value (e.g., 1.25)
+    2. Identify the scale (billion, million, thousand)
+    3. Identify the stock class (e.g., "class b common stock")
+    4. Create FinancialMetric with:
+       - kg:shareMetricType "authorized"
+       - kg:label "Authorized shares of [stock class]"
+       - kg:hasValue with correct numericValue and scale
+
+    DISAMBIGUATION FROM ACTUAL ISSUANCES:
+    - "authorized to issue" → authorized (capacity)
+    - "issued shares" in table → actual issuance (transaction)
+    - "outstanding shares" → currently held (issued - repurchased)
+
+    Example extraction from "authorized to issue 1.25 billion shares of class b common stock":
+    - Metric label: "Authorized shares of class b common stock"
+    - Value: 1.25
+    - Scale: Billions
+    - shareMetricType: "authorized" """ .
+
+kg:pattern_investment_performance a kg:LinguisticPattern ;
+    kg:naturalLanguagePhrase "value of an investment in [company] in [year]" ;
+    kg:alternatePhrase "investment value",
+        "value if the investment in",
+        "cumulative total return" ;
+    kg:exampleQuestion "what is the value of an investment in edwards lifesciences in 2016?" ;
+    kg:semanticOperation kg:DirectTableLookup ;
+    kg:requiresPreviousResult false ;
+    rdfs:comment """CRITICAL: Investment performance/return tables show INDEXED return values.
+
+    TABLE CHARACTERISTICS:
+    - Table caption typically contains: "cumulative total return", "stock performance", "investment growth"
+    - Values are indexed returns (base year = 100)
+    - Example: If base year (2011) = 100, then 2016 = 265.06 means $100 grew to $265.06
+
+    QUESTION PATTERNS:
+    1. "what is the value of an investment in [company] in [year]?"
+       → Look up the indexed return value for that company and year
+       → This is a DIRECT table lookup, NOT a calculation
+
+    2. "what is the net change from the initial investment?"
+       → CONTEXT-DEPENDENT: Refers to the most recently mentioned company/index
+       → Formula: current_year_value - base_year_value
+       → Example: If discussing Edwards Lifesciences (2016=265.06, base=100) → 265.06 - 100 = 165.06
+       → If context switches to S&P 500 (2016=198.18, base=100) → 198.18 - 100 = 98.18
+
+    3. "what rate of cumulative return does this represent?"
+       → Formula: to_percentage((current_value - base_value) / base_value)
+       → Example: (265.06 - 100) / 100 = 1.6506 = 165.06%
+
+    CRITICAL - BASE YEAR CONTEXT:
+    - "initial investment" means base year value (typically 100 in indexed return tables)
+    - Base year is usually the FIRST year shown in the table
+    - All values are relative to this base
+
+    CRITICAL - CONTEXT TRACKING:
+    - "the investment" or "the initial investment" refers to the entity currently being discussed
+    - Track which company/index is the current topic
+    - Example dialogue:
+      Q1: "value of investment in Edwards Lifesciences in 2016?" → 265.06 (EW becomes current context)
+      Q2: "net change from initial investment?" → 265.06 - 100 = 165.06 (EW still in context)
+      Q3: "value of investment in S&P 500 in 2016?" → 198.18 (S&P becomes new context)
+      Q4: "net change from initial investment?" → 198.18 - 100 = 98.18 (S&P now in context)
+
+    VALUE RESOLUTION:
+    - Phase 1 must track current entity context
+    - Phase 2B formulas must use correct entity variables
+    - "net change" = current_entity_value - 100 (NOT previous turn's value)""" .
+
+kg:pattern_initial_investment a kg:LinguisticPattern ;
+    kg:naturalLanguagePhrase "initial investment" ;
+    kg:alternatePhrase "base year",
+        "starting value" ;
+    kg:exampleQuestion "what is the net change from the initial investment?" ;
+    kg:semanticOperation kg:Constant ;
+    kg:requiresPreviousResult false ;
+    rdfs:comment """CRITICAL: In indexed return tables, "initial investment" = base year value (typically 100).
+
+    CONTEXT:
+    - Investment performance tables show indexed returns
+    - Base year is set to 100
+    - All subsequent years show growth relative to this base
+
+    HOW TO IDENTIFY BASE YEAR:
+    1. Check table caption for date range (e.g., "2011-2016")
+    2. First year mentioned is typically the base year
+    3. Base year value is usually 100 (or closest to 100)
+
+    USAGE IN FORMULAS:
+    - "net change from initial investment" → current_value - 100
+    - "cumulative return" → (current_value - 100) / 100
+    - This is a CONSTANT (100), not a variable lookup
+
+    ENTITY-SPECIFIC CONTEXT:
+    - Each entity (company, index) has its own "initial investment" of 100
+    - The base year is the SAME for all entities in the table
+    - Example: Edwards Lifesciences base=100, S&P 500 base=100 (both in 2011)""" .
+
+kg:pattern_activity_table a kg:LinguisticPattern ;
+    kg:naturalLanguagePhrase "activity table with changes over period" ;
+    kg:alternatePhrase "rollforward table",
+        "reconciliation table",
+        "changes in balance" ;
+    kg:exampleQuestion "what was the net change in balance from [year] to [year]?" ;
+    kg:semanticOperation kg:Subtraction ;
+    kg:requiresPreviousResult false ;
+    rdfs:comment """GENERAL PATTERN: Activity/reconciliation tables that show changes in a value over time.
+
+    TABLE CHARACTERISTICS:
+    - Shows how a balance/value changed during a period
+    - Has an OPENING/BEGINNING balance (starting point)
+    - Has line items showing additions, subtractions, or changes
+    - Has a CLOSING/ENDING balance (ending point)
+    - May have only ONE column of data showing activity for a specific period
+
+    STRUCTURE VARIATIONS:
+    1. Multi-row format:
+       - Row 1: "Beginning balance" or "Balance at [start date]"
+       - Rows 2-N: Activity items (additions, subtractions)
+       - Last row: "Ending balance" or "Balance at [end date]"
+
+    2. Single-column with header value:
+       - Column header may contain a monetary value
+       - This value could represent opening balance, period total, or year label
+       - Rows show activity and ending balance
+
+    CRITICAL - IDENTIFYING VALUES:
+    - Look for rows with "balance", "beginning", "opening", "ending", "closing"
+    - Opening balance = earliest period mentioned
+    - Ending balance = latest period mentioned
+    - Column headers with amounts need contextual interpretation
+
+    QUESTION PATTERNS:
+    1. "what was the net change from [year X] to [year Y]?"
+       → Find balance for year X (could be in column header, opening balance row, or previous period)
+       → Find balance for year Y (typically ending balance row)
+       → Formula: balance_Y - balance_X
+
+    2. "what is the percent change?"
+       → Requires context from previous turn about which years/values
+       → Formula: (ending - beginning) / beginning
+
+    VALUE RESOLUTION STRATEGY:
+    - Check table caption and row labels for temporal indicators
+    - Match year mentions in question to available data points
+    - Opening balance may be: column header value, first row, or implied from context
+    - Ending balance typically: last row with "balance" + period identifier""" .
+

@@ -1,0 +1,281 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+entity:entity_Company_Example114 a kg:Company ;
+    kg:hasMetric entity:entity_Metric_2013_10_00NotesRedeemed,
+        entity:entity_Metric_2013_AcquisitionPayments,
+        entity:entity_Metric_2013_CapitalExpenditures,
+        entity:entity_Metric_2013_CommonStockRepurchased_Cost,
+        entity:entity_Metric_2013_CommonStockRepurchased_Shares,
+        entity:entity_Metric_2013_DividendPayments,
+        entity:entity_Metric_2013_ForeignExchangeDecrease,
+        entity:entity_Metric_2014_4_20NotesIssued,
+        entity:entity_Metric_2014_6_25NotesRedeemed,
+        entity:entity_Metric_2014_CommonStockRepurchased_Cost,
+        entity:entity_Metric_2014_CommonStockRepurchased_Shares,
+        entity:entity_Metric_2014_DividendPayments,
+        entity:entity_Metric_2014_ForeignExchangeDecrease,
+        entity:entity_Metric_CashCashEquivalentsAndMarketableSecurities_2013,
+        entity:entity_Metric_CashCashEquivalentsAndMarketableSecurities_2014,
+        entity:entity_Metric_CurrentPortionOfLongTermDebt_2013,
+        entity:entity_Metric_CurrentPortionOfLongTermDebt_2014,
+        entity:entity_Metric_LongTermDebt_2013,
+        entity:entity_Metric_LongTermDebt_2014,
+        entity:entity_Metric_ShortTermBorrowings_2013,
+        entity:entity_Metric_ShortTermBorrowings_2014,
+        entity:entity_Metric_TotalDebt_2013,
+        entity:entity_Metric_TotalDebt_2014 ;
+    kg:label "Example 114 Company" .
+
+entity:entity_Currency_USD a kg:Currency ;
+    kg:label "U.S. dollar" .
+
+entity:entity_FinancialInstrument_10_00Notes a kg:FinancialInstrument ;
+    kg:label "10.00% notes" .
+
+entity:entity_FinancialInstrument_4_20Notes a kg:FinancialInstrument ;
+    kg:label "4.20% notes" .
+
+entity:entity_FinancialInstrument_6_25Notes a kg:FinancialInstrument ;
+    kg:label "6.25% notes" .
+
+entity:entity_StockClass_OurCommonStock a kg:StockClass ;
+    kg:label "our common stock" .
+
+entity:entity_Metric_2013_10_00NotesRedeemed a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:value_2013_10_00NotesRedeemed ;
+    kg:label "2013 10.00% notes redeemed" .
+
+entity:entity_Metric_2013_AcquisitionPayments a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:value_2013_AcquisitionPayments ;
+    kg:label "2013 acquisition payments" .
+
+entity:entity_Metric_2013_CapitalExpenditures a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:value_2013_CapitalExpenditures ;
+    kg:label "2013 capital expenditures" .
+
+entity:entity_Metric_2013_CommonStockRepurchased_Cost a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:value_2013_CommonStockRepurchased_Cost ;
+    kg:label "2013 common stock repurchased_cost" .
+
+entity:entity_Metric_2013_CommonStockRepurchased_Shares a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:value_2013_CommonStockRepurchased_Shares ;
+    kg:label "2013 common stock repurchased_shares" .
+
+entity:entity_Metric_2013_DividendPayments a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:value_2013_DividendPayments ;
+    kg:label "2013 dividend payments" .
+
+entity:entity_Metric_2013_ForeignExchangeDecrease a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:value_2013_ForeignExchangeDecrease ;
+    kg:label "2013 foreign exchange decrease" .
+
+entity:entity_Metric_2014_4_20NotesIssued a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:value_2014_4_20NotesIssued ;
+    kg:label "2014 4.20% notes issued" .
+
+entity:entity_Metric_2014_6_25NotesRedeemed a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:value_2014_6_25NotesRedeemed ;
+    kg:label "2014 6.25% notes redeemed" .
+
+entity:entity_Metric_2014_CommonStockRepurchased_Cost a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:value_2014_CommonStockRepurchased_Cost ;
+    kg:label "2014 common stock repurchased_cost" .
+
+entity:entity_Metric_2014_CommonStockRepurchased_Shares a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:value_2014_CommonStockRepurchased_Shares ;
+    kg:label "2014 common stock repurchased_shares" .
+
+entity:entity_Metric_2014_DividendPayments a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:value_2014_DividendPayments ;
+    kg:label "2014 dividend payments" .
+
+entity:entity_Metric_2014_ForeignExchangeDecrease a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:value_2014_ForeignExchangeDecrease ;
+    kg:label "2014 foreign exchange decrease" .
+
+entity:entity_Metric_CashCashEquivalentsAndMarketableSecurities_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:value_CashCashEquivalentsAndMarketableSecurities_2013 ;
+    kg:label "Cash cash equivalents and marketable securities" ;
+    kg:tableColumn "december 31 , 2013" ;
+    kg:tableRow "cash cash equivalents and marketable securities" .
+
+entity:entity_Metric_CashCashEquivalentsAndMarketableSecurities_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:value_CashCashEquivalentsAndMarketableSecurities_2014 ;
+    kg:label "Cash cash equivalents and marketable securities" ;
+    kg:tableColumn "december 31 , 2014" ;
+    kg:tableRow "cash cash equivalents and marketable securities" .
+
+entity:entity_Metric_CurrentPortionOfLongTermDebt_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:value_CurrentPortionOfLongTermDebt_2013 ;
+    kg:label "Current portion of long-term debt" ;
+    kg:tableColumn "december 31 , 2013" ;
+    kg:tableRow "current portion of long-term debt" .
+
+entity:entity_Metric_CurrentPortionOfLongTermDebt_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:value_CurrentPortionOfLongTermDebt_2014 ;
+    kg:label "Current portion of long-term debt" ;
+    kg:tableColumn "december 31 , 2014" ;
+    kg:tableRow "current portion of long-term debt" .
+
+entity:entity_Metric_LongTermDebt_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:value_LongTermDebt_2013 ;
+    kg:label "Long-term debt" ;
+    kg:tableColumn "december 31 , 2013" ;
+    kg:tableRow "long-term debt" .
+
+entity:entity_Metric_LongTermDebt_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:value_LongTermDebt_2014 ;
+    kg:label "Long-term debt" ;
+    kg:tableColumn "december 31 , 2014" ;
+    kg:tableRow "long-term debt" .
+
+entity:entity_Metric_ShortTermBorrowings_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:value_ShortTermBorrowings_2013 ;
+    kg:label "Short-term borrowings" ;
+    kg:tableColumn "december 31 , 2013" ;
+    kg:tableRow "short-term borrowings" .
+
+entity:entity_Metric_ShortTermBorrowings_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:value_ShortTermBorrowings_2014 ;
+    kg:label "Short-term borrowings" ;
+    kg:tableColumn "december 31 , 2014" ;
+    kg:tableRow "short-term borrowings" .
+
+entity:entity_Metric_TotalDebt_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:value_TotalDebt_2013 ;
+    kg:label "Total debt" ;
+    kg:tableColumn "december 31 , 2013" ;
+    kg:tableRow "total debt" .
+
+entity:entity_Metric_TotalDebt_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:value_TotalDebt_2014 ;
+    kg:label "Total debt" ;
+    kg:tableColumn "december 31 , 2014" ;
+    kg:tableRow "total debt" .
+
+value:value_2013_10_00NotesRedeemed a kg:MonetaryValue ;
+    kg:displayValue "600.0" ;
+    kg:numericValue 600.0 .
+
+value:value_2013_AcquisitionPayments a kg:MonetaryValue ;
+    kg:displayValue "61.5" ;
+    kg:numericValue 61.5 .
+
+value:value_2013_CapitalExpenditures a kg:MonetaryValue ;
+    kg:displayValue "173.0" ;
+    kg:numericValue 173.0 .
+
+value:value_2013_CommonStockRepurchased_Cost a kg:MonetaryValue ;
+    kg:displayValue "481.8" ;
+    kg:numericValue 481.8 .
+
+value:value_2013_CommonStockRepurchased_Shares a kg:CountValue ;
+    kg:displayValue "31.8" ;
+    kg:numericValue 31.8 .
+
+value:value_2013_DividendPayments a kg:MonetaryValue ;
+    kg:displayValue "126.0" ;
+    kg:numericValue 126.0 .
+
+value:value_2013_ForeignExchangeDecrease a kg:MonetaryValue ;
+    kg:displayValue "94.1" ;
+    kg:numericValue 94.1 .
+
+value:value_2014_4_20NotesIssued a kg:MonetaryValue ;
+    kg:displayValue "500.0" ;
+    kg:numericValue 500.0 .
+
+value:value_2014_6_25NotesRedeemed a kg:MonetaryValue ;
+    kg:displayValue "350.0" ;
+    kg:numericValue 350.0 .
+
+value:value_2014_CommonStockRepurchased_Cost a kg:MonetaryValue ;
+    kg:displayValue "275.1" ;
+    kg:numericValue 275.1 .
+
+value:value_2014_CommonStockRepurchased_Shares a kg:CountValue ;
+    kg:displayValue "14.9" ;
+    kg:numericValue 14.9 .
+
+value:value_2014_DividendPayments a kg:MonetaryValue ;
+    kg:displayValue "159.0" ;
+    kg:numericValue 159.0 .
+
+value:value_2014_ForeignExchangeDecrease a kg:MonetaryValue ;
+    kg:displayValue "101.0" ;
+    kg:numericValue 101.0 .
+
+value:value_CashCashEquivalentsAndMarketableSecurities_2013 a kg:MonetaryValue ;
+    kg:displayValue "1642.1" ;
+    kg:numericValue 1642.1 .
+
+value:value_CashCashEquivalentsAndMarketableSecurities_2014 a kg:MonetaryValue ;
+    kg:displayValue "1667.2" ;
+    kg:numericValue 1667.2 .
+
+value:value_CurrentPortionOfLongTermDebt_2013 a kg:MonetaryValue ;
+    kg:displayValue "353.6" ;
+    kg:numericValue 353.6 .
+
+value:value_CurrentPortionOfLongTermDebt_2014 a kg:MonetaryValue ;
+    kg:displayValue "2.1" ;
+    kg:numericValue 2.1 .
+
+value:value_LongTermDebt_2013 a kg:MonetaryValue ;
+    kg:displayValue "1129.8" ;
+    kg:numericValue 1129.8 .
+
+value:value_LongTermDebt_2014 a kg:MonetaryValue ;
+    kg:displayValue "1623.5" ;
+    kg:numericValue 1623.5 .
+
+value:value_ShortTermBorrowings_2013 a kg:MonetaryValue ;
+    kg:displayValue "179.1" ;
+    kg:numericValue 179.1 .
+
+value:value_ShortTermBorrowings_2014 a kg:MonetaryValue ;
+    kg:displayValue "107.2" ;
+    kg:numericValue 107.2 .
+
+value:value_TotalDebt_2013 a kg:MonetaryValue ;
+    kg:displayValue "1662.5" ;
+    kg:numericValue 1662.5 .
+
+value:value_TotalDebt_2014 a kg:MonetaryValue ;
+    kg:displayValue "1732.8" ;
+    kg:numericValue 1732.8 .
+
+entity:entity_Year_2014 a kg:Year ;
+    kg:label "2014" ;
+    kg:yearValue 2014 .
+
+entity:entity_Year_2013 a kg:Year ;
+    kg:label "2013" ;
+    kg:yearValue 2013 .
+

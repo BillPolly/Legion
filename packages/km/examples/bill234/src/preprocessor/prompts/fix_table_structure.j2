@@ -1,0 +1,45 @@
+You are analyzing a financial table that has structural issues. The table has a SINGLE ROW where the row key appears to be a DATA VALUE rather than a category label.
+
+MALFORMED TABLE:
+{{ table_json }}
+
+DOCUMENT CONTEXT:
+{% if pre_text %}
+Text before table:
+{{ pre_text }}
+{% endif %}
+
+{% if post_text %}
+Text after table:
+{{ post_text }}
+{% endif %}
+
+TASK:
+The row key "{{ row_key }}" appears to be a data value (likely a currency amount or number) that should actually be IN the table as a data point, not used as a row label.
+
+Based on the document context and the column names in the table, determine:
+1. What does this numeric row key represent? (e.g., "opening balance", "total amount", "balance at january 1 2010")
+2. What should the proper row label be? (e.g., "valuation allowance", "total", "summary")
+
+Then restructure the table with:
+- A meaningful row label (category name)
+- The numeric row key value added as a new column with appropriate label
+
+Return ONLY a JSON object with this structure:
+{
+  "fixed_table": {
+    "<proper_row_label>": {
+      "<new_column_name>": <numeric_value_from_row_key>,
+      "<existing_column_1>": <existing_value_1>,
+      "<existing_column_2>": <existing_value_2>,
+      ...
+    }
+  },
+  "reasoning": "<brief explanation of what the row key represents and why you chose this structure>"
+}
+
+IMPORTANT:
+- The new column should be placed FIRST (leftmost) since it's likely the opening/initial value
+- Choose descriptive names based on the document context
+- Preserve all existing columns and values exactly
+- Return ONLY valid JSON, no additional text

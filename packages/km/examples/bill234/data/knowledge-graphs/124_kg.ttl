@@ -1,0 +1,271 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+entity:entity_Company_CadenceDesignSystems a kg:Company ;
+    kg:hasMetric entity:entity_Metric_CadenceDesignSystems_2011,
+        entity:entity_Metric_CadenceDesignSystems_2012,
+        entity:entity_Metric_CadenceDesignSystems_2013,
+        entity:entity_Metric_CadenceDesignSystems_2015,
+        entity:entity_Metric_CadenceDesignSystems_2016,
+        entity:entity_Metric_CadenceDesignSystems_2016end ;
+    kg:label "cadence design systems inc ." .
+
+entity:entity_EconomicIndex_NasdaqComposite a kg:EconomicIndex ;
+    kg:hasMetric entity:entity_Metric_NasdaqComposite_2011,
+        entity:entity_Metric_NasdaqComposite_2012,
+        entity:entity_Metric_NasdaqComposite_2013,
+        entity:entity_Metric_NasdaqComposite_2015,
+        entity:entity_Metric_NasdaqComposite_2016,
+        entity:entity_Metric_NasdaqComposite_2016end ;
+    kg:label "nasdaq composite" .
+
+entity:entity_EconomicIndex_SP400IT a kg:EconomicIndex ;
+    kg:hasMetric entity:entity_Metric_SP400IT_2011,
+        entity:entity_Metric_SP400IT_2012,
+        entity:entity_Metric_SP400IT_2013,
+        entity:entity_Metric_SP400IT_2015,
+        entity:entity_Metric_SP400IT_2016,
+        entity:entity_Metric_SP400IT_2016end ;
+    kg:label "s&p 400 information technology" .
+
+entity:entity_Metric_CadenceDesignSystems_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:value_CadenceDesignSystems_2011 ;
+    kg:label "cadence design systems inc . - 2011" ;
+    kg:tableColumn "12/31/2011" ;
+    kg:tableRow "cadence design systems inc ." .
+
+entity:entity_Metric_CadenceDesignSystems_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:value_CadenceDesignSystems_2012 ;
+    kg:label "cadence design systems inc . - 2012" ;
+    kg:tableColumn "12/29/2012" ;
+    kg:tableRow "cadence design systems inc ." .
+
+entity:entity_Metric_CadenceDesignSystems_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:value_CadenceDesignSystems_2013 ;
+    kg:label "cadence design systems inc . - 2013" ;
+    kg:tableColumn "12/28/2013" ;
+    kg:tableRow "cadence design systems inc ." .
+
+entity:entity_Metric_CadenceDesignSystems_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2015 ;
+    kg:hasValue value:value_CadenceDesignSystems_2015 ;
+    kg:label "cadence design systems inc . - 2015" ;
+    kg:tableColumn "1/3/2015" ;
+    kg:tableRow "cadence design systems inc ." .
+
+entity:entity_Metric_CadenceDesignSystems_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2016 ;
+    kg:hasValue value:value_CadenceDesignSystems_2016 ;
+    kg:label "cadence design systems inc . - 2016" ;
+    kg:tableColumn "1/2/2016" ;
+    kg:tableRow "cadence design systems inc ." .
+
+entity:entity_Metric_CadenceDesignSystems_2016end a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2016 ;
+    kg:hasValue value:value_CadenceDesignSystems_2016end ;
+    kg:label "cadence design systems inc . - 2016" ;
+    kg:tableColumn "12/31/2016" ;
+    kg:tableRow "cadence design systems inc ." .
+
+entity:entity_Metric_NasdaqComposite_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:value_NasdaqComposite_2011 ;
+    kg:label "nasdaq composite - 2011" ;
+    kg:tableColumn "12/31/2011" ;
+    kg:tableRow "nasdaq composite" .
+
+entity:entity_Metric_NasdaqComposite_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:value_NasdaqComposite_2012 ;
+    kg:label "nasdaq composite - 2012" ;
+    kg:tableColumn "12/29/2012" ;
+    kg:tableRow "nasdaq composite" .
+
+entity:entity_Metric_NasdaqComposite_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:value_NasdaqComposite_2013 ;
+    kg:label "nasdaq composite - 2013" ;
+    kg:tableColumn "12/28/2013" ;
+    kg:tableRow "nasdaq composite" .
+
+entity:entity_Metric_NasdaqComposite_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2015 ;
+    kg:hasValue value:value_NasdaqComposite_2015 ;
+    kg:label "nasdaq composite - 2015" ;
+    kg:tableColumn "1/3/2015" ;
+    kg:tableRow "nasdaq composite" .
+
+entity:entity_Metric_NasdaqComposite_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2016 ;
+    kg:hasValue value:value_NasdaqComposite_2016 ;
+    kg:label "nasdaq composite - 2016" ;
+    kg:tableColumn "1/2/2016" ;
+    kg:tableRow "nasdaq composite" .
+
+entity:entity_Metric_NasdaqComposite_2016end a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2016 ;
+    kg:hasValue value:value_NasdaqComposite_2016end ;
+    kg:label "nasdaq composite - 2016" ;
+    kg:tableColumn "12/31/2016" ;
+    kg:tableRow "nasdaq composite" .
+
+entity:entity_Metric_SP400IT_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:value_SP400IT_2011 ;
+    kg:label "s&p 400 information technology - 2011" ;
+    kg:tableColumn "12/31/2011" ;
+    kg:tableRow "s&p 400 information technology" .
+
+entity:entity_Metric_SP400IT_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:value_SP400IT_2012 ;
+    kg:label "s&p 400 information technology - 2012" ;
+    kg:tableColumn "12/29/2012" ;
+    kg:tableRow "s&p 400 information technology" .
+
+entity:entity_Metric_SP400IT_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:value_SP400IT_2013 ;
+    kg:label "s&p 400 information technology - 2013" ;
+    kg:tableColumn "12/28/2013" ;
+    kg:tableRow "s&p 400 information technology" .
+
+entity:entity_Metric_SP400IT_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2015 ;
+    kg:hasValue value:value_SP400IT_2015 ;
+    kg:label "s&p 400 information technology - 2015" ;
+    kg:tableColumn "1/3/2015" ;
+    kg:tableRow "s&p 400 information technology" .
+
+entity:entity_Metric_SP400IT_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2016 ;
+    kg:hasValue value:value_SP400IT_2016 ;
+    kg:label "s&p 400 information technology - 2016" ;
+    kg:tableColumn "1/2/2016" ;
+    kg:tableRow "s&p 400 information technology" .
+
+entity:entity_Metric_SP400IT_2016end a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2016 ;
+    kg:hasValue value:value_SP400IT_2016end ;
+    kg:label "s&p 400 information technology - 2016" ;
+    kg:tableColumn "12/31/2016" ;
+    kg:tableRow "s&p 400 information technology" .
+
+value:value_CadenceDesignSystems_2011 a kg:IndexValue ;
+    kg:baselineYear entity:entity_Year_2011 ;
+    kg:displayValue "100.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 100.0 .
+
+value:value_CadenceDesignSystems_2012 a kg:IndexValue ;
+    kg:displayValue "129.23" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 129.23 .
+
+value:value_CadenceDesignSystems_2013 a kg:IndexValue ;
+    kg:displayValue "133.94" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 133.94 .
+
+value:value_CadenceDesignSystems_2015 a kg:IndexValue ;
+    kg:displayValue "181.06" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 181.06 .
+
+value:value_CadenceDesignSystems_2016 a kg:IndexValue ;
+    kg:displayValue "200.1" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 200.1 .
+
+value:value_CadenceDesignSystems_2016end a kg:IndexValue ;
+    kg:displayValue "242.5" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 242.5 .
+
+value:value_NasdaqComposite_2011 a kg:IndexValue ;
+    kg:baselineYear entity:entity_Year_2011 ;
+    kg:displayValue "100.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 100.0 .
+
+value:value_NasdaqComposite_2012 a kg:IndexValue ;
+    kg:displayValue "116.41" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 116.41 .
+
+value:value_NasdaqComposite_2013 a kg:IndexValue ;
+    kg:displayValue "165.47" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 165.47 .
+
+value:value_NasdaqComposite_2015 a kg:IndexValue ;
+    kg:displayValue "188.69" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 188.69 .
+
+value:value_NasdaqComposite_2016 a kg:IndexValue ;
+    kg:displayValue "200.32" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 200.32 .
+
+value:value_NasdaqComposite_2016end a kg:IndexValue ;
+    kg:displayValue "216.54" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 216.54 .
+
+value:value_SP400IT_2011 a kg:IndexValue ;
+    kg:baselineYear entity:entity_Year_2011 ;
+    kg:displayValue "100.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 100.0 .
+
+value:value_SP400IT_2012 a kg:IndexValue ;
+    kg:displayValue "118.41" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 118.41 .
+
+value:value_SP400IT_2013 a kg:IndexValue ;
+    kg:displayValue "165.38" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 165.38 .
+
+value:value_SP400IT_2015 a kg:IndexValue ;
+    kg:displayValue "170.5" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 170.5 .
+
+value:value_SP400IT_2016 a kg:IndexValue ;
+    kg:displayValue "178.74" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 178.74 .
+
+value:value_SP400IT_2016end a kg:IndexValue ;
+    kg:displayValue "219.65" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 219.65 .
+
+entity:entity_Year_2012 a kg:Year ;
+    kg:label "2012" ;
+    kg:yearValue 2012 .
+
+entity:entity_Year_2013 a kg:Year ;
+    kg:label "2013" ;
+    kg:yearValue 2013 .
+
+entity:entity_Year_2015 a kg:Year ;
+    kg:label "2015" ;
+    kg:yearValue 2015 .
+
+entity:entity_Year_2011 a kg:Year ;
+    kg:label "2011" ;
+    kg:yearValue 2011 .
+
+entity:entity_Year_2016 a kg:Year ;
+    kg:label "2016" ;
+    kg:yearValue 2016 .
+

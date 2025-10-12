@@ -1,0 +1,195 @@
+You are generating SPARQL queries to retrieve values from a financial knowledge graph.
+
+VALUES TO RETRIEVE:
+{% for name, info in values.items() %}
+{{ name }}:
+  Description: {{ info.description }}
+  Semantic Type: {{ info.semantic_type }}
+{% endfor %}
+
+ONTOLOGY STRUCTURE:
+==================
+
+Classes:
+- kg:Company - Business organizations
+- kg:FinancialMetric - Financial line items (table rows or extracted metrics)
+- kg:FinancialValue - Base class for all numeric values
+  - kg:MonetaryValue - Dollar amounts (has kg:hasCurrency, kg:hasScale)
+  - kg:PercentageValue - Percentages (stored as numbers: 19 means 19%)
+  - kg:CountValue - Quantities/counts
+  - kg:RatioValue - Dimensionless ratios
+- kg:Year - Time periods
+- kg:Category - Categorical dimensions
+
+Properties:
+- kg:hasMetric - Links Company to FinancialMetric
+- kg:hasValue - Links FinancialMetric to FinancialValue entity
+- kg:forTimePeriod - Links metric to Year
+- kg:inCategory - Links metric to Category
+
+FinancialValue Attributes:
+- kg:numericValue (xsd:decimal) - The actual number (ALWAYS extract this!)
+- kg:hasScale - Object property to kg:Units, kg:Thousands, kg:Millions, kg:Billions
+- kg:hasCurrency - For MonetaryValue only
+- kg:displayValue (string) - How it was shown in document
+
+FinancialMetric Attributes (for table metrics):
+- kg:tableRow (string) - Row label from table
+- kg:tableColumn (string) - Column label from table
+- kg:label (string) - Human-readable label (ALL metrics have this)
+
+AVAILABLE ENTITIES IN THIS GRAPH:
+==================================
+
+{% if sample_entities %}
+Extracted Metrics (from text, no tableRow/tableColumn):
+{% for metric in sample_entities.extracted_metrics %}
+- "{{ metric.label }}"{% if metric.year %} (year: {{ metric.year }}){% endif %}
+{% endfor %}
+
+{% if sample_entities.table_metadata %}
+TABLE STRUCTURE:
+Table Orientation: {{ sample_entities.table_metadata.orientation or "unknown" }}
+{% if sample_entities.table_metadata.caption %}Table Caption: {{ sample_entities.table_metadata.caption }}{% endif %}
+
+CRITICAL ORIENTATION GUIDANCE:
+{% if sample_entities.table_metadata.orientation == "column-first" %}
+- This table is COLUMN-FIRST (years/categories in COLUMNS, metrics in ROWS)
+- To find a year like "2008", search in tableColumn: FILTER(CONTAINS(LCASE(?col), "2008"))
+- To find a metric like "net revenue", search in tableRow: FILTER(CONTAINS(LCASE(?row), "net revenue"))
+{% elif sample_entities.table_metadata.orientation == "row-first" %}
+- This table is ROW-FIRST (years/categories in ROWS, metrics in COLUMNS)
+- To find a year like "2008", search in tableRow: FILTER(CONTAINS(LCASE(?row), "2008"))
+- To find a metric like "net revenue", search in tableColumn: FILTER(CONTAINS(LCASE(?col), "net revenue"))
+{% endif %}
+{% endif %}
+
+Table Metrics (have tableRow and tableColumn):
+Row Labels:
+{% for row in sample_entities.financial_metrics.row_labels %}
+- "{{ row }}"
+{% endfor %}
+
+Column Labels:
+{% for col in sample_entities.financial_metrics.column_labels %}
+- "{{ col }}"
+{% endfor %}
+{% endif %}
+
+TASK:
+For each value above, write a SPARQL query that retrieves ?value and ?scale.
+
+EXAMPLES:
+
+Example 1 - Simple metric with year:
+Description: "revenues for the year 2007"
+Query:
+SELECT ?value ?scale WHERE {
+  ?metric a kg:FinancialMetric .
+  ?metric kg:label ?label .
+  FILTER(CONTAINS(LCASE(?label), "revenue"))
+  ?metric kg:forTimePeriod ?year .
+  ?year kg:yearValue 2007 .
+  ?metric kg:hasValue ?valueEntity .
+  ?valueEntity kg:numericValue ?value .
+  ?valueEntity kg:hasScale ?scaleURI .
+  BIND(REPLACE(STR(?scaleURI), ".*[/#]", "") AS ?scale)
+}
+
+Example 2 - Company performance:
+Description: "performance for the united parcel service inc. for the year 2004"
+Query:
+SELECT ?value ?scale WHERE {
+  ?metric a kg:FinancialMetric .
+  ?metric kg:label ?label .
+  FILTER(CONTAINS(LCASE(?label), "united parcel service"))
+  ?metric kg:forTimePeriod ?year .
+  ?year kg:yearValue 2004 .
+  ?metric kg:hasValue ?valueEntity .
+  ?valueEntity kg:numericValue ?value .
+  ?valueEntity kg:hasScale ?scaleURI .
+  BIND(REPLACE(STR(?scaleURI), ".*[/#]", "") AS ?scale)
+}
+
+Example 3 - Index value:
+Description: "performance value of the s&p 500 index in 2009"
+Query:
+SELECT ?value ?scale WHERE {
+  ?metric a kg:FinancialMetric .
+  ?metric kg:label ?label .
+  FILTER(CONTAINS(LCASE(?label), "s&p 500"))
+  ?metric kg:forTimePeriod ?year .
+  ?year kg:yearValue 2009 .
+  ?metric kg:hasValue ?valueEntity .
+  ?valueEntity kg:numericValue ?value .
+  ?valueEntity kg:hasScale ?scaleURI .
+  BIND(REPLACE(STR(?scaleURI), ".*[/#]", "") AS ?scale)
+}
+
+IMPORTANT NOTES:
+- Determine if metric is TIME-SERIES or TABLE-BASED:
+  * CRITICAL: Check "AVAILABLE ENTITIES" Column Labels FIRST!
+  * If year appears in Column Labels (e.g., "2014" in list) → TABLE-BASED: use kg:tableColumn with FILTER(CONTAINS(LCASE(?col), "2014"))
+  * If year appears in Row Labels → TABLE-BASED: use kg:tableRow with FILTER(CONTAINS(LCASE(?row), "2014"))
+  * ONLY if year does NOT appear in Row/Column Labels → TIME-SERIES: use kg:forTimePeriod and kg:yearValue 2014
+  * Example: If Column Labels shows ["2012", "2013", "2014"] → Use tableColumn, NOT forTimePeriod!
+- Use FILTER(CONTAINS(LCASE(?label), "search_term")) for flexible matching on kg:label
+- For table queries, use FILTER(CONTAINS(LCASE(?row), "...")) on kg:tableRow and FILTER(CONTAINS(LCASE(?col), "...")) on kg:tableColumn
+- Split table descriptions into row concept (metric type) and column concept (category/period)
+- Use kg:yearValue with UNQUOTED integers (2008, not "2008")
+- Always extract scale using BIND(REPLACE(STR(?scaleURI), ".*[/#]", "") AS ?scale)
+- Match entities that EXIST in the "AVAILABLE ENTITIES" section above!
+
+CRITICAL - FILTER SPECIFICITY:
+- START BROAD: Use the SHORTEST, most GENERAL keyword that captures the concept
+- AVOID OVER-CONSTRAINING: Don't combine multiple keywords with AND (&&) unless absolutely necessary
+- If description says "total amount available under committed credit facilities", use FILTER(CONTAINS(LCASE(?label), "commit")) NOT FILTER(CONTAINS(LCASE(?label), "committed credit facility") && CONTAINS(LCASE(?label), "unused"))
+- When in doubt, use FEWER filters rather than MORE filters
+- Example: For "amortization expense", try "amortization" first - don't add additional constraints like "expense" AND "annual"
+
+CRITICAL - EXACT MATCH VS AGGREGATION:
+1. **PREFER EXACT MATCHES for "total"**: If looking for "total [metric]", check if a row or column is LITERALLY labeled "total":
+   - Check the Row Labels and Column Labels lists above
+   - If "total" appears as an exact label → Use exact match: FILTER(LCASE(?row) = "total") or FILTER(LCASE(?col) = "total")
+   - Example: "total obligations due" + Row Labels contains "total" → Use FILTER(LCASE(?row) = "total")
+
+2. **GRAND TOTAL (both dimensions)**: If BOTH Row Labels AND Column Labels contain "total":
+   - This indicates a grand total cell at the intersection
+   - Use BOTH exact match filters: FILTER(LCASE(?row) = "total") AND FILTER(LCASE(?col) = "total")
+   - Example: "total obligations due" + both dimensions have "total" → Match the (total, total) cell
+   - DO NOT add time period filters unless explicitly specified in the description
+
+3. **Use aggregation ONLY when "total" is NOT a table label**:
+   - If description says "sum of X and Y" or "total of [category A, B, C]" → Aggregate with SUM
+   - If "total" does NOT appear in Row/Column Labels AND description implies summing → Use SUM
+   - Use: SELECT (SUM(?value) as ?value) ?scale WHERE { ... } GROUP BY ?scale
+
+4. **DO NOT over-aggregate**:
+   - If a "total" row/column already exists in the table, DO NOT sum the detail rows!
+   - Tables with "total" rows already contain pre-calculated sums
+   - Summing detail rows would double-count or give wrong results
+
+CRITICAL - TEMPORAL BALANCE LOOKUPS ("as of" pattern):
+When description contains "as of [specific date]" (e.g., "as of december 31", "as of january 1"):
+- This asks for a balance VALUE at a specific date, NOT a calculated metric
+- The TABLE ROW is the DATE, not the metric name
+- Example: "balance of allowance for loan and lease losses as of december 31, 2014"
+  * WRONG: FILTER(CONTAINS(LCASE(?row), "allowance for loan and lease losses"))
+  * CORRECT: FILTER(CONTAINS(LCASE(?row), "december 31"))
+- These are common in rollforward tables where rows are:
+  * "january 1" (beginning balance)
+  * "december 31" (ending balance)
+  * various line items (provisions, charge-offs, etc.)
+- The date IS the row label, the metric name appears in table caption or context
+
+OUTPUT (JSON):
+{
+  "values": {
+    "variable_name": {
+      "sparql": "SELECT ?value ?scale WHERE { ... }",
+      "description": "what this query retrieves"
+    }
+  }
+}
+
+Generate the JSON now:

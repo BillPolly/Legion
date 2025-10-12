@@ -1,0 +1,195 @@
+You are answering a financial question using type-specific guidance.
+
+{% if knowledge_base %}
+DOCUMENT KNOWLEDGE BASE:
+Entities: {{ knowledge_base.entities | map(attribute='name') | join(', ') }}
+Key Facts:
+{% for fact in knowledge_base.key_facts %}
+- {{ fact }}
+{% endfor %}
+Table Units: {{ knowledge_base.table_metadata.units }}
+{% if knowledge_base.table_metadata.baseline_year %}
+Baseline Year: {{ knowledge_base.table_metadata.baseline_year }} (all values = 100.0)
+{% endif %}
+{% if knowledge_base.extracted_values %}
+Important Values from Text (NOT in table):
+{% for key, val in knowledge_base.extracted_values.items() %}
+- {{ key }}: {{ val.value }} {{ val.units }} ({{ val.context }})
+{% endfor %}
+
+CRITICAL - READ THIS FIRST:
+1. BEFORE using the table, check if any extracted value matches the question
+2. Look at the CONTEXT of each extracted value - if the context mentions terms from the question, USE THAT VALUE
+3. For example: If question asks "shares issued" and extracted_values has "authorized to issue X shares", use X
+4. Extracted values from document text take PRECEDENCE over table calculations when semantically related
+5. The question writer may use "issued" to mean "authorized to issue" based on document context
+{% endif %}
+{% endif %}
+
+PRE-EXTRACTED VALUES (from Stage 1):
+{% if hints.extracted_values %}
+{% for val in hints.extracted_values %}
+- {{ val.description }}: {{ val.value }} {{ val.units }} (source: {{ val.source_location }})
+{% endfor %}
+
+⚠️  CRITICAL: Stage 1 has already extracted all values you need from the table!
+⚠️  Use these extracted values DIRECTLY in your calculation
+⚠️  Do NOT try to read values from anywhere else - everything you need is above
+{% else %}
+(No values extracted - this may indicate an error in Stage 1)
+{% endif %}
+
+CALCULATION PLAN (from Stage 1):
+{% if hints.calculation_plan %}
+Reasoning: {{ hints.calculation_plan.reasoning }}
+
+Steps to follow:
+{% for step in hints.calculation_plan.steps %}
+{{ loop.index }}. {{ step }}
+{% endfor %}
+
+Expected result: {{ hints.calculation_plan.expected_result_description }}
+
+⚠️  FOLLOW THIS PLAN EXACTLY - Stage 1 has reasoned through the semantic meaning of the question
+⚠️  The plan explains WHY these specific values were selected and HOW to combine them
+⚠️  If the plan includes explicit operations (like "divide by 1000000"), you MUST perform them
+{% else %}
+(No calculation plan provided)
+{% endif %}
+
+TABLE UNITS: {{ knowledge_base.table_metadata.units if knowledge_base and knowledge_base.table_metadata else 'unknown' }}
+⚠️  ALL EXTRACTED VALUES ARE IN {{ knowledge_base.table_metadata.units | upper if knowledge_base and knowledge_base.table_metadata else 'UNKNOWN UNITS' }}
+⚠️  You MUST account for this when calculating and returning your answer
+
+{% if conversation_history %}
+PREVIOUS CONVERSATION:
+{% for turn in conversation_history %}
+Q{{ loop.index }}: {{ turn.question }}
+A{{ loop.index }}: {{ turn.answer }}
+{% endfor %}
+{% endif %}
+
+CURRENT QUESTION: {{ question }}
+
+QUESTION TYPE: {{ hints.question_type | default('unknown') }}
+
+{% if type_guidance %}
+HOW TO ANSWER THIS TYPE:
+{{ type_guidance }}
+{% endif %}
+
+ANALYSIS:
+- Relevant Columns: {{ hints.table_analysis.relevant_columns | join(', ') if hints.table_analysis.relevant_columns else '' }}
+- Measurement Type: {{ hints.table_analysis.measurement_type | default('unknown') }}
+- Table Units: {{ hints.table_analysis.units | default('unknown') }}
+- Operation: {{ hints.calculation.operation | default('unknown') }}
+- Operands: {{ hints.calculation.operands | join(', ') if hints.calculation.operands else '' }}
+
+
+{% if hints.answer_format.warnings %}
+WARNINGS:
+{% for warning in hints.answer_format.warnings %}
+⚠️  {{ warning }}
+{% endfor %}
+{% endif %}
+
+ANSWER FORMAT:
+- Type: {{ hints.answer_format.type | default('number') }}
+- Magnitude: {{ hints.answer_format.magnitude | default('') }}
+{% if hints.answer_format.magnitude == 'raw_value' %}
+- Return RAW value (e.g., -8.94, NOT -0.0894)
+{% elif hints.answer_format.magnitude == 'decimal' %}
+- Return as decimal (e.g., 0.0894 for 8.94%)
+{% endif %}
+
+UNITS CONVERSION REQUIREMENTS:
+{% if knowledge_base and knowledge_base.table_metadata and knowledge_base.table_metadata.units %}
+Table values are in: {{ knowledge_base.table_metadata.units }}
+Expected answer units: {{ hints.answer_format.expected_units | default('raw_value') }}
+Reasoning: {{ hints.answer_format.units_reasoning | default('Not specified') }}
+
+CONVERSION MATRIX:
+
+⚠️  MOST COMMON CASE: Table units = Expected units → NO CONVERSION NEEDED
+If table is in "thousands" and expected is "thousands" → Return table value AS-IS
+If table is in "millions" and expected is "millions" → Return table value AS-IS
+If table is in "billions" and expected is "billions" → Return table value AS-IS
+
+FROM TABLE UNITS "thousands":
+  → TO "thousands": ✅ NO CONVERSION (e.g., 6424582.0 thousands stays 6424582.0)
+  → TO "millions": Divide by 1,000 (e.g., 2380 thousands = 2.38 millions)
+  → TO "billions": Divide by 1,000,000 (e.g., 2380 thousands = 0.00238 billions)
+  → TO "raw_value": Multiply by 1,000 (RARE - only if explicitly requested)
+
+FROM TABLE UNITS "millions":
+  → TO "millions": ✅ NO CONVERSION (e.g., 2.8 millions stays 2.8)
+  → TO "thousands": Multiply by 1,000 (e.g., 2.8 millions = 2,800 thousands)
+  → TO "billions": Divide by 1,000 (e.g., 2.8 millions = 0.0028 billions)
+  → TO "raw_value": Multiply by 1,000,000 (RARE - only if explicitly requested)
+
+FROM TABLE UNITS "billions":
+  → TO "billions": ✅ NO CONVERSION (e.g., 1.5 billions stays 1.5)
+  → TO "millions": Multiply by 1,000 (e.g., 1.5 billions = 1,500 millions)
+  → TO "thousands": Multiply by 1,000,000 (e.g., 1.5 billions = 1,500,000 thousands)
+  → TO "raw_value": Multiply by 1,000,000,000 (RARE - only if explicitly requested)
+
+PERCENTAGE/RATIO CONVERSIONS:
+  → TO "percentage_decimal": Keep as decimal (e.g., 0.25 for 25%)
+  → TO "percentage_number": Multiply by 100 (e.g., 25 for 25%)
+  → TO "raw_value" (for ratios): Keep as decimal (e.g., 0.25)
+
+CRITICAL: Stage 1 has determined the expected units. Apply the conversion shown above.
+DEFAULT: If table units = expected units, return table value WITHOUT any multiplication/division.
+{% endif %}
+
+SIGN HANDLING:
+Expected sign: {{ hints.answer_format.sign_expectation | default('either') }}
+Reasoning: {{ hints.answer_format.sign_reasoning | default('Not specified') }}
+
+SIGN ENFORCEMENT RULES:
+{% if hints.answer_format.sign_expectation == 'negative' %}
+⚠️  YOUR ANSWER MUST BE NEGATIVE
+If you calculate a positive value, make it negative (multiply by -1).
+Example: If you calculated +4.3 but expected sign is "negative", return -4.3
+
+{% elif hints.answer_format.sign_expectation == 'positive' %}
+⚠️  YOUR ANSWER MUST BE POSITIVE
+If you calculate a negative value, make it positive (take absolute value).
+Example: If you calculated -2054.0 but expected sign is "positive", return 2054.0
+
+{% else %}
+Sign can be positive or negative based on the actual calculation result.
+
+CRITICAL - PERCENTAGE CHANGE WITH NEGATIVE BASE:
+When calculating percentage change: (new - old) / old OR change / base
+- If base is NEGATIVE: The sign of the percentage follows division rules
+  Example: change = +93, base = -1460 → result = 93 / -1460 = -0.0637 (NEGATIVE)
+  Example: change = -50, base = -1000 → result = -50 / -1000 = +0.05 (POSITIVE)
+- If base is POSITIVE: Normal behavior
+  Example: change = +50, base = 1000 → result = 50 / 1000 = +0.05 (POSITIVE)
+
+DO NOT take absolute value of the base when calculating percentages!
+The mathematical sign is correct: positive/negative = negative, negative/negative = positive
+{% endif %}
+
+RESPONSE FORMAT:
+- Return ONLY the numerical answer (or 'yes'/'no' for yes/no questions)
+- Do NOT return: explanations, reasoning, units, currency symbols, commas
+- Do NOT return: empty strings, "n/a", "unknown", "cannot determine"
+- If you cannot find the exact value, use your best judgment based on the available data
+- ALWAYS return a number (even if uncertain)
+
+Examples of CORRECT responses:
+  6424582.0
+  -0.0637
+  0.25
+  yes
+
+Examples of INCORRECT responses:
+  6,424,582 (has comma)
+  -6.37% (has % symbol)
+  $2500 (has $ symbol)
+  approximately 2500 (has text)
+  [empty string] (must always return a value)
+
+YOUR ANSWER:

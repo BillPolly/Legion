@@ -1,0 +1,293 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-11" ;
+    kg:builtWithOntologyVersion "1.0.8" .
+
+entity:Company_Alexion a kg:Company ;
+    kg:hasMetric entity:Metric_AuthorizedShares,
+        entity:Metric_OperatingResults_2019 ;
+    kg:label "Alexion" .
+
+entity:Company_Example30 a kg:Company ;
+    kg:hasMetric entity:Metric_LeaseExpiration_LexingtonMassachusetts,
+        entity:Metric_LeaseExpiration_NewHavenConnecticut,
+        entity:Metric_LeaseExpiration_ZurichSwitzerland,
+        entity:Metric_SquareFeet_AthloneIreland,
+        entity:Metric_SquareFeet_BogartGeorgia,
+        entity:Metric_SquareFeet_DublinIreland,
+        entity:Metric_SquareFeet_LexingtonMassachusetts,
+        entity:Metric_SquareFeet_NewHavenConnecticut,
+        entity:Metric_SquareFeet_SmithfieldRhodeIsland,
+        entity:Metric_SquareFeet_ZurichSwitzerland ;
+    kg:label "Company" .
+
+entity:FinancialTable a kg:Table ;
+    kg:hasColumn entity:TableColumn_0,
+        entity:TableColumn_1,
+        entity:TableColumn_2 ;
+    kg:hasRow entity:TableRow_0,
+        entity:TableRow_1,
+        entity:TableRow_2,
+        entity:TableRow_3,
+        entity:TableRow_4,
+        entity:TableRow_5,
+        entity:TableRow_6 ;
+    kg:tableCaption "Real estate operations and leases by location" ;
+    kg:tableOrientation "column-first" .
+
+entity:Metric_TextCell_0_0 a kg:FinancialMetric ;
+    kg:label "athlone ireland: commercial research and development manufacturing" ;
+    kg:tableColumn "operations conducted" ;
+    kg:tableRow "athlone ireland" ;
+    kg:textValue "commercial research and development manufacturing" .
+
+entity:Metric_TextCell_0_2 a kg:FinancialMetric ;
+    kg:label "athlone ireland: owned" ;
+    kg:tableColumn "leaseexpirationdates" ;
+    kg:tableRow "athlone ireland" ;
+    kg:textValue "owned" .
+
+entity:Metric_TextCell_1_0 a kg:FinancialMetric ;
+    kg:label "bogart georgia: commercial research and development manufacturing" ;
+    kg:tableColumn "operations conducted" ;
+    kg:tableRow "bogart georgia" ;
+    kg:textValue "commercial research and development manufacturing" .
+
+entity:Metric_TextCell_1_2 a kg:FinancialMetric ;
+    kg:label "bogart georgia: owned" ;
+    kg:tableColumn "leaseexpirationdates" ;
+    kg:tableRow "bogart georgia" ;
+    kg:textValue "owned" .
+
+entity:Metric_TextCell_2_0 a kg:FinancialMetric ;
+    kg:label "dublin ireland: global supply chain distribution and administration offices" ;
+    kg:tableColumn "operations conducted" ;
+    kg:tableRow "dublin ireland" ;
+    kg:textValue "global supply chain distribution and administration offices" .
+
+entity:Metric_TextCell_2_2 a kg:FinancialMetric ;
+    kg:label "dublin ireland: owned" ;
+    kg:tableColumn "leaseexpirationdates" ;
+    kg:tableRow "dublin ireland" ;
+    kg:textValue "owned" .
+
+entity:Metric_TextCell_3_0 a kg:FinancialMetric ;
+    kg:label "lexington massachusetts: research and development offices" ;
+    kg:tableColumn "operations conducted" ;
+    kg:tableRow "lexington massachusetts" ;
+    kg:textValue "research and development offices" .
+
+entity:Metric_TextCell_4_0 a kg:FinancialMetric ;
+    kg:label "new haven connecticut: corporate headquarters and executive sales research and development offices" ;
+    kg:tableColumn "operations conducted" ;
+    kg:tableRow "new haven connecticut" ;
+    kg:textValue "corporate headquarters and executive sales research and development offices" .
+
+entity:Metric_TextCell_5_0 a kg:FinancialMetric ;
+    kg:label "smithfield rhode island: commercial research and development manufacturing" ;
+    kg:tableColumn "operations conducted" ;
+    kg:tableRow "smithfield rhode island" ;
+    kg:textValue "commercial research and development manufacturing" .
+
+entity:Metric_TextCell_5_2 a kg:FinancialMetric ;
+    kg:label "smithfield rhode island: owned" ;
+    kg:tableColumn "leaseexpirationdates" ;
+    kg:tableRow "smithfield rhode island" ;
+    kg:textValue "owned" .
+
+entity:Metric_TextCell_6_0 a kg:FinancialMetric ;
+    kg:label "zurich switzerland: regional executive and sales offices" ;
+    kg:tableColumn "operations conducted" ;
+    kg:tableRow "zurich switzerland" ;
+    kg:textValue "regional executive and sales offices" .
+
+entity:Metric_AuthorizedShares a kg:FinancialMetric ;
+    kg:hasValue value:AuthorizedShares ;
+    kg:label "Authorized shares" .
+
+entity:Metric_LeaseExpiration_LexingtonMassachusetts a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2019,
+        entity:entity_Year_2019 ;
+    kg:hasValue value:LeaseExpiration_LexingtonMassachusetts ;
+    kg:label "Lease expiration dates" ;
+    kg:tableColumn "lexington massachusetts" ;
+    kg:tableRow "leaseexpirationdates" .
+
+entity:Metric_LeaseExpiration_NewHavenConnecticut a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2030,
+        entity:entity_Year_2030 ;
+    kg:hasValue value:LeaseExpiration_NewHavenConnecticut ;
+    kg:label "Lease expiration dates" ;
+    kg:tableColumn "new haven connecticut" ;
+    kg:tableRow "leaseexpirationdates" .
+
+entity:Metric_LeaseExpiration_ZurichSwitzerland a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2025,
+        entity:entity_Year_2025 ;
+    kg:hasValue value:LeaseExpiration_ZurichSwitzerland ;
+    kg:label "Lease expiration dates" ;
+    kg:tableColumn "zurich switzerland" ;
+    kg:tableRow "leaseexpirationdates" .
+
+entity:Metric_OperatingResults_2019 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2019,
+        entity:entity_Year_2019 ;
+    kg:hasValue value:OperatingResults_2019 ;
+    kg:label "2019 operating results" .
+
+entity:Metric_SquareFeet_AthloneIreland a kg:FinancialMetric ;
+    kg:hasValue value:SquareFeet_AthloneIreland ;
+    kg:label "Approximate square feet" ;
+    kg:tableColumn "athlone ireland" ;
+    kg:tableRow "approximate square feet" .
+
+entity:Metric_SquareFeet_BogartGeorgia a kg:FinancialMetric ;
+    kg:hasValue value:SquareFeet_BogartGeorgia ;
+    kg:label "Approximate square feet" ;
+    kg:tableColumn "bogart georgia" ;
+    kg:tableRow "approximate square feet" .
+
+entity:Metric_SquareFeet_DublinIreland a kg:FinancialMetric ;
+    kg:hasValue value:SquareFeet_DublinIreland ;
+    kg:label "Approximate square feet" ;
+    kg:tableColumn "dublin ireland" ;
+    kg:tableRow "approximate square feet" .
+
+entity:Metric_SquareFeet_LexingtonMassachusetts a kg:FinancialMetric ;
+    kg:hasValue value:SquareFeet_LexingtonMassachusetts ;
+    kg:label "Approximate square feet" ;
+    kg:tableColumn "lexington massachusetts" ;
+    kg:tableRow "approximate square feet" .
+
+entity:Metric_SquareFeet_NewHavenConnecticut a kg:FinancialMetric ;
+    kg:hasValue value:SquareFeet_NewHavenConnecticut ;
+    kg:label "Approximate square feet" ;
+    kg:tableColumn "new haven connecticut" ;
+    kg:tableRow "approximate square feet" .
+
+entity:Metric_SquareFeet_SmithfieldRhodeIsland a kg:FinancialMetric ;
+    kg:hasValue value:SquareFeet_SmithfieldRhodeIsland ;
+    kg:label "Approximate square feet" ;
+    kg:tableColumn "smithfield rhode island" ;
+    kg:tableRow "approximate square feet" .
+
+entity:Metric_SquareFeet_ZurichSwitzerland a kg:FinancialMetric ;
+    kg:hasValue value:SquareFeet_ZurichSwitzerland ;
+    kg:label "Approximate square feet" ;
+    kg:tableColumn "zurich switzerland" ;
+    kg:tableRow "approximate square feet" .
+
+entity:TableColumn_0 a kg:TableColumn ;
+    kg:columnIndex 0 ;
+    kg:label "{'index': 0, 'label': 'operations conducted', 'numeric_value': None}" .
+
+entity:TableColumn_1 a kg:TableColumn ;
+    kg:columnIndex 1 ;
+    kg:label "{'index': 1, 'label': 'approximatesquare feet', 'numeric_value': None}" .
+
+entity:TableColumn_2 a kg:TableColumn ;
+    kg:columnIndex 2 ;
+    kg:label "{'index': 2, 'label': 'leaseexpirationdates', 'numeric_value': None}" .
+
+entity:TableRow_0 a kg:TableRow ;
+    kg:label "{'index': 0, 'label': 'athlone ireland', 'numeric_value': None}" ;
+    kg:rowIndex 0 .
+
+entity:TableRow_1 a kg:TableRow ;
+    kg:label "{'index': 1, 'label': 'bogart georgia', 'numeric_value': None}" ;
+    kg:rowIndex 1 .
+
+entity:TableRow_2 a kg:TableRow ;
+    kg:label "{'index': 2, 'label': 'dublin ireland', 'numeric_value': None}" ;
+    kg:rowIndex 2 .
+
+entity:TableRow_3 a kg:TableRow ;
+    kg:label "{'index': 3, 'label': 'lexington massachusetts', 'numeric_value': None}" ;
+    kg:rowIndex 3 .
+
+entity:TableRow_4 a kg:TableRow ;
+    kg:label "{'index': 4, 'label': 'new haven connecticut', 'numeric_value': None}" ;
+    kg:rowIndex 4 .
+
+entity:TableRow_5 a kg:TableRow ;
+    kg:label "{'index': 5, 'label': 'smithfield rhode island', 'numeric_value': None}" ;
+    kg:rowIndex 5 .
+
+entity:TableRow_6 a kg:TableRow ;
+    kg:label "{'index': 6, 'label': 'zurich switzerland', 'numeric_value': None}" ;
+    kg:rowIndex 6 .
+
+entity:Year_2025 a kg:Year ;
+    kg:yearValue 2025 .
+
+entity:Year_2030 a kg:Year ;
+    kg:yearValue 2030 .
+
+value:AuthorizedShares a kg:MonetaryValue ;
+    kg:displayValue "up to 5" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 5.0 .
+
+value:LeaseExpiration_LexingtonMassachusetts a kg:MonetaryValue ;
+    kg:displayValue "2019.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2019.0 .
+
+value:LeaseExpiration_NewHavenConnecticut a kg:MonetaryValue ;
+    kg:displayValue "2030.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2030.0 .
+
+value:LeaseExpiration_ZurichSwitzerland a kg:MonetaryValue ;
+    kg:displayValue "2025.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2025.0 .
+
+value:OperatingResults_2019 a kg:MonetaryValue ;
+    kg:displayValue "2019" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 0.0 .
+
+value:SquareFeet_AthloneIreland a kg:MonetaryValue ;
+    kg:displayValue "80000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 80000.0 .
+
+value:SquareFeet_BogartGeorgia a kg:MonetaryValue ;
+    kg:displayValue "70000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 70000.0 .
+
+value:SquareFeet_DublinIreland a kg:MonetaryValue ;
+    kg:displayValue "160000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 160000.0 .
+
+value:SquareFeet_LexingtonMassachusetts a kg:MonetaryValue ;
+    kg:displayValue "81000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 81000.0 .
+
+value:SquareFeet_NewHavenConnecticut a kg:MonetaryValue ;
+    kg:displayValue "514000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 514000.0 .
+
+value:SquareFeet_SmithfieldRhodeIsland a kg:MonetaryValue ;
+    kg:displayValue "67000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 67000.0 .
+
+value:SquareFeet_ZurichSwitzerland a kg:MonetaryValue ;
+    kg:displayValue "69000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 69000.0 .
+
+entity:Year_2019 a kg:Year ;
+    kg:yearValue 2019 .
+

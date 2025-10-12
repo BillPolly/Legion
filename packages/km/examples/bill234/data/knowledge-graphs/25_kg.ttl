@@ -1,0 +1,143 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-11" ;
+    kg:builtWithOntologyVersion "1.0.8" .
+
+entity:Company_Example0 a kg:Company ;
+    kg:hasMetric entity:Metric_AdditionsForTaxPositions_CurrentYear,
+        entity:Metric_BalanceNov1_2008,
+        entity:Metric_BalanceOct31_2009 ;
+    kg:label "Example Company" .
+
+entity:Company_Example25 a kg:Company ;
+    kg:hasMetric entity:Metric_AdditionalTaxLiability_2004_2005,
+        entity:Metric_AdditionalTaxLiability_2006_2007,
+        entity:Metric_InterestPenalties_2008,
+        entity:Metric_InterestPenalties_2009 ;
+    kg:label "Example Company 25" .
+
+entity:FinancialTable a kg:Table ;
+    kg:hasColumn entity:TableColumn_0 ;
+    kg:hasRow entity:TableRow_0,
+        entity:TableRow_1,
+        entity:TableRow_2 ;
+    kg:tableCaption "Changes in total amounts of uncertain tax positions for fiscal 2008 and fiscal 2009" ;
+    kg:tableOrientation "column-first" .
+
+entity:Metric_ColumnHeaderValue_0 a kg:FinancialMetric ;
+    kg:hasValue value:ColumnHeaderValue_0 ;
+    kg:label "Column header value: $ 9889" ;
+    kg:tableColumn "$ 9889" .
+
+entity:Metric_AdditionalTaxLiability_2004_2005 a kg:FinancialMetric ;
+    kg:hasValue value:AdditionalTaxLiability_2004_2005 ;
+    kg:label "Additional potential total tax liability (four items)" .
+
+entity:Metric_AdditionalTaxLiability_2006_2007 a kg:FinancialMetric ;
+    kg:hasValue value:AdditionalTaxLiability_2006_2007 ;
+    kg:label "Additional potential total tax liability (four items)" .
+
+entity:Metric_AdditionsForTaxPositions_CurrentYear a kg:FinancialMetric ;
+    kg:hasValue value:AdditionsForTaxPositions_CurrentYear ;
+    kg:label "additions for tax positions of current year" ;
+    kg:tableColumn "$ 9889" ;
+    kg:tableRow "additions for tax positions of current year" .
+
+entity:Metric_BalanceNov1_2008 a kg:FinancialMetric ;
+    kg:hasValue value:BalanceNov1_2008 ;
+    kg:label "balance november 1 2008" ;
+    kg:tableColumn "$ 9889" ;
+    kg:tableRow "balance november 1 2008" .
+
+entity:Metric_BalanceOct31_2009 a kg:FinancialMetric ;
+    kg:hasValue value:BalanceOct31_2009 ;
+    kg:label "balance october 31 2009" ;
+    kg:tableColumn "$ 9889" ;
+    kg:tableRow "balance october 31 2009" .
+
+entity:Metric_InterestPenalties_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2008,
+        entity:entity_Year_2008 ;
+    kg:hasValue value:InterestPenalties_2008 ;
+    kg:label "Interest and penalties related to unrecognized tax benefits" .
+
+entity:Metric_InterestPenalties_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2009,
+        entity:entity_Year_2009 ;
+    kg:hasValue value:InterestPenalties_2009 ;
+    kg:label "Interest and penalties related to unrecognized tax benefits" .
+
+entity:TableColumn_0 a kg:TableColumn ;
+    kg:columnIndex 0 ;
+    kg:label "{'index': 0, 'label': '$ 9889', 'numeric_value': 9889.0}" .
+
+entity:TableRow_0 a kg:TableRow ;
+    kg:label "{'index': 0, 'label': 'additions for tax positions of current year', 'numeric_value': None}" ;
+    kg:rowIndex 0 .
+
+entity:TableRow_1 a kg:TableRow ;
+    kg:label "{'index': 1, 'label': 'balance november 1 2008', 'numeric_value': None}" ;
+    kg:rowIndex 1 .
+
+entity:TableRow_2 a kg:TableRow ;
+    kg:label "{'index': 2, 'label': 'balance october 31 2009', 'numeric_value': None}" ;
+    kg:rowIndex 2 .
+
+entity:Year_2008 a kg:Year ;
+    kg:yearValue 2008 .
+
+entity:Year_2009 a kg:Year ;
+    kg:yearValue 2009 .
+
+value:AdditionalTaxLiability_2004_2005 a kg:MonetaryValue ;
+    kg:displayValue "$46 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 46.0 .
+
+value:AdditionalTaxLiability_2006_2007 a kg:MonetaryValue ;
+    kg:displayValue "$195 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 195.0 .
+
+value:AdditionsForTaxPositions_CurrentYear a kg:MonetaryValue ;
+    kg:displayValue "4411.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 4411.0 .
+
+value:BalanceNov1_2008 a kg:MonetaryValue ;
+    kg:displayValue "13750.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 13750.0 .
+
+value:BalanceOct31_2009 a kg:MonetaryValue ;
+    kg:displayValue "18161.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 18161.0 .
+
+value:ColumnHeaderValue_0 a kg:MonetaryValue ;
+    kg:displayValue "$ 9889" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 9889.0 .
+
+value:InterestPenalties_2008 a kg:MonetaryValue ;
+    kg:displayValue "$1.3 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1.3 .
+
+value:InterestPenalties_2009 a kg:MonetaryValue ;
+    kg:displayValue "$1.7 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1.7 .
+

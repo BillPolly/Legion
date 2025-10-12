@@ -1,0 +1,426 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-11" ;
+    kg:builtWithOntologyVersion "1.0.4" .
+
+entity:Company_BakerHughes a kg:Company ;
+    kg:hasMetric entity:Metric_AuthorizedSharesClassA,
+        entity:Metric_AuthorizedSharesClassB,
+        entity:Metric_AuthorizedSharesPreferred,
+        entity:Metric_ClassACommonStock_Balance_2016,
+        entity:Metric_ClassACommonStock_Balance_2017,
+        entity:Metric_ClassACommonStock_BusinessCombination_2017,
+        entity:Metric_ClassACommonStock_RepurchaseProgram,
+        entity:Metric_ClassACommonStock_RestrictedStockUnits,
+        entity:Metric_ClassACommonStock_StockOptions,
+        entity:Metric_ClassASharesRepurchaseCost2017,
+        entity:Metric_ClassASharesRepurchased2017,
+        entity:Metric_ClassBCommonStock_Balance_2016,
+        entity:Metric_ClassBCommonStock_Balance_2017,
+        entity:Metric_ClassBCommonStock_BusinessCombination_2017,
+        entity:Metric_ClassBCommonStock_RepurchaseProgram,
+        entity:Metric_ClassBCommonStock_RestrictedStockUnits,
+        entity:Metric_ClassBCommonStock_StockOptions,
+        entity:Metric_ClassBSharesRepurchaseCost2017,
+        entity:Metric_ClassBSharesRepurchased2017,
+        entity:Metric_OutstandingSharesClassA,
+        entity:Metric_OutstandingSharesClassB,
+        entity:Metric_PotentialClassARepurchase,
+        entity:Metric_RegularDividendsQ3_2017,
+        entity:Metric_RepurchaseAuthorizationRemaining,
+        entity:Metric_RepurchaseProgramAuthorization,
+        entity:Metric_SpecialDividendPerShare,
+        entity:Metric_TotalFairValueRSUsVested2017,
+        entity:Metric_TotalIntrinsicValueRSUsOutstanding2017,
+        entity:Metric_TotalIntrinsicValueRSUsVested2017,
+        entity:Metric_TotalUnrecognizedCompensationCost2017 ;
+    kg:label "Baker Hughes",
+        "Baker Hughes, a GE Company" .
+
+entity:FinancialTable a kg:Table ;
+    kg:hasColumn entity:TableColumn_0,
+        entity:TableColumn_1 ;
+    kg:hasRow entity:TableRow_0,
+        entity:TableRow_1,
+        entity:TableRow_2,
+        entity:TableRow_3,
+        entity:TableRow_4,
+        entity:TableRow_5 ;
+    kg:tableCaption "Changes in Class A and Class B common stock shares" ;
+    kg:tableOrientation "column-first" .
+
+entity:Metric_AuthorizedSharesClassA a kg:FinancialMetric ;
+    kg:hasValue value:AuthorizedSharesClassA ;
+    kg:label "Authorized shares of class a common stock" .
+
+entity:Metric_AuthorizedSharesClassB a kg:FinancialMetric ;
+    kg:hasValue value:AuthorizedSharesClassB ;
+    kg:label "Authorized shares of class b common stock" .
+
+entity:Metric_AuthorizedSharesPreferred a kg:FinancialMetric ;
+    kg:hasValue value:AuthorizedSharesPreferred ;
+    kg:label "Authorized shares of preferred stock" .
+
+entity:Metric_ClassACommonStock_Balance_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:ClassACommonStock_Balance_2016 ;
+    kg:label "Class a common stock - Balance at december 31 2016" ;
+    kg:tableColumn "balance at december 31 2016" ;
+    kg:tableRow "class a common stock" .
+
+entity:Metric_ClassACommonStock_Balance_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:ClassACommonStock_Balance_2017 ;
+    kg:label "Class a common stock - Balance at december 31 2017" ;
+    kg:tableColumn "balance at december 31 2017" ;
+    kg:tableRow "class a common stock" .
+
+entity:Metric_ClassACommonStock_BusinessCombination_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:ClassACommonStock_BusinessCombination_2017 ;
+    kg:label "Class a common stock - Issue of shares on business combination at july 3 2017" ;
+    kg:tableColumn "issue of shares on business combination at july 3 2017" ;
+    kg:tableRow "class a common stock" .
+
+entity:Metric_ClassACommonStock_RepurchaseProgram a kg:FinancialMetric ;
+    kg:hasValue value:ClassACommonStock_RepurchaseProgram ;
+    kg:label "Class a common stock - Stock repurchase program ( 2 ) ( 3 )" ;
+    kg:tableColumn "stock repurchase program ( 2 ) ( 3 )" ;
+    kg:tableRow "class a common stock" .
+
+entity:Metric_ClassACommonStock_RestrictedStockUnits a kg:FinancialMetric ;
+    kg:hasValue value:ClassACommonStock_RestrictedStockUnits ;
+    kg:label "Class a common stock - Issue of shares upon vesting of restricted stock units ( 1 )" ;
+    kg:tableColumn "issue of shares upon vesting of restricted stock units ( 1 )" ;
+    kg:tableRow "class a common stock" .
+
+entity:Metric_ClassACommonStock_StockOptions a kg:FinancialMetric ;
+    kg:hasValue value:ClassACommonStock_StockOptions ;
+    kg:label "Class a common stock - Issue of shares on exercises of stock options ( 1 )" ;
+    kg:tableColumn "issue of shares on exercises of stock options ( 1 )" ;
+    kg:tableRow "class a common stock" .
+
+entity:Metric_ClassASharesRepurchaseCost2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:ClassASharesRepurchaseCost2017 ;
+    kg:label "Class a common stock repurchase cost" .
+
+entity:Metric_ClassASharesRepurchased2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:ClassASharesRepurchased2017 ;
+    kg:label "Class a common stock shares repurchased" .
+
+entity:Metric_ClassBCommonStock_Balance_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:ClassBCommonStock_Balance_2016 ;
+    kg:label "Class b common stock - Balance at december 31 2016" ;
+    kg:tableColumn "balance at december 31 2016" ;
+    kg:tableRow "class b common stock" .
+
+entity:Metric_ClassBCommonStock_Balance_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:ClassBCommonStock_Balance_2017 ;
+    kg:label "Class b common stock - Balance at december 31 2017" ;
+    kg:tableColumn "balance at december 31 2017" ;
+    kg:tableRow "class b common stock" .
+
+entity:Metric_ClassBCommonStock_BusinessCombination_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:ClassBCommonStock_BusinessCombination_2017 ;
+    kg:label "Class b common stock - Issue of shares on business combination at july 3 2017" ;
+    kg:tableColumn "issue of shares on business combination at july 3 2017" ;
+    kg:tableRow "class b common stock" .
+
+entity:Metric_ClassBCommonStock_RepurchaseProgram a kg:FinancialMetric ;
+    kg:hasValue value:ClassBCommonStock_RepurchaseProgram ;
+    kg:label "Class b common stock - Stock repurchase program ( 2 ) ( 3 )" ;
+    kg:tableColumn "stock repurchase program ( 2 ) ( 3 )" ;
+    kg:tableRow "class b common stock" .
+
+entity:Metric_ClassBCommonStock_RestrictedStockUnits a kg:FinancialMetric ;
+    kg:hasValue value:ClassBCommonStock_RestrictedStockUnits ;
+    kg:label "Class b common stock - Issue of shares upon vesting of restricted stock units ( 1 )" ;
+    kg:tableColumn "issue of shares upon vesting of restricted stock units ( 1 )" ;
+    kg:tableRow "class b common stock" .
+
+entity:Metric_ClassBCommonStock_StockOptions a kg:FinancialMetric ;
+    kg:hasValue value:ClassBCommonStock_StockOptions ;
+    kg:label "Class b common stock - Issue of shares on exercises of stock options ( 1 )" ;
+    kg:tableColumn "issue of shares on exercises of stock options ( 1 )" ;
+    kg:tableRow "class b common stock" .
+
+entity:Metric_ClassBSharesRepurchaseCost2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:ClassBSharesRepurchaseCost2017 ;
+    kg:label "Class b common stock repurchase cost" .
+
+entity:Metric_ClassBSharesRepurchased2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:ClassBSharesRepurchased2017 ;
+    kg:label "Class b common stock shares repurchased" .
+
+entity:Metric_OutstandingSharesClassA a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:OutstandingSharesClassA ;
+    kg:label "Number of class a common stock shares outstanding" .
+
+entity:Metric_OutstandingSharesClassB a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:OutstandingSharesClassB ;
+    kg:label "Number of class b common stock shares outstanding" .
+
+entity:Metric_PotentialClassARepurchase a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:PotentialClassARepurchase ;
+    kg:label "Potential class a common stock repurchase amount" .
+
+entity:Metric_RegularDividendsQ3_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:RegularDividendsQ3_2017 ;
+    kg:label "Regular dividends to holders of class a common stock" .
+
+entity:Metric_RepurchaseAuthorizationRemaining a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:RepurchaseAuthorizationRemaining ;
+    kg:label "Repurchase authorization remaining amount" .
+
+entity:Metric_RepurchaseProgramAuthorization a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:RepurchaseProgramAuthorization ;
+    kg:label "Repurchase program authorization amount" .
+
+entity:Metric_SpecialDividendPerShare a kg:FinancialMetric ;
+    kg:hasValue value:SpecialDividendPerShare ;
+    kg:label "Special one-time cash dividend per share" .
+
+entity:Metric_TotalFairValueRSUsVested2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:TotalFairValueRSUsVested2017 ;
+    kg:label "Total fair value of rsus vested" .
+
+entity:Metric_TotalIntrinsicValueRSUsOutstanding2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:TotalIntrinsicValueRSUsOutstanding2017 ;
+    kg:label "Total intrinsic value of rsus outstanding" .
+
+entity:Metric_TotalIntrinsicValueRSUsVested2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:TotalIntrinsicValueRSUsVested2017 ;
+    kg:label "Total intrinsic value of rsus vested" .
+
+entity:Metric_TotalUnrecognizedCompensationCost2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:TotalUnrecognizedCompensationCost2017 ;
+    kg:label "Total unrecognized compensation cost related to unvested rsus" .
+
+entity:TableColumn_0 a kg:TableColumn ;
+    kg:columnIndex 0 ;
+    kg:label "{'index': 0, 'label': 'class a common stock'}" .
+
+entity:TableColumn_1 a kg:TableColumn ;
+    kg:columnIndex 1 ;
+    kg:label "{'index': 1, 'label': 'class b common stock'}" .
+
+entity:TableRow_0 a kg:TableRow ;
+    kg:label "{'index': 0, 'label': 'balance at december 31 2016'}" ;
+    kg:rowIndex 0 .
+
+entity:TableRow_1 a kg:TableRow ;
+    kg:label "{'index': 1, 'label': 'balance at december 31 2017'}" ;
+    kg:rowIndex 1 .
+
+entity:TableRow_2 a kg:TableRow ;
+    kg:label "{'index': 2, 'label': 'issue of shares on business combination at july 3 2017'}" ;
+    kg:rowIndex 2 .
+
+entity:TableRow_3 a kg:TableRow ;
+    kg:label "{'index': 3, 'label': 'issue of shares on exercises of stock options ( 1 )'}" ;
+    kg:rowIndex 3 .
+
+entity:TableRow_4 a kg:TableRow ;
+    kg:label "{'index': 4, 'label': 'issue of shares upon vesting of restricted stock units ( 1 )'}" ;
+    kg:rowIndex 4 .
+
+entity:TableRow_5 a kg:TableRow ;
+    kg:label "{'index': 5, 'label': 'stock repurchase program ( 2 ) ( 3 )'}" ;
+    kg:rowIndex 5 .
+
+value:AuthorizedSharesClassA a kg:MonetaryValue ;
+    kg:displayValue "2 billion" ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 2.0 .
+
+value:AuthorizedSharesClassB a kg:MonetaryValue ;
+    kg:displayValue "1.25 billion" ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 1.25 .
+
+value:AuthorizedSharesPreferred a kg:MonetaryValue ;
+    kg:displayValue "50 million" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 50.0 .
+
+value:ClassACommonStock_Balance_2016 a kg:MonetaryValue ;
+    kg:displayValue "2014.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2014.0 .
+
+value:ClassACommonStock_Balance_2017 a kg:MonetaryValue ;
+    kg:displayValue "422208.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 422208.0 .
+
+value:ClassACommonStock_BusinessCombination_2017 a kg:MonetaryValue ;
+    kg:displayValue "427709.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 427709.0 .
+
+value:ClassACommonStock_RepurchaseProgram a kg:MonetaryValue ;
+    kg:displayValue "-6047.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -6047.0 .
+
+value:ClassACommonStock_RestrictedStockUnits a kg:MonetaryValue ;
+    kg:displayValue "290.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 290.0 .
+
+value:ClassACommonStock_StockOptions a kg:MonetaryValue ;
+    kg:displayValue "256.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 256.0 .
+
+value:ClassASharesRepurchaseCost2017 a kg:MonetaryValue ;
+    kg:displayValue "$187 million" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 187.0 .
+
+value:ClassASharesRepurchased2017 a kg:MonetaryValue ;
+    kg:displayValue "6,046,735 shares" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 6046735.0 .
+
+value:ClassBCommonStock_Balance_2016 a kg:MonetaryValue ;
+    kg:displayValue "2014.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2014.0 .
+
+value:ClassBCommonStock_Balance_2017 a kg:MonetaryValue ;
+    kg:displayValue "706985.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 706985.0 .
+
+value:ClassBCommonStock_BusinessCombination_2017 a kg:MonetaryValue ;
+    kg:displayValue "717111.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 717111.0 .
+
+value:ClassBCommonStock_RepurchaseProgram a kg:MonetaryValue ;
+    kg:displayValue "-10126.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -10126.0 .
+
+value:ClassBCommonStock_RestrictedStockUnits a kg:MonetaryValue ;
+    kg:displayValue "2014.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2014.0 .
+
+value:ClassBCommonStock_StockOptions a kg:MonetaryValue ;
+    kg:displayValue "2014.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2014.0 .
+
+value:ClassBSharesRepurchaseCost2017 a kg:MonetaryValue ;
+    kg:displayValue "$314 million" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 314.0 .
+
+value:ClassBSharesRepurchased2017 a kg:MonetaryValue ;
+    kg:displayValue "10,126,467 shares" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 10126467.0 .
+
+value:OutstandingSharesClassA a kg:MonetaryValue ;
+    kg:displayValue "422 million" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 422.0 .
+
+value:OutstandingSharesClassB a kg:MonetaryValue ;
+    kg:displayValue "707 million" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 707.0 .
+
+value:PotentialClassARepurchase a kg:MonetaryValue ;
+    kg:displayValue "$1.1 billion" ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 1.1 .
+
+value:RegularDividendsQ3_2017 a kg:MonetaryValue ;
+    kg:displayValue "$0.17" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 0.17 .
+
+value:RepurchaseAuthorizationRemaining a kg:MonetaryValue ;
+    kg:displayValue "$2.5 billion" ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 2.5 .
+
+value:RepurchaseProgramAuthorization a kg:MonetaryValue ;
+    kg:displayValue "$3 billion" ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 3.0 .
+
+value:SpecialDividendPerShare a kg:MonetaryValue ;
+    kg:displayValue "$17.50" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 17.5 .
+
+value:TotalFairValueRSUsVested2017 a kg:MonetaryValue ;
+    kg:displayValue "$19 million" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 19.0 .
+
+value:TotalIntrinsicValueRSUsOutstanding2017 a kg:MonetaryValue ;
+    kg:displayValue "$38 million" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 38.0 .
+
+value:TotalIntrinsicValueRSUsVested2017 a kg:MonetaryValue ;
+    kg:displayValue "$17 million" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 17.0 .
+
+value:TotalUnrecognizedCompensationCost2017 a kg:MonetaryValue ;
+    kg:displayValue "$98 million" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 98.0 .
+
+entity:Year_2016 a kg:Year ;
+    kg:yearValue 2016 .
+
+entity:Year_2017 a kg:Year ;
+    kg:yearValue 2017 .
+

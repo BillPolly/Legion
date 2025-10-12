@@ -1,0 +1,180 @@
+You are analyzing a financial question to classify it into a specific question type.
+
+{% if knowledge_base %}
+DOCUMENT KNOWLEDGE BASE:
+Entities: {{ knowledge_base.entities | map(attribute='name') | join(', ') }}
+Key Facts:
+{% for fact in knowledge_base.key_facts %}
+- {{ fact }}
+{% endfor %}
+Table Units: {{ knowledge_base.table_metadata.units }}
+{% if knowledge_base.table_metadata.baseline_year %}
+Baseline Year: {{ knowledge_base.table_metadata.baseline_year }} (all values = 100.0)
+{% endif %}
+{% if knowledge_base.extracted_values %}
+Important Values from Text:
+{% for key, val in knowledge_base.extracted_values.items() %}
+- {{ key }}: {{ val.value }} {{ val.units }} ({{ val.context }})
+{% endfor %}
+{% endif %}
+{% endif %}
+
+TABLE DATA:
+{{ table_json }}
+
+{% if conversation_history %}
+PREVIOUS CONVERSATION:
+{% for turn in conversation_history %}
+Q{{ loop.index }}: {{ turn.question }}
+A{{ loop.index }}: {{ turn.answer }}
+{% endfor %}
+{% endif %}
+
+CURRENT QUESTION: {{ question }}
+
+AVAILABLE QUESTION TYPES:
+{% for type_name, type_info in question_types.items() %}
+- {{ type_name }}: {{ type_info.description }}
+  Identify by: {{ type_info.identification_hints | join('; ') }}
+{% endfor %}
+
+Analyze this question and provide a JSON response with the following structure:
+
+{
+  "question_type": "<one of: {{ question_types.keys() | join(', ') }}>",
+  "table_analysis": {
+    "relevant_columns": ["<column names>"],
+    "measurement_type": "<what is being measured>",
+    "units": "<units if specified, e.g., millions, billions, dollars, percent>"
+  },
+  "extracted_values": [
+    {
+      "description": "<what this value represents>",
+      "value": <the actual numerical value extracted from the table>,
+      "units": "<units of this value>",
+      "source_location": "<where this came from, e.g., 'table[federal][2021 to 2025]' or 'knowledge_base.extracted_values.total_sales_2011'>"
+    }
+  ],
+  "calculation_plan": {
+    "reasoning": "<Explain WHY you selected these specific values. What is the question really asking? For 'total' questions, should multiple categories be summed? For date ranges, which periods are included?>",
+    "steps": [
+      "<step 1: what to extract or calculate>",
+      "<step 2: next operation>",
+      "<step 3: final result>"
+    ],
+    "expected_result_description": "<what should the final answer represent in plain English>"
+  },
+  "calculation": {
+    "operation": "<operation needed: lookup, subtract, divide, multiply, add, etc.>",
+    "operands": ["<description of values to operate on>"],
+    "reference_previous": <true/false - does this reference a previous answer?>
+  },
+  "answer_format": {
+    "type": "<number, percentage_as_decimal, yes_no>",
+    "expected_units": "<raw_value | thousands | millions | billions | percentage_decimal | percentage_number>",
+    "units_reasoning": "<why these units? check for keywords like 'in thousands', 'converted to', or default to raw_value>",
+    "sign_expectation": "<positive | negative | either>",
+    "sign_reasoning": "<why this sign? check for 'decline', 'decrease', 'net cash used', 'increase', etc.>",
+    "warnings": ["<any warnings about ambiguity or common mistakes>"]
+  }
+}
+
+IMPORTANT:
+- FIRST check if the knowledge_base.extracted_values contains a value that matches the question
+- If extracted_values has a matching value, classify as 'extracted_value_lookup' even if table has similar data
+- Choose the MOST SPECIFIC question type that matches
+- Pay attention to conversation history patterns (total → specific → proportion)
+- In index tables where one year=100.0, that's the baseline year for references
+
+CRITICAL - Value Extraction:
+- You MUST extract the actual values from the table or knowledge_base and include them in "extracted_values"
+- READ the exact value and include it with its description and units
+- Specify the source_location so we can verify where it came from
+- Example: If question asks about "commercial paper in 2011":
+  {
+    "description": "commercial paper outstanding in 2011",
+    "value": 2.38,
+    "units": "billions",
+    "source_location": "table[commercial paper][2011]"
+  }
+- If question requires multiple values, extract ALL values needed
+- For values from knowledge_base.extracted_values, use source_location like "knowledge_base.extracted_values.total_sales_2011"
+- Stage 2 will ONLY see these extracted values, not the full table, so extract everything needed!
+
+CRITICAL - Calculation Planning:
+Think through the calculation step-by-step with explicit reasoning:
+
+1. **Semantic Interpretation:**
+   - What does "total" mean in this context? Should you sum multiple categories?
+   - **CRITICAL**: Look for multiple rows with similar names that are subcategories
+   - Example: "total long-term debt" when table has BOTH:
+     - "long-term debt": 2907.3
+     - "long-term debt - related party": 320.1
+     → You should sum BOTH (2907.3 + 320.1 = 3227.4) because they are both types of long-term debt
+   - Pattern: If rows have the same base term with qualifiers (e.g., "debt - related party"), they are subcategories
+   - What does "within 2014" mean? Aggregate all periods up to 2014, or just the 2014 row?
+
+2. **Explicit Operations:**
+   - If question says "divided by 1000000" or "multiplied by X", include this as a calculation step
+   - Don't assume unit conversion - if explicitly stated, plan it as a step
+
+3. **Financial Term Understanding:**
+   - Check knowledge_base.financial_terms for definitions
+   - "net cash used" vs "net cash provided" have specific meanings
+   - "operating profit" might exclude certain items
+
+4. **Multi-value Selection:**
+   - If extracting multiple similar values, explain WHY each one
+   - Example: Question asks "net sales 2006 for North American printing papers"
+     - Multiple extracted_values entries exist: "north_american_sales_2006", "u.s._market_pulp_sales_2006"
+     - Reasoning: "Select 'north_american_sales_2006' because question specifically asks for printing papers segment"
+
+5. **Date Range Logic:**
+   - "between 2021 and 2025" → sum all rows in that range
+   - "within 2014" → typically means up to and including 2014
+   - "in 2014" → just the 2014 row
+
+6. **Subtraction Order for Time-Based Differences:**
+   - "difference between [earlier date] and [later date]" → later - earlier (chronological order)
+   - Example: "difference between 2017 and 2018" → 2018 value - 2017 value
+   - This gives POSITIVE for increases, NEGATIVE for decreases
+   - If result should be negative (decrease), don't flip the order - let the math be negative
+
+Your calculation_plan should make your reasoning transparent so Stage 2 can verify and execute correctly!
+
+CRITICAL - Units Detection (expected_units field):
+Look for keywords in the question to determine what units the answer should be in:
+- "in thousands" / "converted to thousands" / "in 000s" → expected_units: "thousands"
+- "in millions" / "converted to millions" → expected_units: "millions"
+- "in billions" / "converted to billions" → expected_units: "billions"
+- "what percentage" / "percent change" / "as a percentage" → expected_units: "percentage_decimal" (return 0.25 for 25%)
+- "how much percent" (numerical) → expected_units: "percentage_number" (return 25 for 25%)
+- Question is about ratios / proportions / fractions → expected_units: "raw_value" (decimal ratio)
+
+DEFAULT RULE (NO unit keywords):
+- If table has units (thousands/millions/billions) → expected_units: SAME AS TABLE
+- Rationale: Financial datasets keep values in consistent units throughout
+- ONLY convert if question EXPLICITLY asks for different units
+
+Examples:
+- "what is the balance of total debt?" + table in thousands → expected_units: "thousands" (DEFAULT: same as table)
+- "what is the value in 2011?" + table in millions → expected_units: "millions" (DEFAULT: same as table)
+- "and converted to the thousands?" + table in millions → expected_units: "thousands" (EXPLICIT conversion requested)
+- "what proportion..." + table in any units → expected_units: "raw_value" (ratio question, not currency)
+
+CRITICAL - Sign Detection (sign_expectation field):
+Each question type has specific sign handling rules. After classifying the question type, apply its sign_rules:
+
+{% for type_name, type_info in question_types.items() %}
+{{ type_name }}: {{ type_info.sign_rules }}
+{% endfor %}
+
+IMPORTANT for "arithmetic" type:
+When question asks about "change in cash USED" or "change in cash PROVIDED" and table values are NEGATIVE:
+- The question is asking about magnitude of change in USAGE/PROVIDED
+- Calculate: abs(later value) - abs(earlier value)
+- Example: "change in cash used from 2004 to 2005" where table has -2534 (2004) and -3679 (2005)
+  → More cash was used in 2005 → abs(-3679) - abs(-2534) = 3679 - 2534 = 1145 (positive)
+  → sign_expectation: "positive", reasoning: "Question asks for change in usage magnitude; more cash was used"
+
+Reply with ONLY the JSON object, no explanation.

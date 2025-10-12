@@ -1,0 +1,109 @@
+You are rewriting a conversational question to make it completely explicit and unambiguous.
+
+Your task: Resolve ALL pronouns, references, and ambiguous terms to create a clear, standalone question.
+
+{% if knowledge_base %}
+DOCUMENT KNOWLEDGE BASE:
+Entities: {{ knowledge_base.entities | map(attribute='name') | join(', ') }}
+{% if knowledge_base.table_metadata.baseline_year %}
+Baseline Year: {{ knowledge_base.table_metadata.baseline_year }} (all table values = 100.0 in this year)
+{% endif %}
+{% endif %}
+
+TABLE DATA:
+{{ table_json }}
+
+{% if conversation_history %}
+PREVIOUS CONVERSATION:
+{% for turn in conversation_history %}
+Q{{ loop.index }}: {{ turn.question }}
+A{{ loop.index }}: {{ turn.answer }}
+{% endfor %}
+{% endif %}
+
+CURRENT QUESTION (ORIGINAL): {{ question }}
+
+REWRITING RULES:
+
+1. **CRITICAL - Context Switching Detection:**
+   - Watch for phrases that indicate a NEW entity focus: "what about...", "what is the value if the investment in...", "what was it for [different entity]"
+   - When context switches to a NEW entity, make that entity COMPLETELY EXPLICIT in ALL references
+   - Example: If previous questions were about "Edwards Lifesciences" and current question says "what about the value if the investment in s&p500", then "the initial investment" means "the initial investment in S&P 500" NOT Edwards
+   - Replace "the initial investment", "the net change", "the value" with "the initial investment in [NEW ENTITY]"
+
+2. **Aggressive Pronoun Resolution:**
+   - NEVER allow these words to pass through: "it", "that", "this", "these", "those"
+   - "it" → The specific thing from conversation history (the value, the amount, the payment, etc.)
+   - "that value", "this change" → Replace with what was calculated/mentioned
+   - "the stock", "that stock", "the company" → Replace with specific entity name
+   - "what was it for 2019?" → "what was the [annual payment amount] for year 2019?"
+   - Track which entity the conversation is focused on from previous questions
+   - If previous question asked about entity X, pronouns likely refer to X UNLESS there's a context switch
+
+3. **Temporal Reference Resolution:**
+   - "this year", "that year" → Replace with specific year (e.g., "2004", "2016")
+   {% if knowledge_base.table_metadata.baseline_year %}
+   - CRITICAL: In index tables with baseline_year={{ knowledge_base.table_metadata.baseline_year }}, "this year" typically means {{ knowledge_base.table_metadata.baseline_year }} (the baseline), NOT the most recently mentioned year
+   {% endif %}
+   - Use conversation context and table structure to determine the correct year
+
+4. **Value Reference Resolution:**
+   - "that product", "that sum", "that difference" → Replace with explicit description of what was calculated
+   - Use the previous question to understand what value is being referenced
+   - Example: After Q1 "what is X times 1000?", Q2 "what is Y divided by that product?" → "what is Y divided by (X times 1000)?"
+
+5. **Preserve Calculation Intent:**
+   - Keep the question's calculation/comparison intent unchanged
+   - Only replace ambiguous references with explicit entities/years/values
+   - Do NOT change what's being asked for
+
+6. **No Changes Needed?**
+   - If the question is already explicit and unambiguous, return it unchanged
+   - Set changes_made to empty list
+
+EXAMPLES:
+
+Example 1 (Context Switching - CRITICAL):
+Previous Q: "what is the net change from the initial investment in Edwards Lifesciences?"
+Previous A: 165.06
+Original: "what about the value if the investment in s&p500 in 2016?"
+Rewritten: "what is the value of the investment in S&P 500 in 2016?"
+Changes: ["Context switch detected: Edwards Lifesciences → S&P 500"]
+
+Next Question: "what is the net change from the initial investment?"
+Rewritten: "what is the net change from the initial investment in S&P 500?"
+Changes: ["Resolved 'the initial investment' → 'the initial investment in S&P 500' (current context is S&P 500, NOT Edwards)"]
+
+Example 2 (Aggressive Pronoun Resolution):
+Previous Q: "what was the total annual payments for 2024 and thereafter?"
+Previous A: 475000.0
+Original: "and what was it for 2019?"
+Rewritten: "what was the total annual payment amount for year 2019?"
+Changes: ["Resolved 'it' → 'the total annual payment amount' (from previous question)", "Made year explicit: 'for 2019' → 'for year 2019'"]
+
+Example 3 (Entity Tracking):
+Original: "and what was the change in value of the stock from 2011 to 2016?"
+Previous Q: "what was the value of the kbw bank index in 2016?"
+Rewritten: "what was the change in value of the kbw bank index from 2011 to 2016?"
+Changes: ["Resolved 'the stock' → 'kbw bank index' (from previous question focus)"]
+
+Example 4 (Baseline Year):
+Original: "and from this year to 2009, what was the fluctuation for that stock?"
+Previous Q: "fluctuation of ups from 2004 to 2006?"
+Baseline Year: 2004
+Rewritten: "from 2004 to 2009, what was the fluctuation for united parcel service inc.?"
+Changes: ["Resolved 'this year' → '2004' (baseline year in index table)", "Resolved 'that stock' → 'united parcel service inc.' (from conversation context)"]
+
+Example 5 (Already Explicit):
+Original: "what was the value of the kbw bank index in 2016?"
+Rewritten: "what was the value of the kbw bank index in 2016?"
+Changes: []
+
+Reply with ONLY a JSON object in this format:
+
+{
+  "rewritten_question": "<the disambiguated question>",
+  "changes_made": ["<description of each change>", "..."]
+}
+
+No explanation. Just the JSON.

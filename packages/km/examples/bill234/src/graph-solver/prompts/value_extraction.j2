@@ -1,0 +1,348 @@
+You are extracting specific financial values directly from knowledge graph data.
+
+VALUES TO RETRIEVE:
+{% for name, info in values.items() %}
+{{ name }}:
+  Description: {{ info.description }}
+  Semantic Type: {{ info.semantic_type }}
+{% endfor %}
+
+ONTOLOGY STRUCTURE:
+==================
+
+Classes:
+- kg:Company - Business organizations
+- kg:FinancialMetric - Financial line items (table rows or extracted metrics)
+- kg:FinancialValue - Base class for all numeric values
+  - kg:MonetaryValue - Dollar amounts (has kg:hasCurrency, kg:hasScale)
+  - kg:PercentageValue - Percentages (stored as numbers: 19 means 19%)
+  - kg:CountValue - Quantities/counts
+  - kg:RatioValue - Dimensionless ratios
+- kg:Year - Time periods
+- kg:Category - Categorical dimensions
+
+FinancialValue Attributes:
+- numericValue - The actual number
+- hasScale - Units, Thousands, Millions, or Billions
+
+AVAILABLE ENTITIES IN THIS GRAPH:
+==================================
+
+{% if sample_entities %}
+Extracted Metrics (from text, no tableRow/tableColumn):
+{% for metric in sample_entities.extracted_metrics %}
+- "{{ metric.label }}"{% if metric.year %} (year: {{ metric.year }}){% endif %}
+{% endfor %}
+
+{% if sample_entities.table_metadata %}
+TABLE STRUCTURE:
+Table Orientation: {{ sample_entities.table_metadata.orientation or "unknown" }}
+{% if sample_entities.table_metadata.caption %}Table Caption: {{ sample_entities.table_metadata.caption }}{% endif %}
+
+CRITICAL ORIENTATION GUIDANCE:
+{% if sample_entities.table_metadata.orientation == "column-first" %}
+- This table is COLUMN-FIRST (years/categories in COLUMNS, metrics in ROWS)
+- To find a year like "2008", look in the column headers
+- To find a metric like "net revenue", look in the row labels
+{% elif sample_entities.table_metadata.orientation == "row-first" %}
+- This table is ROW-FIRST (years/categories in ROWS, metrics in COLUMNS)
+- To find a year like "2008", look in the row labels
+- To find a metric like "net revenue", look in the column headers
+{% endif %}
+{% endif %}
+
+Table Metrics (have tableRow and tableColumn):
+Row Labels:
+{% for row in sample_entities.financial_metrics.row_labels %}
+- "{{ row }}"
+{% endfor %}
+
+Column Labels:
+{% for col in sample_entities.financial_metrics.column_labels %}
+- "{{ col }}"
+{% endfor %}
+
+{% if sample_entities.column_header_values %}
+COLUMN HEADER VALUES (numeric values in column headers):
+{% for header in sample_entities.column_header_values %}
+- Column "{{ header.label }}": value = {{ header.value }}, scale = {{ header.scale }}
+{% endfor %}
+{% endif %}
+
+{% if sample_entities.row_header_values %}
+ROW HEADER VALUES (numeric values in row headers):
+{% for header in sample_entities.row_header_values %}
+- Row "{{ header.label }}": value = {{ header.value }}, scale = {{ header.scale }}
+{% endfor %}
+{% endif %}
+
+{% if sample_entities.text_derived_metrics %}
+TEXT-DERIVED METRICS (extracted from narrative text, not from table):
+{% for metric in sample_entities.text_derived_metrics %}
+- "{{ metric.label }}": value = {{ metric.value }}, scale = {{ metric.scale }}
+{% endfor %}
+{% endif %}
+
+TABLE DATA (JSON array of row objects):
+{% if sample_entities.table_data %}
+```json
+{{ sample_entities.table_data | tojson(indent=2) }}
+```
+{% endif %}
+
+{% if sample_entities.metric_comments and sample_entities.metric_comments|length > 0 %}
+METRIC FOOTNOTES (Semantic Explanations):
+{% for row_label, explanation in sample_entities.metric_comments.items() %}
+- "{{ row_label }}": {{ explanation }}
+{% endfor %}
+
+**CRITICAL FOR SEMANTIC MATCHING:**
+These footnotes explain what table metrics SEMANTICALLY represent.
+When a question asks for "contractual principal, interest and fees", check if any metric footnote defines that phrase!
+Example: If footnote says "outstanding balance (a) represents the sum of contractual principal, interest and fees"
+  → Then "outstanding balance (a)" IS what the question is asking for!
+{% endif %}
+{% endif %}
+
+TASK:
+For each value above, extract the specific numeric value and scale from the TABLE DATA.
+
+EXAMPLES:
+
+Example 1 - Simple metric with year:
+Description: "compensation expense for the fiscal year 2015"
+Looking for: Row where "metric" contains "compensation expense" (but NOT "unrecognized")
+```json
+{
+  "metric": "compensation expense related to stock awards",
+  "2013": {"value": 44.0, "scale": "Millions"},
+  "2014": {"value": 34.0, "scale": "Millions"},
+  "2015": {"value": 43.0, "scale": "Millions"}
+}
+```
+Extract: row["2015"]["value"] = 43.0, scale = "Millions"
+NOT: "unrecognized compensation expense" (this is FUTURE expense, not recorded)
+
+Example 2 - Total metric:
+Description: "total obligations due"
+Looking for: Row where "metric" exactly matches "total" (if it exists)
+```json
+{
+  "metric": "total",
+  "2015": {"value": 317105.0, "scale": "Thousands"}
+}
+```
+Extract: row["2015"]["value"] = 317105.0, scale = "Thousands"
+
+Example 3 - Temporal balance:
+Description: "balance of allowance for loan and lease losses as of december 31, 2014"
+Looking for: Row where "metric" contains "december 31" (the DATE is the metric label)
+```json
+{
+  "metric": "december 31, 2014",
+  "balance": {"value": 3331.0, "scale": "Millions"}
+}
+```
+Extract: row["balance"]["value"] = 3331.0, scale = "Millions"
+
+IMPORTANT NOTES:
+- Each row in the JSON array represents one metric/line item from the table
+- The "metric" field contains the row label (e.g., metric name, date, category)
+- Other fields are column names with {value, scale} objects
+- To extract a value: find the right row, then access the right column
+
+SEMANTIC MATCHING STRATEGY:
+1. **START BROAD**: Filter rows by keyword (e.g., rows where metric contains "compensation expense")
+2. **NARROW DOWN**: Use semantic context to pick the RIGHT row:
+   - "compensation expense" (recorded) ≠ "unrecognized compensation expense" (future)
+   - "total debt" (aggregate) ≠ "debt due in 1-3 years" (subset)
+   - "december 31, 2014" (end of year) ≠ "january 1, 2014" (start of year)
+3. **EXTRACT VALUE**: Access the correct column from the selected row
+
+Example workflow for "compensation expense in 2015":
+```
+Step 1: Filter rows → [{metric: "compensation expense related to stock awards"},
+                        {metric: "unrecognized compensation expense associated with rpsrs"}]
+Step 2: Pick correct row → "compensation expense related to stock awards" (recorded, not unrecognized)
+Step 3: Extract value → row["2015"]["value"] = 43.0
+```
+
+CRITICAL - EXACT MATCH VS AGGREGATION:
+1. **PREFER EXACT MATCHES for "total"**: If looking for "total [metric]", check if a row or column is LITERALLY labeled "total"
+2. **GRAND TOTAL (both dimensions)**: If BOTH Row Labels AND Column Labels contain "total", use that cell
+3. **Use aggregation ONLY when "total" is NOT a table label**: If description says "sum of X and Y", add the values
+4. **DO NOT over-aggregate**: If a "total" row/column exists, don't sum detail rows
+
+CRITICAL - TEMPORAL BALANCE LOOKUPS ("as of" pattern):
+When description contains "as of [specific date]" (e.g., "as of december 31", "as of january 1"):
+- This asks for a balance VALUE at a specific date
+- The TABLE ROW (or column) is the DATE, not the metric name
+- Example: "balance of allowance for loan and lease losses as of december 31, 2014"
+  * Look for row: "december 31, 2014" or "december 31" with year context
+  * NOT row: "allowance for loan and lease losses"
+
+CRITICAL - PERFORMANCE/RETURN TABLES:
+When the table caption contains "cumulative total return", "performance", "stock performance", or "investment growth":
+- The values shown in the table ARE the return/performance metrics
+- Questions like "value of an investment in [company] in [year]" refer to the return INDEX VALUE shown in the table
+- These tables show indexed returns (typically starting at 100 in base year)
+- Example: "what is the value of an investment in edwards lifesciences in 2016?"
+  * Table caption: "Comparison of 5 year cumulative total return"
+  * Look for: Row "edwards lifesciences", Column "2016"
+  * Extract: The indexed return value (e.g., 265.06 means $100 invested in base year grew to $265.06)
+  * DO NOT say "value not found" - the table contains exactly what is being asked for!
+
+CRITICAL - MULTI-ROW FILTERING (Location/Property Tables):
+When description contains MULTIPLE criteria (e.g., "owned" AND "supply chain offices"):
+- The table may have multiple attribute rows (e.g., "operations conducted", "lease expiration", "square feet")
+- You must filter columns by ALL criteria before summing
+
+**Pattern: Property/Facility Tables**
+Example: "square feet of owned global supply chain offices"
+- Criteria 1: "owned" (check "leaseexpirationdates" row)
+- Criteria 2: "global supply chain" (check "operations conducted" row)
+- Value: "approximatesquare feet" row
+
+**CRITICAL - Specificity Matters:**
+When the description specifies a UNIQUE facility type, return ONLY matching locations:
+- "owned global supply chain" → UNIQUE phrase, likely 1 location
+- "owned commercial R&D manufacturing" → COMMON phrase, may match MULTIPLE locations
+- "owned commercial R&D manufacturing in Athlone" → SPECIFIC location, return 1 value
+
+**When to SUM vs. Return Single Value:**
+1. **UNIQUE facility type** (e.g., "global supply chain", "corporate headquarters"):
+   - These phrases typically describe ONE unique facility
+   - Return the FIRST/ONLY match
+   - Example: "owned global supply chain" → Dublin 160000 (only match)
+
+2. **GENERIC facility type** (e.g., "commercial R&D manufacturing", "sales offices"):
+   - These phrases may describe MULTIPLE similar facilities
+   - BUT if only ONE location matches the ownership criterion → Return that ONE
+   - If MULTIPLE match → Return the FIRST match UNLESS question explicitly says "total"
+   - Example: "owned commercial R&D manufacturing" → Athlone 80000 (first match)
+   - Example: "TOTAL owned commercial R&D manufacturing" → Sum all matches
+
+3. **SPECIFIC location mentioned** (e.g., "in Bogart, Georgia"):
+   - Return only that specific location's value
+   - Example: "commercial R&D in Bogart" → 70000
+
+**Filtering Steps:**
+1. Identify the VALUE row (e.g., "approximatesquare feet")
+2. Identify FILTER rows (e.g., "leaseexpirationdates", "operations conducted")
+3. For each column (location):
+   - Check filter row 1: Does it match criterion 1? (e.g., = "owned")
+   - Check filter row 2: Does it match criterion 2? (e.g., contains "supply chain")
+   - If ALL criteria match: Add to candidates list
+4. **NEW**: If candidates list has multiple entries:
+   - Check if facility type is UNIQUE (likely 1 match) → Return first
+   - Check if question says "total" or "sum" → Sum all
+   - Otherwise → Return FIRST matching location (alphabetically or by appearance order)
+
+**Example:**
+```json
+{
+  "operations conducted": {
+    "dublin": "global supply chain offices",
+    "athlone": "commercial R&D manufacturing",
+    "bogart": "commercial R&D manufacturing"
+  },
+  "lease expiration": {"dublin": "owned", "athlone": "owned", "bogart": "owned"},
+  "square feet": {"dublin": 160000, "athlone": 80000, "bogart": 70000}
+}
+```
+Q1: "square feet of owned global supply chain offices"
+- Matches: Dublin (unique facility type)
+- Answer: 160000
+
+Q2: "square feet of owned commercial R&D manufacturing"
+- Matches: Athlone, Bogart (multiple with same type)
+- Answer: 80000 (FIRST match: Athlone)
+
+Q3: "square feet of owned commercial R&D manufacturing in Bogart"
+- Matches: Bogart (specific location)
+- Answer: 70000
+
+Q4: "TOTAL square feet of owned commercial R&D"
+- Matches: Athlone, Bogart
+- Answer: 150000 (sum because "TOTAL")
+
+CRITICAL - ACTIVITY/RECONCILIATION TABLES WITH COLUMN HEADER VALUES:
+When the table has a SINGLE COLUMN with a NUMERIC VALUE in the column header (e.g., "$ 9889"):
+- This often represents the OPENING BALANCE or BASE YEAR value
+- The column header value is used when questions ask for years NOT in the row labels
+
+Pattern recognition for single-column activity tables:
+1. **Table structure**: One data column with numeric header, rows showing activity/balances
+   - Column header: "$ 9889" = opening balance or base year
+   - Rows: "additions...", "balance [date1]", "balance [date2]"
+   - This is a reconciliation showing: opening → activities → closing
+
+2. **Year matching logic**:
+   - First check: Does the question's year appear in any ROW label? If yes, use that row.
+   - If NOT in rows: Check if column header has numeric value. That's likely the value for the missing year.
+   - Example pattern:
+     * Caption: "Changes for fiscal [year N] and [year N+1]"
+     * Rows: "balance [date in year N]", "balance [date in year N+1]"
+     * Column: "[numeric value]"
+     * Question asks for "[year N-1] value" → Column header (opening/base value)
+     * Question asks for "[year N+1] value" (vague) → Could be row OR column depending on context
+
+3. **Disambiguating ambiguous year questions**:
+   - When question is VAGUE like "what was the 2009 value?" with NO context about which balance:
+     * If column header has numeric value → PREFER column header (often the base/reference value)
+     * Row values are typically for specific dates within the period
+   - When question is SPECIFIC like "what was the balance at october 31, 2009?":
+     * Use the specific row match
+   - For "net change from X to Y": Opening balance (X) often = column header, Closing (Y) = final row
+
+4. **When to use column/row header value**:
+   ✅ Question asks for year NOT in any row/column label
+   ✅ Question asks for "opening balance" or "beginning balance"
+   ✅ Question asks for "base year" or first year in a range
+   ❌ Question asks for year that appears in a row/column label (unless it's opening balance)
+
+   **CRITICAL - Row labels can also contain year values!**
+   - If row label is numeric (e.g., "$ 317") and column labels are years (2009, 2010...)
+   - The row label represents the PRIOR YEAR (year before first column)
+   - Example: columns = [2009, 2010], row = "$ 317" → row represents 2008 value
+
+5. **Example resolution logic** (NOT specific values, just the pattern):
+
+   **Pattern A - Column header is numeric (Example 25 pattern):**
+   - Caption: "Changes for fiscal [year N] and [year N+1]"
+   - Column: "[numeric value X]"
+   - Rows: "balance [date in year N]" (value Y), "balance [date in year N+1]" (value Z)
+   - Q: "[year N-1] value?" → Column header X (year not in rows, column is base)
+   - Q: "[year N+1] value?" (VAGUE) → Column header X (prefer header when ambiguous)
+   - Q: "balance at [specific date in year N+1]?" (SPECIFIC) → Row value Z (exact match)
+   - Q: "net change [year N-1] to [year N+1]?" → Z - X (closing row minus opening column)
+
+   **Pattern B - Row label is numeric (Example 26 pattern):**
+   - Caption: "Future minimum rent payments"
+   - Row: "[numeric value X]" (e.g., "$ 317")
+   - Columns: "[year N]" (value Y), "[year N+1]" (value Z), ...
+   - Q: "[year N-1] value?" → Row label X (year not in columns, row is prior year)
+   - Q: "[year N] value?" → Column "[year N]" value Y (exact match)
+   - Q: "difference [year N-1] to [year N]?" → Y - X (column value minus row label)
+
+   **CRITICAL FOR MULTI-VALUE EXTRACTION:**
+   When asked for MULTIPLE years in one request (e.g., "2008 and 2009"):
+   1. First check: Is each year in row/column labels? Extract those.
+   2. For missing years: Check if row/column label is numeric
+   3. Infer the year: If columns=[2009, 2010], numeric row="$ X" → row=2008
+   4. Extract the numeric label value for the missing year
+
+OUTPUT (JSON):
+{
+  "values": {
+    "variable_name": {
+      "value": <numeric_value>,
+      "scale": "<Units|Thousands|Millions|Billions>",
+      "source_row": "<table row label>",
+      "source_column": "<table column label>",
+      "reasoning": "Why this specific row/column was selected"
+    }
+  }
+}
+
+Generate the JSON now:

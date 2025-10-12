@@ -1,0 +1,311 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-11" ;
+    kg:builtWithOntologyVersion "1.0.8" .
+
+entity:Company_ZimmerHoldings a kg:Company ;
+    kg:hasMetric entity:Metric_AuthorizedShares_ClassB,
+        entity:Metric_CreditFacility_2001,
+        entity:Metric_CreditFacility_2002,
+        entity:Metric_DerivativeFairValueNetOfTaxes_2002,
+        entity:Metric_DerivativeFairValue_2002,
+        entity:Metric_FXForwardNotional_2002,
+        entity:Metric_InterestCharges_2001,
+        entity:Metric_InterestCharges_2002,
+        entity:Metric_ReclassifyTwelveMonthsNetOfTaxes_2002,
+        entity:Metric_ReclassifyTwelveMonths_2002,
+        entity:Metric_ReclassifyTwoYearsNetOfTaxes_2002,
+        entity:Metric_ReclassifyTwoYears_2002,
+        entity:Metric_TotalDebt_2001,
+        entity:Metric_TotalDebt_2002,
+        entity:Metric_UncommittedCreditFacilities_2001,
+        entity:Metric_UncommittedCreditFacilities_2002,
+        entity:Metric_UncommittedLineOutstanding_2002,
+        entity:Metric_WeightedAvgInterestRate_2002 ;
+    kg:label "Zimmer Holdings, Inc.",
+        "Zimmer Holdings, Inc. and subsidiaries" .
+
+entity:FinancialTable a kg:Table ;
+    kg:hasColumn entity:TableColumn_0,
+        entity:TableColumn_1 ;
+    kg:hasRow entity:TableRow_0,
+        entity:TableRow_1,
+        entity:TableRow_2 ;
+    kg:tableCaption "Debt and credit facilities comparison between 2001 and 2002" ;
+    kg:tableOrientation "column-first" .
+
+entity:Metric_ColumnHeaderValue_0 a kg:FinancialMetric ;
+    kg:hasValue value:ColumnHeaderValue_0 ;
+    kg:label "Column header value: 2002" ;
+    kg:tableColumn "2002" .
+
+entity:Metric_ColumnHeaderValue_1 a kg:FinancialMetric ;
+    kg:hasValue value:ColumnHeaderValue_1 ;
+    kg:label "Column header value: 2001" ;
+    kg:tableColumn "2001" .
+
+entity:Metric_AuthorizedShares_ClassB a kg:FinancialMetric ;
+    kg:hasValue value:AuthorizedShares_ClassB ;
+    kg:label "Authorized shares of class b common stock" .
+
+entity:Metric_CreditFacility_2001 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2001,
+        entity:entity_Year_2001 ;
+    kg:hasValue value:CreditFacility_2001 ;
+    kg:label "Credit facility" ;
+    kg:tableColumn "2001" ;
+    kg:tableRow "credit facility" .
+
+entity:Metric_CreditFacility_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:CreditFacility_2002 ;
+    kg:label "Credit facility" ;
+    kg:tableColumn "2002" ;
+    kg:tableRow "credit facility" .
+
+entity:Metric_DerivativeFairValueNetOfTaxes_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:DerivativeFairValueNetOfTaxes_2002 ;
+    kg:label "Fair value of derivative instruments net of taxes" .
+
+entity:Metric_DerivativeFairValue_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:DerivativeFairValue_2002 ;
+    kg:label "Fair value of derivative instruments recorded in accrued liabilities" .
+
+entity:Metric_FXForwardNotional_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:FXForwardNotional_2002 ;
+    kg:label "Notional amounts of outstanding foreign exchange forward contracts" .
+
+entity:Metric_InterestCharges_2001 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2001,
+        entity:entity_Year_2001 ;
+    kg:hasValue value:InterestCharges_2001 ;
+    kg:label "Interest charges" .
+
+entity:Metric_InterestCharges_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:InterestCharges_2002 ;
+    kg:label "Interest charges" .
+
+entity:Metric_ReclassifyTwelveMonthsNetOfTaxes_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:ReclassifyTwelveMonthsNetOfTaxes_2002 ;
+    kg:label "Amount expected to be reclassified to earnings over next twelve months net of taxes" .
+
+entity:Metric_ReclassifyTwelveMonths_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:ReclassifyTwelveMonths_2002 ;
+    kg:label "Amount expected to be reclassified to earnings over next twelve months" .
+
+entity:Metric_ReclassifyTwoYearsNetOfTaxes_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:ReclassifyTwoYearsNetOfTaxes_2002 ;
+    kg:label "Amount expected to be reclassified to earnings over next two years net of taxes" .
+
+entity:Metric_ReclassifyTwoYears_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:ReclassifyTwoYears_2002 ;
+    kg:label "Amount expected to be reclassified to earnings over next two years" .
+
+entity:Metric_TotalDebt_2001 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2001,
+        entity:entity_Year_2001 ;
+    kg:hasValue value:TotalDebt_2001 ;
+    kg:label "Total debt" ;
+    kg:tableColumn "2001" ;
+    kg:tableRow "total debt" .
+
+entity:Metric_TotalDebt_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:TotalDebt_2002 ;
+    kg:label "Total debt" ;
+    kg:tableColumn "2002" ;
+    kg:tableRow "total debt" .
+
+entity:Metric_UncommittedCreditFacilities_2001 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2001,
+        entity:entity_Year_2001 ;
+    kg:hasValue value:UncommittedCreditFacilities_2001 ;
+    kg:label "Uncommitted credit facilities" ;
+    kg:tableColumn "2001" ;
+    kg:tableRow "uncommitted credit facilities" .
+
+entity:Metric_UncommittedCreditFacilities_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:UncommittedCreditFacilities_2002 ;
+    kg:label "Uncommitted credit facilities" ;
+    kg:tableColumn "2002" ;
+    kg:tableRow "uncommitted credit facilities" .
+
+entity:Metric_UncommittedLineOutstanding_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:UncommittedLineOutstanding_2002 ;
+    kg:label "Outstanding borrowings under uncommitted line of credit" .
+
+entity:Metric_WeightedAvgInterestRate_2002 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2002,
+        entity:entity_Year_2002 ;
+    kg:hasValue value:WeightedAvgInterestRate_2002 ;
+    kg:label "Weighted average interest rate" .
+
+entity:TableColumn_0 a kg:TableColumn ;
+    kg:columnIndex 0 ;
+    kg:label "{'index': 0, 'label': '2002', 'numeric_value': 2002.0}" .
+
+entity:TableColumn_1 a kg:TableColumn ;
+    kg:columnIndex 1 ;
+    kg:label "{'index': 1, 'label': '2001', 'numeric_value': 2001.0}" .
+
+entity:TableRow_0 a kg:TableRow ;
+    kg:label "{'index': 0, 'label': 'credit facility', 'numeric_value': None}" ;
+    kg:rowIndex 0 .
+
+entity:TableRow_1 a kg:TableRow ;
+    kg:label "{'index': 1, 'label': 'total debt', 'numeric_value': None}" ;
+    kg:rowIndex 1 .
+
+entity:TableRow_2 a kg:TableRow ;
+    kg:label "{'index': 2, 'label': 'uncommitted credit facilities', 'numeric_value': None}" ;
+    kg:rowIndex 2 .
+
+value:AuthorizedShares_ClassB a kg:MonetaryValue ;
+    kg:displayValue "1.25 billion" ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 1.25 .
+
+value:ColumnHeaderValue_0 a kg:MonetaryValue ;
+    kg:displayValue "2002" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2002.0 .
+
+value:ColumnHeaderValue_1 a kg:MonetaryValue ;
+    kg:displayValue "2001" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2001.0 .
+
+value:CreditFacility_2001 a kg:MonetaryValue ;
+    kg:displayValue "358.2" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 358.2 .
+
+value:CreditFacility_2002 a kg:MonetaryValue ;
+    kg:displayValue "156.2" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 156.2 .
+
+value:DerivativeFairValueNetOfTaxes_2002 a kg:MonetaryValue ;
+    kg:displayValue "$8.5 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 8.5 .
+
+value:DerivativeFairValue_2002 a kg:MonetaryValue ;
+    kg:displayValue "$13.8 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 13.8 .
+
+value:FXForwardNotional_2002 a kg:MonetaryValue ;
+    kg:displayValue "$252 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 252.0 .
+
+value:InterestCharges_2001 a kg:MonetaryValue ;
+    kg:displayValue "$4.6 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 4.6 .
+
+value:InterestCharges_2002 a kg:MonetaryValue ;
+    kg:displayValue "$13.0 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 13.0 .
+
+value:ReclassifyTwelveMonthsNetOfTaxes_2002 a kg:MonetaryValue ;
+    kg:displayValue "$4.8 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 4.8 .
+
+value:ReclassifyTwelveMonths_2002 a kg:MonetaryValue ;
+    kg:displayValue "$7.7 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 7.7 .
+
+value:ReclassifyTwoYearsNetOfTaxes_2002 a kg:MonetaryValue ;
+    kg:displayValue "$4.8 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 4.8 .
+
+value:ReclassifyTwoYears_2002 a kg:MonetaryValue ;
+    kg:displayValue "$7.7 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 7.7 .
+
+value:TotalDebt_2001 a kg:MonetaryValue ;
+    kg:displayValue "363.9" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 363.9 .
+
+value:TotalDebt_2002 a kg:MonetaryValue ;
+    kg:displayValue "156.7" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 156.7 .
+
+value:UncommittedCreditFacilities_2001 a kg:MonetaryValue ;
+    kg:displayValue "5.7" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 5.7 .
+
+value:UncommittedCreditFacilities_2002 a kg:MonetaryValue ;
+    kg:displayValue "0.5" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 0.5 .
+
+value:UncommittedLineOutstanding_2002 a kg:MonetaryValue ;
+    kg:displayValue "$0.5 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 0.5 .
+
+value:WeightedAvgInterestRate_2002 a kg:MonetaryValue ;
+    kg:displayValue "6.35 percent" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 6.35 .
+
+entity:Year_2001 a kg:Year ;
+    kg:yearValue 2001 .
+
+entity:Year_2002 a kg:Year ;
+    kg:yearValue 2002 .
+

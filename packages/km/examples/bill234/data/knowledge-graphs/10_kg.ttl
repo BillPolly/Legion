@@ -1,0 +1,705 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-11" ;
+    kg:builtWithOntologyVersion "1.0.3" .
+
+entity:Company_AES a kg:Company ;
+    kg:hasMetric entity:Metric_ForeignCurrencyTransactionGains_AESCorporation_2014,
+        entity:Metric_ForeignCurrencyTransactionGains_AESCorporation_2015,
+        entity:Metric_ForeignCurrencyTransactionGains_AESCorporation_2016,
+        entity:Metric_ForeignCurrencyTransactionGains_Argentina_2014,
+        entity:Metric_ForeignCurrencyTransactionGains_Argentina_2015,
+        entity:Metric_ForeignCurrencyTransactionGains_Argentina_2016,
+        entity:Metric_ForeignCurrencyTransactionGains_Chile_2014,
+        entity:Metric_ForeignCurrencyTransactionGains_Chile_2015,
+        entity:Metric_ForeignCurrencyTransactionGains_Chile_2016,
+        entity:Metric_ForeignCurrencyTransactionGains_Colombia_2014,
+        entity:Metric_ForeignCurrencyTransactionGains_Colombia_2015,
+        entity:Metric_ForeignCurrencyTransactionGains_Colombia_2016,
+        entity:Metric_ForeignCurrencyTransactionGains_Mexico_2014,
+        entity:Metric_ForeignCurrencyTransactionGains_Mexico_2015,
+        entity:Metric_ForeignCurrencyTransactionGains_Mexico_2016,
+        entity:Metric_ForeignCurrencyTransactionGains_Other_2014,
+        entity:Metric_ForeignCurrencyTransactionGains_Other_2015,
+        entity:Metric_ForeignCurrencyTransactionGains_Other_2016,
+        entity:Metric_ForeignCurrencyTransactionGains_Philippines_2014,
+        entity:Metric_ForeignCurrencyTransactionGains_Philippines_2015,
+        entity:Metric_ForeignCurrencyTransactionGains_Philippines_2016,
+        entity:Metric_ForeignCurrencyTransactionGains_Total_2014,
+        entity:Metric_ForeignCurrencyTransactionGains_Total_2015,
+        entity:Metric_ForeignCurrencyTransactionGains_Total_2016,
+        entity:Metric_ForeignCurrencyTransactionGains_UnitedKingdom_2014,
+        entity:Metric_ForeignCurrencyTransactionGains_UnitedKingdom_2015,
+        entity:Metric_ForeignCurrencyTransactionGains_UnitedKingdom_2016 ;
+    kg:label "AES Corporation" .
+
+entity:Company_AESCorporation a kg:Company ;
+    kg:hasMetric entity:Metric_AESCorporationLosses_2016,
+        entity:Metric_ArgentinaGains_2015,
+        entity:Metric_ArgentinaGains_2016,
+        entity:Metric_ColombiaGains_2015,
+        entity:Metric_EffectiveTaxRate_2014,
+        entity:Metric_EffectiveTaxRate_2015,
+        entity:Metric_ForeignCurrencyDerivativeGains_2014,
+        entity:Metric_ForeignCurrencyDerivativeGains_2015,
+        entity:Metric_ForeignCurrencyDerivativeGains_2016,
+        entity:Metric_ForeignCurrencyTransactionGain_2015,
+        entity:Metric_ForeignCurrencyTransactionLoss_2016,
+        entity:Metric_IncomeTaxExpenseIncrease_2015,
+        entity:Metric_IncomeTaxExpense_2015,
+        entity:Metric_UKGains_2015,
+        entity:Metric_USStatutoryRate ;
+    kg:label "AES Corporation" .
+
+entity:FinancialTable a kg:Table ;
+    kg:hasColumn entity:TableColumn_0,
+        entity:TableColumn_1,
+        entity:TableColumn_2 ;
+    kg:hasRow entity:TableRow_0,
+        entity:TableRow_1,
+        entity:TableRow_2,
+        entity:TableRow_3,
+        entity:TableRow_4,
+        entity:TableRow_5,
+        entity:TableRow_6,
+        entity:TableRow_7,
+        entity:TableRow_8 ;
+    kg:tableCaption "Geographic/operational entity data by year for AES Corporation" ;
+    kg:tableOrientation "column-first" .
+
+entity:Metric_AESCorporationLosses_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:AESCorporationLosses_2016 ;
+    kg:label "AES corporation losses" .
+
+entity:Metric_ArgentinaGains_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:ArgentinaGains_2015 ;
+    kg:label "Argentina gains" .
+
+entity:Metric_ArgentinaGains_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:ArgentinaGains_2016 ;
+    kg:label "Argentina gains" .
+
+entity:Metric_ColombiaGains_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:ColombiaGains_2015 ;
+    kg:label "Colombia gains" .
+
+entity:Metric_EffectiveTaxRate_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:EffectiveTaxRate_2014 ;
+    kg:label "Effective tax rate" .
+
+entity:Metric_EffectiveTaxRate_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:EffectiveTaxRate_2015 ;
+    kg:label "Effective tax rate" .
+
+entity:Metric_ForeignCurrencyDerivativeGains_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:ForeignCurrencyDerivativeGains_2014 ;
+    kg:label "Gains on foreign currency derivative contracts" .
+
+entity:Metric_ForeignCurrencyDerivativeGains_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:ForeignCurrencyDerivativeGains_2015 ;
+    kg:label "Gains on foreign currency derivative contracts" .
+
+entity:Metric_ForeignCurrencyDerivativeGains_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:ForeignCurrencyDerivativeGains_2016 ;
+    kg:label "Gains on foreign currency derivative contracts" .
+
+entity:Metric_ForeignCurrencyTransactionGain_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:ForeignCurrencyTransactionGain_2015 ;
+    kg:label "Foreign currency transaction gain" .
+
+entity:Metric_ForeignCurrencyTransactionGains_AESCorporation_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:AESCorporation_2014 ;
+    kg:label "Foreign currency transaction gains (losses) - AES Corporation" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "aes corporation" .
+
+entity:Metric_ForeignCurrencyTransactionGains_AESCorporation_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:AESCorporation_2015 ;
+    kg:label "Foreign currency transaction gains (losses) - AES Corporation" ;
+    kg:tableColumn "2015" ;
+    kg:tableRow "aes corporation" .
+
+entity:Metric_ForeignCurrencyTransactionGains_AESCorporation_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:AESCorporation_2016 ;
+    kg:label "Foreign currency transaction gains (losses) - AES Corporation" ;
+    kg:tableColumn "2016" ;
+    kg:tableRow "aes corporation" .
+
+entity:Metric_ForeignCurrencyTransactionGains_Argentina_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:Argentina_2014 ;
+    kg:inCategory entity:Category_Argentina ;
+    kg:label "Foreign currency transaction gains (losses) - Argentina" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "argentina" .
+
+entity:Metric_ForeignCurrencyTransactionGains_Argentina_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:Argentina_2015 ;
+    kg:inCategory entity:Category_Argentina ;
+    kg:label "Foreign currency transaction gains (losses) - Argentina" ;
+    kg:tableColumn "2015" ;
+    kg:tableRow "argentina" .
+
+entity:Metric_ForeignCurrencyTransactionGains_Argentina_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:Argentina_2016 ;
+    kg:inCategory entity:Category_Argentina ;
+    kg:label "Foreign currency transaction gains (losses) - Argentina" ;
+    kg:tableColumn "2016" ;
+    kg:tableRow "argentina" .
+
+entity:Metric_ForeignCurrencyTransactionGains_Chile_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:Chile_2014 ;
+    kg:inCategory entity:Category_Chile ;
+    kg:label "Foreign currency transaction gains (losses) - Chile" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "chile" .
+
+entity:Metric_ForeignCurrencyTransactionGains_Chile_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:Chile_2015 ;
+    kg:inCategory entity:Category_Chile ;
+    kg:label "Foreign currency transaction gains (losses) - Chile" ;
+    kg:tableColumn "2015" ;
+    kg:tableRow "chile" .
+
+entity:Metric_ForeignCurrencyTransactionGains_Chile_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:Chile_2016 ;
+    kg:inCategory entity:Category_Chile ;
+    kg:label "Foreign currency transaction gains (losses) - Chile" ;
+    kg:tableColumn "2016" ;
+    kg:tableRow "chile" .
+
+entity:Metric_ForeignCurrencyTransactionGains_Colombia_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:Colombia_2014 ;
+    kg:inCategory entity:Category_Colombia ;
+    kg:label "Foreign currency transaction gains (losses) - Colombia" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "colombia" .
+
+entity:Metric_ForeignCurrencyTransactionGains_Colombia_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:Colombia_2015 ;
+    kg:inCategory entity:Category_Colombia ;
+    kg:label "Foreign currency transaction gains (losses) - Colombia" ;
+    kg:tableColumn "2015" ;
+    kg:tableRow "colombia" .
+
+entity:Metric_ForeignCurrencyTransactionGains_Colombia_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:Colombia_2016 ;
+    kg:inCategory entity:Category_Colombia ;
+    kg:label "Foreign currency transaction gains (losses) - Colombia" ;
+    kg:tableColumn "2016" ;
+    kg:tableRow "colombia" .
+
+entity:Metric_ForeignCurrencyTransactionGains_Mexico_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:Mexico_2014 ;
+    kg:inCategory entity:Category_Mexico ;
+    kg:label "Foreign currency transaction gains (losses) - Mexico" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "mexico" .
+
+entity:Metric_ForeignCurrencyTransactionGains_Mexico_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:Mexico_2015 ;
+    kg:inCategory entity:Category_Mexico ;
+    kg:label "Foreign currency transaction gains (losses) - Mexico" ;
+    kg:tableColumn "2015" ;
+    kg:tableRow "mexico" .
+
+entity:Metric_ForeignCurrencyTransactionGains_Mexico_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:Mexico_2016 ;
+    kg:inCategory entity:Category_Mexico ;
+    kg:label "Foreign currency transaction gains (losses) - Mexico" ;
+    kg:tableColumn "2016" ;
+    kg:tableRow "mexico" .
+
+entity:Metric_ForeignCurrencyTransactionGains_Other_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:Other_2014 ;
+    kg:inCategory entity:Category_Other ;
+    kg:label "Foreign currency transaction gains (losses) - Other" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "other" .
+
+entity:Metric_ForeignCurrencyTransactionGains_Other_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:Other_2015 ;
+    kg:inCategory entity:Category_Other ;
+    kg:label "Foreign currency transaction gains (losses) - Other" ;
+    kg:tableColumn "2015" ;
+    kg:tableRow "other" .
+
+entity:Metric_ForeignCurrencyTransactionGains_Other_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:Other_2016 ;
+    kg:inCategory entity:Category_Other ;
+    kg:label "Foreign currency transaction gains (losses) - Other" ;
+    kg:tableColumn "2016" ;
+    kg:tableRow "other" .
+
+entity:Metric_ForeignCurrencyTransactionGains_Philippines_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:Philippines_2014 ;
+    kg:inCategory entity:Category_Philippines ;
+    kg:label "Foreign currency transaction gains (losses) - Philippines" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "philippines" .
+
+entity:Metric_ForeignCurrencyTransactionGains_Philippines_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:Philippines_2015 ;
+    kg:inCategory entity:Category_Philippines ;
+    kg:label "Foreign currency transaction gains (losses) - Philippines" ;
+    kg:tableColumn "2015" ;
+    kg:tableRow "philippines" .
+
+entity:Metric_ForeignCurrencyTransactionGains_Philippines_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:Philippines_2016 ;
+    kg:inCategory entity:Category_Philippines ;
+    kg:label "Foreign currency transaction gains (losses) - Philippines" ;
+    kg:tableColumn "2016" ;
+    kg:tableRow "philippines" .
+
+entity:Metric_ForeignCurrencyTransactionGains_Total_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:Total_2014 ;
+    kg:label "Foreign currency transaction gains (losses) - Total" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "total ( 1 )" .
+
+entity:Metric_ForeignCurrencyTransactionGains_Total_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:Total_2015 ;
+    kg:label "Foreign currency transaction gains (losses) - Total" ;
+    kg:tableColumn "2015" ;
+    kg:tableRow "total ( 1 )" .
+
+entity:Metric_ForeignCurrencyTransactionGains_Total_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:Total_2016 ;
+    kg:label "Foreign currency transaction gains (losses) - Total" ;
+    kg:tableColumn "2016" ;
+    kg:tableRow "total ( 1 )" .
+
+entity:Metric_ForeignCurrencyTransactionGains_UnitedKingdom_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:UnitedKingdom_2014 ;
+    kg:inCategory entity:Category_UnitedKingdom ;
+    kg:label "Foreign currency transaction gains (losses) - United Kingdom" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "united kingdom" .
+
+entity:Metric_ForeignCurrencyTransactionGains_UnitedKingdom_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:UnitedKingdom_2015 ;
+    kg:inCategory entity:Category_UnitedKingdom ;
+    kg:label "Foreign currency transaction gains (losses) - United Kingdom" ;
+    kg:tableColumn "2015" ;
+    kg:tableRow "united kingdom" .
+
+entity:Metric_ForeignCurrencyTransactionGains_UnitedKingdom_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:UnitedKingdom_2016 ;
+    kg:inCategory entity:Category_UnitedKingdom ;
+    kg:label "Foreign currency transaction gains (losses) - United Kingdom" ;
+    kg:tableColumn "2016" ;
+    kg:tableRow "united kingdom" .
+
+entity:Metric_ForeignCurrencyTransactionLoss_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:ForeignCurrencyTransactionLoss_2016 ;
+    kg:label "Foreign currency transaction loss" .
+
+entity:Metric_IncomeTaxExpenseIncrease_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:IncomeTaxExpenseIncrease_2015 ;
+    kg:label "Income tax expense increase" .
+
+entity:Metric_IncomeTaxExpense_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:IncomeTaxExpense_2015 ;
+    kg:label "Income tax expense" .
+
+entity:Metric_UKGains_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:UKGains_2015 ;
+    kg:label "United Kingdom gains" .
+
+entity:Metric_USStatutoryRate a kg:FinancialMetric ;
+    kg:hasValue value:USStatutoryRate ;
+    kg:label "U.S. statutory rate" .
+
+entity:TableColumn_0 a kg:TableColumn ;
+    kg:columnIndex 0 ;
+    kg:label "{'index': 0, 'label': '2016'}" .
+
+entity:TableColumn_1 a kg:TableColumn ;
+    kg:columnIndex 1 ;
+    kg:label "{'index': 1, 'label': '2015'}" .
+
+entity:TableColumn_2 a kg:TableColumn ;
+    kg:columnIndex 2 ;
+    kg:label "{'index': 2, 'label': '2014'}" .
+
+entity:TableRow_0 a kg:TableRow ;
+    kg:label "{'index': 0, 'label': 'aes corporation'}" ;
+    kg:rowIndex 0 .
+
+entity:TableRow_1 a kg:TableRow ;
+    kg:label "{'index': 1, 'label': 'argentina'}" ;
+    kg:rowIndex 1 .
+
+entity:TableRow_2 a kg:TableRow ;
+    kg:label "{'index': 2, 'label': 'chile'}" ;
+    kg:rowIndex 2 .
+
+entity:TableRow_3 a kg:TableRow ;
+    kg:label "{'index': 3, 'label': 'colombia'}" ;
+    kg:rowIndex 3 .
+
+entity:TableRow_4 a kg:TableRow ;
+    kg:label "{'index': 4, 'label': 'mexico'}" ;
+    kg:rowIndex 4 .
+
+entity:TableRow_5 a kg:TableRow ;
+    kg:label "{'index': 5, 'label': 'other'}" ;
+    kg:rowIndex 5 .
+
+entity:TableRow_6 a kg:TableRow ;
+    kg:label "{'index': 6, 'label': 'philippines'}" ;
+    kg:rowIndex 6 .
+
+entity:TableRow_7 a kg:TableRow ;
+    kg:label "{'index': 7, 'label': 'total ( 1 )'}" ;
+    kg:rowIndex 7 .
+
+entity:TableRow_8 a kg:TableRow ;
+    kg:label "{'index': 8, 'label': 'united kingdom'}" ;
+    kg:rowIndex 8 .
+
+value:AESCorporationLosses_2016 a kg:MonetaryValue ;
+    kg:displayValue "$50 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 50.0 .
+
+value:AESCorporation_2014 a kg:MonetaryValue ;
+    kg:displayValue "-34.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -34.0 .
+
+value:AESCorporation_2015 a kg:MonetaryValue ;
+    kg:displayValue "-31.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -31.0 .
+
+value:AESCorporation_2016 a kg:MonetaryValue ;
+    kg:displayValue "-50.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -50.0 .
+
+value:ArgentinaGains_2015 a kg:MonetaryValue ;
+    kg:displayValue "$124 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 124.0 .
+
+value:ArgentinaGains_2016 a kg:MonetaryValue ;
+    kg:displayValue "$37 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 37.0 .
+
+value:Argentina_2014 a kg:MonetaryValue ;
+    kg:displayValue "66.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 66.0 .
+
+value:Argentina_2015 a kg:MonetaryValue ;
+    kg:displayValue "124.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 124.0 .
+
+value:Argentina_2016 a kg:MonetaryValue ;
+    kg:displayValue "37.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 37.0 .
+
+value:Chile_2014 a kg:MonetaryValue ;
+    kg:displayValue "-30.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -30.0 .
+
+value:Chile_2015 a kg:MonetaryValue ;
+    kg:displayValue "-18.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -18.0 .
+
+value:Chile_2016 a kg:MonetaryValue ;
+    kg:displayValue "-9.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -9.0 .
+
+value:ColombiaGains_2015 a kg:MonetaryValue ;
+    kg:displayValue "$29 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 29.0 .
+
+value:Colombia_2014 a kg:MonetaryValue ;
+    kg:displayValue "17.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 17.0 .
+
+value:Colombia_2015 a kg:MonetaryValue ;
+    kg:displayValue "29.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 29.0 .
+
+value:Colombia_2016 a kg:MonetaryValue ;
+    kg:displayValue "-8.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -8.0 .
+
+value:EffectiveTaxRate_2014 a kg:MonetaryValue ;
+    kg:displayValue "26%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 26.0 .
+
+value:EffectiveTaxRate_2015 a kg:MonetaryValue ;
+    kg:displayValue "41%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 41.0 .
+
+value:ForeignCurrencyDerivativeGains_2014 a kg:MonetaryValue ;
+    kg:displayValue "$172 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 172.0 .
+
+value:ForeignCurrencyDerivativeGains_2015 a kg:MonetaryValue ;
+    kg:displayValue "$247 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 247.0 .
+
+value:ForeignCurrencyDerivativeGains_2016 a kg:MonetaryValue ;
+    kg:displayValue "$17 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 17.0 .
+
+value:ForeignCurrencyTransactionGain_2015 a kg:MonetaryValue ;
+    kg:displayValue "$107 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 107.0 .
+
+value:ForeignCurrencyTransactionLoss_2016 a kg:MonetaryValue ;
+    kg:displayValue "$15 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 15.0 .
+
+value:IncomeTaxExpenseIncrease_2015 a kg:MonetaryValue ;
+    kg:displayValue "$101 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 101.0 .
+
+value:IncomeTaxExpense_2015 a kg:MonetaryValue ;
+    kg:displayValue "$472 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 472.0 .
+
+value:Mexico_2014 a kg:MonetaryValue ;
+    kg:displayValue "-14.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -14.0 .
+
+value:Mexico_2015 a kg:MonetaryValue ;
+    kg:displayValue "-6.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -6.0 .
+
+value:Mexico_2016 a kg:MonetaryValue ;
+    kg:displayValue "-8.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -8.0 .
+
+value:Other_2014 a kg:MonetaryValue ;
+    kg:displayValue "-17.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -17.0 .
+
+value:Other_2015 a kg:MonetaryValue ;
+    kg:displayValue "-10.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -10.0 .
+
+value:Other_2016 a kg:MonetaryValue ;
+    kg:displayValue "-2.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -2.0 .
+
+value:Philippines_2014 a kg:MonetaryValue ;
+    kg:displayValue "11.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 11.0 .
+
+value:Philippines_2015 a kg:MonetaryValue ;
+    kg:displayValue "8.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 8.0 .
+
+value:Philippines_2016 a kg:MonetaryValue ;
+    kg:displayValue "12.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 12.0 .
+
+value:Total_2014 a kg:MonetaryValue ;
+    kg:displayValue "11.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 11.0 .
+
+value:Total_2015 a kg:MonetaryValue ;
+    kg:displayValue "107.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 107.0 .
+
+value:Total_2016 a kg:MonetaryValue ;
+    kg:displayValue "-15.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -15.0 .
+
+value:UKGains_2015 a kg:MonetaryValue ;
+    kg:displayValue "$11 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 11.0 .
+
+value:USStatutoryRate a kg:MonetaryValue ;
+    kg:displayValue "35%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 35.0 .
+
+value:UnitedKingdom_2014 a kg:MonetaryValue ;
+    kg:displayValue "12.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 12.0 .
+
+value:UnitedKingdom_2015 a kg:MonetaryValue ;
+    kg:displayValue "11.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 11.0 .
+
+value:UnitedKingdom_2016 a kg:MonetaryValue ;
+    kg:displayValue "13.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 13.0 .
+
+entity:Year_2014 a kg:Year ;
+    kg:yearValue 2014 .
+
+entity:Year_2016 a kg:Year ;
+    kg:yearValue 2016 .
+
+entity:Year_2015 a kg:Year ;
+    kg:yearValue 2015 .
+

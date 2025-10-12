@@ -1,0 +1,278 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-11" ;
+    kg:builtWithOntologyVersion "1.0.3" .
+
+entity:Company_Example23 a kg:Company ;
+    kg:hasMetric entity:Metric_MaturityRequirements_2020,
+        entity:Metric_MaturityRequirements_2021,
+        entity:Metric_MaturityRequirements_2022,
+        entity:Metric_MaturityRequirements_2023,
+        entity:Metric_MaturityRequirements_2024andThereafter,
+        entity:Metric_MaturityRequirements_Total ;
+    kg:label "Company for Example 23" .
+
+entity:Company_GlobalPayments a kg:Company ;
+    kg:hasMetric entity:Metric_CommitmentFeeRate,
+        entity:Metric_InterestRate_RevolvingCredit,
+        entity:Metric_InterestRate_TermA,
+        entity:Metric_InterestRate_TermA2,
+        entity:Metric_InterestRate_TermB2,
+        entity:Metric_InterestRate_TermB4,
+        entity:Metric_RevolvingCreditFacility,
+        entity:Metric_StandbyLettersCreditLimit,
+        entity:Metric_TermA2Loan,
+        entity:Metric_TermALoan,
+        entity:Metric_TermB2LoanFacility,
+        entity:Metric_TermB4Loan,
+        entity:Metric_TermB4LoanProceeds,
+        entity:Metric_TotalAvailableCommitments_2018,
+        entity:Metric_TotalFinancingCapacity ;
+    kg:label "Global Payments Inc." .
+
+entity:Metric_CommitmentFeeRate a kg:FinancialMetric ;
+    kg:hasValue value:CommitmentFeeRate ;
+    kg:label "Quarterly commitment fee rate" .
+
+entity:Metric_InterestRate_RevolvingCredit a kg:FinancialMetric ;
+    kg:hasValue value:InterestRate_RevolvingCredit ;
+    kg:label "Interest rate on revolving credit facility" .
+
+entity:Metric_InterestRate_TermA a kg:FinancialMetric ;
+    kg:hasValue value:InterestRate_TermA ;
+    kg:label "Interest rate on term A loan" .
+
+entity:Metric_InterestRate_TermA2 a kg:FinancialMetric ;
+    kg:hasValue value:InterestRate_TermA2 ;
+    kg:label "Interest rate on term A-2 loan" .
+
+entity:Metric_InterestRate_TermB2 a kg:FinancialMetric ;
+    kg:hasValue value:InterestRate_TermB2 ;
+    kg:label "Interest rate on term B-2 loan" .
+
+entity:Metric_InterestRate_TermB4 a kg:FinancialMetric ;
+    kg:hasValue value:InterestRate_TermB4 ;
+    kg:label "Interest rate on term B-4 loan" .
+
+entity:Metric_MaturityRequirements_2020 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2020,
+        entity:entity_Year_2020 ;
+    kg:hasValue value:MaturityRequirements_2020 ;
+    kg:label "maturity requirements on long-term debt" ;
+    kg:tableColumn "2020" ;
+    kg:tableRow "$ 124176" .
+
+entity:Metric_MaturityRequirements_2021 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2021,
+        entity:entity_Year_2021 ;
+    kg:hasValue value:MaturityRequirements_2021 ;
+    kg:label "maturity requirements on long-term debt" ;
+    kg:tableColumn "2021" ;
+    kg:tableRow "$ 124176" .
+
+entity:Metric_MaturityRequirements_2022 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2022,
+        entity:entity_Year_2022 ;
+    kg:hasValue value:MaturityRequirements_2022 ;
+    kg:label "maturity requirements on long-term debt" ;
+    kg:tableColumn "2022" ;
+    kg:tableRow "$ 124176" .
+
+entity:Metric_MaturityRequirements_2023 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2023,
+        entity:entity_Year_2023 ;
+    kg:hasValue value:MaturityRequirements_2023 ;
+    kg:label "maturity requirements on long-term debt" ;
+    kg:tableColumn "2023" ;
+    kg:tableRow "$ 124176" .
+
+entity:Metric_MaturityRequirements_2024andThereafter a kg:FinancialMetric ;
+    kg:hasValue value:MaturityRequirements_2024andThereafter ;
+    kg:label "maturity requirements on long-term debt" ;
+    kg:tableColumn "2024 and thereafter" ;
+    kg:tableRow "$ 124176" .
+
+entity:Metric_MaturityRequirements_Total a kg:FinancialMetric ;
+    kg:hasValue value:MaturityRequirements_Total ;
+    kg:label "maturity requirements on long-term debt" ;
+    kg:tableColumn "total" ;
+    kg:tableRow "$ 124176" .
+
+entity:Metric_RevolvingCreditFacility a kg:FinancialMetric ;
+    kg:hasValue value:RevolvingCreditFacility ;
+    kg:label "Revolving credit facility amount" .
+
+entity:Metric_StandbyLettersCreditLimit a kg:FinancialMetric ;
+    kg:hasValue value:StandbyLettersCreditLimit ;
+    kg:label "Standby letters of credit limit" .
+
+entity:Metric_TermA2Loan a kg:FinancialMetric ;
+    kg:hasValue value:TermA2Loan ;
+    kg:label "Term A-2 loan amount" .
+
+entity:Metric_TermALoan a kg:FinancialMetric ;
+    kg:hasValue value:TermALoan ;
+    kg:label "Term A loan amount" .
+
+entity:Metric_TermB2LoanFacility a kg:FinancialMetric ;
+    kg:hasValue value:TermB2LoanFacility ;
+    kg:label "Term B-2 loan facility amount" .
+
+entity:Metric_TermB4Loan a kg:FinancialMetric ;
+    kg:hasValue value:TermB4Loan ;
+    kg:label "Term B-4 loan amount" .
+
+entity:Metric_TermB4LoanProceeds a kg:FinancialMetric ;
+    kg:hasValue value:TermB4LoanProceeds ;
+    kg:label "Term B-4 loan proceeds amount" .
+
+entity:Metric_TotalAvailableCommitments_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2018,
+        entity:entity_Year_2018 ;
+    kg:hasValue value:TotalAvailableCommitments_2018 ;
+    kg:label "Total available commitments under revolving credit facility" .
+
+entity:Metric_TotalFinancingCapacity a kg:FinancialMetric ;
+    kg:hasValue value:TotalFinancingCapacity ;
+    kg:label "Total financing capacity under credit facility" .
+
+entity:Year_2018 a kg:Year ;
+    kg:yearValue 2018 .
+
+entity:Year_2020 a kg:Year ;
+    kg:yearValue 2020 .
+
+entity:Year_2021 a kg:Year ;
+    kg:yearValue 2021 .
+
+entity:Year_2022 a kg:Year ;
+    kg:yearValue 2022 .
+
+entity:Year_2023 a kg:Year ;
+    kg:yearValue 2023 .
+
+value:CommitmentFeeRate a kg:MonetaryValue ;
+    kg:displayValue "0.20% to 0.30%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 0.2 .
+
+value:InterestRate_RevolvingCredit a kg:MonetaryValue ;
+    kg:displayValue "3.92%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 3.92 .
+
+value:InterestRate_TermA a kg:MonetaryValue ;
+    kg:displayValue "4.02%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 4.02 .
+
+value:InterestRate_TermA2 a kg:MonetaryValue ;
+    kg:displayValue "4.01%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 4.01 .
+
+value:InterestRate_TermB2 a kg:MonetaryValue ;
+    kg:displayValue "4.27%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 4.27 .
+
+value:InterestRate_TermB4 a kg:MonetaryValue ;
+    kg:displayValue "4.27%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 4.27 .
+
+value:MaturityRequirements_2020 a kg:MonetaryValue ;
+    kg:displayValue "159979.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 159979.0 .
+
+value:MaturityRequirements_2021 a kg:MonetaryValue ;
+    kg:displayValue "195848.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 195848.0 .
+
+value:MaturityRequirements_2022 a kg:MonetaryValue ;
+    kg:displayValue "267587.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 267587.0 .
+
+value:MaturityRequirements_2023 a kg:MonetaryValue ;
+    kg:displayValue "3945053.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 3945053.0 .
+
+value:MaturityRequirements_2024andThereafter a kg:MonetaryValue ;
+    kg:displayValue "475000.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 475000.0 .
+
+value:MaturityRequirements_Total a kg:MonetaryValue ;
+    kg:displayValue "5167643.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 5167643.0 .
+
+value:RevolvingCreditFacility a kg:MonetaryValue ;
+    kg:displayValue "$1.5 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 1.5 .
+
+value:StandbyLettersCreditLimit a kg:MonetaryValue ;
+    kg:displayValue "$100 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 100.0 .
+
+value:TermA2Loan a kg:MonetaryValue ;
+    kg:displayValue "$1.37 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 1.37 .
+
+value:TermALoan a kg:MonetaryValue ;
+    kg:displayValue "$1.5 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 1.5 .
+
+value:TermB2LoanFacility a kg:MonetaryValue ;
+    kg:displayValue "$1.14 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 1.14 .
+
+value:TermB4Loan a kg:MonetaryValue ;
+    kg:displayValue "$500 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 500.0 .
+
+value:TermB4LoanProceeds a kg:MonetaryValue ;
+    kg:displayValue "$500 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 500.0 .
+
+value:TotalAvailableCommitments_2018 a kg:MonetaryValue ;
+    kg:displayValue "$783.6 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 783.6 .
+
+value:TotalFinancingCapacity a kg:MonetaryValue ;
+    kg:displayValue "$5.5 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 5.5 .
+

@@ -1,0 +1,598 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+entity:Company_JPMorganChase a kg:Company ;
+    kg:hasMetric entity:Metric_AdditionalLitigationReserves_2011,
+        entity:Metric_AdditionalLitigationReserves_2012,
+        entity:Metric_BearStearnsSubordinatedLoanRecovery_2012,
+        entity:Metric_ExtinguishmentGains_2012,
+        entity:Metric_HeldToMaturityBalance_2013,
+        entity:Metric_InvestmentSecuritiesPortfolioAverage_2011,
+        entity:Metric_InvestmentSecuritiesPortfolioAverage_2012,
+        entity:Metric_InvestmentSecuritiesPortfolioAverage_2013,
+        entity:Metric_InvestmentSecuritiesPortfolioPeriodEnd2013_2011,
+        entity:Metric_InvestmentSecuritiesPortfolioPeriodEnd2013_2012,
+        entity:Metric_InvestmentSecuritiesPortfolioPeriodEnd2013_2013,
+        entity:Metric_MortgageLoansAverage_2011,
+        entity:Metric_MortgageLoansAverage_2012,
+        entity:Metric_MortgageLoansAverage_2013,
+        entity:Metric_MortgageLoansPeriodEnd_2011,
+        entity:Metric_MortgageLoansPeriodEnd_2012,
+        entity:Metric_MortgageLoansPeriodEnd_2013,
+        entity:Metric_NetIncome_2011,
+        entity:Metric_NetInterestIncome_2011,
+        entity:Metric_NetInterestIncome_2012,
+        entity:Metric_NetLoss_2012,
+        entity:Metric_OtherCorporateNetLoss_2011,
+        entity:Metric_OtherCorporateNetLoss_2012,
+        entity:Metric_OtherCorporateNoninterestExpense_2012,
+        entity:Metric_OtherCorporateNoninterestRevenue_2012,
+        entity:Metric_PrivateEquityNetIncome_2011,
+        entity:Metric_PrivateEquityNetIncome_2012,
+        entity:Metric_PrivateEquityNetRevenue_2011,
+        entity:Metric_PrivateEquityNetRevenue_2012,
+        entity:Metric_PrivateEquityNoninterestExpense_2011,
+        entity:Metric_PrivateEquityNoninterestExpense_2012,
+        entity:Metric_RetainedIndexCreditDerivativeLosses_2012,
+        entity:Metric_SecuritiesGains_2011,
+        entity:Metric_SecuritiesGains_2012,
+        entity:Metric_SecuritiesGains_2013,
+        entity:Metric_SyntheticCreditPortfolioLosses_2012,
+        entity:Metric_TreasuryAndCIOInvestmentSecuritiesPortfolio_2013,
+        entity:Metric_TreasuryAndCIONetIncome_2011,
+        entity:Metric_TreasuryAndCIONetLoss_2012,
+        entity:Metric_TreasuryAndCIONetRevenue_2011,
+        entity:Metric_TreasuryAndCIONetRevenue_2012,
+        entity:Metric_WashingtonMutualBankruptcySettlement_2012 ;
+    kg:label "JPMorgan Chase",
+        "JPMorgan Chase & Co." .
+
+entity:Metric_AdditionalLitigationReserves_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:AdditionalLitigationReserves_2011 ;
+    kg:label "Additional litigation reserves" .
+
+entity:Metric_AdditionalLitigationReserves_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:AdditionalLitigationReserves_2012 ;
+    kg:label "Additional litigation reserves" .
+
+entity:Metric_BearStearnsSubordinatedLoanRecovery_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:BearStearnsSubordinatedLoanRecovery_2012 ;
+    kg:label "Bear stearns subordinated loan recovery gain" .
+
+entity:Metric_ExtinguishmentGains_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:ExtinguishmentGains_2012 ;
+    kg:label "Extinguishment gains" .
+
+entity:Metric_HeldToMaturityBalance_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:HeldToMaturityBalance_2013 ;
+    kg:label "Held-to-maturity balance" .
+
+entity:Metric_InvestmentSecuritiesPortfolioAverage_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:InvestmentSecuritiesPortfolioAverage_2011 ;
+    kg:label "investment securities portfolio ( average )" ;
+    kg:tableColumn "2011" ;
+    kg:tableRow "investment securities portfolio ( average )" .
+
+entity:Metric_InvestmentSecuritiesPortfolioAverage_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:InvestmentSecuritiesPortfolioAverage_2012 ;
+    kg:label "investment securities portfolio ( average )" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "investment securities portfolio ( average )" .
+
+entity:Metric_InvestmentSecuritiesPortfolioAverage_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:InvestmentSecuritiesPortfolioAverage_2013 ;
+    kg:label "investment securities portfolio ( average )" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "investment securities portfolio ( average )" .
+
+entity:Metric_InvestmentSecuritiesPortfolioPeriodEnd2013_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:InvestmentSecuritiesPortfolioPeriodEnd2013_2011 ;
+    kg:label "investment securities portfolio ( period 2013end ) ( a )" ;
+    kg:tableColumn "2011" ;
+    kg:tableRow "investment securities portfolio ( period 2013end ) ( a )" .
+
+entity:Metric_InvestmentSecuritiesPortfolioPeriodEnd2013_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:InvestmentSecuritiesPortfolioPeriodEnd2013_2012 ;
+    kg:label "investment securities portfolio ( period 2013end ) ( a )" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "investment securities portfolio ( period 2013end ) ( a )" .
+
+entity:Metric_InvestmentSecuritiesPortfolioPeriodEnd2013_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:InvestmentSecuritiesPortfolioPeriodEnd2013_2013 ;
+    kg:label "investment securities portfolio ( period 2013end ) ( a )" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "investment securities portfolio ( period 2013end ) ( a )" .
+
+entity:Metric_MortgageLoansAverage_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:MortgageLoansAverage_2011 ;
+    kg:label "mortgage loans ( average )" ;
+    kg:tableColumn "2011" ;
+    kg:tableRow "mortgage loans ( average )" .
+
+entity:Metric_MortgageLoansAverage_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:MortgageLoansAverage_2012 ;
+    kg:label "mortgage loans ( average )" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "mortgage loans ( average )" .
+
+entity:Metric_MortgageLoansAverage_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:MortgageLoansAverage_2013 ;
+    kg:label "mortgage loans ( average )" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "mortgage loans ( average )" .
+
+entity:Metric_MortgageLoansPeriodEnd_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:MortgageLoansPeriodEnd_2011 ;
+    kg:label "mortgage loans ( period-end )" ;
+    kg:tableColumn "2011" ;
+    kg:tableRow "mortgage loans ( period-end )" .
+
+entity:Metric_MortgageLoansPeriodEnd_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:MortgageLoansPeriodEnd_2012 ;
+    kg:label "mortgage loans ( period-end )" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "mortgage loans ( period-end )" .
+
+entity:Metric_MortgageLoansPeriodEnd_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:MortgageLoansPeriodEnd_2013 ;
+    kg:label "mortgage loans ( period-end )" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "mortgage loans ( period-end )" .
+
+entity:Metric_NetIncome_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:NetIncome_2011 ;
+    kg:label "Net income" .
+
+entity:Metric_NetInterestIncome_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:NetInterestIncome_2011 ;
+    kg:label "Net interest income" .
+
+entity:Metric_NetInterestIncome_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:NetInterestIncome_2012 ;
+    kg:label "Net interest income" .
+
+entity:Metric_NetLoss_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:NetLoss_2012 ;
+    kg:label "Net loss" .
+
+entity:Metric_OtherCorporateNetLoss_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:OtherCorporateNetLoss_2011 ;
+    kg:label "Other corporate net loss" .
+
+entity:Metric_OtherCorporateNetLoss_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:OtherCorporateNetLoss_2012 ;
+    kg:label "Other corporate net loss" .
+
+entity:Metric_OtherCorporateNoninterestExpense_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:OtherCorporateNoninterestExpense_2012 ;
+    kg:label "Other corporate noninterest expense" .
+
+entity:Metric_OtherCorporateNoninterestRevenue_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:OtherCorporateNoninterestRevenue_2012 ;
+    kg:label "Other corporate noninterest revenue" .
+
+entity:Metric_PrivateEquityNetIncome_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:PrivateEquityNetIncome_2011 ;
+    kg:label "Private equity net income" .
+
+entity:Metric_PrivateEquityNetIncome_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:PrivateEquityNetIncome_2012 ;
+    kg:label "Private equity net income" .
+
+entity:Metric_PrivateEquityNetRevenue_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:PrivateEquityNetRevenue_2011 ;
+    kg:label "Private equity net revenue" .
+
+entity:Metric_PrivateEquityNetRevenue_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:PrivateEquityNetRevenue_2012 ;
+    kg:label "Private equity net revenue" .
+
+entity:Metric_PrivateEquityNoninterestExpense_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:PrivateEquityNoninterestExpense_2011 ;
+    kg:label "Private equity noninterest expense" .
+
+entity:Metric_PrivateEquityNoninterestExpense_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:PrivateEquityNoninterestExpense_2012 ;
+    kg:label "Private equity noninterest expense" .
+
+entity:Metric_RetainedIndexCreditDerivativeLosses_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:RetainedIndexCreditDerivativeLosses_2012 ;
+    kg:label "Retained index credit derivative losses" .
+
+entity:Metric_SecuritiesGains_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:SecuritiesGains_2011 ;
+    kg:label "securities gains" ;
+    kg:tableColumn "2011" ;
+    kg:tableRow "securities gains" .
+
+entity:Metric_SecuritiesGains_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:SecuritiesGains_2012 ;
+    kg:label "Securities gains",
+        "securities gains" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "securities gains" .
+
+entity:Metric_SecuritiesGains_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:SecuritiesGains_2013 ;
+    kg:label "securities gains" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "securities gains" .
+
+entity:Metric_SyntheticCreditPortfolioLosses_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:SyntheticCreditPortfolioLosses_2012 ;
+    kg:label "Synthetic credit portfolio losses" .
+
+entity:Metric_TreasuryAndCIOInvestmentSecuritiesPortfolio_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:TreasuryAndCIOInvestmentSecuritiesPortfolio_2013 ;
+    kg:label "Treasury and CIO investment securities portfolio" .
+
+entity:Metric_TreasuryAndCIONetIncome_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:TreasuryAndCIONetIncome_2011 ;
+    kg:label "Treasury and CIO net income" .
+
+entity:Metric_TreasuryAndCIONetLoss_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:TreasuryAndCIONetLoss_2012 ;
+    kg:label "Treasury and CIO net loss" .
+
+entity:Metric_TreasuryAndCIONetRevenue_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:TreasuryAndCIONetRevenue_2011 ;
+    kg:label "Treasury and CIO net revenue" .
+
+entity:Metric_TreasuryAndCIONetRevenue_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:TreasuryAndCIONetRevenue_2012 ;
+    kg:label "Treasury and CIO net revenue" .
+
+entity:Metric_WashingtonMutualBankruptcySettlement_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:WashingtonMutualBankruptcySettlement_2012 ;
+    kg:label "Washington mutual bankruptcy settlement benefit" .
+
+value:AdditionalLitigationReserves_2011 a kg:MonetaryValue ;
+    kg:displayValue "$ 3.2 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 3.2 .
+
+value:AdditionalLitigationReserves_2012 a kg:MonetaryValue ;
+    kg:displayValue "$ 3.7 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 3.7 .
+
+value:BearStearnsSubordinatedLoanRecovery_2012 a kg:MonetaryValue ;
+    kg:displayValue "$ 665 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 665.0 .
+
+value:ExtinguishmentGains_2012 a kg:MonetaryValue ;
+    kg:displayValue "$ 888 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 888.0 .
+
+value:HeldToMaturityBalance_2013 a kg:MonetaryValue ;
+    kg:displayValue "$ 24.0 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 24.0 .
+
+value:InvestmentSecuritiesPortfolioAverage_2011 a kg:MonetaryValue ;
+    kg:displayValue "330885.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 330885.0 .
+
+value:InvestmentSecuritiesPortfolioAverage_2012 a kg:MonetaryValue ;
+    kg:displayValue "358029.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 358029.0 .
+
+value:InvestmentSecuritiesPortfolioAverage_2013 a kg:MonetaryValue ;
+    kg:displayValue "353712.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 353712.0 .
+
+value:InvestmentSecuritiesPortfolioPeriodEnd2013_2011 a kg:MonetaryValue ;
+    kg:displayValue "355605.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 355605.0 .
+
+value:InvestmentSecuritiesPortfolioPeriodEnd2013_2012 a kg:MonetaryValue ;
+    kg:displayValue "365421.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 365421.0 .
+
+value:InvestmentSecuritiesPortfolioPeriodEnd2013_2013 a kg:MonetaryValue ;
+    kg:displayValue "347562.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 347562.0 .
+
+value:MortgageLoansAverage_2011 a kg:MonetaryValue ;
+    kg:displayValue "13006.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 13006.0 .
+
+value:MortgageLoansAverage_2012 a kg:MonetaryValue ;
+    kg:displayValue "10241.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 10241.0 .
+
+value:MortgageLoansAverage_2013 a kg:MonetaryValue ;
+    kg:displayValue "5145.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 5145.0 .
+
+value:MortgageLoansPeriodEnd_2011 a kg:MonetaryValue ;
+    kg:displayValue "13375.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 13375.0 .
+
+value:MortgageLoansPeriodEnd_2012 a kg:MonetaryValue ;
+    kg:displayValue "7037.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 7037.0 .
+
+value:MortgageLoansPeriodEnd_2013 a kg:MonetaryValue ;
+    kg:displayValue "3779.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 3779.0 .
+
+value:NetIncome_2011 a kg:MonetaryValue ;
+    kg:displayValue "$ 919 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 919.0 .
+
+value:NetInterestIncome_2011 a kg:MonetaryValue ;
+    kg:displayValue "$ 1.4 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 1.4 .
+
+value:NetInterestIncome_2012 a kg:MonetaryValue ;
+    kg:displayValue "negative $ 683 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -683.0 .
+
+value:NetLoss_2012 a kg:MonetaryValue ;
+    kg:displayValue "$ 2.0 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 2.0 .
+
+value:OtherCorporateNetLoss_2011 a kg:MonetaryValue ;
+    kg:displayValue "$ 821 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 821.0 .
+
+value:OtherCorporateNetLoss_2012 a kg:MonetaryValue ;
+    kg:displayValue "$ 221 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 221.0 .
+
+value:OtherCorporateNoninterestExpense_2012 a kg:MonetaryValue ;
+    kg:displayValue "$ 3.8 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 3.8 .
+
+value:OtherCorporateNoninterestRevenue_2012 a kg:MonetaryValue ;
+    kg:displayValue "$ 1.8 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 1.8 .
+
+value:PrivateEquityNetIncome_2011 a kg:MonetaryValue ;
+    kg:displayValue "$ 391 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 391.0 .
+
+value:PrivateEquityNetIncome_2012 a kg:MonetaryValue ;
+    kg:displayValue "$ 292 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 292.0 .
+
+value:PrivateEquityNetRevenue_2011 a kg:MonetaryValue ;
+    kg:displayValue "$ 836 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 836.0 .
+
+value:PrivateEquityNetRevenue_2012 a kg:MonetaryValue ;
+    kg:displayValue "$ 601 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 601.0 .
+
+value:PrivateEquityNoninterestExpense_2011 a kg:MonetaryValue ;
+    kg:displayValue "$ 238 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 238.0 .
+
+value:PrivateEquityNoninterestExpense_2012 a kg:MonetaryValue ;
+    kg:displayValue "$ 145 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 145.0 .
+
+value:RetainedIndexCreditDerivativeLosses_2012 a kg:MonetaryValue ;
+    kg:displayValue "$ 449 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 449.0 .
+
+value:SecuritiesGains_2011 a kg:MonetaryValue ;
+    kg:displayValue "1385.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1385.0 .
+
+value:SecuritiesGains_2012 a kg:MonetaryValue ;
+    kg:displayValue "$ 2.0 billion",
+        "2028.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions,
+        kg:Millions ;
+    kg:numericValue 2.0,
+        2028.0 .
+
+value:SecuritiesGains_2013 a kg:MonetaryValue ;
+    kg:displayValue "659.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 659.0 .
+
+value:SyntheticCreditPortfolioLosses_2012 a kg:MonetaryValue ;
+    kg:displayValue "$ 5.8 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 5.8 .
+
+value:TreasuryAndCIOInvestmentSecuritiesPortfolio_2013 a kg:MonetaryValue ;
+    kg:displayValue "$ 347.6 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 347.6 .
+
+value:TreasuryAndCIONetIncome_2011 a kg:MonetaryValue ;
+    kg:displayValue "$ 1.3 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 1.3 .
+
+value:TreasuryAndCIONetLoss_2012 a kg:MonetaryValue ;
+    kg:displayValue "$ 2.1 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 2.1 .
+
+value:TreasuryAndCIONetRevenue_2011 a kg:MonetaryValue ;
+    kg:displayValue "$ 3.2 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 3.2 .
+
+value:TreasuryAndCIONetRevenue_2012 a kg:MonetaryValue ;
+    kg:displayValue "loss of $ 3.1 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue -3.1 .
+
+value:WashingtonMutualBankruptcySettlement_2012 a kg:MonetaryValue ;
+    kg:displayValue "$ 1.1 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 1.1 .
+
+entity:Year_2013 a kg:Year ;
+    kg:yearValue 2013 .
+
+entity:Year_2011 a kg:Year ;
+    kg:yearValue 2011 .
+
+entity:Year_2012 a kg:Year ;
+    kg:yearValue 2012 .
+

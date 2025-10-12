@@ -1,0 +1,315 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-11" ;
+    kg:builtWithOntologyVersion "1.0.6" .
+
+entity:Company_EdwardsLifesciences a kg:Company ;
+    kg:hasMetric entity:Metric_EdwardsLifesciences_2012,
+        entity:Metric_EdwardsLifesciences_2013,
+        entity:Metric_EdwardsLifesciences_2014,
+        entity:Metric_EdwardsLifesciences_2015,
+        entity:Metric_EdwardsLifesciences_2016,
+        entity:Metric_ShaesRepurchased_2016 ;
+    kg:label "Edwards Lifesciences" .
+
+entity:Company_SP500 a kg:Company ;
+    kg:hasMetric entity:Metric_SP500_2012,
+        entity:Metric_SP500_2013,
+        entity:Metric_SP500_2014,
+        entity:Metric_SP500_2015,
+        entity:Metric_SP500_2016 ;
+    kg:label "S&P 500" .
+
+entity:Company_SP500Healthcare a kg:Company ;
+    kg:hasMetric entity:Metric_SP500Healthcare_2012,
+        entity:Metric_SP500Healthcare_2013,
+        entity:Metric_SP500Healthcare_2014,
+        entity:Metric_SP500Healthcare_2015,
+        entity:Metric_SP500Healthcare_2016 ;
+    kg:label "S&P 500 Healthcare Equipment Index" .
+
+entity:FinancialTable a kg:Table ;
+    kg:hasColumn entity:TableColumn_0,
+        entity:TableColumn_1,
+        entity:TableColumn_2 ;
+    kg:hasRow entity:TableRow_0,
+        entity:TableRow_1,
+        entity:TableRow_2,
+        entity:TableRow_3,
+        entity:TableRow_4 ;
+    kg:tableCaption "Comparison of 5 year cumulative total return for Edwards Lifesciences Corporation stock, S&P 500 index, and S&P 500 healthcare equipment index" ;
+    kg:tableOrientation "row-first" .
+
+entity:Metric_EdwardsLifesciences_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:EdwardsLifesciences_2012 ;
+    kg:label "Edwards Lifesciences 2012" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "edwards lifesciences" .
+
+entity:Metric_EdwardsLifesciences_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:EdwardsLifesciences_2013 ;
+    kg:label "Edwards Lifesciences 2013" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "edwards lifesciences" .
+
+entity:Metric_EdwardsLifesciences_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:EdwardsLifesciences_2014 ;
+    kg:label "Edwards Lifesciences 2014" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "edwards lifesciences" .
+
+entity:Metric_EdwardsLifesciences_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:EdwardsLifesciences_2015 ;
+    kg:label "Edwards Lifesciences 2015" ;
+    kg:tableColumn "2015" ;
+    kg:tableRow "edwards lifesciences" .
+
+entity:Metric_EdwardsLifesciences_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:EdwardsLifesciences_2016 ;
+    kg:label "Edwards Lifesciences 2016" ;
+    kg:tableColumn "2016" ;
+    kg:tableRow "edwards lifesciences" .
+
+entity:Metric_SP500Healthcare_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:SP500Healthcare_2012 ;
+    kg:label "S&P 500 Healthcare Equipment Index 2012" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "s&p 500 healthcare equipment index" .
+
+entity:Metric_SP500Healthcare_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:SP500Healthcare_2013 ;
+    kg:label "S&P 500 Healthcare Equipment Index 2013" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "s&p 500 healthcare equipment index" .
+
+entity:Metric_SP500Healthcare_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:SP500Healthcare_2014 ;
+    kg:label "S&P 500 Healthcare Equipment Index 2014" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "s&p 500 healthcare equipment index" .
+
+entity:Metric_SP500Healthcare_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:SP500Healthcare_2015 ;
+    kg:label "S&P 500 Healthcare Equipment Index 2015" ;
+    kg:tableColumn "2015" ;
+    kg:tableRow "s&p 500 healthcare equipment index" .
+
+entity:Metric_SP500Healthcare_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:SP500Healthcare_2016 ;
+    kg:label "S&P 500 Healthcare Equipment Index 2016" ;
+    kg:tableColumn "2016" ;
+    kg:tableRow "s&p 500 healthcare equipment index" .
+
+entity:Metric_SP500_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:SP500_2012 ;
+    kg:label "S&P 500 2012" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "s&p 500" .
+
+entity:Metric_SP500_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:SP500_2013 ;
+    kg:label "S&P 500 2013" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "s&p 500" .
+
+entity:Metric_SP500_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2014,
+        entity:entity_Year_2014 ;
+    kg:hasValue value:SP500_2014 ;
+    kg:label "S&P 500 2014" ;
+    kg:tableColumn "2014" ;
+    kg:tableRow "s&p 500" .
+
+entity:Metric_SP500_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2015,
+        entity:entity_Year_2015 ;
+    kg:hasValue value:SP500_2015 ;
+    kg:label "S&P 500 2015" ;
+    kg:tableColumn "2015" ;
+    kg:tableRow "s&p 500" .
+
+entity:Metric_SP500_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:SP500_2016 ;
+    kg:label "S&P 500 2016" ;
+    kg:tableColumn "2016" ;
+    kg:tableRow "s&p 500" .
+
+entity:Metric_ShaesRepurchased_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:ShaesRepurchased_2016 ;
+    kg:label "Shares repurchased" .
+
+entity:TableColumn_0 a kg:TableColumn ;
+    kg:columnIndex 0 ;
+    kg:label "{'index': 0, 'label': 'edwards lifesciences'}" .
+
+entity:TableColumn_1 a kg:TableColumn ;
+    kg:columnIndex 1 ;
+    kg:label "{'index': 1, 'label': 's&p 500'}" .
+
+entity:TableColumn_2 a kg:TableColumn ;
+    kg:columnIndex 2 ;
+    kg:label "{'index': 2, 'label': 's&p 500 healthcare equipment index'}" .
+
+entity:TableRow_0 a kg:TableRow ;
+    kg:label "{'index': 0, 'label': '2012'}" ;
+    kg:rowIndex 0 .
+
+entity:TableRow_1 a kg:TableRow ;
+    kg:label "{'index': 1, 'label': '2013'}" ;
+    kg:rowIndex 1 .
+
+entity:TableRow_2 a kg:TableRow ;
+    kg:label "{'index': 2, 'label': '2014'}" ;
+    kg:rowIndex 2 .
+
+entity:TableRow_3 a kg:TableRow ;
+    kg:label "{'index': 3, 'label': '2015'}" ;
+    kg:rowIndex 3 .
+
+entity:TableRow_4 a kg:TableRow ;
+    kg:label "{'index': 4, 'label': '2016'}" ;
+    kg:rowIndex 4 .
+
+value:EdwardsLifesciences_2012 a kg:MonetaryValue ;
+    kg:displayValue "127.54" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 127.54 .
+
+value:EdwardsLifesciences_2013 a kg:MonetaryValue ;
+    kg:displayValue "93.01" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 93.01 .
+
+value:EdwardsLifesciences_2014 a kg:MonetaryValue ;
+    kg:displayValue "180.17" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 180.17 .
+
+value:EdwardsLifesciences_2015 a kg:MonetaryValue ;
+    kg:displayValue "223.42" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 223.42 .
+
+value:EdwardsLifesciences_2016 a kg:MonetaryValue ;
+    kg:displayValue "265.06" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 265.06 .
+
+value:SP500Healthcare_2012 a kg:MonetaryValue ;
+    kg:displayValue "117.42" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 117.42 .
+
+value:SP500Healthcare_2013 a kg:MonetaryValue ;
+    kg:displayValue "150.28" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 150.28 .
+
+value:SP500Healthcare_2014 a kg:MonetaryValue ;
+    kg:displayValue "181.96" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 181.96 .
+
+value:SP500Healthcare_2015 a kg:MonetaryValue ;
+    kg:displayValue "194.37" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 194.37 .
+
+value:SP500Healthcare_2016 a kg:MonetaryValue ;
+    kg:displayValue "207.46" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 207.46 .
+
+value:SP500_2012 a kg:MonetaryValue ;
+    kg:displayValue "116.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 116.0 .
+
+value:SP500_2013 a kg:MonetaryValue ;
+    kg:displayValue "153.58" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 153.58 .
+
+value:SP500_2014 a kg:MonetaryValue ;
+    kg:displayValue "174.6" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 174.6 .
+
+value:SP500_2015 a kg:MonetaryValue ;
+    kg:displayValue "177.01" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 177.01 .
+
+value:SP500_2016 a kg:MonetaryValue ;
+    kg:displayValue "198.18" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 198.18 .
+
+value:ShaesRepurchased_2016 a kg:MonetaryValue ;
+    kg:displayValue "44 thousand shares" ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 44.0 .
+
+entity:Year_2012 a kg:Year ;
+    kg:yearValue 2012 .
+
+entity:Year_2013 a kg:Year ;
+    kg:yearValue 2013 .
+
+entity:Year_2014 a kg:Year ;
+    kg:yearValue 2014 .
+
+entity:Year_2015 a kg:Year ;
+    kg:yearValue 2015 .
+
+entity:Year_2016 a kg:Year ;
+    kg:yearValue 2016 .
+

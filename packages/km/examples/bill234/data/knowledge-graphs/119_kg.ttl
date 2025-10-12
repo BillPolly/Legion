@@ -1,0 +1,121 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+entity:entity_EconomicIndex_FederalFundsRate_2008 a kg:EconomicIndex ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:value_FederalFundsRate_2008 ;
+    kg:label "Average federal funds rate" .
+
+entity:entity_EconomicIndex_FederalFundsRate_2009 a kg:EconomicIndex ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:value_FederalFundsRate_2009 ;
+    kg:label "Average federal funds rate" .
+
+entity:entity_Metric_NetIncome_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:value_NetIncome_2008 ;
+    kg:label "Net income" .
+
+entity:entity_Metric_NetIncome_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:value_NetIncome_2009 ;
+    kg:label "Net income" .
+
+entity:entity_Metric_NetInterestIncome_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:value_NetInterestIncome_2008 ;
+    kg:label "Net interest income" ;
+    kg:tableColumn "2008" ;
+    kg:tableRow "net interest income" .
+
+entity:entity_Metric_NetInterestIncome_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:value_NetInterestIncome_2009 ;
+    kg:label "Net interest income" ;
+    kg:tableColumn "2009" ;
+    kg:tableRow "net interest income" .
+
+entity:entity_Metric_NetInterestMargin_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:value_NetInterestMargin_2008 ;
+    kg:label "Net interest margin" ;
+    kg:tableColumn "2008" ;
+    kg:tableRow "net interest margin" .
+
+entity:entity_Metric_NetInterestMargin_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:value_NetInterestMargin_2009 ;
+    kg:label "Net interest margin" ;
+    kg:tableColumn "2009" ;
+    kg:tableRow "net interest margin" .
+
+entity:entity_Metric_NoninterestIncome_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:value_NoninterestIncome_2008 ;
+    kg:label "Noninterest income" .
+
+entity:entity_Metric_NoninterestIncome_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:value_NoninterestIncome_2009 ;
+    kg:label "Noninterest income" .
+
+value:value_FederalFundsRate_2008 a kg:PercentageValue ;
+    kg:displayValue "1.94%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1.94 .
+
+value:value_FederalFundsRate_2009 a kg:PercentageValue ;
+    kg:displayValue ".16%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 0.16 .
+
+value:value_NetIncome_2008 a kg:MonetaryValue ;
+    kg:displayValue "$ 914 million" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 914.0 .
+
+value:value_NetIncome_2009 a kg:MonetaryValue ;
+    kg:displayValue "$ 2.4 billion" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2400.0 .
+
+value:value_NetInterestIncome_2008 a kg:MonetaryValue ;
+    kg:displayValue "3854.0" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 3854.0 .
+
+value:value_NetInterestIncome_2009 a kg:MonetaryValue ;
+    kg:displayValue "9083.0" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 9083.0 .
+
+value:value_NetInterestMargin_2008 a kg:PercentageValue ;
+    kg:displayValue "-3.37" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -3.37 .
+
+value:value_NetInterestMargin_2009 a kg:PercentageValue ;
+    kg:displayValue "-3.82" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -3.82 .
+
+value:value_NoninterestIncome_2008 a kg:MonetaryValue ;
+    kg:displayValue "$ 2.4 billion" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2400.0 .
+
+value:value_NoninterestIncome_2009 a kg:MonetaryValue ;
+    kg:displayValue "$ 7.1 billion" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 7100.0 .
+
+entity:entity_Year_2008 a kg:Year ;
+    kg:label "2008" ;
+    kg:yearValue 2008 .
+
+entity:entity_Year_2009 a kg:Year ;
+    kg:label "2009" ;
+    kg:yearValue 2009 .
+

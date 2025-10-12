@@ -1,0 +1,267 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-11" ;
+    kg:builtWithOntologyVersion "1.0.3" .
+
+entity:Company_AmericanTower a kg:Company ;
+    kg:hasMetric entity:Metric_ATINotesProceeds,
+        entity:Metric_GrossProceeds,
+        entity:Metric_NetProceeds,
+        entity:Metric_PaydownFromMTNSale,
+        entity:Metric_PrincipalPayments_2004,
+        entity:Metric_PrincipalPayments_2005,
+        entity:Metric_PrincipalPayments_2006,
+        entity:Metric_PrincipalPayments_2007,
+        entity:Metric_PrincipalPayments_Thereafter,
+        entity:Metric_PrincipalPayments_Total,
+        entity:Metric_SeniorSubordinatedNotes,
+        entity:Metric_TermLoanAPrepayment,
+        entity:Metric_TermLoanBPrepayment,
+        entity:Metric_TermLoanPrepayment,
+        entity:Metric_WarrantsFairValue ;
+    kg:label "American Tower Corporation",
+        "American Tower Corporation and subsidiaries" .
+
+entity:Metric_SeniorSubordinatedNotesRate a kg:FinancialMetric ;
+    kg:hasValue value:SeniorSubordinatedNotesRate ;
+    kg:label "12.25% senior subordinated discount notes rate" .
+
+entity:Metric_WarrantExercisePrice a kg:FinancialMetric ;
+    kg:hasValue value:WarrantExercisePrice ;
+    kg:label "warrant exercise price" .
+
+entity:Metric_WarrantPercentage a kg:FinancialMetric ;
+    kg:hasValue value:WarrantPercentage ;
+    kg:label "percentage of outstanding common stock represented by warrants" .
+
+entity:Metric_WarrantSharesPerUnit a kg:FinancialMetric ;
+    kg:hasValue value:WarrantSharesPerUnit ;
+    kg:label "shares per warrant unit" .
+
+entity:Metric_ATINotesProceeds a kg:FinancialMetric ;
+    kg:hasValue value:ATINotesProceeds ;
+    kg:label "ATI notes proceeds" .
+
+entity:Metric_GrossProceeds a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2003,
+        entity:entity_Year_2003 ;
+    kg:hasValue value:GrossProceeds ;
+    kg:label "gross proceeds from notes and warrants offering" .
+
+entity:Metric_NetProceeds a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2003,
+        entity:entity_Year_2003 ;
+    kg:hasValue value:NetProceeds ;
+    kg:label "net proceeds from the offering" .
+
+entity:Metric_PaydownFromMTNSale a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2003,
+        entity:entity_Year_2003 ;
+    kg:hasValue value:PaydownFromMTNSale ;
+    kg:label "paydown of debt from net proceeds of the sale of mtn" .
+
+entity:Metric_PrincipalPayments_2004 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2004,
+        entity:entity_Year_2004 ;
+    kg:hasValue value:PrincipalPayments_2004 ;
+    kg:label "Principal payments of long-term debt, including capital leases" ;
+    kg:tableColumn "2004" ;
+    kg:tableRow "$ 268496" .
+
+entity:Metric_PrincipalPayments_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2005,
+        entity:entity_Year_2005 ;
+    kg:hasValue value:PrincipalPayments_2005 ;
+    kg:label "Principal payments of long-term debt, including capital leases" ;
+    kg:tableColumn "2005" ;
+    kg:tableRow "$ 268496" .
+
+entity:Metric_PrincipalPayments_2006 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2006,
+        entity:entity_Year_2006 ;
+    kg:hasValue value:PrincipalPayments_2006 ;
+    kg:label "Principal payments of long-term debt, including capital leases" ;
+    kg:tableColumn "2006" ;
+    kg:tableRow "$ 268496" .
+
+entity:Metric_PrincipalPayments_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2007,
+        entity:entity_Year_2007 ;
+    kg:hasValue value:PrincipalPayments_2007 ;
+    kg:label "Principal payments of long-term debt, including capital leases" ;
+    kg:tableColumn "2007" ;
+    kg:tableRow "$ 268496" .
+
+entity:Metric_PrincipalPayments_Thereafter a kg:FinancialMetric ;
+    kg:hasValue value:PrincipalPayments_Thereafter ;
+    kg:label "Principal payments of long-term debt, including capital leases" ;
+    kg:tableColumn "thereafter" ;
+    kg:tableRow "$ 268496" .
+
+entity:Metric_PrincipalPayments_Total a kg:FinancialMetric ;
+    kg:hasValue value:PrincipalPayments_Total ;
+    kg:label "Principal payments of long-term debt, including capital leases" ;
+    kg:tableColumn "total" ;
+    kg:tableRow "$ 268496" .
+
+entity:Metric_SeniorSubordinatedNotes a kg:FinancialMetric ;
+    kg:hasValue value:SeniorSubordinatedNotes,
+        value:SeniorSubordinatedNotesRate ;
+    kg:label "12.25% senior subordinated discount notes due 2008" .
+
+entity:Metric_TermLoanAPrepayment a kg:FinancialMetric ;
+    kg:hasValue value:TermLoanAPrepayment ;
+    kg:label "prepayment of term loan a" .
+
+entity:Metric_TermLoanBPrepayment a kg:FinancialMetric ;
+    kg:hasValue value:TermLoanBPrepayment ;
+    kg:label "prepayment of term loan b" .
+
+entity:Metric_TermLoanPrepayment a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2003,
+        entity:entity_Year_2003 ;
+    kg:hasValue value:TermLoanPrepayment ;
+    kg:label "prepayment of term loans" .
+
+entity:Metric_WarrantsFairValue a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2006,
+        entity:Year_2008 ;
+    kg:hasValue value:WarrantExercisePrice,
+        value:WarrantPercentage,
+        value:WarrantSharesPerUnit,
+        value:WarrantsFairValue ;
+    kg:label "fair value of the warrants" .
+
+entity:Year_2004 a kg:Year ;
+    kg:yearValue 2004 .
+
+entity:Year_2005 a kg:Year ;
+    kg:yearValue 2005 .
+
+entity:Year_2007 a kg:Year ;
+    kg:yearValue 2007 .
+
+entity:Year_2008 a kg:Year ;
+    kg:yearValue 2008 .
+
+value:ATINotesProceeds a kg:MonetaryValue ;
+    kg:displayValue "$367.4 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 367.4 .
+
+value:GrossProceeds a kg:MonetaryValue ;
+    kg:displayValue "$420.0 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 420.0 .
+
+value:NetProceeds a kg:MonetaryValue ;
+    kg:displayValue "$397.0 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 397.0 .
+
+value:PaydownFromMTNSale a kg:MonetaryValue ;
+    kg:displayValue "$24.5 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 24.5 .
+
+value:PrincipalPayments_2004 a kg:MonetaryValue ;
+    kg:displayValue "131262.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 131262.0 .
+
+value:PrincipalPayments_2005 a kg:MonetaryValue ;
+    kg:displayValue "195082.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 195082.0 .
+
+value:PrincipalPayments_2006 a kg:MonetaryValue ;
+    kg:displayValue "538479.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 538479.0 .
+
+value:PrincipalPayments_2007 a kg:MonetaryValue ;
+    kg:displayValue "1065437.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 1065437.0 .
+
+value:PrincipalPayments_Thereafter a kg:MonetaryValue ;
+    kg:displayValue "1408783.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 1408783.0 .
+
+value:PrincipalPayments_Total a kg:MonetaryValue ;
+    kg:displayValue "3607539.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 3607539.0 .
+
+value:SeniorSubordinatedNotes a kg:MonetaryValue ;
+    kg:displayValue "808000" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 808000.0 .
+
+value:TermLoanAPrepayment a kg:MonetaryValue ;
+    kg:displayValue "$125.0 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 125.0 .
+
+value:TermLoanBPrepayment a kg:MonetaryValue ;
+    kg:displayValue "$75.0 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 75.0 .
+
+value:TermLoanPrepayment a kg:MonetaryValue ;
+    kg:displayValue "$200.0 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 200.0 .
+
+value:WarrantsFairValue a kg:MonetaryValue ;
+    kg:displayValue "$52.6 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 52.6 .
+
+entity:Year_2006 a kg:Year ;
+    kg:yearValue 2006 .
+
+value:SeniorSubordinatedNotesRate a kg:MonetaryValue ;
+    kg:displayValue "12.25%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 12.25 .
+
+value:WarrantExercisePrice a kg:MonetaryValue ;
+    kg:displayValue "$0.01 per share" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 0.01 .
+
+value:WarrantPercentage a kg:MonetaryValue ;
+    kg:displayValue "5.5%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 5.5 .
+
+value:WarrantSharesPerUnit a kg:MonetaryValue ;
+    kg:displayValue "14.0953" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 14.0953 .
+
+entity:Year_2003 a kg:Year ;
+    kg:yearValue 2003 .
+

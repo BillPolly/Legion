@@ -1,0 +1,397 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-11" ;
+    kg:builtWithOntologyVersion "1.0.5" .
+
+entity:Company_StateStreet a kg:Company ;
+    kg:hasMetric entity:Metric_IndexBaseInvestment,
+        entity:Metric_StateStreetCorp_2008,
+        entity:Metric_StateStreetCorp_2009,
+        entity:Metric_StateStreetCorp_2010,
+        entity:Metric_StateStreetCorp_2011,
+        entity:Metric_StateStreetCorp_2012,
+        entity:Metric_StateStreetCorp_2013 ;
+    kg:label "State Street Corporation" .
+
+entity:FinancialTable a kg:Table ;
+    kg:hasColumn entity:TableColumn_0,
+        entity:TableColumn_1,
+        entity:TableColumn_2,
+        entity:TableColumn_3 ;
+    kg:hasRow entity:TableRow_0,
+        entity:TableRow_1,
+        entity:TableRow_2,
+        entity:TableRow_3,
+        entity:TableRow_4,
+        entity:TableRow_5 ;
+    kg:tableCaption "Shareholder return performance presentation comparing cumulative total shareholder return on State Street's common stock to the cumulative total return of the S&P 500 index, the S&P Financial index and the KBW Bank index over a five-year period" ;
+    kg:tableOrientation "row-first" .
+
+entity:Metric_KBWBankIndex_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:KBWBankIndex_2008 ;
+    kg:label "KBW Bank Index" ;
+    kg:tableColumn "2008" ;
+    kg:tableRow "kbw bank index" .
+
+entity:Metric_KBWBankIndex_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:KBWBankIndex_2009 ;
+    kg:label "KBW Bank Index" ;
+    kg:tableColumn "2009" ;
+    kg:tableRow "kbw bank index" .
+
+entity:Metric_KBWBankIndex_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:KBWBankIndex_2010 ;
+    kg:label "KBW Bank Index" ;
+    kg:tableColumn "2010" ;
+    kg:tableRow "kbw bank index" .
+
+entity:Metric_KBWBankIndex_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:KBWBankIndex_2011 ;
+    kg:label "KBW Bank Index" ;
+    kg:tableColumn "2011" ;
+    kg:tableRow "kbw bank index" .
+
+entity:Metric_KBWBankIndex_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:KBWBankIndex_2012 ;
+    kg:label "KBW Bank Index" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "kbw bank index" .
+
+entity:Metric_KBWBankIndex_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:KBWBankIndex_2013 ;
+    kg:label "KBW Bank Index" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "kbw bank index" .
+
+entity:Metric_SP500Index_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:SP500Index_2008 ;
+    kg:label "S&P 500 Index" ;
+    kg:tableColumn "2008" ;
+    kg:tableRow "s&p 500 index" .
+
+entity:Metric_SP500Index_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:SP500Index_2009 ;
+    kg:label "S&P 500 Index" ;
+    kg:tableColumn "2009" ;
+    kg:tableRow "s&p 500 index" .
+
+entity:Metric_SP500Index_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:SP500Index_2010 ;
+    kg:label "S&P 500 Index" ;
+    kg:tableColumn "2010" ;
+    kg:tableRow "s&p 500 index" .
+
+entity:Metric_SP500Index_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:SP500Index_2011 ;
+    kg:label "S&P 500 Index" ;
+    kg:tableColumn "2011" ;
+    kg:tableRow "s&p 500 index" .
+
+entity:Metric_SP500Index_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:SP500Index_2012 ;
+    kg:label "S&P 500 Index" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "s&p 500 index" .
+
+entity:Metric_SP500Index_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:SP500Index_2013 ;
+    kg:label "S&P 500 Index" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "s&p 500 index" .
+
+entity:Metric_SPFinancialIndex_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:SPFinancialIndex_2008 ;
+    kg:label "S&P Financial Index" ;
+    kg:tableColumn "2008" ;
+    kg:tableRow "s&p financial index" .
+
+entity:Metric_SPFinancialIndex_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:SPFinancialIndex_2009 ;
+    kg:label "S&P Financial Index" ;
+    kg:tableColumn "2009" ;
+    kg:tableRow "s&p financial index" .
+
+entity:Metric_SPFinancialIndex_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:SPFinancialIndex_2010 ;
+    kg:label "S&P Financial Index" ;
+    kg:tableColumn "2010" ;
+    kg:tableRow "s&p financial index" .
+
+entity:Metric_SPFinancialIndex_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:SPFinancialIndex_2011 ;
+    kg:label "S&P Financial Index" ;
+    kg:tableColumn "2011" ;
+    kg:tableRow "s&p financial index" .
+
+entity:Metric_SPFinancialIndex_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:SPFinancialIndex_2012 ;
+    kg:label "S&P Financial Index" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "s&p financial index" .
+
+entity:Metric_SPFinancialIndex_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:SPFinancialIndex_2013 ;
+    kg:label "S&P Financial Index" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "s&p financial index" .
+
+entity:Metric_IndexBaseInvestment a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2008 ;
+    kg:hasValue value:IndexBaseInvestment ;
+    kg:label "index base investment amount" .
+
+entity:Metric_StateStreetCorp_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2008,
+        entity:entity_Year_2008 ;
+    kg:hasValue value:StateStreetCorp_2008 ;
+    kg:label "State Street Corporation" ;
+    kg:tableColumn "2008" ;
+    kg:tableRow "state street corporation" .
+
+entity:Metric_StateStreetCorp_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2009,
+        entity:entity_Year_2009 ;
+    kg:hasValue value:StateStreetCorp_2009 ;
+    kg:label "State Street Corporation" ;
+    kg:tableColumn "2009" ;
+    kg:tableRow "state street corporation" .
+
+entity:Metric_StateStreetCorp_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2010,
+        entity:entity_Year_2010 ;
+    kg:hasValue value:StateStreetCorp_2010 ;
+    kg:label "State Street Corporation" ;
+    kg:tableColumn "2010" ;
+    kg:tableRow "state street corporation" .
+
+entity:Metric_StateStreetCorp_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2011,
+        entity:entity_Year_2011 ;
+    kg:hasValue value:StateStreetCorp_2011 ;
+    kg:label "State Street Corporation" ;
+    kg:tableColumn "2011" ;
+    kg:tableRow "state street corporation" .
+
+entity:Metric_StateStreetCorp_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2012,
+        entity:entity_Year_2012 ;
+    kg:hasValue value:StateStreetCorp_2012 ;
+    kg:label "State Street Corporation" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "state street corporation" .
+
+entity:Metric_StateStreetCorp_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2013,
+        entity:entity_Year_2013 ;
+    kg:hasValue value:StateStreetCorp_2013 ;
+    kg:label "State Street Corporation" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "state street corporation" .
+
+entity:TableColumn_0 a kg:TableColumn ;
+    kg:columnIndex 0 ;
+    kg:label "{'index': 0, 'label': 'kbw bank index'}" .
+
+entity:TableColumn_1 a kg:TableColumn ;
+    kg:columnIndex 1 ;
+    kg:label "{'index': 1, 'label': 's&p 500 index'}" .
+
+entity:TableColumn_2 a kg:TableColumn ;
+    kg:columnIndex 2 ;
+    kg:label "{'index': 2, 'label': 's&p financial index'}" .
+
+entity:TableColumn_3 a kg:TableColumn ;
+    kg:columnIndex 3 ;
+    kg:label "{'index': 3, 'label': 'state street corporation'}" .
+
+entity:TableRow_0 a kg:TableRow ;
+    kg:label "{'index': 0, 'label': '2008'}" ;
+    kg:rowIndex 0 .
+
+entity:TableRow_1 a kg:TableRow ;
+    kg:label "{'index': 1, 'label': '2009'}" ;
+    kg:rowIndex 1 .
+
+entity:TableRow_2 a kg:TableRow ;
+    kg:label "{'index': 2, 'label': '2010'}" ;
+    kg:rowIndex 2 .
+
+entity:TableRow_3 a kg:TableRow ;
+    kg:label "{'index': 3, 'label': '2011'}" ;
+    kg:rowIndex 3 .
+
+entity:TableRow_4 a kg:TableRow ;
+    kg:label "{'index': 4, 'label': '2012'}" ;
+    kg:rowIndex 4 .
+
+entity:TableRow_5 a kg:TableRow ;
+    kg:label "{'index': 5, 'label': '2013'}" ;
+    kg:rowIndex 5 .
+
+entity:Year_2009 a kg:Year ;
+    kg:yearValue 2009 .
+
+entity:Year_2010 a kg:Year ;
+    kg:yearValue 2010 .
+
+entity:Year_2011 a kg:Year ;
+    kg:yearValue 2011 .
+
+entity:Year_2012 a kg:Year ;
+    kg:yearValue 2012 .
+
+entity:Year_2013 a kg:Year ;
+    kg:yearValue 2013 .
+
+value:IndexBaseInvestment a kg:MonetaryValue ;
+    kg:displayValue "$ 100" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 100.0 .
+
+value:KBWBankIndex_2008 a kg:MonetaryValue ;
+    kg:displayValue "100.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 100.0 .
+
+value:KBWBankIndex_2009 a kg:MonetaryValue ;
+    kg:displayValue "98.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 98.0 .
+
+value:KBWBankIndex_2010 a kg:MonetaryValue ;
+    kg:displayValue "121.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 121.0 .
+
+value:KBWBankIndex_2011 a kg:MonetaryValue ;
+    kg:displayValue "93.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 93.0 .
+
+value:KBWBankIndex_2012 a kg:MonetaryValue ;
+    kg:displayValue "122.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 122.0 .
+
+value:KBWBankIndex_2013 a kg:MonetaryValue ;
+    kg:displayValue "168.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 168.0 .
+
+value:SP500Index_2008 a kg:MonetaryValue ;
+    kg:displayValue "100.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 100.0 .
+
+value:SP500Index_2009 a kg:MonetaryValue ;
+    kg:displayValue "126.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 126.0 .
+
+value:SP500Index_2010 a kg:MonetaryValue ;
+    kg:displayValue "146.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 146.0 .
+
+value:SP500Index_2011 a kg:MonetaryValue ;
+    kg:displayValue "149.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 149.0 .
+
+value:SP500Index_2012 a kg:MonetaryValue ;
+    kg:displayValue "172.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 172.0 .
+
+value:SP500Index_2013 a kg:MonetaryValue ;
+    kg:displayValue "228.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 228.0 .
+
+value:SPFinancialIndex_2008 a kg:MonetaryValue ;
+    kg:displayValue "100.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 100.0 .
+
+value:SPFinancialIndex_2009 a kg:MonetaryValue ;
+    kg:displayValue "117.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 117.0 .
+
+value:SPFinancialIndex_2010 a kg:MonetaryValue ;
+    kg:displayValue "132.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 132.0 .
+
+value:SPFinancialIndex_2011 a kg:MonetaryValue ;
+    kg:displayValue "109.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 109.0 .
+
+value:SPFinancialIndex_2012 a kg:MonetaryValue ;
+    kg:displayValue "141.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 141.0 .
+
+value:SPFinancialIndex_2013 a kg:MonetaryValue ;
+    kg:displayValue "191.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 191.0 .
+
+value:StateStreetCorp_2008 a kg:MonetaryValue ;
+    kg:displayValue "100.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 100.0 .
+
+value:StateStreetCorp_2009 a kg:MonetaryValue ;
+    kg:displayValue "111.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 111.0 .
+
+value:StateStreetCorp_2010 a kg:MonetaryValue ;
+    kg:displayValue "118.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 118.0 .
+
+value:StateStreetCorp_2011 a kg:MonetaryValue ;
+    kg:displayValue "105.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 105.0 .
+
+value:StateStreetCorp_2012 a kg:MonetaryValue ;
+    kg:displayValue "125.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 125.0 .
+
+value:StateStreetCorp_2013 a kg:MonetaryValue ;
+    kg:displayValue "198.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 198.0 .
+
+entity:Year_2008 a kg:Year ;
+    kg:yearValue 2008 .
+

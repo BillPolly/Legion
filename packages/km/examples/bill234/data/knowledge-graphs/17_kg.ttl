@@ -1,0 +1,664 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-11" ;
+    kg:builtWithOntologyVersion "1.0.5" .
+
+entity:Company_BlackRock a kg:Company ;
+    kg:hasMetric entity:Metric_ActiveNetOutflows_2017,
+        entity:Metric_AssetAllocationAndBalanced_2016,
+        entity:Metric_AssetAllocationAndBalanced_2017,
+        entity:Metric_AssetAllocationBalancedPercentage_2022,
+        entity:Metric_DefinedContributionPlansNetInflows_2017,
+        entity:Metric_DefinedContributionPlansTargetDateRiskPercentage_2022,
+        entity:Metric_EquityAUM_2017,
+        entity:Metric_EquityNetInflows_2017,
+        entity:Metric_FXImpact_AssetAllocationAndBalanced,
+        entity:Metric_FXImpact_Fiduciary,
+        entity:Metric_FXImpact_FutureAdvisor,
+        entity:Metric_FXImpact_TargetDateRisk,
+        entity:Metric_FXImpact_Total,
+        entity:Metric_Fiduciary_2016,
+        entity:Metric_Fiduciary_2017,
+        entity:Metric_FixedIncomeAUM_2017,
+        entity:Metric_FixedIncomeActiveNetInflows_2017,
+        entity:Metric_FixedIncomeNetInflows_2017,
+        entity:Metric_FutureAdvisor_2016,
+        entity:Metric_FutureAdvisor_2017,
+        entity:Metric_InstitutionalMultiAssetNetInflows_2017,
+        entity:Metric_MarketChange_AssetAllocationAndBalanced,
+        entity:Metric_MarketChange_Fiduciary,
+        entity:Metric_MarketChange_FutureAdvisor,
+        entity:Metric_MarketChange_TargetDateRisk,
+        entity:Metric_MarketChange_Total,
+        entity:Metric_MultiAssetIncomeFundFamilyRaised_2017,
+        entity:Metric_NetInflowsOutflows_AssetAllocationAndBalanced,
+        entity:Metric_NetInflowsOutflows_Fiduciary,
+        entity:Metric_NetInflowsOutflows_FutureAdvisor,
+        entity:Metric_NetInflowsOutflows_TargetDateRisk,
+        entity:Metric_NetInflowsOutflows_Total,
+        entity:Metric_NonETFIndexFixedIncomeNetInflows_2017,
+        entity:Metric_NonETFIndexNetOutflows_2017,
+        entity:Metric_RetailMultiAssetNetInflows_2017,
+        entity:Metric_TargetDateRiskInstitutionalPercentage_2022,
+        entity:Metric_TargetDateRiskNetInflows_2017,
+        entity:Metric_TargetDateRiskOrganicGrowth_2017,
+        entity:Metric_TargetDateRisk_2016,
+        entity:Metric_TargetDateRisk_2017,
+        entity:Metric_Total_2016,
+        entity:Metric_Total_2017,
+        entity:Metric_iSharesETFsFixedIncomeNetInflows_2017,
+        entity:Metric_iSharesETFsNetInflows_2017 ;
+    kg:label "BlackRock" .
+
+entity:FinancialTable a kg:Table ;
+    kg:hasColumn entity:TableColumn_0,
+        entity:TableColumn_1,
+        entity:TableColumn_2,
+        entity:TableColumn_3,
+        entity:TableColumn_4 ;
+    kg:hasRow entity:TableRow_0,
+        entity:TableRow_1,
+        entity:TableRow_2,
+        entity:TableRow_3,
+        entity:TableRow_4 ;
+    kg:tableCaption "Analysis of investment products performance showing net flows, market changes, and FX impact for asset allocation and balanced, fiduciary, futureadvisor, and target date/risk strategies" ;
+    kg:tableOrientation "row-first" .
+
+entity:Metric_ActiveNetOutflows_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:ActiveNetOutflows_2017 ;
+    kg:label "Active net outflows" .
+
+entity:Metric_AssetAllocationAndBalanced_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:AssetAllocationAndBalanced_2016 ;
+    kg:label "Asset allocation and balanced" ;
+    kg:tableColumn "december 312016" ;
+    kg:tableRow "asset allocation and balanced" .
+
+entity:Metric_AssetAllocationAndBalanced_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:AssetAllocationAndBalanced_2017 ;
+    kg:label "Asset allocation and balanced" ;
+    kg:tableColumn "december 312017" ;
+    kg:tableRow "asset allocation and balanced" .
+
+entity:Metric_AssetAllocationBalancedPercentage_2022 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2022,
+        entity:entity_Year_2022 ;
+    kg:hasValue value:AssetAllocationBalancedPercentage_2022 ;
+    kg:label "Asset allocation and balanced percentage of multi-asset AUM" .
+
+entity:Metric_DefinedContributionPlansNetInflows_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:DefinedContributionPlansNetInflows_2017 ;
+    kg:label "Defined contribution plans institutional multi-asset net inflows" .
+
+entity:Metric_DefinedContributionPlansTargetDateRiskPercentage_2022 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2022,
+        entity:entity_Year_2022 ;
+    kg:hasValue value:DefinedContributionPlansTargetDateRiskPercentage_2022 ;
+    kg:label "Defined contribution plans percentage of target date/risk AUM" .
+
+entity:Metric_EquityAUM_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:EquityAUM_2017 ;
+    kg:label "Equity year-end AUM" .
+
+entity:Metric_EquityNetInflows_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:EquityNetInflows_2017 ;
+    kg:label "Equity net inflows" .
+
+entity:Metric_FXImpact_AssetAllocationAndBalanced a kg:FinancialMetric ;
+    kg:hasValue value:FXImpact_AssetAllocationAndBalanced ;
+    kg:label "FX impact - Asset allocation and balanced" ;
+    kg:tableColumn "fximpact" ;
+    kg:tableRow "asset allocation and balanced" .
+
+entity:Metric_FXImpact_Fiduciary a kg:FinancialMetric ;
+    kg:hasValue value:FXImpact_Fiduciary ;
+    kg:label "FX impact - Fiduciary" ;
+    kg:tableColumn "fximpact" ;
+    kg:tableRow "fiduciary" .
+
+entity:Metric_FXImpact_FutureAdvisor a kg:FinancialMetric ;
+    kg:hasValue value:FXImpact_FutureAdvisor ;
+    kg:label "FX impact - FutureAdvisor (1)" ;
+    kg:tableColumn "fximpact" ;
+    kg:tableRow "futureadvisor ( 1 )" .
+
+entity:Metric_FXImpact_TargetDateRisk a kg:FinancialMetric ;
+    kg:hasValue value:FXImpact_TargetDateRisk ;
+    kg:label "FX impact - Target date/risk" ;
+    kg:tableColumn "fximpact" ;
+    kg:tableRow "target date/risk" .
+
+entity:Metric_FXImpact_Total a kg:FinancialMetric ;
+    kg:hasValue value:FXImpact_Total ;
+    kg:label "FX impact - Total" ;
+    kg:tableColumn "fximpact" ;
+    kg:tableRow "total" .
+
+entity:Metric_Fiduciary_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:Fiduciary_2016 ;
+    kg:label "Fiduciary" ;
+    kg:tableColumn "december 312016" ;
+    kg:tableRow "fiduciary" .
+
+entity:Metric_Fiduciary_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:Fiduciary_2017 ;
+    kg:label "Fiduciary" ;
+    kg:tableColumn "december 312017" ;
+    kg:tableRow "fiduciary" .
+
+entity:Metric_FixedIncomeAUM_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:FixedIncomeAUM_2017 ;
+    kg:label "Fixed income AUM" .
+
+entity:Metric_FixedIncomeActiveNetInflows_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:FixedIncomeActiveNetInflows_2017 ;
+    kg:label "Fixed income active net inflows" .
+
+entity:Metric_FixedIncomeNetInflows_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:FixedIncomeNetInflows_2017 ;
+    kg:label "Fixed income net inflows" .
+
+entity:Metric_FutureAdvisor_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:FutureAdvisor_2016 ;
+    kg:label "FutureAdvisor (1)" ;
+    kg:tableColumn "december 312016" ;
+    kg:tableRow "futureadvisor ( 1 )" .
+
+entity:Metric_FutureAdvisor_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:FutureAdvisor_2017 ;
+    kg:label "FutureAdvisor (1)" ;
+    kg:tableColumn "december 312017" ;
+    kg:tableRow "futureadvisor ( 1 )" .
+
+entity:Metric_InstitutionalMultiAssetNetInflows_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:InstitutionalMultiAssetNetInflows_2017 ;
+    kg:label "Institutional multi-asset net inflows" .
+
+entity:Metric_MarketChange_AssetAllocationAndBalanced a kg:FinancialMetric ;
+    kg:hasValue value:MarketChange_AssetAllocationAndBalanced ;
+    kg:label "Market change - Asset allocation and balanced" ;
+    kg:tableColumn "marketchange" ;
+    kg:tableRow "asset allocation and balanced" .
+
+entity:Metric_MarketChange_Fiduciary a kg:FinancialMetric ;
+    kg:hasValue value:MarketChange_Fiduciary ;
+    kg:label "Market change - Fiduciary" ;
+    kg:tableColumn "marketchange" ;
+    kg:tableRow "fiduciary" .
+
+entity:Metric_MarketChange_FutureAdvisor a kg:FinancialMetric ;
+    kg:hasValue value:MarketChange_FutureAdvisor ;
+    kg:label "Market change - FutureAdvisor (1)" ;
+    kg:tableColumn "marketchange" ;
+    kg:tableRow "futureadvisor ( 1 )" .
+
+entity:Metric_MarketChange_TargetDateRisk a kg:FinancialMetric ;
+    kg:hasValue value:MarketChange_TargetDateRisk ;
+    kg:label "Market change - Target date/risk" ;
+    kg:tableColumn "marketchange" ;
+    kg:tableRow "target date/risk" .
+
+entity:Metric_MarketChange_Total a kg:FinancialMetric ;
+    kg:hasValue value:MarketChange_Total ;
+    kg:label "Market change - Total" ;
+    kg:tableColumn "marketchange" ;
+    kg:tableRow "total" .
+
+entity:Metric_MultiAssetIncomeFundFamilyRaised_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:MultiAssetIncomeFundFamilyRaised_2017 ;
+    kg:label "Multi-asset income fund family raised" .
+
+entity:Metric_NetInflowsOutflows_AssetAllocationAndBalanced a kg:FinancialMetric ;
+    kg:hasValue value:NetInflowsOutflows_AssetAllocationAndBalanced ;
+    kg:label "Net inflows (outflows) - Asset allocation and balanced" ;
+    kg:tableColumn "net inflows ( outflows )" ;
+    kg:tableRow "asset allocation and balanced" .
+
+entity:Metric_NetInflowsOutflows_Fiduciary a kg:FinancialMetric ;
+    kg:hasValue value:NetInflowsOutflows_Fiduciary ;
+    kg:label "Net inflows (outflows) - Fiduciary" ;
+    kg:tableColumn "net inflows ( outflows )" ;
+    kg:tableRow "fiduciary" .
+
+entity:Metric_NetInflowsOutflows_FutureAdvisor a kg:FinancialMetric ;
+    kg:hasValue value:NetInflowsOutflows_FutureAdvisor ;
+    kg:label "Net inflows (outflows) - FutureAdvisor (1)" ;
+    kg:tableColumn "net inflows ( outflows )" ;
+    kg:tableRow "futureadvisor ( 1 )" .
+
+entity:Metric_NetInflowsOutflows_TargetDateRisk a kg:FinancialMetric ;
+    kg:hasValue value:NetInflowsOutflows_TargetDateRisk ;
+    kg:label "Net inflows (outflows) - Target date/risk" ;
+    kg:tableColumn "net inflows ( outflows )" ;
+    kg:tableRow "target date/risk" .
+
+entity:Metric_NetInflowsOutflows_Total a kg:FinancialMetric ;
+    kg:hasValue value:NetInflowsOutflows_Total ;
+    kg:label "Net inflows (outflows) - Total" ;
+    kg:tableColumn "net inflows ( outflows )" ;
+    kg:tableRow "total" .
+
+entity:Metric_NonETFIndexFixedIncomeNetInflows_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:NonETFIndexFixedIncomeNetInflows_2017 ;
+    kg:label "Non-ETF index fixed income net inflows" .
+
+entity:Metric_NonETFIndexNetOutflows_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:NonETFIndexNetOutflows_2017 ;
+    kg:label "Non-ETF index net outflows" .
+
+entity:Metric_RetailMultiAssetNetInflows_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:RetailMultiAssetNetInflows_2017 ;
+    kg:label "Retail multi-asset net inflows" .
+
+entity:Metric_TargetDateRiskInstitutionalPercentage_2022 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2022,
+        entity:entity_Year_2022 ;
+    kg:hasValue value:TargetDateRiskInstitutionalPercentage_2022 ;
+    kg:label "Target date and target risk institutional investor percentage of AUM" .
+
+entity:Metric_TargetDateRiskNetInflows_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:TargetDateRiskNetInflows_2017 ;
+    kg:label "Target date and target risk net inflows" .
+
+entity:Metric_TargetDateRiskOrganicGrowth_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:TargetDateRiskOrganicGrowth_2017 ;
+    kg:label "Target date and target risk organic growth" .
+
+entity:Metric_TargetDateRisk_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:TargetDateRisk_2016 ;
+    kg:label "Target date/risk" ;
+    kg:tableColumn "december 312016" ;
+    kg:tableRow "target date/risk" .
+
+entity:Metric_TargetDateRisk_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:TargetDateRisk_2017 ;
+    kg:label "Target date/risk" ;
+    kg:tableColumn "december 312017" ;
+    kg:tableRow "target date/risk" .
+
+entity:Metric_Total_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2016,
+        entity:entity_Year_2016 ;
+    kg:hasValue value:Total_2016 ;
+    kg:label "Total" ;
+    kg:tableColumn "december 312016" ;
+    kg:tableRow "total" .
+
+entity:Metric_Total_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:Total_2017 ;
+    kg:label "Total" ;
+    kg:tableColumn "december 312017" ;
+    kg:tableRow "total" .
+
+entity:Metric_iSharesETFsFixedIncomeNetInflows_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:iSharesETFsFixedIncomeNetInflows_2017 ;
+    kg:label "iShares ETFs fixed income net inflows" .
+
+entity:Metric_iSharesETFsNetInflows_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2017,
+        entity:entity_Year_2017 ;
+    kg:hasValue value:iSharesETFsNetInflows_2017 ;
+    kg:label "iShares ETFs net inflows" .
+
+entity:TableColumn_0 a kg:TableColumn ;
+    kg:columnIndex 0 ;
+    kg:label "{'index': 0, 'label': 'asset allocation and balanced'}" .
+
+entity:TableColumn_1 a kg:TableColumn ;
+    kg:columnIndex 1 ;
+    kg:label "{'index': 1, 'label': 'fiduciary'}" .
+
+entity:TableColumn_2 a kg:TableColumn ;
+    kg:columnIndex 2 ;
+    kg:label "{'index': 2, 'label': 'futureadvisor ( 1 )'}" .
+
+entity:TableColumn_3 a kg:TableColumn ;
+    kg:columnIndex 3 ;
+    kg:label "{'index': 3, 'label': 'target date/risk'}" .
+
+entity:TableColumn_4 a kg:TableColumn ;
+    kg:columnIndex 4 ;
+    kg:label "{'index': 4, 'label': 'total'}" .
+
+entity:TableRow_0 a kg:TableRow ;
+    kg:label "{'index': 0, 'label': 'december 312016'}" ;
+    kg:rowIndex 0 .
+
+entity:TableRow_1 a kg:TableRow ;
+    kg:label "{'index': 1, 'label': 'net inflows ( outflows )'}" ;
+    kg:rowIndex 1 .
+
+entity:TableRow_2 a kg:TableRow ;
+    kg:label "{'index': 2, 'label': 'marketchange'}" ;
+    kg:rowIndex 2 .
+
+entity:TableRow_3 a kg:TableRow ;
+    kg:label "{'index': 3, 'label': 'fximpact'}" ;
+    kg:rowIndex 3 .
+
+entity:TableRow_4 a kg:TableRow ;
+    kg:label "{'index': 4, 'label': 'december 312017'}" ;
+    kg:rowIndex 4 .
+
+value:ActiveNetOutflows_2017 a kg:MonetaryValue ;
+    kg:displayValue "$18.5 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 18.5 .
+
+value:AssetAllocationAndBalanced_2016 a kg:MonetaryValue ;
+    kg:displayValue "176675.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 176675.0 .
+
+value:AssetAllocationAndBalanced_2017 a kg:MonetaryValue ;
+    kg:displayValue "196545.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 196545.0 .
+
+value:AssetAllocationBalancedPercentage_2022 a kg:MonetaryValue ;
+    kg:displayValue "41%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 41.0 .
+
+value:DefinedContributionPlansNetInflows_2017 a kg:MonetaryValue ;
+    kg:displayValue "$20.8 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 20.8 .
+
+value:DefinedContributionPlansTargetDateRiskPercentage_2022 a kg:MonetaryValue ;
+    kg:displayValue "87%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 87.0 .
+
+value:EquityAUM_2017 a kg:MonetaryValue ;
+    kg:displayValue "$3.372 trillion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 3372.0 .
+
+value:EquityNetInflows_2017 a kg:MonetaryValue ;
+    kg:displayValue "$130.1 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 130.1 .
+
+value:FXImpact_AssetAllocationAndBalanced a kg:MonetaryValue ;
+    kg:displayValue "4985.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 4985.0 .
+
+value:FXImpact_Fiduciary a kg:MonetaryValue ;
+    kg:displayValue "8819.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 8819.0 .
+
+value:FXImpact_FutureAdvisor a kg:MonetaryValue ;
+    kg:displayValue "2014.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2014.0 .
+
+value:FXImpact_TargetDateRisk a kg:MonetaryValue ;
+    kg:displayValue "1577.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 1577.0 .
+
+value:FXImpact_Total a kg:MonetaryValue ;
+    kg:displayValue "15381.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 15381.0 .
+
+value:Fiduciary_2016 a kg:MonetaryValue ;
+    kg:displayValue "68395.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 68395.0 .
+
+value:Fiduciary_2017 a kg:MonetaryValue ;
+    kg:displayValue "83689.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 83689.0 .
+
+value:FixedIncomeAUM_2017 a kg:MonetaryValue ;
+    kg:displayValue "$1.855 trillion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 1855.0 .
+
+value:FixedIncomeActiveNetInflows_2017 a kg:MonetaryValue ;
+    kg:displayValue "$21.5 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 21.5 .
+
+value:FixedIncomeNetInflows_2017 a kg:MonetaryValue ;
+    kg:displayValue "$178.8 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 178.8 .
+
+value:FutureAdvisor_2016 a kg:MonetaryValue ;
+    kg:displayValue "505.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 505.0 .
+
+value:FutureAdvisor_2017 a kg:MonetaryValue ;
+    kg:displayValue "578.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 578.0 .
+
+value:InstitutionalMultiAssetNetInflows_2017 a kg:MonetaryValue ;
+    kg:displayValue "$18.9 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 18.9 .
+
+value:MarketChange_AssetAllocationAndBalanced a kg:MonetaryValue ;
+    kg:displayValue "17387.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 17387.0 .
+
+value:MarketChange_Fiduciary a kg:MonetaryValue ;
+    kg:displayValue "7522.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 7522.0 .
+
+value:MarketChange_FutureAdvisor a kg:MonetaryValue ;
+    kg:displayValue "119.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 119.0 .
+
+value:MarketChange_TargetDateRisk a kg:MonetaryValue ;
+    kg:displayValue "24532.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 24532.0 .
+
+value:MarketChange_Total a kg:MonetaryValue ;
+    kg:displayValue "49560.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 49560.0 .
+
+value:MultiAssetIncomeFundFamilyRaised_2017 a kg:MonetaryValue ;
+    kg:displayValue "$5.8 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 5.8 .
+
+value:NetInflowsOutflows_AssetAllocationAndBalanced a kg:MonetaryValue ;
+    kg:displayValue "-2502.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -2502.0 .
+
+value:NetInflowsOutflows_Fiduciary a kg:MonetaryValue ;
+    kg:displayValue "-1047.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -1047.0 .
+
+value:NetInflowsOutflows_FutureAdvisor a kg:MonetaryValue ;
+    kg:displayValue "-46.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -46.0 .
+
+value:NetInflowsOutflows_TargetDateRisk a kg:MonetaryValue ;
+    kg:displayValue "23925.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 23925.0 .
+
+value:NetInflowsOutflows_Total a kg:MonetaryValue ;
+    kg:displayValue "20330.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 20330.0 .
+
+value:NonETFIndexFixedIncomeNetInflows_2017 a kg:MonetaryValue ;
+    kg:displayValue "$89.8 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 89.8 .
+
+value:NonETFIndexNetOutflows_2017 a kg:MonetaryValue ;
+    kg:displayValue "$25.7 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 25.7 .
+
+value:RetailMultiAssetNetInflows_2017 a kg:MonetaryValue ;
+    kg:displayValue "$1.1 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 1.1 .
+
+value:TargetDateRiskInstitutionalPercentage_2022 a kg:MonetaryValue ;
+    kg:displayValue "93%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 93.0 .
+
+value:TargetDateRiskNetInflows_2017 a kg:MonetaryValue ;
+    kg:displayValue "$23.9 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 23.9 .
+
+value:TargetDateRiskOrganicGrowth_2017 a kg:MonetaryValue ;
+    kg:displayValue "16%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 16.0 .
+
+value:TargetDateRisk_2016 a kg:MonetaryValue ;
+    kg:displayValue "149432.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 149432.0 .
+
+value:TargetDateRisk_2017 a kg:MonetaryValue ;
+    kg:displayValue "199466.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 199466.0 .
+
+value:Total_2016 a kg:MonetaryValue ;
+    kg:displayValue "395007.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 395007.0 .
+
+value:Total_2017 a kg:MonetaryValue ;
+    kg:displayValue "480278.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 480278.0 .
+
+value:iSharesETFsFixedIncomeNetInflows_2017 a kg:MonetaryValue ;
+    kg:displayValue "$67.5 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 67.5 .
+
+value:iSharesETFsNetInflows_2017 a kg:MonetaryValue ;
+    kg:displayValue "$174.4 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 174.4 .
+
+entity:Year_2022 a kg:Year ;
+    kg:yearValue 2022 .
+
+entity:Year_2016 a kg:Year ;
+    kg:yearValue 2016 .
+
+entity:Year_2017 a kg:Year ;
+    kg:yearValue 2017 .
+

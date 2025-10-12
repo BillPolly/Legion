@@ -1,0 +1,353 @@
+{
+  "summary": {
+    "turn_accuracy": 0.0,
+    "conversation_accuracy": 0.0,
+    "correct_turns": 0,
+    "total_turns": 34,
+    "perfect_conversations": 0,
+    "total_conversations": 10
+  },
+  "errors": [],
+  "solver_errors": [
+    {
+      "id": "Single_UPS/2010/page_33.pdf-4",
+      "error": "'questions'"
+    },
+    {
+      "id": "Single_DISCA/2013/page_60.pdf-2",
+      "error": "'questions'"
+    },
+    {
+      "id": "Double_FIS/2016/page_93.pdf",
+      "error": "'questions'"
+    },
+    {
+      "id": "Single_CDNS/2012/page_58.pdf-1",
+      "error": "'questions'"
+    },
+    {
+      "id": "Single_LMT/2012/page_46.pdf-2",
+      "error": "'questions'"
+    },
+    {
+      "id": "Single_UAA/2016/page_82.pdf-2",
+      "error": "'questions'"
+    },
+    {
+      "id": "Single_UNP/2018/page_50.pdf-1",
+      "error": "'questions'"
+    },
+    {
+      "id": "Double_CAG/2008/page_35.pdf",
+      "error": "'questions'"
+    },
+    {
+      "id": "Single_AWK/2012/page_118.pdf-3",
+      "error": "'questions'"
+    },
+    {
+      "id": "Single_ORLY/2006/page_40.pdf-2",
+      "error": "'questions'"
+    }
+  ],
+  "per_conversation": [
+    {
+      "id": "Single_UPS/2010/page_33.pdf-4",
+      "turns": [
+        {
+          "turn": 0,
+          "question": "what was the performance value of the united parcel service inc . in 2010?",
+          "gold": 110.57,
+          "predicted": NaN,
+          "correct": false
+        },
+        {
+          "turn": 1,
+          "question": "and what was the change in this performance from 2005 to 2010?",
+          "gold": 10.57,
+          "predicted": NaN,
+          "correct": false
+        },
+        {
+          "turn": 2,
+          "question": "what is, then, the return on that stock, or how much does this change represent in relation to that performance value in 2005, in percentage?",
+          "gold": 0.1057,
+          "predicted": NaN,
+          "correct": false
+        },
+        {
+          "turn": 3,
+          "question": "what was the change in the performance value of the standard & poor 2019s 500 index from 2005 to 2010?",
+          "gold": 11.99,
+          "predicted": NaN,
+          "correct": false
+        },
+        {
+          "turn": 4,
+          "question": "what was, then, the return on that stock for that period, in percentage?",
+          "gold": 0.1199,
+          "predicted": NaN,
+          "correct": false
+        },
+        {
+          "turn": 5,
+          "question": "and what is the difference between the return for the united parcel service inc . and the one for standard & poor 2019s 500 index?",
+          "gold": -0.0142,
+          "predicted": NaN,
+          "correct": false
+        }
+      ],
+      "all_correct": false
+    },
+    {
+      "id": "Single_DISCA/2013/page_60.pdf-2",
+      "turns": [
+        {
+          "turn": 0,
+          "question": "what is the difference between discb share price of december 31 2013 and of december 31 2008?",
+          "gold": 502.08,
+          "predicted": NaN,
+          "correct": false
+        },
+        {
+          "turn": 1,
+          "question": "how much does that difference represents in relation to the number 100?",
+          "gold": 5.0208,
+          "predicted": NaN,
+          "correct": false
+        }
+      ],
+      "all_correct": false
+    },
+    {
+      "id": "Double_FIS/2016/page_93.pdf",
+      "turns": [
+        {
+          "turn": 0,
+          "question": "as of december 31, 2016, what was the difference between the accumulated benefit obligation and the projected one?",
+          "gold": -1.0,
+          "predicted": NaN,
+          "correct": false
+        },
+        {
+          "turn": 1,
+          "question": "and from 2015 to that year, what was the change in the fair value of options?",
+          "gold": -1.32,
+          "predicted": NaN,
+          "correct": false
+        },
+        {
+          "turn": 2,
+          "question": "what is this change as a percentage of that fair value in 2015?",
+          "gold": -0.12371,
+          "predicted": NaN,
+          "correct": false
+        }
+      ],
+      "all_correct": false
+    },
+    {
+      "id": "Single_CDNS/2012/page_58.pdf-1",
+      "turns": [
+        {
+          "turn": 0,
+          "question": "what was the number of shares if the closing price is $20?",
+          "gold": 21.4,
+          "predicted": NaN,
+          "correct": false
+        },
+        {
+          "turn": 1,
+          "question": "and if the closing price is $11?",
+          "gold": 0.9,
+          "predicted": NaN,
+          "correct": false
+        },
+        {
+          "turn": 2,
+          "question": "so what is the difference in shares to be issued in these two scenarios?",
+          "gold": 20.5,
+          "predicted": NaN,
+          "correct": false
+        },
+        {
+          "turn": 3,
+          "question": "and the percentage difference in the number of shares to be issued if the stock price closes at $11 over $20?",
+          "gold": 22.77778,
+          "predicted": NaN,
+          "correct": false
+        }
+      ],
+      "all_correct": false
+    },
+    {
+      "id": "Single_LMT/2012/page_46.pdf-2",
+      "turns": [
+        {
+          "turn": 0,
+          "question": "what was the difference in operating profit between 2011 and 2012?",
+          "gold": 92.0,
+          "predicted": NaN,
+          "correct": false
+        },
+        {
+          "turn": 1,
+          "question": "and the percentage change?",
+          "gold": 0.14264,
+          "predicted": NaN,
+          "correct": false
+        }
+      ],
+      "all_correct": false
+    },
+    {
+      "id": "Single_UAA/2016/page_82.pdf-2",
+      "turns": [
+        {
+          "turn": 0,
+          "question": "what was the sg&a including rent expense in 2015?",
+          "gold": 83.0,
+          "predicted": NaN,
+          "correct": false
+        },
+        {
+          "turn": 1,
+          "question": "what was the sg&a including rent expense in 2014?",
+          "gold": 59.0,
+          "predicted": NaN,
+          "correct": false
+        },
+        {
+          "turn": 2,
+          "question": "what was the net difference?",
+          "gold": 24.0,
+          "predicted": NaN,
+          "correct": false
+        },
+        {
+          "turn": 3,
+          "question": "what was the sg&a including rent expense in 2014?",
+          "gold": 59.0,
+          "predicted": NaN,
+          "correct": false
+        },
+        {
+          "turn": 4,
+          "question": "what is the percent change?",
+          "gold": 0.40678,
+          "predicted": NaN,
+          "correct": false
+        }
+      ],
+      "all_correct": false
+    },
+    {
+      "id": "Single_UNP/2018/page_50.pdf-1",
+      "turns": [
+        {
+          "turn": 0,
+          "question": "what was the total operating revenues for 2018, converted to the tens place?",
+          "gold": 22.832,
+          "predicted": NaN,
+          "correct": false
+        },
+        {
+          "turn": 1,
+          "question": "so what would 2018 total operating revenues have been without the mexico business, in billions?",
+          "gold": 20.332,
+          "predicted": NaN,
+          "correct": false
+        }
+      ],
+      "all_correct": false
+    },
+    {
+      "id": "Double_CAG/2008/page_35.pdf",
+      "turns": [
+        {
+          "turn": 0,
+          "question": "what is the gross profit generated by consumer foods in 2007?",
+          "gold": 1923.0,
+          "predicted": NaN,
+          "correct": false
+        },
+        {
+          "turn": 1,
+          "question": "what about the total gross profit?",
+          "gold": 2693.0,
+          "predicted": NaN,
+          "correct": false
+        },
+        {
+          "turn": 2,
+          "question": "what proportion is coming from consumer foods?",
+          "gold": 0.71407,
+          "predicted": NaN,
+          "correct": false
+        },
+        {
+          "turn": 3,
+          "question": "what about the gross profit generated by consumer foods in 2008?",
+          "gold": 1802.0,
+          "predicted": NaN,
+          "correct": false
+        },
+        {
+          "turn": 4,
+          "question": "and total gross profit in 2008?",
+          "gold": 2716.0,
+          "predicted": NaN,
+          "correct": false
+        },
+        {
+          "turn": 5,
+          "question": "what portion does this represent in 2008?",
+          "gold": 0.66348,
+          "predicted": NaN,
+          "correct": false
+        }
+      ],
+      "all_correct": false
+    },
+    {
+      "id": "Single_AWK/2012/page_118.pdf-3",
+      "turns": [
+        {
+          "turn": 0,
+          "question": "what was the difference in the balance between 1/1/10 and 12/31/12?",
+          "gold": -6101.0,
+          "predicted": NaN,
+          "correct": false
+        },
+        {
+          "turn": 1,
+          "question": "and as a percentage of the original value?",
+          "gold": -0.23812,
+          "predicted": NaN,
+          "correct": false
+        }
+      ],
+      "all_correct": false
+    },
+    {
+      "id": "Single_ORLY/2006/page_40.pdf-2",
+      "turns": [
+        {
+          "turn": 0,
+          "question": "what were the number of shares issued in 2015 times the average share price per share?",
+          "gold": 4463665.71,
+          "predicted": NaN,
+          "correct": false
+        },
+        {
+          "turn": 1,
+          "question": "what is that value simplified?",
+          "gold": 4.46367,
+          "predicted": NaN,
+          "correct": false
+        }
+      ],
+      "all_correct": false
+    }
+  ]
+}

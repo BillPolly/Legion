@@ -1,0 +1,178 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+entity:entity_Company_RepublicServices a kg:Company ;
+    kg:hasMetric entity:entity_Metric_AvgAge_LargeContainer_2017,
+        entity:entity_Metric_AvgAge_Residential_2017,
+        entity:entity_Metric_AvgAge_SmallContainer_2017,
+        entity:entity_Metric_AvgAge_Total_2017,
+        entity:entity_Metric_NumCNGStations_2017,
+        entity:entity_Metric_NumVehicles_LargeContainer_2017,
+        entity:entity_Metric_NumVehicles_Residential_2017,
+        entity:entity_Metric_NumVehicles_SmallContainer_2017,
+        entity:entity_Metric_NumVehicles_Total_2017,
+        entity:entity_Metric_PercAutomatedResidentialRoutes,
+        entity:entity_Metric_PercCNGFleet,
+        entity:entity_Metric_PercCNGPurchases_2017 ;
+    kg:label "Republic Services" .
+
+entity:entity_Metric_AvgAge_LargeContainer_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_AvgAge_LargeContainer_2017 ;
+    kg:inCategory entity:entity_Category_LargeContainer ;
+    kg:label "Approximate average age - large-container" ;
+    kg:tableColumn "large-container" ;
+    kg:tableRow "approximate average age" .
+
+entity:entity_Metric_AvgAge_Residential_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_AvgAge_Residential_2017 ;
+    kg:inCategory entity:entity_Category_Residential ;
+    kg:label "Approximate average age - residential" ;
+    kg:tableColumn "residential" ;
+    kg:tableRow "approximate average age" .
+
+entity:entity_Metric_AvgAge_SmallContainer_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_AvgAge_SmallContainer_2017 ;
+    kg:inCategory entity:entity_Category_SmallContainer ;
+    kg:label "Approximate average age - small-container" ;
+    kg:tableColumn "small-container" ;
+    kg:tableRow "approximate average age" .
+
+entity:entity_Metric_AvgAge_Total_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_AvgAge_Total_2017 ;
+    kg:inCategory entity:entity_Category_Total ;
+    kg:label "Approximate average age - total" ;
+    kg:tableColumn "total" ;
+    kg:tableRow "approximate average age" .
+
+entity:entity_Metric_NumCNGStations_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_NumCNGStations_2017 ;
+    kg:label "Number of CNG fueling stations" .
+
+entity:entity_Metric_NumVehicles_LargeContainer_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_NumVehicles_LargeContainer_2017 ;
+    kg:inCategory entity:entity_Category_LargeContainer ;
+    kg:label "Approximate number of vehicles - large-container" ;
+    kg:tableColumn "large-container" ;
+    kg:tableRow "approximate number of vehicles" .
+
+entity:entity_Metric_NumVehicles_Residential_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_NumVehicles_Residential_2017 ;
+    kg:inCategory entity:entity_Category_Residential ;
+    kg:label "Approximate number of vehicles - residential" ;
+    kg:tableColumn "residential" ;
+    kg:tableRow "approximate number of vehicles" .
+
+entity:entity_Metric_NumVehicles_SmallContainer_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_NumVehicles_SmallContainer_2017 ;
+    kg:inCategory entity:entity_Category_SmallContainer ;
+    kg:label "Approximate number of vehicles - small-container" ;
+    kg:tableColumn "small-container" ;
+    kg:tableRow "approximate number of vehicles" .
+
+entity:entity_Metric_NumVehicles_Total_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_NumVehicles_Total_2017 ;
+    kg:inCategory entity:entity_Category_Total ;
+    kg:label "Approximate number of vehicles - total" ;
+    kg:tableColumn "total" ;
+    kg:tableRow "approximate number of vehicles" .
+
+entity:entity_Metric_PercAutomatedResidentialRoutes a kg:FinancialMetric ;
+    kg:hasValue value:value_PercAutomatedResidentialRoutes ;
+    kg:label "Percentage of automated residential routes" .
+
+entity:entity_Metric_PercCNGFleet a kg:FinancialMetric ;
+    kg:hasValue value:value_PercCNGFleet ;
+    kg:label "Percentage of fleet that operates on CNG" .
+
+entity:entity_Metric_PercCNGPurchases_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:value_PercCNGPurchases_2017 ;
+    kg:label "Percentage of 2017 vehicle purchases that were CNG" .
+
+value:value_AvgAge_LargeContainer_2017 a kg:RatioValue ;
+    kg:displayValue "8.8" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 8.8 .
+
+value:value_AvgAge_Residential_2017 a kg:RatioValue ;
+    kg:displayValue "7.5" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 7.5 .
+
+value:value_AvgAge_SmallContainer_2017 a kg:RatioValue ;
+    kg:displayValue "7.1" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 7.1 .
+
+value:value_AvgAge_Total_2017 a kg:RatioValue ;
+    kg:displayValue "7.7" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 7.7 .
+
+value:value_NumCNGStations_2017 a kg:CountValue ;
+    kg:displayValue "37" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 37.0 .
+
+value:value_NumVehicles_LargeContainer_2017 a kg:CountValue ;
+    kg:displayValue "4100.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 4100.0 .
+
+value:value_NumVehicles_Residential_2017 a kg:CountValue ;
+    kg:displayValue "7200.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 7200.0 .
+
+value:value_NumVehicles_SmallContainer_2017 a kg:CountValue ;
+    kg:displayValue "4600.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 4600.0 .
+
+value:value_NumVehicles_Total_2017 a kg:CountValue ;
+    kg:displayValue "15900.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 15900.0 .
+
+value:value_PercAutomatedResidentialRoutes a kg:PercentageValue ;
+    kg:displayValue "75%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 75.0 .
+
+value:value_PercCNGFleet a kg:PercentageValue ;
+    kg:displayValue "19%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 19.0 .
+
+value:value_PercCNGPurchases_2017 a kg:PercentageValue ;
+    kg:displayValue "30%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 30.0 .
+
+entity:entity_Category_LargeContainer a kg:Category ;
+    kg:label "large-container" .
+
+entity:entity_Category_Residential a kg:Category ;
+    kg:label "residential" .
+
+entity:entity_Category_SmallContainer a kg:Category ;
+    kg:label "small-container" .
+
+entity:entity_Category_Total a kg:Category ;
+    kg:label "total" .
+
+entity:entity_Year_2017 a kg:Year ;
+    kg:label "2017" ;
+    kg:yearValue 2017 .
+
