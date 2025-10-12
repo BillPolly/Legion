@@ -1,0 +1,431 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1063295"
+  ], 
+  "relations": [
+   "P22"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which male person was the parent of Ludovico II, Marquess of Saluzzo ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3839126"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3839126"
+  ], 
+  "utterance": "Ludovico I, Marquess of Saluzzo", 
+  "active_set": [
+   "(Q1063295,P22,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1063295"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P40"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who are the children of Ludovico II, Marquess of Saluzzo ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3750875", 
+   "Q3756712", 
+   "Q3767600", 
+   "Q3856501"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3756712", 
+   "Q3750875", 
+   "Q3767600"
+  ], 
+  "utterance": "Gian Gabriele I of Saluzzo, Francesco of Saluzzo, Giovanni Ludovico, Marquess of Saluzzo", 
+  "active_set": [
+   "(Q1063295,P40,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q3767600"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P7"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who are siblings of that one ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q3750875"
+  ], 
+  "active_set": [
+   "(c(Q502895),P7,Q3756712)", 
+   "(c(Q502895),P7,Q3750875)", 
+   "(c(Q502895),P7,Q3767600)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q3756712", 
+   "Q3750875", 
+   "Q3767600"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Francesco of Saluzzo ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q3767600"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Giovanni Ludovico, Marquess of Saluzzo. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q3750875", 
+   "Q3756712", 
+   "Q3856501"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3750875", 
+   "Q3756712", 
+   "Q3856501"
+  ], 
+  "utterance": "Francesco of Saluzzo, Gian Gabriele I of Saluzzo, Michele Antonio, Marquess of Saluzzo", 
+  "active_set": [
+   "(c(Q502895),P7,Q3767600)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q1776510"
+  ], 
+  "relations": [
+   "P40"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Do Painter of Berlin A 34 have those ones as an offspring ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q1776510,P40,Q3750875)", 
+   "(Q1776510,P40,Q3756712)", 
+   "(Q1776510,P40,Q3856501)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q3756712"
+  ], 
+  "relations": [
+   "P7"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many people have Gian Gabriele I of Saluzzo as their sibling ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q3750875", 
+   "Q3767600", 
+   "Q3856501"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "3", 
+  "active_set": [
+   "(Q3756712,P7,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q554847"
+  ], 
+  "relations": [
+   "P7"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about Jacob Gerritsz. Cuyp?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q552910"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q554847,P7,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q26236182"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Alice Franklin?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "3", 
+  "active_set": [
+   "(Q26236182,P7,c(Q502895))"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Mult. entity type", 
+  "entities_in_utterance": [
+   "Q26236182", 
+   "Q1729394"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P21"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q290"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many sexes are the sex of Alice Franklin or Luqman ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q6581097", 
+   "Q6581072"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(Q26236182,P21,c(Q290))", 
+   "(Q1729394,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q3839126"
+  ], 
+  "relations": [
+   "P22"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many people have Ludovico I, Marquess of Saluzzo as father ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1063295"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(c(Q502895),P22,Q3839126)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q3839126"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P26"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person has that one as spouse ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3802283"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3802283"
+  ], 
+  "utterance": "Isabella Palaiologina of Montferrat", 
+  "active_set": []
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which musical instruments can atleast 2459 people perform with ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q5994", 
+   "Q8355"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5994", 
+   "Q8355"
+  ], 
+  "utterance": "piano, violin", 
+  "active_set": [
+   "(c(Q502895),P1303,c(Q34379))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q8355"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P264"
+  ], 
+  "type_list": [
+   "Q2031291"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which release has been sponsored by that musical instrument for its recording ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q5994"
+  ], 
+  "active_set": [
+   "(c(Q2031291),P264,Q5994)", 
+   "(c(Q2031291),P264,Q8355)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q5994", 
+   "Q8355"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean piano ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q8355"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant violin. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q7936123"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7936123"
+  ], 
+  "utterance": "Vision", 
+  "active_set": [
+   "(c(Q2031291),P264,Q8355)"
+  ]
+ }
+]

@@ -1,0 +1,519 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q3083008"
+  ], 
+  "relations": [
+   "P1196"
+  ], 
+  "type_list": [
+   "Q1931388"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What situation did Veda Ann Borg die in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3739104"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3739104"
+  ], 
+  "utterance": "natural causes", 
+  "active_set": [
+   "(Q3083008,P1196,c(Q1931388))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q3083008"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P26"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person is married to that one ?"
+ }, 
+ {
+  "all_entities": [
+   "Q508248"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q508248"
+  ], 
+  "utterance": "Andrew V. McLaglen", 
+  "active_set": [
+   "(c(Q502895),P26,Q3739104)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q3083008"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P161"
+  ], 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which works of art do Veda Ann Borg star in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q4662444", 
+   "Q15651081", 
+   "Q1748046", 
+   "Q2963389", 
+   "Q3792671", 
+   "Q2481740", 
+   "Q2060027", 
+   "Q12125295", 
+   "Q4672702", 
+   "Q2349116", 
+   "Q3389042", 
+   "Q979726", 
+   "Q3212614", 
+   "Q3847937", 
+   "Q1621909", 
+   "Q1813582", 
+   "Q7799058", 
+   "Q1219711", 
+   "Q998321", 
+   "Q1989142", 
+   "Q7743960"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1621909", 
+   "Q979726", 
+   "Q1219711"
+  ], 
+  "utterance": "The Alamo, Mildred Pierce, Julia Misbehaves", 
+  "active_set": [
+   "(c(Q838948),P161,Q3083008)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Mult. Entity", 
+  "entities_in_utterance": [
+   "Q1621909", 
+   "Q979726", 
+   "Q1219711"
+  ], 
+  "sec_ques_sub_type": 3, 
+  "relations": [
+   "P136"
+  ], 
+  "type_list": [
+   "Q1792379"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What can be considered as category for those works of art ?"
+ }, 
+ {
+  "all_entities": [
+   "Q172980", 
+   "Q1257444", 
+   "Q185867", 
+   "Q130232", 
+   "Q1257444", 
+   "Q860626"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q172980", 
+   "Q1257444", 
+   "Q185867"
+  ], 
+  "utterance": "Western, film adaptation, film noir", 
+  "active_set": [
+   "(Q1621909,P136,c(Q1792379))", 
+   "(Q979726,P136,c(Q1792379))", 
+   "(Q1219711,P136,c(Q1792379))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q508248"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the job of Andrew V. McLaglen ?"
+ }, 
+ {
+  "all_entities": [
+   "Q33999"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q33999"
+  ], 
+  "utterance": "actor", 
+  "active_set": [
+   "(Q508248,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q508248"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P162"
+  ], 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which work of art created Andrew V. McLaglen ?"
+ }, 
+ {
+  "all_entities": [
+   "Q677782"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q677782"
+  ], 
+  "utterance": "Seven Men from Now", 
+  "active_set": [
+   "(c(Q838948),P162,Q508248)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q677782"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P344"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who is the director of photography for that work of art ?"
+ }, 
+ {
+  "all_entities": [
+   "Q369059"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q369059"
+  ], 
+  "utterance": "William H. Clothier", 
+  "active_set": [
+   "(Q677782,P344,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q369059"
+  ], 
+  "relations": [
+   "P19"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories are the places of birth of William H. Clothier ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q506325"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q369059,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q1566315"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about J\u00e1n Petr\u00e1\u0161?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q1566315,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1566315"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P641"
+  ], 
+  "type_list": [
+   "Q349"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which sport did that person participate in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2736"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2736"
+  ], 
+  "utterance": "association football", 
+  "active_set": []
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type", 
+  "type_list": [
+   "Q11204", 
+   "Q502895", 
+   "Q838948"
+  ], 
+  "entities_in_utterance": [
+   "Q15716339"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P88"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "Which works of art have around the same number of legislatures and people as their commisioner as Chaufferie avec chemin\u00e9e ?"
+ }, 
+ {
+  "all_entities": [
+   "Q5539462", 
+   "Q4945054", 
+   "Q2887541", 
+   "Q945850", 
+   "Q3344733", 
+   "Q12432989", 
+   "Q3647650", 
+   "Q1094083", 
+   "Q18156247", 
+   "Q17530350", 
+   "Q19801071", 
+   "Q17451496", 
+   "Q2859883", 
+   "Q18201640", 
+   "Q23693632", 
+   "Q1760522", 
+   "Q18156272", 
+   "Q18156279", 
+   "Q14626964", 
+   "Q4866787", 
+   "Q1026644", 
+   "Q3068259", 
+   "Q2627551", 
+   "Q786001", 
+   "Q20178465", 
+   "Q15731486", 
+   "Q2887491", 
+   "Q1893353", 
+   "Q3047015", 
+   "Q18156280", 
+   "Q18156273", 
+   "Q766487", 
+   "Q22330289", 
+   "Q27032019", 
+   "Q2928781", 
+   "Q18156282", 
+   "Q18385381", 
+   "Q19753109", 
+   "Q359256", 
+   "Q2963060", 
+   "Q826947", 
+   "Q1093113", 
+   "Q5002067", 
+   "Q15716339", 
+   "Q19421785", 
+   "Q1988321", 
+   "Q2352789", 
+   "Q16014270", 
+   "Q19243728"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3047015", 
+   "Q17451496", 
+   "Q3068259"
+  ], 
+  "utterance": "Odalisque with Slave, Nymph with a Scorpion, Femme piqu\u00e9e par un serpent", 
+  "active_set": [
+   "(c(Q838948),P88,c(Q11204)|c(Q502895))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q11204", 
+   "Q502895", 
+   "Q838948"
+  ], 
+  "entities_in_utterance": [
+   "Q2418237"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P88"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And what about The Kiss?"
+ }, 
+ {
+  "all_entities": [
+   "Q952817", 
+   "Q21856944", 
+   "Q4091869", 
+   "Q1345100", 
+   "Q5887388", 
+   "Q12347248", 
+   "Q19693349", 
+   "Q7404187", 
+   "Q26908500", 
+   "Q1231464", 
+   "Q17442691", 
+   "Q7604500", 
+   "Q3225815", 
+   "Q2879984", 
+   "Q3533222", 
+   "Q27477357", 
+   "Q6572993", 
+   "Q179900", 
+   "Q5309288", 
+   "Q19681517", 
+   "Q5509283", 
+   "Q2418237", 
+   "Q27477315", 
+   "Q27525226", 
+   "Q5447226", 
+   "Q2659575", 
+   "Q3206679", 
+   "Q19730417"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2418237", 
+   "Q6572993", 
+   "Q17442691"
+  ], 
+  "utterance": "The Kiss, Amphitrite, the wave and the sea birds, Neapolitan fisherboy", 
+  "active_set": [
+   "(c(Q838948),P88,c(Q11204)|c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1445"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q838948", 
+   "Q386724"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which works represents a fictional universe described in atmost 5 works of art ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1203222", 
+   "Q15731902", 
+   "Q11927", 
+   "Q3177580", 
+   "Q384426"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1203222", 
+   "Q384426", 
+   "Q15731902"
+  ], 
+  "utterance": "Shrek, Pirates of the Caribbean, Aladdin media franchise", 
+  "active_set": [
+   "(c(Q386724),P1445,c(Q838948))"
+  ]
+ }
+]

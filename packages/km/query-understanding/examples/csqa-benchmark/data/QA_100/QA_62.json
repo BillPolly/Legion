@@ -1,0 +1,167 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q23431370"
+  ], 
+  "relations": [
+   "P703"
+  ], 
+  "type_list": [
+   "Q631147"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which taxon is RNA methyltransferase    AHA_1745 a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21102944"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21102944"
+  ], 
+  "utterance": "Aeromonas hydrophila subsp. hydrophila ATCC 7966", 
+  "active_set": [
+   "(Q23431370,P703,c(Q631147))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type|Indirect", 
+  "type_list": [
+   "Q631147", 
+   "Q181394", 
+   "Q863908"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P703"
+  ], 
+  "count_ques_sub_type": 9, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which infraspecific names are greater number of nutrients and nucleic acid sequences a part of than that infraspecific name ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21102993", 
+   "Q21102995", 
+   "Q21102996", 
+   "Q21102997", 
+   "Q21102998", 
+   "Q27510868", 
+   "Q21079489", 
+   "Q21102943", 
+   "Q21102947", 
+   "Q21102930", 
+   "Q21102924", 
+   "Q21102927", 
+   "Q21102986", 
+   "Q21102928", 
+   "Q21102918", 
+   "Q21102988", 
+   "Q21079490", 
+   "Q21079491", 
+   "Q21102950", 
+   "Q21102953", 
+   "Q23309229", 
+   "Q21102972", 
+   "Q21102970", 
+   "Q21102971", 
+   "Q21064863", 
+   "Q21102931", 
+   "Q21102937", 
+   "Q21102934", 
+   "Q21102939"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21102993", 
+   "Q21102995", 
+   "Q21102996"
+  ], 
+  "utterance": "Burkholderia mallei ATCC 23344, Burkholderia pseudomallei K96243, Salmonella enterica subsp. enterica serovar Typhimurium str. LT2", 
+  "active_set": [
+   "(c(Q181394)|c(Q863908),P703,c(Q631147))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Comparative|More/Less|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P703"
+  ], 
+  "count_ques_sub_type": 8, 
+  "type_list": [
+   "Q631147", 
+   "Q863908"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which infraspecific names are more number of nucleic acid sequences a part of than that infraspecific name ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "description": "Comparative|More/Less|Single entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q21102995"
+  ], 
+  "active_set": [
+   "(c(Q863908),P703,c(Q631147))"
+  ], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Burkholderia pseudomallei K96243 ?"
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "count_ques_sub_type": 8, 
+  "entities": [
+   "Q21102993"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "No, I meant Burkholderia mallei ATCC 23344. Could you tell me the answer for that?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q21102995", 
+   "Q21102998", 
+   "Q27510868", 
+   "Q21079489", 
+   "Q21102930", 
+   "Q21102986", 
+   "Q21102928", 
+   "Q21102918", 
+   "Q21102988", 
+   "Q21079490", 
+   "Q23309229", 
+   "Q21102972", 
+   "Q21102970", 
+   "Q21102931", 
+   "Q21102937", 
+   "Q21102939"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21102995", 
+   "Q21102998", 
+   "Q27510868"
+  ], 
+  "utterance": "Burkholderia pseudomallei K96243, Amycolatopsis mediterranei U32, Saccharomyces cerevisiae S288c", 
+  "active_set": [
+   "(c(Q863908),P703,c(Q631147))"
+  ]
+ }
+]

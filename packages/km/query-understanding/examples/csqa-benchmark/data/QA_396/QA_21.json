@@ -1,0 +1,375 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q23462988"
+  ], 
+  "relations": [
+   "P682"
+  ], 
+  "type_list": [
+   "Q3249551"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is the process that formyltetrahydrofolate deformylase    DVU1540 is involved in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1057"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1057"
+  ], 
+  "utterance": "metabolic process", 
+  "active_set": [
+   "(Q23462988,P682,c(Q3249551))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q23462988"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P703"
+  ], 
+  "type_list": [
+   "Q16521"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where is formyltetrahydrofolate deformylase    DVU1540 found ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21383317"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21383317"
+  ], 
+  "utterance": "Desulfovibrio vulgaris subsp. vulgaris str. Hildenborough", 
+  "active_set": [
+   "(Q23462988,P703,c(Q16521))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q23462988"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P688"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which nucleic acid sequence encodes formyltetrahydrofolate deformylase    DVU1540 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q23325076"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23325076"
+  ], 
+  "utterance": "formyltetrahydrofolate deformylase    DVU1540", 
+  "active_set": [
+   "(c(Q863908),P688,Q23462988)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q23462988"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P702"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What encodes formyltetrahydrofolate deformylase    DVU1540 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q23325076"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23325076"
+  ], 
+  "utterance": "formyltetrahydrofolate deformylase    DVU1540", 
+  "active_set": [
+   "(Q23462988,P702,c(Q863908))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, one direct and one indirect, subject is indirect", 
+  "entities_in_utterance": [
+   "Q23325076", 
+   "Q23462988"
+  ], 
+  "relations": [
+   "P688"
+  ], 
+  "type_list": [
+   "Q181394"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 2, 
+  "utterance": "Is formyltetrahydrofolate deformylase    DVU1540 encoded by that nucleic acid sequence ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q23325076,P688,Q23462988)"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type", 
+  "type_list": [
+   "Q3249551", 
+   "Q502895", 
+   "Q43229"
+  ], 
+  "entities_in_utterance": [
+   "Q1057"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P101"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which processes are the field of work of lesser number of people or organizations than metabolic process ?"
+ }, 
+ {
+  "all_entities": [
+   "Q273499", 
+   "Q852186", 
+   "Q898912", 
+   "Q192275", 
+   "Q82264", 
+   "Q8366", 
+   "Q750843", 
+   "Q42240", 
+   "Q173514", 
+   "Q38695", 
+   "Q1152135", 
+   "Q1455196", 
+   "Q4986607"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q8366", 
+   "Q852186", 
+   "Q4986607"
+  ], 
+  "utterance": "algorithm, mushroom poisoning, Building services engineering", 
+  "active_set": [
+   "(c(Q502895)|c(Q43229),P101,c(Q3249551))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q3249551", 
+   "Q502895", 
+   "Q43229"
+  ], 
+  "entities_in_utterance": [
+   "Q42240"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P101"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about research?"
+ }, 
+ {
+  "all_entities": [
+   "Q273499", 
+   "Q852186", 
+   "Q898912", 
+   "Q82264", 
+   "Q8366", 
+   "Q750843", 
+   "Q173514", 
+   "Q38695", 
+   "Q1152135", 
+   "Q4986607"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q8366", 
+   "Q852186", 
+   "Q4986607"
+  ], 
+  "utterance": "algorithm, mushroom poisoning, Building services engineering", 
+  "active_set": [
+   "(c(Q502895)|c(Q43229),P101,c(Q3249551))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Mult. entity type", 
+  "type_list": [
+   "Q3249551", 
+   "Q502895", 
+   "Q43229"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P101"
+  ], 
+  "count_ques_sub_type": 6, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many processes do exactly 2 people or organizations belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q134995", 
+   "Q253140", 
+   "Q1057"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "3", 
+  "active_set": [
+   "(c(Q502895)|c(Q43229),P101,c(Q3249551))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q8366"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P361"
+  ], 
+  "type_list": [
+   "Q336"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which sciences are algorithm a component of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q395", 
+   "Q13636890"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q395", 
+   "Q13636890"
+  ], 
+  "utterance": "mathematics, algorithmics", 
+  "active_set": [
+   "(Q8366,P361,c(Q336))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q8366"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P138"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is that process named after ?"
+ }, 
+ {
+  "all_entities": [
+   "Q9038"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q9038"
+  ], 
+  "utterance": "Mu\u1e25ammad ibn M\u016bs\u0101 al-Khw\u0101rizm\u012b", 
+  "active_set": [
+   "(Q395,P138,c(Q502895))", 
+   "(Q13636890,P138,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q9038"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P50"
+  ], 
+  "type_list": [
+   "Q2342494"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which collectable has that person as its author ?"
+ }, 
+ {
+  "all_entities": [
+   "Q8369"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q8369"
+  ], 
+  "utterance": "The Compendious Book on Calculation by Completion and Balancing", 
+  "active_set": [
+   "(c(Q2342494),P50,Q9038)"
+  ]
+ }
+]

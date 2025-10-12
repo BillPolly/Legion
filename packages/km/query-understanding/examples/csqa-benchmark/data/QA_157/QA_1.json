@@ -1,0 +1,594 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q287713"
+  ], 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territory was Ruth Chatterton born at ?"
+ }, 
+ {
+  "all_entities": [
+   "Q60"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q60"
+  ], 
+  "utterance": "New York City", 
+  "active_set": [
+   "(Q287713,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q287713"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P26"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people are married to that one ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1124735", 
+   "Q3418251"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1124735", 
+   "Q3418251"
+  ], 
+  "utterance": "George Brent, Ralph Forbes", 
+  "active_set": [
+   "(c(Q502895),P26,Q60)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q60"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P176"
+  ], 
+  "type_list": [
+   "Q2235308"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "What was built by New York City ?"
+ }, 
+ {
+  "all_entities": [
+   "Q7156361"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7156361"
+  ], 
+  "utterance": "Pawtuxet-class cutter", 
+  "active_set": [
+   "(c(Q2235308),P176,Q60)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q60"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P931"
+  ], 
+  "type_list": [
+   "Q62447"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which aerodromes are served by New York City ?"
+ }, 
+ {
+  "all_entities": [
+   "Q7984216", 
+   "Q5462911", 
+   "Q1575175", 
+   "Q3375426", 
+   "Q10860385"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7984216", 
+   "Q5462911", 
+   "Q1575175"
+  ], 
+  "utterance": "West 30th Street Heliport, Flushing Airport, Downtown Manhattan Heliport", 
+  "active_set": [
+   "(c(Q62447),P931,Q60)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q7984216"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is that aerodrome located in ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q5462911"
+  ], 
+  "active_set": [
+   "(Q7984216,P17,c(Q15617994))", 
+   "(Q5462911,P17,c(Q15617994))", 
+   "(Q1575175,P17,c(Q15617994))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q7984216", 
+   "Q5462911", 
+   "Q1575175"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Flushing Airport ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q7984216"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant West 30th Street Heliport. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q30"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "utterance": "United States of America", 
+  "active_set": [
+   "(Q7984216,P17,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P495"
+  ], 
+  "count_ques_sub_type": 8, 
+  "type_list": [
+   "Q15617994", 
+   "Q2031291"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which administrative territories are the countries of origin of lesser number of releases than that administrative territory ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q805", 
+   "Q804", 
+   "Q801", 
+   "Q800", 
+   "Q1462", 
+   "Q419", 
+   "Q668", 
+   "Q414", 
+   "Q142", 
+   "Q55", 
+   "Q145", 
+   "Q12536", 
+   "Q262", 
+   "Q148", 
+   "Q783", 
+   "Q265", 
+   "Q37", 
+   "Q36678", 
+   "Q712", 
+   "Q711", 
+   "Q717", 
+   "Q837", 
+   "Q252", 
+   "Q1460", 
+   "Q399", 
+   "Q398", 
+   "Q403", 
+   "Q657", 
+   "Q258", 
+   "Q45", 
+   "Q159", 
+   "Q43", 
+   "Q41", 
+   "Q155", 
+   "Q792", 
+   "Q790", 
+   "Q4628", 
+   "Q796", 
+   "Q794", 
+   "Q954", 
+   "Q889", 
+   "Q884", 
+   "Q958", 
+   "Q881", 
+   "Q986", 
+   "Q826", 
+   "Q822", 
+   "Q241", 
+   "Q242", 
+   "Q244", 
+   "Q811", 
+   "Q153136", 
+   "Q33", 
+   "Q32", 
+   "Q31", 
+   "Q924", 
+   "Q36", 
+   "Q34", 
+   "Q928", 
+   "Q39", 
+   "Q38", 
+   "Q739", 
+   "Q423", 
+   "Q983", 
+   "Q851", 
+   "Q733", 
+   "Q29999", 
+   "Q854", 
+   "Q819", 
+   "Q424", 
+   "Q730", 
+   "Q1013", 
+   "Q159626", 
+   "Q236", 
+   "Q230", 
+   "Q232", 
+   "Q233", 
+   "Q238", 
+   "Q20", 
+   "Q1045", 
+   "Q1044", 
+   "Q1041", 
+   "Q27", 
+   "Q28", 
+   "Q921", 
+   "Q1049", 
+   "Q1025", 
+   "Q1027", 
+   "Q1020", 
+   "Q189", 
+   "Q843", 
+   "Q184", 
+   "Q1029", 
+   "Q1028", 
+   "Q736", 
+   "Q786", 
+   "Q227", 
+   "Q225", 
+   "Q224", 
+   "Q223", 
+   "Q222", 
+   "Q221", 
+   "Q96", 
+   "Q229", 
+   "Q347", 
+   "Q17", 
+   "Q902", 
+   "Q1036", 
+   "Q1037", 
+   "Q974", 
+   "Q1032", 
+   "Q1033", 
+   "Q1030", 
+   "Q191", 
+   "Q965", 
+   "Q967", 
+   "Q962", 
+   "Q963", 
+   "Q298", 
+   "Q115", 
+   "Q114", 
+   "Q117", 
+   "Q754", 
+   "Q750", 
+   "Q212", 
+   "Q213", 
+   "Q211", 
+   "Q217", 
+   "Q214", 
+   "Q215", 
+   "Q218", 
+   "Q219", 
+   "Q912", 
+   "Q917", 
+   "Q916", 
+   "Q1007", 
+   "Q1006", 
+   "Q1005", 
+   "Q833", 
+   "Q1009", 
+   "Q1008", 
+   "Q971", 
+   "Q970", 
+   "Q239502", 
+   "Q686", 
+   "Q836", 
+   "Q574", 
+   "Q874", 
+   "Q79", 
+   "Q77", 
+   "Q858", 
+   "Q878", 
+   "Q774", 
+   "Q948", 
+   "Q817", 
+   "Q810", 
+   "Q1019", 
+   "Q813", 
+   "Q1014", 
+   "Q1016", 
+   "Q1011", 
+   "Q945", 
+   "Q29", 
+   "Q672", 
+   "Q176", 
+   "Q863", 
+   "Q869", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q38", 
+   "Q155", 
+   "Q230"
+  ], 
+  "utterance": "Italy, Brazil, Georgia", 
+  "active_set": [
+   "(c(Q2031291),P495,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories have a diplomatic relationship with exactly 3 administrative territories ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q262", 
+   "Q45", 
+   "Q954", 
+   "Q36", 
+   "Q928", 
+   "Q39", 
+   "Q739", 
+   "Q851", 
+   "Q1049", 
+   "Q228", 
+   "Q224", 
+   "Q974", 
+   "Q298", 
+   "Q115", 
+   "Q114", 
+   "Q212", 
+   "Q211", 
+   "Q215", 
+   "Q810", 
+   "Q29"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "20", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q56061"
+  ], 
+  "entities_in_utterance": [
+   "Q3165328", 
+   "Q7984216"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P19", 
+   "P931"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are served by West 30th Street Heliport or were Jean-Denis Robert born ?"
+ }, 
+ {
+  "all_entities": [
+   "Q60", 
+   "Q90"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q60", 
+   "Q90"
+  ], 
+  "utterance": "New York City, Paris", 
+  "active_set": [
+   "OR((Q7984216,P931,c(Q56061)), (Q3165328,P19,c(Q56061)))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q62447", 
+   "Q2424752", 
+   "Q15056995"
+  ], 
+  "entities_in_utterance": [
+   "Q650056"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P608"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many aerodromes were less number of products and aircraft models exhibited at than Langley Field ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1032113", 
+   "Q597631", 
+   "Q1836849", 
+   "Q17440", 
+   "Q1032108", 
+   "Q1061846", 
+   "Q1431444", 
+   "Q3564934", 
+   "Q5010470", 
+   "Q1785757", 
+   "Q3017348"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "11", 
+  "active_set": [
+   "(c(Q2424752)|c(Q15056995),P608,c(Q62447))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q62447", 
+   "Q2424752", 
+   "Q15056995"
+  ], 
+  "entities_in_utterance": [
+   "Q1999664"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P608"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And what about Tinker Air Force Base?"
+ }, 
+ {
+  "all_entities": [
+   "Q1032113", 
+   "Q597631", 
+   "Q1836849", 
+   "Q17440", 
+   "Q1032108", 
+   "Q1061846", 
+   "Q1431444", 
+   "Q3564934", 
+   "Q5010470", 
+   "Q1785757", 
+   "Q3017348"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "11", 
+  "active_set": [
+   "(c(Q2424752)|c(Q15056995),P608,c(Q62447))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q5336942", 
+   "Q5462911"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P17"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are Flushing Airport or Eden Township, Wyandot County, Ohio situated in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q30"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "utterance": "United States of America", 
+  "active_set": [
+   "OR((Q5462911,P17,c(Q15617994)), (Q5336942,P17,c(Q15617994)))"
+  ]
+ }
+]

@@ -1,0 +1,338 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q445113"
+  ], 
+  "relations": [
+   "P54"
+  ], 
+  "type_list": [
+   "Q1194951"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is Massimo Martino a member of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q184266"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q184266"
+  ], 
+  "utterance": "Luxembourg national football team", 
+  "active_set": [
+   "(Q445113,P54,c(Q1194951))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q445113"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P734"
+  ], 
+  "type_list": [
+   "Q82799"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who is associated with that person ?"
+ }, 
+ {
+  "all_entities": [
+   "Q18002394"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18002394"
+  ], 
+  "utterance": "Martino", 
+  "active_set": [
+   "(Q184266,P734,c(Q82799))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q184266"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1532"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is played by Luxembourg national football team ?"
+ }, 
+ {
+  "all_entities": [
+   "Q32"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q32"
+  ], 
+  "utterance": "Luxembourg", 
+  "active_set": [
+   "(Q184266,P1532,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q983091"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about Jaime Correa?"
+ }, 
+ {
+  "all_entities": [
+   "Q96"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q96"
+  ], 
+  "utterance": "Mexico", 
+  "active_set": [
+   "(Q983091,P1532,c(Q15617994))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q2515574", 
+   "Q445113"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories do Massimo Martino or Sun Chao belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q32", 
+   "Q148"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q32", 
+   "Q148"
+  ], 
+  "utterance": "Luxembourg, People's Republic of China", 
+  "active_set": [
+   "OR((Q445113,P27,c(Q15617994)), (Q2515574,P27,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q15617994", 
+   "Q1048835"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which political territories are known to have diplomatic connections with approximately 53 administrative territories ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q16"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q16"
+  ], 
+  "utterance": "Canada", 
+  "active_set": [
+   "(c(Q1048835),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q355304", 
+   "Q1267889", 
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q7561974"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P206"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many administrative territories are located nearby greater number of watercourses or waterways than Sonning Eye ?"
+ }, 
+ {
+  "all_entities": [
+   "Q241358", 
+   "Q214", 
+   "Q491751", 
+   "Q14825", 
+   "Q36", 
+   "Q28", 
+   "Q525900", 
+   "Q213", 
+   "Q3923", 
+   "Q252320", 
+   "Q526087", 
+   "Q2758", 
+   "Q494305"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "13", 
+  "active_set": [
+   "(c(Q15617994),P206,c(Q355304)|c(Q1267889))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q355304", 
+   "Q1267889", 
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q1984541"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P206"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And how about Niamey II?"
+ }, 
+ {
+  "all_entities": [
+   "Q241358", 
+   "Q214", 
+   "Q491751", 
+   "Q14825", 
+   "Q36", 
+   "Q28", 
+   "Q525900", 
+   "Q213", 
+   "Q3923", 
+   "Q252320", 
+   "Q526087", 
+   "Q2758", 
+   "Q494305"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "13", 
+  "active_set": [
+   "(c(Q15617994),P206,c(Q355304)|c(Q1267889))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q1048835", 
+   "Q1048835"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which political territories have ambassadorial relations with atleast 8 political territories ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q408"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q408"
+  ], 
+  "utterance": "Australia", 
+  "active_set": [
+   "(c(Q1048835),P530,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q16"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which political territory is Canada situated in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q16"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q16"
+  ], 
+  "utterance": "Canada", 
+  "active_set": [
+   "(Q16,P17,c(Q1048835))"
+  ]
+ }
+]

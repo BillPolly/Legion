@@ -1,0 +1,839 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q6425991"
+  ], 
+  "relations": [
+   "P1344"
+  ], 
+  "type_list": [
+   "Q328539"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which German Open Badminton Championships did Chae Yoo-jung compete in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q27570626"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q27570626"
+  ], 
+  "utterance": "2016 German Open Badminton Championships \u2013 Mixed doubles", 
+  "active_set": [
+   "(Q6425991,P1344,c(Q328539))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q6425991"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P710"
+  ], 
+  "type_list": [
+   "Q18643369"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which Korean Junior International Badminton Championshipss did Chae Yoo-jung participate in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q27799749", 
+   "Q27799748", 
+   "Q27799449"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q27799749", 
+   "Q27799748", 
+   "Q27799449"
+  ], 
+  "utterance": "2013 Korean Junior International Badminton Championships \u2013 Mixed doubles, 2012 Korean Junior International Badminton Championships \u2013 Mixed doubles, 2013 Korean Junior International Badminton Championships \u2013 Women's doubles", 
+  "active_set": [
+   "(c(Q18643369),P710,Q6425991)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Mult. Entity", 
+  "entities_in_utterance": [
+   "Q27799749", 
+   "Q27799748", 
+   "Q27799449"
+  ], 
+  "sec_ques_sub_type": 3, 
+  "relations": [
+   "P1344"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who participated in those Korean Junior International Badminton Championshipss ?"
+ }, 
+ {
+  "all_entities": [
+   "Q15133544", 
+   "Q6425991", 
+   "Q27817603", 
+   "Q27817601", 
+   "Q27824716", 
+   "Q6334649", 
+   "Q27672091", 
+   "Q15114802", 
+   "Q15133544", 
+   "Q6425991", 
+   "Q16354863", 
+   "Q27824719", 
+   "Q27824718", 
+   "Q6334649", 
+   "Q27463130", 
+   "Q15114802", 
+   "Q27044891", 
+   "Q6425991", 
+   "Q27817588", 
+   "Q27817586", 
+   "Q27817591", 
+   "Q27824716", 
+   "Q27817594", 
+   "Q15114802"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6334649", 
+   "Q6334649", 
+   "Q6425991"
+  ], 
+  "utterance": "Choi Sol-gyu for 1st, 2nd, Chae Yoo-jung for 3rd", 
+  "active_set": [
+   "(c(Q502895),P1344,Q27799749)", 
+   "(c(Q502895),P1344,Q27799748)", 
+   "(c(Q502895),P1344,Q27799449)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q27799749"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is 2013 Korean Junior International Badminton Championships \u2013 Mixed doubles situated in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q884"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q884"
+  ], 
+  "utterance": "South Korea", 
+  "active_set": [
+   "(Q27799749,P17,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q27799749"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P641"
+  ], 
+  "type_list": [
+   "Q349"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What was the sport that 2013 Korean Junior International Badminton Championships \u2013 Mixed doubles was a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q7291"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7291"
+  ], 
+  "utterance": "badminton", 
+  "active_set": [
+   "(Q27799749,P641,c(Q349))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q27799749"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P361"
+  ], 
+  "type_list": [
+   "Q18608583"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is that Korean Junior International Badminton Championships a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q18643367"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18643367"
+  ], 
+  "utterance": "2013 Korean Junior International Badminton Championships", 
+  "active_set": [
+   "(Q7291,P361,c(Q18608583))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P361"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q18608583", 
+   "Q22348500"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many cycling race classes are a portion of atmost 1 recurring sporting event ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q22338002", 
+   "Q17008911", 
+   "Q20895712", 
+   "Q20895713", 
+   "Q20895714", 
+   "Q20895715", 
+   "Q21072408", 
+   "Q21074145", 
+   "Q23045712", 
+   "Q20155428", 
+   "Q19842424", 
+   "Q17988757", 
+   "Q27516394", 
+   "Q27480997", 
+   "Q21011978", 
+   "Q20872308", 
+   "Q938073", 
+   "Q21069064", 
+   "Q20872305", 
+   "Q18923425", 
+   "Q19832829", 
+   "Q20751920", 
+   "Q27503392", 
+   "Q26208898", 
+   "Q23819599", 
+   "Q20897893", 
+   "Q20897894", 
+   "Q27827518", 
+   "Q19859305", 
+   "Q19371744", 
+   "Q21847093", 
+   "Q21088548", 
+   "Q22132642", 
+   "Q27832215", 
+   "Q21088547", 
+   "Q26208688", 
+   "Q22780713", 
+   "Q20651307", 
+   "Q19412884", 
+   "Q20640109", 
+   "Q17001005", 
+   "Q21041739", 
+   "Q20814366", 
+   "Q19917447", 
+   "Q17014243", 
+   "Q19917448", 
+   "Q17310866", 
+   "Q19607326", 
+   "Q19607327", 
+   "Q24025254", 
+   "Q21831173", 
+   "Q18711267", 
+   "Q19392897", 
+   "Q16677957", 
+   "Q18890149", 
+   "Q20015950", 
+   "Q27826969", 
+   "Q20804559", 
+   "Q3114093", 
+   "Q3114095", 
+   "Q3114094", 
+   "Q3114096", 
+   "Q23905289", 
+   "Q22024750", 
+   "Q23903014", 
+   "Q20748907", 
+   "Q4614542", 
+   "Q20978954", 
+   "Q19402398", 
+   "Q21079232", 
+   "Q15731706", 
+   "Q26922391", 
+   "Q24579050", 
+   "Q22670388", 
+   "Q21768432", 
+   "Q21768436", 
+   "Q18056673", 
+   "Q17000988", 
+   "Q20645272", 
+   "Q22969620", 
+   "Q20895351", 
+   "Q20895352", 
+   "Q20895353", 
+   "Q20046424", 
+   "Q26208313", 
+   "Q20972301", 
+   "Q19795851", 
+   "Q15920352", 
+   "Q20872500", 
+   "Q26208535", 
+   "Q27555311", 
+   "Q18772405", 
+   "Q17413847", 
+   "Q21832681", 
+   "Q20018702", 
+   "Q20169711", 
+   "Q21070561", 
+   "Q22893479", 
+   "Q20817425", 
+   "Q20031490", 
+   "Q19606232", 
+   "Q261842", 
+   "Q3114100", 
+   "Q20176865", 
+   "Q19249082", 
+   "Q18071193", 
+   "Q904052", 
+   "Q20046675", 
+   "Q19933462", 
+   "Q23691294", 
+   "Q27816915", 
+   "Q21072326", 
+   "Q22032242", 
+   "Q21950739", 
+   "Q26945247", 
+   "Q27827637", 
+   "Q20735331", 
+   "Q20747413", 
+   "Q22101577", 
+   "Q20932051", 
+   "Q20017663", 
+   "Q22812462", 
+   "Q26838733", 
+   "Q20080457", 
+   "Q26860260", 
+   "Q17008920", 
+   "Q20968689", 
+   "Q20202379", 
+   "Q20827575", 
+   "Q21884141", 
+   "Q4622092", 
+   "Q20826600", 
+   "Q20025125", 
+   "Q20648065", 
+   "Q20638524", 
+   "Q22570015", 
+   "Q22583109", 
+   "Q27555212", 
+   "Q20855948", 
+   "Q17280196", 
+   "Q4611712", 
+   "Q21844758", 
+   "Q21072503", 
+   "Q21885368", 
+   "Q3883590", 
+   "Q22582912", 
+   "Q20882755", 
+   "Q20724636", 
+   "Q21528764", 
+   "Q19576835", 
+   "Q17630478", 
+   "Q20898706", 
+   "Q26253614", 
+   "Q26253613", 
+   "Q26253612", 
+   "Q25346446", 
+   "Q21069083", 
+   "Q20809972", 
+   "Q21866985", 
+   "Q20651314", 
+   "Q21083468", 
+   "Q26396528", 
+   "Q16823350", 
+   "Q21621724", 
+   "Q26208710", 
+   "Q22752188", 
+   "Q23534938", 
+   "Q20084073", 
+   "Q21856726", 
+   "Q15999749", 
+   "Q16154239", 
+   "Q20011868", 
+   "Q24841181", 
+   "Q23044678", 
+   "Q23044679", 
+   "Q23905930", 
+   "Q22977069", 
+   "Q20806392", 
+   "Q22569748", 
+   "Q22806707", 
+   "Q24706415", 
+   "Q23645451", 
+   "Q21858066", 
+   "Q20746173", 
+   "Q19753550", 
+   "Q4626990", 
+   "Q20202136", 
+   "Q21093836", 
+   "Q22814898", 
+   "Q24578697", 
+   "Q23045937", 
+   "Q23701768", 
+   "Q20724112", 
+   "Q20724111", 
+   "Q23292729", 
+   "Q23447236", 
+   "Q20651104", 
+   "Q23438851", 
+   "Q24037730", 
+   "Q22677273", 
+   "Q20942855", 
+   "Q20898056", 
+   "Q20898057", 
+   "Q17625916", 
+   "Q21848550", 
+   "Q20033471", 
+   "Q19979596", 
+   "Q23701770", 
+   "Q25115102", 
+   "Q23701776", 
+   "Q18574623", 
+   "Q22321289", 
+   "Q4626445", 
+   "Q20872499", 
+   "Q19588465", 
+   "Q21069736", 
+   "Q21832571", 
+   "Q16274901", 
+   "Q19985572", 
+   "Q18890259", 
+   "Q16274704", 
+   "Q4613900", 
+   "Q19056763", 
+   "Q17068505", 
+   "Q26208618", 
+   "Q20175097", 
+   "Q11080986", 
+   "Q19606141", 
+   "Q16954637", 
+   "Q1358941", 
+   "Q20893480", 
+   "Q27826917", 
+   "Q26208508", 
+   "Q20016030", 
+   "Q21091977", 
+   "Q17332841", 
+   "Q11958583", 
+   "Q21609216", 
+   "Q20735326", 
+   "Q24084521", 
+   "Q20681024", 
+   "Q16154207", 
+   "Q22266693", 
+   "Q20830577", 
+   "Q24074230", 
+   "Q3365218", 
+   "Q19316919", 
+   "Q17332833", 
+   "Q23979088", 
+   "Q17332839", 
+   "Q21867749", 
+   "Q23701733", 
+   "Q23392957", 
+   "Q19951555", 
+   "Q22920552", 
+   "Q22981819", 
+   "Q22683201", 
+   "Q23005628", 
+   "Q22683202", 
+   "Q23701736", 
+   "Q764681", 
+   "Q26208382", 
+   "Q23701739", 
+   "Q21821246", 
+   "Q18632801", 
+   "Q614218", 
+   "Q20855950", 
+   "Q26208939", 
+   "Q20738934", 
+   "Q20070265", 
+   "Q20647587", 
+   "Q23905782", 
+   "Q23905783", 
+   "Q19361204", 
+   "Q23001535", 
+   "Q22969962", 
+   "Q26208735", 
+   "Q20739152", 
+   "Q22569449", 
+   "Q21070545", 
+   "Q21070546", 
+   "Q21070542", 
+   "Q4618106", 
+   "Q4618109", 
+   "Q27681327", 
+   "Q21027926", 
+   "Q19598856", 
+   "Q17312900", 
+   "Q14901154", 
+   "Q20740354", 
+   "Q21903450", 
+   "Q20650122", 
+   "Q20025073", 
+   "Q16027296", 
+   "Q26933278", 
+   "Q23905929", 
+   "Q18124859", 
+   "Q20087598", 
+   "Q24278787", 
+   "Q23925855", 
+   "Q20011874", 
+   "Q15220420", 
+   "Q20723777", 
+   "Q27481015", 
+   "Q26849092", 
+   "Q26835951", 
+   "Q17008904", 
+   "Q18127156", 
+   "Q19607089", 
+   "Q20748811", 
+   "Q20738971", 
+   "Q20640438", 
+   "Q20155459", 
+   "Q23655565", 
+   "Q20724108", 
+   "Q27011614", 
+   "Q1140568", 
+   "Q20080404", 
+   "Q21013075", 
+   "Q20080403", 
+   "Q20080401", 
+   "Q16970127", 
+   "Q27827435", 
+   "Q19596368", 
+   "Q931675", 
+   "Q19838947", 
+   "Q20035564", 
+   "Q21006972", 
+   "Q24910037", 
+   "Q16274911", 
+   "Q3114085", 
+   "Q22506035", 
+   "Q3114089", 
+   "Q23933289", 
+   "Q18752244", 
+   "Q20111975", 
+   "Q20080416", 
+   "Q20025032", 
+   "Q23294076", 
+   "Q24031534", 
+   "Q21071155", 
+   "Q16511453", 
+   "Q4626015", 
+   "Q18857018", 
+   "Q20806284", 
+   "Q19607330", 
+   "Q18589873", 
+   "Q20071027", 
+   "Q27643873", 
+   "Q20015948", 
+   "Q27503706", 
+   "Q27481057", 
+   "Q17253775", 
+   "Q20984918", 
+   "Q21885938", 
+   "Q27826879", 
+   "Q19636059", 
+   "Q26878348", 
+   "Q17135105", 
+   "Q24265096", 
+   "Q22337737", 
+   "Q17332829", 
+   "Q20754617", 
+   "Q19204232", 
+   "Q19580171", 
+   "Q19606882", 
+   "Q27074321", 
+   "Q20648047", 
+   "Q20730613", 
+   "Q20638549", 
+   "Q20638547", 
+   "Q26458300", 
+   "Q24068707", 
+   "Q26922709", 
+   "Q20740048", 
+   "Q18578160", 
+   "Q20018695", 
+   "Q22569830", 
+   "Q23042007", 
+   "Q23673809", 
+   "Q26208484", 
+   "Q23607495", 
+   "Q20059842", 
+   "Q21869773", 
+   "Q21083327", 
+   "Q20706277", 
+   "Q20706278", 
+   "Q23015479", 
+   "Q23058733", 
+   "Q23306987", 
+   "Q19598847", 
+   "Q19335154", 
+   "Q20819749", 
+   "Q21816915", 
+   "Q2685979", 
+   "Q21903469", 
+   "Q26904692", 
+   "Q23793832", 
+   "Q22570383", 
+   "Q19260764", 
+   "Q18720386", 
+   "Q21884122", 
+   "Q21855698", 
+   "Q19952249", 
+   "Q27687926"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "405", 
+  "active_set": [
+   "(c(Q22348500),P361,c(Q18608583))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q6425991"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P734"
+  ], 
+  "type_list": [
+   "Q82799"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who has the surname Chae Yoo-jung ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1207872"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1207872"
+  ], 
+  "utterance": "Cai", 
+  "active_set": [
+   "(Q6425991,P734,c(Q82799))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q6425991"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the profession of Chae Yoo-jung ?"
+ }, 
+ {
+  "all_entities": [
+   "Q13141064"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q13141064"
+  ], 
+  "utterance": "badminton player", 
+  "active_set": [
+   "(Q6425991,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q27062473"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about Chuck Nanney?"
+ }, 
+ {
+  "all_entities": [
+   "Q1028181", 
+   "Q33231", 
+   "Q15296811"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1028181", 
+   "Q33231", 
+   "Q15296811"
+  ], 
+  "utterance": "painter, photographer, draughtsperson", 
+  "active_set": [
+   "(Q27062473,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q884"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P194"
+  ], 
+  "type_list": [
+   "Q11204"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which legislature is the legislative body for South Korea ?"
+ }, 
+ {
+  "all_entities": [
+   "Q494162"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q494162"
+  ], 
+  "utterance": "National Assembly", 
+  "active_set": [
+   "(Q884,P194,c(Q11204))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q884"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P85"
+  ], 
+  "type_list": [
+   "Q484692"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which hymn is the anthem for that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q193233"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q193233"
+  ], 
+  "utterance": "Aegukga", 
+  "active_set": [
+   "(Q494162,P85,c(Q484692))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q494162"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P159"
+  ], 
+  "type_list": [
+   "Q515"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where is the head office for National Assembly located ?"
+ }, 
+ {
+  "all_entities": [
+   "Q8684"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q8684"
+  ], 
+  "utterance": "Seoul", 
+  "active_set": [
+   "(Q494162,P159,c(Q515))"
+  ]
+ }
+]

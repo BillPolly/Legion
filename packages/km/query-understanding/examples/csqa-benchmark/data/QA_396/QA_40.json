@@ -1,0 +1,424 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q21984339"
+  ], 
+  "relations": [
+   "P681"
+  ], 
+  "type_list": [
+   "Q15989253"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which are the cell components of Kinesin-like protein KIF20B ?"
+ }, 
+ {
+  "all_entities": [
+   "Q79899", 
+   "Q190769", 
+   "Q40260"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q79899", 
+   "Q190769", 
+   "Q40260"
+  ], 
+  "utterance": "cytoplasm, centrosome, nucleus", 
+  "active_set": [
+   "(Q21984339,P681,c(Q15989253))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q79899"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P361"
+  ], 
+  "type_list": [
+   "Q20011319"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "What is a component of that part ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q79899"
+  ], 
+  "active_set": [
+   "(c(Q20011319),P361,Q79899)", 
+   "(c(Q20011319),P361,Q190769)", 
+   "(c(Q20011319),P361,Q40260)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q79899", 
+   "Q190769", 
+   "Q40260"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean cytoplasm ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "Yes"
+ }, 
+ {
+  "all_entities": [
+   "Q22329458"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q22329458"
+  ], 
+  "utterance": "cytoplasmic region", 
+  "active_set": [
+   "(c(Q20011319),P361,Q79899)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q899827"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P361"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q5058355", 
+   "Q15989253"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many cellular components are less number of parts a part of than endomembrane system ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q22329450", 
+   "Q21106124", 
+   "Q15320191", 
+   "Q14912978", 
+   "Q14864171", 
+   "Q14876131", 
+   "Q14878067", 
+   "Q1604780", 
+   "Q22327994", 
+   "Q22327622", 
+   "Q14860843", 
+   "Q22327479", 
+   "Q22327686", 
+   "Q22327683", 
+   "Q22330482", 
+   "Q671136", 
+   "Q22326188", 
+   "Q22330431", 
+   "Q189094", 
+   "Q24576572", 
+   "Q3824358", 
+   "Q22329021", 
+   "Q14864391", 
+   "Q14864390", 
+   "Q22328085", 
+   "Q21095183", 
+   "Q14329032", 
+   "Q14905221", 
+   "Q21199358", 
+   "Q22327411", 
+   "Q22327418", 
+   "Q22329159", 
+   "Q21109092", 
+   "Q22329397", 
+   "Q14864382", 
+   "Q14353100", 
+   "Q22327884", 
+   "Q22329851", 
+   "Q14863372", 
+   "Q21423046", 
+   "Q47263", 
+   "Q22327652", 
+   "Q22329848", 
+   "Q180436", 
+   "Q22329162", 
+   "Q22329846", 
+   "Q22329160", 
+   "Q24570682", 
+   "Q22330051", 
+   "Q22327498", 
+   "Q14911512", 
+   "Q14819352", 
+   "Q22327494", 
+   "Q22327889", 
+   "Q14762605", 
+   "Q14864266", 
+   "Q21750262", 
+   "Q21198990", 
+   "Q776995", 
+   "Q22329401", 
+   "Q24570673", 
+   "Q14349538", 
+   "Q22328884", 
+   "Q22329076", 
+   "Q22330231", 
+   "Q5419646", 
+   "Q21126899", 
+   "Q22325459", 
+   "Q2914458", 
+   "Q22327714", 
+   "Q22327805", 
+   "Q21107481", 
+   "Q22327505", 
+   "Q21102478", 
+   "Q22327502", 
+   "Q22327500", 
+   "Q138639", 
+   "Q22329104", 
+   "Q21095308", 
+   "Q14864857", 
+   "Q1065756", 
+   "Q79927", 
+   "Q180951", 
+   "Q22327475", 
+   "Q14864520", 
+   "Q29548", 
+   "Q22328105", 
+   "Q14860546", 
+   "Q14860540", 
+   "Q14864866", 
+   "Q6414172", 
+   "Q193825"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "92", 
+  "active_set": [
+   "(c(Q15989253),P361,c(Q5058355))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q21984339"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P702"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the gene that encodes Kinesin-like protein KIF20B ?"
+ }, 
+ {
+  "all_entities": [
+   "Q18298883"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18298883"
+  ], 
+  "utterance": "Kif20b", 
+  "active_set": [
+   "(Q21984339,P702,c(Q863908))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q24095328"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about succinyl-diaminopimelate desuccinylase    Psyr_1331?"
+ }, 
+ {
+  "all_entities": [
+   "Q23151840"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23151840"
+  ], 
+  "utterance": "succinyl-diaminopimelate desuccinylase    Psyr_1331", 
+  "active_set": [
+   "(Q24095328,P702,c(Q863908))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q21984339"
+  ], 
+  "relations": [
+   "P688"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many nucleic acid sequences encode Kinesin-like protein KIF20B ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q18298883"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(c(Q863908),P688,Q21984339)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q23600816"
+  ], 
+  "relations": [
+   "P688"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And what about bifunctional 3,4-dihydroxy-2-butanone 4-phosphate synthase/GTP cyclohydrolase II    CPn0872?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q23328374"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(c(Q863908),P688,Q23600816)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q18298883"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P703"
+  ], 
+  "type_list": [
+   "Q16521"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where is Kif20b found ?"
+ }, 
+ {
+  "all_entities": [
+   "Q83310"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q83310"
+  ], 
+  "utterance": "Mus musculus", 
+  "active_set": [
+   "(Q18298883,P703,c(Q16521))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q24223583"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q16521"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about bll4707    bll4707?"
+ }, 
+ {
+  "all_entities": [
+   "Q21397598"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21397598"
+  ], 
+  "utterance": "Bradyrhizobium japonicum USDA 110", 
+  "active_set": [
+   "(Q24223583,P703,c(Q16521))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q83310"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P144"
+  ], 
+  "type_list": [
+   "Q15619164"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which abstract being is based on Mus musculus ?"
+ }, 
+ {
+  "all_entities": [
+   "Q9351"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q9351"
+  ], 
+  "utterance": "Pikachu", 
+  "active_set": [
+   "(c(Q15619164),P144,Q83310)"
+  ]
+ }
+]

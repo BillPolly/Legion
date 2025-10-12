@@ -1,0 +1,321 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q504901"
+  ], 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territory is the birthplace of Jerald terHorst ?"
+ }, 
+ {
+  "all_entities": [
+   "Q184587"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q184587"
+  ], 
+  "utterance": "Grand Rapids", 
+  "active_set": [
+   "(Q504901,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q504901"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P241"
+  ], 
+  "type_list": [
+   "Q781132"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which military branch did Jerald terHorst belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q11218"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q11218"
+  ], 
+  "utterance": "United States Marine Corps", 
+  "active_set": [
+   "(Q504901,P241,c(Q781132))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation|Incomplete", 
+  "type_list": [
+   "Q781132"
+  ], 
+  "entities_in_utterance": [
+   "Q5534896", 
+   "Q504901"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 1, 
+  "relations": [
+   "P241"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Or Geoffrey Sherman?"
+ }, 
+ {
+  "all_entities": [
+   "Q11218", 
+   "Q1046947", 
+   "Q172771"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q11218", 
+   "Q1046947", 
+   "Q172771"
+  ], 
+  "utterance": "United States Marine Corps, Royal Marines, Royal Navy", 
+  "active_set": [
+   "OR((Q504901,P241,c(Q781132)), (Q5534896,P241,c(Q781132)))"
+  ]
+ }, 
+ {
+  "question-type": "Clarification", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Indirect", 
+  "type_list": [
+   "Q781132", 
+   "Q23905071", 
+   "Q176799"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 3, 
+  "relations": [
+   "P361"
+  ], 
+  "count_ques_sub_type": 10, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many military branches are more number of military unit type-size classes or military units a part of than that military branch ?"
+ }, 
+ {
+  "description": "Comparative|Count over More/Less|Mult. entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q172771"
+  ], 
+  "active_set": [
+   "(c(Q23905071)|c(Q176799),P361,c(Q781132))"
+  ], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Royal Navy ?"
+ }, 
+ {
+  "ques_type_id": 8, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "count_ques_sub_type": 10, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Yes", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q23905126", 
+   "Q222595", 
+   "Q56015", 
+   "Q1799545", 
+   "Q483268", 
+   "Q1815399", 
+   "Q3068744", 
+   "Q701923", 
+   "Q2078095", 
+   "Q313422", 
+   "Q2558747", 
+   "Q311689", 
+   "Q248989", 
+   "Q642932", 
+   "Q833040", 
+   "Q1546449", 
+   "Q889751", 
+   "Q781360", 
+   "Q2862927", 
+   "Q19247539", 
+   "Q276535", 
+   "Q796411", 
+   "Q56012", 
+   "Q7275540", 
+   "Q1076619", 
+   "Q897614", 
+   "Q6479134", 
+   "Q741691", 
+   "Q11218", 
+   "Q2301347", 
+   "Q2383264", 
+   "Q1358152", 
+   "Q9212", 
+   "Q355771", 
+   "Q18129370", 
+   "Q1753805", 
+   "Q731647", 
+   "Q706042", 
+   "Q706996", 
+   "Q1370395"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "40", 
+  "active_set": [
+   "(c(Q23905071)|c(Q176799),P361,c(Q781132))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q4724937", 
+   "Q504901"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are Jerald terHorst or Ali Karimi an inhabitant of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q30", 
+   "Q794"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30", 
+   "Q794"
+  ], 
+  "utterance": "United States of America, Iran", 
+  "active_set": [
+   "OR((Q504901,P27,c(Q15617994)), (Q4724937,P27,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q1382535"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Are Ivan Galamian a native of those administrative territories ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q1382535,P27,Q30)", 
+   "(Q1382535,P27,Q794)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P30"
+  ], 
+  "type_list": [
+   "Q2221906"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where are United States of America situated ?"
+ }, 
+ {
+  "all_entities": [
+   "Q49", 
+   "Q538"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q49", 
+   "Q538"
+  ], 
+  "utterance": "North America, Oceania", 
+  "active_set": [
+   "(Q30,P30,c(Q2221906))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q49", 
+   "Q538"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P30"
+  ], 
+  "type_list": [
+   "Q34763"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which peninsulas are located in North America and Oceania ?"
+ }, 
+ {
+  "all_entities": [
+   "Q4921478", 
+   "Q5314679", 
+   "Q5034961"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q4921478", 
+   "Q5314679", 
+   "Q5034961"
+  ], 
+  "utterance": "Black Point, Duncans Point, Cape Nelson", 
+  "active_set": [
+   "(c(Q34763),P30,Q49)", 
+   "(c(Q34763),P30,Q538)"
+  ]
+ }
+]

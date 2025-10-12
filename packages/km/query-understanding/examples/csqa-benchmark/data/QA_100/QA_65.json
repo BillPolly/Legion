@@ -1,0 +1,390 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q338435"
+  ], 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q486972"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which human settlement is the birthplace of Heinz Flotho ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2916"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2916"
+  ], 
+  "utterance": "Osnabr\u00fcck", 
+  "active_set": [
+   "(Q338435,P19,c(Q486972))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q2916"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P36"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which political territory consists of that human settlement as its capital ?"
+ }, 
+ {
+  "all_entities": [
+   "Q5940"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5940"
+  ], 
+  "utterance": "Osnabr\u00fcck", 
+  "active_set": [
+   "(c(Q1048835),P36,Q2916)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "relations": [
+   "P20"
+  ], 
+  "count_ques_sub_type": 7, 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many people expired at that political territory ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q495297"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(c(Q502895),P20,Q5940)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q5940"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P47"
+  ], 
+  "type_list": [
+   "Q486972"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which human settlement has an adjacent border with Osnabr\u00fcck ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2916"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2916"
+  ], 
+  "utterance": "Osnabr\u00fcck", 
+  "active_set": [
+   "(c(Q486972),P47,Q5940)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q2916"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P931"
+  ], 
+  "type_list": [
+   "Q62447"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which aerodrome serves the place named that human settlement ?"
+ }, 
+ {
+  "all_entities": [
+   "Q673760"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q673760"
+  ], 
+  "utterance": "M\u00fcnster Osnabr\u00fcck International Airport", 
+  "active_set": [
+   "(c(Q62447),P931,Q2916)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q2916"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P740"
+  ], 
+  "type_list": [
+   "Q2088357"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which are the musical ensembles that originates at Osnabr\u00fcck ?"
+ }, 
+ {
+  "all_entities": [
+   "Q204248", 
+   "Q19258095"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q204248", 
+   "Q19258095"
+  ], 
+  "utterance": "S.D.I., 4.9.0 Friedhof Chiller", 
+  "active_set": [
+   "(c(Q2088357),P740,Q2916)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q2916"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P276"
+  ], 
+  "type_list": [
+   "Q131569"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "What is situated at that human settlement ?"
+ }, 
+ {
+  "all_entities": [
+   "Q150995"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q150995"
+  ], 
+  "utterance": "Peace of Westphalia", 
+  "active_set": [
+   "(c(Q131569),P276,Q204248)", 
+   "(c(Q131569),P276,Q19258095)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q150995", 
+   "Q20894752"
+  ], 
+  "relations": [
+   "P138"
+  ], 
+  "type_list": [
+   "Q618779"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Does Commander of the Royal Norwegian Order of Merit have that treaty as its toponym ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q20894752,P138,Q150995)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q19258095", 
+   "Q183"
+  ], 
+  "relations": [
+   "P495"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Is Germany the origin of 4.9.0 Friedhof Chiller ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q19258095,P495,Q183)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1542"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q131569", 
+   "Q1190554"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many events were the cause of atleast 1 treaty ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1070342", 
+   "Q150701", 
+   "Q916495"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "3", 
+  "active_set": [
+   "(c(Q1190554),P1542,c(Q131569))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q2916"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P706"
+  ], 
+  "type_list": [
+   "Q22698"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where is Osnabr\u00fcck located on ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1969869"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1969869"
+  ], 
+  "utterance": "TERRA.vita Nature Park", 
+  "active_set": [
+   "(Q2916,P706,c(Q22698))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q10700342"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q22698"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about Tors fiske?"
+ }, 
+ {
+  "all_entities": [
+   "Q1897080"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1897080"
+  ], 
+  "utterance": "Mariatorget", 
+  "active_set": [
+   "(Q10700342,P706,c(Q22698))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1542"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q131569", 
+   "Q1190554"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many events have their outcome as approximately 2 treaties ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q150701"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(c(Q1190554),P1542,c(Q131569))"
+  ]
+ }
+]

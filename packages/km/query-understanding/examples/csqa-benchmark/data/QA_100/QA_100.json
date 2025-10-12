@@ -1,0 +1,839 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q4497091"
+  ], 
+  "relations": [
+   "P607"
+  ], 
+  "type_list": [
+   "Q198"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What battle was Hans Heidtmann a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q362"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q362"
+  ], 
+  "utterance": "World War II", 
+  "active_set": [
+   "(Q4497091,P607,c(Q198))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q4497091"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which political territory is the country of citizenship of that person ?"
+ }, 
+ {
+  "all_entities": [
+   "Q183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "utterance": "Germany", 
+  "active_set": [
+   "(Q362,P27,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P163"
+  ], 
+  "type_list": [
+   "Q14660"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is associated with that political territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q48160"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q48160"
+  ], 
+  "utterance": "flag of Germany", 
+  "active_set": [
+   "(Q183,P163,c(Q14660))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q115"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q14660"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about Ethiopia?"
+ }, 
+ {
+  "all_entities": [
+   "Q162068"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q162068"
+  ], 
+  "utterance": "Flag of Ethiopia", 
+  "active_set": [
+   "(Q115,P163,c(Q14660))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P163"
+  ], 
+  "count_ques_sub_type": 8, 
+  "type_list": [
+   "Q14660", 
+   "Q13220204"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which flags are associated with approximately the same number of administrative country subdivisions as that flag ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q81477", 
+   "Q225360", 
+   "Q12188", 
+   "Q165500", 
+   "Q171124", 
+   "Q81471", 
+   "Q279667", 
+   "Q159872", 
+   "Q16611", 
+   "Q601391", 
+   "Q41673", 
+   "Q83392", 
+   "Q1165949", 
+   "Q211579", 
+   "Q184584", 
+   "Q173548", 
+   "Q483659", 
+   "Q42436", 
+   "Q102960", 
+   "Q168935", 
+   "Q162068", 
+   "Q270377", 
+   "Q18983", 
+   "Q81970", 
+   "Q42537", 
+   "Q1426561", 
+   "Q235445", 
+   "Q2062018", 
+   "Q1074327", 
+   "Q103001", 
+   "Q133015", 
+   "Q238759", 
+   "Q4633", 
+   "Q130774", 
+   "Q328889", 
+   "Q128347", 
+   "Q131204", 
+   "Q134521", 
+   "Q266618", 
+   "Q102944", 
+   "Q235829", 
+   "Q103084", 
+   "Q127296", 
+   "Q642998", 
+   "Q168912", 
+   "Q204120", 
+   "Q127179", 
+   "Q60149", 
+   "Q168711", 
+   "Q163008", 
+   "Q75374", 
+   "Q147776", 
+   "Q601976", 
+   "Q252995", 
+   "Q173535", 
+   "Q122462", 
+   "Q1418784", 
+   "Q207518", 
+   "Q185285", 
+   "Q26491", 
+   "Q302382", 
+   "Q484249", 
+   "Q165905", 
+   "Q219726", 
+   "Q567838", 
+   "Q156564", 
+   "Q190064", 
+   "Q18993", 
+   "Q83278", 
+   "Q600147", 
+   "Q127974", 
+   "Q182514", 
+   "Q181120", 
+   "Q558375", 
+   "Q134627", 
+   "Q495469", 
+   "Q162699", 
+   "Q41327", 
+   "Q258262", 
+   "Q133022", 
+   "Q658355", 
+   "Q618036", 
+   "Q3039133", 
+   "Q103019", 
+   "Q659058", 
+   "Q172517", 
+   "Q19427", 
+   "Q134885", 
+   "Q204666", 
+   "Q578054", 
+   "Q46008", 
+   "Q170554", 
+   "Q170555", 
+   "Q169907", 
+   "Q132633", 
+   "Q169903", 
+   "Q330517", 
+   "Q283772", 
+   "Q170795", 
+   "Q103037", 
+   "Q19810326", 
+   "Q36005", 
+   "Q135014", 
+   "Q530665", 
+   "Q173201", 
+   "Q523638", 
+   "Q168917", 
+   "Q83149", 
+   "Q164584", 
+   "Q26236277", 
+   "Q160872", 
+   "Q369618", 
+   "Q605195", 
+   "Q633087", 
+   "Q524824", 
+   "Q392167", 
+   "Q462498", 
+   "Q81952", 
+   "Q29074", 
+   "Q201987", 
+   "Q652088", 
+   "Q48409", 
+   "Q232591", 
+   "Q124329", 
+   "Q43175", 
+   "Q188072", 
+   "Q160260", 
+   "Q224972", 
+   "Q129132", 
+   "Q160877", 
+   "Q483774", 
+   "Q383109", 
+   "Q162781", 
+   "Q162980", 
+   "Q102987", 
+   "Q59070", 
+   "Q912854", 
+   "Q162789", 
+   "Q130449", 
+   "Q103055", 
+   "Q1064042", 
+   "Q165550", 
+   "Q102198", 
+   "Q130442", 
+   "Q160124", 
+   "Q168925", 
+   "Q128480", 
+   "Q208671", 
+   "Q435309", 
+   "Q134252", 
+   "Q19016", 
+   "Q168941", 
+   "Q79874", 
+   "Q46835", 
+   "Q102993", 
+   "Q512175", 
+   "Q102939", 
+   "Q102392", 
+   "Q134933", 
+   "Q121688", 
+   "Q328895", 
+   "Q82205", 
+   "Q42876", 
+   "Q102184", 
+   "Q105643", 
+   "Q284396", 
+   "Q126622", 
+   "Q165775", 
+   "Q82194", 
+   "Q128812", 
+   "Q188477", 
+   "Q492524", 
+   "Q616325", 
+   "Q170064", 
+   "Q160242", 
+   "Q167584", 
+   "Q117758", 
+   "Q170465", 
+   "Q199621", 
+   "Q165872", 
+   "Q33213", 
+   "Q134874", 
+   "Q1426630", 
+   "Q369833", 
+   "Q1091279", 
+   "Q127155", 
+   "Q119605", 
+   "Q19000", 
+   "Q131650", 
+   "Q4575", 
+   "Q46585", 
+   "Q124020", 
+   "Q34599", 
+   "Q101769", 
+   "Q160255", 
+   "Q48160", 
+   "Q160250", 
+   "Q190648", 
+   "Q174487", 
+   "Q673117", 
+   "Q184268", 
+   "Q103046", 
+   "Q1856088", 
+   "Q184265", 
+   "Q167119", 
+   "Q81286", 
+   "Q134247", 
+   "Q499127", 
+   "Q245213", 
+   "Q104351", 
+   "Q242502", 
+   "Q163753", 
+   "Q160425", 
+   "Q172530", 
+   "Q131469", 
+   "Q130481", 
+   "Q165545", 
+   "Q188609", 
+   "Q159741", 
+   "Q19373", 
+   "Q1414813", 
+   "Q43192", 
+   "Q19374", 
+   "Q162033", 
+   "Q1122078", 
+   "Q180725", 
+   "Q169192", 
+   "Q601206", 
+   "Q162999", 
+   "Q130807", 
+   "Q130458", 
+   "Q102977", 
+   "Q520966", 
+   "Q135034", 
+   "Q663111", 
+   "Q497997", 
+   "Q241781", 
+   "Q159538", 
+   "Q131147", 
+   "Q178179", 
+   "Q163333", 
+   "Q165552", 
+   "Q101472", 
+   "Q202189", 
+   "Q117347", 
+   "Q185271", 
+   "Q185273", 
+   "Q202610", 
+   "Q160861", 
+   "Q103070", 
+   "Q185277", 
+   "Q613188", 
+   "Q103414", 
+   "Q189612", 
+   "Q81526", 
+   "Q82236", 
+   "Q160676", 
+   "Q676623", 
+   "Q604735", 
+   "Q301628", 
+   "Q693558", 
+   "Q637134", 
+   "Q492541", 
+   "Q79198", 
+   "Q645967", 
+   "Q370111", 
+   "Q182782", 
+   "Q617649", 
+   "Q171117", 
+   "Q245269", 
+   "Q590821", 
+   "Q200260", 
+   "Q193693", 
+   "Q285418", 
+   "Q170814", 
+   "Q632491", 
+   "Q102967", 
+   "Q12990", 
+   "Q235475", 
+   "Q30768", 
+   "Q93335", 
+   "Q429900", 
+   "Q19379", 
+   "Q170289", 
+   "Q154823", 
+   "Q159865", 
+   "Q103447", 
+   "Q165542", 
+   "Q165641", 
+   "Q492546", 
+   "Q103064", 
+   "Q586585", 
+   "Q221881", 
+   "Q80110", 
+   "Q47214", 
+   "Q33037", 
+   "Q636719", 
+   "Q248102", 
+   "Q609337", 
+   "Q165230", 
+   "Q184596", 
+   "Q47891", 
+   "Q81676", 
+   "Q186226", 
+   "Q159746", 
+   "Q184283", 
+   "Q188839", 
+   "Q148199", 
+   "Q172533", 
+   "Q159986", 
+   "Q179383", 
+   "Q171103", 
+   "Q173554", 
+   "Q594095", 
+   "Q169441", 
+   "Q45136", 
+   "Q163832", 
+   "Q104969", 
+   "Q170809", 
+   "Q329280", 
+   "Q170543", 
+   "Q204143", 
+   "Q130811", 
+   "Q165811", 
+   "Q102953", 
+   "Q165822"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q82194", 
+   "Q81676", 
+   "Q185271"
+  ], 
+  "utterance": "flag of Brazil, flag of Australia, Flag of Papua New Guinea", 
+  "active_set": [
+   "(c(Q13220204),P163,c(Q14660))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q1048835", 
+   "Q2235308", 
+   "Q43229"
+  ], 
+  "entities_in_utterance": [
+   "Q8182"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P127"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many political territories are the owners of lesser number of ship types and organizations than Rastatt ?"
+ }, 
+ {
+  "all_entities": [
+   "Q192536", 
+   "Q1648590", 
+   "Q318314", 
+   "Q3741", 
+   "Q20937", 
+   "Q2321093", 
+   "Q5691", 
+   "Q188399", 
+   "Q490638", 
+   "Q126514", 
+   "Q211091", 
+   "Q192387", 
+   "Q133083", 
+   "Q217838", 
+   "Q74881", 
+   "Q6139", 
+   "Q6339", 
+   "Q7379734", 
+   "Q1823", 
+   "Q13786", 
+   "Q5783", 
+   "Q741765", 
+   "Q193317", 
+   "Q35", 
+   "Q191091", 
+   "Q2947", 
+   "Q13862", 
+   "Q276176", 
+   "Q1135166", 
+   "Q46070", 
+   "Q211106", 
+   "Q54902", 
+   "Q192697", 
+   "Q188373", 
+   "Q190930", 
+   "Q192702", 
+   "Q2175", 
+   "Q849584", 
+   "Q2271", 
+   "Q6142", 
+   "Q909707", 
+   "Q234", 
+   "Q100166", 
+   "Q17557", 
+   "Q231", 
+   "Q40", 
+   "Q9331", 
+   "Q9337", 
+   "Q23635", 
+   "Q193307", 
+   "Q207111", 
+   "Q206926", 
+   "Q5756"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "53", 
+  "active_set": [
+   "(c(Q2235308)|c(Q43229),P127,c(Q1048835))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q1048835", 
+   "Q2235308", 
+   "Q43229"
+  ], 
+  "entities_in_utterance": [
+   "Q408"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P127"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And how about Australia?"
+ }, 
+ {
+  "all_entities": [
+   "Q192536", 
+   "Q1648590", 
+   "Q318314", 
+   "Q3741", 
+   "Q20937", 
+   "Q2321093", 
+   "Q5691", 
+   "Q188399", 
+   "Q490638", 
+   "Q126514", 
+   "Q211091", 
+   "Q192387", 
+   "Q133083", 
+   "Q217838", 
+   "Q74881", 
+   "Q6139", 
+   "Q6339", 
+   "Q7379734", 
+   "Q1823", 
+   "Q13786", 
+   "Q5783", 
+   "Q741765", 
+   "Q193317", 
+   "Q35", 
+   "Q191091", 
+   "Q2947", 
+   "Q13862", 
+   "Q276176", 
+   "Q1135166", 
+   "Q46070", 
+   "Q211106", 
+   "Q54902", 
+   "Q192697", 
+   "Q188373", 
+   "Q190930", 
+   "Q192702", 
+   "Q2175", 
+   "Q849584", 
+   "Q2271", 
+   "Q6142", 
+   "Q909707", 
+   "Q234", 
+   "Q100166", 
+   "Q17557", 
+   "Q231", 
+   "Q40", 
+   "Q9331", 
+   "Q9337", 
+   "Q23635", 
+   "Q193307", 
+   "Q207111", 
+   "Q206926", 
+   "Q5756"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "53", 
+  "active_set": [
+   "(c(Q2235308)|c(Q43229),P127,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P88"
+  ], 
+  "type_list": [
+   "Q12280"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "What was commisioned by Germany ?"
+ }, 
+ {
+  "all_entities": [
+   "Q15715928"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q15715928"
+  ], 
+  "utterance": "Fu\u00dfg\u00e4nger\u00fcberf\u00fchrung Wielstra\u00dfe", 
+  "active_set": [
+   "(c(Q12280),P88,Q183)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P291"
+  ], 
+  "type_list": [
+   "Q2342494"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which collectables have Germany as their publication location ?"
+ }, 
+ {
+  "all_entities": [
+   "Q786908", 
+   "Q1167344", 
+   "Q1962934"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q786908", 
+   "Q1167344", 
+   "Q1962934"
+  ], 
+  "utterance": "The 13\u00bd Lives of Captain Bluebear, Das Boot, Night Train to Lisbon", 
+  "active_set": [
+   "(c(Q2342494),P291,Q183)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P609"
+  ], 
+  "type_list": [
+   "Q83620"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which thoroughfares are Germany a destination for ?"
+ }, 
+ {
+  "all_entities": [
+   "Q18619599", 
+   "Q18679137"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18619599", 
+   "Q18679137"
+  ], 
+  "utterance": "European route E35 in the Netherlands, European route E30 in the Netherlands", 
+  "active_set": [
+   "(c(Q83620),P609,Q183)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Mult. Entity", 
+  "entities_in_utterance": [
+   "Q18619599", 
+   "Q18679137"
+  ], 
+  "sec_ques_sub_type": 3, 
+  "relations": [
+   "P609"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territories are the terminus locations of those thoroughfares ?"
+ }, 
+ {
+  "all_entities": [
+   "Q727", 
+   "Q990130"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q727", 
+   "Q990130"
+  ], 
+  "utterance": "Amsterdam, Hook of Holland", 
+  "active_set": [
+   "(Q18619599,P609,c(Q56061))", 
+   "(Q18679137,P609,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q18619599"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P126"
+  ], 
+  "type_list": [
+   "Q895526"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who was the custodian of that thoroughfare ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q18619599"
+  ], 
+  "active_set": [
+   "(Q727,P126,c(Q895526))", 
+   "(Q990130,P126,c(Q895526))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q727", 
+   "Q990130"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean European route E35 in the Netherlands ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "Yes"
+ }, 
+ {
+  "all_entities": [
+   "Q1408870"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1408870"
+  ], 
+  "utterance": "Rijkswaterstaat", 
+  "active_set": [
+   "(Q18619599,P126,c(Q895526))"
+  ]
+ }
+]

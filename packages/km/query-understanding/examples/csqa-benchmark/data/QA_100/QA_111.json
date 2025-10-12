@@ -1,0 +1,596 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q6184086"
+  ], 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is the sex of Jerry McNertney ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "utterance": "male", 
+  "active_set": [
+   "(Q6184086,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q6184086"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is Jerry McNertney an inhabitant of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q30"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "utterance": "United States of America", 
+  "active_set": [
+   "(Q6184086,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q1048835", 
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many political territories or administrative territories have diplomatic relationships with United States of America ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q805", 
+   "Q38", 
+   "Q159", 
+   "Q222", 
+   "Q801", 
+   "Q155", 
+   "Q148", 
+   "Q183", 
+   "Q796", 
+   "Q17", 
+   "Q408", 
+   "Q16", 
+   "Q37", 
+   "Q889", 
+   "Q668", 
+   "Q403", 
+   "Q1011", 
+   "Q347", 
+   "Q414", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "20", 
+  "active_set": [
+   "(Q30,P530,c(Q1048835))", 
+   "(Q30,P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Mult. entity type", 
+  "entities_in_utterance": [
+   "Q30", 
+   "Q21"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P38"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q8142"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many currencies are the currencies of United States of America or England ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q25224", 
+   "Q4917"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(Q30,P38,c(Q8142))", 
+   "(Q21,P38,c(Q8142))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P172"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people have United States of America as ethnic group ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6498788", 
+   "Q1617040", 
+   "Q1121923", 
+   "Q1309248", 
+   "Q881282", 
+   "Q4881771", 
+   "Q5550870", 
+   "Q6229442", 
+   "Q6286945", 
+   "Q7166358", 
+   "Q1752858", 
+   "Q6248626", 
+   "Q6789001", 
+   "Q7558698", 
+   "Q1282481", 
+   "Q2352411", 
+   "Q702510", 
+   "Q1339445", 
+   "Q7928107", 
+   "Q1120176", 
+   "Q6532530", 
+   "Q467925", 
+   "Q4515626", 
+   "Q5371265", 
+   "Q6794903", 
+   "Q4411969", 
+   "Q7827487", 
+   "Q5497389", 
+   "Q6451062", 
+   "Q4648425", 
+   "Q460312"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1617040", 
+   "Q1339445", 
+   "Q6248626"
+  ], 
+  "utterance": "Heywood Broun, Rolf Saxon, John Michael Ferrari", 
+  "active_set": [
+   "(c(Q502895),P172,Q30)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P30"
+  ], 
+  "type_list": [
+   "Q2221906"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which geographic locations are that administrative territory situated in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q49", 
+   "Q538"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q49", 
+   "Q538"
+  ], 
+  "utterance": "North America, Oceania", 
+  "active_set": [
+   "(Q1617040,P30,c(Q2221906))", 
+   "(Q1339445,P30,c(Q2221906))", 
+   "(Q6248626,P30,c(Q2221906))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q2005333"
+  ], 
+  "relations": [
+   "P840"
+  ], 
+  "type_list": [
+   "Q15416"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Do Mr. Men have their narrative set in those geographic locations ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q2005333,P840,Q49)", 
+   "(Q2005333,P840,Q538)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q1822811", 
+   "Q30"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P530", 
+   "P17"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories have diplomatic relationships with United States of America or are Lebanese government of July 2005 situated in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q805", 
+   "Q38", 
+   "Q159", 
+   "Q222", 
+   "Q801", 
+   "Q155", 
+   "Q148", 
+   "Q1011", 
+   "Q889", 
+   "Q822", 
+   "Q17", 
+   "Q37", 
+   "Q953", 
+   "Q668", 
+   "Q403", 
+   "Q347", 
+   "Q414", 
+   "Q796"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q347", 
+   "Q37", 
+   "Q414", 
+   "Q805", 
+   "Q222", 
+   "Q822", 
+   "Q796", 
+   "Q889", 
+   "Q155", 
+   "Q1011"
+  ], 
+  "utterance": "Some of them are Liechtenstein, Lithuania, Argentina, Yemen, Albania, Lebanon, Iraq, Afghanistan, Brazil, Cape Verde", 
+  "active_set": [
+   "OR((Q30,P530,c(Q15617994)), (Q1822811,P17,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q889"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P138"
+  ], 
+  "type_list": [
+   "Q7946"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which mineral has that administrative territory as its toponym ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q155"
+  ], 
+  "active_set": [
+   "(c(Q7946),P138,Q347)", 
+   "(c(Q7946),P138,Q37)", 
+   "(c(Q7946),P138,Q414)", 
+   "(c(Q7946),P138,Q805)", 
+   "(c(Q7946),P138,Q222)", 
+   "(c(Q7946),P138,Q822)", 
+   "(c(Q7946),P138,Q796)", 
+   "(c(Q7946),P138,Q889)", 
+   "(c(Q7946),P138,Q155)", 
+   "(c(Q7946),P138,Q1011)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q347", 
+   "Q37", 
+   "Q414", 
+   "Q805", 
+   "Q222", 
+   "Q822", 
+   "Q796", 
+   "Q889", 
+   "Q155", 
+   "Q1011"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Brazil ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q889"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Afghanistan. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q978346"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q978346"
+  ], 
+  "utterance": "afghanite", 
+  "active_set": [
+   "(c(Q7946),P138,Q889)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q889"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P122"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the type of government for Afghanistan ?"
+ }, 
+ {
+  "all_entities": [
+   "Q189898"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q189898"
+  ], 
+  "utterance": "emirate", 
+  "active_set": [
+   "(Q889,P122,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q155"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P35"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who are the chiefs of state of Brazil ?"
+ }, 
+ {
+  "all_entities": [
+   "Q37181", 
+   "Q230578", 
+   "Q463533", 
+   "Q485946", 
+   "Q236503", 
+   "Q40722"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q37181", 
+   "Q230578", 
+   "Q40722"
+  ], 
+  "utterance": "Luiz In\u00e1cio Lula da Silva, Fernando Henrique Cardoso, Dilma Rousseff", 
+  "active_set": [
+   "(Q155,P35,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q230578"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P991"
+  ], 
+  "type_list": [
+   "Q1076105"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which general elections were that person a successful candidate from ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q37181"
+  ], 
+  "active_set": [
+   "(c(Q1076105),P991,Q37181)", 
+   "(c(Q1076105),P991,Q230578)", 
+   "(c(Q1076105),P991,Q40722)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q37181", 
+   "Q230578", 
+   "Q40722"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Luiz In\u00e1cio Lula da Silva ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q230578"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Fernando Henrique Cardoso. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q2346732", 
+   "Q4958829"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2346732", 
+   "Q4958829"
+  ], 
+  "utterance": "Brazilian general election, 1998, Brazilian general election, 1994", 
+  "active_set": [
+   "(c(Q1076105),P991,Q230578)"
+  ]
+ }, 
+ {
+  "set_op_choice": 3, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Difference|Multiple_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q1343944", 
+   "Q30"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P530", 
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories have diplomatic relations with United States of America and are not the countries of citizenship of Enrique Anderson Imbert ?"
+ }, 
+ {
+  "all_entities": [
+   "Q805", 
+   "Q38", 
+   "Q159", 
+   "Q222", 
+   "Q801", 
+   "Q155", 
+   "Q148", 
+   "Q1011", 
+   "Q889", 
+   "Q796", 
+   "Q17", 
+   "Q37", 
+   "Q953", 
+   "Q668", 
+   "Q403", 
+   "Q347"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q155", 
+   "Q953", 
+   "Q37", 
+   "Q38", 
+   "Q668", 
+   "Q17", 
+   "Q148", 
+   "Q403", 
+   "Q805", 
+   "Q222"
+  ], 
+  "utterance": "Some of them are Brazil, Zambia, Lithuania, Italy, India, Japan, People's Republic of China, Serbia, Yemen, Albania", 
+  "active_set": [
+   "AND((Q30,P530,c(Q15617994)), NOT((Q1343944,P27,c(Q15617994))))"
+  ]
+ }
+]

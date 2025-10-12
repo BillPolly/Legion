@@ -1,0 +1,184 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q16734787"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which political territory is Rob Pyne an inhabitant of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q408"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q408"
+  ], 
+  "utterance": "Australia", 
+  "active_set": [
+   "(Q16734787,P27,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q16734787"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P102"
+  ], 
+  "type_list": [
+   "Q7210356"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which party does that person belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q216082"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q216082"
+  ], 
+  "utterance": "Australian Labor Party", 
+  "active_set": [
+   "(Q408,P102,c(Q7210356))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q216082", 
+   "Q7181810"
+  ], 
+  "relations": [
+   "P102"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Does Phil Costa belong to the political party named that one ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q7181810,P102,Q216082)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, all direct, 2 are query entities", 
+  "entities_in_utterance": [
+   "Q408", 
+   "Q3388144", 
+   "Q5258366"
+  ], 
+  "relations": [
+   "P6"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 4, 
+  "utterance": "Is Pietro Modoliense and Dennis Dyer the head of the goverment of Australia ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q408,P6,Q3388144)", 
+   "(Q408,P6,Q5258366)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q408"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P180"
+  ], 
+  "type_list": [
+   "Q2342494"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which collectable depicts that political territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1768515"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1768515"
+  ], 
+  "utterance": "The Voyage of the Beagle", 
+  "active_set": []
+ }, 
+ {
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Mult. entity type", 
+  "entities_in_utterance": [
+   "Q408", 
+   "Q40"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many administrative territories have diplomatic associations with Australia and Austria ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q142", 
+   "Q403", 
+   "Q38", 
+   "Q230", 
+   "Q114"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "5", 
+  "active_set": [
+   "(c(Q15617994),P530,Q408)", 
+   "(c(Q15617994),P530,Q40)"
+  ]
+ }
+]

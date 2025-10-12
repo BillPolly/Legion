@@ -1,0 +1,432 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1355729"
+  ], 
+  "relations": [
+   "P1050"
+  ], 
+  "type_list": [
+   "Q2057971"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which health problem does Neil Harbisson have ?"
+ }, 
+ {
+  "all_entities": [
+   "Q133696"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q133696"
+  ], 
+  "utterance": "color blindness", 
+  "active_set": [
+   "(Q1355729,P1050,c(Q2057971))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q133696"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1995"
+  ], 
+  "type_list": [
+   "Q1047113"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which special field is the medical expertise concerned with that health problem ?"
+ }, 
+ {
+  "all_entities": [
+   "Q161437"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q161437"
+  ], 
+  "utterance": "ophthalmology", 
+  "active_set": [
+   "(Q133696,P1995,c(Q1047113))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q416417"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q1047113"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about Akathisia?"
+ }, 
+ {
+  "all_entities": [
+   "Q83042"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q83042"
+  ], 
+  "utterance": "neurology", 
+  "active_set": [
+   "(Q416417,P1995,c(Q1047113))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "relations": [
+   "P1995"
+  ], 
+  "count_ques_sub_type": 7, 
+  "type_list": [
+   "Q2057971"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many health problems specializes in that special field ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q4973199", 
+   "Q1919487", 
+   "Q649602", 
+   "Q1049655", 
+   "Q1947307", 
+   "Q587420", 
+   "Q18740", 
+   "Q49989", 
+   "Q1255956", 
+   "Q1041258", 
+   "Q583908", 
+   "Q189561", 
+   "Q213600", 
+   "Q1132120", 
+   "Q1410673", 
+   "Q1431371", 
+   "Q4813631", 
+   "Q2325854", 
+   "Q17083186", 
+   "Q751641", 
+   "Q17156972", 
+   "Q1815019", 
+   "Q3508787", 
+   "Q4804182", 
+   "Q3269843", 
+   "Q2484592", 
+   "Q1476361", 
+   "Q370066", 
+   "Q12202", 
+   "Q3338681", 
+   "Q5282843", 
+   "Q3029045", 
+   "Q657516", 
+   "Q1788314", 
+   "Q3312899", 
+   "Q7879711", 
+   "Q11081", 
+   "Q11085", 
+   "Q190370", 
+   "Q616667", 
+   "Q177809", 
+   "Q1756898", 
+   "Q1137767", 
+   "Q17125280", 
+   "Q2310947", 
+   "Q1297985", 
+   "Q1995327", 
+   "Q11707850", 
+   "Q174651", 
+   "Q17232521", 
+   "Q3301664", 
+   "Q2881413", 
+   "Q620760", 
+   "Q551085", 
+   "Q18209712", 
+   "Q979168", 
+   "Q6901840", 
+   "Q221472", 
+   "Q3508804", 
+   "Q5182126", 
+   "Q794457", 
+   "Q2346415", 
+   "Q742099", 
+   "Q3338682", 
+   "Q4731121", 
+   "Q945930", 
+   "Q17141939", 
+   "Q593958", 
+   "Q3281293", 
+   "Q11540874", 
+   "Q1066311", 
+   "Q133823", 
+   "Q980709", 
+   "Q6881881", 
+   "Q576349", 
+   "Q250365", 
+   "Q8285", 
+   "Q1051436", 
+   "Q4837923", 
+   "Q209733", 
+   "Q693872", 
+   "Q488214", 
+   "Q6152510", 
+   "Q498916", 
+   "Q4898733", 
+   "Q177190", 
+   "Q1321884", 
+   "Q1531322", 
+   "Q613809", 
+   "Q1186703", 
+   "Q1126839", 
+   "Q1881388", 
+   "Q2868788", 
+   "Q862872", 
+   "Q7562539", 
+   "Q629444", 
+   "Q3792460", 
+   "Q2303951", 
+   "Q3456637", 
+   "Q190564", 
+   "Q163905", 
+   "Q161790", 
+   "Q7234177", 
+   "Q638975", 
+   "Q3042171", 
+   "Q944758", 
+   "Q1331905", 
+   "Q192579", 
+   "Q3026441", 
+   "Q1076421", 
+   "Q4862390", 
+   "Q8277", 
+   "Q1399182", 
+   "Q1153641", 
+   "Q2669284", 
+   "Q5114004", 
+   "Q403453", 
+   "Q1558317", 
+   "Q199615", 
+   "Q495068", 
+   "Q522163", 
+   "Q1634879", 
+   "Q1648484", 
+   "Q543517", 
+   "Q1755122", 
+   "Q1541975", 
+   "Q1125121", 
+   "Q205214", 
+   "Q741208", 
+   "Q9294654", 
+   "Q13038909", 
+   "Q1507379", 
+   "Q4463723", 
+   "Q665207", 
+   "Q210427", 
+   "Q883863", 
+   "Q624590", 
+   "Q906492", 
+   "Q2140130", 
+   "Q18592", 
+   "Q1470530", 
+   "Q48143", 
+   "Q1502312", 
+   "Q622828", 
+   "Q3144201", 
+   "Q3961686", 
+   "Q2666433", 
+   "Q1209150", 
+   "Q41571", 
+   "Q112412", 
+   "Q83030", 
+   "Q132971", 
+   "Q580290", 
+   "Q913856", 
+   "Q2844600", 
+   "Q427118", 
+   "Q4771330", 
+   "Q899726", 
+   "Q387082", 
+   "Q693519", 
+   "Q1135338", 
+   "Q1544884", 
+   "Q11571043", 
+   "Q11571043", 
+   "Q1198391", 
+   "Q5532415", 
+   "Q332293", 
+   "Q916280", 
+   "Q1436162", 
+   "Q1712213", 
+   "Q1531991", 
+   "Q3508800", 
+   "Q424242", 
+   "Q9386865", 
+   "Q2356131", 
+   "Q826103", 
+   "Q1335642", 
+   "Q1860507", 
+   "Q154709", 
+   "Q166907", 
+   "Q611458"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "181", 
+  "active_set": [
+   "(c(Q2057971),P1995,Q83042)"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Mult. entity type", 
+  "entities_in_utterance": [
+   "Q1355729", 
+   "Q1175669"
+  ], 
+  "relations": [
+   "P50"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q2342494"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many collectables are written by Neil Harbisson or David Michaels ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1131434", 
+   "Q3992454", 
+   "Q1392028", 
+   "Q3992455", 
+   "Q15070936", 
+   "Q1102091", 
+   "Q4051564", 
+   "Q1826472"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "8", 
+  "active_set": [
+   "(c(Q2342494),P50,Q1355729)", 
+   "(c(Q2342494),P50,Q1175669)"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Mult. entity type", 
+  "entities_in_utterance": [
+   "Q1355729", 
+   "Q27651264"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P734"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q82799"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many names are associated with Neil Harbisson or Arwidsson ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q25294874", 
+   "Q16158929"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(Q1355729,P734,c(Q82799))", 
+   "(Q27651264,P734,c(Q82799))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P361"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q5962346", 
+   "Q1047113"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which classification schemes are exactly 1 special field a portion of ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q7193", 
+   "Q787422", 
+   "Q188504", 
+   "Q216320"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q787422", 
+   "Q7193", 
+   "Q188504"
+  ], 
+  "utterance": "Automatic Control (technology of automation), microbiology, alternative medicine", 
+  "active_set": [
+   "(c(Q1047113),P361,c(Q5962346))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q201989"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q2057971"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about Lyme disease?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q201989,P361,c(Q2057971))"
+  ]
+ }
+]

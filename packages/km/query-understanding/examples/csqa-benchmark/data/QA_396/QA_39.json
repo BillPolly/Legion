@@ -1,0 +1,494 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1452423"
+  ], 
+  "relations": [
+   "P101"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which occupation is the field of work of Fred Soper ?"
+ }, 
+ {
+  "all_entities": [
+   "Q17156912"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q17156912"
+  ], 
+  "utterance": "malariologist", 
+  "active_set": [
+   "(Q1452423,P101,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1452423"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What does Fred Soper do for a living ?"
+ }, 
+ {
+  "all_entities": [
+   "Q13416803"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q13416803"
+  ], 
+  "utterance": "epidemiologist", 
+  "active_set": [
+   "(Q1452423,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q6700435"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about Luis Collazo?"
+ }, 
+ {
+  "all_entities": [
+   "Q11338576"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q11338576"
+  ], 
+  "utterance": "boxer", 
+  "active_set": [
+   "(Q6700435,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q11338576"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P425"
+  ], 
+  "type_list": [
+   "Q349"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which sport is associated with the field of occupation that one ?"
+ }, 
+ {
+  "all_entities": [
+   "Q32112"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q32112"
+  ], 
+  "utterance": "boxing", 
+  "active_set": [
+   "(Q11338576,P425,c(Q349))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q13474373"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q349"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about professional wrestler?"
+ }, 
+ {
+  "all_entities": [
+   "Q131359"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q131359"
+  ], 
+  "utterance": "professional wrestling", 
+  "active_set": [
+   "(Q13474373,P425,c(Q349))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type", 
+  "type_list": [
+   "Q349", 
+   "Q8205328", 
+   "Q1875621"
+  ], 
+  "entities_in_utterance": [
+   "Q183018"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P366"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which sports are considered as the main functionality of approximately the same number of artefacts or aircraft classes as bandy ?"
+ }, 
+ {
+  "all_entities": [
+   "Q7856", 
+   "Q5372", 
+   "Q8418", 
+   "Q1734", 
+   "Q206989", 
+   "Q183018", 
+   "Q36908", 
+   "Q500050", 
+   "Q624161", 
+   "Q1345388", 
+   "Q177275", 
+   "Q206763", 
+   "Q2736", 
+   "Q61065", 
+   "Q847", 
+   "Q41466", 
+   "Q22857", 
+   "Q1194269", 
+   "Q41323", 
+   "Q7291"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q206763", 
+   "Q8418", 
+   "Q183018"
+  ], 
+  "utterance": "floorball, handball, bandy", 
+  "active_set": [
+   "(c(Q8205328)|c(Q1875621),P366,c(Q349))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q349", 
+   "Q8205328", 
+   "Q1875621"
+  ], 
+  "entities_in_utterance": [
+   "Q1345388"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P366"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about greyhound racing?"
+ }, 
+ {
+  "all_entities": [
+   "Q7856", 
+   "Q5372", 
+   "Q8418", 
+   "Q1734", 
+   "Q206989", 
+   "Q183018", 
+   "Q36908", 
+   "Q500050", 
+   "Q624161", 
+   "Q1345388", 
+   "Q177275", 
+   "Q206763", 
+   "Q2736", 
+   "Q61065", 
+   "Q847", 
+   "Q41466", 
+   "Q22857", 
+   "Q1194269", 
+   "Q41323", 
+   "Q7291"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q206763", 
+   "Q8418", 
+   "Q183018"
+  ], 
+  "utterance": "floorball, handball, bandy", 
+  "active_set": [
+   "(c(Q8205328)|c(Q1875621),P366,c(Q349))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q206763"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P495"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territories are the origin of that sport ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q8418"
+  ], 
+  "active_set": [
+   "(Q206763,P495,c(Q15617994))", 
+   "(Q8418,P495,c(Q15617994))", 
+   "(Q183018,P495,c(Q15617994))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q206763", 
+   "Q8418", 
+   "Q183018"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean handball ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q206763"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant floorball. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q33", 
+   "Q39", 
+   "Q34"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q33", 
+   "Q39", 
+   "Q34"
+  ], 
+  "utterance": "Finland, Switzerland, Sweden", 
+  "active_set": [
+   "(Q206763,P495,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q33"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P163"
+  ], 
+  "type_list": [
+   "Q14660"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which flag is associated with Finland ?"
+ }, 
+ {
+  "all_entities": [
+   "Q47891"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q47891"
+  ], 
+  "utterance": "Flag of Finland", 
+  "active_set": [
+   "(Q33,P163,c(Q14660))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q33"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P85"
+  ], 
+  "type_list": [
+   "Q484692"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which hymn is the anthem for Finland ?"
+ }, 
+ {
+  "all_entities": [
+   "Q162483"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q162483"
+  ], 
+  "utterance": "Maamme", 
+  "active_set": [
+   "(Q33,P85,c(Q484692))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q33"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P551"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person dwells at Finland ?"
+ }, 
+ {
+  "all_entities": [
+   "Q23045432"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23045432"
+  ], 
+  "utterance": "Xiao Zhong", 
+  "active_set": [
+   "(c(Q502895),P551,Q33)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q34"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1532"
+  ], 
+  "type_list": [
+   "Q6979593"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who play for Sweden ?"
+ }, 
+ {
+  "all_entities": [
+   "Q15982182", 
+   "Q13892297", 
+   "Q16581726", 
+   "Q726066"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q726066", 
+   "Q15982182", 
+   "Q13892297"
+  ], 
+  "utterance": "Sweden women's national association football team, Sweden women's national under-19 football team, Sweden women's national under-17 football team", 
+  "active_set": [
+   "(c(Q6979593),P1532,Q34)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q726066", 
+   "Q15982182", 
+   "Q13892297"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P641"
+  ], 
+  "type_list": [
+   "Q349"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which sports were Sweden women's national association football team, Sweden women's national under-19 football team and Sweden women's national under-17 football team a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q606060", 
+   "Q606060", 
+   "Q606060"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q606060", 
+   "Q606060", 
+   "Q606060"
+  ], 
+  "utterance": "women's association football", 
+  "active_set": [
+   "(Q726066,P641,c(Q349))", 
+   "(Q15982182,P641,c(Q349))", 
+   "(Q13892297,P641,c(Q349))"
+  ]
+ }
+]

@@ -1,0 +1,690 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q13529854"
+  ], 
+  "relations": [
+   "P102"
+  ], 
+  "type_list": [
+   "Q7210356"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which political organization is Henry Brudenell-Bruce, 5th Marquess of Ailesbury a member of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q9626"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q9626"
+  ], 
+  "utterance": "Conservative Party", 
+  "active_set": [
+   "(Q13529854,P102,c(Q7210356))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q13529854"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which occupation has that person as his/her 's career ?"
+ }, 
+ {
+  "all_entities": [
+   "Q82955"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q82955"
+  ], 
+  "utterance": "politician", 
+  "active_set": [
+   "(Q9626,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q82955"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P425"
+  ], 
+  "type_list": [
+   "Q3769299"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which human behaviour is associated with the field of occupation that one ?"
+ }, 
+ {
+  "all_entities": [
+   "Q7163"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7163"
+  ], 
+  "utterance": "politics", 
+  "active_set": [
+   "(Q82955,P425,c(Q3769299))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q56061"
+  ], 
+  "entities_in_utterance": [
+   "Q4013260", 
+   "Q13529854"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P19"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are the birthplace of Henry Brudenell-Bruce, 5th Marquess of Ailesbury or Vincenzo Fato ?"
+ }, 
+ {
+  "all_entities": [
+   "Q51821", 
+   "Q84"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q51821", 
+   "Q84"
+  ], 
+  "utterance": "Castellana Grotte, London", 
+  "active_set": [
+   "OR((Q13529854,P19,c(Q56061)), (Q4013260,P19,c(Q56061)))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Mult. entity type", 
+  "type_list": [
+   "Q12737077", 
+   "Q2342494", 
+   "Q838948"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P921"
+  ], 
+  "count_ques_sub_type": 4, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which occupations were the main subjects of around 12 collectables and works of art 's work ?"
+ }, 
+ {
+  "all_entities": [
+   "Q39631", 
+   "Q11631", 
+   "Q1930187", 
+   "Q937857", 
+   "Q101539", 
+   "Q164236", 
+   "Q16746569", 
+   "Q16003605", 
+   "Q16003532"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1930187", 
+   "Q937857", 
+   "Q16746569"
+  ], 
+  "utterance": "journalist, association football player, high school student", 
+  "active_set": [
+   "(c(Q2342494)|c(Q838948),P921,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q9626"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P463"
+  ], 
+  "type_list": [
+   "Q7278"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What was Conservative Party a member of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1577483"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1577483"
+  ], 
+  "utterance": "Alliance of European Conservatives and Reformists", 
+  "active_set": [
+   "(Q9626,P463,c(Q7278))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q9626"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1142"
+  ], 
+  "type_list": [
+   "Q7257"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which ideology does Conservative Party believe in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3401913"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3401913"
+  ], 
+  "utterance": "Unionism in the United Kingdom", 
+  "active_set": [
+   "(Q9626,P1142,c(Q7257))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "Incomplete|object parent is changed, subject and predicate remain same", 
+  "entities_in_utterance": [
+   "Q9626"
+  ], 
+  "inc_ques_type": 1, 
+  "relations": [], 
+  "type_list": [
+   "Q1047113"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And which special field?"
+ }, 
+ {
+  "all_entities": [
+   "Q7169"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7169"
+  ], 
+  "utterance": "conservatism", 
+  "active_set": [
+   "(Q9626,P1142,c(Q1047113))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q7169"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P135"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people are associated with that special field ?"
+ }, 
+ {
+  "all_entities": [
+   "Q9024668", 
+   "Q3017380", 
+   "Q6230006", 
+   "Q7152467", 
+   "Q2871502", 
+   "Q888726", 
+   "Q888722", 
+   "Q888509", 
+   "Q3101623", 
+   "Q524668", 
+   "Q2500617", 
+   "Q2871042", 
+   "Q2396018", 
+   "Q2958464", 
+   "Q8017032", 
+   "Q472568", 
+   "Q23017817", 
+   "Q3309356", 
+   "Q2871297", 
+   "Q5024838", 
+   "Q3187583", 
+   "Q507298", 
+   "Q979876", 
+   "Q5077275", 
+   "Q6752596", 
+   "Q3184754", 
+   "Q7908685", 
+   "Q2925016", 
+   "Q3286982", 
+   "Q3020613", 
+   "Q3186446", 
+   "Q365381", 
+   "Q2364407", 
+   "Q7324498"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q472568", 
+   "Q2871502", 
+   "Q507298"
+  ], 
+  "utterance": "Paul F\u00e9val, Augustin-Charles Renouard, Lucas Alam\u00e1n", 
+  "active_set": [
+   "(c(Q502895),P135,Q7169)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q2862190", 
+   "Q507298"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are Lucas Alam\u00e1n or Armen Bedrossian a civilian of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q29", 
+   "Q96", 
+   "Q27"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q29", 
+   "Q96", 
+   "Q27"
+  ], 
+  "utterance": "Spain, Mexico, Ireland", 
+  "active_set": [
+   "OR((Q507298,P27,c(Q15617994)), (Q2862190,P27,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Comparative|More/Less|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P495"
+  ], 
+  "count_ques_sub_type": 8, 
+  "type_list": [
+   "Q15617994", 
+   "Q2031291"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which administrative territories are the countries of origin of around the same number of releases as that administrative territory ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "description": "Comparative|More/Less|Single entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q96"
+  ], 
+  "active_set": [
+   "(c(Q2031291),P495,c(Q15617994))"
+  ], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Mexico ?"
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "count_ques_sub_type": 8, 
+  "entities": [
+   "Q27"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "No, I meant Ireland. Could you tell me the answer for that?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q805", 
+   "Q804", 
+   "Q801", 
+   "Q800", 
+   "Q1462", 
+   "Q419", 
+   "Q668", 
+   "Q414", 
+   "Q142", 
+   "Q55", 
+   "Q145", 
+   "Q12536", 
+   "Q262", 
+   "Q148", 
+   "Q783", 
+   "Q265", 
+   "Q37", 
+   "Q36678", 
+   "Q712", 
+   "Q711", 
+   "Q717", 
+   "Q837", 
+   "Q252", 
+   "Q1460", 
+   "Q399", 
+   "Q398", 
+   "Q403", 
+   "Q657", 
+   "Q258", 
+   "Q45", 
+   "Q159", 
+   "Q43", 
+   "Q41", 
+   "Q155", 
+   "Q792", 
+   "Q790", 
+   "Q4628", 
+   "Q796", 
+   "Q794", 
+   "Q954", 
+   "Q889", 
+   "Q884", 
+   "Q958", 
+   "Q881", 
+   "Q986", 
+   "Q826", 
+   "Q822", 
+   "Q241", 
+   "Q242", 
+   "Q244", 
+   "Q811", 
+   "Q153136", 
+   "Q33", 
+   "Q32", 
+   "Q31", 
+   "Q924", 
+   "Q36", 
+   "Q34", 
+   "Q928", 
+   "Q39", 
+   "Q38", 
+   "Q739", 
+   "Q423", 
+   "Q983", 
+   "Q851", 
+   "Q733", 
+   "Q29999", 
+   "Q854", 
+   "Q819", 
+   "Q424", 
+   "Q730", 
+   "Q1013", 
+   "Q159626", 
+   "Q236", 
+   "Q230", 
+   "Q232", 
+   "Q233", 
+   "Q238", 
+   "Q20", 
+   "Q1045", 
+   "Q1044", 
+   "Q1041", 
+   "Q27", 
+   "Q28", 
+   "Q921", 
+   "Q1049", 
+   "Q1025", 
+   "Q1027", 
+   "Q1020", 
+   "Q189", 
+   "Q843", 
+   "Q184", 
+   "Q1029", 
+   "Q1028", 
+   "Q736", 
+   "Q786", 
+   "Q227", 
+   "Q225", 
+   "Q224", 
+   "Q223", 
+   "Q222", 
+   "Q221", 
+   "Q96", 
+   "Q229", 
+   "Q347", 
+   "Q17", 
+   "Q902", 
+   "Q1036", 
+   "Q1037", 
+   "Q974", 
+   "Q1032", 
+   "Q1033", 
+   "Q1030", 
+   "Q191", 
+   "Q965", 
+   "Q967", 
+   "Q962", 
+   "Q963", 
+   "Q298", 
+   "Q115", 
+   "Q114", 
+   "Q117", 
+   "Q754", 
+   "Q750", 
+   "Q212", 
+   "Q213", 
+   "Q211", 
+   "Q217", 
+   "Q214", 
+   "Q215", 
+   "Q218", 
+   "Q219", 
+   "Q912", 
+   "Q917", 
+   "Q916", 
+   "Q1007", 
+   "Q1006", 
+   "Q1005", 
+   "Q833", 
+   "Q1009", 
+   "Q1008", 
+   "Q971", 
+   "Q970", 
+   "Q239502", 
+   "Q686", 
+   "Q836", 
+   "Q574", 
+   "Q874", 
+   "Q79", 
+   "Q77", 
+   "Q858", 
+   "Q878", 
+   "Q774", 
+   "Q948", 
+   "Q817", 
+   "Q810", 
+   "Q1019", 
+   "Q813", 
+   "Q1014", 
+   "Q1016", 
+   "Q1011", 
+   "Q945", 
+   "Q29", 
+   "Q672", 
+   "Q176", 
+   "Q863", 
+   "Q869", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q38", 
+   "Q155", 
+   "Q230"
+  ], 
+  "utterance": "Italy, Brazil, Georgia", 
+  "active_set": [
+   "(c(Q2031291),P495,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Mult. Entity", 
+  "entities_in_utterance": [
+   "Q38", 
+   "Q155", 
+   "Q230"
+  ], 
+  "sec_ques_sub_type": 3, 
+  "relations": [
+   "P840"
+  ], 
+  "type_list": [
+   "Q2342494"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which collectables have their narrative set in those administrative territories ?"
+ }, 
+ {
+  "all_entities": [
+   "Q22677282", 
+   "Q3227887", 
+   "Q4004281", 
+   "Q22815168", 
+   "Q215894", 
+   "Q654562"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q22815168", 
+   "Q654562", 
+   "Q215894"
+  ], 
+  "utterance": "Eine Frau f\u00e4hrt um die Welt, The Travels of Marco Polo, Candide", 
+  "active_set": [
+   "(c(Q2342494),P840,Q38)", 
+   "(c(Q2342494),P840,Q155)", 
+   "(c(Q2342494),P840,Q230)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q215894"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P144"
+  ], 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which work of art is derived from that collectable ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q654562"
+  ], 
+  "active_set": [
+   "(c(Q838948),P144,Q22815168)", 
+   "(c(Q838948),P144,Q654562)", 
+   "(c(Q838948),P144,Q215894)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q22815168", 
+   "Q654562", 
+   "Q215894"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean The Travels of Marco Polo ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q215894"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Candide. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q1031683"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1031683"
+  ], 
+  "utterance": "Candide ou l'optimisme au XXe si\u00e8cle", 
+  "active_set": [
+   "(c(Q838948),P144,Q215894)"
+  ]
+ }
+]

@@ -1,0 +1,222 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q933969"
+  ], 
+  "relations": [
+   "P641"
+  ], 
+  "type_list": [
+   "Q349"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What was the sport that Otakar Janeck\u00fd was a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q41466"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q41466"
+  ], 
+  "utterance": "ice hockey", 
+  "active_set": [
+   "(Q933969,P641,c(Q349))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q933969"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is the country of citizenship of Otakar Janeck\u00fd ?"
+ }, 
+ {
+  "all_entities": [
+   "Q213"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q213"
+  ], 
+  "utterance": "Czech Republic", 
+  "active_set": [
+   "(Q933969,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q213"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1376"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which administrative territory is center of administration for that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1085"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1085"
+  ], 
+  "utterance": "Prague", 
+  "active_set": [
+   "(c(Q56061),P1376,Q213)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1085"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P190"
+  ], 
+  "type_list": [
+   "Q20667921"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which french administrative divisions are partner town of that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q201348", 
+   "Q42807"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q201348", 
+   "Q42807"
+  ], 
+  "utterance": "Drancy, N\u00eemes", 
+  "active_set": [
+   "(c(Q20667921),P190,Q1085)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q4688120", 
+   "Q201348"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P17"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are Drancy or Aero Club Argentino situated in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q142", 
+   "Q414"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q142", 
+   "Q414"
+  ], 
+  "utterance": "France, Argentina", 
+  "active_set": [
+   "OR((Q201348,P17,c(Q15617994)), (Q4688120,P17,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q2012521", 
+   "Q1085"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P1376", 
+   "P17"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories have Prague as their capital or are Bubino present in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q213", 
+   "Q219"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q213", 
+   "Q219"
+  ], 
+  "utterance": "Czech Republic, Bulgaria", 
+  "active_set": [
+   "OR((Q1085,P1376,c(Q15617994)), (Q2012521,P17,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q1211929"
+  ], 
+  "relations": [
+   "P915"
+  ], 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Were The Lady in the Car with Glasses and a Gun filmed at those administrative territories ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q1211929,P915,Q213)", 
+   "(Q1211929,P915,Q219)"
+  ]
+ }
+]

@@ -1,0 +1,660 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1902147"
+  ], 
+  "relations": [
+   "P1313"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is the occupation held by L'Albag\u00e9s ?"
+ }, 
+ {
+  "all_entities": [
+   "Q26696771"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q26696771"
+  ], 
+  "utterance": "mayor of Albag\u00e9s", 
+  "active_set": [
+   "(Q1902147,P1313,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1902147"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P47"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which political territories have an adjacent border with L'Albag\u00e9s ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1902165", 
+   "Q783127", 
+   "Q1770839", 
+   "Q1769645", 
+   "Q1769580"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1770839", 
+   "Q1902165", 
+   "Q1769645"
+  ], 
+  "utterance": "Castelldans, Juncosa, Cervi\u00e0 de les Garrigues", 
+  "active_set": [
+   "(c(Q1048835),P47,Q1902147)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1769645"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1001"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which occupation has jurisdiction over that political territory ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q1770839"
+  ], 
+  "active_set": [
+   "(c(Q12737077),P1001,Q1770839)", 
+   "(c(Q12737077),P1001,Q1902165)", 
+   "(c(Q12737077),P1001,Q1769645)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q1770839", 
+   "Q1902165", 
+   "Q1769645"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Castelldans ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q1769645"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Cervi\u00e0 de les Garrigues. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q26696427"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q26696427"
+  ], 
+  "utterance": "mayor of Cervi\u00e1", 
+  "active_set": [
+   "(c(Q12737077),P1001,Q1769645)"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q895526", 
+   "Q1752346", 
+   "Q12737077"
+  ], 
+  "entities_in_utterance": [
+   "Q967750"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P748"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many occupations are appointed by approximately the same number of authority organs and assemblies as United States Secretary of Labor ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2666591", 
+   "Q1072417", 
+   "Q2287650", 
+   "Q5333410", 
+   "Q261746", 
+   "Q1029955", 
+   "Q642859", 
+   "Q967762", 
+   "Q15305714", 
+   "Q842386", 
+   "Q19056310", 
+   "Q890030", 
+   "Q796593", 
+   "Q940135", 
+   "Q2305968", 
+   "Q7444340", 
+   "Q2419581", 
+   "Q25863345", 
+   "Q2747647", 
+   "Q13645132", 
+   "Q636207", 
+   "Q7574264", 
+   "Q2003296", 
+   "Q967750", 
+   "Q783785", 
+   "Q1072415", 
+   "Q3409203", 
+   "Q327948", 
+   "Q1763459", 
+   "Q1591470", 
+   "Q735015", 
+   "Q1029968", 
+   "Q2297543", 
+   "Q967737", 
+   "Q1370482", 
+   "Q6542448", 
+   "Q2301213", 
+   "Q1658460", 
+   "Q628102", 
+   "Q786242", 
+   "Q1434880"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "41", 
+  "active_set": [
+   "(c(Q12737077),P748,c(Q895526)|c(Q1752346))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q895526", 
+   "Q1752346", 
+   "Q12737077"
+  ], 
+  "entities_in_utterance": [
+   "Q19056310"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P748"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And also tell me about President of Botswana?"
+ }, 
+ {
+  "all_entities": [
+   "Q2666591", 
+   "Q1072417", 
+   "Q2287650", 
+   "Q5333410", 
+   "Q261746", 
+   "Q1029955", 
+   "Q642859", 
+   "Q967762", 
+   "Q15305714", 
+   "Q842386", 
+   "Q19056310", 
+   "Q890030", 
+   "Q796593", 
+   "Q940135", 
+   "Q2305968", 
+   "Q7444340", 
+   "Q2419581", 
+   "Q25863345", 
+   "Q2747647", 
+   "Q13645132", 
+   "Q636207", 
+   "Q7574264", 
+   "Q2003296", 
+   "Q967750", 
+   "Q783785", 
+   "Q1072415", 
+   "Q3409203", 
+   "Q327948", 
+   "Q1763459", 
+   "Q1591470", 
+   "Q735015", 
+   "Q1029968", 
+   "Q2297543", 
+   "Q967737", 
+   "Q1370482", 
+   "Q6542448", 
+   "Q2301213", 
+   "Q1658460", 
+   "Q628102", 
+   "Q786242", 
+   "Q1434880"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "41", 
+  "active_set": [
+   "(c(Q12737077),P748,c(Q895526)|c(Q1752346))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q26696427"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1001"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which political territory belongs to jurisdiction of mayor of Cervi\u00e1 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1769645"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1769645"
+  ], 
+  "utterance": "Cervi\u00e0 de les Garrigues", 
+  "active_set": [
+   "(Q26696427,P1001,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q26694647"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about mayor of El Frago?"
+ }, 
+ {
+  "all_entities": [
+   "Q1650363"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1650363"
+  ], 
+  "utterance": "El Frago", 
+  "active_set": [
+   "(Q26694647,P1001,c(Q1048835))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q7130959", 
+   "Q26694647"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P17"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are mayor of El Frago or Pangkalan Brandan present in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q29", 
+   "Q252"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q29", 
+   "Q252"
+  ], 
+  "utterance": "Spain, Indonesia", 
+  "active_set": [
+   "OR((Q26694647,P17,c(Q15617994)), (Q7130959,P17,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Mult. entity type", 
+  "type_list": [
+   "Q4164871", 
+   "Q151885", 
+   "Q1048835"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P122"
+  ], 
+  "count_ques_sub_type": 6, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many political territories have exactly 2 positions or concepts as government ?"
+ }, 
+ {
+  "all_entities": [
+   "Q641138"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(c(Q1048835),P122,c(Q4164871)|c(Q151885))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q12737077", 
+   "Q17638008", 
+   "Q3305213"
+  ], 
+  "entities_in_utterance": [
+   "Q852389"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many occupations are demonstrated in more number of game equipment and paintings than beekeeper ?"
+ }, 
+ {
+  "all_entities": [
+   "Q131512", 
+   "Q1401609", 
+   "Q1124183", 
+   "Q81710", 
+   "Q1259917", 
+   "Q4504549", 
+   "Q842782", 
+   "Q486748", 
+   "Q483501", 
+   "Q215536", 
+   "Q19723482", 
+   "Q1139055", 
+   "Q1028181", 
+   "Q733786", 
+   "Q12097", 
+   "Q12059906", 
+   "Q14009165", 
+   "Q10833314", 
+   "Q1318187", 
+   "Q4991371", 
+   "Q250867", 
+   "Q10873124", 
+   "Q2730732", 
+   "Q103163", 
+   "Q207651", 
+   "Q5716684", 
+   "Q833860", 
+   "Q2191547", 
+   "Q838811", 
+   "Q331432", 
+   "Q639669", 
+   "Q49757", 
+   "Q15296811", 
+   "Q1281618", 
+   "Q811122", 
+   "Q42603", 
+   "Q1630100"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "37", 
+  "active_set": [
+   "(c(Q17638008)|c(Q3305213),P180,c(Q12737077))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q12737077", 
+   "Q17638008", 
+   "Q3305213"
+  ], 
+  "entities_in_utterance": [
+   "Q156839"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And how about cook?"
+ }, 
+ {
+  "all_entities": [
+   "Q131512", 
+   "Q1401609", 
+   "Q1124183", 
+   "Q81710", 
+   "Q1259917", 
+   "Q4504549", 
+   "Q842782", 
+   "Q486748", 
+   "Q483501", 
+   "Q215536", 
+   "Q19723482", 
+   "Q1139055", 
+   "Q1028181", 
+   "Q733786", 
+   "Q12097", 
+   "Q12059906", 
+   "Q14009165", 
+   "Q10833314", 
+   "Q1318187", 
+   "Q4991371", 
+   "Q250867", 
+   "Q10873124", 
+   "Q2730732", 
+   "Q103163", 
+   "Q207651", 
+   "Q5716684", 
+   "Q833860", 
+   "Q2191547", 
+   "Q838811", 
+   "Q331432", 
+   "Q639669", 
+   "Q49757", 
+   "Q15296811", 
+   "Q1281618", 
+   "Q811122", 
+   "Q42603", 
+   "Q1630100"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "37", 
+  "active_set": [
+   "(c(Q17638008)|c(Q3305213),P180,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories have diplomatic relationships with approximately 9 administrative territories ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q800", 
+   "Q419", 
+   "Q668", 
+   "Q414", 
+   "Q55", 
+   "Q145", 
+   "Q262", 
+   "Q148", 
+   "Q37", 
+   "Q711", 
+   "Q717", 
+   "Q252", 
+   "Q399", 
+   "Q398", 
+   "Q403", 
+   "Q258", 
+   "Q45", 
+   "Q43", 
+   "Q41", 
+   "Q796", 
+   "Q794", 
+   "Q954", 
+   "Q889", 
+   "Q884", 
+   "Q958", 
+   "Q881", 
+   "Q822", 
+   "Q241", 
+   "Q33", 
+   "Q32", 
+   "Q31", 
+   "Q924", 
+   "Q36", 
+   "Q34", 
+   "Q928", 
+   "Q39", 
+   "Q739", 
+   "Q423", 
+   "Q983", 
+   "Q851", 
+   "Q733", 
+   "Q734", 
+   "Q236", 
+   "Q230", 
+   "Q233", 
+   "Q27", 
+   "Q28", 
+   "Q1049", 
+   "Q189", 
+   "Q843", 
+   "Q184", 
+   "Q1029", 
+   "Q736", 
+   "Q228", 
+   "Q227", 
+   "Q225", 
+   "Q224", 
+   "Q222", 
+   "Q221", 
+   "Q96", 
+   "Q229", 
+   "Q347", 
+   "Q17", 
+   "Q902", 
+   "Q974", 
+   "Q1033", 
+   "Q1030", 
+   "Q191", 
+   "Q963", 
+   "Q298", 
+   "Q115", 
+   "Q114", 
+   "Q750", 
+   "Q212", 
+   "Q213", 
+   "Q211", 
+   "Q217", 
+   "Q214", 
+   "Q215", 
+   "Q219", 
+   "Q916", 
+   "Q1009", 
+   "Q1008", 
+   "Q971", 
+   "Q874", 
+   "Q79", 
+   "Q77", 
+   "Q858", 
+   "Q878", 
+   "Q810", 
+   "Q1016", 
+   "Q1011", 
+   "Q29", 
+   "Q869", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "95", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994))"
+  ]
+ }
+]

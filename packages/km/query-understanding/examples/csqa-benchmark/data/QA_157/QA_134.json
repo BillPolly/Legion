@@ -1,0 +1,315 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q215284"
+  ], 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What are the job of Jerry Yang ?"
+ }, 
+ {
+  "all_entities": [
+   "Q82594", 
+   "Q131524", 
+   "Q43845"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q82594", 
+   "Q131524", 
+   "Q43845"
+  ], 
+  "utterance": "computer scientist, entrepreneur, businessperson", 
+  "active_set": [
+   "(Q215284,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q215284"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P112"
+  ], 
+  "type_list": [
+   "Q43229"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which organization was founded by Jerry Yang ?"
+ }, 
+ {
+  "all_entities": [
+   "Q37093"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q37093"
+  ], 
+  "utterance": "Yahoo!", 
+  "active_set": [
+   "(c(Q43229),P112,Q215284)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q37093"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1056"
+  ], 
+  "type_list": [
+   "Q340169"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which media is produced by that organization ?"
+ }, 
+ {
+  "all_entities": [
+   "Q186165"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q186165"
+  ], 
+  "utterance": "web portal", 
+  "active_set": [
+   "(Q37093,P1056,c(Q340169))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P608"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q464980", 
+   "Q340169"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many exhibitions were atmost 6 medias exhibited at ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q16643903", 
+   "Q16977023", 
+   "Q1114964", 
+   "Q250578", 
+   "Q16632328", 
+   "Q15620849", 
+   "Q24237549", 
+   "Q688909", 
+   "Q15298209", 
+   "Q17456865", 
+   "Q16736000", 
+   "Q15273842", 
+   "Q283454", 
+   "Q753646", 
+   "Q16658565", 
+   "Q14619895", 
+   "Q14619896", 
+   "Q25175731", 
+   "Q15118718", 
+   "Q16659398", 
+   "Q2186413", 
+   "Q1345539", 
+   "Q17451431", 
+   "Q17374739", 
+   "Q207420", 
+   "Q329154", 
+   "Q19057071", 
+   "Q17093682", 
+   "Q957317", 
+   "Q15925025", 
+   "Q15732002", 
+   "Q19205977", 
+   "Q1054110", 
+   "Q15731376", 
+   "Q18429168", 
+   "Q25147506", 
+   "Q19347412", 
+   "Q18759729", 
+   "Q25141765", 
+   "Q18918844", 
+   "Q15620425", 
+   "Q17274259", 
+   "Q3610454", 
+   "Q16659396", 
+   "Q2925732", 
+   "Q5393515", 
+   "Q19807149", 
+   "Q20020104", 
+   "Q15087813", 
+   "Q871508", 
+   "Q15726974", 
+   "Q17101798", 
+   "Q1165690", 
+   "Q15274985", 
+   "Q15710932", 
+   "Q22666748", 
+   "Q15617708", 
+   "Q23699261", 
+   "Q16499412", 
+   "Q15311595", 
+   "Q15966863", 
+   "Q23113720", 
+   "Q15727592", 
+   "Q285406", 
+   "Q18745579", 
+   "Q2977833", 
+   "Q15711352"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "67", 
+  "active_set": [
+   "(c(Q340169),P608,c(Q464980))"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Mult. entity type", 
+  "entities_in_utterance": [
+   "Q215284", 
+   "Q22575791"
+  ], 
+  "relations": [
+   "P169"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q43229"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many organizations have Jerry Yang or Bhavish Aggarwal as cheif executive officer ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q19059388", 
+   "Q37093"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(c(Q43229),P169,Q215284)", 
+   "(c(Q43229),P169,Q22575791)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q215284"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P734"
+  ], 
+  "type_list": [
+   "Q101352"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who have the surname Jerry Yang ?"
+ }, 
+ {
+  "all_entities": [
+   "Q845069", 
+   "Q14523543"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q845069", 
+   "Q14523543"
+  ], 
+  "utterance": "Yang, Yang", 
+  "active_set": [
+   "(Q215284,P734,c(Q101352))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q14523543"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1533"
+  ], 
+  "type_list": [
+   "Q82799"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which name exactly matches that family name ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q14523543"
+  ], 
+  "active_set": [
+   "(c(Q82799),P1533,Q845069)", 
+   "(c(Q82799),P1533,Q14523543)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q845069", 
+   "Q14523543"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Yang ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "Yes"
+ }, 
+ {
+  "all_entities": [
+   "Q19810523"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q19810523"
+  ], 
+  "utterance": "Yang", 
+  "active_set": [
+   "(c(Q82799),P1533,Q14523543)"
+  ]
+ }
+]

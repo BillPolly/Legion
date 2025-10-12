@@ -1,0 +1,538 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q7151186"
+  ], 
+  "relations": [
+   "P641"
+  ], 
+  "type_list": [
+   "Q349"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What did Paul Haverson participate in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2736"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2736"
+  ], 
+  "utterance": "association football", 
+  "active_set": [
+   "(Q7151186,P641,c(Q349))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q2736"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P495"
+  ], 
+  "type_list": [
+   "Q1496967"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the country of origin of that sport ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21"
+  ], 
+  "utterance": "England", 
+  "active_set": [
+   "(Q2736,P495,c(Q1496967))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q2896075"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q1496967"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about Sally Lunn bun?"
+ }, 
+ {
+  "all_entities": [
+   "Q21"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21"
+  ], 
+  "utterance": "England", 
+  "active_set": [
+   "(Q2896075,P495,c(Q1496967))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q21", 
+   "Q1556403"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Is Gustav Siegel a civilian of that territory ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q1556403,P27,Q21)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q21"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P937"
+  ], 
+  "type_list": [
+   "Q874405"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who is an social group who works at England ?"
+ }, 
+ {
+  "all_entities": [
+   "Q20888877"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q20888877"
+  ], 
+  "utterance": "Bassano", 
+  "active_set": [
+   "(c(Q874405),P937,Q21)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q21"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1532"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Whose people are England ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21402269", 
+   "Q16210580", 
+   "Q1922188", 
+   "Q718533", 
+   "Q23933231", 
+   "Q126279", 
+   "Q16570372", 
+   "Q318765", 
+   "Q310450", 
+   "Q83756", 
+   "Q4757089", 
+   "Q17198424", 
+   "Q19578071", 
+   "Q23839484", 
+   "Q24283657", 
+   "Q18015449", 
+   "Q952295", 
+   "Q27062578", 
+   "Q1719210", 
+   "Q25841148", 
+   "Q25712393", 
+   "Q730238", 
+   "Q6382704", 
+   "Q26464525", 
+   "Q190782", 
+   "Q2907705", 
+   "Q135314", 
+   "Q311858", 
+   "Q125538", 
+   "Q1181146", 
+   "Q2346840", 
+   "Q550313", 
+   "Q6209321", 
+   "Q23899221", 
+   "Q7608817", 
+   "Q178195", 
+   "Q313507", 
+   "Q6834464", 
+   "Q22159069", 
+   "Q23010253", 
+   "Q6405342", 
+   "Q21675005", 
+   "Q371382", 
+   "Q3489581", 
+   "Q16197248", 
+   "Q357473", 
+   "Q59600", 
+   "Q234576", 
+   "Q935875", 
+   "Q373397", 
+   "Q275823", 
+   "Q318920", 
+   "Q455460", 
+   "Q721813", 
+   "Q138067", 
+   "Q9140805", 
+   "Q6211475", 
+   "Q26217926", 
+   "Q16019708", 
+   "Q148312", 
+   "Q5983251", 
+   "Q957789", 
+   "Q391401", 
+   "Q4707430", 
+   "Q1681385", 
+   "Q26217998", 
+   "Q24050583", 
+   "Q22669100", 
+   "Q21808670", 
+   "Q10718", 
+   "Q1452267", 
+   "Q3481426", 
+   "Q5225233", 
+   "Q23907033"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q234576", 
+   "Q190782", 
+   "Q22669100"
+  ], 
+  "utterance": "Teddy Sheringham, Ronnie O'Sullivan, Yvonne Saunders", 
+  "active_set": [
+   "(c(Q502895),P1532,Q21)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q22669100"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1344"
+  ], 
+  "type_list": [
+   "Q476300"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What did that person participate in ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q234576"
+  ], 
+  "active_set": [
+   "(Q234576,P1344,c(Q476300))", 
+   "(Q190782,P1344,c(Q476300))", 
+   "(Q22669100,P1344,c(Q476300))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q234576", 
+   "Q190782", 
+   "Q22669100"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Teddy Sheringham ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q22669100"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Yvonne Saunders. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q3908712"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3908712"
+  ], 
+  "utterance": "Liberty Bell Classic", 
+  "active_set": [
+   "(Q22669100,P1344,c(Q476300))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, one direct and one indirect, subject is indirect", 
+  "entities_in_utterance": [
+   "Q3908712", 
+   "Q30"
+  ], 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 2, 
+  "utterance": "Is that competition a part of United States of America ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q3908712,P17,Q30)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q886"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P725"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q502895", 
+   "Q15961987"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many television genres did greater number of people do the dubbing for than The Simpsons ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q7615342", 
+   "Q22773153", 
+   "Q18790", 
+   "Q53093", 
+   "Q5415"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "5", 
+  "active_set": [
+   "(c(Q15961987),P725,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q11572"
+  ], 
+  "relations": [
+   "P725"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q502895", 
+   "Q15961987"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And what about Avatar: The Last Airbender?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q24034511", 
+   "Q11296848", 
+   "Q7615342", 
+   "Q3235151", 
+   "Q576501", 
+   "Q22773153", 
+   "Q18790", 
+   "Q53093", 
+   "Q753848", 
+   "Q5415", 
+   "Q886", 
+   "Q2750339"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "12", 
+  "active_set": [
+   "(c(Q15961987),P725,c(Q502895))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q1194951"
+  ], 
+  "entities_in_utterance": [
+   "Q722569", 
+   "Q234576"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P54"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What are the team that Teddy Sheringham or Aleksandar Tri\u0161ovi\u0107 are a member of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q47762", 
+   "Q182740"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q47762", 
+   "Q182740"
+  ], 
+  "utterance": "England national football team, Serbia national football team", 
+  "active_set": [
+   "OR((Q234576,P54,c(Q1194951)), (Q722569,P54,c(Q1194951)))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Mult. entity type", 
+  "type_list": [
+   "Q874405", 
+   "Q1269299", 
+   "Q43229"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P355"
+  ], 
+  "count_ques_sub_type": 6, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many social groups are approximately 1 business organizations and organizations the parent company of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q751152", 
+   "Q1114200", 
+   "Q11788418", 
+   "Q4929965", 
+   "Q82610", 
+   "Q13431465", 
+   "Q2860866", 
+   "Q4698479", 
+   "Q3519460", 
+   "Q14623752", 
+   "Q2044206", 
+   "Q1203555", 
+   "Q2543504", 
+   "Q3913196", 
+   "Q3435621", 
+   "Q5892736", 
+   "Q4698480", 
+   "Q1377855", 
+   "Q477386", 
+   "Q408396", 
+   "Q11722823", 
+   "Q14334150", 
+   "Q1411739", 
+   "Q10955989"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "24", 
+  "active_set": [
+   "(c(Q1269299)|c(Q43229),P355,c(Q874405))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q47762"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1346"
+  ], 
+  "type_list": [
+   "Q15275719"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Where was England national football team decalred as a victor ?"
+ }, 
+ {
+  "all_entities": [
+   "Q134202"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q134202"
+  ], 
+  "utterance": "1966 FIFA World Cup", 
+  "active_set": [
+   "(c(Q15275719),P1346,Q47762)"
+  ]
+ }
+]

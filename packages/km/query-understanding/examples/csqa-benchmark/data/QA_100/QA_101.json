@@ -1,0 +1,376 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q78502"
+  ], 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territory was Gerhard Berger born in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q253639"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q253639"
+  ], 
+  "utterance": "W\u00f6rgl", 
+  "active_set": [
+   "(Q78502,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q78502"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P734"
+  ], 
+  "type_list": [
+   "Q82799"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which name is associated with Gerhard Berger ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1260304"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1260304"
+  ], 
+  "utterance": "Berger", 
+  "active_set": [
+   "(Q78502,P734,c(Q82799))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q5180910"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q82799"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about Craig Doyle?"
+ }, 
+ {
+  "all_entities": [
+   "Q11825166"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q11825166"
+  ], 
+  "utterance": "Doyle", 
+  "active_set": [
+   "(Q5180910,P734,c(Q82799))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q11825166", 
+   "Q16830239"
+  ], 
+  "relations": [
+   "P734"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Does Charles William Doyle have that name as surname ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q16830239,P734,Q11825166)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q11825166"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1533"
+  ], 
+  "type_list": [
+   "Q82799"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which name is identical to Doyle ?"
+ }, 
+ {
+  "all_entities": [
+   "Q18418758"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18418758"
+  ], 
+  "utterance": "Doyle", 
+  "active_set": [
+   "(c(Q82799),P1533,Q11825166)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q18418758"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P735"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who have that name as forename ?"
+ }, 
+ {
+  "all_entities": [
+   "Q5303742", 
+   "Q5303745", 
+   "Q5303747", 
+   "Q3038390", 
+   "Q5303740", 
+   "Q5303743", 
+   "Q5303768", 
+   "Q5303767", 
+   "Q5303764", 
+   "Q15733805", 
+   "Q5303776", 
+   "Q5303761", 
+   "Q5303760", 
+   "Q19282015", 
+   "Q909474", 
+   "Q16059537", 
+   "Q956140", 
+   "Q5303780", 
+   "Q5303762", 
+   "Q881673", 
+   "Q5303752", 
+   "Q5303750", 
+   "Q5303778", 
+   "Q16092596", 
+   "Q3038389", 
+   "Q5303758", 
+   "Q5303759", 
+   "Q5303770", 
+   "Q5303771", 
+   "Q18645772", 
+   "Q5303738", 
+   "Q5303777", 
+   "Q5303756", 
+   "Q246538", 
+   "Q313139"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5303778", 
+   "Q5303771", 
+   "Q5303743"
+  ], 
+  "utterance": "Doyle Vaca, Doyle Overton Hickey, Doyle Conner", 
+  "active_set": [
+   "(c(Q502895),P735,Q18418758)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which musical instruments can approximately 1935 people perform with ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q46185", 
+   "Q80019", 
+   "Q8338", 
+   "Q8371", 
+   "Q1444", 
+   "Q128309"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q46185", 
+   "Q80019", 
+   "Q8338"
+  ], 
+  "utterance": "bass guitar, double bass, trumpet", 
+  "active_set": [
+   "(c(Q502895),P1303,c(Q34379))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q515"
+  ], 
+  "entities_in_utterance": [
+   "Q3195714", 
+   "Q5180910"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P19"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which cities were Craig Doyle or Kevin Heffernan born ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1761"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1761"
+  ], 
+  "utterance": "Dublin", 
+  "active_set": [
+   "OR((Q5180910,P19,c(Q515)), (Q3195714,P19,c(Q515)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1761"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P551"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who lives in that city ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6098243", 
+   "Q6779022", 
+   "Q16062621", 
+   "Q16066303", 
+   "Q314917", 
+   "Q1008587", 
+   "Q273207", 
+   "Q16219269", 
+   "Q15820716", 
+   "Q18227983", 
+   "Q2347916", 
+   "Q17418030", 
+   "Q27611250", 
+   "Q1476652", 
+   "Q8016", 
+   "Q16208664", 
+   "Q6306589", 
+   "Q296616", 
+   "Q26710597", 
+   "Q18580062", 
+   "Q562000", 
+   "Q1026954", 
+   "Q1983888", 
+   "Q4865594"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q8016", 
+   "Q296616", 
+   "Q314917"
+  ], 
+  "utterance": "Winston Churchill, Gabriel Byrne, Daniel O'Connell", 
+  "active_set": [
+   "(c(Q502895),P551,Q1761)"
+  ]
+ }, 
+ {
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators", 
+  "entities_in_utterance": [
+   "Q1761"
+  ], 
+  "relations": [
+   "P36"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q7275", 
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many states and administrative territories are Dublin the capital of ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q215530", 
+   "Q844250", 
+   "Q27"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2 states and 1 administrative territories", 
+  "active_set": [
+   "(c(Q7275),P36,Q1761)", 
+   "(c(Q15617994),P36,Q1761)"
+  ]
+ }
+]

@@ -1,0 +1,235 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q23461990"
+  ], 
+  "relations": [
+   "P681"
+  ], 
+  "type_list": [
+   "Q5058355"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is a component of cytochrome c3    DVU2809 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21198990"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21198990"
+  ], 
+  "utterance": "periplasmic space", 
+  "active_set": [
+   "(Q23461990,P681,c(Q5058355))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q23461990"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P688"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which nucleic acid sequence encodes cytochrome c3    DVU2809 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q23324112"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23324112"
+  ], 
+  "utterance": "cytochrome c3    DVU2809", 
+  "active_set": [
+   "(c(Q863908),P688,Q23461990)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q23461990"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P680"
+  ], 
+  "type_list": [
+   "Q44424"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which the chemical bond that represents the molecular function of cytochrome c3    DVU2809 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q13667380"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q13667380"
+  ], 
+  "utterance": "metal ion binding", 
+  "active_set": [
+   "(Q23461990,P680,c(Q44424))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q23324112"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P703"
+  ], 
+  "type_list": [
+   "Q16521"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where is cytochrome c3    DVU2809 found ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21383317"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21383317"
+  ], 
+  "utterance": "Desulfovibrio vulgaris subsp. vulgaris str. Hildenborough", 
+  "active_set": [
+   "(Q23324112,P703,c(Q16521))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q24583894"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q16521"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about AWAT1?"
+ }, 
+ {
+  "all_entities": [
+   "Q618026"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q618026"
+  ], 
+  "utterance": "Southern pig-tailed macaque", 
+  "active_set": [
+   "(Q24583894,P703,c(Q16521))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q16521", 
+   "Q1792379"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many art genres express around 1 taxon ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1189907", 
+   "Q2302151", 
+   "Q18559971"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "3", 
+  "active_set": [
+   "(c(Q1792379),P180,c(Q16521))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q23050400"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about Phosphopantetheine adenylyltransferase    RSP_2960?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q23050400,P702,c(Q863908))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q288705"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q181394"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about Alpha-galactosidase A?"
+ }, 
+ {
+  "all_entities": [
+   "Q14886374"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14886374"
+  ], 
+  "utterance": "GLA", 
+  "active_set": [
+   "(Q288705,P702,c(Q181394))"
+  ]
+ }
+]

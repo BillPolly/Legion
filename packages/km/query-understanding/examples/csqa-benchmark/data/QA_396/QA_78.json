@@ -1,0 +1,233 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q930755"
+  ], 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What are the professions of Edward O. Thorp ?"
+ }, 
+ {
+  "all_entities": [
+   "Q36180", 
+   "Q170790", 
+   "Q1622272"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q36180", 
+   "Q170790", 
+   "Q1622272"
+  ], 
+  "utterance": "writer, mathematician, university teacher", 
+  "active_set": [
+   "(Q930755,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q36180", 
+   "Q170790", 
+   "Q1622272"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P101"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people have his/her area as writer, mathematician and university teacher ?"
+ }, 
+ {
+  "all_entities": [
+   "Q168569", 
+   "Q34943", 
+   "Q60677", 
+   "Q5938836", 
+   "Q21030230"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21030230", 
+   "Q168569", 
+   "Q34943"
+  ], 
+  "utterance": "Eli\u0161ka Klimkov\u00e1-Deutschov\u00e1, Martin Andersen Nex\u00f8, Ptolemy", 
+  "active_set": [
+   "(c(Q502895),P101,Q36180)", 
+   "(c(Q502895),P101,Q170790)", 
+   "(c(Q502895),P101,Q1622272)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Mult. Entity", 
+  "entities_in_utterance": [
+   "Q21030230", 
+   "Q168569", 
+   "Q34943"
+  ], 
+  "sec_ques_sub_type": 3, 
+  "relations": [
+   "P101"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which occupations are the field of work of those people ?"
+ }, 
+ {
+  "all_entities": [
+   "Q15980158", 
+   "Q783906", 
+   "Q1622272", 
+   "Q36180", 
+   "Q170790"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1622272", 
+   "Q15980158", 
+   "Q783906"
+  ], 
+  "utterance": "university teacher, non-fiction writer, neurologist", 
+  "active_set": [
+   "(Q21030230,P101,c(Q12737077))", 
+   "(Q168569,P101,c(Q12737077))", 
+   "(Q34943,P101,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q21030230"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q515"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which city is the birthplace of that person ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q21030230"
+  ], 
+  "active_set": [
+   "(Q1622272,P19,c(Q515))", 
+   "(Q15980158,P19,c(Q515))", 
+   "(Q783906,P19,c(Q515))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q1622272", 
+   "Q15980158", 
+   "Q783906"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Eli\u0161ka Klimkov\u00e1-Deutschov\u00e1 ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "Yes"
+ }, 
+ {
+  "all_entities": [
+   "Q722732"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q722732"
+  ], 
+  "utterance": "Litomy\u0161l", 
+  "active_set": [
+   "(Q21030230,P19,c(Q515))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, one direct and one indirect, subject is indirect", 
+  "entities_in_utterance": [
+   "Q722732", 
+   "Q10755817"
+  ], 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 2, 
+  "utterance": "Is that city present in Dionysos, Greece ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q722732,P17,Q10755817)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q168569"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1411"
+  ], 
+  "type_list": [
+   "Q618779"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which award did Martin Andersen Nex\u00f8 receive ?"
+ }, 
+ {
+  "all_entities": [
+   "Q37922"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q37922"
+  ], 
+  "utterance": "Nobel Prize in Literature", 
+  "active_set": [
+   "(Q168569,P1411,c(Q618779))"
+  ]
+ }
+]

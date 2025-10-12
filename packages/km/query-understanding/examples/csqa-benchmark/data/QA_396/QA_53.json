@@ -1,0 +1,280 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q519977"
+  ], 
+  "relations": [
+   "P40"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which person is an offspring of Andr\u00e9 Jolly ?"
+ }, 
+ {
+  "all_entities": [
+   "Q23901671"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23901671"
+  ], 
+  "utterance": "Ferdinand Jolly", 
+  "active_set": [
+   "(Q519977,P40,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q519977"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q515"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where did the expiration of Andr\u00e9 Jolly occur ?"
+ }, 
+ {
+  "all_entities": [
+   "Q9005"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q9005"
+  ], 
+  "utterance": "Brussels", 
+  "active_set": [
+   "(Q519977,P20,c(Q515))"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Multiple_Relation", 
+  "type_list": [
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q6581097", 
+   "Q519977"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P21", 
+   "P22"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people have Andr\u00e9 Jolly as a parent and are a male ?"
+ }, 
+ {
+  "all_entities": [
+   "Q17351366", 
+   "Q23901671"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q17351366", 
+   "Q23901671"
+  ], 
+  "utterance": "Oscar Jolly, Ferdinand Jolly", 
+  "active_set": [
+   "AND((c(Q502895),P22,Q519977), (c(Q502895),P21,Q6581097))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q23901671"
+  ], 
+  "relations": [
+   "P19"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories were Ferdinand Jolly born in ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q239"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q23901671,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q16269568"
+  ], 
+  "relations": [
+   "P19"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And how about Sylvie Payette?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q340"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q16269568,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q6722501"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about Ver\u00f3nica Macamo?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q6722501,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which musical instruments are played by exactly 5 people ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q213461", 
+   "Q213100"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q213461", 
+   "Q213100"
+  ], 
+  "utterance": "harmonium, tabla", 
+  "active_set": [
+   "(c(Q502895),P1303,c(Q34379))"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Mult. entity type", 
+  "entities_in_utterance": [
+   "Q519977", 
+   "Q2608870"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P106"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many occupations are the professions of Andr\u00e9 Jolly or Bowser Jr. Koopa ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1028181", 
+   "Q81096", 
+   "Q82955"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "3", 
+  "active_set": [
+   "(Q519977,P106,c(Q12737077))", 
+   "(Q2608870,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q9005"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1313"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which occupation serves as the political office that is fulfilled by the head of the government of Brussels ?"
+ }, 
+ {
+  "all_entities": [
+   "Q435627"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q435627"
+  ], 
+  "utterance": "Minister-President of the Brussels-Capital Region", 
+  "active_set": [
+   "(Q9005,P1313,c(Q12737077))"
+  ]
+ }
+]

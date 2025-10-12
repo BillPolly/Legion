@@ -1,0 +1,546 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q706293"
+  ], 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q28640"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What are the job of Lau Kar-leung ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2526255", 
+   "Q28389"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2526255", 
+   "Q28389"
+  ], 
+  "utterance": "film director, screenwriter", 
+  "active_set": [
+   "(Q706293,P106,c(Q28640))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q706293"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1196"
+  ], 
+  "type_list": [
+   "Q1931388"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What manner did Lau Kar-leung die ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3739104"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3739104"
+  ], 
+  "utterance": "natural causes", 
+  "active_set": [
+   "(Q706293,P1196,c(Q1931388))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q28640", 
+   "Q43229", 
+   "Q1269299"
+  ], 
+  "entities_in_utterance": [
+   "Q94937"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P355"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many professions are the subordinates of around the same number of organizations or business organizations as 2K Games ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1040450", 
+   "Q18414205", 
+   "Q15240959", 
+   "Q1064703", 
+   "Q863618", 
+   "Q2076545", 
+   "Q18388687", 
+   "Q2607531", 
+   "Q7641092", 
+   "Q3456271", 
+   "Q611508", 
+   "Q1060165", 
+   "Q26222", 
+   "Q1053684", 
+   "Q739711", 
+   "Q991149", 
+   "Q204474", 
+   "Q122741", 
+   "Q2510684", 
+   "Q94937", 
+   "Q4039000", 
+   "Q1930918", 
+   "Q923047", 
+   "Q8043371", 
+   "Q467598", 
+   "Q1358751", 
+   "Q1172164"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "27", 
+  "active_set": [
+   "(c(Q43229)|c(Q1269299),P355,c(Q28640))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q245772"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P355"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q28640", 
+   "Q28640"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which professions are greater number of professions the subordinate of than Zynga ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q860580", 
+   "Q73801", 
+   "Q188273", 
+   "Q372471", 
+   "Q542018"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q188273", 
+   "Q860580", 
+   "Q73801"
+  ], 
+  "utterance": "Ubisoft, Tencent Holdings, Microsoft Studios", 
+  "active_set": [
+   "(c(Q28640),P355,c(Q28640))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type", 
+  "type_list": [
+   "Q28640", 
+   "Q4830453", 
+   "Q1269299"
+  ], 
+  "entities_in_utterance": [
+   "Q611508"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P355"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which professions are the subordinates of approximately the same number of business enterprises or business organizations as Creative Assembly ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3281900", 
+   "Q1040450", 
+   "Q18414205", 
+   "Q15240959", 
+   "Q1064703", 
+   "Q863618", 
+   "Q6423274", 
+   "Q2076545", 
+   "Q18388687", 
+   "Q2607531", 
+   "Q7641092", 
+   "Q3456271", 
+   "Q611508", 
+   "Q1060165", 
+   "Q684218", 
+   "Q26222", 
+   "Q123018", 
+   "Q1053684", 
+   "Q2660350", 
+   "Q739711", 
+   "Q991149", 
+   "Q204474", 
+   "Q13409231", 
+   "Q2510684", 
+   "Q94937", 
+   "Q4039000", 
+   "Q1930918", 
+   "Q18594", 
+   "Q923047", 
+   "Q800120", 
+   "Q860580", 
+   "Q8043371", 
+   "Q467598", 
+   "Q1358751", 
+   "Q1172164", 
+   "Q1466613"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q204474", 
+   "Q1060165", 
+   "Q18594"
+  ], 
+  "utterance": "id Software, Riot Games, Sony Interactive Entertainment", 
+  "active_set": [
+   "(c(Q4830453)|c(Q1269299),P355,c(Q28640))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P355"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q28640", 
+   "Q4830453"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which business enterprises contains max number of professions as their subordinate ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1457152", 
+   "Q19604369"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1457152", 
+   "Q19604369"
+  ], 
+  "utterance": "Sega Sammy Holdings, Columbus Nova", 
+  "active_set": [
+   "(c(Q4830453),P355,c(Q28640))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q19604369"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P749"
+  ], 
+  "type_list": [
+   "Q4830453"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the parent organization of that one ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q1457152"
+  ], 
+  "active_set": [
+   "(Q1457152,P749,c(Q4830453))", 
+   "(Q19604369,P749,c(Q4830453))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q1457152", 
+   "Q19604369"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Sega Sammy Holdings ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q19604369"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Columbus Nova. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q4393272"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q4393272"
+  ], 
+  "utterance": "Renova Group", 
+  "active_set": [
+   "(Q19604369,P749,c(Q4830453))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "relations": [
+   "P749"
+  ], 
+  "count_ques_sub_type": 7, 
+  "type_list": [
+   "Q4830453"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many business enterprises are that business enterprise a parent organization of ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q19604369"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(c(Q4830453),P749,Q4393272)"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Mult. entity type", 
+  "entities_in_utterance": [
+   "Q204474", 
+   "Q14647"
+  ], 
+  "relations": [
+   "P178"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q2424752"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many products were produced by id Software or Sun Microsystems ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1224834", 
+   "Q765812", 
+   "Q1358512"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "3", 
+  "active_set": [
+   "(c(Q2424752),P178,Q204474)", 
+   "(c(Q2424752),P178,Q14647)"
+  ]
+ }, 
+ {
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators", 
+  "entities_in_utterance": [
+   "Q18594"
+  ], 
+  "relations": [
+   "P127"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q80071", 
+   "Q43229"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many symbols and organizations are under posessision of Sony Interactive Entertainment ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1323662", 
+   "Q2635539"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1 symbols and 1 organizations", 
+  "active_set": [
+   "(c(Q80071),P127,Q18594)", 
+   "(c(Q43229),P127,Q18594)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q188273"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1454"
+  ], 
+  "type_list": [
+   "Q2712963"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which abstract noun is the type of legal form of Ubisoft ?"
+ }, 
+ {
+  "all_entities": [
+   "Q18195767"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18195767"
+  ], 
+  "utterance": "soci\u00e9t\u00e9 anonyme", 
+  "active_set": [
+   "(Q188273,P1454,c(Q2712963))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q812142"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q2712963"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about Bayer MaterialScience?"
+ }, 
+ {
+  "all_entities": [
+   "Q134161"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q134161"
+  ], 
+  "utterance": "joint-stock company", 
+  "active_set": [
+   "(Q812142,P1454,c(Q2712963))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q812142"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P859"
+  ], 
+  "type_list": [
+   "Q11436"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which aircraft was sponsored by that organization ?"
+ }, 
+ {
+  "all_entities": [
+   "Q742889"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q742889"
+  ], 
+  "utterance": "Solar Impulse", 
+  "active_set": [
+   "(c(Q11436),P859,Q134161)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q742889"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P488"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who were the chair of that aircraft ?"
+ }, 
+ {
+  "all_entities": [
+   "Q366255", 
+   "Q517213"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q366255", 
+   "Q517213"
+  ], 
+  "utterance": "Bertrand Piccard, Andr\u00e9 Borschberg", 
+  "active_set": [
+   "(Q742889,P488,c(Q502895))"
+  ]
+ }
+]

@@ -1,0 +1,221 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q7416149"
+  ], 
+  "relations": [
+   "P1040"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Who has editted Sanders of the River ?"
+ }, 
+ {
+  "all_entities": [
+   "Q727753"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q727753"
+  ], 
+  "utterance": "Charles Crichton", 
+  "active_set": [
+   "(Q7416149,P1040,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q727753"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory was that person born in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q780923"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q780923"
+  ], 
+  "utterance": "Wallasey", 
+  "active_set": [
+   "(Q727753,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q727753"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is the country of citizenship of Charles Crichton ?"
+ }, 
+ {
+  "all_entities": [
+   "Q145"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q145"
+  ], 
+  "utterance": "United Kingdom", 
+  "active_set": [
+   "(Q727753,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q727753"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1346"
+  ], 
+  "type_list": [
+   "Q4220917"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Where was that person decalred as a champion ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2663714"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2663714"
+  ], 
+  "utterance": "British Academy Film Award for Best British Film", 
+  "active_set": [
+   "(c(Q4220917),P1346,Q145)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q727753"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q28640"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What are the professions of that person ?"
+ }, 
+ {
+  "all_entities": [
+   "Q7042855", 
+   "Q2526255", 
+   "Q3282637", 
+   "Q28389"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7042855", 
+   "Q2526255", 
+   "Q28389"
+  ], 
+  "utterance": "film editor, film director, screenwriter", 
+  "active_set": [
+   "(Q2663714,P106,c(Q28640))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q7042855"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P39"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who held the position of that profession ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q28389"
+  ], 
+  "active_set": [
+   "(c(Q502895),P39,Q7042855)", 
+   "(c(Q502895),P39,Q2526255)", 
+   "(c(Q502895),P39,Q28389)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q7042855", 
+   "Q2526255", 
+   "Q28389"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean screenwriter ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q7042855"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant film editor. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q3035503"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3035503"
+  ], 
+  "utterance": "Dominique Van Goolen", 
+  "active_set": [
+   "(c(Q502895),P39,Q7042855)"
+  ]
+ }
+]

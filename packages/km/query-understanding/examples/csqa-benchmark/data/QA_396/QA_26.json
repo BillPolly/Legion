@@ -1,0 +1,616 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1579785"
+  ], 
+  "relations": [
+   "P39"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which occupation was a position for which Hans Gerhard was appointed ?"
+ }, 
+ {
+  "all_entities": [
+   "Q17781726"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q17781726"
+  ], 
+  "utterance": "member of the Landtag of North Rhine-Westphalia", 
+  "active_set": [
+   "(Q1579785,P39,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q17781726"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P361"
+  ], 
+  "type_list": [
+   "Q1752346"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is that occupation a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q571436"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q571436"
+  ], 
+  "utterance": "Landtag of North Rhine-Westphalia", 
+  "active_set": [
+   "(Q17781726,P361,c(Q1752346))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P361"
+  ], 
+  "count_ques_sub_type": 8, 
+  "type_list": [
+   "Q1752346", 
+   "Q7210356"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which assemblies are around the same number of political organizations a component of as that assembly ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q3154693", 
+   "Q1253647", 
+   "Q109016", 
+   "Q896075", 
+   "Q2511660", 
+   "Q949699", 
+   "Q1422275", 
+   "Q3365524", 
+   "Q715641", 
+   "Q2635070", 
+   "Q2584535", 
+   "Q676484", 
+   "Q1258164", 
+   "Q14759322", 
+   "Q1368318", 
+   "Q648716", 
+   "Q502026", 
+   "Q1572486", 
+   "Q206171", 
+   "Q636377", 
+   "Q4345413", 
+   "Q1813360", 
+   "Q6518214", 
+   "Q510511", 
+   "Q650248", 
+   "Q314690", 
+   "Q1599346", 
+   "Q1398920", 
+   "Q3251036", 
+   "Q1969527", 
+   "Q641439", 
+   "Q1817866", 
+   "Q319994", 
+   "Q1450753", 
+   "Q2994116", 
+   "Q3564203", 
+   "Q2097101", 
+   "Q2647159", 
+   "Q884824", 
+   "Q1577158", 
+   "Q1585014", 
+   "Q154797", 
+   "Q19758733", 
+   "Q1969591", 
+   "Q1368588", 
+   "Q382118", 
+   "Q11010", 
+   "Q1112381", 
+   "Q7252745", 
+   "Q1807513", 
+   "Q1798607", 
+   "Q1371388", 
+   "Q640859", 
+   "Q1188525", 
+   "Q230003", 
+   "Q371576", 
+   "Q7285832", 
+   "Q2185780", 
+   "Q1969585", 
+   "Q1117578", 
+   "Q1969587", 
+   "Q2016884", 
+   "Q1139204", 
+   "Q2011165", 
+   "Q4345419", 
+   "Q1968458", 
+   "Q1415847", 
+   "Q1848595", 
+   "Q2119357", 
+   "Q740564", 
+   "Q1517231", 
+   "Q2347172", 
+   "Q3365530", 
+   "Q1972029", 
+   "Q1417210", 
+   "Q643412", 
+   "Q2739604", 
+   "Q820697", 
+   "Q378605", 
+   "Q1130737", 
+   "Q583157", 
+   "Q1292", 
+   "Q571436", 
+   "Q35749", 
+   "Q521764", 
+   "Q720753", 
+   "Q1484825", 
+   "Q12041660", 
+   "Q1542985", 
+   "Q209151", 
+   "Q1520966", 
+   "Q1284236", 
+   "Q157638", 
+   "Q5531805", 
+   "Q219825", 
+   "Q1138299", 
+   "Q884829", 
+   "Q1357543", 
+   "Q1288169", 
+   "Q882738", 
+   "Q1077701", 
+   "Q321246", 
+   "Q2665089", 
+   "Q1280751", 
+   "Q3365552", 
+   "Q1135960", 
+   "Q775767", 
+   "Q7063612", 
+   "Q1650523", 
+   "Q3896143", 
+   "Q817979", 
+   "Q326465", 
+   "Q1969569", 
+   "Q714698", 
+   "Q14552853", 
+   "Q339033", 
+   "Q697775", 
+   "Q20992117", 
+   "Q684719", 
+   "Q3365546", 
+   "Q160208", 
+   "Q1968468", 
+   "Q260372", 
+   "Q742110", 
+   "Q7138943", 
+   "Q1501988", 
+   "Q317147", 
+   "Q878525", 
+   "Q1853235", 
+   "Q859658", 
+   "Q449304", 
+   "Q17014622", 
+   "Q6682043", 
+   "Q654504", 
+   "Q646190", 
+   "Q639704", 
+   "Q1320418", 
+   "Q475689", 
+   "Q1973075", 
+   "Q15150880", 
+   "Q822919", 
+   "Q455697", 
+   "Q2053647", 
+   "Q219692", 
+   "Q9300937", 
+   "Q637829", 
+   "Q5339025", 
+   "Q133396", 
+   "Q122635", 
+   "Q3246027", 
+   "Q2444341", 
+   "Q477089", 
+   "Q1760847", 
+   "Q667464", 
+   "Q15304628", 
+   "Q632552", 
+   "Q555809", 
+   "Q1769673", 
+   "Q189445"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q154797", 
+   "Q209151", 
+   "Q157638"
+  ], 
+  "utterance": "Bundestag of Germany, Folketing, Frankfurt Parliament", 
+  "active_set": [
+   "(c(Q7210356),P361,c(Q1752346))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q154797", 
+   "Q209151", 
+   "Q157638"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P488"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who were the chair of Bundestag of Germany, Folketing and Frankfurt Parliament ?"
+ }, 
+ {
+  "all_entities": [
+   "Q57474", 
+   "Q2569", 
+   "Q62703", 
+   "Q454669", 
+   "Q66286", 
+   "Q470285", 
+   "Q214060", 
+   "Q78425", 
+   "Q70058", 
+   "Q66138", 
+   "Q65526", 
+   "Q66447", 
+   "Q1937560", 
+   "Q272924", 
+   "Q64856", 
+   "Q65230"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2569", 
+   "Q57474", 
+   "Q454669"
+  ], 
+  "utterance": "Karl Carstens, Norbert Lammert, Richard St\u00fccklen", 
+  "active_set": [
+   "(Q154797,P488,c(Q502895))", 
+   "(Q209151,P488,c(Q502895))", 
+   "(Q157638,P488,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Mult. Entity", 
+  "entities_in_utterance": [
+   "Q2569", 
+   "Q57474", 
+   "Q454669"
+  ], 
+  "sec_ques_sub_type": 3, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which occupations have those people as his/her 's career ?"
+ }, 
+ {
+  "all_entities": [
+   "Q193391", 
+   "Q82955", 
+   "Q82955", 
+   "Q82955"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q193391", 
+   "Q82955", 
+   "Q82955"
+  ], 
+  "utterance": "diplomat for 1st, politician for 2nd, 3rd", 
+  "active_set": [
+   "(Q2569,P106,c(Q12737077))", 
+   "(Q57474,P106,c(Q12737077))", 
+   "(Q454669,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q82955"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P425"
+  ], 
+  "type_list": [
+   "Q3769299"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who is associated with the field of occupation that one ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q193391"
+  ], 
+  "active_set": [
+   "(Q193391,P425,c(Q3769299))", 
+   "(Q82955,P425,c(Q3769299))", 
+   "(Q82955,P425,c(Q3769299))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q193391", 
+   "Q82955", 
+   "Q82955"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean diplomat ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q82955"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant politician. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q7163"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7163"
+  ], 
+  "utterance": "politics", 
+  "active_set": [
+   "(Q82955,P425,c(Q3769299))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q2569"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P607"
+  ], 
+  "type_list": [
+   "Q198"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which battle did Karl Carstens take part in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q362"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q362"
+  ], 
+  "utterance": "World War II", 
+  "active_set": [
+   "(Q2569,P607,c(Q198))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q3848501"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q198"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Mario de Bernardi?"
+ }, 
+ {
+  "all_entities": [
+   "Q361"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q361"
+  ], 
+  "utterance": "World War I", 
+  "active_set": [
+   "(Q3848501,P607,c(Q198))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q3848501"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory does that person belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q38"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q38"
+  ], 
+  "utterance": "Italy", 
+  "active_set": [
+   "(Q361,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q362"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P509"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people had World War II as cause of death ?"
+ }, 
+ {
+  "all_entities": [
+   "Q20727330", 
+   "Q705617"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q20727330", 
+   "Q705617"
+  ], 
+  "utterance": "Maurice Poedts, Ch\u014dmo Hanashiro", 
+  "active_set": [
+   "(c(Q502895),P509,Q362)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q20727330"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P410"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which occupation was the military rank conferred upon that person ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q20727330"
+  ], 
+  "active_set": [
+   "(Q20727330,P410,c(Q12737077))", 
+   "(Q705617,P410,c(Q12737077))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q20727330", 
+   "Q705617"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Maurice Poedts ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "Yes"
+ }, 
+ {
+  "all_entities": [
+   "Q4991371"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q4991371"
+  ], 
+  "utterance": "soldier", 
+  "active_set": [
+   "(Q20727330,P410,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P417"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q502895", 
+   "Q12737077"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which people are the names of person who are the patron saints of max number of occupations ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q179718"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q179718"
+  ], 
+  "utterance": "Catherine of Alexandria", 
+  "active_set": [
+   "(c(Q12737077),P417,Q208331)"
+  ]
+ }
+]

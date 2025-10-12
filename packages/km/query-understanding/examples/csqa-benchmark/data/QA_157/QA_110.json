@@ -1,0 +1,315 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q7086075"
+  ], 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which sex does Oleg Kharakhordin have ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "utterance": "male", 
+  "active_set": [
+   "(Q7086075,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P69"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person was educated at that sex ?"
+ }, 
+ {
+  "all_entities": [
+   "Q4662307"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q4662307"
+  ], 
+  "utterance": "Aaron Parchem", 
+  "active_set": [
+   "(c(Q502895),P69,Q6581097)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q4662307"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1344"
+  ], 
+  "type_list": [
+   "Q15900616"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which event sequence did that person participate in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q9672"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q9672"
+  ], 
+  "utterance": "2006 Winter Olympics", 
+  "active_set": [
+   "(Q4662307,P1344,c(Q15900616))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q4662307"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What does that person do for a living ?"
+ }, 
+ {
+  "all_entities": [
+   "Q13219587"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q13219587"
+  ], 
+  "utterance": "figure skater", 
+  "active_set": [
+   "(Q9672,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P417"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q502895", 
+   "Q12737077"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many people are the patron saints of around 2 occupations ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q229190", 
+   "Q328804", 
+   "Q166876", 
+   "Q170547", 
+   "Q183240", 
+   "Q196653", 
+   "Q44265", 
+   "Q744884", 
+   "Q151967", 
+   "Q44248"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "10", 
+  "active_set": [
+   "(c(Q12737077),P417,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q9672"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is 2006 Winter Olympics a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q38"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q38"
+  ], 
+  "utterance": "Italy", 
+  "active_set": [
+   "(Q9672,P17,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q9672"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P276"
+  ], 
+  "type_list": [
+   "Q1076486"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which sports venue is the location of that event sequence ?"
+ }, 
+ {
+  "all_entities": [
+   "Q214629"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q214629"
+  ], 
+  "utterance": "Stadio Olimpico di Torino", 
+  "active_set": [
+   "(Q38,P276,c(Q1076486))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, 2 direct, 2(direct) are query entities, subject is indirect", 
+  "entities_in_utterance": [
+   "Q214629", 
+   "Q41049", 
+   "Q53757"
+  ], 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 5, 
+  "utterance": "Is that sports venue located in Cecima and Hohenmocker ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q214629,P17,Q41049)", 
+   "(Q214629,P17,Q53757)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q38"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P162"
+  ], 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which work of art has been produced by Italy ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2933446"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2933446"
+  ], 
+  "utterance": "Calabuch", 
+  "active_set": [
+   "(c(Q838948),P162,Q38)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q2933446"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P86"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which person composed that work of art ?"
+ }, 
+ {
+  "all_entities": [
+   "Q658571"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q658571"
+  ], 
+  "utterance": "Guido Guerrini", 
+  "active_set": [
+   "(Q2933446,P86,c(Q502895))"
+  ]
+ }
+]

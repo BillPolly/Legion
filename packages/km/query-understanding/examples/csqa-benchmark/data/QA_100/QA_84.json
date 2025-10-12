@@ -1,0 +1,362 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q7248181"
+  ], 
+  "relations": [
+   "P57"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Who directed Professor Pyarelal ?"
+ }, 
+ {
+  "all_entities": [
+   "Q4967979"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q4967979"
+  ], 
+  "utterance": "Brij Sadanah", 
+  "active_set": [
+   "(Q7248181,P57,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q4967979"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P40"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which person is a successor of that one ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6355516"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6355516"
+  ], 
+  "utterance": "Kamal Sadanah", 
+  "active_set": [
+   "(Q4967979,P40,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q4967979"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P22"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who has Brij Sadanah as a father ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6355516"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6355516"
+  ], 
+  "utterance": "Kamal Sadanah", 
+  "active_set": [
+   "(c(Q502895),P22,Q4967979)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q6355516"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is the place of birth of that person ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1156"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1156"
+  ], 
+  "utterance": "Mumbai", 
+  "active_set": [
+   "(Q6355516,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q6355516"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which sex does Kamal Sadanah have ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "utterance": "male", 
+  "active_set": [
+   "(Q6355516,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q6355516"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P162"
+  ], 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which work of art created Kamal Sadanah ?"
+ }, 
+ {
+  "all_entities": [
+   "Q16255202"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q16255202"
+  ], 
+  "utterance": "Victoria No. 203", 
+  "active_set": [
+   "(c(Q838948),P162,Q6355516)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q6355516"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the profession of Kamal Sadanah ?"
+ }, 
+ {
+  "all_entities": [
+   "Q33999"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q33999"
+  ], 
+  "utterance": "actor", 
+  "active_set": [
+   "(Q6355516,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q33999"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P425"
+  ], 
+  "type_list": [
+   "Q1914636"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who is associated with the field of occupation that one ?"
+ }, 
+ {
+  "all_entities": [
+   "Q222749"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q222749"
+  ], 
+  "utterance": "acting", 
+  "active_set": [
+   "(Q33999,P425,c(Q1914636))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q17136179"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q1914636"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about interdisciplinary scientist?"
+ }, 
+ {
+  "all_entities": [
+   "Q1665984"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1665984"
+  ], 
+  "utterance": "interdisciplinary science", 
+  "active_set": [
+   "(Q17136179,P425,c(Q1914636))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q1665984", 
+   "Q17136179"
+  ], 
+  "relations": [
+   "P425"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Does that activity belong to interdisciplinary scientist ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q17136179,P425,Q1665984)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q4967979"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where did Brij Sadanah die ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1156"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1156"
+  ], 
+  "utterance": "Mumbai", 
+  "active_set": [
+   "(Q4967979,P20,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q3770964"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about Giuseppe Mastroleo?"
+ }, 
+ {
+  "all_entities": [
+   "Q2634"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2634"
+  ], 
+  "utterance": "Naples", 
+  "active_set": [
+   "(Q3770964,P20,c(Q56061))"
+  ]
+ }
+]

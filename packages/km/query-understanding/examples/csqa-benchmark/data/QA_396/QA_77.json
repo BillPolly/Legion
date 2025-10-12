@@ -1,0 +1,310 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1187488"
+  ], 
+  "relations": [
+   "P54"
+  ], 
+  "type_list": [
+   "Q12973014"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which sports team is Denis Lapaczinski a member of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q314851"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q314851"
+  ], 
+  "utterance": "Germany national under-21 football team", 
+  "active_set": [
+   "(Q1187488,P54,c(Q12973014))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1187488"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P641"
+  ], 
+  "type_list": [
+   "Q349"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What was the sport that Denis Lapaczinski was a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2736"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2736"
+  ], 
+  "utterance": "association football", 
+  "active_set": [
+   "(Q1187488,P641,c(Q349))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P641"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q349", 
+   "Q12973014"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which sports did around 208 sports teams participate in ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q10962", 
+   "Q847", 
+   "Q7291", 
+   "Q136851", 
+   "Q5375", 
+   "Q1455", 
+   "Q1734", 
+   "Q2736", 
+   "Q210778"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q136851", 
+   "Q10962", 
+   "Q847"
+  ], 
+  "utterance": "curling, rugby league, tennis", 
+  "active_set": [
+   "(c(Q12973014),P641,c(Q349))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Quantitative|Count|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "relations": [
+   "P641"
+  ], 
+  "count_ques_sub_type": 7, 
+  "type_list": [
+   "Q349"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many sports did that sport participate in ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "description": "Quantitative|Count|Single entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q136851"
+  ], 
+  "active_set": [
+   "(Q136851,P641,c(Q349))", 
+   "(Q10962,P641,c(Q349))", 
+   "(Q847,P641,c(Q349))"
+  ], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean curling ?"
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Yes", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q5369"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q136851,P641,c(Q349))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q847"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P101"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person has his/her area as tennis ?"
+ }, 
+ {
+  "all_entities": [
+   "Q16231455"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q16231455"
+  ], 
+  "utterance": "Kgothatso Montjane", 
+  "active_set": [
+   "(c(Q502895),P101,Q847)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q847"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P921"
+  ], 
+  "type_list": [
+   "Q2342494"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which collectables have tennis as their principal topic ?"
+ }, 
+ {
+  "all_entities": [
+   "Q13415851", 
+   "Q13410659", 
+   "Q21014398", 
+   "Q23978365"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q13415851", 
+   "Q13410659", 
+   "Q21014398"
+  ], 
+  "utterance": "The Bud Collins History of Tennis, 100 years of Wimbledon, World of Tennis 1985", 
+  "active_set": [
+   "(c(Q2342494),P921,Q847)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q13415851"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P291"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is the place of publication of that collectable ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q13410659"
+  ], 
+  "active_set": [
+   "(Q13415851,P291,c(Q56061))", 
+   "(Q13410659,P291,c(Q56061))", 
+   "(Q21014398,P291,c(Q56061))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q13415851", 
+   "Q13410659", 
+   "Q21014398"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean 100 years of Wimbledon ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q13415851"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant The Bud Collins History of Tennis. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q60"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q60"
+  ], 
+  "utterance": "New York City", 
+  "active_set": [
+   "(Q13415851,P291,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q60", 
+   "Q2807"
+  ], 
+  "relations": [
+   "P190"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Is Madrid twin town of New York City ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q60,P190,Q2807)"
+  ]
+ }
+]

@@ -1,0 +1,352 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q102462"
+  ], 
+  "relations": [
+   "P241"
+  ], 
+  "type_list": [
+   "Q327333"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which government agency did James Stewart belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q407191"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q407191"
+  ], 
+  "utterance": "Air Force Reserve Command", 
+  "active_set": [
+   "(Q102462,P241,c(Q327333))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q102462"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where did the expiration of James Stewart occur ?"
+ }, 
+ {
+  "all_entities": [
+   "Q127856"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q127856"
+  ], 
+  "utterance": "Beverly Hills", 
+  "active_set": [
+   "(Q102462,P20,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P532"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q56061", 
+   "Q2235308"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many ship types have approximately 3 administrative territories as registry port ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q11707059"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(c(Q2235308),P532,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q127856"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P840"
+  ], 
+  "type_list": [
+   "Q15416"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which television programs have their setting located at Beverly Hills ?"
+ }, 
+ {
+  "all_entities": [
+   "Q276071", 
+   "Q941737", 
+   "Q117590", 
+   "Q7759591", 
+   "Q2559315", 
+   "Q5302911", 
+   "Q4899547"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q117590", 
+   "Q276071", 
+   "Q7759591"
+  ], 
+  "utterance": "Beverly Hills, 90210, 90210, The Real Housewives of Beverly Hills", 
+  "active_set": [
+   "(c(Q15416),P840,Q127856)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q127856"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1408"
+  ], 
+  "type_list": [
+   "Q4830453"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which business enterprise has procured license for broadcasting to Beverly Hills ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6334100"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6334100"
+  ], 
+  "utterance": "KBOQ", 
+  "active_set": [
+   "(c(Q4830453),P1408,Q127856)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q127856"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is that administrative territory present in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q30"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "utterance": "United States of America", 
+  "active_set": [
+   "(Q6334100,P17,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories holds diplomatic relationship with United States of America ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q805", 
+   "Q159", 
+   "Q222", 
+   "Q801", 
+   "Q155", 
+   "Q148", 
+   "Q796", 
+   "Q347", 
+   "Q17", 
+   "Q37", 
+   "Q889", 
+   "Q668", 
+   "Q403", 
+   "Q1011", 
+   "Q38", 
+   "Q414", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "17", 
+  "active_set": [
+   "(Q30,P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q189"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about Iceland?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q38"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q189,P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about Germany?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "124", 
+  "active_set": [
+   "(Q183,P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which administrative territories have diplomatic relations with atleast 54 administrative territories ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q38", 
+   "Q230"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q38", 
+   "Q230"
+  ], 
+  "utterance": "Italy, Georgia", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q6972061"
+  ], 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q83620"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Are National Cycle Route 44 present in those administrative territories ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q6972061,P17,Q38)", 
+   "(Q6972061,P17,Q230)"
+  ]
+ }
+]

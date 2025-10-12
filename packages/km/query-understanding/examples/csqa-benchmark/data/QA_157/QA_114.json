@@ -1,0 +1,419 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q11926828"
+  ], 
+  "relations": [
+   "P172"
+  ], 
+  "type_list": [
+   "Q2472587"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people does Iolanda Bustos have as his/her race ?"
+ }, 
+ {
+  "all_entities": [
+   "Q244504"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q244504"
+  ], 
+  "utterance": "Catalan people", 
+  "active_set": [
+   "(Q11926828,P172,c(Q2472587))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q11926828"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is the native country of Iolanda Bustos ?"
+ }, 
+ {
+  "all_entities": [
+   "Q29"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q29"
+  ], 
+  "utterance": "Spain", 
+  "active_set": [
+   "(Q11926828,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q29"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P437"
+  ], 
+  "type_list": [
+   "Q82799"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which name was distributed as that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q19891513"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q19891513"
+  ], 
+  "utterance": "Fonseca", 
+  "active_set": [
+   "(c(Q82799),P437,Q29)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q19891513"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P734"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people have that one as last name ?"
+ }, 
+ {
+  "all_entities": [
+   "Q5829666", 
+   "Q5394172", 
+   "Q505947", 
+   "Q4888873", 
+   "Q362144", 
+   "Q462842", 
+   "Q6099627"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q362144", 
+   "Q462842", 
+   "Q4888873"
+  ], 
+  "utterance": "Francisco Fonseca, Daniel Fonseca, Gregorio Fonseca", 
+  "active_set": [
+   "(c(Q502895),P734,Q19891513)"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Mult. entity type", 
+  "entities_in_utterance": [
+   "Q244504", 
+   "Q219563"
+  ], 
+  "relations": [
+   "P172"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many people have Catalan people or University of Washington as ethnic group ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q21854697", 
+   "Q21854618", 
+   "Q21935650", 
+   "Q21705025", 
+   "Q21753904", 
+   "Q9081084", 
+   "Q11928426", 
+   "Q21907048", 
+   "Q11919325", 
+   "Q11927735", 
+   "Q11948257", 
+   "Q21791539", 
+   "Q11919630", 
+   "Q21774085", 
+   "Q11926839", 
+   "Q21923521", 
+   "Q11935677", 
+   "Q21714759", 
+   "Q21771931", 
+   "Q16190723", 
+   "Q9013390", 
+   "Q19301601", 
+   "Q8201515", 
+   "Q8353706", 
+   "Q17715223", 
+   "Q21705871", 
+   "Q21935644", 
+   "Q21753913", 
+   "Q5644553", 
+   "Q21936241", 
+   "Q21759306", 
+   "Q21936594", 
+   "Q21936590", 
+   "Q19299732", 
+   "Q21891716", 
+   "Q21891712", 
+   "Q17036852", 
+   "Q21708633", 
+   "Q21747364", 
+   "Q21708281", 
+   "Q19257068", 
+   "Q21714749", 
+   "Q21815951", 
+   "Q523037", 
+   "Q21923240", 
+   "Q21936589", 
+   "Q21936584", 
+   "Q11905964", 
+   "Q21779000", 
+   "Q16941926", 
+   "Q21923913", 
+   "Q11928488", 
+   "Q21924235", 
+   "Q21891708", 
+   "Q19290046", 
+   "Q21905959", 
+   "Q21854779", 
+   "Q21711134", 
+   "Q9011960", 
+   "Q21725411", 
+   "Q21707827", 
+   "Q21806401", 
+   "Q25893925", 
+   "Q11927611", 
+   "Q21707984", 
+   "Q21935577", 
+   "Q19301146", 
+   "Q21714739", 
+   "Q11921757", 
+   "Q19290957", 
+   "Q20005705", 
+   "Q11928783", 
+   "Q19289725", 
+   "Q21714777", 
+   "Q573927", 
+   "Q11928959", 
+   "Q11927278", 
+   "Q21850628", 
+   "Q21806412", 
+   "Q20006648", 
+   "Q21750255", 
+   "Q11919147", 
+   "Q21936578", 
+   "Q11929374", 
+   "Q11922208", 
+   "Q15389466", 
+   "Q19291127", 
+   "Q11922752", 
+   "Q16172624", 
+   "Q21772088", 
+   "Q21935611", 
+   "Q19300394", 
+   "Q21714726", 
+   "Q21711127", 
+   "Q21707804", 
+   "Q19301637", 
+   "Q21849223", 
+   "Q21849225", 
+   "Q21936648", 
+   "Q19290508", 
+   "Q21936645", 
+   "Q21923460", 
+   "Q11933669", 
+   "Q4888181", 
+   "Q21806424", 
+   "Q11946283", 
+   "Q16184134", 
+   "Q21923374", 
+   "Q16943412", 
+   "Q21923162", 
+   "Q19300713", 
+   "Q16167072", 
+   "Q11928777", 
+   "Q740256", 
+   "Q11685283", 
+   "Q21698206", 
+   "Q22002303", 
+   "Q21711143", 
+   "Q21814420", 
+   "Q21813495", 
+   "Q17036818", 
+   "Q21922994", 
+   "Q25893905", 
+   "Q21711301", 
+   "Q4263166", 
+   "Q21778989", 
+   "Q20003555", 
+   "Q17034879", 
+   "Q21923200", 
+   "Q21850471", 
+   "Q21935521", 
+   "Q21935636", 
+   "Q21916802", 
+   "Q11905243", 
+   "Q17033630", 
+   "Q21936546", 
+   "Q19300406", 
+   "Q21924843", 
+   "Q11952097", 
+   "Q25893873", 
+   "Q25893870", 
+   "Q5864696", 
+   "Q21697955", 
+   "Q158099", 
+   "Q16189975", 
+   "Q21905353", 
+   "Q11935444", 
+   "Q21706120", 
+   "Q17301525", 
+   "Q11928458", 
+   "Q21905294", 
+   "Q1706303", 
+   "Q21705853", 
+   "Q21854776", 
+   "Q21854778", 
+   "Q11928917", 
+   "Q17277297", 
+   "Q21993411", 
+   "Q19290791", 
+   "Q11921799", 
+   "Q11926828", 
+   "Q21993419"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "162", 
+  "active_set": [
+   "(c(Q502895),P172,Q244504)", 
+   "(c(Q502895),P172,Q219563)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q362144"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P54"
+  ], 
+  "type_list": [
+   "Q1194951"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which national sports team is Francisco Fonseca a member of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q164089"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q164089"
+  ], 
+  "utterance": "Mexico national football team", 
+  "active_set": [
+   "(Q362144,P54,c(Q1194951))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q362144"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where was Francisco Fonseca born ?"
+ }, 
+ {
+  "all_entities": [
+   "Q189128"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q189128"
+  ], 
+  "utterance": "Le\u00f3n", 
+  "active_set": [
+   "(Q362144,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q189128"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1383"
+  ], 
+  "type_list": [
+   "Q112865"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which Mexican administrative territory does that administrative territory belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q9022143"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q9022143"
+  ], 
+  "utterance": "Le\u00f3n Municipality", 
+  "active_set": [
+   "(c(Q112865),P1383,Q189128)"
+  ]
+ }
+]

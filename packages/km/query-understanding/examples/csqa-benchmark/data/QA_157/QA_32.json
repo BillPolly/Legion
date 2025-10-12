@@ -1,0 +1,394 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1227925"
+  ], 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is the profession of Dirk Kontny ?"
+ }, 
+ {
+  "all_entities": [
+   "Q937857"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q937857"
+  ], 
+  "utterance": "association football player", 
+  "active_set": [
+   "(Q1227925,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1227925"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which political territory is Dirk Kontny a civilian of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "utterance": "Germany", 
+  "active_set": [
+   "(Q1227925,P27,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P551"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people dwell at that political territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q60066", 
+   "Q114060", 
+   "Q23721911", 
+   "Q5847813", 
+   "Q6309468", 
+   "Q17302908", 
+   "Q273207", 
+   "Q107961", 
+   "Q7348968", 
+   "Q215182", 
+   "Q18534257", 
+   "Q14943164", 
+   "Q12729037", 
+   "Q5217909", 
+   "Q24324351", 
+   "Q117139", 
+   "Q100236", 
+   "Q15429884", 
+   "Q65081", 
+   "Q1036172", 
+   "Q2221144", 
+   "Q25865472", 
+   "Q1983888", 
+   "Q1808047", 
+   "Q108459", 
+   "Q17198141", 
+   "Q101005"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q60066", 
+   "Q14943164", 
+   "Q117139"
+  ], 
+  "utterance": "Gerhard Ertl, Alain Schneider, Wiz Khalifa", 
+  "active_set": [
+   "(c(Q502895),P551,Q183)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q14943164"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P7"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who has Alain Schneider as their sibling ?"
+ }, 
+ {
+  "all_entities": [
+   "Q15957655"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q15957655"
+  ], 
+  "utterance": "Pierre-Yves Schneider", 
+  "active_set": [
+   "(c(Q502895),P7,Q14943164)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P137"
+  ], 
+  "type_list": [
+   "Q3084961"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which product linings are the administrator of Germany ?"
+ }, 
+ {
+  "all_entities": [
+   "Q58725", 
+   "Q151384", 
+   "Q313740"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q58725", 
+   "Q151384", 
+   "Q313740"
+  ], 
+  "utterance": "T-33 Shooting Star, Typhoon, Alpha Jet", 
+  "active_set": [
+   "(c(Q3084961),P137,Q183)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q58725", 
+   "Q151384", 
+   "Q313740"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P121"
+  ], 
+  "type_list": [
+   "Q1875621"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which aircraft classes manage T-33 Shooting Star, Typhoon and Alpha Jet ?"
+ }, 
+ {
+  "all_entities": [
+   "Q17627587", 
+   "Q18145463", 
+   "Q18043441", 
+   "Q17584170"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18043441", 
+   "Q17627587", 
+   "Q18145463"
+  ], 
+  "utterance": "Typhoon in Royal Air Force service, T-33 in Bolivian service, Tif\u00f3n in Spanish Air Force service", 
+  "active_set": [
+   "(c(Q1875621),P121,Q58725)", 
+   "(c(Q1875621),P121,Q151384)", 
+   "(c(Q1875621),P121,Q313740)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q18043441"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is that aircraft class present in ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q18043441"
+  ], 
+  "active_set": [
+   "(Q18043441,P17,c(Q15617994))", 
+   "(Q17627587,P17,c(Q15617994))", 
+   "(Q18145463,P17,c(Q15617994))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q18043441", 
+   "Q17627587", 
+   "Q18145463"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Typhoon in Royal Air Force service ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "Yes"
+ }, 
+ {
+  "all_entities": [
+   "Q145"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q145"
+  ], 
+  "utterance": "United Kingdom", 
+  "active_set": [
+   "(Q18043441,P17,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q781"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q1048835", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which political territories have diplomatic relationships with more number of administrative territories than Antigua and Barbuda ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q40", 
+   "Q183", 
+   "Q408", 
+   "Q35", 
+   "Q16", 
+   "Q664", 
+   "Q766"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183", 
+   "Q408", 
+   "Q35"
+  ], 
+  "utterance": "Germany, Australia, Denmark", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q766"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q1048835", 
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And how about Jamaica?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q40", 
+   "Q183", 
+   "Q408", 
+   "Q35", 
+   "Q16", 
+   "Q664"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183", 
+   "Q408", 
+   "Q35"
+  ], 
+  "utterance": "Germany, Australia, Denmark", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q269476"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Are Perinaldo known to have diplomatic connections with those political territories ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q269476,P530,Q183)", 
+   "(Q269476,P530,Q408)", 
+   "(Q269476,P530,Q35)"
+  ]
+ }
+]

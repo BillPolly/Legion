@@ -1,0 +1,390 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q544114"
+  ], 
+  "relations": [
+   "P7"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Who are the brother of Otto I, Count of Burgundy ?"
+ }, 
+ {
+  "all_entities": [
+   "Q664749", 
+   "Q121130", 
+   "Q2190533", 
+   "Q150953", 
+   "Q504733"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q121130", 
+   "Q150953", 
+   "Q664749"
+  ], 
+  "utterance": "Philip of Swabia, Henry VI, Holy Roman Emperor, Conrad II, Duke of Swabia", 
+  "active_set": [
+   "(Q544114,P7,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Mult. Entity", 
+  "entities_in_utterance": [
+   "Q121130", 
+   "Q150953", 
+   "Q664749"
+  ], 
+  "sec_ques_sub_type": 3, 
+  "relations": [
+   "P22"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which people were the father of those ones ?"
+ }, 
+ {
+  "all_entities": [
+   "Q79789", 
+   "Q79789", 
+   "Q79789"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q79789", 
+   "Q79789", 
+   "Q79789"
+  ], 
+  "utterance": "Frederick I, Holy Roman Emperor", 
+  "active_set": [
+   "(Q121130,P22,c(Q502895))", 
+   "(Q150953,P22,c(Q502895))", 
+   "(Q664749,P22,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q544114"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P25"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which female person has a child named Otto I, Count of Burgundy ?"
+ }, 
+ {
+  "all_entities": [
+   "Q234219"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q234219"
+  ], 
+  "utterance": "Beatrice I, Countess of Burgundy", 
+  "active_set": [
+   "(Q544114,P25,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, 2 direct, 2(direct) are query entities, subject is indirect", 
+  "entities_in_utterance": [
+   "Q234219", 
+   "Q21208906", 
+   "Q664749"
+  ], 
+  "relations": [
+   "P40"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 5, 
+  "utterance": "Does that person have Claudio Pezzuto and Conrad II, Duke of Swabia as an offspring ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO and YES respectively", 
+  "active_set": [
+   "(Q234219,P40,Q21208906)", 
+   "(Q234219,P40,Q664749)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q150953", 
+   "Q183"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Is Henry VI, Holy Roman Emperor a civilian of Germany ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q150953,P27,Q183)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q150953"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P39"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What were the positions held by Henry VI, Holy Roman Emperor ?"
+ }, 
+ {
+  "all_entities": [
+   "Q782985", 
+   "Q181765"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q782985", 
+   "Q181765"
+  ], 
+  "utterance": "King of the Romans, Holy Roman Emperor", 
+  "active_set": [
+   "(Q150953,P39,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q1292437"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about Edward H. Moore?"
+ }, 
+ {
+  "all_entities": [
+   "Q13217683"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q13217683"
+  ], 
+  "utterance": "United States Senator", 
+  "active_set": [
+   "(Q1292437,P39,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P417"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q502895", 
+   "Q12737077"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which people are the patron saint of around 3 occupations ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q128538", 
+   "Q192816", 
+   "Q200895"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q128538", 
+   "Q192816", 
+   "Q200895"
+  ], 
+  "utterance": "Luke the Evangelist, Saint Barbara, Agatha of Sicily", 
+  "active_set": [
+   "(c(Q12737077),P417,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q1204015"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P725"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q502895", 
+   "Q2342494"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many collectables did more number of people dub for than \u014ckami Kakushi ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q483263", 
+   "Q53351", 
+   "Q5647726"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "3", 
+  "active_set": [
+   "(c(Q2342494),P725,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q495094"
+  ], 
+  "relations": [
+   "P725"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q502895", 
+   "Q2342494"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And also tell me about Durarara!!?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q50035", 
+   "Q483263", 
+   "Q482870", 
+   "Q1204015", 
+   "Q485958", 
+   "Q53351", 
+   "Q5647726"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "7", 
+  "active_set": [
+   "(c(Q2342494),P725,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which musical instruments do max number of people know to play ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q5994"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5994"
+  ], 
+  "utterance": "piano", 
+  "active_set": [
+   "(c(Q502895),P1303,Q3623688)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q128538"
+  ], 
+  "relations": [
+   "P800"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q3305213"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many paintings are the notable works of Luke the Evangelist ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q573619"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q128538,P800,c(Q3305213))"
+  ]
+ }
+]

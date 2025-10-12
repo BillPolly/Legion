@@ -1,0 +1,485 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q72458"
+  ], 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which sex does Ko Willems belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "utterance": "male", 
+  "active_set": [
+   "(Q72458,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q72458"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P641"
+  ], 
+  "type_list": [
+   "Q349"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What did that person participate in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q221635"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q221635"
+  ], 
+  "utterance": "track cycling", 
+  "active_set": [
+   "(Q6581097,P641,c(Q349))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q72458"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory was Ko Willems born at ?"
+ }, 
+ {
+  "all_entities": [
+   "Q727"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q727"
+  ], 
+  "utterance": "Amsterdam", 
+  "active_set": [
+   "(Q72458,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q491610"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about Erich Mende?"
+ }, 
+ {
+  "all_entities": [
+   "Q510827"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q510827"
+  ], 
+  "utterance": "Strzelce Opolskie", 
+  "active_set": [
+   "(Q491610,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q510827"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P190"
+  ], 
+  "type_list": [
+   "Q5119"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which capital is twin city of that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6149"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6149"
+  ], 
+  "utterance": "Soest", 
+  "active_set": [
+   "(Q510827,P190,c(Q5119))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q510827"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person expired at Strzelce Opolskie ?"
+ }, 
+ {
+  "all_entities": [
+   "Q104880"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q104880"
+  ], 
+  "utterance": "Andreas Maria Renard", 
+  "active_set": [
+   "(c(Q502895),P20,Q510827)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q510827"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is Strzelce Opolskie present in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q36"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q36"
+  ], 
+  "utterance": "Poland", 
+  "active_set": [
+   "(Q510827,P17,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q727"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P937"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people have Amsterdam as their work location ?"
+ }, 
+ {
+  "all_entities": [
+   "Q604927", 
+   "Q19885645", 
+   "Q1656387", 
+   "Q1694746", 
+   "Q1458529", 
+   "Q1038911", 
+   "Q678099", 
+   "Q1497725", 
+   "Q2486642", 
+   "Q26690157", 
+   "Q1363375", 
+   "Q4794968", 
+   "Q90250", 
+   "Q1029143", 
+   "Q78163", 
+   "Q237416", 
+   "Q7192056", 
+   "Q356234", 
+   "Q523866", 
+   "Q260087", 
+   "Q26690202", 
+   "Q2790487", 
+   "Q1907680", 
+   "Q1246188", 
+   "Q1928950", 
+   "Q1109324", 
+   "Q2645552", 
+   "Q935192", 
+   "Q1311664", 
+   "Q2326447", 
+   "Q18511825", 
+   "Q2025435", 
+   "Q3161674", 
+   "Q447109", 
+   "Q1404627", 
+   "Q1936019", 
+   "Q1713035", 
+   "Q2214914", 
+   "Q864193", 
+   "Q25667799", 
+   "Q1375019", 
+   "Q777623", 
+   "Q3013397", 
+   "Q5163895", 
+   "Q6508285", 
+   "Q420452", 
+   "Q3156399", 
+   "Q26690161", 
+   "Q1209620", 
+   "Q1462125", 
+   "Q1167358", 
+   "Q19729684", 
+   "Q104369", 
+   "Q118082", 
+   "Q2862493", 
+   "Q20113663", 
+   "Q2725591", 
+   "Q24436730", 
+   "Q2344390", 
+   "Q5588035", 
+   "Q19259324", 
+   "Q1354089", 
+   "Q1893807", 
+   "Q1122812", 
+   "Q533759", 
+   "Q1711821", 
+   "Q719671", 
+   "Q4093080", 
+   "Q3157947", 
+   "Q1752082", 
+   "Q1106683", 
+   "Q2761474", 
+   "Q2096001", 
+   "Q469283", 
+   "Q274415", 
+   "Q323431", 
+   "Q6119855", 
+   "Q5681591", 
+   "Q2492353", 
+   "Q2480090", 
+   "Q1695328", 
+   "Q1691420", 
+   "Q47496", 
+   "Q4054689", 
+   "Q18516669", 
+   "Q18558911", 
+   "Q336725", 
+   "Q1732719", 
+   "Q1605029", 
+   "Q19287740", 
+   "Q105345", 
+   "Q1027310", 
+   "Q2039458", 
+   "Q18602853", 
+   "Q2224119", 
+   "Q1685538", 
+   "Q2214848", 
+   "Q2208284", 
+   "Q202382", 
+   "Q122287", 
+   "Q1862268", 
+   "Q379677", 
+   "Q216872", 
+   "Q18507959", 
+   "Q60477", 
+   "Q26690084", 
+   "Q26690089", 
+   "Q691944", 
+   "Q7335", 
+   "Q1084376", 
+   "Q3126978", 
+   "Q6835062", 
+   "Q158370", 
+   "Q2044422", 
+   "Q1703565", 
+   "Q1308583", 
+   "Q957115", 
+   "Q1766736", 
+   "Q216676", 
+   "Q981689", 
+   "Q325922", 
+   "Q514074", 
+   "Q329791", 
+   "Q24347666", 
+   "Q430523", 
+   "Q16318975", 
+   "Q536951", 
+   "Q471147", 
+   "Q345858", 
+   "Q2578435", 
+   "Q2545292", 
+   "Q5582", 
+   "Q1928910", 
+   "Q1706474", 
+   "Q1698586", 
+   "Q566194", 
+   "Q28550", 
+   "Q1079592", 
+   "Q1402952", 
+   "Q1707976", 
+   "Q551624", 
+   "Q2062204", 
+   "Q24452339", 
+   "Q18071809", 
+   "Q655049", 
+   "Q93503", 
+   "Q1394958", 
+   "Q2786135", 
+   "Q13424102", 
+   "Q1174034", 
+   "Q39658", 
+   "Q18603176", 
+   "Q542383", 
+   "Q3136323", 
+   "Q458734", 
+   "Q1041353", 
+   "Q18516692", 
+   "Q1737761", 
+   "Q19587808", 
+   "Q18516514", 
+   "Q1283911", 
+   "Q1949147", 
+   "Q24258483", 
+   "Q95252", 
+   "Q1594223", 
+   "Q2250081", 
+   "Q1679453", 
+   "Q115333", 
+   "Q454603", 
+   "Q4949349", 
+   "Q100276", 
+   "Q7336", 
+   "Q17351358", 
+   "Q1465270", 
+   "Q16148030", 
+   "Q19883341", 
+   "Q63149", 
+   "Q724192", 
+   "Q21637722", 
+   "Q78772", 
+   "Q18289544", 
+   "Q1611705", 
+   "Q20172671", 
+   "Q213612", 
+   "Q18516502", 
+   "Q97977", 
+   "Q1892877", 
+   "Q7078543", 
+   "Q1689871", 
+   "Q21130436", 
+   "Q680607", 
+   "Q2089185", 
+   "Q602194", 
+   "Q19832279", 
+   "Q6481304", 
+   "Q728991", 
+   "Q18516466", 
+   "Q533876", 
+   "Q5109799"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5582", 
+   "Q39658", 
+   "Q78772"
+  ], 
+  "utterance": "Vincent van Gogh, Carl Peter Thunberg, Robert Menasse", 
+  "active_set": [
+   "(c(Q502895),P937,Q727)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q36"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P47"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which administrative territories are next to the border of Poland ?"
+ }, 
+ {
+  "all_entities": [
+   "Q212", 
+   "Q213", 
+   "Q211", 
+   "Q159", 
+   "Q214", 
+   "Q218", 
+   "Q37", 
+   "Q184"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q159", 
+   "Q184", 
+   "Q213"
+  ], 
+  "utterance": "Russia, Belarus, Czech Republic", 
+  "active_set": [
+   "(c(Q15617994),P47,Q36)"
+  ]
+ }
+]

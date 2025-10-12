@@ -1,0 +1,282 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q333987"
+  ], 
+  "relations": [
+   "P101"
+  ], 
+  "type_list": [
+   "Q336"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which field does Edwin Howard Armstrong belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q43035"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q43035"
+  ], 
+  "utterance": "electrical engineering", 
+  "active_set": [
+   "(Q333987,P101,c(Q336))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q333987"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P26"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person is married to Edwin Howard Armstrong ?"
+ }, 
+ {
+  "all_entities": [
+   "Q16008604"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q16008604"
+  ], 
+  "utterance": "Esther Marion Armstrong", 
+  "active_set": [
+   "(c(Q502895),P26,Q333987)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q16008604"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the sex of that person ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581072"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581072"
+  ], 
+  "utterance": "female", 
+  "active_set": [
+   "(Q16008604,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P21"
+  ], 
+  "count_ques_sub_type": 9, 
+  "type_list": [
+   "Q290", 
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many sexes are the sex of more number of people than that sex ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(c(Q502895),P21,c(Q290))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q543402", 
+   "Q333987"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are Edwin Howard Armstrong or Eva Sl\u00e1dekov\u00e1 an inhabitant of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q30", 
+   "Q214"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30", 
+   "Q214"
+  ], 
+  "utterance": "United States of America, Slovakia", 
+  "active_set": [
+   "OR((Q333987,P27,c(Q15617994)), (Q543402,P27,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q214"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P85"
+  ], 
+  "type_list": [
+   "Q484692"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which hymn is the anthem for that administrative territory ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "active_set": [
+   "(Q30,P85,c(Q484692))", 
+   "(Q214,P85,c(Q484692))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q30", 
+   "Q214"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean United States of America ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q214"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Slovakia. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q166944"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q166944"
+  ], 
+  "utterance": "Nad Tatrou sa bl\u00fdska", 
+  "active_set": [
+   "(Q214,P85,c(Q484692))"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Mult. entity type", 
+  "entities_in_utterance": [
+   "Q30", 
+   "Q62633"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P85"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q484692"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many hymns are the anthems for United States of America or Grand Duchy of Finland ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q44696", 
+   "Q162483"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(Q30,P85,c(Q484692))", 
+   "(Q62633,P85,c(Q484692))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1969862"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P607"
+  ], 
+  "type_list": [
+   "Q198"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which battles did Boris Vannikov take part in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q8683", 
+   "Q362"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q8683", 
+   "Q362"
+  ], 
+  "utterance": "Cold War, World War II", 
+  "active_set": [
+   "(Q1969862,P607,c(Q198))"
+  ]
+ }
+]

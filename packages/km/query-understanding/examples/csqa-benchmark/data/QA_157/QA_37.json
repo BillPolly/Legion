@@ -1,0 +1,263 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q6700048"
+  ], 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is the job of Luigi Grassi ?"
+ }, 
+ {
+  "all_entities": [
+   "Q937857"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q937857"
+  ], 
+  "utterance": "association football player", 
+  "active_set": [
+   "(Q6700048,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q6700048"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is the native country of that person ?"
+ }, 
+ {
+  "all_entities": [
+   "Q38"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q38"
+  ], 
+  "utterance": "Italy", 
+  "active_set": [
+   "(Q937857,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q38"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P162"
+  ], 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which work of art created that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2933446"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2933446"
+  ], 
+  "utterance": "Calabuch", 
+  "active_set": [
+   "(c(Q838948),P162,Q38)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q2933446", 
+   "Q222791"
+  ], 
+  "relations": [
+   "P58"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Did Ennio Flaiano serve as the screenwriter for Calabuch ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q2933446,P58,Q222791)"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Mult. entity type", 
+  "entities_in_utterance": [
+   "Q2933446", 
+   "Q1736108"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P86"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many people did the compostion for Calabuch or Katharinenkirche ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q658571", 
+   "Q1511"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(Q2933446,P86,c(Q502895))", 
+   "(Q1736108,P86,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q38"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P532"
+  ], 
+  "type_list": [
+   "Q2235308"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which ship type has Italy as registry port ?"
+ }, 
+ {
+  "all_entities": [
+   "Q190542"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q190542"
+  ], 
+  "utterance": "Costa Concordia", 
+  "active_set": [
+   "(c(Q2235308),P532,Q38)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q190542"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P793"
+  ], 
+  "type_list": [
+   "Q2245405"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which significant event is that ship type associated with ?"
+ }, 
+ {
+  "all_entities": [
+   "Q14713606"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14713606"
+  ], 
+  "utterance": "ship launch", 
+  "active_set": [
+   "(Q190542,P793,c(Q2245405))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "entities_in_utterance": [
+   "Q837777", 
+   "Q1736108"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P47", 
+   "P17"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which political territories are Katharinenkirche a part of or share the border with G\u00f3mara ?"
+ }, 
+ {
+  "all_entities": [
+   "Q831987", 
+   "Q829951", 
+   "Q183", 
+   "Q483532", 
+   "Q833410", 
+   "Q837193", 
+   "Q835443", 
+   "Q829175"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q831987", 
+   "Q829951", 
+   "Q183", 
+   "Q483532", 
+   "Q833410", 
+   "Q837193", 
+   "Q835443", 
+   "Q829175"
+  ], 
+  "utterance": "Buberos, Almazul, Germany, Aliud, Ser\u00f3n de N\u00e1gima, Tejado, Villaseca de Arciel, Aldealafuente", 
+  "active_set": [
+   "OR((Q1736108,P17,c(Q1048835)), (Q837777,P47,c(Q1048835)))"
+  ]
+ }
+]

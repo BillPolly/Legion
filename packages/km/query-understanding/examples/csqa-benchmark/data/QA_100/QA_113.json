@@ -1,0 +1,424 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q4908178"
+  ], 
+  "relations": [
+   "P39"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What was the position held by Bill Blythe ?"
+ }, 
+ {
+  "all_entities": [
+   "Q18604553"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18604553"
+  ], 
+  "utterance": "member of the Texas House of Representatives", 
+  "active_set": [
+   "(Q4908178,P39,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q18604553"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1001"
+  ], 
+  "type_list": [
+   "Q852446"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which US administrative territory applies to jurisdiction of that occupation ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1439"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1439"
+  ], 
+  "utterance": "Texas", 
+  "active_set": [
+   "(Q18604553,P1001,c(Q852446))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q605195"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q852446"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Flag of Tennessee?"
+ }, 
+ {
+  "all_entities": [
+   "Q1509"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1509"
+  ], 
+  "utterance": "Tennessee", 
+  "active_set": [
+   "(Q605195,P1001,c(Q852446))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, one direct and one indirect, subject is indirect", 
+  "entities_in_utterance": [
+   "Q1509", 
+   "Q30"
+  ], 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 2, 
+  "utterance": "Is that US administrative territory located in United States of America ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q1509,P17,Q30)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1509"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P551"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people have residence at that US administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1040657", 
+   "Q180453", 
+   "Q17717", 
+   "Q4932334"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q180453", 
+   "Q17717", 
+   "Q1040657"
+  ], 
+  "utterance": "Dolly Parton, Oscar Robertson, Carl Smith", 
+  "active_set": []
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q180453", 
+   "Q17717", 
+   "Q1040657"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What do Dolly Parton, Oscar Robertson and Carl Smith do for a living ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1327329", 
+   "Q43845", 
+   "Q9648008", 
+   "Q488205", 
+   "Q2405480", 
+   "Q177220", 
+   "Q639669", 
+   "Q10798782", 
+   "Q33999", 
+   "Q36834", 
+   "Q183945", 
+   "Q7622988", 
+   "Q822146", 
+   "Q5137571", 
+   "Q3665646", 
+   "Q753110", 
+   "Q177220"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q10798782", 
+   "Q36834", 
+   "Q7622988"
+  ], 
+  "utterance": "television actor, composer, street artist", 
+  "active_set": [
+   "(Q180453,P106,c(Q12737077))", 
+   "(Q17717,P106,c(Q12737077))", 
+   "(Q1040657,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q180453"
+  ], 
+  "relations": [
+   "P800"
+  ], 
+  "type_list": [
+   "Q7725634"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 1, 
+  "utterance": "What is notable work of Dolly Parton ?"
+ }, 
+ {
+  "all_entities": [
+   "Q666856"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q666856"
+  ], 
+  "utterance": "I Will Always Love You", 
+  "active_set": [
+   "(Q10798782,P800,c(Q7725634))", 
+   "(Q36834,P800,c(Q7725634))", 
+   "(Q7622988,P800,c(Q7725634))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q666856", 
+   "Q180453"
+  ], 
+  "relations": [
+   "P800"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Is Dolly Parton accredited with being the author of the notable work that one ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q180453,P800,Q666856)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P407"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q34770", 
+   "Q7725634"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many languages are the languages of work for approximately 7 literary works ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q132659", 
+   "Q18130932", 
+   "Q13414913", 
+   "Q21161942", 
+   "Q35499", 
+   "Q37015", 
+   "Q8785", 
+   "Q35726", 
+   "Q34909", 
+   "Q27403", 
+   "Q1420587", 
+   "Q36206", 
+   "Q1321", 
+   "Q33976", 
+   "Q33879", 
+   "Q10498031", 
+   "Q397", 
+   "Q9056", 
+   "Q8752", 
+   "Q37041", 
+   "Q652", 
+   "Q35505", 
+   "Q25167", 
+   "Q25164", 
+   "Q56982", 
+   "Q35308", 
+   "Q36790", 
+   "Q447117"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "28", 
+  "active_set": [
+   "(c(Q7725634),P407,c(Q34770))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q1654604", 
+   "Q1439"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P17"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are Texas or Sakmarsky District present in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q30", 
+   "Q159"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30", 
+   "Q159"
+  ], 
+  "utterance": "United States of America, Russia", 
+  "active_set": [
+   "OR((Q1439,P17,c(Q15617994)), (Q1654604,P17,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q852446", 
+   "Q166142", 
+   "Q838948"
+  ], 
+  "entities_in_utterance": [
+   "Q812"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P840"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many US administrative territories are the narrative locations of more number of applications or works of art than Florida ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1439", 
+   "Q1384", 
+   "Q99", 
+   "Q1408"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "4", 
+  "active_set": [
+   "(c(Q166142)|c(Q838948),P840,c(Q852446))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q852446", 
+   "Q166142", 
+   "Q838948"
+  ], 
+  "entities_in_utterance": [
+   "Q1408"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P840"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And how about New Jersey?"
+ }, 
+ {
+  "all_entities": [
+   "Q1439", 
+   "Q99"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(c(Q166142)|c(Q838948),P840,c(Q852446))"
+  ]
+ }
+]

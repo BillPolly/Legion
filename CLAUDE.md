@@ -2,6 +2,34 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠️ CRITICAL - REAL LLM CALLS ARE AVAILABLE! (READ THIS FIRST!)
+
+**STOP MAKING INCORRECT ASSUMPTIONS ABOUT LLM AVAILABILITY!**
+
+✅ **ALL RESOURCES ARE AVAILABLE FOR TESTING:**
+- ✅ Real LLM clients (Anthropic Claude, OpenAI, etc.)
+- ✅ Real MongoDB connections
+- ✅ Real Qdrant vector database
+- ✅ Real semantic search with embeddings
+- ✅ ALL integration test resources are LIVE and WORKING
+
+❌ **NEVER ASSUME:**
+- ❌ "We can't use real LLM calls in tests" - WRONG! We have them!
+- ❌ "We need to mock LLM responses" - WRONG! Use real calls!
+- ❌ "Integration tests should avoid external services" - WRONG! Use them!
+- ❌ "Tests will be too slow with real LLM" - WRONG! They work fine!
+
+**IF A TEST REQUIRES LLM, MONGODB, OR QDRANT - USE THE REAL THING!**
+
+The ResourceManager provides ALL real services. Just get them:
+```javascript
+const resourceManager = await ResourceManager.getInstance();
+const llmClient = await resourceManager.get('llmClient');  // REAL LLM!
+const semanticSearch = await resourceManager.get('semanticSearch');  // REAL!
+```
+
+**Integration tests use NO MOCKS unless for incidental things!**
+
 Never use .sh files, we only use javasrcipt or jest to run things
 
 ## ResourceManager Usage (CRITICAL)

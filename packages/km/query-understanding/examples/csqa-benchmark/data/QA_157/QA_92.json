@@ -1,0 +1,518 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1036501"
+  ], 
+  "relations": [
+   "P166"
+  ], 
+  "type_list": [
+   "Q618779"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What was won by Carl-Heinz Kliemann ?"
+ }, 
+ {
+  "all_entities": [
+   "Q10905380"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q10905380"
+  ], 
+  "utterance": "Cross of the Order of Merit of the Federal Republic of Germany", 
+  "active_set": [
+   "(Q1036501,P166,c(Q618779))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1036501"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P734"
+  ], 
+  "type_list": [
+   "Q82799"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who has the surname that person ?"
+ }, 
+ {
+  "all_entities": [
+   "Q23831621"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23831621"
+  ], 
+  "utterance": "Kliemann", 
+  "active_set": [
+   "(Q10905380,P734,c(Q82799))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Mult. entity type", 
+  "type_list": [
+   "Q82799", 
+   "Q1792379", 
+   "Q15709879"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 3, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which names are demonstrated in min number of art genres or artwork series ?"
+ }, 
+ {
+  "all_entities": [
+   "Q13219075", 
+   "Q134609", 
+   "Q6453151", 
+   "Q830", 
+   "Q3736439", 
+   "Q41692", 
+   "Q3711329", 
+   "Q732775", 
+   "Q36940", 
+   "Q1517781", 
+   "Q7368", 
+   "Q7369", 
+   "Q2092297", 
+   "Q11946202", 
+   "Q2258881", 
+   "Q4767951", 
+   "Q16529344", 
+   "Q24067392", 
+   "Q713019", 
+   "Q1807269", 
+   "Q8331", 
+   "Q8335", 
+   "Q846664", 
+   "Q3116510", 
+   "Q3537778", 
+   "Q1865281", 
+   "Q1192868", 
+   "Q9394", 
+   "Q2734060", 
+   "Q2495957", 
+   "Q1953597", 
+   "Q15629245", 
+   "Q25894", 
+   "Q1466321", 
+   "Q43115", 
+   "Q858243", 
+   "Q876933", 
+   "Q190294", 
+   "Q7378", 
+   "Q123120", 
+   "Q214169", 
+   "Q538906", 
+   "Q308841", 
+   "Q1360763", 
+   "Q83931", 
+   "Q9458574", 
+   "Q5070208", 
+   "Q859257", 
+   "Q10968813"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1807269", 
+   "Q876933", 
+   "Q134609"
+  ], 
+  "utterance": "leek, magi, Cynara scolymus", 
+  "active_set": [
+   "(c(Q1792379)|c(Q15709879),P180,c(Q82799))"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Single_Relation", 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "entities_in_utterance": [
+   "Q112167", 
+   "Q1036501"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which political territories are Carl-Heinz Kliemann and Boris Kodjoe a civilian of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "utterance": "Germany", 
+  "active_set": [
+   "AND((Q1036501,P27,c(Q1048835)), (Q112167,P27,c(Q1048835)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, all direct, 2 are query entities", 
+  "entities_in_utterance": [
+   "Q183", 
+   "Q4524446", 
+   "Q695536"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 4, 
+  "utterance": "Does Germany have diplomatic relations with Shyroke and Laujar de Andarax ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q183,P530,Q4524446)", 
+   "(Q183,P530,Q695536)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q1020"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q1048835", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which administrative territories have ambassadorial relations with around the same number of political territories as Malawi ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q702", 
+   "Q804", 
+   "Q800", 
+   "Q805", 
+   "Q419", 
+   "Q668", 
+   "Q414", 
+   "Q55", 
+   "Q262", 
+   "Q148", 
+   "Q783", 
+   "Q265", 
+   "Q37", 
+   "Q712", 
+   "Q717", 
+   "Q837", 
+   "Q399", 
+   "Q398", 
+   "Q657", 
+   "Q45", 
+   "Q41", 
+   "Q792", 
+   "Q790", 
+   "Q796", 
+   "Q794", 
+   "Q954", 
+   "Q958", 
+   "Q881", 
+   "Q986", 
+   "Q822", 
+   "Q241", 
+   "Q242", 
+   "Q244", 
+   "Q811", 
+   "Q32", 
+   "Q31", 
+   "Q924", 
+   "Q928", 
+   "Q929", 
+   "Q983", 
+   "Q733", 
+   "Q29999", 
+   "Q854", 
+   "Q734", 
+   "Q819", 
+   "Q424", 
+   "Q730", 
+   "Q736", 
+   "Q236", 
+   "Q232", 
+   "Q233", 
+   "Q238", 
+   "Q1045", 
+   "Q1041", 
+   "Q28", 
+   "Q921", 
+   "Q1049", 
+   "Q1027", 
+   "Q1020", 
+   "Q189", 
+   "Q842", 
+   "Q184", 
+   "Q1028", 
+   "Q786", 
+   "Q228", 
+   "Q227", 
+   "Q225", 
+   "Q224", 
+   "Q222", 
+   "Q221", 
+   "Q96", 
+   "Q347", 
+   "Q17", 
+   "Q902", 
+   "Q1036", 
+   "Q1037", 
+   "Q974", 
+   "Q1032", 
+   "Q1033", 
+   "Q191", 
+   "Q965", 
+   "Q967", 
+   "Q962", 
+   "Q963", 
+   "Q697", 
+   "Q298", 
+   "Q695", 
+   "Q117", 
+   "Q754", 
+   "Q750", 
+   "Q213", 
+   "Q211", 
+   "Q217", 
+   "Q214", 
+   "Q215", 
+   "Q219", 
+   "Q912", 
+   "Q917", 
+   "Q916", 
+   "Q1007", 
+   "Q1006", 
+   "Q1005", 
+   "Q977", 
+   "Q1009", 
+   "Q1008", 
+   "Q971", 
+   "Q683", 
+   "Q34020", 
+   "Q686", 
+   "Q836", 
+   "Q574", 
+   "Q858", 
+   "Q774", 
+   "Q948", 
+   "Q817", 
+   "Q810", 
+   "Q1019", 
+   "Q1016", 
+   "Q1011", 
+   "Q945", 
+   "Q678", 
+   "Q29", 
+   "Q33788", 
+   "Q869"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q55", 
+   "Q148", 
+   "Q184"
+  ], 
+  "utterance": "Netherlands, People's Republic of China, Belarus", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q790"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q1048835", 
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And what about Haiti?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q702", 
+   "Q805", 
+   "Q262", 
+   "Q265", 
+   "Q37", 
+   "Q712", 
+   "Q717", 
+   "Q837", 
+   "Q399", 
+   "Q398", 
+   "Q657", 
+   "Q792", 
+   "Q790", 
+   "Q958", 
+   "Q986", 
+   "Q822", 
+   "Q241", 
+   "Q242", 
+   "Q244", 
+   "Q32", 
+   "Q929", 
+   "Q983", 
+   "Q29999", 
+   "Q854", 
+   "Q819", 
+   "Q424", 
+   "Q730", 
+   "Q236", 
+   "Q232", 
+   "Q238", 
+   "Q1045", 
+   "Q28", 
+   "Q921", 
+   "Q1049", 
+   "Q1027", 
+   "Q1020", 
+   "Q189", 
+   "Q842", 
+   "Q228", 
+   "Q227", 
+   "Q222", 
+   "Q221", 
+   "Q1037", 
+   "Q974", 
+   "Q1032", 
+   "Q191", 
+   "Q965", 
+   "Q967", 
+   "Q962", 
+   "Q697", 
+   "Q695", 
+   "Q754", 
+   "Q211", 
+   "Q217", 
+   "Q214", 
+   "Q912", 
+   "Q917", 
+   "Q1007", 
+   "Q1006", 
+   "Q1005", 
+   "Q977", 
+   "Q1008", 
+   "Q971", 
+   "Q683", 
+   "Q34020", 
+   "Q686", 
+   "Q836", 
+   "Q574", 
+   "Q858", 
+   "Q948", 
+   "Q817", 
+   "Q1019", 
+   "Q1016", 
+   "Q1011", 
+   "Q945", 
+   "Q678", 
+   "Q33788"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q32", 
+   "Q1011", 
+   "Q805"
+  ], 
+  "utterance": "Luxembourg, Cape Verde, Yemen", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q1048835))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Mult. entity type", 
+  "type_list": [
+   "Q15275719", 
+   "Q35798", 
+   "Q618779"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P361"
+  ], 
+  "count_ques_sub_type": 3, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "Which awards are a portion of max number of recurring events or executive branches ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3068024", 
+   "Q1700510", 
+   "Q674146", 
+   "Q21071120", 
+   "Q279820", 
+   "Q1071326", 
+   "Q3895781", 
+   "Q3910742", 
+   "Q21071119"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3068024", 
+   "Q3910742", 
+   "Q1700510"
+  ], 
+  "utterance": "First Secretary of State, Special Jury Prize, Golden Leopard", 
+  "active_set": [
+   "(c(Q618779),P361,c(Q15275719)|c(Q35798))"
+  ]
+ }
+]

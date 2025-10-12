@@ -1,0 +1,375 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q6058327"
+  ], 
+  "relations": [
+   "P172"
+  ], 
+  "type_list": [
+   "Q2472587"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people does Intra have as his/her race ?"
+ }, 
+ {
+  "all_entities": [
+   "Q79797"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q79797"
+  ], 
+  "utterance": "Armenians", 
+  "active_set": [
+   "(Q6058327,P172,c(Q2472587))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q6058327"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which sex does Intra possess ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "utterance": "male", 
+  "active_set": [
+   "(Q6058327,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Single_Relation", 
+  "type_list": [
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q6581072", 
+   "Q6581097"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P21"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people have the gender as male and female ?"
+ }, 
+ {
+  "all_entities": [
+   "Q12966459", 
+   "Q17600942", 
+   "Q3260705", 
+   "Q5874237", 
+   "Q21391750", 
+   "Q17225819", 
+   "Q5972494", 
+   "Q16941580", 
+   "Q16733519", 
+   "Q11622868", 
+   "Q6702791", 
+   "Q10263785", 
+   "Q6571041", 
+   "Q16732132", 
+   "Q24264223", 
+   "Q20401379", 
+   "Q20119921", 
+   "Q2312612", 
+   "Q16164967", 
+   "Q242700", 
+   "Q6555624", 
+   "Q12586819", 
+   "Q23698979", 
+   "Q17628096", 
+   "Q22342662", 
+   "Q525066", 
+   "Q9544977", 
+   "Q503007", 
+   "Q22280111", 
+   "Q22102078", 
+   "Q5482749", 
+   "Q21392153", 
+   "Q201204", 
+   "Q10281088", 
+   "Q442804", 
+   "Q16767898", 
+   "Q22570074", 
+   "Q21601127", 
+   "Q12403076", 
+   "Q14432239", 
+   "Q12734885", 
+   "Q734662", 
+   "Q24500675", 
+   "Q24034956", 
+   "Q19957341", 
+   "Q6258596", 
+   "Q22236117", 
+   "Q22808784", 
+   "Q11379959", 
+   "Q6003690", 
+   "Q24807469", 
+   "Q21857402", 
+   "Q21258362", 
+   "Q4979792", 
+   "Q11449790", 
+   "Q22001922", 
+   "Q3575012", 
+   "Q3764762", 
+   "Q7377573", 
+   "Q20068820", 
+   "Q6031433", 
+   "Q21794041", 
+   "Q6438624", 
+   "Q25768293", 
+   "Q19448005", 
+   "Q21503040", 
+   "Q17148031", 
+   "Q11604340", 
+   "Q17158335", 
+   "Q11815936", 
+   "Q17364527", 
+   "Q22280435", 
+   "Q15934058", 
+   "Q18559837", 
+   "Q11201210", 
+   "Q25748324", 
+   "Q459844", 
+   "Q2379965", 
+   "Q3291942", 
+   "Q17621841", 
+   "Q20980163", 
+   "Q453573", 
+   "Q11531266", 
+   "Q4255661", 
+   "Q22675675", 
+   "Q528434", 
+   "Q237726", 
+   "Q74813", 
+   "Q2668396", 
+   "Q298423", 
+   "Q22073991", 
+   "Q503575", 
+   "Q23416861", 
+   "Q15807938", 
+   "Q19357604", 
+   "Q18049905", 
+   "Q26921704", 
+   "Q2882250", 
+   "Q18346977", 
+   "Q2939204", 
+   "Q3809749", 
+   "Q12685049", 
+   "Q21033490", 
+   "Q5856706", 
+   "Q16165783", 
+   "Q5569499", 
+   "Q12613187", 
+   "Q7849225", 
+   "Q16582167", 
+   "Q19543099", 
+   "Q16865281", 
+   "Q22095108", 
+   "Q12872947", 
+   "Q15433626"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21392153", 
+   "Q22001922", 
+   "Q22570074", 
+   "Q16733519", 
+   "Q3809749", 
+   "Q242700", 
+   "Q11531266", 
+   "Q19957341", 
+   "Q12966459", 
+   "Q16164967"
+  ], 
+  "utterance": "Some of them are Jian-Huan Yang, Suzanne Schulting, Elisabeth Ullmann, Ali Nuhu, Jaiyah Saelua, Naima Mora, Miki Matsumoto, Tinne De Caigny, Kim Ju-yeong, Ivan Almeida", 
+  "active_set": [
+   "AND((c(Q502895),P21,Q6581097), (c(Q502895),P21,Q6581072))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P725"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q502895", 
+   "Q386724"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which works did max number of people do the dubbing for ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q26331781"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q26331781"
+  ], 
+  "utterance": "H\u00e9rcules y el examen de conducir", 
+  "active_set": [
+   "(c(Q386724),P725,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, all direct, 2 are query entities", 
+  "entities_in_utterance": [
+   "Q26331781", 
+   "Q23768155", 
+   "Q3084428"
+  ], 
+  "relations": [
+   "P725"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 4, 
+  "utterance": "Has H\u00e9rcules y el examen de conducir been dubbed by Bel\u00e9n Roca and Fran\u00e7ois Descraques ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES and NO respectively", 
+  "active_set": [
+   "(Q26331781,P725,Q23768155)", 
+   "(Q26331781,P725,Q3084428)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q26331781"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P407"
+  ], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which language is that work composed in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1321"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1321"
+  ], 
+  "utterance": "Spanish", 
+  "active_set": []
+ }, 
+ {
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Mult. entity type", 
+  "entities_in_utterance": [
+   "Q1321", 
+   "Q21686005"
+  ], 
+  "relations": [
+   "P364"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many works of art were originally created in Spanish and n/a (silent film) language ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q6464008", 
+   "Q4985504", 
+   "Q18709052", 
+   "Q6463643", 
+   "Q18709151", 
+   "Q5169684", 
+   "Q5966899", 
+   "Q1323904", 
+   "Q1702785", 
+   "Q7077833", 
+   "Q6462732", 
+   "Q21646506", 
+   "Q1589300", 
+   "Q7736557", 
+   "Q4739391", 
+   "Q3206715", 
+   "Q19571380", 
+   "Q6843816", 
+   "Q6812178", 
+   "Q20649996", 
+   "Q12155725", 
+   "Q153534", 
+   "Q1584320", 
+   "Q4658218", 
+   "Q20649826", 
+   "Q19599972", 
+   "Q7128613", 
+   "Q15918435", 
+   "Q20649598", 
+   "Q20002482", 
+   "Q16864757", 
+   "Q5518919", 
+   "Q19600006", 
+   "Q3213556", 
+   "Q4733623", 
+   "Q5583239", 
+   "Q18709005", 
+   "Q16931062"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "38", 
+  "active_set": [
+   "(c(Q838948),P364,Q1321)", 
+   "(c(Q838948),P364,Q21686005)"
+  ]
+ }
+]

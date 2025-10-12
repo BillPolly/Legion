@@ -1,0 +1,341 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q705522"
+  ], 
+  "relations": [
+   "P26"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which person is the life partner of Hiroyuki Sanada ?"
+ }, 
+ {
+  "all_entities": [
+   "Q11496977"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q11496977"
+  ], 
+  "utterance": "Satomi Tezuka", 
+  "active_set": [
+   "(Q705522,P26,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q11496977"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P161"
+  ], 
+  "type_list": [
+   "Q15416"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which television program does that person star in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q11325984"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q11325984"
+  ], 
+  "utterance": "Haikara-san", 
+  "active_set": [
+   "(c(Q15416),P161,Q11496977)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q705522"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P166"
+  ], 
+  "type_list": [
+   "Q2003221"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What was awarded to Hiroyuki Sanada ?"
+ }, 
+ {
+  "all_entities": [
+   "Q12201526"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q12201526"
+  ], 
+  "utterance": "Member of the Order of the British Empire", 
+  "active_set": [
+   "(Q705522,P166,c(Q2003221))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q12201526", 
+   "Q934531"
+  ], 
+  "relations": [
+   "P166"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Was Martyn Williams honoured with that chivalric order ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q934531,P166,Q12201526)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q11496977", 
+   "Q17"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Is Satomi Tezuka a civilian of Japan ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q11496977,P27,Q17)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q12201526"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory does Member of the Order of the British Empire belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q145"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q145"
+  ], 
+  "utterance": "United Kingdom", 
+  "active_set": [
+   "(Q12201526,P17,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q145"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P108"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people work for that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q131733", 
+   "Q2261240", 
+   "Q110869"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q131733", 
+   "Q2261240", 
+   "Q110869"
+  ], 
+  "utterance": "Henry Cavendish, William Hume-Rothery, William Lassell", 
+  "active_set": [
+   "(c(Q502895),P108,Q145)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q340653", 
+   "Q145"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P47", 
+   "P530"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories have diplomatic relationships with United Kingdom or have a shared border with Badesi ?"
+ }, 
+ {
+  "all_entities": [
+   "Q142", 
+   "Q805", 
+   "Q341096", 
+   "Q801", 
+   "Q155", 
+   "Q37", 
+   "Q403", 
+   "Q391735", 
+   "Q38", 
+   "Q391723"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q142", 
+   "Q805", 
+   "Q341096", 
+   "Q801", 
+   "Q155", 
+   "Q37", 
+   "Q403", 
+   "Q391735", 
+   "Q38", 
+   "Q391723"
+  ], 
+  "utterance": "France, Yemen, Trinit\u00e0 d'Agultu e Vignola, Israel, Brazil, Lithuania, Serbia, Viddalba, Italy, Valledoria", 
+  "active_set": [
+   "OR((Q145,P530,c(Q15617994)), (Q340653,P47,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q155"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P361"
+  ], 
+  "type_list": [
+   "Q2221906"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which geographic locations are that administrative territory a part of ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q403"
+  ], 
+  "active_set": [
+   "(Q142,P361,c(Q2221906))", 
+   "(Q805,P361,c(Q2221906))", 
+   "(Q341096,P361,c(Q2221906))", 
+   "(Q801,P361,c(Q2221906))", 
+   "(Q155,P361,c(Q2221906))", 
+   "(Q37,P361,c(Q2221906))", 
+   "(Q403,P361,c(Q2221906))", 
+   "(Q391735,P361,c(Q2221906))", 
+   "(Q38,P361,c(Q2221906))", 
+   "(Q391723,P361,c(Q2221906))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q142", 
+   "Q805", 
+   "Q341096", 
+   "Q801", 
+   "Q155", 
+   "Q37", 
+   "Q403", 
+   "Q391735", 
+   "Q38", 
+   "Q391723"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Serbia ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q155"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Brazil. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q12585", 
+   "Q236118"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q12585", 
+   "Q236118"
+  ], 
+  "utterance": "Latin America, Southern Cone", 
+  "active_set": [
+   "(Q155,P361,c(Q2221906))"
+  ]
+ }
+]

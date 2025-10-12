@@ -1,0 +1,777 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q19802079"
+  ], 
+  "relations": [
+   "P97"
+  ], 
+  "type_list": [
+   "Q4164871"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What was the noble title held by Willem Caspar de Jonge ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1496077"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1496077"
+  ], 
+  "utterance": "Jonkheer", 
+  "active_set": [
+   "(Q19802079,P97,c(Q4164871))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q19802079"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where did Willem Caspar de Jonge expire ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1075656"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1075656"
+  ], 
+  "utterance": "Bilthoven", 
+  "active_set": [
+   "(Q19802079,P20,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q19802079"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P102"
+  ], 
+  "type_list": [
+   "Q7210356"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which political organization is Willem Caspar de Jonge a member of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2558701"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2558701"
+  ], 
+  "utterance": "Social Democratic Workers' Party", 
+  "active_set": [
+   "(Q19802079,P102,c(Q7210356))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P361"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q7210356", 
+   "Q7210356"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which political organizations are a component of min number of political organizations ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1518193", 
+   "Q7131032", 
+   "Q1654268", 
+   "Q3935996", 
+   "Q2632305", 
+   "Q2179086", 
+   "Q4824226", 
+   "Q1952211", 
+   "Q21405813", 
+   "Q2482138", 
+   "Q7303029", 
+   "Q1922340", 
+   "Q83372", 
+   "Q1408232", 
+   "Q291031", 
+   "Q5874016", 
+   "Q10564889", 
+   "Q627189", 
+   "Q20081274", 
+   "Q978086", 
+   "Q3834914", 
+   "Q1149512", 
+   "Q1479955", 
+   "Q4118233", 
+   "Q3678393", 
+   "Q2070568", 
+   "Q25648673", 
+   "Q18390996", 
+   "Q192254", 
+   "Q2256403", 
+   "Q6357092", 
+   "Q504564", 
+   "Q3366586", 
+   "Q370936", 
+   "Q5032604", 
+   "Q17291443", 
+   "Q941224", 
+   "Q5305890", 
+   "Q281745", 
+   "Q25796237", 
+   "Q7362579", 
+   "Q606620", 
+   "Q2037135", 
+   "Q213451", 
+   "Q285388", 
+   "Q7551721", 
+   "Q634277", 
+   "Q5604428", 
+   "Q5604429", 
+   "Q4157656", 
+   "Q2256283"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q213451", 
+   "Q634277", 
+   "Q2482138"
+  ], 
+  "utterance": "Green Party, True Finns, Autonomy Liberty Participation Ecology", 
+  "active_set": [
+   "(c(Q7210356),P361,c(Q7210356))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q53826", 
+   "Q19802079"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P47", 
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are the native countriesof Willem Caspar de Jonge or are bordered by Altomonte ?"
+ }, 
+ {
+  "all_entities": [
+   "Q53948", 
+   "Q53897", 
+   "Q53971", 
+   "Q29999", 
+   "Q53880", 
+   "Q53816", 
+   "Q53981", 
+   "Q53995", 
+   "Q53962", 
+   "Q53857"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q53948", 
+   "Q53897", 
+   "Q53971", 
+   "Q29999", 
+   "Q53880", 
+   "Q53816", 
+   "Q53981", 
+   "Q53995", 
+   "Q53962", 
+   "Q53857"
+  ], 
+  "utterance": "Roggiano Gravina, Lungro, San Lorenzo del Vallo, Kingdom of the Netherlands, Firmo, Acquaformosa, San Sosti, Saracena, San Donato di Ninea, Castrovillari", 
+  "active_set": [
+   "OR((Q19802079,P27,c(Q15617994)), (Q53826,P47,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q15617994", 
+   "Q1048835"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which political territories have ambassadorial relations with less number of administrative territories than Germany ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1000", 
+   "Q40", 
+   "Q781", 
+   "Q778", 
+   "Q408", 
+   "Q769", 
+   "Q685", 
+   "Q35", 
+   "Q691", 
+   "Q16", 
+   "Q664", 
+   "Q766"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q408", 
+   "Q35", 
+   "Q16"
+  ], 
+  "utterance": "Australia, Denmark, Canada", 
+  "active_set": [
+   "(c(Q1048835),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q7431089"
+  ], 
+  "relations": [
+   "P710"
+  ], 
+  "type_list": [
+   "Q1190554"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Did those political territories particiate in Scheidler v. National Organization for Women ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q7431089,P710,Q408)", 
+   "(Q7431089,P710,Q35)", 
+   "(Q7431089,P710,Q16)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q15617994", 
+   "Q1048835"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which administrative territories have diplomatic relationships with approximately 1 political territory ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q702", 
+   "Q262", 
+   "Q265", 
+   "Q37", 
+   "Q712", 
+   "Q717", 
+   "Q837", 
+   "Q657", 
+   "Q792", 
+   "Q958", 
+   "Q986", 
+   "Q822", 
+   "Q241", 
+   "Q242", 
+   "Q244", 
+   "Q32", 
+   "Q929", 
+   "Q983", 
+   "Q29999", 
+   "Q854", 
+   "Q819", 
+   "Q424", 
+   "Q730", 
+   "Q230", 
+   "Q232", 
+   "Q238", 
+   "Q1045", 
+   "Q28", 
+   "Q921", 
+   "Q1049", 
+   "Q1027", 
+   "Q1020", 
+   "Q189", 
+   "Q184", 
+   "Q228", 
+   "Q227", 
+   "Q222", 
+   "Q221", 
+   "Q1037", 
+   "Q974", 
+   "Q1032", 
+   "Q191", 
+   "Q965", 
+   "Q967", 
+   "Q962", 
+   "Q697", 
+   "Q695", 
+   "Q754", 
+   "Q211", 
+   "Q217", 
+   "Q214", 
+   "Q912", 
+   "Q917", 
+   "Q1007", 
+   "Q1006", 
+   "Q1005", 
+   "Q977", 
+   "Q1008", 
+   "Q971", 
+   "Q683", 
+   "Q34020", 
+   "Q686", 
+   "Q836", 
+   "Q574", 
+   "Q948", 
+   "Q817", 
+   "Q1019", 
+   "Q1016", 
+   "Q1011", 
+   "Q945", 
+   "Q678", 
+   "Q33788"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q230", 
+   "Q184", 
+   "Q32"
+  ], 
+  "utterance": "Georgia, Belarus, Luxembourg", 
+  "active_set": [
+   "(c(Q1048835),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q4470447"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Do Ukrainka have diplomatic relations with those administrative territories ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q4470447,P530,Q230)", 
+   "(Q4470447,P530,Q184)", 
+   "(Q4470447,P530,Q32)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q1006"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which administrative territories have diplomatic relationships with greater number of administrative territories than Guinea ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q801", 
+   "Q800", 
+   "Q805", 
+   "Q419", 
+   "Q668", 
+   "Q414", 
+   "Q142", 
+   "Q55", 
+   "Q145", 
+   "Q262", 
+   "Q148", 
+   "Q37", 
+   "Q711", 
+   "Q717", 
+   "Q252", 
+   "Q399", 
+   "Q398", 
+   "Q403", 
+   "Q258", 
+   "Q45", 
+   "Q159", 
+   "Q43", 
+   "Q41", 
+   "Q155", 
+   "Q796", 
+   "Q794", 
+   "Q954", 
+   "Q889", 
+   "Q884", 
+   "Q958", 
+   "Q881", 
+   "Q822", 
+   "Q241", 
+   "Q33", 
+   "Q32", 
+   "Q31", 
+   "Q30", 
+   "Q924", 
+   "Q36", 
+   "Q34", 
+   "Q928", 
+   "Q39", 
+   "Q38", 
+   "Q739", 
+   "Q423", 
+   "Q983", 
+   "Q851", 
+   "Q733", 
+   "Q734", 
+   "Q236", 
+   "Q230", 
+   "Q233", 
+   "Q27", 
+   "Q28", 
+   "Q1049", 
+   "Q189", 
+   "Q843", 
+   "Q184", 
+   "Q1029", 
+   "Q736", 
+   "Q228", 
+   "Q227", 
+   "Q225", 
+   "Q224", 
+   "Q222", 
+   "Q221", 
+   "Q96", 
+   "Q229", 
+   "Q347", 
+   "Q17", 
+   "Q902", 
+   "Q974", 
+   "Q1033", 
+   "Q1030", 
+   "Q191", 
+   "Q963", 
+   "Q298", 
+   "Q115", 
+   "Q114", 
+   "Q750", 
+   "Q212", 
+   "Q213", 
+   "Q211", 
+   "Q217", 
+   "Q214", 
+   "Q215", 
+   "Q219", 
+   "Q916", 
+   "Q1009", 
+   "Q1008", 
+   "Q971", 
+   "Q874", 
+   "Q79", 
+   "Q77", 
+   "Q858", 
+   "Q878", 
+   "Q810", 
+   "Q1016", 
+   "Q1011", 
+   "Q29", 
+   "Q869", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q38", 
+   "Q155", 
+   "Q30"
+  ], 
+  "utterance": "Italy, Brazil, United States of America", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q355304", 
+   "Q473972", 
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q104192"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P706"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many administrative territories are located in less number of watercourses or protected areas than Kleinmachnow ?"
+ }, 
+ {
+  "all_entities": [
+   "Q805", 
+   "Q1070686", 
+   "Q695445", 
+   "Q2712111", 
+   "Q489215", 
+   "Q5101419", 
+   "Q682072", 
+   "Q6685870", 
+   "Q4692591", 
+   "Q525879", 
+   "Q267993", 
+   "Q3172", 
+   "Q922342", 
+   "Q637400", 
+   "Q21042", 
+   "Q632868", 
+   "Q148", 
+   "Q784", 
+   "Q21049", 
+   "Q786", 
+   "Q25129", 
+   "Q7042", 
+   "Q312335", 
+   "Q21160", 
+   "Q525945", 
+   "Q5382040", 
+   "Q252320", 
+   "Q3003231", 
+   "Q505665", 
+   "Q1462", 
+   "Q15744129", 
+   "Q4692611", 
+   "Q521132", 
+   "Q790", 
+   "Q508054", 
+   "Q1721440", 
+   "Q5517964", 
+   "Q496389", 
+   "Q555609", 
+   "Q267005", 
+   "Q128230", 
+   "Q27332", 
+   "Q1619957", 
+   "Q1093572", 
+   "Q6350324", 
+   "Q204529", 
+   "Q244", 
+   "Q4789577", 
+   "Q501683", 
+   "Q582690", 
+   "Q216422", 
+   "Q20789", 
+   "Q16642582", 
+   "Q33", 
+   "Q921", 
+   "Q633162", 
+   "Q3146", 
+   "Q520347", 
+   "Q851", 
+   "Q845396", 
+   "Q15213143", 
+   "Q598754", 
+   "Q252772", 
+   "Q21074475", 
+   "Q81306", 
+   "Q771971", 
+   "Q1778088", 
+   "Q3942", 
+   "Q145", 
+   "Q333149", 
+   "Q27", 
+   "Q494305", 
+   "Q4770750", 
+   "Q20836", 
+   "Q769680", 
+   "Q5420482", 
+   "Q19906291", 
+   "Q192129", 
+   "Q502662", 
+   "Q47821", 
+   "Q20019215", 
+   "Q503693", 
+   "Q4692647", 
+   "Q3038", 
+   "Q3068", 
+   "Q331886", 
+   "Q15244035", 
+   "Q6472577", 
+   "Q25130", 
+   "Q588957", 
+   "Q25135", 
+   "Q229", 
+   "Q3218", 
+   "Q4769813", 
+   "Q112019", 
+   "Q704288", 
+   "Q21008", 
+   "Q7916724", 
+   "Q660806", 
+   "Q25125", 
+   "Q29931", 
+   "Q28091", 
+   "Q754", 
+   "Q507258", 
+   "Q5275507", 
+   "Q28013", 
+   "Q558787", 
+   "Q14892", 
+   "Q180271", 
+   "Q262684", 
+   "Q6353095", 
+   "Q628095", 
+   "Q3923", 
+   "Q27649869", 
+   "Q5283827", 
+   "Q3193", 
+   "Q522992", 
+   "Q15744111", 
+   "Q23968", 
+   "Q760", 
+   "Q6835962", 
+   "Q489865", 
+   "Q518171", 
+   "Q2119591", 
+   "Q46870", 
+   "Q72432", 
+   "Q504134", 
+   "Q625747", 
+   "Q2585085", 
+   "Q20754", 
+   "Q8147649", 
+   "Q153969", 
+   "Q481758", 
+   "Q8043694", 
+   "Q55416", 
+   "Q31640", 
+   "Q3559483", 
+   "Q376823", 
+   "Q3559279", 
+   "Q3559271"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "140", 
+  "active_set": [
+   "(c(Q15617994),P706,c(Q355304)|c(Q473972))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories have diplomatic relations with atleast 12 administrative territories ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q801", 
+   "Q805", 
+   "Q142", 
+   "Q148", 
+   "Q159", 
+   "Q155", 
+   "Q30", 
+   "Q38"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "8", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994))"
+  ]
+ }
+]

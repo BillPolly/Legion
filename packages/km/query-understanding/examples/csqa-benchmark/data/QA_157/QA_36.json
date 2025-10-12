@@ -1,0 +1,1009 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q741091"
+  ], 
+  "relations": [
+   "P172"
+  ], 
+  "type_list": [
+   "Q2472587"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is the ethnicity of Christopher Weeramantry ?"
+ }, 
+ {
+  "all_entities": [
+   "Q932244"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q932244"
+  ], 
+  "utterance": "Sinhalese people", 
+  "active_set": [
+   "(Q741091,P172,c(Q2472587))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q741091"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P69"
+  ], 
+  "type_list": [
+   "Q3918"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which university was that person educated at ?"
+ }, 
+ {
+  "all_entities": [
+   "Q245247"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q245247"
+  ], 
+  "utterance": "King's College London", 
+  "active_set": [
+   "(Q932244,P69,c(Q3918))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P69"
+  ], 
+  "count_ques_sub_type": 9, 
+  "type_list": [
+   "Q3918", 
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many universities are less number of people an alumni of than that university ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q3183295", 
+   "Q749718", 
+   "Q483656", 
+   "Q967165", 
+   "Q7413401", 
+   "Q1305521", 
+   "Q1551044", 
+   "Q6694614", 
+   "Q5499390", 
+   "Q736674", 
+   "Q2667184", 
+   "Q1665236", 
+   "Q15570", 
+   "Q7895557", 
+   "Q1678753", 
+   "Q7082157", 
+   "Q6904331", 
+   "Q845138", 
+   "Q5468082", 
+   "Q1100801", 
+   "Q845768", 
+   "Q14691855", 
+   "Q4027", 
+   "Q6973717", 
+   "Q5555403", 
+   "Q14688472", 
+   "Q6106933", 
+   "Q1664127", 
+   "Q5129063", 
+   "Q558977", 
+   "Q39949", 
+   "Q281155", 
+   "Q6516648", 
+   "Q2302260", 
+   "Q1053985", 
+   "Q1377", 
+   "Q892188", 
+   "Q2590962", 
+   "Q6542166", 
+   "Q491511", 
+   "Q152303", 
+   "Q2688358", 
+   "Q7432967", 
+   "Q3551751", 
+   "Q500740", 
+   "Q6792811", 
+   "Q7634594", 
+   "Q7746440", 
+   "Q1495387", 
+   "Q1939211", 
+   "Q1153094", 
+   "Q41085", 
+   "Q6851447", 
+   "Q662801", 
+   "Q2503794", 
+   "Q4203305", 
+   "Q7895286", 
+   "Q472316", 
+   "Q4095278", 
+   "Q7523091", 
+   "Q7382811", 
+   "Q19159531", 
+   "Q4920974", 
+   "Q613736", 
+   "Q567899", 
+   "Q951305", 
+   "Q4318523", 
+   "Q7895916", 
+   "Q2456057", 
+   "Q344262", 
+   "Q7895695", 
+   "Q1784748", 
+   "Q491127", 
+   "Q7121909", 
+   "Q923610", 
+   "Q7895594", 
+   "Q7972542", 
+   "Q7629097", 
+   "Q1633215", 
+   "Q8018007", 
+   "Q6593237", 
+   "Q5542217", 
+   "Q1143289", 
+   "Q743615", 
+   "Q7675042", 
+   "Q1247544", 
+   "Q6801255", 
+   "Q1322289", 
+   "Q41790", 
+   "Q2378091", 
+   "Q11942", 
+   "Q212297", 
+   "Q6912389", 
+   "Q7663080", 
+   "Q681", 
+   "Q18155496", 
+   "Q7419339", 
+   "Q1326975", 
+   "Q5582145", 
+   "Q864855", 
+   "Q36188", 
+   "Q7896321", 
+   "Q7896329", 
+   "Q4836272", 
+   "Q7676661", 
+   "Q176473", 
+   "Q4314987", 
+   "Q126726", 
+   "Q7058422", 
+   "Q2495874", 
+   "Q4760155", 
+   "Q2303907", 
+   "Q1656608", 
+   "Q1149089", 
+   "Q1799872", 
+   "Q1511650", 
+   "Q6040911", 
+   "Q7896029", 
+   "Q5508996", 
+   "Q6040919", 
+   "Q12058774", 
+   "Q1517478", 
+   "Q1145306", 
+   "Q702303", 
+   "Q483032", 
+   "Q5048332", 
+   "Q5123486", 
+   "Q7894802", 
+   "Q6133193", 
+   "Q4119470", 
+   "Q268411", 
+   "Q632891", 
+   "Q2038878", 
+   "Q6393365", 
+   "Q846173", 
+   "Q216273", 
+   "Q6694579", 
+   "Q5184025", 
+   "Q758560", 
+   "Q5316090", 
+   "Q7660015", 
+   "Q7895798", 
+   "Q3016196", 
+   "Q2648311", 
+   "Q3151861", 
+   "Q3026663", 
+   "Q2000624", 
+   "Q1665121", 
+   "Q7896446", 
+   "Q4005921", 
+   "Q7895647", 
+   "Q5210049", 
+   "Q1401524", 
+   "Q283099", 
+   "Q6470927", 
+   "Q4765985", 
+   "Q3544530", 
+   "Q4947841", 
+   "Q6452737", 
+   "Q1036763", 
+   "Q891082", 
+   "Q7522161", 
+   "Q3551771", 
+   "Q7611664", 
+   "Q7829357", 
+   "Q8023816", 
+   "Q310842", 
+   "Q24576", 
+   "Q1564297", 
+   "Q7895892", 
+   "Q1024426", 
+   "Q7456791", 
+   "Q7896167", 
+   "Q7896169", 
+   "Q5305628", 
+   "Q4068854", 
+   "Q5150109", 
+   "Q5921126", 
+   "Q16997122", 
+   "Q7864076", 
+   "Q557597", 
+   "Q7489128", 
+   "Q3997334", 
+   "Q1257946", 
+   "Q16955", 
+   "Q76473", 
+   "Q5461282", 
+   "Q683580", 
+   "Q7063457", 
+   "Q1141929", 
+   "Q1858310", 
+   "Q5312901", 
+   "Q4534839", 
+   "Q7425578", 
+   "Q49206", 
+   "Q349055", 
+   "Q1654025", 
+   "Q845392", 
+   "Q1549932", 
+   "Q41114", 
+   "Q1141586", 
+   "Q487804", 
+   "Q11684710", 
+   "Q4538875", 
+   "Q1073441", 
+   "Q725198", 
+   "Q7896011", 
+   "Q1854488", 
+   "Q4813072", 
+   "Q167102", 
+   "Q2303432", 
+   "Q5193960", 
+   "Q7895653", 
+   "Q7986919", 
+   "Q240784", 
+   "Q7893913", 
+   "Q1517780", 
+   "Q5933098", 
+   "Q2140369", 
+   "Q1378", 
+   "Q846183", 
+   "Q300980", 
+   "Q5104666", 
+   "Q5303959", 
+   "Q1420500", 
+   "Q7387200", 
+   "Q2302336", 
+   "Q1504133", 
+   "Q39988", 
+   "Q7895581", 
+   "Q7260309", 
+   "Q1124657", 
+   "Q3064269", 
+   "Q1351317", 
+   "Q1187623", 
+   "Q1537436", 
+   "Q635118", 
+   "Q2496094", 
+   "Q7603650", 
+   "Q1477551", 
+   "Q484230", 
+   "Q833670", 
+   "Q7622043", 
+   "Q7896235", 
+   "Q7692472", 
+   "Q1434547", 
+   "Q7896238", 
+   "Q968559", 
+   "Q1048898", 
+   "Q85285", 
+   "Q240631", 
+   "Q7799288", 
+   "Q10379501", 
+   "Q6966999", 
+   "Q1760244", 
+   "Q5208233", 
+   "Q4041", 
+   "Q913861", 
+   "Q7060409", 
+   "Q3098071", 
+   "Q235034", 
+   "Q1187271", 
+   "Q4696572", 
+   "Q820796", 
+   "Q8012895", 
+   "Q2508061", 
+   "Q1307345", 
+   "Q1570276", 
+   "Q1066492", 
+   "Q7063663", 
+   "Q344334", 
+   "Q5123253", 
+   "Q4981651", 
+   "Q3577853", 
+   "Q2303765", 
+   "Q6770581", 
+   "Q6023633", 
+   "Q14328110", 
+   "Q40006", 
+   "Q2687782", 
+   "Q1284408", 
+   "Q5354197", 
+   "Q3778182", 
+   "Q6825262", 
+   "Q1034468", 
+   "Q482659", 
+   "Q467025", 
+   "Q3551820", 
+   "Q1707779", 
+   "Q528377", 
+   "Q1136919", 
+   "Q7895301", 
+   "Q7895499", 
+   "Q139901", 
+   "Q955764", 
+   "Q10854154", 
+   "Q7976643", 
+   "Q7896780", 
+   "Q15228657", 
+   "Q7405523", 
+   "Q1343885", 
+   "Q6879100", 
+   "Q7058068", 
+   "Q7895273", 
+   "Q600634", 
+   "Q633561", 
+   "Q1661242", 
+   "Q7894990", 
+   "Q7401683", 
+   "Q622906", 
+   "Q7864163", 
+   "Q7414060", 
+   "Q696672", 
+   "Q1353248", 
+   "Q1857293", 
+   "Q7566644", 
+   "Q590643", 
+   "Q304985", 
+   "Q1467920", 
+   "Q533235", 
+   "Q5055985", 
+   "Q10906760", 
+   "Q3268248", 
+   "Q153265", 
+   "Q49213", 
+   "Q7970913", 
+   "Q631066", 
+   "Q4916802", 
+   "Q1362729", 
+   "Q579321", 
+   "Q846101", 
+   "Q7590449", 
+   "Q1446492", 
+   "Q7866339", 
+   "Q766145", 
+   "Q7166399", 
+   "Q3067635", 
+   "Q204181", 
+   "Q5500137", 
+   "Q8003310", 
+   "Q7698689", 
+   "Q3445856", 
+   "Q5546035", 
+   "Q1938341", 
+   "Q1364464", 
+   "Q7971464", 
+   "Q392897", 
+   "Q14693404", 
+   "Q5132316", 
+   "Q734266", 
+   "Q685557", 
+   "Q2496210", 
+   "Q11837925", 
+   "Q746079", 
+   "Q7895026", 
+   "Q17040748", 
+   "Q7895457", 
+   "Q461551", 
+   "Q475007", 
+   "Q7640246", 
+   "Q5445386", 
+   "Q4874603", 
+   "Q861888", 
+   "Q624985", 
+   "Q3151965", 
+   "Q7912578", 
+   "Q5645514", 
+   "Q39997", 
+   "Q3578275", 
+   "Q391028", 
+   "Q7896136", 
+   "Q1579397", 
+   "Q491711", 
+   "Q3534782", 
+   "Q877925", 
+   "Q200601", 
+   "Q7895338", 
+   "Q496536", 
+   "Q7603641", 
+   "Q1049470", 
+   "Q6694609", 
+   "Q1755318", 
+   "Q179781", 
+   "Q4837977", 
+   "Q15568", 
+   "Q579968", 
+   "Q7895523", 
+   "Q132478", 
+   "Q5588949", 
+   "Q24714140", 
+   "Q2495890", 
+   "Q659080", 
+   "Q309988", 
+   "Q641609", 
+   "Q18545951", 
+   "Q3635065", 
+   "Q7571324", 
+   "Q8012898", 
+   "Q4380853", 
+   "Q314305", 
+   "Q1273836", 
+   "Q1815994", 
+   "Q507349", 
+   "Q4032", 
+   "Q734764", 
+   "Q3551486", 
+   "Q1111640", 
+   "Q1131088", 
+   "Q685664", 
+   "Q3523254", 
+   "Q4775029", 
+   "Q2001033", 
+   "Q5018694", 
+   "Q7988336", 
+   "Q5416962", 
+   "Q186285", 
+   "Q374457", 
+   "Q1521725", 
+   "Q11093399", 
+   "Q378134", 
+   "Q911830", 
+   "Q835366", 
+   "Q6772633", 
+   "Q6647469", 
+   "Q487170", 
+   "Q487177", 
+   "Q7896469", 
+   "Q7152118", 
+   "Q839900", 
+   "Q375606", 
+   "Q488851", 
+   "Q465922", 
+   "Q2001088", 
+   "Q689775", 
+   "Q7588853", 
+   "Q597236", 
+   "Q6536214", 
+   "Q858662", 
+   "Q4456884", 
+   "Q3551758", 
+   "Q14692455", 
+   "Q5588960", 
+   "Q6214727", 
+   "Q482735", 
+   "Q10176", 
+   "Q56143", 
+   "Q7914456", 
+   "Q847128", 
+   "Q694219", 
+   "Q487841", 
+   "Q4304088", 
+   "Q8010335", 
+   "Q258464", 
+   "Q6156725", 
+   "Q1470431", 
+   "Q41765", 
+   "Q7930883", 
+   "Q1057199", 
+   "Q213439", 
+   "Q179501", 
+   "Q7896088", 
+   "Q7895518", 
+   "Q7895843", 
+   "Q7895840", 
+   "Q192334", 
+   "Q7570576", 
+   "Q4551377", 
+   "Q7348679", 
+   "Q3695416", 
+   "Q7895108", 
+   "Q7165488", 
+   "Q4556206", 
+   "Q1026846", 
+   "Q457281", 
+   "Q1472347", 
+   "Q1333303", 
+   "Q219563", 
+   "Q133965", 
+   "Q11509930", 
+   "Q7494418", 
+   "Q9357897", 
+   "Q1378099", 
+   "Q7896545", 
+   "Q167049", 
+   "Q7057624", 
+   "Q153978", 
+   "Q5461640", 
+   "Q15952687", 
+   "Q1190852", 
+   "Q7708154", 
+   "Q3064264", 
+   "Q7895034", 
+   "Q3409570", 
+   "Q1807942", 
+   "Q7895748", 
+   "Q7416583", 
+   "Q1627967", 
+   "Q503419", 
+   "Q5244034", 
+   "Q734324", 
+   "Q16543763", 
+   "Q1641788", 
+   "Q7895080"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "503", 
+  "active_set": [
+   "(c(Q502895),P69,c(Q3918))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q741091"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is the place of birth of Christopher Weeramantry ?"
+ }, 
+ {
+  "all_entities": [
+   "Q35381"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q35381"
+  ], 
+  "utterance": "Colombo", 
+  "active_set": [
+   "(Q741091,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q741091"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P166"
+  ], 
+  "type_list": [
+   "Q618779"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What was received by Christopher Weeramantry ?"
+ }, 
+ {
+  "all_entities": [
+   "Q152770"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q152770"
+  ], 
+  "utterance": "Right Livelihood Award", 
+  "active_set": [
+   "(Q741091,P166,c(Q618779))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q3102242"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q618779"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Georges Barazer de Lannurien?"
+ }, 
+ {
+  "all_entities": [
+   "Q185493", 
+   "Q10855195"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q185493", 
+   "Q10855195"
+  ], 
+  "utterance": "Order of Lenin, Officer of the Legion of Honour", 
+  "active_set": [
+   "(Q3102242,P166,c(Q618779))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q3102242"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P607"
+  ], 
+  "type_list": [
+   "Q198"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which battle did Georges Barazer de Lannurien take part in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q362"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q362"
+  ], 
+  "utterance": "World War II", 
+  "active_set": [
+   "(Q3102242,P607,c(Q198))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q12797451"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q198"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Nicolae Scarlat Stoenescu?"
+ }, 
+ {
+  "all_entities": [
+   "Q362"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q362"
+  ], 
+  "utterance": "World War II", 
+  "active_set": [
+   "(Q12797451,P607,c(Q198))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q198", 
+   "Q2342494", 
+   "Q838948"
+  ], 
+  "entities_in_utterance": [
+   "Q545449"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P921"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many wars were the main subjects of around the same number of collectables and works of art 's work as Iraq War ?"
+ }, 
+ {
+  "all_entities": [
+   "Q8683", 
+   "Q81545", 
+   "Q211855", 
+   "Q8676", 
+   "Q633862", 
+   "Q188972", 
+   "Q129053", 
+   "Q1049945", 
+   "Q10859", 
+   "Q209297", 
+   "Q242352", 
+   "Q201424", 
+   "Q142529", 
+   "Q361", 
+   "Q75984", 
+   "Q178810", 
+   "Q545449", 
+   "Q243620"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "18", 
+  "active_set": [
+   "(c(Q2342494)|c(Q838948),P921,c(Q198))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q198", 
+   "Q2342494", 
+   "Q838948"
+  ], 
+  "entities_in_utterance": [
+   "Q243620"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P921"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about Somali Civil War?"
+ }, 
+ {
+  "all_entities": [
+   "Q8683", 
+   "Q81545", 
+   "Q211855", 
+   "Q8676", 
+   "Q633862", 
+   "Q188972", 
+   "Q129053", 
+   "Q1049945", 
+   "Q10859", 
+   "Q209297", 
+   "Q242352", 
+   "Q201424", 
+   "Q142529", 
+   "Q361", 
+   "Q75984", 
+   "Q178810", 
+   "Q545449", 
+   "Q243620"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "18", 
+  "active_set": [
+   "(c(Q2342494)|c(Q838948),P921,c(Q198))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q3103281", 
+   "Q545449"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27", 
+   "P17"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories do Iraq War belong to or are Georges Ouvray an inhabitant of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q142", 
+   "Q145", 
+   "Q796", 
+   "Q786", 
+   "Q30", 
+   "Q36", 
+   "Q29"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q142", 
+   "Q145", 
+   "Q796", 
+   "Q786", 
+   "Q30", 
+   "Q36", 
+   "Q29"
+  ], 
+  "utterance": "France, United Kingdom, Iraq, Dominican Republic, United States of America, Poland, Spain", 
+  "active_set": [
+   "OR((Q545449,P17,c(Q15617994)), (Q3103281,P27,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q4323509"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Do Novohryhorivka have ambassadorial relations with those administrative territories ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q4323509,P530,Q142)", 
+   "(Q4323509,P530,Q145)", 
+   "(Q4323509,P530,Q796)", 
+   "(Q4323509,P530,Q786)", 
+   "(Q4323509,P530,Q30)", 
+   "(Q4323509,P530,Q36)", 
+   "(Q4323509,P530,Q29)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q16"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q15617994", 
+   "Q1048835"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which political territories have tactful political relations with less number of administrative territories than Canada ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1000", 
+   "Q40", 
+   "Q781", 
+   "Q778", 
+   "Q769", 
+   "Q685", 
+   "Q35", 
+   "Q691", 
+   "Q664", 
+   "Q766"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q35", 
+   "Q40", 
+   "Q664"
+  ], 
+  "utterance": "Denmark, Austria, New Zealand", 
+  "active_set": [
+   "(c(Q1048835),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q35", 
+   "Q40", 
+   "Q664"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P530"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which political territories have tactful political relations with Denmark, Austria and New Zealand ?"
+ }, 
+ {
+  "all_entities": [
+   "Q408", 
+   "Q183", 
+   "Q16", 
+   "Q408", 
+   "Q183", 
+   "Q408", 
+   "Q183", 
+   "Q16"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183", 
+   "Q183", 
+   "Q183"
+  ], 
+  "utterance": "Germany", 
+  "active_set": [
+   "(c(Q1048835),P530,Q35)", 
+   "(c(Q1048835),P530,Q40)", 
+   "(c(Q1048835),P530,Q664)"
+  ]
+ }
+]

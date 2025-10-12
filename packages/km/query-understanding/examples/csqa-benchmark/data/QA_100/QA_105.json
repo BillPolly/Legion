@@ -1,0 +1,440 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1745266"
+  ], 
+  "relations": [
+   "P166"
+  ], 
+  "type_list": [
+   "Q618779"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What was received by Klaus H\u00e4r\u00f6 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1714070"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1714070"
+  ], 
+  "utterance": "Jussi Award for Best Direction", 
+  "active_set": [
+   "(Q1745266,P166,c(Q618779))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1745266"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P140"
+  ], 
+  "type_list": [
+   "Q879146"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the religion associated with Klaus H\u00e4r\u00f6 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1379849"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1379849"
+  ], 
+  "utterance": "Evangelical Lutheran Church of Finland", 
+  "active_set": [
+   "(Q1745266,P140,c(Q879146))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q879146", 
+   "Q12737077", 
+   "Q2342494"
+  ], 
+  "entities_in_utterance": [
+   "Q682443"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P361"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many Christian denominations are lesser number of occupations or collectables a portion of than Episcopal Church ?"
+ }, 
+ {
+  "all_entities": [
+   "Q666860", 
+   "Q752470", 
+   "Q346575", 
+   "Q749243", 
+   "Q922480", 
+   "Q170111", 
+   "Q1379849"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "7", 
+  "active_set": [
+   "(c(Q12737077)|c(Q2342494),P361,c(Q879146))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q879146", 
+   "Q12737077", 
+   "Q2342494"
+  ], 
+  "entities_in_utterance": [
+   "Q1089788"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P361"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And what about Church in Wales?"
+ }, 
+ {
+  "all_entities": [
+   "Q682443", 
+   "Q666860", 
+   "Q752470", 
+   "Q346575", 
+   "Q749243", 
+   "Q540782", 
+   "Q922480", 
+   "Q170111", 
+   "Q1379849"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "9", 
+  "active_set": [
+   "(c(Q12737077)|c(Q2342494),P361,c(Q879146))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q838948"
+  ], 
+  "entities_in_utterance": [
+   "Q187364", 
+   "Q1745266"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P800"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which works of art were notable works done by Klaus H\u00e4r\u00f6 or Robert Zemeckis ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1217931", 
+   "Q1329527", 
+   "Q16933688", 
+   "Q1059450", 
+   "Q134773", 
+   "Q379873", 
+   "Q213411", 
+   "Q502629", 
+   "Q862197"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1217931", 
+   "Q1329527", 
+   "Q16933688", 
+   "Q1059450", 
+   "Q134773", 
+   "Q379873", 
+   "Q213411", 
+   "Q502629", 
+   "Q862197"
+  ], 
+  "utterance": "Mother of Mine, Elina: As If I Wasn't There, The Fencer, Letters to Father Jacob, Forrest Gump, Who Framed Roger Rabbit, Cast Away, Romancing the Stone, The Polar Express", 
+  "active_set": [
+   "OR((Q1745266,P800,c(Q838948)), (Q187364,P800,c(Q838948)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q502629"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P915"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which city was that work of art filmed on ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q213411"
+  ], 
+  "active_set": [
+   "(Q1217931,P915,c(Q56061))", 
+   "(Q1329527,P915,c(Q56061))", 
+   "(Q16933688,P915,c(Q56061))", 
+   "(Q1059450,P915,c(Q56061))", 
+   "(Q134773,P915,c(Q56061))", 
+   "(Q379873,P915,c(Q56061))", 
+   "(Q213411,P915,c(Q56061))", 
+   "(Q502629,P915,c(Q56061))", 
+   "(Q862197,P915,c(Q56061))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q1217931", 
+   "Q1329527", 
+   "Q16933688", 
+   "Q1059450", 
+   "Q134773", 
+   "Q379873", 
+   "Q213411", 
+   "Q502629", 
+   "Q862197"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Cast Away ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q502629"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Romancing the Stone. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q60"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q60"
+  ], 
+  "utterance": "New York City", 
+  "active_set": [
+   "(Q502629,P915,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, 2 direct, 2(direct) are query entities, subject is indirect", 
+  "entities_in_utterance": [
+   "Q60", 
+   "Q2544704", 
+   "Q1793805"
+  ], 
+  "relations": [
+   "P6"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 5, 
+  "utterance": "Is William Jay Gaynor and Kurt Lilien the head of the goverment of Q60 ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES and NO respectively", 
+  "active_set": [
+   "(Q60,P6,Q2544704)", 
+   "(Q60,P6,Q1793805)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, all direct, 2 are query entities", 
+  "entities_in_utterance": [
+   "Q1379849", 
+   "Q5647717", 
+   "Q224487"
+  ], 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 4, 
+  "utterance": "Is Evangelical Lutheran Church of Finland present in Handy Cross and Salisano ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q1379849,P17,Q5647717)", 
+   "(Q1379849,P17,Q224487)"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q838948", 
+   "Q386724", 
+   "Q340169"
+  ], 
+  "entities_in_utterance": [
+   "Q1989744"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many works of art are expressed in more number of works and medias than Moses ?"
+ }, 
+ {
+  "all_entities": [
+   "Q267971", 
+   "Q831869", 
+   "Q733893", 
+   "Q1350279", 
+   "Q183272"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "5", 
+  "active_set": [
+   "(c(Q386724)|c(Q340169),P180,c(Q838948))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q838948", 
+   "Q386724", 
+   "Q340169"
+  ], 
+  "entities_in_utterance": [
+   "Q2070542"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about Hermes?"
+ }, 
+ {
+  "all_entities": [
+   "Q267971", 
+   "Q831869", 
+   "Q733893", 
+   "Q1350279", 
+   "Q183272"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "5", 
+  "active_set": [
+   "(c(Q386724)|c(Q340169),P180,c(Q838948))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q134773"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1411"
+  ], 
+  "type_list": [
+   "Q4220917"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which film awards were Forrest Gump nominated for ?"
+ }, 
+ {
+  "all_entities": [
+   "Q487136", 
+   "Q488645", 
+   "Q107258", 
+   "Q102427", 
+   "Q830079", 
+   "Q106291", 
+   "Q277751", 
+   "Q103360", 
+   "Q281939", 
+   "Q393686", 
+   "Q131520", 
+   "Q103916", 
+   "Q488651"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q106291", 
+   "Q103916", 
+   "Q102427"
+  ], 
+  "utterance": "Academy Award for Best Supporting Actor, Academy Award for Best Actor, Academy Award for Best Picture", 
+  "active_set": [
+   "(Q134773,P1411,c(Q4220917))"
+  ]
+ }
+]

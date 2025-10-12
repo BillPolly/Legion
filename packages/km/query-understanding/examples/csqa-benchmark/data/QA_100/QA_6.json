@@ -1,0 +1,294 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q13643654"
+  ], 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Where was Elle Evans born ?"
+ }, 
+ {
+  "all_entities": [
+   "Q830149"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q830149"
+  ], 
+  "utterance": "Paris", 
+  "active_set": [
+   "(Q13643654,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q830149"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P138"
+  ], 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which work of art has that administrative territory as its namesake ?"
+ }, 
+ {
+  "all_entities": [
+   "Q160946"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q160946"
+  ], 
+  "utterance": "Paris, Texas", 
+  "active_set": [
+   "(c(Q838948),P138,Q830149)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q830149"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P931"
+  ], 
+  "type_list": [
+   "Q62447"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which aerodrome serves the place named that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1654696"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1654696"
+  ], 
+  "utterance": "Cox Field", 
+  "active_set": [
+   "(c(Q62447),P931,Q160946)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q87", 
+   "Q830149"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P20"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people died in Paris or Alexandria ?"
+ }, 
+ {
+  "all_entities": [
+   "Q367319", 
+   "Q180109", 
+   "Q472809", 
+   "Q1700904", 
+   "Q2358257", 
+   "Q932997", 
+   "Q5393112", 
+   "Q11903", 
+   "Q15217091", 
+   "Q40234", 
+   "Q41766", 
+   "Q400918", 
+   "Q6023903", 
+   "Q188883", 
+   "Q1132898", 
+   "Q4662603", 
+   "Q354384", 
+   "Q5277618", 
+   "Q15691357", 
+   "Q709713", 
+   "Q507195", 
+   "Q15430409", 
+   "Q44024", 
+   "Q39589", 
+   "Q3263187", 
+   "Q559194", 
+   "Q4119364", 
+   "Q505931", 
+   "Q16931521", 
+   "Q2621323", 
+   "Q11306260", 
+   "Q631413", 
+   "Q526842", 
+   "Q3425935", 
+   "Q703505", 
+   "Q5229570", 
+   "Q3817725", 
+   "Q168261", 
+   "Q4429417", 
+   "Q354377", 
+   "Q317942", 
+   "Q548731", 
+   "Q635", 
+   "Q6583195", 
+   "Q365927", 
+   "Q939680", 
+   "Q34943", 
+   "Q31966", 
+   "Q20966043", 
+   "Q653213", 
+   "Q2456904", 
+   "Q6526588", 
+   "Q5940505", 
+   "Q1523601", 
+   "Q40022", 
+   "Q733780", 
+   "Q4918134", 
+   "Q18756984", 
+   "Q23822273", 
+   "Q15429735", 
+   "Q310173", 
+   "Q19202664", 
+   "Q1278123", 
+   "Q5141647", 
+   "Q3853129", 
+   "Q4002445", 
+   "Q16824968", 
+   "Q559224", 
+   "Q3723471", 
+   "Q461067", 
+   "Q87187", 
+   "Q216980", 
+   "Q3855701", 
+   "Q1233945", 
+   "Q2667099", 
+   "Q377336", 
+   "Q1365369", 
+   "Q311826", 
+   "Q7000484", 
+   "Q44079", 
+   "Q12875042", 
+   "Q927009", 
+   "Q1346458", 
+   "Q4720311", 
+   "Q4687473", 
+   "Q315360", 
+   "Q5462560", 
+   "Q19263024", 
+   "Q310811", 
+   "Q2348355", 
+   "Q3870270", 
+   "Q403629", 
+   "Q1292836", 
+   "Q7036079", 
+   "Q13107383", 
+   "Q3620719", 
+   "Q2401859", 
+   "Q1285426", 
+   "Q17285012", 
+   "Q161853", 
+   "Q44794", 
+   "Q4747311", 
+   "Q471255", 
+   "Q15967727", 
+   "Q2218898", 
+   "Q1334734", 
+   "Q314467", 
+   "Q7331183", 
+   "Q6102686", 
+   "Q15869274", 
+   "Q313018", 
+   "Q179718", 
+   "Q3840109", 
+   "Q233552", 
+   "Q1278118", 
+   "Q2372199", 
+   "Q2922506", 
+   "Q382012", 
+   "Q1291369", 
+   "Q363394", 
+   "Q4822806", 
+   "Q39991", 
+   "Q238539", 
+   "Q39996", 
+   "Q16034060", 
+   "Q312500", 
+   "Q1208788", 
+   "Q7791933", 
+   "Q43182", 
+   "Q177847", 
+   "Q19244263", 
+   "Q1317528", 
+   "Q4118655", 
+   "Q1295215", 
+   "Q87455", 
+   "Q40060", 
+   "Q232427", 
+   "Q15708451", 
+   "Q210445", 
+   "Q559182", 
+   "Q7382585", 
+   "Q2476089", 
+   "Q51673", 
+   "Q150642", 
+   "Q278399", 
+   "Q509004", 
+   "Q385708", 
+   "Q5519555", 
+   "Q450311", 
+   "Q2695834", 
+   "Q3770161", 
+   "Q11011921", 
+   "Q3663105", 
+   "Q192417", 
+   "Q7683555", 
+   "Q3230253", 
+   "Q355633", 
+   "Q2579462", 
+   "Q1400207", 
+   "Q328736", 
+   "Q16528419"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q210445", 
+   "Q7036079", 
+   "Q4118655", 
+   "Q15217091", 
+   "Q11903", 
+   "Q20966043", 
+   "Q278399", 
+   "Q1400207", 
+   "Q1700904", 
+   "Q87455"
+  ], 
+  "utterance": "Some of them are Al-Musta'in, Nikolaos Roussen, Ismail Chirine, Cratesicleia, Hypatia, Ambroise Poncet, Ralph Abercromby, Turan-Shah, John M. Brower, Pope Shenouda III of Alexandria", 
+  "active_set": [
+   "OR((c(Q502895),P20,Q830149), (c(Q502895),P20,Q87))"
+  ]
+ }
+]

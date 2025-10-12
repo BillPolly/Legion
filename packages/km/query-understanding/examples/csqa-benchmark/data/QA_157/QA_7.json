@@ -1,0 +1,545 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q3731707"
+  ], 
+  "relations": [
+   "P54"
+  ], 
+  "type_list": [
+   "Q1194951"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which national sports team is Erik Just Olsen a member of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q184387"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q184387"
+  ], 
+  "utterance": "Norway national football team", 
+  "active_set": [
+   "(Q3731707,P54,c(Q1194951))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q3731707"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P734"
+  ], 
+  "type_list": [
+   "Q82799"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who has the surname Erik Just Olsen ?"
+ }, 
+ {
+  "all_entities": [
+   "Q12042571"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q12042571"
+  ], 
+  "utterance": "Olsen", 
+  "active_set": [
+   "(Q3731707,P734,c(Q82799))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q3731707"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What does that person do for a living ?"
+ }, 
+ {
+  "all_entities": [
+   "Q937857"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q937857"
+  ], 
+  "utterance": "association football player", 
+  "active_set": [
+   "(Q12042571,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q3731707"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is that person a civilian of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q20"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q20"
+  ], 
+  "utterance": "Norway", 
+  "active_set": [
+   "(Q937857,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Mult. entity type", 
+  "type_list": [
+   "Q502895", 
+   "Q838948", 
+   "Q11424"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P144"
+  ], 
+  "count_ques_sub_type": 6, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many people are atleast 3 works of art or films a fork of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q313048", 
+   "Q12014160", 
+   "Q5968600"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "3", 
+  "active_set": [
+   "(c(Q838948)|c(Q11424),P144,c(Q502895))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q3545968", 
+   "Q20"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P530", 
+   "P17"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories have diplomatic relationships with Norway or are Sumberejo located in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q38", 
+   "Q252"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q38", 
+   "Q252"
+  ], 
+  "utterance": "Italy, Indonesia", 
+  "active_set": [
+   "OR((Q20,P530,c(Q15617994)), (Q3545968,P17,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q754"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which administrative territories have diplomatic relations with more number of administrative territories than Trinidad and Tobago ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q801", 
+   "Q800", 
+   "Q805", 
+   "Q419", 
+   "Q668", 
+   "Q414", 
+   "Q142", 
+   "Q55", 
+   "Q145", 
+   "Q262", 
+   "Q148", 
+   "Q783", 
+   "Q784", 
+   "Q37", 
+   "Q711", 
+   "Q710", 
+   "Q717", 
+   "Q252", 
+   "Q399", 
+   "Q398", 
+   "Q403", 
+   "Q657", 
+   "Q258", 
+   "Q45", 
+   "Q159", 
+   "Q43", 
+   "Q41", 
+   "Q155", 
+   "Q792", 
+   "Q790", 
+   "Q796", 
+   "Q794", 
+   "Q954", 
+   "Q889", 
+   "Q884", 
+   "Q958", 
+   "Q881", 
+   "Q986", 
+   "Q822", 
+   "Q241", 
+   "Q244", 
+   "Q33", 
+   "Q32", 
+   "Q31", 
+   "Q30", 
+   "Q924", 
+   "Q36", 
+   "Q34", 
+   "Q928", 
+   "Q39", 
+   "Q38", 
+   "Q739", 
+   "Q423", 
+   "Q983", 
+   "Q851", 
+   "Q733", 
+   "Q734", 
+   "Q819", 
+   "Q424", 
+   "Q1013", 
+   "Q236", 
+   "Q230", 
+   "Q233", 
+   "Q238", 
+   "Q20", 
+   "Q1045", 
+   "Q1041", 
+   "Q27", 
+   "Q28", 
+   "Q921", 
+   "Q1049", 
+   "Q1020", 
+   "Q189", 
+   "Q843", 
+   "Q842", 
+   "Q184", 
+   "Q1029", 
+   "Q1028", 
+   "Q736", 
+   "Q786", 
+   "Q228", 
+   "Q227", 
+   "Q225", 
+   "Q224", 
+   "Q222", 
+   "Q221", 
+   "Q96", 
+   "Q229", 
+   "Q347", 
+   "Q17", 
+   "Q902", 
+   "Q1036", 
+   "Q1037", 
+   "Q974", 
+   "Q1033", 
+   "Q1030", 
+   "Q191", 
+   "Q965", 
+   "Q967", 
+   "Q962", 
+   "Q963", 
+   "Q298", 
+   "Q115", 
+   "Q114", 
+   "Q117", 
+   "Q750", 
+   "Q212", 
+   "Q213", 
+   "Q211", 
+   "Q217", 
+   "Q214", 
+   "Q215", 
+   "Q218", 
+   "Q219", 
+   "Q917", 
+   "Q916", 
+   "Q1007", 
+   "Q1006", 
+   "Q1005", 
+   "Q833", 
+   "Q977", 
+   "Q1009", 
+   "Q1008", 
+   "Q971", 
+   "Q970", 
+   "Q34020", 
+   "Q686", 
+   "Q574", 
+   "Q874", 
+   "Q79", 
+   "Q77", 
+   "Q858", 
+   "Q878", 
+   "Q774", 
+   "Q948", 
+   "Q810", 
+   "Q1016", 
+   "Q1011", 
+   "Q29", 
+   "Q869", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q38", 
+   "Q155", 
+   "Q30"
+  ], 
+  "utterance": "Italy, Brazil, United States of America", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q796"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about Iraq?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q801", 
+   "Q805", 
+   "Q668", 
+   "Q142", 
+   "Q145", 
+   "Q148", 
+   "Q403", 
+   "Q159", 
+   "Q43", 
+   "Q155", 
+   "Q30", 
+   "Q38", 
+   "Q17", 
+   "Q79", 
+   "Q1016", 
+   "Q1011", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q38", 
+   "Q155", 
+   "Q30"
+  ], 
+  "utterance": "Italy, Brazil, United States of America", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Mult. entity type", 
+  "entities_in_utterance": [
+   "Q155", 
+   "Q17012"
+  ], 
+  "relations": [
+   "P1532"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q6979593"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many national association football teams represent Brazil or Guadeloupe ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q23013382", 
+   "Q757014", 
+   "Q899189", 
+   "Q3590230", 
+   "Q16845544"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "5", 
+  "active_set": [
+   "(c(Q6979593),P1532,Q155)", 
+   "(c(Q6979593),P1532,Q17012)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q778"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q15617994", 
+   "Q1048835"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which political territories have ambassadorial relations with around the same number of administrative territories as The Bahamas ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1000", 
+   "Q40", 
+   "Q781", 
+   "Q778", 
+   "Q769", 
+   "Q685", 
+   "Q35", 
+   "Q691", 
+   "Q16", 
+   "Q664", 
+   "Q766"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q35", 
+   "Q16", 
+   "Q40"
+  ], 
+  "utterance": "Denmark, Canada, Austria", 
+  "active_set": [
+   "(c(Q1048835),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q40"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q15617994", 
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And what about Austria?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q1000", 
+   "Q40", 
+   "Q781", 
+   "Q778", 
+   "Q769", 
+   "Q685", 
+   "Q35", 
+   "Q691", 
+   "Q16", 
+   "Q664", 
+   "Q766"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q35", 
+   "Q16", 
+   "Q40"
+  ], 
+  "utterance": "Denmark, Canada, Austria", 
+  "active_set": [
+   "(c(Q1048835),P530,c(Q15617994))"
+  ]
+ }
+]

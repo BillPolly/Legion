@@ -1,0 +1,479 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q7297496"
+  ], 
+  "relations": [
+   "P102"
+  ], 
+  "type_list": [
+   "Q7210356"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which party does Ray Franz belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6837658"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6837658"
+  ], 
+  "utterance": "Michigan Republican Party", 
+  "active_set": [
+   "(Q7297496,P102,c(Q7210356))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q7297496"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1412"
+  ], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which language does that person speak in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1860"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1860"
+  ], 
+  "utterance": "English", 
+  "active_set": [
+   "(Q6837658,P1412,c(Q34770))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1860"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P361"
+  ], 
+  "type_list": [
+   "Q5962346"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which classification schemes are that language a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1346342", 
+   "Q5329170"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1346342", 
+   "Q5329170"
+  ], 
+  "utterance": "Anglic languages, Anglo-Frisian languages", 
+  "active_set": [
+   "(Q1860,P361,c(Q5962346))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q7425993"
+  ], 
+  "relations": [
+   "P361"
+  ], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Are Sateliti a component of those classification schemes ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q7425993,P361,Q1346342)", 
+   "(Q7425993,P361,Q5329170)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, all direct, 2 are query entities", 
+  "entities_in_utterance": [
+   "Q1346342", 
+   "Q1262069", 
+   "Q26721"
+  ], 
+  "relations": [
+   "P361"
+  ], 
+  "type_list": [
+   "Q5962346"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 4, 
+  "utterance": "Is Anglic languages a portion of Oru\u00e7 Reis-class submarine and West Germanic languages ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO and YES respectively", 
+  "active_set": [
+   "(Q1346342,P361,Q1262069)", 
+   "(Q1346342,P361,Q26721)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1860"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P725"
+  ], 
+  "type_list": [
+   "Q11424"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which film has been dubbed by English ?"
+ }, 
+ {
+  "all_entities": [
+   "Q9019373"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q9019373"
+  ], 
+  "utterance": "The Legend of the North Wind", 
+  "active_set": [
+   "(c(Q11424),P725,Q1860)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q5962346"
+  ], 
+  "entities_in_utterance": [
+   "Q321148", 
+   "Q5329170"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P361", 
+   "P289"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which classification schemes are Anglo-Frisian languages a component of or are the vessel classes of German submarine U-251 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q10374571", 
+   "Q26721", 
+   "Q30134"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q10374571", 
+   "Q26721", 
+   "Q30134"
+  ], 
+  "utterance": "German Type VIIC submarine, West Germanic languages, Ingvaeonic languages", 
+  "active_set": [
+   "OR((Q5329170,P361,c(Q5962346)), (Q321148,P289,c(Q5962346)))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q9332", 
+   "Q1914636", 
+   "Q5962346"
+  ], 
+  "entities_in_utterance": [
+   "Q1421211"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P361"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many classification schemes are parts of approximately the same number of behaviors and activities as Media psychology ?"
+ }, 
+ {
+  "all_entities": [
+   "Q814495", 
+   "Q18336", 
+   "Q13295", 
+   "Q905036", 
+   "Q17308701", 
+   "Q56936", 
+   "Q7081687", 
+   "Q1346342", 
+   "Q7071313", 
+   "Q165838", 
+   "Q795113", 
+   "Q2145956", 
+   "Q2714388", 
+   "Q16334497", 
+   "Q5577428", 
+   "Q35111", 
+   "Q144713", 
+   "Q380313", 
+   "Q856638", 
+   "Q33852", 
+   "Q3064420", 
+   "Q770723", 
+   "Q484761", 
+   "Q715396", 
+   "Q954321", 
+   "Q1929812", 
+   "Q33136", 
+   "Q391015", 
+   "Q853915", 
+   "Q15614122", 
+   "Q205740", 
+   "Q2701314", 
+   "Q831873", 
+   "Q1422731", 
+   "Q25433", 
+   "Q1056396", 
+   "Q574273", 
+   "Q787422", 
+   "Q2056514", 
+   "Q1429100", 
+   "Q938245", 
+   "Q1924856", 
+   "Q381496", 
+   "Q294217", 
+   "Q128030", 
+   "Q10427676", 
+   "Q3217376", 
+   "Q126842", 
+   "Q3217378", 
+   "Q1380905", 
+   "Q1193625", 
+   "Q27660317", 
+   "Q382113", 
+   "Q3450906", 
+   "Q16583941", 
+   "Q1063076", 
+   "Q3123021", 
+   "Q15783860", 
+   "Q7007379", 
+   "Q6743068", 
+   "Q1436372", 
+   "Q25295", 
+   "Q621080", 
+   "Q1412461", 
+   "Q41217", 
+   "Q599958", 
+   "Q420591", 
+   "Q16113196", 
+   "Q2029930", 
+   "Q2397881", 
+   "Q7632661", 
+   "Q1255897", 
+   "Q1153495", 
+   "Q6424775", 
+   "Q1334774", 
+   "Q1603899", 
+   "Q378426", 
+   "Q1738162", 
+   "Q3039115", 
+   "Q812943", 
+   "Q164273", 
+   "Q13955118", 
+   "Q161272", 
+   "Q930752", 
+   "Q1481411", 
+   "Q32906", 
+   "Q615684", 
+   "Q1944497", 
+   "Q33750", 
+   "Q7847646", 
+   "Q335632", 
+   "Q2458420", 
+   "Q1908419", 
+   "Q47307", 
+   "Q323936", 
+   "Q371304", 
+   "Q2153999", 
+   "Q1640108", 
+   "Q34090", 
+   "Q34230", 
+   "Q3745514", 
+   "Q2045692", 
+   "Q193870", 
+   "Q2520728", 
+   "Q336387", 
+   "Q5617043", 
+   "Q407784", 
+   "Q591763", 
+   "Q2520723", 
+   "Q1434048", 
+   "Q3217502", 
+   "Q1362435", 
+   "Q290578", 
+   "Q396090", 
+   "Q179805", 
+   "Q1338164", 
+   "Q379838", 
+   "Q735602", 
+   "Q10387", 
+   "Q26721", 
+   "Q5551285", 
+   "Q986800", 
+   "Q184793", 
+   "Q1200977", 
+   "Q1413406", 
+   "Q52040", 
+   "Q380344", 
+   "Q730675", 
+   "Q11797549", 
+   "Q30134", 
+   "Q870895", 
+   "Q840400", 
+   "Q1663002", 
+   "Q18575626", 
+   "Q372449", 
+   "Q15841889", 
+   "Q184274", 
+   "Q179957", 
+   "Q624758", 
+   "Q55640", 
+   "Q5329170", 
+   "Q12636140", 
+   "Q7022532", 
+   "Q150971", 
+   "Q294417", 
+   "Q4663617", 
+   "Q7974669", 
+   "Q1413942", 
+   "Q456632", 
+   "Q3699526", 
+   "Q1460420", 
+   "Q149584", 
+   "Q171184", 
+   "Q828395", 
+   "Q33932", 
+   "Q10374568", 
+   "Q1421211", 
+   "Q687826", 
+   "Q180592", 
+   "Q1323395", 
+   "Q190637", 
+   "Q4866154", 
+   "Q163629", 
+   "Q44325", 
+   "Q5381001", 
+   "Q175002"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "166", 
+  "active_set": [
+   "(c(Q5962346),P361,c(Q9332)|c(Q1914636))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q10374571"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P138"
+  ], 
+  "type_list": [
+   "Q559026"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which ship class has German Type VIIC submarine as its namesake ?"
+ }, 
+ {
+  "all_entities": [
+   "Q16334443"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q16334443"
+  ], 
+  "utterance": "German Type VIIC/42 submarine", 
+  "active_set": [
+   "(c(Q559026),P138,Q10374571)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P805"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q5962346", 
+   "Q5962346"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which classification schemes have max number of classification schemes as a subject ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q2654422"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2654422"
+  ], 
+  "utterance": "sector of archives", 
+  "active_set": [
+   "(c(Q5962346),P805,Q2654422)"
+  ]
+ }
+]

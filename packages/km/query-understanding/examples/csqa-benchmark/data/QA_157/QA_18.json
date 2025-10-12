@@ -1,0 +1,820 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1020421"
+  ], 
+  "relations": [
+   "P47"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Who share the border with Moratinos, Palencia ?"
+ }, 
+ {
+  "all_entities": [
+   "Q956367", 
+   "Q1622282", 
+   "Q1919717", 
+   "Q821860"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q821860", 
+   "Q1919717", 
+   "Q1622282"
+  ], 
+  "utterance": "Sahag\u00fan, Poblaci\u00f3n de Arroyo, Escobar de Campos", 
+  "active_set": [
+   "(Q1020421,P47,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1020421"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1313"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which occupation is fulfilled by Moratinos, Palencia ?"
+ }, 
+ {
+  "all_entities": [
+   "Q26690243"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q26690243"
+  ], 
+  "utterance": "mayor of Moratinos", 
+  "active_set": [
+   "(Q1020421,P1313,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q26690243"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1001"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which political territory comes under the supervision of that occupation ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1020421"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1020421"
+  ], 
+  "utterance": "Moratinos, Palencia", 
+  "active_set": [
+   "(Q26690243,P1001,c(Q1048835))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q5718202", 
+   "Q1020421"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27", 
+   "P17"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are Moratinos, Palencia present in or do Henry Binns belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q29", 
+   "Q258"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q29", 
+   "Q258"
+  ], 
+  "utterance": "Spain, South Africa", 
+  "active_set": [
+   "OR((Q1020421,P17,c(Q15617994)), (Q5718202,P27,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which administrative territories have diplomatic relationships with min number of administrative territories ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q702", 
+   "Q804", 
+   "Q265", 
+   "Q712", 
+   "Q837", 
+   "Q242", 
+   "Q811", 
+   "Q929", 
+   "Q29999", 
+   "Q854", 
+   "Q730", 
+   "Q232", 
+   "Q1027", 
+   "Q1032", 
+   "Q697", 
+   "Q695", 
+   "Q754", 
+   "Q912", 
+   "Q683", 
+   "Q836", 
+   "Q817", 
+   "Q1019", 
+   "Q945", 
+   "Q678", 
+   "Q33788"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q929", 
+   "Q29999", 
+   "Q232"
+  ], 
+  "utterance": "Central African Republic, Kingdom of the Netherlands, Kazakhstan", 
+  "active_set": [
+   "(c(Q15617994),P530,Q953)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Mult. Entity", 
+  "entities_in_utterance": [
+   "Q929", 
+   "Q29999", 
+   "Q232"
+  ], 
+  "sec_ques_sub_type": 3, 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which administrative territories are present in those ones ?"
+ }, 
+ {
+  "all_entities": [
+   "Q929", 
+   "Q29999", 
+   "Q55", 
+   "Q12546174", 
+   "Q6511462", 
+   "Q232", 
+   "Q836672"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q55", 
+   "Q929", 
+   "Q29999"
+  ], 
+  "utterance": "Netherlands, Central African Republic, Kingdom of the Netherlands", 
+  "active_set": [
+   "(c(Q15617994),P17,Q929)", 
+   "(c(Q15617994),P17,Q29999)", 
+   "(c(Q15617994),P17,Q232)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q55", 
+   "Q929", 
+   "Q29999"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P36"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territories are known as the capital of Netherlands, Central African Republic and Kingdom of the Netherlands ?"
+ }, 
+ {
+  "all_entities": [
+   "Q727", 
+   "Q3832", 
+   "Q727"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q727", 
+   "Q3832", 
+   "Q727"
+  ], 
+  "utterance": "Amsterdam for 1st, 3rd, Bangui for 2nd", 
+  "active_set": [
+   "(Q55,P36,c(Q56061))", 
+   "(Q929,P36,c(Q56061))", 
+   "(Q29999,P36,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q55"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P163"
+  ], 
+  "type_list": [
+   "Q14660"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is associated with Netherlands ?"
+ }, 
+ {
+  "all_entities": [
+   "Q46585"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q46585"
+  ], 
+  "utterance": "flag of the Netherlands", 
+  "active_set": [
+   "(Q55,P163,c(Q14660))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q986"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q14660"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about Eritrea?"
+ }, 
+ {
+  "all_entities": [
+   "Q170555"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q170555"
+  ], 
+  "utterance": "Flag of Eritrea", 
+  "active_set": [
+   "(Q986,P163,c(Q14660))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1001"
+  ], 
+  "count_ques_sub_type": 8, 
+  "type_list": [
+   "Q56061", 
+   "Q14660"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which flags have jurisdiction over around the same number of administrative territories as that flag ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q102939", 
+   "Q279667", 
+   "Q83392", 
+   "Q211579", 
+   "Q42436", 
+   "Q168935", 
+   "Q42537", 
+   "Q46835", 
+   "Q102944", 
+   "Q185273", 
+   "Q147776", 
+   "Q182514", 
+   "Q171124", 
+   "Q185285", 
+   "Q26491", 
+   "Q103084", 
+   "Q24701084", 
+   "Q219726", 
+   "Q33037", 
+   "Q3039133", 
+   "Q127974", 
+   "Q495469", 
+   "Q133022", 
+   "Q42876", 
+   "Q103019", 
+   "Q134885", 
+   "Q578054", 
+   "Q60149", 
+   "Q169907", 
+   "Q132633", 
+   "Q169903", 
+   "Q104351", 
+   "Q135014", 
+   "Q523638", 
+   "Q164584", 
+   "Q105643", 
+   "Q633087", 
+   "Q81952", 
+   "Q201987", 
+   "Q520966", 
+   "Q43175", 
+   "Q188072", 
+   "Q127296", 
+   "Q162980", 
+   "Q59070", 
+   "Q134252", 
+   "Q160242", 
+   "Q79874", 
+   "Q82205", 
+   "Q601391", 
+   "Q103055", 
+   "Q165775", 
+   "Q82194", 
+   "Q188477", 
+   "Q616325", 
+   "Q41673", 
+   "Q199621", 
+   "Q33213", 
+   "Q1426630", 
+   "Q19000", 
+   "Q131650", 
+   "Q4575", 
+   "Q174487", 
+   "Q245213", 
+   "Q160425", 
+   "Q188609", 
+   "Q168711", 
+   "Q43192", 
+   "Q225360", 
+   "Q102977", 
+   "Q163333", 
+   "Q101472", 
+   "Q160861", 
+   "Q130481", 
+   "Q637134", 
+   "Q492541", 
+   "Q15962374", 
+   "Q191731", 
+   "Q190648", 
+   "Q171117", 
+   "Q245269", 
+   "Q248102", 
+   "Q93335", 
+   "Q127179", 
+   "Q492546", 
+   "Q221881", 
+   "Q204678", 
+   "Q159538", 
+   "Q184596", 
+   "Q1064042", 
+   "Q1856088", 
+   "Q18993", 
+   "Q234956", 
+   "Q45136", 
+   "Q165811", 
+   "Q173535", 
+   "Q270377", 
+   "Q159872", 
+   "Q370111", 
+   "Q238759", 
+   "Q131204", 
+   "Q24701080", 
+   "Q170543", 
+   "Q599323", 
+   "Q484249", 
+   "Q156564", 
+   "Q181120", 
+   "Q103447", 
+   "Q163832", 
+   "Q168925", 
+   "Q46008", 
+   "Q122462", 
+   "Q102993", 
+   "Q130458", 
+   "Q258262", 
+   "Q392167", 
+   "Q29074", 
+   "Q524824", 
+   "Q129132", 
+   "Q102198", 
+   "Q912854", 
+   "Q317660", 
+   "Q80110", 
+   "Q12990", 
+   "Q30768", 
+   "Q328895", 
+   "Q169192", 
+   "Q128812", 
+   "Q119605", 
+   "Q47891", 
+   "Q124020", 
+   "Q160255", 
+   "Q160250", 
+   "Q103046", 
+   "Q134247", 
+   "Q170465", 
+   "Q165542", 
+   "Q165545", 
+   "Q102392", 
+   "Q1418784", 
+   "Q24577771", 
+   "Q663111", 
+   "Q497997", 
+   "Q131147", 
+   "Q202189", 
+   "Q185271", 
+   "Q48160", 
+   "Q185277", 
+   "Q162699", 
+   "Q101769", 
+   "Q102960", 
+   "Q285418", 
+   "Q170814", 
+   "Q102967", 
+   "Q160872", 
+   "Q160877", 
+   "Q383109", 
+   "Q47214", 
+   "Q159746", 
+   "Q159741", 
+   "Q148199", 
+   "Q601206", 
+   "Q171103", 
+   "Q173554", 
+   "Q594095", 
+   "Q130811", 
+   "Q81477", 
+   "Q81471", 
+   "Q209963", 
+   "Q184584", 
+   "Q134933", 
+   "Q18983", 
+   "Q209219", 
+   "Q165538", 
+   "Q81970", 
+   "Q1074327", 
+   "Q204143", 
+   "Q4633", 
+   "Q134521", 
+   "Q266618", 
+   "Q645967", 
+   "Q165500", 
+   "Q252995", 
+   "Q462918", 
+   "Q235445", 
+   "Q302382", 
+   "Q209060", 
+   "Q172517", 
+   "Q104969", 
+   "Q134627", 
+   "Q160260", 
+   "Q41327", 
+   "Q658355", 
+   "Q24701074", 
+   "Q83278", 
+   "Q170554", 
+   "Q170555", 
+   "Q283772", 
+   "Q103037", 
+   "Q36005", 
+   "Q235846", 
+   "Q168912", 
+   "Q168917", 
+   "Q336328", 
+   "Q462498", 
+   "Q543471", 
+   "Q652088", 
+   "Q124329", 
+   "Q102987", 
+   "Q550083", 
+   "Q483774", 
+   "Q130442", 
+   "Q462674", 
+   "Q121688", 
+   "Q102184", 
+   "Q126622", 
+   "Q524521", 
+   "Q165872", 
+   "Q134874", 
+   "Q369833", 
+   "Q46585", 
+   "Q435309", 
+   "Q163753", 
+   "Q117347", 
+   "Q673117", 
+   "Q184268", 
+   "Q184265", 
+   "Q167119", 
+   "Q81286", 
+   "Q128347", 
+   "Q499127", 
+   "Q130449", 
+   "Q19373", 
+   "Q19374", 
+   "Q19379", 
+   "Q232591", 
+   "Q135034", 
+   "Q165552", 
+   "Q676623", 
+   "Q165550", 
+   "Q103070", 
+   "Q189612", 
+   "Q82236", 
+   "Q301628", 
+   "Q525410", 
+   "Q590821", 
+   "Q16611", 
+   "Q636719", 
+   "Q609337", 
+   "Q165230", 
+   "Q103414", 
+   "Q184283", 
+   "Q159986", 
+   "Q613188", 
+   "Q1426379", 
+   "Q170809", 
+   "Q182782", 
+   "Q102953", 
+   "Q165822", 
+   "Q12188", 
+   "Q178179", 
+   "Q83149", 
+   "Q375554", 
+   "Q173548", 
+   "Q200260", 
+   "Q162068", 
+   "Q128480", 
+   "Q103001", 
+   "Q133015", 
+   "Q130774", 
+   "Q130807", 
+   "Q642998", 
+   "Q204120", 
+   "Q163008", 
+   "Q75374", 
+   "Q207518", 
+   "Q330517", 
+   "Q165905", 
+   "Q567838", 
+   "Q190064", 
+   "Q235475", 
+   "Q19427", 
+   "Q162999", 
+   "Q170795", 
+   "Q530665", 
+   "Q173201", 
+   "Q369618", 
+   "Q605195", 
+   "Q48409", 
+   "Q390593", 
+   "Q162781", 
+   "Q162789", 
+   "Q208671", 
+   "Q19016", 
+   "Q193693", 
+   "Q512175", 
+   "Q169441", 
+   "Q558375", 
+   "Q492524", 
+   "Q154823", 
+   "Q167584", 
+   "Q117758", 
+   "Q34599", 
+   "Q81526", 
+   "Q131469", 
+   "Q188839", 
+   "Q162033", 
+   "Q1122078", 
+   "Q180725", 
+   "Q170064", 
+   "Q284396", 
+   "Q604735", 
+   "Q617649", 
+   "Q170289", 
+   "Q159865", 
+   "Q165641", 
+   "Q103064", 
+   "Q586585", 
+   "Q168941", 
+   "Q189604", 
+   "Q632491", 
+   "Q127155", 
+   "Q81676", 
+   "Q186226", 
+   "Q172530", 
+   "Q172533", 
+   "Q179383", 
+   "Q160676", 
+   "Q160124", 
+   "Q329280"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q82194", 
+   "Q81676", 
+   "Q185271"
+  ], 
+  "utterance": "flag of Brazil, flag of Australia, Flag of Papua New Guinea", 
+  "active_set": [
+   "(c(Q14660),P1001,c(Q56061))"
+  ]
+ }, 
+ {
+  "question-type": "Clarification", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Indirect", 
+  "type_list": [
+   "Q14660", 
+   "Q515", 
+   "Q13220204"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 3, 
+  "relations": [
+   "P163"
+  ], 
+  "count_ques_sub_type": 10, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many flags have greater number of cities or administrative country subdivisions as their flag than that flag ?"
+ }, 
+ {
+  "description": "Comparative|Count over More/Less|Mult. entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q82194"
+  ], 
+  "active_set": [
+   "(c(Q515)|c(Q13220204),P163,c(Q14660))"
+  ], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean flag of Brazil ?"
+ }, 
+ {
+  "ques_type_id": 8, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "count_ques_sub_type": 10, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Yes", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q543471", 
+   "Q586585", 
+   "Q33037", 
+   "Q159746", 
+   "Q1426379"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "5", 
+  "active_set": [
+   "(c(Q515)|c(Q13220204),P163,c(Q14660))"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Multiple_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q2793379", 
+   "Q55"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P530", 
+   "P495"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories holds diplomatic relationship with Netherlands and are the origins of Pestalozzi's Mountain ?"
+ }, 
+ {
+  "all_entities": [
+   "Q38"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q38"
+  ], 
+  "utterance": "Italy", 
+  "active_set": [
+   "AND((Q55,P530,c(Q15617994)), (Q2793379,P495,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Mult. entity type", 
+  "type_list": [
+   "Q484692", 
+   "Q7725634", 
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P85"
+  ], 
+  "count_ques_sub_type": 3, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "Which administrative territories have max number of hymns or literary works as their anthem ?"
+ }, 
+ {
+  "all_entities": [
+   "Q159", 
+   "Q242", 
+   "Q1045"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q159", 
+   "Q242", 
+   "Q1045"
+  ], 
+  "utterance": "Russia, Belize, Somalia", 
+  "active_set": [
+   "(c(Q15617994),P85,c(Q484692)|c(Q7725634))"
+  ]
+ }
+]

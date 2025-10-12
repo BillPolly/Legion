@@ -1,0 +1,989 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q2121029"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territory is Anand Mahindra a civilian of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q668"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q668"
+  ], 
+  "utterance": "India", 
+  "active_set": [
+   "(Q2121029,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q668"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P163"
+  ], 
+  "type_list": [
+   "Q14660"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is associated with that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q41673"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q41673"
+  ], 
+  "utterance": "flag of India", 
+  "active_set": [
+   "(Q668,P163,c(Q14660))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q668"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P85"
+  ], 
+  "type_list": [
+   "Q7725634"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which is the national anthem of India ?"
+ }, 
+ {
+  "all_entities": [
+   "Q83099"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q83099"
+  ], 
+  "utterance": "Jana Gana Mana", 
+  "active_set": [
+   "(Q668,P85,c(Q7725634))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q7318"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q7725634"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about Nazi Germany?"
+ }, 
+ {
+  "all_entities": [
+   "Q44042"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q44042"
+  ], 
+  "utterance": "Das Lied der Deutschen", 
+  "active_set": [
+   "(Q7318,P85,c(Q7725634))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1445"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q7725634", 
+   "Q386724"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many works represents a fictional universe described in exactly 2 literary works ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q384426"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(c(Q386724),P1445,c(Q7725634))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q56061"
+  ], 
+  "entities_in_utterance": [
+   "Q502712", 
+   "Q7318"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P36"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are called the capital of Nazi Germany or Otsego County ?"
+ }, 
+ {
+  "all_entities": [
+   "Q64", 
+   "Q2300663"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q64", 
+   "Q2300663"
+  ], 
+  "utterance": "Berlin, Gaylord", 
+  "active_set": [
+   "OR((Q7318,P36,c(Q56061)), (Q502712,P36,c(Q56061)))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type", 
+  "type_list": [
+   "Q56061", 
+   "Q2342494", 
+   "Q571"
+  ], 
+  "entities_in_utterance": [
+   "Q127159"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P291"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which administrative territories are the publication regions of less number of collectables or books than Bletchley ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2536016", 
+   "Q190583", 
+   "Q2035368", 
+   "Q3897", 
+   "Q38511", 
+   "Q130191", 
+   "Q203619", 
+   "Q80670", 
+   "Q1544563", 
+   "Q490595", 
+   "Q11974", 
+   "Q36378", 
+   "Q10305", 
+   "Q3404679", 
+   "Q8692", 
+   "Q23051", 
+   "Q2656", 
+   "Q4581188", 
+   "Q8851", 
+   "Q15688", 
+   "Q12155", 
+   "Q323801", 
+   "Q15682", 
+   "Q15684", 
+   "Q170497", 
+   "Q99151", 
+   "Q39561", 
+   "Q48329", 
+   "Q7880", 
+   "Q1930", 
+   "Q949651", 
+   "Q5831", 
+   "Q22889", 
+   "Q132572", 
+   "Q6157", 
+   "Q12411", 
+   "Q1718", 
+   "Q11125", 
+   "Q8810", 
+   "Q15283655", 
+   "Q4713350", 
+   "Q428829", 
+   "Q1335", 
+   "Q1034159", 
+   "Q103717", 
+   "Q28911", 
+   "Q3400328", 
+   "Q14323", 
+   "Q186237", 
+   "Q14325", 
+   "Q180233", 
+   "Q484799", 
+   "Q14328", 
+   "Q576110", 
+   "Q1489", 
+   "Q2020203", 
+   "Q406", 
+   "Q15468", 
+   "Q6346", 
+   "Q887", 
+   "Q54217", 
+   "Q1679567", 
+   "Q15093", 
+   "Q162279", 
+   "Q17151", 
+   "Q1191195", 
+   "Q102217", 
+   "Q237", 
+   "Q16554", 
+   "Q16555", 
+   "Q16557", 
+   "Q486306", 
+   "Q1513", 
+   "Q1296", 
+   "Q1563", 
+   "Q35381", 
+   "Q1024911", 
+   "Q193478", 
+   "Q11959", 
+   "Q35493", 
+   "Q78", 
+   "Q37100", 
+   "Q38022", 
+   "Q286048", 
+   "Q1235510", 
+   "Q15678", 
+   "Q3183", 
+   "Q172157", 
+   "Q33935", 
+   "Q582121", 
+   "Q1861", 
+   "Q14318", 
+   "Q14314", 
+   "Q15090", 
+   "Q134620", 
+   "Q956", 
+   "Q15095", 
+   "Q15098", 
+   "Q437", 
+   "Q8745", 
+   "Q13580", 
+   "Q2766547", 
+   "Q2941325", 
+   "Q12258", 
+   "Q202158", 
+   "Q1017331", 
+   "Q49145", 
+   "Q327022", 
+   "Q12225", 
+   "Q23154", 
+   "Q10282", 
+   "Q429676", 
+   "Q672545", 
+   "Q188304", 
+   "Q617", 
+   "Q634054", 
+   "Q472", 
+   "Q6576", 
+   "Q9580", 
+   "Q8356", 
+   "Q735583", 
+   "Q1724", 
+   "Q11967", 
+   "Q159232", 
+   "Q207891", 
+   "Q3395358", 
+   "Q683512", 
+   "Q3889", 
+   "Q9125", 
+   "Q5818", 
+   "Q204382", 
+   "Q27393", 
+   "Q126148", 
+   "Q771986", 
+   "Q33405", 
+   "Q79990", 
+   "Q6537", 
+   "Q10313", 
+   "Q1295", 
+   "Q59169", 
+   "Q669171", 
+   "Q204720", 
+   "Q206988", 
+   "Q3012", 
+   "Q15699", 
+   "Q485329", 
+   "Q15695", 
+   "Q985271", 
+   "Q28848", 
+   "Q15088", 
+   "Q3366952", 
+   "Q213898", 
+   "Q193180", 
+   "Q8757", 
+   "Q47048", 
+   "Q178277", 
+   "Q192155", 
+   "Q883", 
+   "Q125080", 
+   "Q12303", 
+   "Q156990", 
+   "Q40840", 
+   "Q955640", 
+   "Q26793", 
+   "Q3426", 
+   "Q10686", 
+   "Q211020", 
+   "Q181854", 
+   "Q648", 
+   "Q487786", 
+   "Q12233", 
+   "Q646620", 
+   "Q720627", 
+   "Q215277", 
+   "Q8826", 
+   "Q14336", 
+   "Q34647"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q406", 
+   "Q956", 
+   "Q1489"
+  ], 
+  "utterance": "Istanbul, Beijing, Mexico City", 
+  "active_set": [
+   "(c(Q2342494)|c(Q571),P291,c(Q56061))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q56061", 
+   "Q2342494", 
+   "Q571"
+  ], 
+  "entities_in_utterance": [
+   "Q71"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P291"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And how about Geneva?"
+ }, 
+ {
+  "all_entities": [
+   "Q807", 
+   "Q909146", 
+   "Q2536016", 
+   "Q2512312", 
+   "Q190583", 
+   "Q27918", 
+   "Q736775", 
+   "Q2035368", 
+   "Q3897", 
+   "Q38511", 
+   "Q3711", 
+   "Q130191", 
+   "Q203619", 
+   "Q393", 
+   "Q80670", 
+   "Q25286", 
+   "Q1544563", 
+   "Q490595", 
+   "Q3808", 
+   "Q501661", 
+   "Q982367", 
+   "Q3150", 
+   "Q484678", 
+   "Q11974", 
+   "Q151920", 
+   "Q13375", 
+   "Q36378", 
+   "Q4093", 
+   "Q2560090", 
+   "Q10305", 
+   "Q3404679", 
+   "Q23337", 
+   "Q33959", 
+   "Q987", 
+   "Q8692", 
+   "Q23051", 
+   "Q2656", 
+   "Q1289", 
+   "Q4581188", 
+   "Q8851", 
+   "Q10690", 
+   "Q25748", 
+   "Q9920", 
+   "Q15688", 
+   "Q12155", 
+   "Q323801", 
+   "Q15682", 
+   "Q15684", 
+   "Q170497", 
+   "Q1757", 
+   "Q41876", 
+   "Q749", 
+   "Q99151", 
+   "Q39561", 
+   "Q48329", 
+   "Q3992", 
+   "Q2132", 
+   "Q7880", 
+   "Q1930", 
+   "Q949651", 
+   "Q3846", 
+   "Q81046", 
+   "Q597", 
+   "Q5831", 
+   "Q22889", 
+   "Q12892", 
+   "Q5836", 
+   "Q132572", 
+   "Q6157", 
+   "Q12411", 
+   "Q1718", 
+   "Q43631", 
+   "Q8818", 
+   "Q11125", 
+   "Q8810", 
+   "Q15283655", 
+   "Q4713350", 
+   "Q428829", 
+   "Q1335", 
+   "Q1895", 
+   "Q1034159", 
+   "Q1155", 
+   "Q103717", 
+   "Q28911", 
+   "Q3400328", 
+   "Q14323", 
+   "Q186237", 
+   "Q14325", 
+   "Q180233", 
+   "Q484799", 
+   "Q14328", 
+   "Q576110", 
+   "Q5083", 
+   "Q1524", 
+   "Q1489", 
+   "Q209055", 
+   "Q2020203", 
+   "Q3561", 
+   "Q40347", 
+   "Q406", 
+   "Q234178", 
+   "Q739452", 
+   "Q15468", 
+   "Q6346", 
+   "Q887", 
+   "Q576165", 
+   "Q5465", 
+   "Q2141", 
+   "Q54217", 
+   "Q1679567", 
+   "Q2814", 
+   "Q15093", 
+   "Q162279", 
+   "Q3141", 
+   "Q671288", 
+   "Q17151", 
+   "Q1490", 
+   "Q1191195", 
+   "Q102217", 
+   "Q237", 
+   "Q334", 
+   "Q16559", 
+   "Q16554", 
+   "Q16555", 
+   "Q16557", 
+   "Q486306", 
+   "Q621", 
+   "Q8686", 
+   "Q994", 
+   "Q1513", 
+   "Q3130", 
+   "Q192517", 
+   "Q1296", 
+   "Q3033", 
+   "Q936183", 
+   "Q1563", 
+   "Q170263", 
+   "Q35381", 
+   "Q45412", 
+   "Q87", 
+   "Q40269", 
+   "Q2081145", 
+   "Q1024911", 
+   "Q193478", 
+   "Q5112", 
+   "Q2103", 
+   "Q1741", 
+   "Q178093", 
+   "Q191133", 
+   "Q11959", 
+   "Q35493", 
+   "Q538915", 
+   "Q78", 
+   "Q2617448", 
+   "Q37100", 
+   "Q38022", 
+   "Q36405", 
+   "Q286048", 
+   "Q1235510", 
+   "Q15678", 
+   "Q1931927", 
+   "Q49241", 
+   "Q3183", 
+   "Q172157", 
+   "Q1781", 
+   "Q33935", 
+   "Q582121", 
+   "Q16567", 
+   "Q1861", 
+   "Q14318", 
+   "Q14314", 
+   "Q5092", 
+   "Q15090", 
+   "Q134620", 
+   "Q956", 
+   "Q15095", 
+   "Q15098", 
+   "Q437", 
+   "Q8745", 
+   "Q1479", 
+   "Q13580", 
+   "Q2766547", 
+   "Q18419", 
+   "Q2941325", 
+   "Q12258", 
+   "Q202158", 
+   "Q1017331", 
+   "Q2090", 
+   "Q49145", 
+   "Q42735", 
+   "Q242478", 
+   "Q327022", 
+   "Q12225", 
+   "Q23154", 
+   "Q340", 
+   "Q342", 
+   "Q10282", 
+   "Q26421", 
+   "Q429676", 
+   "Q672545", 
+   "Q188304", 
+   "Q617", 
+   "Q634054", 
+   "Q472", 
+   "Q37995", 
+   "Q6576", 
+   "Q6761", 
+   "Q28249", 
+   "Q13666", 
+   "Q761", 
+   "Q9580", 
+   "Q569661", 
+   "Q2634", 
+   "Q8356", 
+   "Q3584", 
+   "Q49179", 
+   "Q735583", 
+   "Q1724", 
+   "Q11967", 
+   "Q1729", 
+   "Q8717", 
+   "Q3519", 
+   "Q65", 
+   "Q159232", 
+   "Q207891", 
+   "Q2028", 
+   "Q61", 
+   "Q62", 
+   "Q3395358", 
+   "Q683512", 
+   "Q3889", 
+   "Q9125", 
+   "Q5818", 
+   "Q1867", 
+   "Q204382", 
+   "Q12439", 
+   "Q27393", 
+   "Q470445", 
+   "Q126148", 
+   "Q1352", 
+   "Q771986", 
+   "Q49229", 
+   "Q33405", 
+   "Q79990", 
+   "Q8385", 
+   "Q493794", 
+   "Q6537", 
+   "Q6106", 
+   "Q2391194", 
+   "Q10313", 
+   "Q72259", 
+   "Q1295", 
+   "Q19785", 
+   "Q647", 
+   "Q193367", 
+   "Q59169", 
+   "Q669171", 
+   "Q204720", 
+   "Q206988", 
+   "Q3012", 
+   "Q24826", 
+   "Q15699", 
+   "Q485329", 
+   "Q15696", 
+   "Q15695", 
+   "Q985271", 
+   "Q28848", 
+   "Q128306", 
+   "Q15088", 
+   "Q3366952", 
+   "Q997170", 
+   "Q203263", 
+   "Q580", 
+   "Q213898", 
+   "Q193180", 
+   "Q585", 
+   "Q8757", 
+   "Q47048", 
+   "Q178277", 
+   "Q192155", 
+   "Q883", 
+   "Q41262", 
+   "Q125080", 
+   "Q2066", 
+   "Q12303", 
+   "Q156990", 
+   "Q3834", 
+   "Q81137", 
+   "Q40840", 
+   "Q955640", 
+   "Q281839", 
+   "Q485172", 
+   "Q26793", 
+   "Q3426", 
+   "Q10686", 
+   "Q211020", 
+   "Q181854", 
+   "Q648", 
+   "Q487786", 
+   "Q12233", 
+   "Q172", 
+   "Q216", 
+   "Q646620", 
+   "Q720627", 
+   "Q13972", 
+   "Q215277", 
+   "Q8826", 
+   "Q129610", 
+   "Q179385", 
+   "Q1348", 
+   "Q29303", 
+   "Q628667", 
+   "Q127159", 
+   "Q14336", 
+   "Q34647"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q8686", 
+   "Q1781", 
+   "Q216"
+  ], 
+  "utterance": "Shanghai, Budapest, Vilnius", 
+  "active_set": [
+   "(c(Q2342494)|c(Q571),P291,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1781"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1376"
+  ], 
+  "type_list": [
+   "Q2221906"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which geographic location has that administrative territory has its first city ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q216"
+  ], 
+  "active_set": [
+   "(Q8686,P1376,c(Q2221906))", 
+   "(Q1781,P1376,c(Q2221906))", 
+   "(Q216,P1376,c(Q2221906))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q8686", 
+   "Q1781", 
+   "Q216"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Vilnius ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q1781"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Budapest. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q696970"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q696970"
+  ], 
+  "utterance": "Lands of the Crown of Saint Stephen", 
+  "active_set": [
+   "(Q1781,P1376,c(Q2221906))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q696970"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1376"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which administrative territory is the county seat for that geographic location ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1781"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1781"
+  ], 
+  "utterance": "Budapest", 
+  "active_set": [
+   "(c(Q56061),P1376,Q696970)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q1781", 
+   "Q302789"
+  ], 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Does Aaron Stockard have that administrative territory as place of death ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q302789,P20,Q1781)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, all direct, 2 are query entities", 
+  "entities_in_utterance": [
+   "Q8686", 
+   "Q705108", 
+   "Q385973"
+  ], 
+  "relations": [
+   "P190"
+  ], 
+  "type_list": [
+   "Q13220204"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 4, 
+  "utterance": "Is Shanghai twin town of Samchon County and Soum Province ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q8686,P190,Q705108)", 
+   "(Q8686,P190,Q385973)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q1781", 
+   "Q15244609"
+  ], 
+  "relations": [
+   "P190"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Is Mangateparu the sister city of Budapest ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q1781,P190,Q15244609)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1781"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P551"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people live in Budapest ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1001760", 
+   "Q264466", 
+   "Q258965", 
+   "Q1001426", 
+   "Q553339", 
+   "Q1009629", 
+   "Q1214337", 
+   "Q460696", 
+   "Q270408", 
+   "Q12908", 
+   "Q1004428", 
+   "Q370019", 
+   "Q21067292", 
+   "Q19823442", 
+   "Q1002907", 
+   "Q8076514", 
+   "Q1109780", 
+   "Q383341", 
+   "Q1007376", 
+   "Q26253992", 
+   "Q6297974", 
+   "Q22672560", 
+   "Q7217571", 
+   "Q1009626", 
+   "Q9036", 
+   "Q4349034", 
+   "Q1002462", 
+   "Q77284", 
+   "Q281949", 
+   "Q1003530", 
+   "Q1000652", 
+   "Q758074", 
+   "Q22075509", 
+   "Q540484"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q9036", 
+   "Q12908", 
+   "Q460696"
+  ], 
+  "utterance": "Nikola Tesla, George Soros, M\u00e1rton F\u00fcl\u00f6p", 
+  "active_set": [
+   "(c(Q502895),P551,Q1781)"
+  ]
+ }
+]

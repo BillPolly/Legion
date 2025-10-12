@@ -1,0 +1,447 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q7172767"
+  ], 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Where did Peter Benjamin Graham die ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3141"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3141"
+  ], 
+  "utterance": "Melbourne", 
+  "active_set": [
+   "(Q7172767,P20,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q3141"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P138"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which person is the etymology of that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q312567"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q312567"
+  ], 
+  "utterance": "William Lamb, 2nd Viscount Melbourne", 
+  "active_set": [
+   "(Q3141,P138,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, one direct and one indirect, subject is indirect", 
+  "entities_in_utterance": [
+   "Q312567", 
+   "Q26699735"
+  ], 
+  "relations": [
+   "P39"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 2, 
+  "utterance": "Was mayor of El Pozuelo the position held by that person ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q312567,P39,Q26699735)"
+  ]
+ }, 
+ {
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators", 
+  "entities_in_utterance": [
+   "Q312567"
+  ], 
+  "relations": [
+   "P69"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q41176", 
+   "Q3914"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many buildings and schools are the alma mater of William Lamb, 2nd Viscount Melbourne ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q192088", 
+   "Q332342"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1 buildings and 1 schools", 
+  "active_set": [
+   "(Q312567,P69,c(Q41176))", 
+   "(Q312567,P69,c(Q3914))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q502895", 
+   "Q6619679", 
+   "Q11424"
+  ], 
+  "entities_in_utterance": [
+   "Q608806"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P144"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many people do greater number of fictional humanoids or films extend upon than Yumiko Kawahara ?"
+ }, 
+ {
+  "all_entities": [
+   "Q696052", 
+   "Q1964376", 
+   "Q937", 
+   "Q6851849", 
+   "Q6968888", 
+   "Q294931", 
+   "Q222831", 
+   "Q717294", 
+   "Q907550", 
+   "Q313866", 
+   "Q296313", 
+   "Q6389787", 
+   "Q60029", 
+   "Q312692", 
+   "Q232913", 
+   "Q5264", 
+   "Q157040", 
+   "Q378053", 
+   "Q808209", 
+   "Q7341746", 
+   "Q269812", 
+   "Q467646", 
+   "Q557360", 
+   "Q197359", 
+   "Q189081", 
+   "Q4532024", 
+   "Q6814106", 
+   "Q5296634", 
+   "Q297743", 
+   "Q57652", 
+   "Q110714", 
+   "Q3083638", 
+   "Q306914", 
+   "Q3079968", 
+   "Q51505", 
+   "Q4884844", 
+   "Q23722455", 
+   "Q6691", 
+   "Q7106226", 
+   "Q1441684", 
+   "Q106255", 
+   "Q311966", 
+   "Q1048", 
+   "Q315607", 
+   "Q8011009", 
+   "Q150471", 
+   "Q161154", 
+   "Q4963602", 
+   "Q40096"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "49", 
+  "active_set": [
+   "(c(Q6619679)|c(Q11424),P144,c(Q502895))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q502895", 
+   "Q6619679", 
+   "Q11424"
+  ], 
+  "entities_in_utterance": [
+   "Q7177457"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P144"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about Peter Van Greenaway?"
+ }, 
+ {
+  "all_entities": [
+   "Q696052", 
+   "Q1964376", 
+   "Q937", 
+   "Q6851849", 
+   "Q6968888", 
+   "Q294931", 
+   "Q222831", 
+   "Q717294", 
+   "Q907550", 
+   "Q313866", 
+   "Q296313", 
+   "Q6389787", 
+   "Q60029", 
+   "Q312692", 
+   "Q232913", 
+   "Q5264", 
+   "Q157040", 
+   "Q378053", 
+   "Q808209", 
+   "Q7341746", 
+   "Q269812", 
+   "Q467646", 
+   "Q557360", 
+   "Q197359", 
+   "Q189081", 
+   "Q4532024", 
+   "Q6814106", 
+   "Q5296634", 
+   "Q297743", 
+   "Q57652", 
+   "Q110714", 
+   "Q3083638", 
+   "Q306914", 
+   "Q3079968", 
+   "Q51505", 
+   "Q4884844", 
+   "Q23722455", 
+   "Q6691", 
+   "Q7106226", 
+   "Q1441684", 
+   "Q106255", 
+   "Q311966", 
+   "Q1048", 
+   "Q315607", 
+   "Q8011009", 
+   "Q150471", 
+   "Q161154", 
+   "Q4963602", 
+   "Q40096"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "49", 
+  "active_set": [
+   "(c(Q6619679)|c(Q11424),P144,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q244976"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which musical instruments are played by more number of people than bodhr\u00e1n ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q80284", 
+   "Q46185", 
+   "Q201129", 
+   "Q424017", 
+   "Q80019", 
+   "Q2563510", 
+   "Q5994", 
+   "Q3574843", 
+   "Q81982", 
+   "Q182718", 
+   "Q206987", 
+   "Q189737", 
+   "Q8338", 
+   "Q8371", 
+   "Q8355", 
+   "Q213461", 
+   "Q3382191", 
+   "Q862501", 
+   "Q213100", 
+   "Q537750", 
+   "Q626035", 
+   "Q742180", 
+   "Q1300012", 
+   "Q1444", 
+   "Q220971", 
+   "Q128309", 
+   "Q726306", 
+   "Q483994", 
+   "Q1343007", 
+   "Q11404"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5994", 
+   "Q81982", 
+   "Q862501"
+  ], 
+  "utterance": "piano, harpsichord, ondes Martenot", 
+  "active_set": [
+   "(c(Q502895),P1303,c(Q34379))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q46185"
+  ], 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And how about bass guitar?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q5994", 
+   "Q8338", 
+   "Q8355", 
+   "Q1444", 
+   "Q128309"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5994", 
+   "Q8338", 
+   "Q8355"
+  ], 
+  "utterance": "piano, trumpet, violin", 
+  "active_set": [
+   "(c(Q502895),P1303,c(Q34379))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q14806243"
+  ], 
+  "relations": [
+   "P1303"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Does Jan Hrd\u00fd know to play those musical instruments ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q14806243,P1303,Q5994)", 
+   "(Q14806243,P1303,Q8338)", 
+   "(Q14806243,P1303,Q8355)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q862501"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P425"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "What is the occupation that ondes Martenot belongs to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q20198734"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q20198734"
+  ], 
+  "utterance": "ondist", 
+  "active_set": [
+   "(c(Q12737077),P425,Q862501)"
+  ]
+ }
+]

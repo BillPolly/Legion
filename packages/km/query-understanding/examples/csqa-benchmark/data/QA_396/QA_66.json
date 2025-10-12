@@ -1,0 +1,295 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q2901508"
+  ], 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which occupation is the profession of George Flash ?"
+ }, 
+ {
+  "all_entities": [
+   "Q82955"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q82955"
+  ], 
+  "utterance": "politician", 
+  "active_set": [
+   "(Q2901508,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q82955"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P39"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person was appointed for the position of that occupation ?"
+ }, 
+ {
+  "all_entities": [
+   "Q26215129"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q26215129"
+  ], 
+  "utterance": "Morteza Azari", 
+  "active_set": [
+   "(c(Q502895),P39,Q82955)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q82955"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P425"
+  ], 
+  "type_list": [
+   "Q3769299"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who is associated with the field of occupation politician ?"
+ }, 
+ {
+  "all_entities": [
+   "Q7163"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7163"
+  ], 
+  "utterance": "politics", 
+  "active_set": [
+   "(Q82955,P425,c(Q3769299))"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Mult. entity type", 
+  "entities_in_utterance": [
+   "Q82955", 
+   "Q119285"
+  ], 
+  "relations": [
+   "P921"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q191067"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many articles were mainly based on politician or Aleutian Islands ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q26388735", 
+   "Q26388158"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(c(Q191067),P921,Q82955)", 
+   "(c(Q191067),P921,Q119285)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q26215129"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is the native country of Morteza Azari ?"
+ }, 
+ {
+  "all_entities": [
+   "Q794"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q794"
+  ], 
+  "utterance": "Iran", 
+  "active_set": [
+   "(Q26215129,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q794"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P101"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people work in the domain of that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q20741355", 
+   "Q25991769"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q20741355", 
+   "Q25991769"
+  ], 
+  "utterance": "Negar Mortazavi, Holly Dagres", 
+  "active_set": [
+   "(c(Q502895),P101,Q794)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q25991769"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which sex does that person belong to ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q25991769"
+  ], 
+  "active_set": [
+   "(Q20741355,P21,c(Q290))", 
+   "(Q25991769,P21,c(Q290))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q20741355", 
+   "Q25991769"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Holly Dagres ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "Yes"
+ }, 
+ {
+  "all_entities": [
+   "Q6581072"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581072"
+  ], 
+  "utterance": "female", 
+  "active_set": [
+   "(Q25991769,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators|Indirect", 
+  "entities_in_utterance": [], 
+  "relations": [
+   "P21"
+  ], 
+  "count_ques_sub_type": 8, 
+  "type_list": [
+   "Q2207288", 
+   "Q193291"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many crafts or spirits are a that sex ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q6727083", 
+   "Q1888154", 
+   "Q1359465", 
+   "Q4683151", 
+   "Q26436145", 
+   "Q2454771", 
+   "Q5594049", 
+   "Q4750939", 
+   "Q3293278", 
+   "Q739947", 
+   "Q6799152", 
+   "Q5423293", 
+   "Q1930712", 
+   "Q1477162", 
+   "Q6799149", 
+   "Q1888234"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "16", 
+  "active_set": [
+   "(c(Q2207288),P21,Q6581072)", 
+   "(c(Q193291),P21,Q6581072)", 
+   "(c(Q2207288),P21,Q6581072)", 
+   "(c(Q193291),P21,Q6581072)"
+  ]
+ }
+]

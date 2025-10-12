@@ -1601,19 +1601,39 @@ export class ResourceManager {
   }
   
   /**
-   * Check Qdrant health
+   * Check Qdrant health with retries
    * @private
    */
   async _checkQdrantHealth() {
     const qdrantUrl = this.get('env.QDRANT_URL') || 'http://localhost:6333';
-    
-    try {
-      const fetch = (await import('node-fetch')).default;
-      const response = await fetch(`${qdrantUrl}/collections`, { timeout: 2000 });
-      return response.ok;
-    } catch {
-      return false;
+
+    // Try 3 times with increasing timeouts
+    const attempts = [
+      { timeout: 2000, delay: 0 },
+      { timeout: 5000, delay: 500 },
+      { timeout: 5000, delay: 1000 }
+    ];
+
+    for (const attempt of attempts) {
+      try {
+        // Wait before retry
+        if (attempt.delay > 0) {
+          await new Promise(resolve => setTimeout(resolve, attempt.delay));
+        }
+
+        const fetch = (await import('node-fetch')).default;
+        const response = await fetch(`${qdrantUrl}/collections`, { timeout: attempt.timeout });
+
+        if (response.ok) {
+          return true;
+        }
+      } catch (error) {
+        // Continue to next attempt
+        continue;
+      }
     }
+
+    return false;
   }
   
   /**

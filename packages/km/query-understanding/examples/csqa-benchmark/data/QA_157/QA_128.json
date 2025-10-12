@@ -1,0 +1,99 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q104124"
+  ], 
+  "relations": [
+   "P166"
+  ], 
+  "type_list": [
+   "Q618779"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What were won by Otto von H\u00fcgel ?"
+ }, 
+ {
+  "all_entities": [
+   "Q18579585", 
+   "Q684511"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18579585", 
+   "Q684511"
+  ], 
+  "utterance": "Order of the Red Eagle 1st Class, Friedrich Order", 
+  "active_set": [
+   "(Q104124,P166,c(Q618779))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q684511"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1028"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who donates Friedrich Order ?"
+ }, 
+ {
+  "all_entities": [
+   "Q170398"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q170398"
+  ], 
+  "utterance": "William I of W\u00fcrttemberg", 
+  "active_set": [
+   "(Q684511,P1028,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q170398"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P26"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people are married to that one ?"
+ }, 
+ {
+  "all_entities": [
+   "Q57662", 
+   "Q234257", 
+   "Q234703"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q57662", 
+   "Q234257", 
+   "Q234703"
+  ], 
+  "utterance": "Caroline Augusta of Bavaria, Catherine Pavlovna of Russia, Pauline Therese of W\u00fcrttemberg", 
+  "active_set": [
+   "(c(Q502895),P26,Q170398)"
+  ]
+ }
+]

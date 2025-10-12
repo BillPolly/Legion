@@ -1,0 +1,414 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q23507657"
+  ], 
+  "relations": [
+   "P681"
+  ], 
+  "type_list": [
+   "Q5058355"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is a component of hypothetical protein    L13157 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q29548"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q29548"
+  ], 
+  "utterance": "plasma membrane", 
+  "active_set": [
+   "(Q23507657,P681,c(Q5058355))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q23507657"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P703"
+  ], 
+  "type_list": [
+   "Q631147"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which taxon is that nutrient a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21102967"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21102967"
+  ], 
+  "utterance": "Lactococcus lactis subsp. lactis Il1403", 
+  "active_set": [
+   "(Q29548,P703,c(Q631147))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation|Incomplete", 
+  "type_list": [
+   "Q631147"
+  ], 
+  "entities_in_utterance": [
+   "Q27742792", 
+   "Q23507657"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 1, 
+  "relations": [
+   "P703"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Or hypothetical protein    MSMEG_1601?"
+ }, 
+ {
+  "all_entities": [
+   "Q21102986", 
+   "Q21102967"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21102986", 
+   "Q21102967"
+  ], 
+  "utterance": "Mycobacterium smegmatis str. MC2 155, Lactococcus lactis subsp. lactis Il1403", 
+  "active_set": [
+   "OR((Q23507657,P703,c(Q631147)), (Q27742792,P703,c(Q631147)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q22327510"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P361"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q5058355", 
+   "Q5058355"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which cellular components are a component of less number of cellular components than presynaptic cytosol ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q22327392", 
+   "Q22328737", 
+   "Q14912978", 
+   "Q21108229", 
+   "Q22327015", 
+   "Q22327805", 
+   "Q14864978", 
+   "Q14864971", 
+   "Q22327396", 
+   "Q22326356", 
+   "Q22327622", 
+   "Q24570686", 
+   "Q22327479", 
+   "Q22327475", 
+   "Q21172343", 
+   "Q21172341", 
+   "Q22326870", 
+   "Q22327043", 
+   "Q22326188", 
+   "Q22326831", 
+   "Q14877465", 
+   "Q22327676", 
+   "Q22326089", 
+   "Q22327469", 
+   "Q24576579", 
+   "Q14914004", 
+   "Q21095183", 
+   "Q14905221", 
+   "Q22327389", 
+   "Q21105647", 
+   "Q15320191", 
+   "Q21106212", 
+   "Q22326799", 
+   "Q22328904", 
+   "Q22329850", 
+   "Q26253851", 
+   "Q22328035", 
+   "Q22327397", 
+   "Q22329249", 
+   "Q22327525", 
+   "Q22327526", 
+   "Q22329848", 
+   "Q22329843", 
+   "Q22329844", 
+   "Q22329845", 
+   "Q22329846", 
+   "Q24570682", 
+   "Q14911512", 
+   "Q24570689", 
+   "Q22327468", 
+   "Q22327061", 
+   "Q22327803", 
+   "Q24576582", 
+   "Q22329409", 
+   "Q22326951", 
+   "Q22328884", 
+   "Q22328762", 
+   "Q22327083", 
+   "Q14873267", 
+   "Q22329076", 
+   "Q22328801", 
+   "Q22330049", 
+   "Q2914458", 
+   "Q22325454", 
+   "Q21097505", 
+   "Q16949578", 
+   "Q22327686", 
+   "Q22327108", 
+   "Q22329467", 
+   "Q22327341", 
+   "Q6414172", 
+   "Q22327736", 
+   "Q193825", 
+   "Q22327423"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14912978", 
+   "Q22327015", 
+   "Q22326799"
+  ], 
+  "utterance": "mitochondrial nucleoid, photosystem II oxygen evolving complex, alpha-1,6-mannosyltransferase complex", 
+  "active_set": [
+   "(c(Q5058355),P361,c(Q5058355))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q21108411"
+  ], 
+  "relations": [
+   "P361"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q5058355", 
+   "Q5058355"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And what about CNTFR-CLCF1 complex?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q22327392", 
+   "Q22328737", 
+   "Q14912978", 
+   "Q21108229", 
+   "Q22327015", 
+   "Q22327805", 
+   "Q14864978", 
+   "Q14864971", 
+   "Q22327396", 
+   "Q22326356", 
+   "Q22327622", 
+   "Q24570686", 
+   "Q22327479", 
+   "Q22327475", 
+   "Q21172343", 
+   "Q21172341", 
+   "Q22326870", 
+   "Q22327043", 
+   "Q22326188", 
+   "Q22326831", 
+   "Q14877465", 
+   "Q22327676", 
+   "Q22326089", 
+   "Q22327469", 
+   "Q24576579", 
+   "Q14914004", 
+   "Q21095183", 
+   "Q14905221", 
+   "Q22327389", 
+   "Q21105647", 
+   "Q15320191", 
+   "Q21106212", 
+   "Q22326799", 
+   "Q22328904", 
+   "Q22329850", 
+   "Q26253851", 
+   "Q22328035", 
+   "Q22327397", 
+   "Q22329249", 
+   "Q22327525", 
+   "Q22327526", 
+   "Q22329848", 
+   "Q22329843", 
+   "Q22329844", 
+   "Q22329845", 
+   "Q22329846", 
+   "Q24570682", 
+   "Q14911512", 
+   "Q24570689", 
+   "Q22327468", 
+   "Q22327061", 
+   "Q22327803", 
+   "Q24576582", 
+   "Q22329409", 
+   "Q22326951", 
+   "Q22328884", 
+   "Q22328762", 
+   "Q22327083", 
+   "Q14873267", 
+   "Q22329076", 
+   "Q22328801", 
+   "Q22330049", 
+   "Q2914458", 
+   "Q22325454", 
+   "Q21097505", 
+   "Q16949578", 
+   "Q22327686", 
+   "Q22327108", 
+   "Q22329467", 
+   "Q22327341", 
+   "Q6414172", 
+   "Q22327736", 
+   "Q193825", 
+   "Q22327423"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14912978", 
+   "Q22327015", 
+   "Q22326799"
+  ], 
+  "utterance": "mitochondrial nucleoid, photosystem II oxygen evolving complex, alpha-1,6-mannosyltransferase complex", 
+  "active_set": [
+   "(c(Q5058355),P361,c(Q5058355))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q23507657"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P702"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which nucleic acid sequence encodes hypothetical protein    L13157 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q23187403"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23187403"
+  ], 
+  "utterance": "hypothetical protein    L13157", 
+  "active_set": [
+   "(Q23507657,P702,c(Q863908))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q23507657"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P688"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which nucleic acid sequence encodes hypothetical protein    L13157 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q23187403"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23187403"
+  ], 
+  "utterance": "hypothetical protein    L13157", 
+  "active_set": [
+   "(c(Q863908),P688,Q23507657)"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Mult. entity type", 
+  "type_list": [
+   "Q181394", 
+   "Q8386", 
+   "Q181394"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P129"
+  ], 
+  "count_ques_sub_type": 4, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which nutrients do approximately 32 drugs and nutrients interact with ?"
+ }, 
+ {
+  "all_entities": [
+   "Q7050954", 
+   "Q287961", 
+   "Q410142", 
+   "Q21110872", 
+   "Q21108118", 
+   "Q21115046"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21108118", 
+   "Q21110872", 
+   "Q21115046"
+  ], 
+  "utterance": "5-hydroxytryptamine receptor 2C, D(3) dopamine receptor, 5-hydroxytryptamine receptor 1D", 
+  "active_set": [
+   "(c(Q8386)|c(Q181394),P129,c(Q181394))"
+  ]
+ }
+]

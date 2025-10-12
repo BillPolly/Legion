@@ -1,0 +1,400 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q20670058"
+  ], 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which sex does Abraham Goyet-Dubignon belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "utterance": "male", 
+  "active_set": [
+   "(Q20670058,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q20670058"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P22"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person has Abraham Goyet-Dubignon as a parent ?"
+ }, 
+ {
+  "all_entities": [
+   "Q16026822"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q16026822"
+  ], 
+  "utterance": "Charles Goyet-Dubignon", 
+  "active_set": [
+   "(c(Q502895),P22,Q20670058)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q16026822"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P39"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which occupation was a position occupied by that person ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3044918"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3044918"
+  ], 
+  "utterance": "member of the French\u00a0National Assembly", 
+  "active_set": [
+   "(Q16026822,P39,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, all direct, 2 are query entities", 
+  "entities_in_utterance": [
+   "Q3044918", 
+   "Q8036969", 
+   "Q531957"
+  ], 
+  "relations": [
+   "P1001"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 4, 
+  "utterance": "Does member of the French\u00a0National Assembly have jurisdiction over Worsham, Oxfordshire and Germaringen ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q3044918,P1001,Q8036969)", 
+   "(Q3044918,P1001,Q531957)"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Mult. entity type", 
+  "entities_in_utterance": [
+   "Q16026822", 
+   "Q1064555"
+  ], 
+  "relations": [
+   "P40"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many people have Charles Goyet-Dubignon or Kumari as an offspring ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q20670058", 
+   "Q19663326"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(c(Q502895),P40,Q16026822)", 
+   "(c(Q502895),P40,Q1064555)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P417"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q502895", 
+   "Q12737077"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many people are the patron saint of approximately 2 occupations ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q229190", 
+   "Q328804", 
+   "Q166876", 
+   "Q170547", 
+   "Q183240", 
+   "Q196653", 
+   "Q44265", 
+   "Q744884", 
+   "Q151967", 
+   "Q44248"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "10", 
+  "active_set": [
+   "(c(Q12737077),P417,c(Q502895))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q17279452", 
+   "Q8036969"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P17"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are Worsham, Oxfordshire or Phu Sing present in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q869", 
+   "Q145"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q869", 
+   "Q145"
+  ], 
+  "utterance": "Thailand, United Kingdom", 
+  "active_set": [
+   "OR((Q8036969,P17,c(Q15617994)), (Q17279452,P17,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q582671"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Do Brieselang have diplomatic relations with those ones ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q582671,P530,Q869)", 
+   "(Q582671,P530,Q145)"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators", 
+  "entities_in_utterance": [
+   "Q145"
+  ], 
+  "relations": [
+   "P264"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q7725634", 
+   "Q2031291"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many literary works or releases have United Kingdom as their record label ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q7995071", 
+   "Q2198408", 
+   "Q8056664", 
+   "Q7655570", 
+   "Q6723324"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "5", 
+  "active_set": [
+   "(c(Q7725634),P264,Q145)", 
+   "(c(Q2031291),P264,Q145)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q781"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q15617994", 
+   "Q1048835"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which political territories have diplomatic associations with greater number of administrative territories than Antigua and Barbuda ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q40", 
+   "Q183", 
+   "Q408", 
+   "Q35", 
+   "Q16", 
+   "Q664", 
+   "Q766"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183", 
+   "Q408", 
+   "Q35"
+  ], 
+  "utterance": "Germany, Australia, Denmark", 
+  "active_set": [
+   "(c(Q1048835),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q35"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P463"
+  ], 
+  "type_list": [
+   "Q43229"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What were that political territory a member of ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q35"
+  ], 
+  "active_set": [
+   "(Q183,P463,c(Q43229))", 
+   "(Q408,P463,c(Q43229))", 
+   "(Q35,P463,c(Q43229))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q183", 
+   "Q408", 
+   "Q35"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Denmark ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "Yes"
+ }, 
+ {
+  "all_entities": [
+   "Q340195", 
+   "Q191384", 
+   "Q899770", 
+   "Q41550", 
+   "Q656801", 
+   "Q151991", 
+   "Q7825", 
+   "Q827525"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q151991", 
+   "Q7825", 
+   "Q41550"
+  ], 
+  "utterance": "European Southern Observatory, World Trade Organization, Organisation for Economic Co-operation and Development", 
+  "active_set": [
+   "(Q35,P463,c(Q43229))"
+  ]
+ }
+]

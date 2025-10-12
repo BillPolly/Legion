@@ -1,0 +1,808 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q6690891"
+  ], 
+  "relations": [
+   "P735"
+  ], 
+  "type_list": [
+   "Q82799"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which name is Love Jones-Parry known by ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6690289"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6690289"
+  ], 
+  "utterance": "Love", 
+  "active_set": [
+   "(Q6690891,P735,c(Q82799))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q502895", 
+   "Q3745054", 
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q1343527"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P3091"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many people rides on a approximately the same number of people or horse breeds as Karin Rehbein ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2831786", 
+   "Q2964761", 
+   "Q2643622", 
+   "Q1682742", 
+   "Q451395", 
+   "Q1311486", 
+   "Q682476", 
+   "Q1088130", 
+   "Q527657", 
+   "Q364671", 
+   "Q3089727", 
+   "Q919677", 
+   "Q16208274", 
+   "Q3400624", 
+   "Q15782408", 
+   "Q947032", 
+   "Q3428317", 
+   "Q131691", 
+   "Q17350580", 
+   "Q438197", 
+   "Q2396962", 
+   "Q19630218", 
+   "Q3106094", 
+   "Q958372", 
+   "Q319522", 
+   "Q78028", 
+   "Q7647583", 
+   "Q823503", 
+   "Q147663", 
+   "Q513487", 
+   "Q494315", 
+   "Q377345", 
+   "Q5247967", 
+   "Q8409", 
+   "Q2831635", 
+   "Q1710812", 
+   "Q467676", 
+   "Q1545318", 
+   "Q34836", 
+   "Q238769", 
+   "Q745510", 
+   "Q318626", 
+   "Q608440", 
+   "Q19839389", 
+   "Q3134506", 
+   "Q926771", 
+   "Q3309932", 
+   "Q517", 
+   "Q1351428", 
+   "Q62177", 
+   "Q458399", 
+   "Q2903241", 
+   "Q529497", 
+   "Q3380679", 
+   "Q1337633", 
+   "Q953867", 
+   "Q364659", 
+   "Q19880092", 
+   "Q1119157", 
+   "Q1581746", 
+   "Q72502", 
+   "Q25906137", 
+   "Q6765126", 
+   "Q15972334", 
+   "Q6148833", 
+   "Q1391424", 
+   "Q2094373", 
+   "Q5079900", 
+   "Q1342822", 
+   "Q76246", 
+   "Q1691413", 
+   "Q270476", 
+   "Q272533", 
+   "Q3074167", 
+   "Q449891", 
+   "Q1292304", 
+   "Q1343527", 
+   "Q690536", 
+   "Q43958", 
+   "Q3428878", 
+   "Q886901", 
+   "Q1261810", 
+   "Q77560", 
+   "Q3524341", 
+   "Q3591324", 
+   "Q9682", 
+   "Q1633084", 
+   "Q2420937"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "88", 
+  "active_set": [
+   "(c(Q502895),P3091,c(Q502895)|c(Q3745054))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q502895", 
+   "Q3745054", 
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q467676"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P3091"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And how about Reiner Klimke?"
+ }, 
+ {
+  "all_entities": [
+   "Q2831786", 
+   "Q2964761", 
+   "Q2643622", 
+   "Q1682742", 
+   "Q451395", 
+   "Q1311486", 
+   "Q682476", 
+   "Q1088130", 
+   "Q527657", 
+   "Q364671", 
+   "Q3089727", 
+   "Q919677", 
+   "Q16208274", 
+   "Q3400624", 
+   "Q15782408", 
+   "Q947032", 
+   "Q3428317", 
+   "Q131691", 
+   "Q17350580", 
+   "Q438197", 
+   "Q2396962", 
+   "Q19630218", 
+   "Q3106094", 
+   "Q958372", 
+   "Q319522", 
+   "Q78028", 
+   "Q7647583", 
+   "Q823503", 
+   "Q147663", 
+   "Q513487", 
+   "Q494315", 
+   "Q377345", 
+   "Q5247967", 
+   "Q8409", 
+   "Q2831635", 
+   "Q1710812", 
+   "Q467676", 
+   "Q1545318", 
+   "Q34836", 
+   "Q238769", 
+   "Q745510", 
+   "Q318626", 
+   "Q608440", 
+   "Q19839389", 
+   "Q3134506", 
+   "Q926771", 
+   "Q3309932", 
+   "Q517", 
+   "Q1351428", 
+   "Q62177", 
+   "Q458399", 
+   "Q2903241", 
+   "Q529497", 
+   "Q3380679", 
+   "Q1337633", 
+   "Q953867", 
+   "Q364659", 
+   "Q19880092", 
+   "Q1119157", 
+   "Q1581746", 
+   "Q72502", 
+   "Q25906137", 
+   "Q6765126", 
+   "Q15972334", 
+   "Q6148833", 
+   "Q1391424", 
+   "Q2094373", 
+   "Q5079900", 
+   "Q1342822", 
+   "Q76246", 
+   "Q1691413", 
+   "Q270476", 
+   "Q272533", 
+   "Q3074167", 
+   "Q449891", 
+   "Q1292304", 
+   "Q1343527", 
+   "Q690536", 
+   "Q43958", 
+   "Q3428878", 
+   "Q886901", 
+   "Q1261810", 
+   "Q77560", 
+   "Q3524341", 
+   "Q3591324", 
+   "Q9682", 
+   "Q1633084", 
+   "Q2420937"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "88", 
+  "active_set": [
+   "(c(Q502895),P3091,c(Q502895)|c(Q3745054))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q6690289"
+  ], 
+  "relations": [
+   "P1750"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q186081"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many time intervals are the name day of Love ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q2932"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q6690289,P1750,c(Q186081))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q11993741"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q186081"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about Oline?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q11993741,P1750,c(Q186081))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q6690891"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P241"
+  ], 
+  "type_list": [
+   "Q781132"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which military branch did Love Jones-Parry belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q222595"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q222595"
+  ], 
+  "utterance": "British Army", 
+  "active_set": [
+   "(Q6690891,P241,c(Q781132))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q6690891"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1412"
+  ], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which language is Love Jones-Parry capable of writing ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1860"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1860"
+  ], 
+  "utterance": "English", 
+  "active_set": [
+   "(Q6690891,P1412,c(Q34770))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q6690891"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P921"
+  ], 
+  "type_list": [
+   "Q191067"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which article has that person as its main topic ?"
+ }, 
+ {
+  "all_entities": [
+   "Q19024418"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q19024418"
+  ], 
+  "utterance": "Parry, Love Parry Jones (DNB00)", 
+  "active_set": [
+   "(c(Q191067),P921,Q1860)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1860"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P144"
+  ], 
+  "type_list": [
+   "Q1190554"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which event is adapted from English ?"
+ }, 
+ {
+  "all_entities": [
+   "Q36352"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q36352"
+  ], 
+  "utterance": "Loglan", 
+  "active_set": [
+   "(c(Q1190554),P144,Q1860)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1860"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P361"
+  ], 
+  "type_list": [
+   "Q5962346"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which classification schemes are English a component of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1346342", 
+   "Q5329170"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1346342", 
+   "Q5329170"
+  ], 
+  "utterance": "Anglic languages, Anglo-Frisian languages", 
+  "active_set": [
+   "(Q1860,P361,c(Q5962346))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q26721"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q5962346"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about West Germanic languages?"
+ }, 
+ {
+  "all_entities": [
+   "Q21200"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21200"
+  ], 
+  "utterance": "Germanic languages", 
+  "active_set": [
+   "(Q26721,P361,c(Q5962346))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q21200"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P407"
+  ], 
+  "type_list": [
+   "Q82799"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which names are created in language that classification scheme ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1644185", 
+   "Q16872209", 
+   "Q1440298", 
+   "Q2046317", 
+   "Q10450274", 
+   "Q16870715", 
+   "Q21075626", 
+   "Q2793828", 
+   "Q1461071", 
+   "Q6552431", 
+   "Q931355", 
+   "Q7626039", 
+   "Q1644178", 
+   "Q148189", 
+   "Q1158266", 
+   "Q813701", 
+   "Q16869924", 
+   "Q780747", 
+   "Q5501411", 
+   "Q16871816", 
+   "Q1340332", 
+   "Q16282017", 
+   "Q16871090", 
+   "Q2166632", 
+   "Q14915267", 
+   "Q5370814", 
+   "Q318363", 
+   "Q785816", 
+   "Q4822838", 
+   "Q814088", 
+   "Q15731389", 
+   "Q8071504", 
+   "Q4492504", 
+   "Q1627098", 
+   "Q18091376", 
+   "Q16870458", 
+   "Q16884381", 
+   "Q2659856", 
+   "Q16856145", 
+   "Q16870226", 
+   "Q1806512", 
+   "Q16738572", 
+   "Q1616996", 
+   "Q1452724"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7626039", 
+   "Q1340332", 
+   "Q318363"
+  ], 
+  "utterance": "Str\u00f6m, Endemann (surname), Abel", 
+  "active_set": [
+   "(c(Q82799),P407,Q21200)"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q43229", 
+   "Q4830453", 
+   "Q5962346"
+  ], 
+  "entities_in_utterance": [
+   "Q3679466"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P176"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many classification schemes were manufactured by approximately the same number of organizations or business enterprises as Consul class submersible ?"
+ }, 
+ {
+  "all_entities": [
+   "Q4310117", 
+   "Q2714941", 
+   "Q1075135", 
+   "Q3792937", 
+   "Q2657561", 
+   "Q633556", 
+   "Q7862873", 
+   "Q861626", 
+   "Q6424119", 
+   "Q1626579", 
+   "Q624804", 
+   "Q1530956", 
+   "Q1491613", 
+   "Q7918762", 
+   "Q640482", 
+   "Q19735220", 
+   "Q1136699", 
+   "Q1224797", 
+   "Q4001382", 
+   "Q6995590", 
+   "Q15240025", 
+   "Q7860857", 
+   "Q2599168", 
+   "Q1661540", 
+   "Q4785927", 
+   "Q5068938", 
+   "Q2994200", 
+   "Q969480", 
+   "Q628759", 
+   "Q15631817", 
+   "Q3021196", 
+   "Q925594", 
+   "Q6158319", 
+   "Q337990", 
+   "Q580314", 
+   "Q1203377", 
+   "Q373977", 
+   "Q2366375", 
+   "Q3496128", 
+   "Q2455100", 
+   "Q921222", 
+   "Q2638670", 
+   "Q647854", 
+   "Q528109", 
+   "Q1378687", 
+   "Q13360812", 
+   "Q643854", 
+   "Q938245", 
+   "Q321093", 
+   "Q19734842", 
+   "Q7862874", 
+   "Q4789677", 
+   "Q5234874", 
+   "Q2975771", 
+   "Q3679320", 
+   "Q699842", 
+   "Q1516486", 
+   "Q1144934", 
+   "Q2892685", 
+   "Q1141901", 
+   "Q5631890", 
+   "Q2443866", 
+   "Q3679481", 
+   "Q835312", 
+   "Q1089274", 
+   "Q3679523", 
+   "Q3442947", 
+   "Q19735154", 
+   "Q6980321", 
+   "Q913332", 
+   "Q2062612", 
+   "Q7632661", 
+   "Q1207283", 
+   "Q2993149", 
+   "Q2117340", 
+   "Q3442929", 
+   "Q4172473", 
+   "Q819452", 
+   "Q4367164", 
+   "Q482835", 
+   "Q736723", 
+   "Q3545010", 
+   "Q389149", 
+   "Q796474", 
+   "Q1476763", 
+   "Q2257275", 
+   "Q2449695", 
+   "Q719824", 
+   "Q10599228", 
+   "Q2481447", 
+   "Q11706017", 
+   "Q4367179", 
+   "Q4367178", 
+   "Q2140361", 
+   "Q914213", 
+   "Q1086999", 
+   "Q5306791", 
+   "Q4367170", 
+   "Q1968562", 
+   "Q55520", 
+   "Q167991", 
+   "Q1363244", 
+   "Q1046757", 
+   "Q385242", 
+   "Q611047", 
+   "Q1152494", 
+   "Q5569474", 
+   "Q5551294", 
+   "Q3792815", 
+   "Q4670007", 
+   "Q3679466", 
+   "Q5035812", 
+   "Q5551292", 
+   "Q5551291", 
+   "Q301329", 
+   "Q1185553", 
+   "Q584865", 
+   "Q5009407", 
+   "Q2558183", 
+   "Q494403", 
+   "Q1194834", 
+   "Q967977", 
+   "Q477419", 
+   "Q842423", 
+   "Q11706010", 
+   "Q3792787", 
+   "Q11295226", 
+   "Q694684", 
+   "Q4649708", 
+   "Q2118043", 
+   "Q1279940", 
+   "Q1968997", 
+   "Q6405680", 
+   "Q1800152", 
+   "Q596164", 
+   "Q3793315", 
+   "Q4267279", 
+   "Q4789611", 
+   "Q264912", 
+   "Q808804", 
+   "Q6424030", 
+   "Q732680", 
+   "Q2975986", 
+   "Q5306773", 
+   "Q686973", 
+   "Q621854", 
+   "Q1061181", 
+   "Q820105", 
+   "Q3508746", 
+   "Q180719", 
+   "Q15378718", 
+   "Q1194312", 
+   "Q2590674", 
+   "Q2975856", 
+   "Q1541289", 
+   "Q869092", 
+   "Q698417", 
+   "Q2165906", 
+   "Q19735064", 
+   "Q1109767", 
+   "Q378777", 
+   "Q1078065", 
+   "Q2914356", 
+   "Q5288990", 
+   "Q2307521", 
+   "Q1626183", 
+   "Q2976020", 
+   "Q2976023", 
+   "Q7083233", 
+   "Q3087816", 
+   "Q278397", 
+   "Q19735183", 
+   "Q7862861", 
+   "Q553917", 
+   "Q1719789", 
+   "Q1661538", 
+   "Q2455127", 
+   "Q19735216", 
+   "Q1661534", 
+   "Q1462910", 
+   "Q10669459", 
+   "Q1754293", 
+   "Q2257235", 
+   "Q121982", 
+   "Q4310421", 
+   "Q5847242", 
+   "Q17054854", 
+   "Q7905814", 
+   "Q1366715", 
+   "Q765764"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "190", 
+  "active_set": [
+   "(c(Q5962346),P176,c(Q43229)|c(Q4830453))"
+  ]
+ }
+]

@@ -1,0 +1,404 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q4189779"
+  ], 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What do Vasily Zvyagintsev do for a living ?"
+ }, 
+ {
+  "all_entities": [
+   "Q39631", 
+   "Q36180", 
+   "Q18844224"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q39631", 
+   "Q36180", 
+   "Q18844224"
+  ], 
+  "utterance": "physician, writer, science fiction writer", 
+  "active_set": [
+   "(Q4189779,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q4189779"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which sex does Vasily Zvyagintsev have ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "utterance": "male", 
+  "active_set": [
+   "(Q4189779,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q23795276"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Haleth?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "utterance": "male", 
+  "active_set": [
+   "(Q23795276,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P417"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q502895", 
+   "Q12737077"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which people are the names of the patron saint of exactly 3 occupations ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q128538", 
+   "Q192816", 
+   "Q200895"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q128538", 
+   "Q192816", 
+   "Q200895"
+  ], 
+  "utterance": "Luke the Evangelist, Saint Barbara, Agatha of Sicily", 
+  "active_set": [
+   "(c(Q12737077),P417,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P725"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q502895", 
+   "Q5398426"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which television series had min number of people as the dubbing artist ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q2564733", 
+   "Q15148562", 
+   "Q1317227", 
+   "Q2583218", 
+   "Q1723828", 
+   "Q184352", 
+   "Q7445961", 
+   "Q2349865", 
+   "Q3211469", 
+   "Q483557", 
+   "Q95063", 
+   "Q2633652", 
+   "Q483803", 
+   "Q2791605", 
+   "Q1314527", 
+   "Q1107025", 
+   "Q1107521", 
+   "Q483724", 
+   "Q1141789", 
+   "Q844599", 
+   "Q582630", 
+   "Q1837327", 
+   "Q24045770", 
+   "Q15574647", 
+   "Q539284", 
+   "Q425550", 
+   "Q182476", 
+   "Q1060695", 
+   "Q1191236", 
+   "Q2318266", 
+   "Q482551", 
+   "Q900553", 
+   "Q1132147", 
+   "Q1816558", 
+   "Q1055370", 
+   "Q492884", 
+   "Q3271710", 
+   "Q2030675", 
+   "Q1834", 
+   "Q182662", 
+   "Q7094371", 
+   "Q2855268", 
+   "Q2539006", 
+   "Q645307", 
+   "Q5356268", 
+   "Q2522289", 
+   "Q1191938", 
+   "Q1159317", 
+   "Q736163", 
+   "Q698229", 
+   "Q696524", 
+   "Q9385099", 
+   "Q1523630", 
+   "Q642944", 
+   "Q701372", 
+   "Q1058984", 
+   "Q865498", 
+   "Q2539030", 
+   "Q1580513", 
+   "Q488438", 
+   "Q854973", 
+   "Q482872", 
+   "Q484259", 
+   "Q1143991", 
+   "Q11255631", 
+   "Q862850", 
+   "Q5158632", 
+   "Q483375", 
+   "Q431930", 
+   "Q699819", 
+   "Q170019", 
+   "Q268512", 
+   "Q1141838", 
+   "Q1554117", 
+   "Q1348627", 
+   "Q596883", 
+   "Q2390297", 
+   "Q385129", 
+   "Q2756199", 
+   "Q536416", 
+   "Q987783", 
+   "Q185012", 
+   "Q6941258", 
+   "Q137002", 
+   "Q10890355", 
+   "Q5653026", 
+   "Q11519613", 
+   "Q717382", 
+   "Q11179499", 
+   "Q810437", 
+   "Q2088696", 
+   "Q1087664", 
+   "Q11387159", 
+   "Q611650", 
+   "Q1091743", 
+   "Q1309696", 
+   "Q944258", 
+   "Q484515", 
+   "Q1188003", 
+   "Q493744", 
+   "Q368608", 
+   "Q709673", 
+   "Q540497", 
+   "Q830771", 
+   "Q868899", 
+   "Q2482070", 
+   "Q199224", 
+   "Q1778816", 
+   "Q713975", 
+   "Q1013388", 
+   "Q333687", 
+   "Q1317129", 
+   "Q482466", 
+   "Q1186628", 
+   "Q1141816", 
+   "Q632746", 
+   "Q1514362", 
+   "Q1194085", 
+   "Q2566529", 
+   "Q708174", 
+   "Q1073660", 
+   "Q776574", 
+   "Q4251500", 
+   "Q275676", 
+   "Q196214", 
+   "Q1750516", 
+   "Q2663915", 
+   "Q2584248", 
+   "Q7820714", 
+   "Q495919", 
+   "Q143830", 
+   "Q764135", 
+   "Q485199", 
+   "Q614495", 
+   "Q608660", 
+   "Q703031", 
+   "Q2083163", 
+   "Q1200040", 
+   "Q700203", 
+   "Q1202553", 
+   "Q593049", 
+   "Q705053", 
+   "Q11571242", 
+   "Q308035", 
+   "Q931319", 
+   "Q540997", 
+   "Q1743797", 
+   "Q11147846", 
+   "Q491841", 
+   "Q590129", 
+   "Q2499784", 
+   "Q485753", 
+   "Q735669", 
+   "Q1790241", 
+   "Q1477323", 
+   "Q1091195", 
+   "Q91802", 
+   "Q1186554", 
+   "Q2043633", 
+   "Q2578383", 
+   "Q1137447", 
+   "Q1051427", 
+   "Q2418770", 
+   "Q3211549", 
+   "Q2419200", 
+   "Q527398", 
+   "Q2634885", 
+   "Q5680972", 
+   "Q1742099", 
+   "Q1257981", 
+   "Q702014", 
+   "Q1065178", 
+   "Q1209267", 
+   "Q385161", 
+   "Q14318175"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q483803", 
+   "Q1065178", 
+   "Q1013388"
+  ], 
+  "utterance": "Daily Lives of High School Boys, Sketchbook, Telepathy Sh\u014djo Ran Jiken Note", 
+  "active_set": [
+   "(c(Q5398426),P725,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q128538"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P50"
+  ], 
+  "type_list": [
+   "Q179461"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which religious text has that person as its author ?"
+ }, 
+ {
+  "all_entities": [
+   "Q39939"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q39939"
+  ], 
+  "utterance": "Gospel of Luke", 
+  "active_set": [
+   "(c(Q179461),P50,Q483803)", 
+   "(c(Q179461),P50,Q1065178)", 
+   "(c(Q179461),P50,Q1013388)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q39939"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1441"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people are from the works of that religious text ?"
+ }, 
+ {
+  "all_entities": [
+   "Q41370", 
+   "Q9181", 
+   "Q81422"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q41370", 
+   "Q9181", 
+   "Q81422"
+  ], 
+  "utterance": "David, Abraham, Noah", 
+  "active_set": [
+   "(c(Q502895),P1441,Q39939)"
+  ]
+ }
+]

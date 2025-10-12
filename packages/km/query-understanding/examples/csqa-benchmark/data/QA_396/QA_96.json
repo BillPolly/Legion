@@ -1,0 +1,651 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q11770014"
+  ], 
+  "relations": [
+   "P54"
+  ], 
+  "type_list": [
+   "Q1194951"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is Mario Zabalaga a member of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q193386"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q193386"
+  ], 
+  "utterance": "Bolivia national football team", 
+  "active_set": [
+   "(Q11770014,P54,c(Q1194951))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q11770014"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1412"
+  ], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which language can that person understand ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1321"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1321"
+  ], 
+  "utterance": "Spanish", 
+  "active_set": [
+   "(Q193386,P1412,c(Q34770))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q11770014"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories do Mario Zabalaga belong to ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q750"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q11770014,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q739313"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And what about Mark Weigle?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q30"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q739313,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q272642"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about Tessa Jowell?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q272642,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q59117"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P37"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q34770", 
+   "Q56061"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many administrative territories have their official language as around the same number of languages as Aappilattoq ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q807", 
+   "Q64004", 
+   "Q68978", 
+   "Q689502", 
+   "Q9125", 
+   "Q678901", 
+   "Q66629", 
+   "Q9009", 
+   "Q2641849", 
+   "Q175345", 
+   "Q68124", 
+   "Q704257", 
+   "Q68965", 
+   "Q757845", 
+   "Q639054", 
+   "Q689954", 
+   "Q689691", 
+   "Q643200", 
+   "Q5576202", 
+   "Q668705", 
+   "Q69231", 
+   "Q7149", 
+   "Q66616", 
+   "Q54450", 
+   "Q3834", 
+   "Q5951348", 
+   "Q81811", 
+   "Q669310", 
+   "Q674433", 
+   "Q669411", 
+   "Q70477", 
+   "Q429962", 
+   "Q167715", 
+   "Q669254", 
+   "Q64011", 
+   "Q1990899", 
+   "Q597413", 
+   "Q390482", 
+   "Q662499", 
+   "Q669360", 
+   "Q678787", 
+   "Q68883", 
+   "Q660215", 
+   "Q7525", 
+   "Q661369", 
+   "Q669400", 
+   "Q4700013", 
+   "Q121157", 
+   "Q2094680", 
+   "Q1352", 
+   "Q128499", 
+   "Q69639", 
+   "Q662405", 
+   "Q64679", 
+   "Q70485", 
+   "Q669466", 
+   "Q141502", 
+   "Q3639927", 
+   "Q666159", 
+   "Q3951", 
+   "Q381861", 
+   "Q69256", 
+   "Q5689", 
+   "Q63964", 
+   "Q156593", 
+   "Q781354", 
+   "Q660142", 
+   "Q572380", 
+   "Q581562", 
+   "Q678991", 
+   "Q869534", 
+   "Q3702463", 
+   "Q21669478", 
+   "Q669375", 
+   "Q66208", 
+   "Q659753", 
+   "Q15077954", 
+   "Q435231", 
+   "Q2718721", 
+   "Q7172", 
+   "Q689487", 
+   "Q196357", 
+   "Q15730054", 
+   "Q1757", 
+   "Q669280", 
+   "Q5999183", 
+   "Q2492533", 
+   "Q57110", 
+   "Q66668", 
+   "Q541319", 
+   "Q68160", 
+   "Q7001862", 
+   "Q668740", 
+   "Q2152433", 
+   "Q183441", 
+   "Q689499", 
+   "Q678690", 
+   "Q21845358", 
+   "Q1034", 
+   "Q63931", 
+   "Q67812", 
+   "Q669152", 
+   "Q59117", 
+   "Q669350", 
+   "Q67097", 
+   "Q664153", 
+   "Q669292", 
+   "Q3630738", 
+   "Q289534", 
+   "Q688652", 
+   "Q258447", 
+   "Q1259122", 
+   "Q669229", 
+   "Q661817", 
+   "Q14512466", 
+   "Q70683", 
+   "Q669244", 
+   "Q68103", 
+   "Q678769", 
+   "Q669437", 
+   "Q69484", 
+   "Q611382", 
+   "Q69354", 
+   "Q64123", 
+   "Q69290", 
+   "Q25396", 
+   "Q669424", 
+   "Q1341", 
+   "Q78", 
+   "Q2801411", 
+   "Q72", 
+   "Q71", 
+   "Q70", 
+   "Q669332", 
+   "Q277674", 
+   "Q65757", 
+   "Q163798", 
+   "Q65502", 
+   "Q69940", 
+   "Q7942521", 
+   "Q64032", 
+   "Q198210", 
+   "Q869624", 
+   "Q678960", 
+   "Q1026291", 
+   "Q68692", 
+   "Q286332", 
+   "Q1895"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "148", 
+  "active_set": [
+   "(c(Q56061),P37,c(Q34770))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q664153"
+  ], 
+  "relations": [
+   "P37"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q34770", 
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And also tell me about Grandvaux?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q807", 
+   "Q64004", 
+   "Q68978", 
+   "Q689502", 
+   "Q9125", 
+   "Q678901", 
+   "Q66629", 
+   "Q9009", 
+   "Q2641849", 
+   "Q175345", 
+   "Q68124", 
+   "Q704257", 
+   "Q68965", 
+   "Q757845", 
+   "Q639054", 
+   "Q689954", 
+   "Q689691", 
+   "Q643200", 
+   "Q5576202", 
+   "Q668705", 
+   "Q69231", 
+   "Q7149", 
+   "Q66616", 
+   "Q54450", 
+   "Q3834", 
+   "Q5951348", 
+   "Q81811", 
+   "Q669310", 
+   "Q674433", 
+   "Q669411", 
+   "Q70477", 
+   "Q429962", 
+   "Q167715", 
+   "Q669254", 
+   "Q64011", 
+   "Q1990899", 
+   "Q597413", 
+   "Q390482", 
+   "Q662499", 
+   "Q669360", 
+   "Q678787", 
+   "Q68883", 
+   "Q660215", 
+   "Q7525", 
+   "Q661369", 
+   "Q669400", 
+   "Q4700013", 
+   "Q121157", 
+   "Q2094680", 
+   "Q1352", 
+   "Q128499", 
+   "Q69639", 
+   "Q662405", 
+   "Q64679", 
+   "Q70485", 
+   "Q669466", 
+   "Q141502", 
+   "Q3639927", 
+   "Q666159", 
+   "Q3951", 
+   "Q381861", 
+   "Q69256", 
+   "Q5689", 
+   "Q63964", 
+   "Q156593", 
+   "Q781354", 
+   "Q660142", 
+   "Q572380", 
+   "Q581562", 
+   "Q678991", 
+   "Q869534", 
+   "Q3702463", 
+   "Q21669478", 
+   "Q669375", 
+   "Q66208", 
+   "Q659753", 
+   "Q15077954", 
+   "Q435231", 
+   "Q2718721", 
+   "Q7172", 
+   "Q689487", 
+   "Q196357", 
+   "Q15730054", 
+   "Q1757", 
+   "Q669280", 
+   "Q5999183", 
+   "Q2492533", 
+   "Q57110", 
+   "Q66668", 
+   "Q541319", 
+   "Q68160", 
+   "Q7001862", 
+   "Q668740", 
+   "Q2152433", 
+   "Q183441", 
+   "Q689499", 
+   "Q678690", 
+   "Q21845358", 
+   "Q1034", 
+   "Q63931", 
+   "Q67812", 
+   "Q669152", 
+   "Q59117", 
+   "Q669350", 
+   "Q67097", 
+   "Q664153", 
+   "Q669292", 
+   "Q3630738", 
+   "Q289534", 
+   "Q688652", 
+   "Q258447", 
+   "Q1259122", 
+   "Q669229", 
+   "Q661817", 
+   "Q14512466", 
+   "Q70683", 
+   "Q669244", 
+   "Q68103", 
+   "Q678769", 
+   "Q669437", 
+   "Q69484", 
+   "Q611382", 
+   "Q69354", 
+   "Q64123", 
+   "Q69290", 
+   "Q25396", 
+   "Q669424", 
+   "Q1341", 
+   "Q78", 
+   "Q2801411", 
+   "Q72", 
+   "Q71", 
+   "Q70", 
+   "Q669332", 
+   "Q277674", 
+   "Q65757", 
+   "Q163798", 
+   "Q65502", 
+   "Q69940", 
+   "Q7942521", 
+   "Q64032", 
+   "Q198210", 
+   "Q869624", 
+   "Q678960", 
+   "Q1026291", 
+   "Q68692", 
+   "Q286332", 
+   "Q1895"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "148", 
+  "active_set": [
+   "(c(Q56061),P37,c(Q34770))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q193386"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1344"
+  ], 
+  "type_list": [
+   "Q15275719"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which recurring events did Bolivia national football team take part in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q48432", 
+   "Q101751", 
+   "Q132515"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q48432", 
+   "Q101751", 
+   "Q132515"
+  ], 
+  "utterance": "1930 FIFA World Cup, 1994 FIFA World Cup, 1950 FIFA World Cup", 
+  "active_set": [
+   "(Q193386,P1344,c(Q15275719))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q241353"
+  ], 
+  "relations": [
+   "P1344"
+  ], 
+  "type_list": [
+   "Q1194951"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Did Mongolia national football team participate in those recurring events ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q241353,P1344,Q48432)", 
+   "(Q241353,P1344,Q101751)", 
+   "(Q241353,P1344,Q132515)"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Multiple_Relation", 
+  "type_list": [
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q2736", 
+   "Q241353"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P54", 
+   "P641"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people plays for Mongolia national football team and play association football ?"
+ }, 
+ {
+  "all_entities": [
+   "Q7849297", 
+   "Q7400518", 
+   "Q7849560", 
+   "Q6153556", 
+   "Q4745986", 
+   "Q7489435", 
+   "Q7102941", 
+   "Q4751598", 
+   "Q5521571", 
+   "Q7849298", 
+   "Q10554134", 
+   "Q7650438", 
+   "Q10554131", 
+   "Q10551974", 
+   "Q6936743", 
+   "Q10551990", 
+   "Q4736157", 
+   "Q18915334", 
+   "Q7124152", 
+   "Q5927039", 
+   "Q786064", 
+   "Q6936744", 
+   "Q7849496", 
+   "Q17612662", 
+   "Q6939815", 
+   "Q7051375", 
+   "Q2173833", 
+   "Q6160161", 
+   "Q7449687", 
+   "Q7089288", 
+   "Q4837192", 
+   "Q7116391", 
+   "Q6416587", 
+   "Q5581787", 
+   "Q2444765", 
+   "Q1319488", 
+   "Q10554145", 
+   "Q5212094", 
+   "Q16235093", 
+   "Q1919030", 
+   "Q4881601", 
+   "Q4502453", 
+   "Q5385279", 
+   "Q4939047", 
+   "Q5228124"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6416587", 
+   "Q7650438", 
+   "Q10554131", 
+   "Q17612662", 
+   "Q5927039", 
+   "Q6936744", 
+   "Q7849560", 
+   "Q10551990", 
+   "Q1919030", 
+   "Q5385279"
+  ], 
+  "utterance": "Some of them are Kishigdalai Battulga, Suurisuren Munkhbaatar, Ganbold Bilguun, Tuguldur Munkh-Erdene, Jargalsaikhan Enkhbayar, Munkhtogtokh Idersaikan, Tserenjav Enkhjargal, Jargalsaikhan Munkhbayar, Selengiin Odkh\u00fc\u00fc, Erdenebayar Baasangyn", 
+  "active_set": [
+   "AND((c(Q502895),P54,Q241353), (c(Q502895),P641,Q2736))"
+  ]
+ }
+]

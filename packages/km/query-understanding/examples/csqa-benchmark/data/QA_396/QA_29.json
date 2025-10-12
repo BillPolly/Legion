@@ -1,0 +1,696 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q16146916"
+  ], 
+  "relations": [
+   "P54"
+  ], 
+  "type_list": [
+   "Q1194951"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is Francisco Jovel \u00c1lvarez a member of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q188228"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q188228"
+  ], 
+  "utterance": "El Salvador national football team", 
+  "active_set": [
+   "(Q16146916,P54,c(Q1194951))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q16146916"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is the country of citizenship of Francisco Jovel \u00c1lvarez ?"
+ }, 
+ {
+  "all_entities": [
+   "Q792"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q792"
+  ], 
+  "utterance": "El Salvador", 
+  "active_set": [
+   "(Q16146916,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q16146916"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1412"
+  ], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which language is that person capable of writing ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1321"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1321"
+  ], 
+  "utterance": "Spanish", 
+  "active_set": [
+   "(Q792,P1412,c(Q34770))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P282"
+  ], 
+  "count_ques_sub_type": 9, 
+  "type_list": [
+   "Q8192", 
+   "Q34770"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many languages have writing system as more number of writing systems than that language ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q182695", 
+   "Q1669994"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(c(Q34770),P282,c(Q8192))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q8216"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P282"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q2001982", 
+   "Q34770"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which notations are the writing systems used for lesser number of languages than Greek alphabet ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q3544702", 
+   "Q82772", 
+   "Q2003257", 
+   "Q1828555", 
+   "Q321083", 
+   "Q473725", 
+   "Q209764", 
+   "Q187659", 
+   "Q208503", 
+   "Q13586477", 
+   "Q1771716", 
+   "Q26978", 
+   "Q3322653", 
+   "Q1089000", 
+   "Q790681", 
+   "Q752854", 
+   "Q185083", 
+   "Q401", 
+   "Q806024", 
+   "Q2479183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2003257", 
+   "Q473725", 
+   "Q1089000"
+  ], 
+  "utterance": "Cirth, Tengwar, Sarati", 
+  "active_set": [
+   "(c(Q34770),P282,c(Q2001982))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q1771716"
+  ], 
+  "relations": [
+   "P282"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q2001982", 
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And how about Pahlavi scripts?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q3544702", 
+   "Q2003257", 
+   "Q1828555", 
+   "Q321083", 
+   "Q473725", 
+   "Q209764", 
+   "Q187659", 
+   "Q208503", 
+   "Q13586477", 
+   "Q26978", 
+   "Q1089000", 
+   "Q752854", 
+   "Q185083", 
+   "Q806024", 
+   "Q2479183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2003257", 
+   "Q473725", 
+   "Q1089000"
+  ], 
+  "utterance": "Cirth, Tengwar, Sarati", 
+  "active_set": [
+   "(c(Q34770),P282,c(Q2001982))"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators", 
+  "entities_in_utterance": [
+   "Q792"
+  ], 
+  "relations": [
+   "P463"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q484652", 
+   "Q43229"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many international organizations or organizations were El Salvador a member of ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q190008", 
+   "Q190019", 
+   "Q191384", 
+   "Q899770", 
+   "Q1065", 
+   "Q656801", 
+   "Q7825", 
+   "Q827525", 
+   "Q1043527"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "9", 
+  "active_set": [
+   "(Q792,P463,c(Q484652))", 
+   "(Q792,P463,c(Q43229))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q35518"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P282"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q2001982", 
+   "Q25295"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which language families adopt less number of notations as the writing system than Akkadian ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q34016", 
+   "Q33617", 
+   "Q33779", 
+   "Q9288", 
+   "Q33864", 
+   "Q3915511", 
+   "Q36385", 
+   "Q3450749", 
+   "Q35602", 
+   "Q35744", 
+   "Q33655", 
+   "Q1363055", 
+   "Q28244", 
+   "Q13275", 
+   "Q33454", 
+   "Q33578", 
+   "Q35452", 
+   "Q35541", 
+   "Q9205", 
+   "Q34124", 
+   "Q33856", 
+   "Q35963", 
+   "Q50868", 
+   "Q7853191", 
+   "Q34311", 
+   "Q33661", 
+   "Q13198", 
+   "Q33491", 
+   "Q28026", 
+   "Q10179", 
+   "Q1363072", 
+   "Q33339", 
+   "Q1185127", 
+   "Q33281", 
+   "Q2511476", 
+   "Q34159", 
+   "Q565110", 
+   "Q13244", 
+   "Q34015", 
+   "Q34834", 
+   "Q36699", 
+   "Q35939"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q34016", 
+   "Q33864", 
+   "Q3915511"
+  ], 
+  "utterance": "Sandawe, Oromo, Mexican Sign Language", 
+  "active_set": [
+   "(c(Q25295),P282,c(Q2001982))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Comparative|More/Less|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P282"
+  ], 
+  "count_ques_sub_type": 8, 
+  "type_list": [
+   "Q2001982", 
+   "Q25295"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which language families use approximately the same number of notations as the writing system as that language family ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "description": "Comparative|More/Less|Single entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q33864"
+  ], 
+  "active_set": [
+   "(c(Q25295),P282,c(Q2001982))"
+  ], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Oromo ?"
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "count_ques_sub_type": 8, 
+  "entities": [
+   "Q3915511"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "No, I meant Mexican Sign Language. Could you tell me the answer for that?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q35518"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q35518"
+  ], 
+  "utterance": "Akkadian", 
+  "active_set": [
+   "(c(Q25295),P282,c(Q2001982))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P282"
+  ], 
+  "count_ques_sub_type": 8, 
+  "type_list": [
+   "Q2001982", 
+   "Q25295"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which language families are around the same number of notations the writing system of as that language family ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q34016", 
+   "Q33617", 
+   "Q33779", 
+   "Q9288", 
+   "Q33864", 
+   "Q3915511", 
+   "Q36385", 
+   "Q3450749", 
+   "Q35602", 
+   "Q35744", 
+   "Q33655", 
+   "Q1363055", 
+   "Q28244", 
+   "Q13275", 
+   "Q33454", 
+   "Q33578", 
+   "Q35452", 
+   "Q35541", 
+   "Q9205", 
+   "Q34124", 
+   "Q33856", 
+   "Q35963", 
+   "Q50868", 
+   "Q7853191", 
+   "Q34311", 
+   "Q33661", 
+   "Q13198", 
+   "Q33491", 
+   "Q28026", 
+   "Q10179", 
+   "Q1363072", 
+   "Q33339", 
+   "Q1185127", 
+   "Q33281", 
+   "Q2511476", 
+   "Q34159", 
+   "Q565110", 
+   "Q13244", 
+   "Q34015", 
+   "Q34834", 
+   "Q36699", 
+   "Q35939"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q34016", 
+   "Q33864", 
+   "Q3915511"
+  ], 
+  "utterance": "Sandawe, Oromo, Mexican Sign Language", 
+  "active_set": [
+   "(c(Q25295),P282,c(Q2001982))"
+  ]
+ }, 
+ {
+  "set_op_choice": 3, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Difference|Multiple_Relation", 
+  "type_list": [
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q183", 
+   "Q35518"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27", 
+   "P1412"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people speaks Akkadian and do n't have nationality of Germany ?"
+ }, 
+ {
+  "all_entities": [
+   "Q26742858", 
+   "Q4507011", 
+   "Q81794", 
+   "Q23016853", 
+   "Q36359", 
+   "Q12411491", 
+   "Q1703552", 
+   "Q1327855", 
+   "Q297506"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q26742858", 
+   "Q4507011", 
+   "Q81794", 
+   "Q23016853", 
+   "Q36359", 
+   "Q12411491", 
+   "Q1703552", 
+   "Q1327855", 
+   "Q297506"
+  ], 
+  "utterance": "Betina Faist, Mikayel Chamchian, Akhenaten, Daniel E. Fleming, Hammurabi, Sh. Shifra, Joost Hazenbos, Elena Cassin, Naram-Sin of Akkad", 
+  "active_set": [
+   "AND((c(Q502895),P1412,Q35518), NOT((c(Q502895),P27,Q183)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q792"
+  ], 
+  "relations": [
+   "P463"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q43229"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many organizations were El Salvador a member of ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q190019", 
+   "Q191384", 
+   "Q899770", 
+   "Q656801", 
+   "Q7825", 
+   "Q827525"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "6", 
+  "active_set": [
+   "(Q792,P463,c(Q43229))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q5549541"
+  ], 
+  "relations": [
+   "P463"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q43229"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And how about Gerald Rosselot?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q131566"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q5549541,P463,c(Q43229))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q1666720"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q43229"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Peter Suschitzky?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q1666720,P463,c(Q43229))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q2375431", 
+   "Q1703552"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories do Joost Hazenbos or Colea V\u00e2lcov belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q218", 
+   "Q29999"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q218", 
+   "Q29999"
+  ], 
+  "utterance": "Romania, Kingdom of the Netherlands", 
+  "active_set": [
+   "OR((Q1703552,P27,c(Q15617994)), (Q2375431,P27,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q218", 
+   "Q29999"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which occupations are located in Romania and Kingdom of the Netherlands ?"
+ }, 
+ {
+  "all_entities": [
+   "Q17556530", 
+   "Q21503673", 
+   "Q19938957", 
+   "Q839139", 
+   "Q21389881", 
+   "Q7241368", 
+   "Q6797678", 
+   "Q17278763", 
+   "Q7241307", 
+   "Q17278764", 
+   "Q4294873", 
+   "Q15304810", 
+   "Q1923858", 
+   "Q19305384", 
+   "Q26250880", 
+   "Q2045066", 
+   "Q18887908"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21389881", 
+   "Q839139", 
+   "Q15304810"
+  ], 
+  "utterance": "Minister of Education, President of Romania, Prime Minister of Romania", 
+  "active_set": [
+   "(c(Q12737077),P17,Q218)", 
+   "(c(Q12737077),P17,Q29999)"
+  ]
+ }
+]

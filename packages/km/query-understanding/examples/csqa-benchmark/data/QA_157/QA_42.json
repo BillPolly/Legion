@@ -1,0 +1,422 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q958594"
+  ], 
+  "relations": [
+   "P40"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which person is a successor of Francis Schaeffer ?"
+ }, 
+ {
+  "all_entities": [
+   "Q5489433"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5489433"
+  ], 
+  "utterance": "Frank Schaeffer", 
+  "active_set": [
+   "(Q958594,P40,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q379248"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many musical instruments do less number of people know to play than Timbales ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1879664", 
+   "Q748455", 
+   "Q173453"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "3", 
+  "active_set": [
+   "(c(Q502895),P1303,c(Q34379))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q958594"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P50"
+  ], 
+  "type_list": [
+   "Q2342494"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which collectables were written by Francis Schaeffer ?"
+ }, 
+ {
+  "all_entities": [
+   "Q7225739", 
+   "Q7736914", 
+   "Q5688788", 
+   "Q7847520", 
+   "Q5397031"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7736914", 
+   "Q7225739", 
+   "Q5688788"
+  ], 
+  "utterance": "The God Who Is There, Pollution and the Death of Man, He Is There and He Is Not Silent", 
+  "active_set": [
+   "(c(Q2342494),P50,Q958594)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q958594"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P22"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person has that one as father ?"
+ }, 
+ {
+  "all_entities": [
+   "Q5489433"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5489433"
+  ], 
+  "utterance": "Frank Schaeffer", 
+  "active_set": [
+   "(c(Q502895),P22,Q7736914)", 
+   "(c(Q502895),P22,Q7225739)", 
+   "(c(Q502895),P22,Q5688788)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q163740"
+  ], 
+  "entities_in_utterance": [
+   "Q21664274", 
+   "Q958594"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P69", 
+   "P485"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which nonprofit organizations hold the archives of Francis Schaeffer or were William Herbert Carruth educated ?"
+ }, 
+ {
+  "all_entities": [
+   "Q13371", 
+   "Q747179"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q13371", 
+   "Q747179"
+  ], 
+  "utterance": "Harvard University, Wheaton College", 
+  "active_set": [
+   "OR((Q958594,P485,c(Q163740)), (Q21664274,P69,c(Q163740)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q747179"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P140"
+  ], 
+  "type_list": [
+   "Q874405"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which social group is the religion of that nonprofit organization ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q13371"
+  ], 
+  "active_set": [
+   "(Q13371,P140,c(Q874405))", 
+   "(Q747179,P140,c(Q874405))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q13371", 
+   "Q747179"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Harvard University ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q747179"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Wheaton College. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q16055034"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q16055034"
+  ], 
+  "utterance": "undenominationalism", 
+  "active_set": [
+   "(Q747179,P140,c(Q874405))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "relations": [
+   "P140"
+  ], 
+  "count_ques_sub_type": 7, 
+  "type_list": [
+   "Q874405"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many social groups are the religions associated with that social group ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q5043"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q16055034,P140,c(Q874405))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q10484117"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P137"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q874405", 
+   "Q62447"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many aerodromes can be described as service operator of greater number of social groups than Eneryda Airbase ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q2788843", 
+   "Q9001", 
+   "Q1432146", 
+   "Q771340", 
+   "Q466835", 
+   "Q429304", 
+   "Q1416280", 
+   "Q127958"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "8", 
+  "active_set": [
+   "(c(Q62447),P137,c(Q874405))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q478595"
+  ], 
+  "relations": [
+   "P137"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q874405", 
+   "Q62447"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And how about Tan Son Nhat International Airport?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q2788843", 
+   "Q9001", 
+   "Q1432146", 
+   "Q771340", 
+   "Q466835", 
+   "Q429304", 
+   "Q1416280", 
+   "Q127958"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "8", 
+  "active_set": [
+   "(c(Q62447),P137,c(Q874405))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q2993164", 
+   "Q7736914"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P50"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people were the writers of The God Who Is There or Twilight Watch ?"
+ }, 
+ {
+  "all_entities": [
+   "Q958594", 
+   "Q52224"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q958594", 
+   "Q52224"
+  ], 
+  "utterance": "Francis Schaeffer, Sergey Lukyanenko", 
+  "active_set": [
+   "OR((Q7736914,P50,c(Q502895)), (Q2993164,P50,c(Q502895)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q958594"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1412"
+  ], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which language does that person speak in ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q958594"
+  ], 
+  "active_set": [
+   "(Q958594,P1412,c(Q34770))", 
+   "(Q52224,P1412,c(Q34770))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q958594", 
+   "Q52224"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Francis Schaeffer ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "Yes"
+ }, 
+ {
+  "all_entities": [
+   "Q1860"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1860"
+  ], 
+  "utterance": "English", 
+  "active_set": [
+   "(Q958594,P1412,c(Q34770))"
+  ]
+ }
+]

@@ -1,0 +1,568 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q19301099"
+  ], 
+  "relations": [
+   "P136"
+  ], 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which work of art is the genre for Maria Teresa Llorens i Crusat ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1413570"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1413570"
+  ], 
+  "utterance": "Sardana", 
+  "active_set": [
+   "(Q19301099,P136,c(Q838948))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q19301099"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1412"
+  ], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which language can that person read ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1321"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1321"
+  ], 
+  "utterance": "Spanish", 
+  "active_set": [
+   "(Q1413570,P1412,c(Q34770))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q1321", 
+   "Q5121304"
+  ], 
+  "relations": [
+   "P1412"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Does Ciprian Vasilache speak that language ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q5121304,P1412,Q1321)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q19301099", 
+   "Q1492"
+  ], 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Is Barcelona the place of birth of Maria Teresa Llorens i Crusat ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q19301099,P19,Q1492)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q19301099"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories do Maria Teresa Llorens i Crusat belong to ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q29"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q19301099,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q305645"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about William Levitt?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q305645,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q583597", 
+   "Q19301099"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are the native countriesof Maria Teresa Llorens i Crusat or Carlos P\u00e9rez ?"
+ }, 
+ {
+  "all_entities": [
+   "Q241", 
+   "Q29", 
+   "Q28"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q241", 
+   "Q29", 
+   "Q28"
+  ], 
+  "utterance": "Cuba, Spain, Hungary", 
+  "active_set": [
+   "OR((Q19301099,P27,c(Q15617994)), (Q583597,P27,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Quantitative|Count|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "relations": [
+   "P463"
+  ], 
+  "count_ques_sub_type": 7, 
+  "type_list": [
+   "Q484652"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many international organizations were that administrative territory a member of ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "description": "Quantitative|Count|Single entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q28"
+  ], 
+  "active_set": [
+   "(Q241,P463,c(Q484652))", 
+   "(Q29,P463,c(Q484652))", 
+   "(Q28,P463,c(Q484652))"
+  ], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Hungary ?"
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Yes", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q81299", 
+   "Q1065", 
+   "Q1043527", 
+   "Q7184"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "4", 
+  "active_set": [
+   "(Q28,P463,c(Q484652))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q258"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many administrative territories are known to have diplomatic connections with less number of administrative territories than South Africa ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q702", 
+   "Q804", 
+   "Q800", 
+   "Q419", 
+   "Q55", 
+   "Q262", 
+   "Q783", 
+   "Q265", 
+   "Q712", 
+   "Q717", 
+   "Q837", 
+   "Q398", 
+   "Q657", 
+   "Q792", 
+   "Q790", 
+   "Q954", 
+   "Q958", 
+   "Q881", 
+   "Q986", 
+   "Q242", 
+   "Q244", 
+   "Q811", 
+   "Q33", 
+   "Q924", 
+   "Q36", 
+   "Q34", 
+   "Q739", 
+   "Q423", 
+   "Q983", 
+   "Q851", 
+   "Q733", 
+   "Q29999", 
+   "Q854", 
+   "Q734", 
+   "Q819", 
+   "Q424", 
+   "Q730", 
+   "Q736", 
+   "Q236", 
+   "Q232", 
+   "Q233", 
+   "Q238", 
+   "Q20", 
+   "Q1045", 
+   "Q1041", 
+   "Q28", 
+   "Q921", 
+   "Q1049", 
+   "Q1027", 
+   "Q1020", 
+   "Q189", 
+   "Q842", 
+   "Q1029", 
+   "Q1028", 
+   "Q786", 
+   "Q228", 
+   "Q227", 
+   "Q224", 
+   "Q221", 
+   "Q96", 
+   "Q229", 
+   "Q1036", 
+   "Q1037", 
+   "Q974", 
+   "Q1032", 
+   "Q1033", 
+   "Q1030", 
+   "Q191", 
+   "Q965", 
+   "Q967", 
+   "Q962", 
+   "Q963", 
+   "Q697", 
+   "Q298", 
+   "Q695", 
+   "Q115", 
+   "Q117", 
+   "Q754", 
+   "Q750", 
+   "Q211", 
+   "Q217", 
+   "Q214", 
+   "Q215", 
+   "Q219", 
+   "Q912", 
+   "Q917", 
+   "Q916", 
+   "Q1007", 
+   "Q1006", 
+   "Q1005", 
+   "Q833", 
+   "Q977", 
+   "Q1009", 
+   "Q1008", 
+   "Q971", 
+   "Q683", 
+   "Q34020", 
+   "Q686", 
+   "Q836", 
+   "Q574", 
+   "Q77", 
+   "Q878", 
+   "Q774", 
+   "Q817", 
+   "Q810", 
+   "Q1019", 
+   "Q945", 
+   "Q678", 
+   "Q29", 
+   "Q33788", 
+   "Q869"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "111", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q711"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And also tell me about Mongolia?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q702", 
+   "Q804", 
+   "Q800", 
+   "Q419", 
+   "Q414", 
+   "Q55", 
+   "Q262", 
+   "Q783", 
+   "Q265", 
+   "Q37", 
+   "Q712", 
+   "Q717", 
+   "Q837", 
+   "Q252", 
+   "Q399", 
+   "Q398", 
+   "Q657", 
+   "Q258", 
+   "Q45", 
+   "Q41", 
+   "Q792", 
+   "Q790", 
+   "Q796", 
+   "Q794", 
+   "Q954", 
+   "Q889", 
+   "Q958", 
+   "Q881", 
+   "Q986", 
+   "Q822", 
+   "Q241", 
+   "Q242", 
+   "Q244", 
+   "Q811", 
+   "Q33", 
+   "Q32", 
+   "Q31", 
+   "Q924", 
+   "Q36", 
+   "Q34", 
+   "Q928", 
+   "Q39", 
+   "Q739", 
+   "Q423", 
+   "Q983", 
+   "Q851", 
+   "Q733", 
+   "Q29999", 
+   "Q854", 
+   "Q734", 
+   "Q819", 
+   "Q424", 
+   "Q730", 
+   "Q736", 
+   "Q236", 
+   "Q232", 
+   "Q233", 
+   "Q238", 
+   "Q20", 
+   "Q1045", 
+   "Q1041", 
+   "Q27", 
+   "Q28", 
+   "Q921", 
+   "Q1049", 
+   "Q1027", 
+   "Q1020", 
+   "Q189", 
+   "Q843", 
+   "Q842", 
+   "Q1029", 
+   "Q1028", 
+   "Q786", 
+   "Q228", 
+   "Q227", 
+   "Q224", 
+   "Q222", 
+   "Q221", 
+   "Q96", 
+   "Q229", 
+   "Q902", 
+   "Q1036", 
+   "Q1037", 
+   "Q974", 
+   "Q1032", 
+   "Q1033", 
+   "Q1030", 
+   "Q191", 
+   "Q965", 
+   "Q967", 
+   "Q962", 
+   "Q963", 
+   "Q697", 
+   "Q298", 
+   "Q695", 
+   "Q115", 
+   "Q117", 
+   "Q754", 
+   "Q750", 
+   "Q213", 
+   "Q211", 
+   "Q217", 
+   "Q214", 
+   "Q215", 
+   "Q218", 
+   "Q219", 
+   "Q912", 
+   "Q917", 
+   "Q916", 
+   "Q1007", 
+   "Q1006", 
+   "Q1005", 
+   "Q833", 
+   "Q977", 
+   "Q1009", 
+   "Q1008", 
+   "Q971", 
+   "Q683", 
+   "Q34020", 
+   "Q686", 
+   "Q836", 
+   "Q574", 
+   "Q79", 
+   "Q77", 
+   "Q878", 
+   "Q774", 
+   "Q948", 
+   "Q817", 
+   "Q810", 
+   "Q1019", 
+   "Q1016", 
+   "Q945", 
+   "Q678", 
+   "Q29", 
+   "Q33788", 
+   "Q869"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "136", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994))"
+  ]
+ }
+]

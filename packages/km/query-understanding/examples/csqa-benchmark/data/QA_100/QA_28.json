@@ -1,0 +1,332 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q21109126"
+  ], 
+  "relations": [
+   "P682"
+  ], 
+  "type_list": [
+   "Q3249551"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which process is Olfactory receptor 1N2 involved in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q14859560"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14859560"
+  ], 
+  "utterance": "response to stimulus", 
+  "active_set": [
+   "(Q21109126,P682,c(Q3249551))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q21109126"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P681"
+  ], 
+  "type_list": [
+   "Q15989253"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is a component of Olfactory receptor 1N2 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q14349455"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14349455"
+  ], 
+  "utterance": "membrane", 
+  "active_set": [
+   "(Q21109126,P681,c(Q15989253))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Mult. entity type", 
+  "type_list": [
+   "Q15989253", 
+   "Q234460", 
+   "Q15989253"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P361"
+  ], 
+  "count_ques_sub_type": 6, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many parts are approximately 11 texts or parts a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q24720263", 
+   "Q13486671"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(c(Q234460)|c(Q15989253),P361,c(Q15989253))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q21109126"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P688"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "What is the nucleic acid sequence that is encoded by Olfactory receptor 1N2 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q18050744"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18050744"
+  ], 
+  "utterance": "OR1N2", 
+  "active_set": [
+   "(c(Q863908),P688,Q21109126)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q18050744"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P684"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which nucleic acid sequence is an orthologous gene for that one ?"
+ }, 
+ {
+  "all_entities": [
+   "Q18300559"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18300559"
+  ], 
+  "utterance": "Olfr354", 
+  "active_set": [
+   "(Q18050744,P684,c(Q863908))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q18050744"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P702"
+  ], 
+  "type_list": [
+   "Q181394"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "What is encoded by OR1N2 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21109126"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21109126"
+  ], 
+  "utterance": "Olfactory receptor 1N2", 
+  "active_set": [
+   "(c(Q181394),P702,Q18050744)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, one direct and one indirect, subject is indirect", 
+  "entities_in_utterance": [
+   "Q21109126", 
+   "Q24391857"
+  ], 
+  "relations": [
+   "P702"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 2, 
+  "utterance": "Does Chst9 encode that nutrient ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q21109126,P702,Q24391857)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, all direct, 2 are query entities", 
+  "entities_in_utterance": [
+   "Q18300559", 
+   "Q23146245", 
+   "Q23315955"
+  ], 
+  "relations": [
+   "P684"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 4, 
+  "utterance": "Is putative S-adenosyl-L-methionine-dependent methyltransferase    ECUMN_0210 and hypothetical protein    BN112_2060 an orthlogous gene of Olfr354 ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q18300559,P684,Q23146245)", 
+   "(Q18300559,P684,Q23315955)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q18300559"
+  ], 
+  "relations": [
+   "P703"
+  ], 
+  "type_list": [
+   "Q16521"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 1, 
+  "utterance": "Where is Olfr354 found?"
+ }, 
+ {
+  "all_entities": [
+   "Q83310"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q83310"
+  ], 
+  "utterance": "Mus musculus", 
+  "active_set": []
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q83310"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P144"
+  ], 
+  "type_list": [
+   "Q15619164"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which abstract being is based on that taxon ?"
+ }, 
+ {
+  "all_entities": [
+   "Q9351"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q9351"
+  ], 
+  "utterance": "Pikachu", 
+  "active_set": [
+   "(c(Q15619164),P144,Q83310)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, 2 direct, 2(direct) are query entities, subject is indirect", 
+  "entities_in_utterance": [
+   "Q9351", 
+   "Q457871", 
+   "Q7160690"
+  ], 
+  "relations": [
+   "P170"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 5, 
+  "utterance": "Did Ken Sugimori and Peggy McIntosh make Q9351 ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES and NO respectively", 
+  "active_set": [
+   "(Q9351,P170,Q457871)", 
+   "(Q9351,P170,Q7160690)"
+  ]
+ }
+]

@@ -1,0 +1,218 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q600950"
+  ], 
+  "relations": [
+   "P57"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Who was the director of Sid and Nancy ?"
+ }, 
+ {
+  "all_entities": [
+   "Q778865"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q778865"
+  ], 
+  "utterance": "Alex Cox", 
+  "active_set": [
+   "(Q600950,P57,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q600950"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P364"
+  ], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which language was used originally for the creation of that work of art ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1860"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1860"
+  ], 
+  "utterance": "English", 
+  "active_set": [
+   "(Q778865,P364,c(Q34770))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Indirect", 
+  "type_list": [
+   "Q34770", 
+   "Q4830453", 
+   "Q2342494"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P2439"
+  ], 
+  "count_ques_sub_type": 10, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many languages are associated with greater number of business enterprises and collectables than that language ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "0", 
+  "active_set": [
+   "(c(Q4830453)|c(Q2342494),P2439,c(Q34770))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q778865"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P734"
+  ], 
+  "type_list": [
+   "Q82799"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who has the surname Alex Cox ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1138248"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1138248"
+  ], 
+  "utterance": "Cox", 
+  "active_set": [
+   "(Q778865,P734,c(Q82799))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q778865"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P161"
+  ], 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "What are the name of works of art staring Alex Cox ?"
+ }, 
+ {
+  "all_entities": [
+   "Q402758", 
+   "Q1759355", 
+   "Q1702797"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q402758", 
+   "Q1759355", 
+   "Q1702797"
+  ], 
+  "utterance": "The Oxford Murders, Herod's Law, Perdita Durango", 
+  "active_set": [
+   "(c(Q838948),P161,Q778865)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1702797"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P344"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who is the cinematographer of that work of art ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q402758"
+  ], 
+  "active_set": [
+   "(Q402758,P344,c(Q502895))", 
+   "(Q1759355,P344,c(Q502895))", 
+   "(Q1702797,P344,c(Q502895))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q402758", 
+   "Q1759355", 
+   "Q1702797"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean The Oxford Murders ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q1702797"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Perdita Durango. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q12257885"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q12257885"
+  ], 
+  "utterance": "Flavio Mart\u00ednez Labiano", 
+  "active_set": [
+   "(Q1702797,P344,c(Q502895))"
+  ]
+ }
+]

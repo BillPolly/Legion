@@ -1,0 +1,243 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q21109042"
+  ], 
+  "relations": [
+   "P702"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which nucleic acid sequence encodes Regulating synaptic membrane exocytosis protein 2 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q18034595"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18034595"
+  ], 
+  "utterance": "RIMS2", 
+  "active_set": [
+   "(Q21109042,P702,c(Q863908))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q18034595"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P684"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which nucleic acid sequence has that one as its orthologous gene ?"
+ }, 
+ {
+  "all_entities": [
+   "Q18295212"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18295212"
+  ], 
+  "utterance": "Rims2", 
+  "active_set": [
+   "(c(Q863908),P684,Q18034595)"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Mult. entity type", 
+  "type_list": [
+   "Q8386", 
+   "Q79529", 
+   "Q181394"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P129"
+  ], 
+  "count_ques_sub_type": 6, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many nutrients can communicate with atleast 26 drugs or chemical substances ?"
+ }, 
+ {
+  "all_entities": [
+   "Q7050954", 
+   "Q309513", 
+   "Q308856", 
+   "Q4847910", 
+   "Q287961", 
+   "Q5123372", 
+   "Q410142", 
+   "Q288797", 
+   "Q4847900", 
+   "Q4639596", 
+   "Q4734884", 
+   "Q2844056", 
+   "Q21115051", 
+   "Q21115052", 
+   "Q415364", 
+   "Q21109355", 
+   "Q4734894", 
+   "Q21110872", 
+   "Q4734892", 
+   "Q21108118", 
+   "Q4734891", 
+   "Q8083989", 
+   "Q21115046", 
+   "Q21115043", 
+   "Q1949517", 
+   "Q21109363", 
+   "Q2034004"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "27", 
+  "active_set": [
+   "(c(Q181394),P129,c(Q8386)|c(Q79529))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q18295212"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P703"
+  ], 
+  "type_list": [
+   "Q16521"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where is Rims2 found ?"
+ }, 
+ {
+  "all_entities": [
+   "Q83310"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q83310"
+  ], 
+  "utterance": "Mus musculus", 
+  "active_set": [
+   "(Q18295212,P703,c(Q16521))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q83310"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P144"
+  ], 
+  "type_list": [
+   "Q15619164"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which abstract being is adapted from that taxon ?"
+ }, 
+ {
+  "all_entities": [
+   "Q9351"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q9351"
+  ], 
+  "utterance": "Pikachu", 
+  "active_set": [
+   "(c(Q15619164),P144,Q83310)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q9351"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P170"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which person is the creater of that abstract being ?"
+ }, 
+ {
+  "all_entities": [
+   "Q457871"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q457871"
+  ], 
+  "utterance": "Ken Sugimori", 
+  "active_set": [
+   "(Q9351,P170,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q9351"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1441"
+  ], 
+  "type_list": [
+   "Q386724"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which work contains that abstract being ?"
+ }, 
+ {
+  "all_entities": [
+   "Q864"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q864"
+  ], 
+  "utterance": "Pok\u00e9mon", 
+  "active_set": [
+   "(Q457871,P1441,c(Q386724))"
+  ]
+ }
+]

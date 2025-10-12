@@ -1,0 +1,259 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q880952"
+  ], 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Where did the demise of Thomas Kilby occur ?"
+ }, 
+ {
+  "all_entities": [
+   "Q79474"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q79474"
+  ], 
+  "utterance": "Anniston", 
+  "active_set": [
+   "(Q880952,P20,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q880952"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where was Thomas Kilby born ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1520670"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1520670"
+  ], 
+  "utterance": "Lebanon", 
+  "active_set": [
+   "(Q880952,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1520670"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P931"
+  ], 
+  "type_list": [
+   "Q62447"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which city does that administrative territory serve ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6511114"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6511114"
+  ], 
+  "utterance": "Lebanon Municipal Airport", 
+  "active_set": [
+   "(c(Q62447),P931,Q1520670)"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Mult. entity type", 
+  "type_list": [
+   "Q62447", 
+   "Q3084961", 
+   "Q2424752"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P608"
+  ], 
+  "count_ques_sub_type": 3, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which aerodromes were max number of product linings or products displayed at ?"
+ }, 
+ {
+  "all_entities": [
+   "Q577946", 
+   "Q1032113", 
+   "Q650056", 
+   "Q3565266", 
+   "Q3497392", 
+   "Q12694513", 
+   "Q1836849", 
+   "Q919059", 
+   "Q17440", 
+   "Q1032108", 
+   "Q1061846", 
+   "Q1431444", 
+   "Q652649", 
+   "Q2875950", 
+   "Q7306992", 
+   "Q1032127", 
+   "Q5010470", 
+   "Q1999664", 
+   "Q1785757", 
+   "Q5138107", 
+   "Q1268666"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1061846", 
+   "Q577946", 
+   "Q1032113"
+  ], 
+  "utterance": "Ngurah Rai International Airport, Kirtland Air Force Base, CFB Bagotville", 
+  "active_set": [
+   "(c(Q3084961)|c(Q2424752),P608,c(Q62447))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Comparative|Count over More/Less|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P113"
+  ], 
+  "count_ques_sub_type": 9, 
+  "type_list": [
+   "Q62447", 
+   "Q1269299"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many aerodromes act as a hub for more number of business organizations than that aerodrome ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "description": "Comparative|Count over More/Less|Single entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q1061846"
+  ], 
+  "active_set": [
+   "(c(Q1269299),P113,c(Q62447))"
+  ], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Ngurah Rai International Airport ?"
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "count_ques_sub_type": 9, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Yes", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q8694", 
+   "Q178021"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(c(Q1269299),P113,c(Q62447))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q6511114"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is Lebanon Municipal Airport situated in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q30"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "utterance": "United States of America", 
+  "active_set": [
+   "(Q6511114,P17,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q27030768"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about 1972 Portuguese Badminton Championships?"
+ }, 
+ {
+  "all_entities": [
+   "Q45"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q45"
+  ], 
+  "utterance": "Portugal", 
+  "active_set": [
+   "(Q27030768,P17,c(Q15617994))"
+  ]
+ }
+]

@@ -1,0 +1,342 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q2034441"
+  ], 
+  "relations": [
+   "P802"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Who was the teacher of Yokoyama Taikan ?"
+ }, 
+ {
+  "all_entities": [
+   "Q11562624"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q11562624"
+  ], 
+  "utterance": "Kaneo Watanabe", 
+  "active_set": [
+   "(Q2034441,P802,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q11562624"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What does that person do for a living ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1028181"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1028181"
+  ], 
+  "utterance": "painter", 
+  "active_set": [
+   "(Q11562624,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P101"
+  ], 
+  "count_ques_sub_type": 8, 
+  "type_list": [
+   "Q12737077", 
+   "Q2342494"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which occupations are the field of work of around the same number of collectables as that occupation ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q6625963", 
+   "Q4175034", 
+   "Q177220", 
+   "Q911554", 
+   "Q80687", 
+   "Q37226", 
+   "Q39631", 
+   "Q652122", 
+   "Q765778", 
+   "Q2995983", 
+   "Q627325", 
+   "Q33999", 
+   "Q1288557", 
+   "Q14915627", 
+   "Q13418253", 
+   "Q1495660", 
+   "Q774306", 
+   "Q4853732", 
+   "Q211423", 
+   "Q706364", 
+   "Q1231865", 
+   "Q622807", 
+   "Q584301", 
+   "Q6138343", 
+   "Q4610556", 
+   "Q1259917", 
+   "Q17156912", 
+   "Q2516866", 
+   "Q2259451", 
+   "Q947873", 
+   "Q333634", 
+   "Q15949613", 
+   "Q783906", 
+   "Q1792450", 
+   "Q11900058", 
+   "Q3243461", 
+   "Q5482740", 
+   "Q3922505", 
+   "Q1051088", 
+   "Q138858", 
+   "Q183888", 
+   "Q593644", 
+   "Q7888586", 
+   "Q81096", 
+   "Q170790", 
+   "Q30185", 
+   "Q15839135", 
+   "Q2405480", 
+   "Q1930187", 
+   "Q14467526", 
+   "Q6500773", 
+   "Q212238", 
+   "Q11642", 
+   "Q937857", 
+   "Q157509", 
+   "Q128124", 
+   "Q1999841", 
+   "Q131524", 
+   "Q1172458", 
+   "Q2505739", 
+   "Q1622272", 
+   "Q653368", 
+   "Q3455803", 
+   "Q2707485", 
+   "Q1402561", 
+   "Q725440", 
+   "Q2374149", 
+   "Q17277248", 
+   "Q2865798", 
+   "Q326358", 
+   "Q2599593", 
+   "Q705908", 
+   "Q4164507", 
+   "Q2205972", 
+   "Q899758", 
+   "Q2855502", 
+   "Q169470", 
+   "Q36180", 
+   "Q201788", 
+   "Q15117302", 
+   "Q483501", 
+   "Q1114448", 
+   "Q17167049", 
+   "Q1423891", 
+   "Q3665646", 
+   "Q11063", 
+   "Q1028181", 
+   "Q1392297", 
+   "Q901", 
+   "Q1881523", 
+   "Q18524075", 
+   "Q1235146", 
+   "Q36834", 
+   "Q15995642", 
+   "Q254651", 
+   "Q3387717", 
+   "Q354034", 
+   "Q158852", 
+   "Q2252262", 
+   "Q245068", 
+   "Q8011071", 
+   "Q219477", 
+   "Q16009483", 
+   "Q1607826", 
+   "Q154549", 
+   "Q1709010", 
+   "Q639669", 
+   "Q191633", 
+   "Q33231", 
+   "Q2490358", 
+   "Q644687", 
+   "Q2732142", 
+   "Q15980158", 
+   "Q42603", 
+   "Q3621491", 
+   "Q11774891", 
+   "Q6981670"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2855502", 
+   "Q3621491", 
+   "Q1051088"
+  ], 
+  "utterance": "chief of police, archaeologist, Commissioner of Baseball", 
+  "active_set": [
+   "(c(Q2342494),P101,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P417"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q502895", 
+   "Q12737077"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which people are the patron saint of exactly 1 occupation ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q453698", 
+   "Q152457", 
+   "Q43689", 
+   "Q163900", 
+   "Q212850", 
+   "Q374822", 
+   "Q9438", 
+   "Q130997", 
+   "Q312758", 
+   "Q5575577", 
+   "Q191107", 
+   "Q242274", 
+   "Q119289", 
+   "Q360798", 
+   "Q298845", 
+   "Q48438", 
+   "Q119512", 
+   "Q44281", 
+   "Q170164", 
+   "Q43399", 
+   "Q508214", 
+   "Q9200", 
+   "Q193507", 
+   "Q463600", 
+   "Q43669", 
+   "Q40662", 
+   "Q332656", 
+   "Q320171", 
+   "Q137947", 
+   "Q80513", 
+   "Q324700", 
+   "Q44015", 
+   "Q149727", 
+   "Q232427", 
+   "Q60059", 
+   "Q17590", 
+   "Q271474", 
+   "Q276148"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q9438", 
+   "Q60059", 
+   "Q44281"
+  ], 
+  "utterance": "Thomas Aquinas, Albertus Magnus, Ignatius of Loyola", 
+  "active_set": [
+   "(c(Q12737077),P417,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q44281"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P841"
+  ], 
+  "type_list": [
+   "Q186081"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "When does the feast day of that person occur ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q9438"
+  ], 
+  "active_set": [
+   "(Q9438,P841,c(Q186081))", 
+   "(Q60059,P841,c(Q186081))", 
+   "(Q44281,P841,c(Q186081))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q9438", 
+   "Q60059", 
+   "Q44281"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Thomas Aquinas ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q44281"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Ignatius of Loyola. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q2715"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2715"
+  ], 
+  "utterance": "July 31", 
+  "active_set": [
+   "(Q44281,P841,c(Q186081))"
+  ]
+ }
+]

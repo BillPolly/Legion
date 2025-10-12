@@ -1,0 +1,652 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q5274829"
+  ], 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territory is the birthplace of Diego Terrazas ?"
+ }, 
+ {
+  "all_entities": [
+   "Q170688"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q170688"
+  ], 
+  "utterance": "Santa Cruz", 
+  "active_set": [
+   "(Q5274829,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q170688"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P190"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territories are the sister cities of that one ?"
+ }, 
+ {
+  "all_entities": [
+   "Q4361", 
+   "Q44059", 
+   "Q232842"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q4361", 
+   "Q44059", 
+   "Q232842"
+  ], 
+  "utterance": "Curitiba, La Plata, Puno", 
+  "active_set": [
+   "(Q170688,P190,c(Q56061))"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Multiple_Relation", 
+  "type_list": [
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q6581097", 
+   "Q170688"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P19", 
+   "P21"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people were born at Santa Cruz and have the gender as male ?"
+ }, 
+ {
+  "all_entities": [
+   "Q16300417", 
+   "Q16300391", 
+   "Q3845924", 
+   "Q5873557", 
+   "Q625535", 
+   "Q3845829", 
+   "Q6757810", 
+   "Q16652065", 
+   "Q2083426", 
+   "Q23904841", 
+   "Q3940398", 
+   "Q5042602", 
+   "Q2460918", 
+   "Q5274829", 
+   "Q18637207", 
+   "Q16569137", 
+   "Q2634081", 
+   "Q6700929", 
+   "Q7420629", 
+   "Q16556852", 
+   "Q17489917", 
+   "Q16233646", 
+   "Q370507", 
+   "Q554944", 
+   "Q23771469", 
+   "Q2476639", 
+   "Q2474111", 
+   "Q16302358", 
+   "Q21503385", 
+   "Q5817685", 
+   "Q6861076", 
+   "Q365784", 
+   "Q3605830", 
+   "Q743597", 
+   "Q549784", 
+   "Q16801433", 
+   "Q772048", 
+   "Q353295", 
+   "Q6110781", 
+   "Q5340610", 
+   "Q20994083", 
+   "Q3857277", 
+   "Q2009571", 
+   "Q5835734", 
+   "Q3832469", 
+   "Q2733543", 
+   "Q3930835", 
+   "Q11692677", 
+   "Q20064524", 
+   "Q20064549", 
+   "Q5889600", 
+   "Q6112455", 
+   "Q2735425", 
+   "Q3638911", 
+   "Q3850349", 
+   "Q898690", 
+   "Q5942196", 
+   "Q7299782", 
+   "Q6844392", 
+   "Q6844649", 
+   "Q15622946", 
+   "Q5675849", 
+   "Q7365312", 
+   "Q3943225", 
+   "Q3930841", 
+   "Q1187027", 
+   "Q9093231", 
+   "Q3368809", 
+   "Q373873", 
+   "Q5833291", 
+   "Q5873524", 
+   "Q16302065", 
+   "Q5796302", 
+   "Q2665226", 
+   "Q6111337", 
+   "Q5395213", 
+   "Q2721315", 
+   "Q5202592", 
+   "Q3832473", 
+   "Q3810481", 
+   "Q15697117", 
+   "Q4020271", 
+   "Q6015169", 
+   "Q2331752", 
+   "Q3761532", 
+   "Q8078667", 
+   "Q16571392", 
+   "Q5655266", 
+   "Q6174736", 
+   "Q2563266", 
+   "Q3810806", 
+   "Q5444921", 
+   "Q6844699", 
+   "Q2474534", 
+   "Q2656736", 
+   "Q8001108", 
+   "Q20164449", 
+   "Q1997226", 
+   "Q3810470", 
+   "Q552282", 
+   "Q6700326", 
+   "Q5694401", 
+   "Q1406602", 
+   "Q3792250", 
+   "Q2633618", 
+   "Q21044335", 
+   "Q2553339", 
+   "Q2325701", 
+   "Q3956250", 
+   "Q10556593", 
+   "Q1482379", 
+   "Q16297483", 
+   "Q2939282", 
+   "Q2476066", 
+   "Q3624547", 
+   "Q20726462", 
+   "Q6015667", 
+   "Q2463281", 
+   "Q5983645", 
+   "Q20640682", 
+   "Q9028709", 
+   "Q20090136", 
+   "Q960139", 
+   "Q922420", 
+   "Q5935989", 
+   "Q3764210", 
+   "Q5938656", 
+   "Q5726239", 
+   "Q5042709", 
+   "Q5889785", 
+   "Q5955129", 
+   "Q3751054", 
+   "Q21002481", 
+   "Q2393594", 
+   "Q16197254", 
+   "Q6437300", 
+   "Q20090961", 
+   "Q2422878", 
+   "Q2633970", 
+   "Q19577524", 
+   "Q5664475", 
+   "Q20631269", 
+   "Q1459167", 
+   "Q2635610", 
+   "Q7121758", 
+   "Q7365194", 
+   "Q2567993", 
+   "Q7322845", 
+   "Q15708590", 
+   "Q734117", 
+   "Q20711101", 
+   "Q3660086", 
+   "Q3938203", 
+   "Q5866080", 
+   "Q6793853", 
+   "Q19703929", 
+   "Q5934816", 
+   "Q520731", 
+   "Q2467088", 
+   "Q246243", 
+   "Q4716629", 
+   "Q5664762", 
+   "Q178461", 
+   "Q2633629", 
+   "Q10269157", 
+   "Q5829922", 
+   "Q5303778", 
+   "Q5982797", 
+   "Q2467100", 
+   "Q6292816", 
+   "Q5868983", 
+   "Q2458025", 
+   "Q467979", 
+   "Q1983631", 
+   "Q20994203", 
+   "Q946781", 
+   "Q6175476", 
+   "Q5655345", 
+   "Q20746651", 
+   "Q10557615", 
+   "Q3811165", 
+   "Q3941001"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3832469", 
+   "Q1482379", 
+   "Q6757810", 
+   "Q5934816", 
+   "Q6112455", 
+   "Q2474534", 
+   "Q16300417", 
+   "Q6844699", 
+   "Q7299782", 
+   "Q20711101"
+  ], 
+  "utterance": "Some of them are Limberg M\u00e9ndez, Jos\u00e9 Alfredo Castillo, Marcos Andia, Jorge Cu\u00e9llar, Rosauro Rivero, Milton Coimbra, Enrique Flores Yrahory, Miguel Navarro, Ra\u00fal Gutierrez, Rudolf Knijnenburg", 
+  "active_set": [
+   "AND((c(Q502895),P19,Q170688), (c(Q502895),P21,Q6581097))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q3574843"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which musical instruments do more number of people know to play than tonbak ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q80284", 
+   "Q46185", 
+   "Q80019", 
+   "Q2563510", 
+   "Q5994", 
+   "Q81982", 
+   "Q206987", 
+   "Q189737", 
+   "Q8338", 
+   "Q8371", 
+   "Q8355", 
+   "Q213461", 
+   "Q3382191", 
+   "Q213100", 
+   "Q626035", 
+   "Q742180", 
+   "Q1444", 
+   "Q220971", 
+   "Q128309", 
+   "Q726306", 
+   "Q1343007", 
+   "Q11404"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5994", 
+   "Q81982", 
+   "Q80284"
+  ], 
+  "utterance": "piano, harpsichord, viola", 
+  "active_set": [
+   "(c(Q502895),P1303,c(Q34379))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q320341"
+  ], 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And what about celesta?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q80284", 
+   "Q46185", 
+   "Q201129", 
+   "Q424017", 
+   "Q80019", 
+   "Q2563510", 
+   "Q5994", 
+   "Q3574843", 
+   "Q81982", 
+   "Q182718", 
+   "Q206987", 
+   "Q189737", 
+   "Q8338", 
+   "Q8371", 
+   "Q8355", 
+   "Q213461", 
+   "Q3382191", 
+   "Q862501", 
+   "Q213100", 
+   "Q537750", 
+   "Q626035", 
+   "Q742180", 
+   "Q1300012", 
+   "Q1444", 
+   "Q220971", 
+   "Q128309", 
+   "Q726306", 
+   "Q483994", 
+   "Q1343007", 
+   "Q11404"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5994", 
+   "Q81982", 
+   "Q862501"
+  ], 
+  "utterance": "piano, harpsichord, ondes Martenot", 
+  "active_set": [
+   "(c(Q502895),P1303,c(Q34379))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q157855", 
+   "Q862501"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P61"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people were the first persons to come up with ondes Martenot or 912 Maritima ?"
+ }, 
+ {
+  "all_entities": [
+   "Q57492", 
+   "Q1333326"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q57492", 
+   "Q1333326"
+  ], 
+  "utterance": "Friedrich Karl Arnold Schwassmann, Maurice Martenot", 
+  "active_set": [
+   "OR((Q862501,P61,c(Q502895)), (Q157855,P61,c(Q502895)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1333326"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P7"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people had that one as brother ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q1333326"
+  ], 
+  "active_set": [
+   "(c(Q502895),P7,Q57492)", 
+   "(c(Q502895),P7,Q1333326)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q57492", 
+   "Q1333326"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Maurice Martenot ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "Yes"
+ }, 
+ {
+  "all_entities": [
+   "Q11938237", 
+   "Q3106740"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q11938237", 
+   "Q3106740"
+  ], 
+  "utterance": "Madeleine Martenot, Ginette Martenot", 
+  "active_set": [
+   "(c(Q502895),P7,Q1333326)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q2547932"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories do Guillaume belong to ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q31"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q2547932,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q17486504"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about Conor Finn?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q27"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q17486504,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q1247900"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Fl\u00e9rida de Nolasco?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q1247900,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P725"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q502895", 
+   "Q15416"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many television programs did approximately 11 people do the dubbing for ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q15863567", 
+   "Q951078", 
+   "Q165515", 
+   "Q10358973", 
+   "Q25000347", 
+   "Q18577675", 
+   "Q17183708", 
+   "Q15863577"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "8", 
+  "active_set": [
+   "(c(Q15416),P725,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q3832469"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1412"
+  ], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which language does Limberg M\u00e9ndez speak in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1321"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1321"
+  ], 
+  "utterance": "Spanish", 
+  "active_set": [
+   "(Q3832469,P1412,c(Q34770))"
+  ]
+ }
+]

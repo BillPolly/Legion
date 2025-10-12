@@ -1,0 +1,394 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1081206"
+  ], 
+  "relations": [
+   "P734"
+  ], 
+  "type_list": [
+   "Q82799"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Who has the surname Christian M\u00fcller ?"
+ }, 
+ {
+  "all_entities": [
+   "Q8157228"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q8157228"
+  ], 
+  "utterance": "M\u00fcller", 
+  "active_set": [
+   "(Q1081206,P734,c(Q82799))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1081206"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P512"
+  ], 
+  "type_list": [
+   "Q3412758"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What degree or diploma was awarded to Christian M\u00fcller ?"
+ }, 
+ {
+  "all_entities": [
+   "Q849697"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q849697"
+  ], 
+  "utterance": "doctoral degree", 
+  "active_set": [
+   "(Q1081206,P512,c(Q3412758))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1081206"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which political territory is the country of citizenship of Christian M\u00fcller ?"
+ }, 
+ {
+  "all_entities": [
+   "Q183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "utterance": "Germany", 
+  "active_set": [
+   "(Q1081206,P27,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P108"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who works for that political territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2514", 
+   "Q57855", 
+   "Q1492424"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2514", 
+   "Q57855", 
+   "Q1492424"
+  ], 
+  "utterance": "Willy Brandt, Georg Friedrich Grotefend, Marieluise Dei\u00dfmann-Merten", 
+  "active_set": [
+   "(c(Q502895),P108,Q183)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which musical instruments are played by atleast 4154 people ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q5994", 
+   "Q8355"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5994", 
+   "Q8355"
+  ], 
+  "utterance": "piano, violin", 
+  "active_set": [
+   "(c(Q502895),P1303,c(Q34379))"
+  ]
+ }, 
+ {
+  "question-type": "Clarification", 
+  "description": "Comparative|More/Less|Mult. entity type|Indirect", 
+  "type_list": [
+   "Q34379", 
+   "Q15850590", 
+   "Q207628"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 3, 
+  "relations": [
+   "P870"
+  ], 
+  "count_ques_sub_type": 9, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which musical instruments are the instrumentations used in lesser number of theatrical genres and musical compositions than that musical instrument ?"
+ }, 
+ {
+  "description": "Comparative|More/Less|Mult. entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q5994"
+  ], 
+  "active_set": [
+   "(c(Q15850590)|c(Q207628),P870,c(Q34379))"
+  ], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean piano ?"
+ }, 
+ {
+  "ques_type_id": 8, 
+  "question-type": "Comparative Reasoning (All)", 
+  "count_ques_sub_type": 9, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Yes", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q80284", 
+   "Q8371", 
+   "Q213461", 
+   "Q46185", 
+   "Q845193", 
+   "Q190172", 
+   "Q189737", 
+   "Q626035", 
+   "Q593995", 
+   "Q521151", 
+   "Q8338", 
+   "Q320341", 
+   "Q1444", 
+   "Q39777", 
+   "Q8355", 
+   "Q11404", 
+   "Q206987", 
+   "Q81982"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q521151", 
+   "Q81982", 
+   "Q80284"
+  ], 
+  "utterance": "baryton, harpsichord, viola", 
+  "active_set": [
+   "(c(Q15850590)|c(Q207628),P870,c(Q34379))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q2514"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P26"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who are the spouse of Willy Brandt ?"
+ }, 
+ {
+  "all_entities": [
+   "Q14650503", 
+   "Q462355", 
+   "Q916675"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14650503", 
+   "Q462355", 
+   "Q916675"
+  ], 
+  "utterance": "Anna Carlotta Thorkildsen, Rut Brandt, Brigitte Seebacher", 
+  "active_set": [
+   "(c(Q502895),P26,Q2514)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q2514"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P138"
+  ], 
+  "type_list": [
+   "Q34442"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which road has Willy Brandt as its namesake ?"
+ }, 
+ {
+  "all_entities": [
+   "Q15784160"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q15784160"
+  ], 
+  "utterance": "Willy-Brandt-Allee", 
+  "active_set": [
+   "(c(Q34442),P138,Q2514)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q2514"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P991"
+  ], 
+  "type_list": [
+   "Q13365595"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Where was Willy Brandt elected successfully from ?"
+ }, 
+ {
+  "all_entities": [
+   "Q699580"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q699580"
+  ], 
+  "utterance": "West German federal election 1969", 
+  "active_set": [
+   "(c(Q13365595),P991,Q2514)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q2514"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P6"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which political territory has its government headed by Willy Brandt ?"
+ }, 
+ {
+  "all_entities": [
+   "Q183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "utterance": "Germany", 
+  "active_set": [
+   "(c(Q1048835),P6,Q2514)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q2514"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P40"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Whose child is that one ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1903042"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1903042"
+  ], 
+  "utterance": "Martha Frahm", 
+  "active_set": [
+   "(c(Q502895),P40,Q183)"
+  ]
+ }
+]

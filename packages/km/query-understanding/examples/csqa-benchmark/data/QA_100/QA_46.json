@@ -1,0 +1,744 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q442340"
+  ], 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is the sex of Amedeo Maiuri ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "utterance": "male", 
+  "active_set": [
+   "(Q442340,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P69"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person was educated at that sex ?"
+ }, 
+ {
+  "all_entities": [
+   "Q4662307"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q4662307"
+  ], 
+  "utterance": "Aaron Parchem", 
+  "active_set": [
+   "(c(Q502895),P69,Q6581097)"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "relations": [
+   "P21"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q167170", 
+   "Q15961987"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many multi-sport events or television genres have the gender as male ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q18819333", 
+   "Q27772497"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(c(Q167170),P21,Q6581097)", 
+   "(c(Q15961987),P21,Q6581097)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P725"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q502895", 
+   "Q1001378"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which cinematic techniques had their voice dubbing done by around 43 people ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q15270647"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q15270647"
+  ], 
+  "utterance": "Zootopia", 
+  "active_set": [
+   "(c(Q1001378),P725,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P725"
+  ], 
+  "count_ques_sub_type": 9, 
+  "type_list": [
+   "Q502895", 
+   "Q1001378"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many cinematic techniques did more number of people dub for than that cinematic technique ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q6505964", 
+   "Q120367", 
+   "Q1093555", 
+   "Q15270742", 
+   "Q15270647", 
+   "Q2329413", 
+   "Q9321426", 
+   "Q6144664", 
+   "Q392530", 
+   "Q182153", 
+   "Q15728879", 
+   "Q2388653", 
+   "Q246283", 
+   "Q244434", 
+   "Q18647981", 
+   "Q191803", 
+   "Q171048", 
+   "Q15140309", 
+   "Q4243413", 
+   "Q329603", 
+   "Q633053"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "21", 
+  "active_set": [
+   "(c(Q1001378),P725,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q15270647"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P750"
+  ], 
+  "type_list": [
+   "Q43229"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which organization is the distributor of Zootopia ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1323594"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1323594"
+  ], 
+  "utterance": "Walt Disney Studios Motion Pictures", 
+  "active_set": [
+   "(Q15270647,P750,c(Q43229))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1323594"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P159"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where is the head office for that organization located ?"
+ }, 
+ {
+  "all_entities": [
+   "Q39561"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q39561"
+  ], 
+  "utterance": "Burbank", 
+  "active_set": [
+   "(Q1323594,P159,c(Q56061))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q1733303", 
+   "Q442340"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P19"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are the places of birth of Amedeo Maiuri or Karl Wand ?"
+ }, 
+ {
+  "all_entities": [
+   "Q389985", 
+   "Q42466"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q389985", 
+   "Q42466"
+  ], 
+  "utterance": "Gerolstein, Veroli", 
+  "active_set": [
+   "OR((Q442340,P19,c(Q15617994)), (Q1733303,P19,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Mult. entity type", 
+  "type_list": [
+   "Q15617994", 
+   "Q7725634", 
+   "Q15416"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P495"
+  ], 
+  "count_ques_sub_type": 3, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which administrative territories are the origin of min number of literary works or television programs ?"
+ }, 
+ {
+  "all_entities": [
+   "Q805", 
+   "Q800", 
+   "Q1462", 
+   "Q12536", 
+   "Q262", 
+   "Q783", 
+   "Q265", 
+   "Q36678", 
+   "Q711", 
+   "Q1460", 
+   "Q657", 
+   "Q792", 
+   "Q790", 
+   "Q4628", 
+   "Q796", 
+   "Q954", 
+   "Q958", 
+   "Q986", 
+   "Q826", 
+   "Q242", 
+   "Q244", 
+   "Q811", 
+   "Q153136", 
+   "Q924", 
+   "Q423", 
+   "Q983", 
+   "Q851", 
+   "Q733", 
+   "Q29999", 
+   "Q819", 
+   "Q730", 
+   "Q1013", 
+   "Q159626", 
+   "Q236", 
+   "Q233", 
+   "Q238", 
+   "Q1045", 
+   "Q1044", 
+   "Q1049", 
+   "Q1025", 
+   "Q1027", 
+   "Q1020", 
+   "Q1029", 
+   "Q1028", 
+   "Q227", 
+   "Q223", 
+   "Q221", 
+   "Q347", 
+   "Q1036", 
+   "Q1037", 
+   "Q974", 
+   "Q1032", 
+   "Q1030", 
+   "Q965", 
+   "Q967", 
+   "Q962", 
+   "Q963", 
+   "Q115", 
+   "Q912", 
+   "Q917", 
+   "Q1007", 
+   "Q1006", 
+   "Q1009", 
+   "Q1008", 
+   "Q971", 
+   "Q970", 
+   "Q239502", 
+   "Q686", 
+   "Q836", 
+   "Q574", 
+   "Q874", 
+   "Q948", 
+   "Q1019", 
+   "Q813", 
+   "Q1014", 
+   "Q1016", 
+   "Q1011", 
+   "Q945", 
+   "Q672", 
+   "Q176", 
+   "Q863", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q953", 
+   "Q347", 
+   "Q1011"
+  ], 
+  "utterance": "Zambia, Liechtenstein, Cape Verde", 
+  "active_set": [
+   "(c(Q7725634)|c(Q15416),P495,c(Q15617994))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "entities_in_utterance": [
+   "Q5451094", 
+   "Q1733303"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which political territories are the native countriesof Karl Wand or Fiona O'Loughlin ?"
+ }, 
+ {
+  "all_entities": [
+   "Q408", 
+   "Q183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q408", 
+   "Q183"
+  ], 
+  "utterance": "Australia, Germany", 
+  "active_set": [
+   "OR((Q1733303,P27,c(Q1048835)), (Q5451094,P27,c(Q1048835)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q278188"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Do San Polo Matese have diplomatic relations with those political territories ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q278188,P530,Q408)", 
+   "(Q278188,P530,Q183)"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type", 
+  "type_list": [
+   "Q701632", 
+   "Q11204", 
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q55"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P194"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "Which administrative territories have approximately the same number of municipal councils and legislatures as their legislative body as Netherlands ?"
+ }, 
+ {
+  "all_entities": [
+   "Q804", 
+   "Q801", 
+   "Q419", 
+   "Q668", 
+   "Q414", 
+   "Q142", 
+   "Q55", 
+   "Q1948", 
+   "Q145", 
+   "Q717", 
+   "Q252320", 
+   "Q187035", 
+   "Q3361", 
+   "Q657", 
+   "Q258", 
+   "Q1979", 
+   "Q45", 
+   "Q41", 
+   "Q155", 
+   "Q4628", 
+   "Q794", 
+   "Q153529", 
+   "Q1965", 
+   "Q242", 
+   "Q1974", 
+   "Q33", 
+   "Q32", 
+   "Q36", 
+   "Q34", 
+   "Q929", 
+   "Q39", 
+   "Q38", 
+   "Q739", 
+   "Q3685392", 
+   "Q733", 
+   "Q29999", 
+   "Q854", 
+   "Q153091", 
+   "Q104192", 
+   "Q603676", 
+   "Q747074", 
+   "Q72449", 
+   "Q233", 
+   "Q238", 
+   "Q20", 
+   "Q28", 
+   "Q29", 
+   "Q783", 
+   "Q2009", 
+   "Q2007", 
+   "Q184", 
+   "Q2003", 
+   "Q1904", 
+   "Q228", 
+   "Q224", 
+   "Q223", 
+   "Q222", 
+   "Q221", 
+   "Q815731", 
+   "Q96", 
+   "Q229", 
+   "Q1989", 
+   "Q697", 
+   "Q298", 
+   "Q754", 
+   "Q750", 
+   "Q212", 
+   "Q213", 
+   "Q211", 
+   "Q6465", 
+   "Q214", 
+   "Q215", 
+   "Q218", 
+   "Q219", 
+   "Q16110", 
+   "Q694594", 
+   "Q79", 
+   "Q77", 
+   "Q811", 
+   "Q1011", 
+   "Q1013", 
+   "Q12620", 
+   "Q176", 
+   "Q1951", 
+   "Q1952", 
+   "Q2023", 
+   "Q869"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q38", 
+   "Q155", 
+   "Q55"
+  ], 
+  "utterance": "Italy, Brazil, Netherlands", 
+  "active_set": [
+   "(c(Q15617994),P194,c(Q701632)|c(Q11204))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q701632", 
+   "Q11204", 
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q36"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P194"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And what about Poland?"
+ }, 
+ {
+  "all_entities": [
+   "Q804", 
+   "Q801", 
+   "Q419", 
+   "Q668", 
+   "Q414", 
+   "Q142", 
+   "Q55", 
+   "Q1948", 
+   "Q145", 
+   "Q717", 
+   "Q252320", 
+   "Q187035", 
+   "Q3361", 
+   "Q657", 
+   "Q258", 
+   "Q1979", 
+   "Q45", 
+   "Q41", 
+   "Q155", 
+   "Q4628", 
+   "Q794", 
+   "Q153529", 
+   "Q1965", 
+   "Q242", 
+   "Q1974", 
+   "Q33", 
+   "Q32", 
+   "Q36", 
+   "Q34", 
+   "Q929", 
+   "Q39", 
+   "Q38", 
+   "Q739", 
+   "Q3685392", 
+   "Q733", 
+   "Q29999", 
+   "Q854", 
+   "Q153091", 
+   "Q104192", 
+   "Q603676", 
+   "Q747074", 
+   "Q72449", 
+   "Q233", 
+   "Q238", 
+   "Q20", 
+   "Q28", 
+   "Q29", 
+   "Q783", 
+   "Q2009", 
+   "Q2007", 
+   "Q184", 
+   "Q2003", 
+   "Q1904", 
+   "Q228", 
+   "Q224", 
+   "Q223", 
+   "Q222", 
+   "Q221", 
+   "Q815731", 
+   "Q96", 
+   "Q229", 
+   "Q1989", 
+   "Q697", 
+   "Q298", 
+   "Q754", 
+   "Q750", 
+   "Q212", 
+   "Q213", 
+   "Q211", 
+   "Q6465", 
+   "Q214", 
+   "Q215", 
+   "Q218", 
+   "Q219", 
+   "Q16110", 
+   "Q694594", 
+   "Q79", 
+   "Q77", 
+   "Q811", 
+   "Q1011", 
+   "Q1013", 
+   "Q12620", 
+   "Q176", 
+   "Q1951", 
+   "Q1952", 
+   "Q2023", 
+   "Q869"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q38", 
+   "Q155", 
+   "Q55"
+  ], 
+  "utterance": "Italy, Brazil, Netherlands", 
+  "active_set": [
+   "(c(Q15617994),P194,c(Q701632)|c(Q11204))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q1330412", 
+   "Q42466"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P9", 
+   "P417"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people are the patron saint of Veroli or are the siblings of Elisabeth von Brandenburg ?"
+ }, 
+ {
+  "all_entities": [
+   "Q233067", 
+   "Q328573", 
+   "Q258910", 
+   "Q325824", 
+   "Q328598", 
+   "Q327994", 
+   "Q1246311", 
+   "Q1895059", 
+   "Q486674"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q233067", 
+   "Q328573", 
+   "Q258910", 
+   "Q325824", 
+   "Q328598", 
+   "Q327994", 
+   "Q1246311", 
+   "Q1895059", 
+   "Q486674"
+  ], 
+  "utterance": "Salome, Amalie of Brandenburg, Barbara of Brandenburg, Elisabeth of Brandenburg, Duchess of W\u00fcrttemberg, Sibylle of Brandenburg, Ursula of Brandenburg, Duchess of M\u00fcnsterberg-Oels, Dorothea von Brandenburg, Margaret of Brandenburg, Anastasia von Brandenburg", 
+  "active_set": [
+   "OR((Q42466,P417,c(Q502895)), (Q1330412,P9,c(Q502895)))"
+  ]
+ }
+]

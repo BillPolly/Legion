@@ -1,0 +1,582 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q6317326"
+  ], 
+  "relations": [
+   "P641"
+  ], 
+  "type_list": [
+   "Q349"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which sport was Justin Ammar a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2736"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2736"
+  ], 
+  "utterance": "association football", 
+  "active_set": [
+   "(Q6317326,P641,c(Q349))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q2736"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P495"
+  ], 
+  "type_list": [
+   "Q1496967"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the origin of that sport ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21"
+  ], 
+  "utterance": "England", 
+  "active_set": [
+   "(Q2736,P495,c(Q1496967))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q21"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P37"
+  ], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is considered to be the official language of that territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1860"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1860"
+  ], 
+  "utterance": "English", 
+  "active_set": [
+   "(Q21,P37,c(Q34770))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q67969"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Grancia?"
+ }, 
+ {
+  "all_entities": [
+   "Q652"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q652"
+  ], 
+  "utterance": "Italian", 
+  "active_set": [
+   "(Q67969,P37,c(Q34770))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q21"
+  ], 
+  "relations": [
+   "P36"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories are known as the capital of England ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q84"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q21,P36,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q753463"
+  ], 
+  "relations": [
+   "P36"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about Kempsey Shire?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q1619596"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q753463,P36,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q1192829"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Ashinsky District?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q1192829,P36,c(Q56061))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type", 
+  "type_list": [
+   "Q349", 
+   "Q500834", 
+   "Q13406554"
+  ], 
+  "entities_in_utterance": [
+   "Q7707"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P641"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which sports did lesser number of tournaments and sport competitions participate in than water polo ?"
+ }, 
+ {
+  "all_entities": [
+   "Q10962", 
+   "Q4543", 
+   "Q170737", 
+   "Q114466", 
+   "Q12100", 
+   "Q500050", 
+   "Q2348250", 
+   "Q3337306", 
+   "Q193387", 
+   "Q108429", 
+   "Q171038", 
+   "Q191051", 
+   "Q17163326", 
+   "Q4808504", 
+   "Q3844480", 
+   "Q809831", 
+   "Q1575010", 
+   "Q206763", 
+   "Q133201", 
+   "Q244700", 
+   "Q1497658", 
+   "Q902378", 
+   "Q1761866", 
+   "Q192832", 
+   "Q1148620", 
+   "Q46241", 
+   "Q83462", 
+   "Q192937", 
+   "Q3372565", 
+   "Q208607", 
+   "Q188966", 
+   "Q961015", 
+   "Q131359", 
+   "Q27672886", 
+   "Q22857", 
+   "Q657196", 
+   "Q11420", 
+   "Q338208", 
+   "Q738622", 
+   "Q148636", 
+   "Q136851", 
+   "Q2887217", 
+   "Q7856", 
+   "Q599204", 
+   "Q5375", 
+   "Q206989", 
+   "Q690676", 
+   "Q31897", 
+   "Q74542", 
+   "Q1050588", 
+   "Q1758324", 
+   "Q1457676", 
+   "Q592031", 
+   "Q1345388", 
+   "Q102843", 
+   "Q754586", 
+   "Q1682809", 
+   "Q40561", 
+   "Q42486", 
+   "Q1295867", 
+   "Q2483334", 
+   "Q2922870", 
+   "Q1143202", 
+   "Q850256", 
+   "Q204632", 
+   "Q627165", 
+   "Q393808", 
+   "Q213796", 
+   "Q1866478", 
+   "Q182570", 
+   "Q2302906", 
+   "Q989473", 
+   "Q1194269", 
+   "Q2497700", 
+   "Q231200", 
+   "Q990637", 
+   "Q105674", 
+   "Q215862", 
+   "Q212845", 
+   "Q1358545", 
+   "Q1757181", 
+   "Q1145338", 
+   "Q2250158", 
+   "Q212434", 
+   "Q43450", 
+   "Q6034982", 
+   "Q12834857", 
+   "Q61065", 
+   "Q2284014", 
+   "Q221635", 
+   "Q4429020", 
+   "Q2413978", 
+   "Q13108218", 
+   "Q4851143", 
+   "Q14300548", 
+   "Q1455", 
+   "Q2215841", 
+   "Q36908", 
+   "Q1081491", 
+   "Q483693", 
+   "Q389654", 
+   "Q61465", 
+   "Q185851", 
+   "Q4245261", 
+   "Q624161", 
+   "Q327742", 
+   "Q271277", 
+   "Q376040", 
+   "Q4347112", 
+   "Q5465793", 
+   "Q3930", 
+   "Q797108", 
+   "Q963312", 
+   "Q2167372", 
+   "Q130949", 
+   "Q535116", 
+   "Q2360406", 
+   "Q20856109", 
+   "Q16996906", 
+   "Q213934", 
+   "Q1078835", 
+   "Q838781", 
+   "Q26787631", 
+   "Q1899731", 
+   "Q201965", 
+   "Q943526", 
+   "Q647559", 
+   "Q1541373", 
+   "Q606060", 
+   "Q1150656", 
+   "Q1063445", 
+   "Q134211", 
+   "Q31920", 
+   "Q6140386", 
+   "Q3325635", 
+   "Q207703", 
+   "Q2701632", 
+   "Q1875777", 
+   "Q1358925", 
+   "Q1748406", 
+   "Q667692", 
+   "Q183018", 
+   "Q1622659", 
+   "Q1421697", 
+   "Q201252", 
+   "Q177275", 
+   "Q32112", 
+   "Q14405929", 
+   "Q1129021", 
+   "Q1199515", 
+   "Q178678", 
+   "Q17988507", 
+   "Q6350707", 
+   "Q159992", 
+   "Q3924425", 
+   "Q3341285", 
+   "Q210778", 
+   "Q192420", 
+   "Q1784241", 
+   "Q1188693", 
+   "Q204686", 
+   "Q1055193", 
+   "Q124100", 
+   "Q2440459", 
+   "Q429006"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q809831", 
+   "Q1295867", 
+   "Q206763"
+  ], 
+  "utterance": "BASE jumping, pes\u00e4pallo, floorball", 
+  "active_set": [
+   "(c(Q500834)|c(Q13406554),P641,c(Q349))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q349", 
+   "Q500834", 
+   "Q13406554"
+  ], 
+  "entities_in_utterance": [
+   "Q213934"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P641"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And how about canoeing and kayaking?"
+ }, 
+ {
+  "all_entities": [
+   "Q4543", 
+   "Q170737", 
+   "Q500050", 
+   "Q2348250", 
+   "Q3337306", 
+   "Q193387", 
+   "Q108429", 
+   "Q191051", 
+   "Q17163326", 
+   "Q4808504", 
+   "Q3844480", 
+   "Q809831", 
+   "Q1575010", 
+   "Q244700", 
+   "Q1497658", 
+   "Q902378", 
+   "Q1761866", 
+   "Q192832", 
+   "Q1148620", 
+   "Q83462", 
+   "Q192937", 
+   "Q3372565", 
+   "Q208607", 
+   "Q188966", 
+   "Q961015", 
+   "Q27672886", 
+   "Q22857", 
+   "Q657196", 
+   "Q338208", 
+   "Q738622", 
+   "Q148636", 
+   "Q136851", 
+   "Q2887217", 
+   "Q599204", 
+   "Q206989", 
+   "Q690676", 
+   "Q31897", 
+   "Q74542", 
+   "Q1050588", 
+   "Q1758324", 
+   "Q1457676", 
+   "Q592031", 
+   "Q1345388", 
+   "Q102843", 
+   "Q754586", 
+   "Q1682809", 
+   "Q40561", 
+   "Q42486", 
+   "Q1295867", 
+   "Q2483334", 
+   "Q2922870", 
+   "Q1143202", 
+   "Q850256", 
+   "Q204632", 
+   "Q627165", 
+   "Q393808", 
+   "Q213796", 
+   "Q1866478", 
+   "Q182570", 
+   "Q989473", 
+   "Q1194269", 
+   "Q2497700", 
+   "Q990637", 
+   "Q105674", 
+   "Q215862", 
+   "Q212845", 
+   "Q1358545", 
+   "Q1757181", 
+   "Q1145338", 
+   "Q2250158", 
+   "Q212434", 
+   "Q43450", 
+   "Q6034982", 
+   "Q12834857", 
+   "Q61065", 
+   "Q2284014", 
+   "Q4429020", 
+   "Q2413978", 
+   "Q13108218", 
+   "Q4851143", 
+   "Q14300548", 
+   "Q2215841", 
+   "Q36908", 
+   "Q1081491", 
+   "Q483693", 
+   "Q389654", 
+   "Q4245261", 
+   "Q624161", 
+   "Q327742", 
+   "Q271277", 
+   "Q376040", 
+   "Q4347112", 
+   "Q5465793", 
+   "Q3930", 
+   "Q797108", 
+   "Q963312", 
+   "Q2167372", 
+   "Q130949", 
+   "Q535116", 
+   "Q2360406", 
+   "Q20856109", 
+   "Q1078835", 
+   "Q838781", 
+   "Q26787631", 
+   "Q1899731", 
+   "Q201965", 
+   "Q943526", 
+   "Q647559", 
+   "Q1541373", 
+   "Q1150656", 
+   "Q1063445", 
+   "Q6140386", 
+   "Q3325635", 
+   "Q207703", 
+   "Q1358925", 
+   "Q1748406", 
+   "Q667692", 
+   "Q1622659", 
+   "Q1421697", 
+   "Q201252", 
+   "Q177275", 
+   "Q32112", 
+   "Q14405929", 
+   "Q1129021", 
+   "Q1199515", 
+   "Q178678", 
+   "Q17988507", 
+   "Q6350707", 
+   "Q159992", 
+   "Q3924425", 
+   "Q3341285", 
+   "Q210778", 
+   "Q192420", 
+   "Q1784241", 
+   "Q1188693", 
+   "Q204686", 
+   "Q1055193", 
+   "Q124100", 
+   "Q2440459", 
+   "Q429006"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q809831", 
+   "Q1295867", 
+   "Q1148620"
+  ], 
+  "utterance": "BASE jumping, pes\u00e4pallo, Finswimming", 
+  "active_set": [
+   "(c(Q500834)|c(Q13406554),P641,c(Q349))"
+  ]
+ }
+]

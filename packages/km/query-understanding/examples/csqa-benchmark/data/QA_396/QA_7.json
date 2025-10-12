@@ -1,0 +1,540 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q3431882"
+  ], 
+  "relations": [
+   "P166"
+  ], 
+  "type_list": [
+   "Q618779"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What was awarded to Coward of the County ?"
+ }, 
+ {
+  "all_entities": [
+   "Q19859744"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q19859744"
+  ], 
+  "utterance": "Favorite Country Single", 
+  "active_set": [
+   "(Q3431882,P166,c(Q618779))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q3431882"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P264"
+  ], 
+  "type_list": [
+   "Q334453"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the record label of Coward of the County ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1542119"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1542119"
+  ], 
+  "utterance": "United Artists Records", 
+  "active_set": [
+   "(Q3431882,P264,c(Q334453))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q3431882"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1411"
+  ], 
+  "type_list": [
+   "Q618779"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which award does Coward of the County have ?"
+ }, 
+ {
+  "all_entities": [
+   "Q19859744"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q19859744"
+  ], 
+  "utterance": "Favorite Country Single", 
+  "active_set": [
+   "(Q3431882,P1411,c(Q618779))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q3431882"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P495"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the country of origin of Coward of the County ?"
+ }, 
+ {
+  "all_entities": [
+   "Q30"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "utterance": "United States of America", 
+  "active_set": [
+   "(Q3431882,P495,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P47"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territories are adjacent to that one ?"
+ }, 
+ {
+  "all_entities": [
+   "Q702", 
+   "Q804", 
+   "Q159", 
+   "Q96", 
+   "Q17", 
+   "Q786", 
+   "Q241", 
+   "Q683", 
+   "Q710", 
+   "Q678", 
+   "Q717", 
+   "Q790"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q159", 
+   "Q17", 
+   "Q96"
+  ], 
+  "utterance": "Russia, Japan, Mexico", 
+  "active_set": [
+   "(Q30,P47,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q111696"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about Sale Marasino?"
+ }, 
+ {
+  "all_entities": [
+   "Q105168", 
+   "Q105239", 
+   "Q111411", 
+   "Q104623", 
+   "Q112034"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q105168", 
+   "Q111411", 
+   "Q105239"
+  ], 
+  "utterance": "Marone, Polaveno, Monte Isola", 
+  "active_set": [
+   "(Q111696,P47,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q17"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P172"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people have Japan as ethnic group ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3182094", 
+   "Q869156", 
+   "Q3273427", 
+   "Q12027134", 
+   "Q7429095"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q869156", 
+   "Q3182094", 
+   "Q3273427"
+  ], 
+  "utterance": "Kento Nakajima, Manami Yoshii, Nozomi Momoi", 
+  "active_set": [
+   "(c(Q502895),P172,Q17)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q869156", 
+   "Q3182094", 
+   "Q3273427"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which sexes do Kento Nakajima, Manami Yoshii and Nozomi Momoi possess ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097", 
+   "Q6581072", 
+   "Q6581072"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097", 
+   "Q6581072", 
+   "Q6581072"
+  ], 
+  "utterance": "male for 1st, female for 2nd, 3rd", 
+  "active_set": [
+   "(Q869156,P21,c(Q290))", 
+   "(Q3182094,P21,c(Q290))", 
+   "(Q3273427,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P136"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people as that sex as their class ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q6581072"
+  ], 
+  "active_set": [
+   "(c(Q502895),P136,Q6581097)", 
+   "(c(Q502895),P136,Q6581072)", 
+   "(c(Q502895),P136,Q6581072)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q6581097", 
+   "Q6581072", 
+   "Q6581072"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean female ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q6581097"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant male. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q19796723", 
+   "Q23766532", 
+   "Q313288", 
+   "Q18221191"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23766532", 
+   "Q313288", 
+   "Q18221191"
+  ], 
+  "utterance": "Pierre Laviron, Augustus Pugin, Alessandro Gregorio Capponi", 
+  "active_set": [
+   "(c(Q502895),P136,Q6581097)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many musical instruments can approximately 823 people perform with ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q80284", 
+   "Q46185", 
+   "Q201129", 
+   "Q424017", 
+   "Q890073", 
+   "Q80019", 
+   "Q1178361", 
+   "Q2563510", 
+   "Q604538", 
+   "Q2660670", 
+   "Q39777", 
+   "Q3574843", 
+   "Q678090", 
+   "Q81982", 
+   "Q182718", 
+   "Q490054", 
+   "Q873588", 
+   "Q593995", 
+   "Q1327500", 
+   "Q206987", 
+   "Q1879664", 
+   "Q189737", 
+   "Q1759986", 
+   "Q1798603", 
+   "Q1099153", 
+   "Q8338", 
+   "Q120585", 
+   "Q713298", 
+   "Q8371", 
+   "Q1024685", 
+   "Q213461", 
+   "Q3382191", 
+   "Q816793", 
+   "Q862501", 
+   "Q213100", 
+   "Q244976", 
+   "Q537750", 
+   "Q626035", 
+   "Q1179017", 
+   "Q742180", 
+   "Q320341", 
+   "Q1300012", 
+   "Q748455", 
+   "Q669370", 
+   "Q290951", 
+   "Q220971", 
+   "Q178933", 
+   "Q16875637", 
+   "Q790468", 
+   "Q128309", 
+   "Q1129422", 
+   "Q379248", 
+   "Q726306", 
+   "Q173453", 
+   "Q483994", 
+   "Q744831", 
+   "Q963150", 
+   "Q16155191", 
+   "Q644440", 
+   "Q1343007", 
+   "Q11404", 
+   "Q497224", 
+   "Q3623688"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "63", 
+  "active_set": [
+   "(c(Q502895),P1303,c(Q34379))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q7127143", 
+   "Q3273427"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27", 
+   "P17"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are Nozomi Momoi an inhabitant of or are Paleochristian Monastery Church, Nepravisht\u00eb situated in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q17", 
+   "Q222"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q17", 
+   "Q222"
+  ], 
+  "utterance": "Japan, Albania", 
+  "active_set": [
+   "OR((Q3273427,P27,c(Q15617994)), (Q7127143,P17,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q17", 
+   "Q222"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P1313"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which occupations serve as the political office that are fulfilled by the head of the government of Japan and Albania ?"
+ }, 
+ {
+  "all_entities": [
+   "Q274948", 
+   "Q16009376"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q274948", 
+   "Q16009376"
+  ], 
+  "utterance": "Prime Minister of Japan, Prime Minister of Albania", 
+  "active_set": [
+   "(Q17,P1313,c(Q12737077))", 
+   "(Q222,P1313,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q17"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1408"
+  ], 
+  "type_list": [
+   "Q5398426"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which television series have license to broadcast to Japan ?"
+ }, 
+ {
+  "all_entities": [
+   "Q19961524", 
+   "Q3223150", 
+   "Q14801553"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q19961524", 
+   "Q3223150", 
+   "Q14801553"
+  ], 
+  "utterance": "Death Note, Kodoku no Gourmet, Hanzawa Naoki", 
+  "active_set": [
+   "(c(Q5398426),P1408,Q17)"
+  ]
+ }
+]

@@ -1,0 +1,342 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q3194396"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territory is Kayama Matazo a civilian of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q17"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q17"
+  ], 
+  "utterance": "Japan", 
+  "active_set": [
+   "(Q3194396,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q17"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P6"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which person is that administrative territory the head of goverment of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q132345"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q132345"
+  ], 
+  "utterance": "Shinz\u014d Abe", 
+  "active_set": [
+   "(Q17,P6,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q132345"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P39"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What were the positions held by that person ?"
+ }, 
+ {
+  "all_entities": [
+   "Q274948", 
+   "Q1078482", 
+   "Q17506823"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q274948", 
+   "Q1078482", 
+   "Q17506823"
+  ], 
+  "utterance": "Prime Minister of Japan, Chief Cabinet Secretary, member of the House of Representatives of Japan", 
+  "active_set": [
+   "(Q132345,P39,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q132345"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P734"
+  ], 
+  "type_list": [
+   "Q82799"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which name is associated with Shinz\u014d Abe ?"
+ }, 
+ {
+  "all_entities": [
+   "Q18645909"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18645909"
+  ], 
+  "utterance": "Abe", 
+  "active_set": [
+   "(Q132345,P734,c(Q82799))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type", 
+  "type_list": [
+   "Q82799", 
+   "Q15709879", 
+   "Q1792379"
+  ], 
+  "entities_in_utterance": [
+   "Q152"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which names are depicted in less number of artwork series or art genres than fish ?"
+ }, 
+ {
+  "all_entities": [
+   "Q13219075", 
+   "Q134609", 
+   "Q6453151", 
+   "Q830", 
+   "Q3736439", 
+   "Q41692", 
+   "Q3711329", 
+   "Q732775", 
+   "Q36940", 
+   "Q1517781", 
+   "Q7368", 
+   "Q7369", 
+   "Q2092297", 
+   "Q11946202", 
+   "Q2258881", 
+   "Q4767951", 
+   "Q16529344", 
+   "Q24067392", 
+   "Q713019", 
+   "Q1807269", 
+   "Q8331", 
+   "Q8335", 
+   "Q846664", 
+   "Q3116510", 
+   "Q3537778", 
+   "Q1865281", 
+   "Q1192868", 
+   "Q9394", 
+   "Q2734060", 
+   "Q2495957", 
+   "Q1953597", 
+   "Q15629245", 
+   "Q25894", 
+   "Q1466321", 
+   "Q43115", 
+   "Q858243", 
+   "Q876933", 
+   "Q190294", 
+   "Q7378", 
+   "Q123120", 
+   "Q214169", 
+   "Q538906", 
+   "Q308841", 
+   "Q1360763", 
+   "Q83931", 
+   "Q9458574", 
+   "Q5070208", 
+   "Q859257", 
+   "Q10968813"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1807269", 
+   "Q876933", 
+   "Q134609"
+  ], 
+  "utterance": "leek, magi, Cynara scolymus", 
+  "active_set": [
+   "(c(Q15709879)|c(Q1792379),P180,c(Q82799))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q82799", 
+   "Q15709879", 
+   "Q1792379"
+  ], 
+  "entities_in_utterance": [
+   "Q726"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And what about horse?"
+ }, 
+ {
+  "all_entities": [
+   "Q13219075", 
+   "Q134609", 
+   "Q5", 
+   "Q6453151", 
+   "Q830", 
+   "Q3736439", 
+   "Q41692", 
+   "Q3711329", 
+   "Q732775", 
+   "Q36940", 
+   "Q1517781", 
+   "Q7368", 
+   "Q7369", 
+   "Q2092297", 
+   "Q11946202", 
+   "Q144", 
+   "Q2258881", 
+   "Q4767951", 
+   "Q16529344", 
+   "Q24067392", 
+   "Q713019", 
+   "Q1807269", 
+   "Q201251", 
+   "Q8331", 
+   "Q8335", 
+   "Q846664", 
+   "Q3116510", 
+   "Q3537778", 
+   "Q1865281", 
+   "Q1367", 
+   "Q1192868", 
+   "Q9394", 
+   "Q2734060", 
+   "Q2495957", 
+   "Q1953597", 
+   "Q15629245", 
+   "Q25894", 
+   "Q1466321", 
+   "Q43115", 
+   "Q858243", 
+   "Q876933", 
+   "Q190294", 
+   "Q7378", 
+   "Q123120", 
+   "Q214169", 
+   "Q538906", 
+   "Q308841", 
+   "Q1360763", 
+   "Q83931", 
+   "Q9458574", 
+   "Q152", 
+   "Q5070208", 
+   "Q859257", 
+   "Q10968813"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q144", 
+   "Q1807269", 
+   "Q876933"
+  ], 
+  "utterance": "dog, leek, magi", 
+  "active_set": [
+   "(c(Q15709879)|c(Q1792379),P180,c(Q82799))"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Multiple_Relation", 
+  "type_list": [
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q6581097", 
+   "Q1078482"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P39", 
+   "P21"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people held the position of Chief Cabinet Secretary and are a male ?"
+ }, 
+ {
+  "all_entities": [
+   "Q101137", 
+   "Q132345", 
+   "Q1155448", 
+   "Q697258"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q101137", 
+   "Q132345", 
+   "Q1155448", 
+   "Q697258"
+  ], 
+  "utterance": "Yasuo Fukuda, Shinz\u014d Abe, Hirofumi Hirano, Nobutaka Machimura", 
+  "active_set": [
+   "AND((c(Q502895),P39,Q1078482), (c(Q502895),P21,Q6581097))"
+  ]
+ }
+]

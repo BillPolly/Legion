@@ -1,0 +1,545 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q4770968"
+  ], 
+  "relations": [
+   "P69"
+  ], 
+  "type_list": [
+   "Q3918"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Where was Antara Biswas educated ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1145306"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1145306"
+  ], 
+  "utterance": "University of Calcutta", 
+  "active_set": [
+   "(Q4770968,P69,c(Q3918))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q4770968"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which sex does that person belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581072"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581072"
+  ], 
+  "utterance": "female", 
+  "active_set": [
+   "(Q1145306,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q4770968"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the job of that person ?"
+ }, 
+ {
+  "all_entities": [
+   "Q33999"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q33999"
+  ], 
+  "utterance": "actor", 
+  "active_set": [
+   "(Q6581072,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation|Incomplete", 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "entities_in_utterance": [
+   "Q16204007", 
+   "Q4770968"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 1, 
+  "relations": [
+   "P106"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Or Katie Cole?"
+ }, 
+ {
+  "all_entities": [
+   "Q753110", 
+   "Q486748", 
+   "Q33999", 
+   "Q177220"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q753110", 
+   "Q486748", 
+   "Q33999", 
+   "Q177220"
+  ], 
+  "utterance": "songwriter, pianist, actor, singer", 
+  "active_set": [
+   "OR((Q4770968,P106,c(Q12737077)), (Q16204007,P106,c(Q12737077)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q633"
+  ], 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Do Neil Young have the profession as those occupations ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q633,P106,Q753110)", 
+   "(Q633,P106,Q486748)", 
+   "(Q633,P106,Q33999)", 
+   "(Q633,P106,Q177220)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q4770968", 
+   "Q334653"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Is Abtweiler the country of citizenship of Antara Biswas ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q4770968,P27,Q334653)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q11677305", 
+   "Q4770968"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are Antara Biswas or K\u014dshir\u014d Shikano an inhabitant of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q17", 
+   "Q668"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q17", 
+   "Q668"
+  ], 
+  "utterance": "Japan, India", 
+  "active_set": [
+   "OR((Q4770968,P27,c(Q15617994)), (Q11677305,P27,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Comparative|Count over More/Less|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P941"
+  ], 
+  "count_ques_sub_type": 9, 
+  "type_list": [
+   "Q15617994", 
+   "Q3895768"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories were lesser number of fictional locations inspired by than that administrative territory ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "description": "Comparative|Count over More/Less|Single entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q668"
+  ], 
+  "active_set": [
+   "(c(Q3895768),P941,c(Q15617994))"
+  ], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean India ?"
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "count_ques_sub_type": 9, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Yes", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q142", 
+   "Q159", 
+   "Q424", 
+   "Q55416", 
+   "Q794", 
+   "Q33", 
+   "Q954", 
+   "Q31", 
+   "Q889", 
+   "Q55"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "10", 
+  "active_set": [
+   "(c(Q3895768),P941,c(Q15617994))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q7725634"
+  ], 
+  "entities_in_utterance": [
+   "Q297097", 
+   "Q633"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P86", 
+   "P676"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which literary works have Neil Young as their lyricist or have Jack Johnson as the melodist ?"
+ }, 
+ {
+  "all_entities": [
+   "Q20888769", 
+   "Q21403230", 
+   "Q21045644", 
+   "Q21401917", 
+   "Q21009630", 
+   "Q21012203", 
+   "Q21040996", 
+   "Q10268789", 
+   "Q20984709", 
+   "Q20886577", 
+   "Q21043412", 
+   "Q21944831", 
+   "Q12718202", 
+   "Q21127295", 
+   "Q21857422", 
+   "Q3136771", 
+   "Q21294966", 
+   "Q14660878", 
+   "Q20890640", 
+   "Q21401921", 
+   "Q21189404", 
+   "Q18327027", 
+   "Q21857425", 
+   "Q12713379", 
+   "Q20968844", 
+   "Q20923748", 
+   "Q21189433", 
+   "Q21127018", 
+   "Q20986992", 
+   "Q20648592", 
+   "Q21283492", 
+   "Q12713944", 
+   "Q21013056", 
+   "Q21013053", 
+   "Q21482364", 
+   "Q21032398", 
+   "Q4973317", 
+   "Q12267980", 
+   "Q21294973", 
+   "Q21500839", 
+   "Q4840280", 
+   "Q7634881", 
+   "Q20921842", 
+   "Q21127066", 
+   "Q21130388", 
+   "Q20877601", 
+   "Q20967947", 
+   "Q12717982", 
+   "Q2829452", 
+   "Q21142650", 
+   "Q21030193", 
+   "Q20983794", 
+   "Q20874674", 
+   "Q21035698", 
+   "Q20967026", 
+   "Q20019170", 
+   "Q21041536", 
+   "Q17040861", 
+   "Q16251751", 
+   "Q2805621", 
+   "Q21013241", 
+   "Q21283825", 
+   "Q20917754", 
+   "Q6929209", 
+   "Q21032583", 
+   "Q20967715", 
+   "Q7992869", 
+   "Q20967950", 
+   "Q20967952", 
+   "Q21405737", 
+   "Q12718533", 
+   "Q6456191", 
+   "Q20492731", 
+   "Q17059364", 
+   "Q20874723", 
+   "Q21009071", 
+   "Q20987150", 
+   "Q21013090", 
+   "Q5291722", 
+   "Q21283110", 
+   "Q21013552", 
+   "Q7638310", 
+   "Q20899351", 
+   "Q21477119", 
+   "Q5653875", 
+   "Q2137506", 
+   "Q3001871", 
+   "Q21482350", 
+   "Q21012275", 
+   "Q21662137", 
+   "Q21405858", 
+   "Q21043738", 
+   "Q21189311", 
+   "Q20966037", 
+   "Q20871832", 
+   "Q16962615", 
+   "Q21013667", 
+   "Q20968654", 
+   "Q3756063", 
+   "Q20968652", 
+   "Q21027931", 
+   "Q20967986", 
+   "Q20715230", 
+   "Q3352752", 
+   "Q20888436", 
+   "Q21583958", 
+   "Q16035183", 
+   "Q20907581", 
+   "Q21665181", 
+   "Q20968012", 
+   "Q20895685", 
+   "Q3146429", 
+   "Q4690658", 
+   "Q7557270", 
+   "Q21996613", 
+   "Q21996618", 
+   "Q21013205", 
+   "Q20979043", 
+   "Q20986989", 
+   "Q10569960", 
+   "Q21857449", 
+   "Q549370", 
+   "Q4788454", 
+   "Q21405776"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q20877601", 
+   "Q21189433", 
+   "Q3136771", 
+   "Q12718533", 
+   "Q21283110", 
+   "Q4840280", 
+   "Q21477119", 
+   "Q7638310", 
+   "Q4788454", 
+   "Q12713944"
+  ], 
+  "utterance": "Some of them are Unknown Legend, After the Garden, The Needle and the Damage Done, Time Fades Away, Johnny Magic, Bad Fog of Loneliness, Bandit, Sun Green, Are You Ready for the Country, Burned", 
+  "active_set": [
+   "OR((c(Q7725634),P676,Q633), (c(Q7725634),P86,Q297097))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q6236607", 
+   "Q4770968"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories do Antara Biswas or Jeff Werner belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q668", 
+   "Q34"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q668", 
+   "Q34"
+  ], 
+  "utterance": "India, Sweden", 
+  "active_set": [
+   "OR((Q4770968,P27,c(Q15617994)), (Q6236607,P27,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q21387702"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Are Piotr Tuka\u0142\u0142o civilians of those administrative territories ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q21387702,P27,Q668)", 
+   "(Q21387702,P27,Q34)"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Mult. entity type", 
+  "type_list": [
+   "Q15617994", 
+   "Q41176", 
+   "Q1048835"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P17"
+  ], 
+  "count_ques_sub_type": 4, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which administrative territories are atleast 4692 buildings and political territories located in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q145", 
+   "Q30", 
+   "Q212", 
+   "Q29"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30", 
+   "Q145", 
+   "Q29"
+  ], 
+  "utterance": "United States of America, United Kingdom, Spain", 
+  "active_set": [
+   "(c(Q41176)|c(Q1048835),P17,c(Q15617994))"
+  ]
+ }
+]

@@ -1,0 +1,235 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q19692070"
+  ], 
+  "relations": [
+   "P102"
+  ], 
+  "type_list": [
+   "Q7210356"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which party is Hector Macpherson, Sr. affiliated with ?"
+ }, 
+ {
+  "all_entities": [
+   "Q29468"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q29468"
+  ], 
+  "utterance": "Republican Party", 
+  "active_set": [
+   "(Q19692070,P102,c(Q7210356))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q19692070"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the sex of Hector Macpherson, Sr. ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "utterance": "male", 
+  "active_set": [
+   "(Q19692070,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q19692070"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P40"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who is an offspring of Hector Macpherson, Sr. ?"
+ }, 
+ {
+  "all_entities": [
+   "Q16083872"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q16083872"
+  ], 
+  "utterance": "Hector Macpherson, Jr.", 
+  "active_set": [
+   "(Q19692070,P40,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q77335"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Princess Regina of Saxe-Meiningen?"
+ }, 
+ {
+  "all_entities": [
+   "Q112096", 
+   "Q3434236", 
+   "Q78515", 
+   "Q4919368", 
+   "Q113733", 
+   "Q3504210", 
+   "Q77555"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q78515", 
+   "Q77555", 
+   "Q113733"
+  ], 
+  "utterance": "Karl von Habsburg, Walburga Habsburg Douglas, Gabriela von Habsburg", 
+  "active_set": [
+   "(Q77335,P40,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q78515", 
+   "Q77555", 
+   "Q113733"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What do Karl von Habsburg, Walburga Habsburg Douglas and Gabriela von Habsburg do for a living ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1930187", 
+   "Q82955", 
+   "Q1930187", 
+   "Q82955", 
+   "Q193391", 
+   "Q1028181", 
+   "Q1622272", 
+   "Q1281618"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1930187", 
+   "Q1930187", 
+   "Q1028181"
+  ], 
+  "utterance": "journalist for 1st, 2nd, painter for 3rd", 
+  "active_set": [
+   "(Q78515,P106,c(Q12737077))", 
+   "(Q77555,P106,c(Q12737077))", 
+   "(Q113733,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q78515"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P7"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which person is the brother of Karl von Habsburg ?"
+ }, 
+ {
+  "all_entities": [
+   "Q112096"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q112096"
+  ], 
+  "utterance": "Georg von Habsburg", 
+  "active_set": [
+   "(Q78515,P7,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q78515"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P25"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which person was the mother of Karl von Habsburg ?"
+ }, 
+ {
+  "all_entities": [
+   "Q77335"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q77335"
+  ], 
+  "utterance": "Princess Regina of Saxe-Meiningen", 
+  "active_set": [
+   "(Q78515,P25,c(Q502895))"
+  ]
+ }
+]

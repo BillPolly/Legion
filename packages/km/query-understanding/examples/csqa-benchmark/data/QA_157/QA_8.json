@@ -1,0 +1,587 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q23903080"
+  ], 
+  "relations": [
+   "P172"
+  ], 
+  "type_list": [
+   "Q2472587"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people does Eugeniusz Klin have as his/her race ?"
+ }, 
+ {
+  "all_entities": [
+   "Q140472"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q140472"
+  ], 
+  "utterance": "Silesians", 
+  "active_set": [
+   "(Q23903080,P172,c(Q2472587))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q23903080"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What are the job of Eugeniusz Klin ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2599593", 
+   "Q15980158", 
+   "Q1622272", 
+   "Q17167049"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1622272", 
+   "Q2599593", 
+   "Q15980158"
+  ], 
+  "utterance": "university teacher, germanist, non-fiction writer", 
+  "active_set": [
+   "(Q23903080,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1622272"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P101"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who works in the domain of university teacher ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21030230"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21030230"
+  ], 
+  "utterance": "Eli\u0161ka Klimkov\u00e1-Deutschov\u00e1", 
+  "active_set": [
+   "(c(Q502895),P101,Q1622272)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1622272"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P512"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people have the diploma university teacher ?"
+ }, 
+ {
+  "all_entities": [
+   "Q4074760", 
+   "Q22116332", 
+   "Q5697983", 
+   "Q1631650", 
+   "Q1362287", 
+   "Q3350761", 
+   "Q26338766"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1362287", 
+   "Q1631650", 
+   "Q4074760"
+  ], 
+  "utterance": "Manolis Andronikos, Hovhannes Barseghian, Edvard Baghdasaryan", 
+  "active_set": [
+   "(c(Q502895),P512,Q1622272)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1362287"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P802"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person was that one a student of ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q4074760"
+  ], 
+  "active_set": [
+   "(c(Q502895),P802,Q1362287)", 
+   "(c(Q502895),P802,Q1631650)", 
+   "(c(Q502895),P802,Q4074760)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q1362287", 
+   "Q1631650", 
+   "Q4074760"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Edvard Baghdasaryan ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q1362287"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Manolis Andronikos. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q704230"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q704230"
+  ], 
+  "utterance": "John Beazley", 
+  "active_set": [
+   "(c(Q502895),P802,Q1362287)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q704230"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1412"
+  ], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which language is spoken by that person ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1860"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1860"
+  ], 
+  "utterance": "English", 
+  "active_set": [
+   "(Q704230,P1412,c(Q34770))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q1860", 
+   "Q426600"
+  ], 
+  "relations": [
+   "P364"
+  ], 
+  "type_list": [
+   "Q2342494"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Does After the Funeral have that one as its original language of creation ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q426600,P364,Q1860)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, all direct, 2 are query entities", 
+  "entities_in_utterance": [
+   "Q21030230", 
+   "Q2359566", 
+   "Q5815541"
+  ], 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 4, 
+  "utterance": "Did Eli\u0161ka Klimkov\u00e1-Deutschov\u00e1 die in Kri\u017eic and Jamal Kandi ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q21030230,P20,Q2359566)", 
+   "(Q21030230,P20,Q5815541)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P282"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q9779", 
+   "Q34770"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many alphabets are the writing systems of atmost 1 language known as ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q164436", 
+   "Q754989", 
+   "Q792216", 
+   "Q606972", 
+   "Q187846", 
+   "Q829464", 
+   "Q13405127", 
+   "Q550383", 
+   "Q1937113", 
+   "Q442244", 
+   "Q2092163", 
+   "Q540987", 
+   "Q2712936", 
+   "Q83942"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "14", 
+  "active_set": [
+   "(c(Q34770),P282,c(Q9779))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P37"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q34770", 
+   "Q56061"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which administrative territories are known to have atmost 1 language as their official language ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q807", 
+   "Q2414585", 
+   "Q64004", 
+   "Q68978", 
+   "Q689502", 
+   "Q9125", 
+   "Q678901", 
+   "Q66629", 
+   "Q9009", 
+   "Q2641849", 
+   "Q175345", 
+   "Q68124", 
+   "Q704257", 
+   "Q5813", 
+   "Q68965", 
+   "Q757845", 
+   "Q639054", 
+   "Q689954", 
+   "Q68449", 
+   "Q689691", 
+   "Q668625", 
+   "Q643200", 
+   "Q277708", 
+   "Q5576202", 
+   "Q668705", 
+   "Q660999", 
+   "Q69231", 
+   "Q7149", 
+   "Q66616", 
+   "Q54450", 
+   "Q3834", 
+   "Q5951348", 
+   "Q81811", 
+   "Q669310", 
+   "Q674433", 
+   "Q6029", 
+   "Q669411", 
+   "Q70477", 
+   "Q429962", 
+   "Q167715", 
+   "Q669254", 
+   "Q16644", 
+   "Q64011", 
+   "Q16641", 
+   "Q1990899", 
+   "Q11703", 
+   "Q597413", 
+   "Q390482", 
+   "Q662499", 
+   "Q1014671", 
+   "Q669360", 
+   "Q678787", 
+   "Q68883", 
+   "Q660215", 
+   "Q7525", 
+   "Q661369", 
+   "Q669400", 
+   "Q4700013", 
+   "Q25528", 
+   "Q121157", 
+   "Q2094680", 
+   "Q1352", 
+   "Q128499", 
+   "Q69639", 
+   "Q2604700", 
+   "Q662405", 
+   "Q64679", 
+   "Q70485", 
+   "Q669466", 
+   "Q2395382", 
+   "Q123709", 
+   "Q141502", 
+   "Q2214906", 
+   "Q3639927", 
+   "Q666159", 
+   "Q3951", 
+   "Q381861", 
+   "Q69256", 
+   "Q5689", 
+   "Q63964", 
+   "Q156593", 
+   "Q781354", 
+   "Q660142", 
+   "Q572380", 
+   "Q581562", 
+   "Q678991", 
+   "Q869534", 
+   "Q3702463", 
+   "Q21669478", 
+   "Q669375", 
+   "Q66208", 
+   "Q659753", 
+   "Q15077954", 
+   "Q435231", 
+   "Q334", 
+   "Q2718721", 
+   "Q26", 
+   "Q7172", 
+   "Q689487", 
+   "Q196357", 
+   "Q15730054", 
+   "Q2532285", 
+   "Q1757", 
+   "Q669280", 
+   "Q11935", 
+   "Q5999183", 
+   "Q1353", 
+   "Q2492533", 
+   "Q14452", 
+   "Q57110", 
+   "Q677935", 
+   "Q66668", 
+   "Q26180", 
+   "Q541319", 
+   "Q68160", 
+   "Q7001862", 
+   "Q668740", 
+   "Q2152433", 
+   "Q16635", 
+   "Q183441", 
+   "Q689499", 
+   "Q678690", 
+   "Q4264", 
+   "Q21845358", 
+   "Q25230", 
+   "Q1034", 
+   "Q63931", 
+   "Q49192", 
+   "Q67812", 
+   "Q669152", 
+   "Q67986", 
+   "Q59117", 
+   "Q623277", 
+   "Q669350", 
+   "Q67097", 
+   "Q2499687", 
+   "Q664153", 
+   "Q669292", 
+   "Q3630738", 
+   "Q289534", 
+   "Q69041", 
+   "Q3947670", 
+   "Q688652", 
+   "Q258447", 
+   "Q1259122", 
+   "Q669229", 
+   "Q668239", 
+   "Q661817", 
+   "Q14512466", 
+   "Q58337", 
+   "Q70683", 
+   "Q669244", 
+   "Q68103", 
+   "Q334577", 
+   "Q678769", 
+   "Q2217474", 
+   "Q669437", 
+   "Q69484", 
+   "Q660974", 
+   "Q611382", 
+   "Q69354", 
+   "Q64123", 
+   "Q64044", 
+   "Q11959", 
+   "Q69290", 
+   "Q25396", 
+   "Q669424", 
+   "Q1025278", 
+   "Q1341", 
+   "Q179313", 
+   "Q78", 
+   "Q2215147", 
+   "Q2801411", 
+   "Q72", 
+   "Q71", 
+   "Q70", 
+   "Q669332", 
+   "Q277674", 
+   "Q65757", 
+   "Q7024", 
+   "Q7122288", 
+   "Q163798", 
+   "Q65502", 
+   "Q69940", 
+   "Q7942521", 
+   "Q67130", 
+   "Q64032", 
+   "Q198210", 
+   "Q244207", 
+   "Q869624", 
+   "Q678960", 
+   "Q1026291", 
+   "Q68692", 
+   "Q1026296", 
+   "Q286332", 
+   "Q1895", 
+   "Q2215401"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q72", 
+   "Q7172", 
+   "Q334"
+  ], 
+  "utterance": "Z\u00fcrich, Arab League, Singapore", 
+  "active_set": [
+   "(c(Q56061),P37,c(Q34770))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q334"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P36"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which administrative territory consists of Singapore as its capital ?"
+ }, 
+ {
+  "all_entities": [
+   "Q334"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q334"
+  ], 
+  "utterance": "Singapore", 
+  "active_set": [
+   "(c(Q56061),P36,Q334)"
+  ]
+ }
+]

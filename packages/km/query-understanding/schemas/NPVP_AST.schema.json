@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "NPVP_AST.schema.json",
+  "title": "NP/VP Abstract Syntax Tree",
+  "description": "Minimal tree structure capturing noun phrases and verb phrases",
+  "type": "object",
+  "required": ["S"],
+  "properties": {
+    "S": {
+      "type": "object",
+      "description": "Root sentence node",
+      "required": ["NP", "VP", "Force"],
+      "properties": {
+        "NP": {"$ref": "#/definitions/NounPhrase"},
+        "VP": {"$ref": "#/definitions/VerbPhrase"},
+        "Force": {
+          "type": "string",
+          "enum": ["ask", "yn", "explain", "compare"],
+          "description": "Question type"
+        },
+        "Meta": {
+          "type": "object",
+          "description": "Optional metadata (domain hints, etc.)"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "NounPhrase": {
+      "type": "object",
+      "required": ["Head"],
+      "properties": {
+        "Det": {
+          "description": "Determiner (WH-word, article, quantifier, number, or null)"
+        },
+        "Head": {
+          "description": "Head noun (string) or proper noun (object with Name property)"
+        },
+        "Mods": {
+          "type": "array",
+          "description": "Modifiers (pp, adv, relcl, cmp, coord)",
+          "items": {"$ref": "#/definitions/Modifier"}
+        }
+      }
+    },
+    "VerbPhrase": {
+      "type": "object",
+      "required": ["Verb"],
+      "properties": {
+        "Verb": {
+          "type": "string",
+          "description": "Main verb (lemmatized)",
+          "minLength": 1
+        },
+        "Comps": {
+          "type": "array",
+          "description": "Complements (obj, pred, pp, ccomp, xcomp)",
+          "items": {"$ref": "#/definitions/Complement"}
+        },
+        "Mods": {
+          "type": "array",
+          "description": "Modifiers (pp, adv, relcl, cmp, coord)",
+          "items": {"$ref": "#/definitions/Modifier"}
+        }
+      }
+    },
+    "Complement": {
+      "type": "array",
+      "description": "[type, value] pair where value can be NP, string, or nested structure",
+      "minItems": 2,
+      "maxItems": 5
+    },
+    "Modifier": {
+      "type": "array",
+      "description": "Modifier structure: [type, ...args] where args vary by type (pp has 3, adv has 2, etc.)",
+      "minItems": 2,
+      "maxItems": 5
+    }
+  }
+}

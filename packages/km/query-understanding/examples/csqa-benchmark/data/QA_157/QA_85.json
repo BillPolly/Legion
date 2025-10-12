@@ -1,0 +1,738 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q553550"
+  ], 
+  "relations": [
+   "P53"
+  ], 
+  "type_list": [
+   "Q13417114"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is the noble family that Francis I, Duke of Saxe-Lauenburg belongs to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q168352"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q168352"
+  ], 
+  "utterance": "House of Ascania", 
+  "active_set": [
+   "(Q553550,P53,c(Q13417114))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q553550"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P22"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who are the offspring of that one ?"
+ }, 
+ {
+  "all_entities": [
+   "Q328009", 
+   "Q328024", 
+   "Q2501962", 
+   "Q1246335", 
+   "Q89268", 
+   "Q2025468", 
+   "Q1463970", 
+   "Q479538"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q479538", 
+   "Q328024", 
+   "Q89268"
+  ], 
+  "utterance": "Francis II, Duke of Saxe-Lauenburg, Magnus II, Duke of Saxe-Lauenburg, Henry of Saxe-Lauenburg", 
+  "active_set": [
+   "(c(Q502895),P22,Q168352)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q1024685"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which musical instruments are played by around the same number of people as cabasa ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q80284", 
+   "Q201129", 
+   "Q424017", 
+   "Q890073", 
+   "Q80019", 
+   "Q1178361", 
+   "Q2563510", 
+   "Q604538", 
+   "Q2660670", 
+   "Q39777", 
+   "Q3574843", 
+   "Q678090", 
+   "Q81982", 
+   "Q182718", 
+   "Q490054", 
+   "Q873588", 
+   "Q593995", 
+   "Q1327500", 
+   "Q206987", 
+   "Q1879664", 
+   "Q189737", 
+   "Q1759986", 
+   "Q1798603", 
+   "Q1099153", 
+   "Q120585", 
+   "Q713298", 
+   "Q8371", 
+   "Q1024685", 
+   "Q213461", 
+   "Q3382191", 
+   "Q816793", 
+   "Q862501", 
+   "Q213100", 
+   "Q244976", 
+   "Q537750", 
+   "Q626035", 
+   "Q1179017", 
+   "Q742180", 
+   "Q320341", 
+   "Q1300012", 
+   "Q748455", 
+   "Q669370", 
+   "Q290951", 
+   "Q220971", 
+   "Q178933", 
+   "Q16875637", 
+   "Q790468", 
+   "Q1129422", 
+   "Q379248", 
+   "Q726306", 
+   "Q173453", 
+   "Q483994", 
+   "Q744831", 
+   "Q963150", 
+   "Q16155191", 
+   "Q644440", 
+   "Q1343007", 
+   "Q11404", 
+   "Q497224", 
+   "Q3623688"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1178361", 
+   "Q81982", 
+   "Q1759986"
+  ], 
+  "utterance": "davul, harpsichord, Wurlitzer electric piano", 
+  "active_set": [
+   "(c(Q502895),P1303,c(Q34379))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q12018", 
+   "Q553550"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P161", 
+   "P40"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people are an offsprings of Francis I, Duke of Saxe-Lauenburg or were casted in 8\u00bd ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3809276", 
+   "Q3707813", 
+   "Q440224", 
+   "Q3619141", 
+   "Q3941625", 
+   "Q3720100", 
+   "Q3941623", 
+   "Q2025468", 
+   "Q769732", 
+   "Q479538", 
+   "Q16576334", 
+   "Q55469", 
+   "Q2590462", 
+   "Q3174439", 
+   "Q291915", 
+   "Q107006", 
+   "Q1463970", 
+   "Q3869850", 
+   "Q2501962", 
+   "Q3107942", 
+   "Q1553484", 
+   "Q3939011", 
+   "Q3618066", 
+   "Q3809385", 
+   "Q266240", 
+   "Q3769523", 
+   "Q3294107", 
+   "Q1041634", 
+   "Q456390", 
+   "Q228607", 
+   "Q164065", 
+   "Q1246335", 
+   "Q16567494", 
+   "Q3847540", 
+   "Q2058342", 
+   "Q3618087", 
+   "Q3047317", 
+   "Q328009", 
+   "Q328024", 
+   "Q12309389", 
+   "Q508730", 
+   "Q3394223", 
+   "Q89268", 
+   "Q1054390", 
+   "Q3849313", 
+   "Q443254"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q443254", 
+   "Q440224", 
+   "Q228607", 
+   "Q3619141", 
+   "Q107006", 
+   "Q456390", 
+   "Q3769523", 
+   "Q3720100", 
+   "Q479538", 
+   "Q2501962"
+  ], 
+  "utterance": "Some of them are Caterina Boratto, Olimpia Cavalli, Anouk Aim\u00e9e, Antonio Acqua, Claudia Cardinale, Madeleine LeBeau, Giulio Cal\u00ec, Edy Vessel, Francis II, Duke of Saxe-Lauenburg, Ursula of Saxe-Lauenburg", 
+  "active_set": [
+   "OR((Q553550,P40,c(Q502895)), (Q12018,P161,c(Q502895)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q479538"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where did the expiration of Francis II, Duke of Saxe-Lauenburg occur ?"
+ }, 
+ {
+  "all_entities": [
+   "Q492380"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q492380"
+  ], 
+  "utterance": "Lauenburg/Elbe", 
+  "active_set": [
+   "(Q479538,P20,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q492380"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1376"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory has that one has its center of administration ?"
+ }, 
+ {
+  "all_entities": [
+   "Q313175"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q313175"
+  ], 
+  "utterance": "Saxe-Lauenburg", 
+  "active_set": [
+   "(Q492380,P1376,c(Q15617994))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Mult. entity type", 
+  "type_list": [
+   "Q34379", 
+   "Q207628", 
+   "Q838948"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P870"
+  ], 
+  "count_ques_sub_type": 6, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many musical instruments are used as instrumentation in around 8 musical compositions or works of art ?"
+ }, 
+ {
+  "all_entities": [
+   "Q80284", 
+   "Q8371", 
+   "Q213461", 
+   "Q46185", 
+   "Q845193", 
+   "Q190172", 
+   "Q189737", 
+   "Q626035", 
+   "Q593995", 
+   "Q521151", 
+   "Q8338", 
+   "Q320341", 
+   "Q39777", 
+   "Q8355", 
+   "Q11404", 
+   "Q206987", 
+   "Q81982"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "17", 
+  "active_set": [
+   "(c(Q207628)|c(Q838948),P870,c(Q34379))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q1048835", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which political territories have diplomatic relationships with atmost 49 administrative territories ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1000", 
+   "Q40", 
+   "Q781", 
+   "Q778", 
+   "Q769", 
+   "Q685", 
+   "Q35", 
+   "Q691", 
+   "Q16", 
+   "Q664", 
+   "Q766"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q35", 
+   "Q16", 
+   "Q40"
+  ], 
+  "utterance": "Denmark, Canada, Austria", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q1048835))"
+  ]
+ }, 
+ {
+  "set_op": 1, 
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Quantitative|Count|Logical operators|Indirect", 
+  "entities_in_utterance": [], 
+  "relations": [
+   "P276"
+  ], 
+  "count_ques_sub_type": 8, 
+  "type_list": [
+   "Q15275719", 
+   "Q820655"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many recurring events and statutes have their location as that political territory ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "description": "Quantitative|Count|Mult. entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q35"
+  ], 
+  "active_set": [], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Denmark ?"
+ }, 
+ {
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "count_ques_sub_type": 8, 
+  "entities": [
+   "Q16"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "No, I meant Canada. Could you tell me the answer for that?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q4697783", 
+   "Q326303"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1 recurring events and 1 statutes", 
+  "active_set": [
+   "(c(Q15275719),P276,Q16)", 
+   "(c(Q820655),P276,Q16)", 
+   "(c(Q15275719),P276,Q35)", 
+   "(c(Q820655),P276,Q35)", 
+   "(c(Q15275719),P276,Q16)", 
+   "(c(Q820655),P276,Q16)", 
+   "(c(Q15275719),P276,Q40)", 
+   "(c(Q820655),P276,Q40)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q967"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q1048835", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which administrative territories are known to have diplomatic connections with greater number of political territories than Burundi ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q804", 
+   "Q801", 
+   "Q800", 
+   "Q419", 
+   "Q668", 
+   "Q414", 
+   "Q142", 
+   "Q55", 
+   "Q145", 
+   "Q148", 
+   "Q783", 
+   "Q711", 
+   "Q252", 
+   "Q403", 
+   "Q258", 
+   "Q45", 
+   "Q159", 
+   "Q43", 
+   "Q41", 
+   "Q155", 
+   "Q796", 
+   "Q794", 
+   "Q954", 
+   "Q889", 
+   "Q884", 
+   "Q881", 
+   "Q811", 
+   "Q33", 
+   "Q31", 
+   "Q30", 
+   "Q924", 
+   "Q36", 
+   "Q34", 
+   "Q928", 
+   "Q39", 
+   "Q38", 
+   "Q739", 
+   "Q423", 
+   "Q851", 
+   "Q733", 
+   "Q734", 
+   "Q736", 
+   "Q230", 
+   "Q233", 
+   "Q20", 
+   "Q1041", 
+   "Q27", 
+   "Q843", 
+   "Q184", 
+   "Q1029", 
+   "Q1028", 
+   "Q786", 
+   "Q225", 
+   "Q224", 
+   "Q96", 
+   "Q229", 
+   "Q347", 
+   "Q17", 
+   "Q902", 
+   "Q1036", 
+   "Q1033", 
+   "Q1030", 
+   "Q963", 
+   "Q298", 
+   "Q115", 
+   "Q114", 
+   "Q117", 
+   "Q750", 
+   "Q212", 
+   "Q213", 
+   "Q215", 
+   "Q218", 
+   "Q219", 
+   "Q916", 
+   "Q833", 
+   "Q1009", 
+   "Q79", 
+   "Q77", 
+   "Q878", 
+   "Q774", 
+   "Q810", 
+   "Q29", 
+   "Q869", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q38", 
+   "Q155", 
+   "Q30"
+  ], 
+  "utterance": "Italy, Brazil, United States of America", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q55"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q1048835", 
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And also tell me about Netherlands?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q801", 
+   "Q142", 
+   "Q145", 
+   "Q711", 
+   "Q252", 
+   "Q403", 
+   "Q258", 
+   "Q159", 
+   "Q43", 
+   "Q155", 
+   "Q889", 
+   "Q884", 
+   "Q33", 
+   "Q30", 
+   "Q36", 
+   "Q34", 
+   "Q39", 
+   "Q38", 
+   "Q739", 
+   "Q423", 
+   "Q851", 
+   "Q230", 
+   "Q20", 
+   "Q27", 
+   "Q843", 
+   "Q1029", 
+   "Q229", 
+   "Q1030", 
+   "Q115", 
+   "Q114", 
+   "Q212", 
+   "Q218", 
+   "Q833", 
+   "Q79", 
+   "Q77", 
+   "Q878", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q38", 
+   "Q155", 
+   "Q30"
+  ], 
+  "utterance": "Italy, Brazil, United States of America", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q212"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Do Ukraine have diplomatic associations with those ones ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q212,P530,Q38)", 
+   "(Q212,P530,Q155)", 
+   "(Q212,P530,Q30)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q89268", 
+   "Q2971"
+  ], 
+  "relations": [
+   "P937"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Did Henry of Saxe-Lauenburg work Paderborn ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q89268,P937,Q2971)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, all direct, 2 are query entities", 
+  "entities_in_utterance": [
+   "Q3619141", 
+   "Q25187", 
+   "Q8198265"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 4, 
+  "utterance": "Is Antonio Acqua a civilian of Rimella and Anahuir ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q3619141,P27,Q25187)", 
+   "(Q3619141,P27,Q8198265)"
+  ]
+ }
+]

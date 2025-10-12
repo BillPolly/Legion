@@ -1,0 +1,484 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q817693"
+  ], 
+  "relations": [
+   "P119"
+  ], 
+  "type_list": [
+   "Q43229"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Where is the place of burial for Benjamin Stanton located ?"
+ }, 
+ {
+  "all_entities": [
+   "Q5605003"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5605003"
+  ], 
+  "utterance": "Greenwood Cemetery", 
+  "active_set": [
+   "(Q817693,P119,c(Q43229))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q817693"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P39"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which occupation was a position occupied by Benjamin Stanton ?"
+ }, 
+ {
+  "all_entities": [
+   "Q13218630"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q13218630"
+  ], 
+  "utterance": "United States representative", 
+  "active_set": [
+   "(Q817693,P39,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q817693"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories are Benjamin Stanton a civilian of ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q30"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q817693,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q592864"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And how about John Amner?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q145"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q592864,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q11861880"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Heikki Miekk-oja?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q11861880,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Mult. entity type", 
+  "type_list": [
+   "Q11204", 
+   "Q895526", 
+   "Q12737077"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P748"
+  ], 
+  "count_ques_sub_type": 4, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "Which occupations did atleast 1 legislatures or authority organs appoint ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2666591", 
+   "Q11793630", 
+   "Q1072417", 
+   "Q2287650", 
+   "Q5333410", 
+   "Q261746", 
+   "Q1029955", 
+   "Q642859", 
+   "Q967762", 
+   "Q655407", 
+   "Q940135", 
+   "Q2305968", 
+   "Q596123", 
+   "Q7444340", 
+   "Q2419581", 
+   "Q25863345", 
+   "Q2747647", 
+   "Q1043568", 
+   "Q13645132", 
+   "Q636207", 
+   "Q2003296", 
+   "Q967750", 
+   "Q866680", 
+   "Q783785", 
+   "Q1072415", 
+   "Q26000995", 
+   "Q1763459", 
+   "Q1591470", 
+   "Q735015", 
+   "Q1029968", 
+   "Q2297543", 
+   "Q4122271", 
+   "Q967737", 
+   "Q6542448", 
+   "Q2301213", 
+   "Q1658460", 
+   "Q786242", 
+   "Q1434880"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q655407", 
+   "Q4122271", 
+   "Q25863345"
+  ], 
+  "utterance": "President of the People's Republic of China, Premier of the People's Republic of China, Secretary of State for International Trade", 
+  "active_set": [
+   "(c(Q12737077),P748,c(Q11204)|c(Q895526))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q655407"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is that occupation located in ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q655407"
+  ], 
+  "active_set": [
+   "(Q655407,P17,c(Q15617994))", 
+   "(Q4122271,P17,c(Q15617994))", 
+   "(Q25863345,P17,c(Q15617994))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q655407", 
+   "Q4122271", 
+   "Q25863345"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean President of the People's Republic of China ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "Yes"
+ }, 
+ {
+  "all_entities": [
+   "Q148"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q148"
+  ], 
+  "utterance": "People's Republic of China", 
+  "active_set": [
+   "(Q655407,P17,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, one direct and one indirect, subject is indirect", 
+  "entities_in_utterance": [
+   "Q148", 
+   "Q558092"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 2, 
+  "utterance": "Does Daldorf have diplomatic relationships with that one ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q148,P530,Q558092)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q5605003", 
+   "Q5171551"
+  ], 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Is Greenwood Cemetery a part of Cornell School District ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q5605003,P17,Q5171551)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q7210356"
+  ], 
+  "entities_in_utterance": [
+   "Q6768674", 
+   "Q817693"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P102"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which political organizations are Benjamin Stanton or Mark M. Gillen affiliated with ?"
+ }, 
+ {
+  "all_entities": [
+   "Q42183", 
+   "Q29468"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q42183", 
+   "Q29468"
+  ], 
+  "utterance": "Whig Party, Republican Party", 
+  "active_set": [
+   "OR((Q817693,P102,c(Q7210356)), (Q6768674,P102,c(Q7210356)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q881574"
+  ], 
+  "relations": [
+   "P102"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Are Myron H. Clark the members of those political organizations ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q881574,P102,Q42183)", 
+   "(Q881574,P102,Q29468)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q29468"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P463"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person is a member of Republican Party ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2522486"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2522486"
+  ], 
+  "utterance": "Victor Murdock", 
+  "active_set": [
+   "(c(Q502895),P463,Q29468)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q29468"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P462"
+  ], 
+  "type_list": [
+   "Q1075"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which color is associated with that political organization ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3142"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3142"
+  ], 
+  "utterance": "red", 
+  "active_set": [
+   "(Q2522486,P462,c(Q1075))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q29468"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P488"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who was the chairperson of Republican Party ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1357640"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1357640"
+  ], 
+  "utterance": "Reince Priebus", 
+  "active_set": [
+   "(Q29468,P488,c(Q502895))"
+  ]
+ }
+]

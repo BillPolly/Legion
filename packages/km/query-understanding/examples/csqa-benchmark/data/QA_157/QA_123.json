@@ -1,0 +1,279 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1964854"
+  ], 
+  "relations": [
+   "P166"
+  ], 
+  "type_list": [
+   "Q618779"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which awards were received by Ilya Starinov ?"
+ }, 
+ {
+  "all_entities": [
+   "Q185493", 
+   "Q18200478", 
+   "Q337463", 
+   "Q1986005", 
+   "Q728960", 
+   "Q583881", 
+   "Q2525430"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q185493", 
+   "Q2525430", 
+   "Q337463"
+  ], 
+  "utterance": "Order of Lenin, Order of Courage, Order of the Red Banner", 
+  "active_set": [
+   "(Q1964854,P166,c(Q618779))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1964854"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P410"
+  ], 
+  "type_list": [
+   "Q4189293"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the title conferred upon Ilya Starinov ?"
+ }, 
+ {
+  "all_entities": [
+   "Q104680"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q104680"
+  ], 
+  "utterance": "colonel", 
+  "active_set": [
+   "(Q1964854,P410,c(Q4189293))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q12784258"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q4189293"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about Alexander Jeremiah Orenstein?"
+ }, 
+ {
+  "all_entities": [
+   "Q157148"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q157148"
+  ], 
+  "utterance": "major general", 
+  "active_set": [
+   "(Q12784258,P410,c(Q4189293))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1964854"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P793"
+  ], 
+  "type_list": [
+   "Q22675021"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which lifetime is a significant event associated with Ilya Starinov ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2944360"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2944360"
+  ], 
+  "utterance": "centenarian", 
+  "active_set": [
+   "(Q1964854,P793,c(Q22675021))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q2944360"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people have that lifetime as his/her means of employment ?"
+ }, 
+ {
+  "all_entities": [
+   "Q18088603", 
+   "Q23906252", 
+   "Q2700435", 
+   "Q2657341", 
+   "Q3410564"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23906252", 
+   "Q3410564", 
+   "Q18088603"
+  ], 
+  "utterance": "Caf' Francisco, Elodie Van den Bossche, Maria Verkeyn", 
+  "active_set": [
+   "(c(Q502895),P106,Q2944360)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q185493"
+  ], 
+  "relations": [
+   "P138"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many people are the origin of Order of Lenin ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1394"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q185493,P138,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q19291574"
+  ], 
+  "relations": [
+   "P138"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about Karel Doormanstraat?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q437690"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q19291574,P138,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q3647858"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about bykovaite?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q3647858,P138,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q3647858"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P2695"
+  ], 
+  "type_list": [
+   "Q811979"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which architectural structure is known for containing that mineral supergroups naturally ?"
+ }, 
+ {
+  "all_entities": [
+   "Q23893344"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23893344"
+  ], 
+  "utterance": "Umbozero mine", 
+  "active_set": []
+ }
+]

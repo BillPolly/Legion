@@ -1,0 +1,408 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q776164"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territory is the country of citizenship of Pierre Berthier ?"
+ }, 
+ {
+  "all_entities": [
+   "Q142"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q142"
+  ], 
+  "utterance": "France", 
+  "active_set": [
+   "(Q776164,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q776164"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P69"
+  ], 
+  "type_list": [
+   "Q3914"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where was Pierre Berthier educated ?"
+ }, 
+ {
+  "all_entities": [
+   "Q273626"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q273626"
+  ], 
+  "utterance": "\u00c9cole Polytechnique", 
+  "active_set": [
+   "(Q776164,P69,c(Q3914))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "Incomplete|object parent is changed, subject and predicate remain same", 
+  "entities_in_utterance": [
+   "Q776164"
+  ], 
+  "inc_ques_type": 1, 
+  "relations": [], 
+  "type_list": [
+   "Q2385804"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And which educational institution?"
+ }, 
+ {
+  "all_entities": [
+   "Q1189954"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1189954"
+  ], 
+  "utterance": "Mines ParisTech", 
+  "active_set": [
+   "(Q776164,P69,c(Q2385804))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1189954"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P512"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person has the diploma that educational institution ?"
+ }, 
+ {
+  "all_entities": [
+   "Q20021760"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q20021760"
+  ], 
+  "utterance": "Edmond Dupuis", 
+  "active_set": [
+   "(c(Q502895),P512,Q1189954)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1189954"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P361"
+  ], 
+  "type_list": [
+   "Q13226383"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "What is a part of Mines ParisTech ?"
+ }, 
+ {
+  "all_entities": [
+   "Q5062340"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5062340"
+  ], 
+  "utterance": "Centre de Morphologie Math\u00e9matique", 
+  "active_set": [
+   "(c(Q13226383),P361,Q1189954)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q142"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P610"
+  ], 
+  "type_list": [
+   "Q14524493"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which is the zenith of France ?"
+ }, 
+ {
+  "all_entities": [
+   "Q583"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q583"
+  ], 
+  "utterance": "Mont Blanc", 
+  "active_set": [
+   "(Q142,P610,c(Q14524493))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q142"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P85"
+  ], 
+  "type_list": [
+   "Q571"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which book is the anthem for that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q41180"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q41180"
+  ], 
+  "utterance": "La Marseillaise", 
+  "active_set": [
+   "(Q583,P85,c(Q571))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q142"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P30"
+  ], 
+  "type_list": [
+   "Q2221906"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which geographic locations are France located in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q46", 
+   "Q15", 
+   "Q538", 
+   "Q828", 
+   "Q51"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q51", 
+   "Q15", 
+   "Q46"
+  ], 
+  "utterance": "Antarctica, Africa, Europe", 
+  "active_set": [
+   "(Q142,P30,c(Q2221906))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q15"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P921"
+  ], 
+  "type_list": [
+   "Q2342494"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which collectables were mainly based on that geographic location ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q51"
+  ], 
+  "active_set": [
+   "(c(Q2342494),P921,Q51)", 
+   "(c(Q2342494),P921,Q15)", 
+   "(c(Q2342494),P921,Q46)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q51", 
+   "Q15", 
+   "Q46"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Antarctica ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q15"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Africa. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q18205780", 
+   "Q12071418"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18205780", 
+   "Q12071418"
+  ], 
+  "utterance": "Description of Africa, Travels to Discover the Source of the Nile", 
+  "active_set": [
+   "(c(Q2342494),P921,Q15)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q4942342", 
+   "Q12071418"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P50"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people penned Travels to Discover the Source of the Nile or Jibong yuseol ?"
+ }, 
+ {
+  "all_entities": [
+   "Q484770", 
+   "Q348489"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q484770", 
+   "Q348489"
+  ], 
+  "utterance": "Yi Su-gwang, James Bruce", 
+  "active_set": [
+   "OR((Q12071418,P50,c(Q502895)), (Q4942342,P50,c(Q502895)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q348489"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories are the countries of citizenship of James Bruce ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q145"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q348489,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q553440"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And what about Ivo Vojnovi\u0107?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q403"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q553440,P27,c(Q15617994))"
+  ]
+ }
+]

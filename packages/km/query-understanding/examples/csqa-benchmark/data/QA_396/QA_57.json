@@ -1,0 +1,286 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1354307"
+  ], 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which sex does Erika Berger possess ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581072"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581072"
+  ], 
+  "utterance": "female", 
+  "active_set": [
+   "(Q1354307,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1354307"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which political territory is Erika Berger an inhabitant of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "utterance": "Germany", 
+  "active_set": [
+   "(Q1354307,P27,c(Q1048835))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q56061"
+  ], 
+  "entities_in_utterance": [
+   "Q4712275", 
+   "Q1354307"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P19"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories were Erika Berger or Albertoyos born at ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1726", 
+   "Q2807"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1726", 
+   "Q2807"
+  ], 
+  "utterance": "Munich, Madrid", 
+  "active_set": [
+   "OR((Q1354307,P19,c(Q56061)), (Q4712275,P19,c(Q56061)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q17086156"
+  ], 
+  "relations": [
+   "P190"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Are Tolombeh-ye Samareh-ye Do twin town of those ones ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q17086156,P190,Q1726)", 
+   "(Q17086156,P190,Q2807)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q56061"
+  ], 
+  "entities_in_utterance": [
+   "Q365612", 
+   "Q1354307"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P20"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories did the expiration of Erika Berger or Adolph von Vagedes occur ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1718", 
+   "Q365"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1718", 
+   "Q365"
+  ], 
+  "utterance": "D\u00fcsseldorf, Cologne", 
+  "active_set": [
+   "OR((Q1354307,P20,c(Q56061)), (Q365612,P20,c(Q56061)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q365"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1427"
+  ], 
+  "type_list": [
+   "Q18608583"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which recurring sporting event has start point at that administrative territory ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q365"
+  ], 
+  "active_set": [
+   "(c(Q18608583),P1427,Q1718)", 
+   "(c(Q18608583),P1427,Q365)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q1718", 
+   "Q365"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Cologne ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "Yes"
+ }, 
+ {
+  "all_entities": [
+   "Q730402"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q730402"
+  ], 
+  "utterance": "1965 Tour de France", 
+  "active_set": [
+   "(c(Q18608583),P1427,Q365)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1346"
+  ], 
+  "count_ques_sub_type": 8, 
+  "type_list": [
+   "Q502895", 
+   "Q18608583"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which recurring sporting events were won by more number of people than that recurring sporting event ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q608649", 
+   "Q754994", 
+   "Q1672371", 
+   "Q3768638", 
+   "Q18914531", 
+   "Q915918", 
+   "Q279235", 
+   "Q19576833", 
+   "Q2483513", 
+   "Q19258904", 
+   "Q907308", 
+   "Q19594844", 
+   "Q21093835", 
+   "Q4451380", 
+   "Q20199280", 
+   "Q19818801", 
+   "Q19588577", 
+   "Q20055171", 
+   "Q23662651", 
+   "Q221428", 
+   "Q2411800", 
+   "Q20640108", 
+   "Q20647589", 
+   "Q18471444", 
+   "Q936405", 
+   "Q907316", 
+   "Q15731116", 
+   "Q1633331", 
+   "Q847630", 
+   "Q15725895", 
+   "Q20165905", 
+   "Q19792656", 
+   "Q591438", 
+   "Q22893630", 
+   "Q907282", 
+   "Q384895", 
+   "Q19947163", 
+   "Q682253", 
+   "Q580122", 
+   "Q223420", 
+   "Q22344347"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q279235", 
+   "Q19594844", 
+   "Q20055171"
+  ], 
+  "utterance": "1980 Tour de France, 2015 Dwars door Drenthe, 2015 Ster ZLM Toer", 
+  "active_set": [
+   "(c(Q18608583),P1346,c(Q502895))"
+  ]
+ }
+]

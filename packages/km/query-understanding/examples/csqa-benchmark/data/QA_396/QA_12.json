@@ -1,0 +1,651 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1308600"
+  ], 
+  "relations": [
+   "P58"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which person wrote the script for A Holiday with Piroschka ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1641475"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1641475"
+  ], 
+  "utterance": "Kurt Nachmann", 
+  "active_set": [
+   "(Q1308600,P58,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1308600"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P57"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which person directed that work of art ?"
+ }, 
+ {
+  "all_entities": [
+   "Q89283"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q89283"
+  ], 
+  "utterance": "Franz Josef Gottlieb", 
+  "active_set": [
+   "(Q1641475,P57,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1308600"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P344"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who is the director of photography for A Holiday with Piroschka ?"
+ }, 
+ {
+  "all_entities": [
+   "Q121175"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q121175"
+  ], 
+  "utterance": "Richard Angst", 
+  "active_set": [
+   "(Q1308600,P344,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q121175"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is that person a civilian of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q39"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q39"
+  ], 
+  "utterance": "Switzerland", 
+  "active_set": [
+   "(Q121175,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q39", 
+   "Q16724838"
+  ], 
+  "relations": [
+   "P495"
+  ], 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Did Night originate in that administrative territory ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q16724838,P495,Q39)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, all direct, 2 are query entities", 
+  "entities_in_utterance": [
+   "Q1308600", 
+   "Q249345", 
+   "Q3165291"
+  ], 
+  "relations": [
+   "P161"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 4, 
+  "utterance": "Does A Holiday with Piroschka have Teri Tordai and Jean-Daniel Bouvard as actor ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES and NO respectively", 
+  "active_set": [
+   "(Q1308600,P161,Q249345)", 
+   "(Q1308600,P161,Q3165291)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q89283"
+  ], 
+  "relations": [
+   "P509"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q12136"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many diseases were the causes of death of Franz Josef Gottlieb ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q12078"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q89283,P509,c(Q12136))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q3190830"
+  ], 
+  "relations": [
+   "P509"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q12136"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about J\u00e9r\u00f4me Br\u00e9zillon?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q12078"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q3190830,P509,c(Q12136))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q7253041"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q12136"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Prunella Clough?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q7253041,P509,c(Q12136))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q414"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many administrative territories have diplomatic associations with approximately the same number of administrative territories as Argentina ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q702", 
+   "Q804", 
+   "Q800", 
+   "Q419", 
+   "Q668", 
+   "Q414", 
+   "Q55", 
+   "Q145", 
+   "Q262", 
+   "Q148", 
+   "Q783", 
+   "Q265", 
+   "Q37", 
+   "Q712", 
+   "Q711", 
+   "Q717", 
+   "Q837", 
+   "Q252", 
+   "Q399", 
+   "Q398", 
+   "Q403", 
+   "Q657", 
+   "Q258", 
+   "Q45", 
+   "Q43", 
+   "Q41", 
+   "Q792", 
+   "Q790", 
+   "Q796", 
+   "Q794", 
+   "Q954", 
+   "Q889", 
+   "Q884", 
+   "Q958", 
+   "Q881", 
+   "Q986", 
+   "Q822", 
+   "Q241", 
+   "Q242", 
+   "Q244", 
+   "Q811", 
+   "Q33", 
+   "Q32", 
+   "Q31", 
+   "Q924", 
+   "Q36", 
+   "Q34", 
+   "Q928", 
+   "Q39", 
+   "Q739", 
+   "Q423", 
+   "Q983", 
+   "Q851", 
+   "Q733", 
+   "Q29999", 
+   "Q854", 
+   "Q734", 
+   "Q819", 
+   "Q424", 
+   "Q730", 
+   "Q736", 
+   "Q236", 
+   "Q232", 
+   "Q233", 
+   "Q238", 
+   "Q20", 
+   "Q1045", 
+   "Q1041", 
+   "Q27", 
+   "Q28", 
+   "Q921", 
+   "Q1049", 
+   "Q1027", 
+   "Q1020", 
+   "Q189", 
+   "Q843", 
+   "Q842", 
+   "Q1029", 
+   "Q1028", 
+   "Q786", 
+   "Q228", 
+   "Q227", 
+   "Q225", 
+   "Q224", 
+   "Q222", 
+   "Q221", 
+   "Q96", 
+   "Q229", 
+   "Q347", 
+   "Q17", 
+   "Q902", 
+   "Q1036", 
+   "Q1037", 
+   "Q974", 
+   "Q1032", 
+   "Q1033", 
+   "Q1030", 
+   "Q191", 
+   "Q965", 
+   "Q967", 
+   "Q962", 
+   "Q963", 
+   "Q697", 
+   "Q298", 
+   "Q695", 
+   "Q115", 
+   "Q117", 
+   "Q754", 
+   "Q750", 
+   "Q212", 
+   "Q213", 
+   "Q211", 
+   "Q217", 
+   "Q214", 
+   "Q215", 
+   "Q218", 
+   "Q219", 
+   "Q912", 
+   "Q917", 
+   "Q916", 
+   "Q1007", 
+   "Q1006", 
+   "Q1005", 
+   "Q833", 
+   "Q977", 
+   "Q1009", 
+   "Q1008", 
+   "Q971", 
+   "Q683", 
+   "Q34020", 
+   "Q686", 
+   "Q836", 
+   "Q574", 
+   "Q79", 
+   "Q77", 
+   "Q858", 
+   "Q878", 
+   "Q774", 
+   "Q948", 
+   "Q817", 
+   "Q810", 
+   "Q1019", 
+   "Q1016", 
+   "Q1011", 
+   "Q945", 
+   "Q678", 
+   "Q29", 
+   "Q33788", 
+   "Q869"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "149", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q774"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And what about Guatemala?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q702", 
+   "Q804", 
+   "Q800", 
+   "Q419", 
+   "Q668", 
+   "Q414", 
+   "Q55", 
+   "Q145", 
+   "Q262", 
+   "Q148", 
+   "Q783", 
+   "Q265", 
+   "Q37", 
+   "Q712", 
+   "Q711", 
+   "Q717", 
+   "Q837", 
+   "Q252", 
+   "Q399", 
+   "Q398", 
+   "Q403", 
+   "Q657", 
+   "Q258", 
+   "Q45", 
+   "Q43", 
+   "Q41", 
+   "Q792", 
+   "Q790", 
+   "Q796", 
+   "Q794", 
+   "Q954", 
+   "Q889", 
+   "Q884", 
+   "Q958", 
+   "Q881", 
+   "Q986", 
+   "Q822", 
+   "Q241", 
+   "Q242", 
+   "Q244", 
+   "Q811", 
+   "Q33", 
+   "Q32", 
+   "Q31", 
+   "Q924", 
+   "Q36", 
+   "Q34", 
+   "Q928", 
+   "Q39", 
+   "Q739", 
+   "Q423", 
+   "Q983", 
+   "Q851", 
+   "Q733", 
+   "Q29999", 
+   "Q854", 
+   "Q734", 
+   "Q819", 
+   "Q424", 
+   "Q730", 
+   "Q736", 
+   "Q236", 
+   "Q232", 
+   "Q233", 
+   "Q238", 
+   "Q20", 
+   "Q1045", 
+   "Q1041", 
+   "Q27", 
+   "Q28", 
+   "Q921", 
+   "Q1049", 
+   "Q1027", 
+   "Q1020", 
+   "Q189", 
+   "Q843", 
+   "Q842", 
+   "Q1029", 
+   "Q1028", 
+   "Q786", 
+   "Q228", 
+   "Q227", 
+   "Q225", 
+   "Q224", 
+   "Q222", 
+   "Q221", 
+   "Q96", 
+   "Q229", 
+   "Q347", 
+   "Q902", 
+   "Q1036", 
+   "Q1037", 
+   "Q974", 
+   "Q1032", 
+   "Q1033", 
+   "Q1030", 
+   "Q191", 
+   "Q965", 
+   "Q967", 
+   "Q962", 
+   "Q963", 
+   "Q697", 
+   "Q298", 
+   "Q695", 
+   "Q115", 
+   "Q117", 
+   "Q754", 
+   "Q750", 
+   "Q212", 
+   "Q213", 
+   "Q211", 
+   "Q217", 
+   "Q214", 
+   "Q215", 
+   "Q218", 
+   "Q219", 
+   "Q912", 
+   "Q917", 
+   "Q916", 
+   "Q1007", 
+   "Q1006", 
+   "Q1005", 
+   "Q833", 
+   "Q977", 
+   "Q1009", 
+   "Q1008", 
+   "Q971", 
+   "Q683", 
+   "Q34020", 
+   "Q686", 
+   "Q836", 
+   "Q574", 
+   "Q79", 
+   "Q77", 
+   "Q878", 
+   "Q774", 
+   "Q948", 
+   "Q817", 
+   "Q810", 
+   "Q1019", 
+   "Q1016", 
+   "Q1011", 
+   "Q945", 
+   "Q678", 
+   "Q29", 
+   "Q33788", 
+   "Q869"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "147", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q39"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P610"
+  ], 
+  "type_list": [
+   "Q14524493"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which is the highest peak of Switzerland ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3403"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3403"
+  ], 
+  "utterance": "Dufourspitze", 
+  "active_set": [
+   "(Q39,P610,c(Q14524493))"
+  ]
+ }
+]

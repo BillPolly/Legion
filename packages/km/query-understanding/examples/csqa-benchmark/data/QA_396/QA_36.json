@@ -1,0 +1,368 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q4760848"
+  ], 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What does Andy Impey do for a living ?"
+ }, 
+ {
+  "all_entities": [
+   "Q937857"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q937857"
+  ], 
+  "utterance": "association football player", 
+  "active_set": [
+   "(Q4760848,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q4760848"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which sex does Andy Impey have ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "utterance": "male", 
+  "active_set": [
+   "(Q4760848,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q4760848"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P641"
+  ], 
+  "type_list": [
+   "Q349"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which sport was Andy Impey a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2736"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2736"
+  ], 
+  "utterance": "association football", 
+  "active_set": [
+   "(Q4760848,P641,c(Q349))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q368111"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q349"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about Fran\u00e7ois Van der Elst?"
+ }, 
+ {
+  "all_entities": [
+   "Q2736"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2736"
+  ], 
+  "utterance": "association football", 
+  "active_set": [
+   "(Q368111,P641,c(Q349))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P417"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q502895", 
+   "Q12737077"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which people are the patron saint of max number of occupations ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q179718"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q179718"
+  ], 
+  "utterance": "Catherine of Alexandria", 
+  "active_set": [
+   "(c(Q12737077),P417,Q208331)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q179718", 
+   "Q5117210"
+  ], 
+  "relations": [
+   "P417"
+  ], 
+  "type_list": [
+   "Q44539"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Does Church of St. Catherine, Bansk\u00e1 \u0160tiavnica have that person as their patron saint ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q5117210,P417,Q179718)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which musical instruments can atleast 563 people perform with ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q46185", 
+   "Q80019", 
+   "Q5994", 
+   "Q8338", 
+   "Q8371", 
+   "Q8355", 
+   "Q1444", 
+   "Q128309"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5994", 
+   "Q46185", 
+   "Q80019"
+  ], 
+  "utterance": "piano, bass guitar, double bass", 
+  "active_set": [
+   "(c(Q502895),P1303,c(Q34379))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q1018003", 
+   "Q5117210"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P17"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are Church of St. Catherine, Bansk\u00e1 \u0160tiavnica or Habartov situated in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q213", 
+   "Q214"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q213", 
+   "Q214"
+  ], 
+  "utterance": "Czech Republic, Slovakia", 
+  "active_set": [
+   "OR((Q5117210,P17,c(Q15617994)), (Q1018003,P17,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q213", 
+   "Q214"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P206"
+  ], 
+  "type_list": [
+   "Q355304"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which watercourses are located in the neighbourhood of Czech Republic and Slovakia ?"
+ }, 
+ {
+  "all_entities": [
+   "Q552", 
+   "Q179251", 
+   "Q582675", 
+   "Q1331973", 
+   "Q660208", 
+   "Q577026", 
+   "Q756302", 
+   "Q179251", 
+   "Q840694", 
+   "Q4176549", 
+   "Q748872", 
+   "Q1653", 
+   "Q134350"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q179251", 
+   "Q179251", 
+   "Q1653"
+  ], 
+  "utterance": "Danube for 3rd, Morava for 1st, 2nd", 
+  "active_set": [
+   "(Q213,P206,c(Q355304))", 
+   "(Q214,P206,c(Q355304))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q179251"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P403"
+  ], 
+  "type_list": [
+   "Q355304"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which watercourses have their drainage ending at that one ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q179251"
+  ], 
+  "active_set": [
+   "(c(Q355304),P403,Q179251)", 
+   "(c(Q355304),P403,Q179251)", 
+   "(c(Q355304),P403,Q1653)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q179251", 
+   "Q179251", 
+   "Q1653"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Morava ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "Yes"
+ }, 
+ {
+  "all_entities": [
+   "Q1636357", 
+   "Q749800", 
+   "Q1022168", 
+   "Q1754324", 
+   "Q854608", 
+   "Q735940", 
+   "Q660208", 
+   "Q949067", 
+   "Q941512"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q854608", 
+   "Q1636357", 
+   "Q660208"
+  ], 
+  "utterance": "Be\u010dva, Myjava, Thaya", 
+  "active_set": [
+   "(c(Q355304),P403,Q179251)"
+  ]
+ }
+]

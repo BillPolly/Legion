@@ -1,0 +1,404 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q15263581"
+  ], 
+  "relations": [
+   "P607"
+  ], 
+  "type_list": [
+   "Q198"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What battle was Carl Theodor Plessing a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q361"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q361"
+  ], 
+  "utterance": "World War I", 
+  "active_set": [
+   "(Q15263581,P607,c(Q198))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q361"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P276"
+  ], 
+  "type_list": [
+   "Q2221906"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where are that war situated ?"
+ }, 
+ {
+  "all_entities": [
+   "Q46", 
+   "Q15", 
+   "Q7204"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q46", 
+   "Q15", 
+   "Q7204"
+  ], 
+  "utterance": "Europe, Africa, Middle East", 
+  "active_set": [
+   "(Q361,P276,c(Q2221906))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Quantitative|Count|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "relations": [
+   "P30"
+  ], 
+  "count_ques_sub_type": 7, 
+  "type_list": [
+   "Q2221906"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many geographic locations are that geographic location located in ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "description": "Quantitative|Count|Single entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q15"
+  ], 
+  "active_set": [
+   "(Q46,P30,c(Q2221906))", 
+   "(Q15,P30,c(Q2221906))", 
+   "(Q7204,P30,c(Q2221906))"
+  ], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Africa ?"
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "count_ques_sub_type": 7, 
+  "entities": [
+   "Q7204"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "No, I meant Middle East. Could you tell me the answer for that?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q46", 
+   "Q15", 
+   "Q48"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "3", 
+  "active_set": [
+   "(Q7204,P30,c(Q2221906))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q46"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P610"
+  ], 
+  "type_list": [
+   "Q14524493"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the highest point of Europe ?"
+ }, 
+ {
+  "all_entities": [
+   "Q43105"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q43105"
+  ], 
+  "utterance": "Mount Elbrus", 
+  "active_set": [
+   "(Q46,P610,c(Q14524493))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q11574434"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q14524493"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about Ikuchijima?"
+ }, 
+ {
+  "all_entities": [
+   "Q19967376"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q19967376"
+  ], 
+  "utterance": "Kannonyama", 
+  "active_set": [
+   "(Q11574434,P610,c(Q14524493))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q19967376"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P706"
+  ], 
+  "type_list": [
+   "Q271669"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which landform is that terrain located on ?"
+ }, 
+ {
+  "all_entities": [
+   "Q11574434"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q11574434"
+  ], 
+  "utterance": "Ikuchijima", 
+  "active_set": [
+   "(Q19967376,P706,c(Q271669))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q11574434", 
+   "Q21968665"
+  ], 
+  "relations": [
+   "P706"
+  ], 
+  "type_list": [
+   "Q14524493"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Does Hancock Hill have its location as that landform ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q21968665,P706,Q11574434)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q11574434"
+  ], 
+  "relations": [
+   "P706"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q14524493"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many terrains are located in Ikuchijima ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q19968461", 
+   "Q19968513", 
+   "Q19967376", 
+   "Q19967378"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "4", 
+  "active_set": [
+   "(c(Q14524493),P706,Q11574434)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q2648558"
+  ], 
+  "relations": [
+   "P706"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q14524493"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And also tell me about Basque Mountains?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q3307550", 
+   "Q3756092", 
+   "Q2838723", 
+   "Q458478", 
+   "Q3129191", 
+   "Q3756051", 
+   "Q5520549", 
+   "Q6127713", 
+   "Q557374", 
+   "Q2750385", 
+   "Q557367", 
+   "Q2828834", 
+   "Q3025531", 
+   "Q3120793", 
+   "Q3122365", 
+   "Q2880780", 
+   "Q2828822", 
+   "Q3178771"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "18", 
+  "active_set": [
+   "(c(Q14524493),P706,Q2648558)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P706"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q271669", 
+   "Q337567"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many still waterss have their location as approximately 1 landform ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1368080", 
+   "Q26939797", 
+   "Q17452004", 
+   "Q11865265", 
+   "Q1772728", 
+   "Q4208570", 
+   "Q2451527", 
+   "Q1132211", 
+   "Q11237161", 
+   "Q1251026", 
+   "Q2039964", 
+   "Q3215041", 
+   "Q6476924", 
+   "Q2915867", 
+   "Q932408", 
+   "Q1628599", 
+   "Q17476675"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "17", 
+  "active_set": [
+   "(c(Q337567),P706,c(Q271669))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q46"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P840"
+  ], 
+  "type_list": [
+   "Q15416"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which television programs have a setting location of Europe ?"
+ }, 
+ {
+  "all_entities": [
+   "Q4289973", 
+   "Q18085820", 
+   "Q19865103", 
+   "Q1357944", 
+   "Q2496775", 
+   "Q728783", 
+   "Q20053586"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18085820", 
+   "Q1357944", 
+   "Q728783"
+  ], 
+  "utterance": "The Last Kingdom, The Wild Thornberrys, Power Rangers Operation Overdrive", 
+  "active_set": [
+   "(c(Q15416),P840,Q46)"
+  ]
+ }
+]

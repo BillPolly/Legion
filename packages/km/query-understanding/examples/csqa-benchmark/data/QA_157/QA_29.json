@@ -1,0 +1,651 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1524274"
+  ], 
+  "relations": [
+   "P509"
+  ], 
+  "type_list": [
+   "Q2057971"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which health problem was the cause of death of Giles Gilbert Scott ?"
+ }, 
+ {
+  "all_entities": [
+   "Q47912"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q47912"
+  ], 
+  "utterance": "lung cancer", 
+  "active_set": [
+   "(Q1524274,P509,c(Q2057971))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1524274"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1196"
+  ], 
+  "type_list": [
+   "Q1931388"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What manner did Giles Gilbert Scott die ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3739104"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3739104"
+  ], 
+  "utterance": "natural causes", 
+  "active_set": [
+   "(Q1524274,P1196,c(Q1931388))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q47912"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P780"
+  ], 
+  "type_list": [
+   "Q1441305"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What are a symptoms of lung cancer ?"
+ }, 
+ {
+  "all_entities": [
+   "Q517104", 
+   "Q188008", 
+   "Q254327", 
+   "Q647099", 
+   "Q35805"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q35805", 
+   "Q188008", 
+   "Q254327"
+  ], 
+  "utterance": "cough, dyspnea, anorexia", 
+  "active_set": [
+   "(Q47912,P780,c(Q1441305))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Mult. Entity", 
+  "entities_in_utterance": [
+   "Q35805", 
+   "Q188008", 
+   "Q254327"
+  ], 
+  "sec_ques_sub_type": 3, 
+  "relations": [
+   "P780"
+  ], 
+  "type_list": [
+   "Q2057971"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "What are those medical signs a symtom of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q836356", 
+   "Q47912", 
+   "Q1077603", 
+   "Q664174", 
+   "Q180664", 
+   "Q47912", 
+   "Q212961", 
+   "Q180664", 
+   "Q47912", 
+   "Q264118"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q212961", 
+   "Q264118", 
+   "Q47912"
+  ], 
+  "utterance": "pancreatic cancer, acute myeloid leukemia, lung cancer", 
+  "active_set": [
+   "(c(Q2057971),P780,Q35805)", 
+   "(c(Q2057971),P780,Q188008)", 
+   "(c(Q2057971),P780,Q254327)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q47912"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P828"
+  ], 
+  "type_list": [
+   "Q251777"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What causes lung cancer ?"
+ }, 
+ {
+  "all_entities": [
+   "Q259516", 
+   "Q7212330"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q259516", 
+   "Q7212330"
+  ], 
+  "utterance": "passive smoking, tobacco smoking", 
+  "active_set": [
+   "(Q47912,P828,c(Q251777))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Mult. Entity", 
+  "entities_in_utterance": [
+   "Q259516", 
+   "Q7212330"
+  ], 
+  "sec_ques_sub_type": 3, 
+  "relations": [
+   "P828"
+  ], 
+  "type_list": [
+   "Q2057971"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which health problems are caused by those customs ?"
+ }, 
+ {
+  "all_entities": [
+   "Q47912"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q47912"
+  ], 
+  "utterance": "lung cancer", 
+  "active_set": [
+   "(c(Q2057971),P828,Q259516)", 
+   "(c(Q2057971),P828,Q7212330)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1050"
+  ], 
+  "count_ques_sub_type": 9, 
+  "type_list": [
+   "Q2057971", 
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many health problems are greater number of people affected by than that health problem ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q6052272", 
+   "Q372701", 
+   "Q83319", 
+   "Q1151507", 
+   "Q794457", 
+   "Q1198391", 
+   "Q749409", 
+   "Q160649", 
+   "Q500695", 
+   "Q3280669", 
+   "Q16501", 
+   "Q173022", 
+   "Q2290446", 
+   "Q35869", 
+   "Q12199", 
+   "Q7578960", 
+   "Q36956", 
+   "Q3025883", 
+   "Q658873", 
+   "Q18657", 
+   "Q727096", 
+   "Q16483", 
+   "Q478389", 
+   "Q2307256", 
+   "Q41083", 
+   "Q155098", 
+   "Q727153", 
+   "Q170990", 
+   "Q1143025", 
+   "Q147778", 
+   "Q1209744", 
+   "Q12174", 
+   "Q623031", 
+   "Q954625", 
+   "Q857667", 
+   "Q1282114", 
+   "Q2035074", 
+   "Q572169", 
+   "Q1165179", 
+   "Q202837", 
+   "Q844935", 
+   "Q131742", 
+   "Q847057", 
+   "Q178190", 
+   "Q134649", 
+   "Q213098", 
+   "Q191779", 
+   "Q1137767", 
+   "Q10874", 
+   "Q185034", 
+   "Q12167", 
+   "Q223591", 
+   "Q2562598", 
+   "Q187255", 
+   "Q1436063", 
+   "Q208414", 
+   "Q644318", 
+   "Q12195", 
+   "Q118418", 
+   "Q622427", 
+   "Q1138590", 
+   "Q916398", 
+   "Q168403", 
+   "Q12152", 
+   "Q48143", 
+   "Q536269", 
+   "Q244438", 
+   "Q188874", 
+   "Q944758", 
+   "Q134003", 
+   "Q11081", 
+   "Q11085", 
+   "Q159701", 
+   "Q11088", 
+   "Q156050", 
+   "Q206901", 
+   "Q939364", 
+   "Q190805", 
+   "Q199804", 
+   "Q653078", 
+   "Q202387", 
+   "Q1331905", 
+   "Q616087", 
+   "Q4117241", 
+   "Q41571", 
+   "Q8388", 
+   "Q625164", 
+   "Q181257", 
+   "Q180664", 
+   "Q8277", 
+   "Q1049655", 
+   "Q38404", 
+   "Q844717", 
+   "Q180266", 
+   "Q938983", 
+   "Q568865", 
+   "Q504775", 
+   "Q2836", 
+   "Q671776", 
+   "Q131755", 
+   "Q133696", 
+   "Q124292", 
+   "Q12156", 
+   "Q925092", 
+   "Q744790", 
+   "Q42844", 
+   "Q5445", 
+   "Q10860654", 
+   "Q132971", 
+   "Q15283847", 
+   "Q189580", 
+   "Q181754", 
+   "Q5282843", 
+   "Q753904", 
+   "Q189588", 
+   "Q264118", 
+   "Q220570", 
+   "Q580290", 
+   "Q2500124", 
+   "Q684924", 
+   "Q12135", 
+   "Q131749", 
+   "Q1755568", 
+   "Q161790", 
+   "Q572111", 
+   "Q3144986", 
+   "Q3041498", 
+   "Q418418", 
+   "Q174857", 
+   "Q340594", 
+   "Q154874", 
+   "Q281115", 
+   "Q1112977", 
+   "Q693519", 
+   "Q181923", 
+   "Q12204", 
+   "Q12202", 
+   "Q12206", 
+   "Q1161568", 
+   "Q501829", 
+   "Q595010", 
+   "Q133087", 
+   "Q18554893", 
+   "Q128581", 
+   "Q193894", 
+   "Q39222", 
+   "Q47715", 
+   "Q12214", 
+   "Q2406697", 
+   "Q207133", 
+   "Q124407", 
+   "Q476921", 
+   "Q12192", 
+   "Q1209150", 
+   "Q4839317", 
+   "Q29496", 
+   "Q467635", 
+   "Q1066311", 
+   "Q194101", 
+   "Q210427", 
+   "Q1410831", 
+   "Q208562", 
+   "Q188605", 
+   "Q7162621", 
+   "Q653318", 
+   "Q2606101", 
+   "Q2840", 
+   "Q81867", 
+   "Q1141499", 
+   "Q83030"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "170", 
+  "active_set": [
+   "(c(Q502895),P1050,c(Q2057971))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P828"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q10675206", 
+   "Q2057971"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many ingredients are the causes of atmost 1 health problem ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q21546392", 
+   "Q8495", 
+   "Q1090", 
+   "Q102769", 
+   "Q3621199", 
+   "Q34956"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "6", 
+  "active_set": [
+   "(c(Q2057971),P828,c(Q10675206))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q212961"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P2293"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which nucleic acid sequences have genetic relation with pancreatic cancer ?"
+ }, 
+ {
+  "all_entities": [
+   "Q18054393", 
+   "Q18026631", 
+   "Q17836876", 
+   "Q18048865", 
+   "Q15312697", 
+   "Q18046843", 
+   "Q18026489", 
+   "Q14839826", 
+   "Q18060588", 
+   "Q17848412", 
+   "Q17912763", 
+   "Q17914420", 
+   "Q18041357", 
+   "Q18029785", 
+   "Q14864255", 
+   "Q18047105", 
+   "Q17912301", 
+   "Q18037711"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14839826", 
+   "Q17914420", 
+   "Q18046843"
+  ], 
+  "utterance": "ABO, DPP6, CLPTM1L", 
+  "active_set": [
+   "(Q212961,P2293,c(Q863908))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q212961"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P2175"
+  ], 
+  "type_list": [
+   "Q8386"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which drugs are used to cure pancreatic cancer ?"
+ }, 
+ {
+  "all_entities": [
+   "Q419940", 
+   "Q3891664", 
+   "Q20801757", 
+   "Q412197", 
+   "Q412178", 
+   "Q4567614", 
+   "Q420207", 
+   "Q418560", 
+   "Q257331", 
+   "Q421052", 
+   "Q238512", 
+   "Q417775", 
+   "Q905901", 
+   "Q419935", 
+   "Q413299", 
+   "Q2459042", 
+   "Q416451", 
+   "Q7914515", 
+   "Q13896859", 
+   "Q420436", 
+   "Q240642", 
+   "Q7739", 
+   "Q1187179", 
+   "Q423762"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7739", 
+   "Q421052", 
+   "Q413299"
+  ], 
+  "utterance": "Arsenic trioxide, Everolimus, Bevacizumab", 
+  "active_set": [
+   "(c(Q8386),P2175,Q212961)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q14839826"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P688"
+  ], 
+  "type_list": [
+   "Q181394"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is encoded by ABO ?"
+ }, 
+ {
+  "all_entities": [
+   "Q4650352"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q4650352"
+  ], 
+  "utterance": "Histo-blood group ABO system transferase", 
+  "active_set": [
+   "(Q14839826,P688,c(Q181394))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q4650352"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P682"
+  ], 
+  "type_list": [
+   "Q1057"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which metabolic process is that nutrient involved in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q14762260"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14762260"
+  ], 
+  "utterance": "carbohydrate metabolic process", 
+  "active_set": [
+   "(Q4650352,P682,c(Q1057))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P682"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q1057", 
+   "Q181394"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which metabolic processes are min number of nutrients involved in ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q21133617", 
+   "Q21121151", 
+   "Q22275051", 
+   "Q21111970", 
+   "Q14865941", 
+   "Q22282595", 
+   "Q14907181", 
+   "Q21119193"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14865941", 
+   "Q14907181", 
+   "Q21133617"
+  ], 
+  "utterance": "connective tissue growth factor biosynthetic process, granulocyte macrophage colony-stimulating factor biosynthetic process, actin modification", 
+  "active_set": [
+   "(c(Q181394),P682,Q21760838)"
+  ]
+ }
+]

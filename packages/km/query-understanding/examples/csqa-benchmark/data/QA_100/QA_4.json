@@ -1,0 +1,394 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q378013"
+  ], 
+  "relations": [
+   "P161"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people starred in Police Story 2 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q710875", 
+   "Q36970", 
+   "Q1154784", 
+   "Q234778", 
+   "Q15311261", 
+   "Q5084693"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q36970", 
+   "Q234778", 
+   "Q15311261"
+  ], 
+  "utterance": "Jackie Chan, Maggie Cheung, Benny Lai", 
+  "active_set": [
+   "(Q378013,P161,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q36970", 
+   "Q234778", 
+   "Q15311261"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which sexes do Jackie Chan, Maggie Cheung and Benny Lai belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097", 
+   "Q6581072", 
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097", 
+   "Q6581072", 
+   "Q6581097"
+  ], 
+  "utterance": "male for 1st, 3rd, female for 2nd", 
+  "active_set": [
+   "(Q36970,P21,c(Q290))", 
+   "(Q234778,P21,c(Q290))", 
+   "(Q15311261,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q36970"
+  ], 
+  "relations": [
+   "P112"
+  ], 
+  "type_list": [
+   "Q43229"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 1, 
+  "utterance": "Which organization was founded by Jackie Chan ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1114301"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1114301"
+  ], 
+  "utterance": "JCE Movies Limited", 
+  "active_set": [
+   "(c(Q43229),P112,Q6581097)", 
+   "(c(Q43229),P112,Q6581072)", 
+   "(c(Q43229),P112,Q6581097)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q36970"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P50"
+  ], 
+  "type_list": [
+   "Q2342494"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which collectable was written by that person ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3790543"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3790543"
+  ], 
+  "utterance": "I Am Jackie Chan", 
+  "active_set": [
+   "(c(Q2342494),P50,Q1114301)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q36970"
+  ], 
+  "relations": [
+   "P161"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many works of art stars Jackie Chan as actor ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q4101711", 
+   "Q17002139", 
+   "Q2457553", 
+   "Q687068", 
+   "Q369900", 
+   "Q1192612", 
+   "Q206182", 
+   "Q1640085", 
+   "Q255342", 
+   "Q15055043", 
+   "Q340157", 
+   "Q1999059", 
+   "Q19961444", 
+   "Q1734874", 
+   "Q838514", 
+   "Q847435", 
+   "Q4977853", 
+   "Q2497009", 
+   "Q1314177", 
+   "Q2093119", 
+   "Q2567268", 
+   "Q2497046", 
+   "Q709237", 
+   "Q698327", 
+   "Q258126", 
+   "Q595595", 
+   "Q937282", 
+   "Q847530", 
+   "Q849475", 
+   "Q378013", 
+   "Q594033", 
+   "Q1474616", 
+   "Q327685", 
+   "Q7746771", 
+   "Q2651448", 
+   "Q830208", 
+   "Q11079125", 
+   "Q651528", 
+   "Q1144590", 
+   "Q253565", 
+   "Q1152485", 
+   "Q3234902", 
+   "Q24515", 
+   "Q3645481", 
+   "Q1322844", 
+   "Q156519", 
+   "Q232108", 
+   "Q498109", 
+   "Q1193754", 
+   "Q331617", 
+   "Q2569407", 
+   "Q1254861", 
+   "Q759359", 
+   "Q4291736", 
+   "Q3414468", 
+   "Q1677288", 
+   "Q2992506", 
+   "Q1198110", 
+   "Q1851982", 
+   "Q22252048", 
+   "Q391143", 
+   "Q958097", 
+   "Q343667", 
+   "Q863762", 
+   "Q682184", 
+   "Q18613571", 
+   "Q1195928", 
+   "Q1549954", 
+   "Q789374", 
+   "Q1144956", 
+   "Q1549966", 
+   "Q711726", 
+   "Q1144962", 
+   "Q4730018", 
+   "Q2708227", 
+   "Q1199513", 
+   "Q13550796", 
+   "Q1218517", 
+   "Q267526", 
+   "Q2706517", 
+   "Q646806", 
+   "Q2348322", 
+   "Q375775", 
+   "Q770074", 
+   "Q60792", 
+   "Q60794", 
+   "Q1641359", 
+   "Q2095838", 
+   "Q4388226", 
+   "Q24278862", 
+   "Q2563205", 
+   "Q225175", 
+   "Q645387", 
+   "Q1585023", 
+   "Q1261372", 
+   "Q176568", 
+   "Q5455343", 
+   "Q2902377", 
+   "Q6959731", 
+   "Q634493"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "100", 
+  "active_set": [
+   "(c(Q838948),P161,Q36970)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q6166400"
+  ], 
+  "relations": [
+   "P161"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And also tell me about Jay Beyers?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q408780", 
+   "Q2201326"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(c(Q838948),P161,Q6166400)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q36970"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P175"
+  ], 
+  "type_list": [
+   "Q2031291"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which release gave the performance of Jackie Chan ?"
+ }, 
+ {
+  "all_entities": [
+   "Q5453896"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5453896"
+  ], 
+  "utterance": "First Time", 
+  "active_set": [
+   "(c(Q2031291),P175,Q36970)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q36970"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P22"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person has Jackie Chan as dad ?"
+ }, 
+ {
+  "all_entities": [
+   "Q561310"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q561310"
+  ], 
+  "utterance": "Jaycee Chan", 
+  "active_set": [
+   "(c(Q502895),P22,Q36970)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q561310"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P25"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who was the mom of that one ?"
+ }, 
+ {
+  "all_entities": [
+   "Q717669"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q717669"
+  ], 
+  "utterance": "Lin Feng-jiao", 
+  "active_set": [
+   "(Q561310,P25,c(Q502895))"
+  ]
+ }
+]

@@ -1,0 +1,414 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1069050"
+  ], 
+  "relations": [
+   "P161"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people are in Leroy & Stitch ?"
+ }, 
+ {
+  "all_entities": [
+   "Q237774", 
+   "Q1995506", 
+   "Q311103", 
+   "Q369424", 
+   "Q115541", 
+   "Q446188", 
+   "Q4029", 
+   "Q201641", 
+   "Q853018", 
+   "Q237530", 
+   "Q310315", 
+   "Q296577", 
+   "Q286570", 
+   "Q2534772", 
+   "Q488335", 
+   "Q202449", 
+   "Q311987"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q115541", 
+   "Q201641", 
+   "Q1995506"
+  ], 
+  "utterance": "Dakota Fanning, Chris Sanders, Zoe Caldwell", 
+  "active_set": [
+   "(Q1069050,P161,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Mult. Entity", 
+  "entities_in_utterance": [
+   "Q115541", 
+   "Q201641", 
+   "Q1995506"
+  ], 
+  "sec_ques_sub_type": 3, 
+  "relations": [
+   "P161"
+  ], 
+  "type_list": [
+   "Q15416"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which television programs do those people star in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1069050", 
+   "Q2275664", 
+   "Q590166", 
+   "Q1069050", 
+   "Q1069050"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1069050", 
+   "Q2275664", 
+   "Q1069050"
+  ], 
+  "utterance": "Leroy & Stitch for 1st, 3rd, Kim Possible: A Sitch in Time for 2nd", 
+  "active_set": [
+   "(c(Q15416),P161,Q115541)", 
+   "(c(Q15416),P161,Q201641)", 
+   "(c(Q15416),P161,Q1995506)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q115541"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1346"
+  ], 
+  "type_list": [
+   "Q4220917"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Where was that person decalred as a victor ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q115541"
+  ], 
+  "active_set": [
+   "(c(Q4220917),P1346,Q1069050)", 
+   "(c(Q4220917),P1346,Q2275664)", 
+   "(c(Q4220917),P1346,Q1069050)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q1069050", 
+   "Q2275664", 
+   "Q1069050"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Dakota Fanning ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "Yes"
+ }, 
+ {
+  "all_entities": [
+   "Q425675"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q425675"
+  ], 
+  "utterance": "MTV Movie Award for Best Scared-As-S**t Performance", 
+  "active_set": [
+   "(c(Q4220917),P1346,Q115541)"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Multiple_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q4936315", 
+   "Q1069050"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27", 
+   "P495"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are the origins of Leroy & Stitch and are Tsuru Aoki an inhabitant of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q30"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "utterance": "United States of America", 
+  "active_set": [
+   "AND((Q1069050,P495,c(Q15617994)), (Q4936315,P27,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P36"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territories are known as the capital of that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q60", 
+   "Q61"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q60", 
+   "Q61"
+  ], 
+  "utterance": "New York City, Washington, D.C.", 
+  "active_set": [
+   "(Q30,P36,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Mult. Entity", 
+  "entities_in_utterance": [
+   "Q60", 
+   "Q61"
+  ], 
+  "sec_ques_sub_type": 3, 
+  "relations": [
+   "P190"
+  ], 
+  "type_list": [
+   "Q515"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which cities are twin town of those administrative territories ?"
+ }, 
+ {
+  "all_entities": [
+   "Q8684", 
+   "Q2844", 
+   "Q3926", 
+   "Q8684", 
+   "Q3624", 
+   "Q9005", 
+   "Q2844"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q8684", 
+   "Q8684", 
+   "Q9005"
+  ], 
+  "utterance": "Brussels for 3rd, Seoul for 1st, 2nd", 
+  "active_set": [
+   "(c(Q515),P190,Q60)", 
+   "(c(Q515),P190,Q61)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q115541"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P551"
+  ], 
+  "type_list": [
+   "Q852446"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which US administrative territory was the place of residence of Dakota Fanning ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1428"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1428"
+  ], 
+  "utterance": "Georgia", 
+  "active_set": [
+   "(Q115541,P551,c(Q852446))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "Incomplete|object parent is changed, subject and predicate remain same", 
+  "entities_in_utterance": [
+   "Q115541"
+  ], 
+  "inc_ques_type": 1, 
+  "relations": [], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And which administrative territory?"
+ }, 
+ {
+  "all_entities": [
+   "Q65"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q65"
+  ], 
+  "utterance": "Los Angeles", 
+  "active_set": [
+   "(Q115541,P551,c(Q56061))"
+  ]
+ }, 
+ {
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators|Indirect", 
+  "entities_in_utterance": [], 
+  "relations": [
+   "P190"
+  ], 
+  "count_ques_sub_type": 8, 
+  "type_list": [
+   "Q515", 
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many cities and political territories are twin cities of that administrative territory ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q16520", 
+   "Q1508", 
+   "Q3616", 
+   "Q1953", 
+   "Q16572", 
+   "Q36947"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "4 cities and 2 political territories", 
+  "active_set": [
+   "(Q65,P190,c(Q515))", 
+   "(Q65,P190,c(Q1048835))", 
+   "(Q65,P190,c(Q515))", 
+   "(Q65,P190,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1428"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P127"
+  ], 
+  "type_list": [
+   "Q41176"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which building belongs to Georgia ?"
+ }, 
+ {
+  "all_entities": [
+   "Q12060043"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q12060043"
+  ], 
+  "utterance": "State of Georgia Building", 
+  "active_set": [
+   "(c(Q41176),P127,Q1428)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q12060043"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is that building located in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q30"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "utterance": "United States of America", 
+  "active_set": [
+   "(Q12060043,P17,c(Q15617994))"
+  ]
+ }
+]

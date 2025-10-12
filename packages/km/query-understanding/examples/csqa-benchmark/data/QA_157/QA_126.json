@@ -1,0 +1,316 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q447941"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territory is Alioune Badara B\u00e8ye a civilian of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1041"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1041"
+  ], 
+  "utterance": "Senegal", 
+  "active_set": [
+   "(Q447941,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1041"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P551"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person has residence at that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2895607"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2895607"
+  ], 
+  "utterance": "Ben Zimet", 
+  "active_set": [
+   "(c(Q502895),P551,Q1041)"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q20667921", 
+   "Q56061", 
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q1886098"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P36"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many administrative territories contain greater number of french administrative divisions and administrative territories as their capital than Pixley ka Seme District Municipality ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2998020", 
+   "Q258", 
+   "Q3259", 
+   "Q12798", 
+   "Q1020", 
+   "Q12703", 
+   "Q12569", 
+   "Q41", 
+   "Q30", 
+   "Q230", 
+   "Q12730", 
+   "Q199688", 
+   "Q3278", 
+   "Q12772", 
+   "Q12661", 
+   "Q12536", 
+   "Q3164", 
+   "Q517333", 
+   "Q17", 
+   "Q160307", 
+   "Q12789"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "21", 
+  "active_set": [
+   "(c(Q15617994),P36,c(Q20667921)|c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1041"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P30"
+  ], 
+  "type_list": [
+   "Q2221906"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where is Senegal situated ?"
+ }, 
+ {
+  "all_entities": [
+   "Q15"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q15"
+  ], 
+  "utterance": "Africa", 
+  "active_set": [
+   "(Q1041,P30,c(Q2221906))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q21490458"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q2221906"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about Milorgknausane?"
+ }, 
+ {
+  "all_entities": [
+   "Q51"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q51"
+  ], 
+  "utterance": "Antarctica", 
+  "active_set": [
+   "(Q21490458,P30,c(Q2221906))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q2895607"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What are the job of Ben Zimet ?"
+ }, 
+ {
+  "all_entities": [
+   "Q16023925", 
+   "Q177220"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q16023925", 
+   "Q177220"
+  ], 
+  "utterance": "story-teller, singer", 
+  "active_set": [
+   "(Q2895607,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q3113501"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about Miwa Yoshida?"
+ }, 
+ {
+  "all_entities": [
+   "Q36834", 
+   "Q15981151", 
+   "Q822146", 
+   "Q488205", 
+   "Q177220"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q36834", 
+   "Q822146", 
+   "Q15981151"
+  ], 
+  "utterance": "composer, lyricist, jazz musician", 
+  "active_set": [
+   "(Q3113501,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "question-type": "Clarification", 
+  "description": "Comparative|More/Less|Mult. entity type|Indirect", 
+  "type_list": [
+   "Q12737077", 
+   "Q502895", 
+   "Q43229"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 3, 
+  "relations": [
+   "P101"
+  ], 
+  "count_ques_sub_type": 9, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which occupations are the area of more number of people or organizations than that occupation ?"
+ }, 
+ {
+  "description": "Comparative|More/Less|Mult. entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q822146"
+  ], 
+  "active_set": [
+   "(c(Q502895)|c(Q43229),P101,c(Q12737077))"
+  ], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean lyricist ?"
+ }, 
+ {
+  "ques_type_id": 8, 
+  "question-type": "Comparative Reasoning (All)", 
+  "count_ques_sub_type": 9, 
+  "entities": [
+   "Q36834"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "No, I meant composer. Could you tell me the answer for that?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q6625963", 
+   "Q177220", 
+   "Q39631", 
+   "Q17156912", 
+   "Q81096", 
+   "Q170790", 
+   "Q2405480", 
+   "Q1172458", 
+   "Q169470", 
+   "Q201788", 
+   "Q1114448", 
+   "Q1028181", 
+   "Q16009483", 
+   "Q1607826", 
+   "Q639669", 
+   "Q11774891"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q16009483", 
+   "Q201788", 
+   "Q1028181"
+  ], 
+  "utterance": "sideshow performer, historian, painter", 
+  "active_set": [
+   "(c(Q502895)|c(Q43229),P101,c(Q12737077))"
+  ]
+ }
+]

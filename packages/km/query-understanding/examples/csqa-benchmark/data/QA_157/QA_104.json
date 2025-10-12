@@ -1,0 +1,707 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q21134307"
+  ], 
+  "relations": [
+   "P703"
+  ], 
+  "type_list": [
+   "Q16521"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which taxon is Serpin B9 found in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q15978631"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q15978631"
+  ], 
+  "utterance": "Homo sapiens", 
+  "active_set": [
+   "(Q21134307,P703,c(Q16521))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q15978631"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P689"
+  ], 
+  "type_list": [
+   "Q2057971"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "What can afflict that taxon ?"
+ }, 
+ {
+  "all_entities": [
+   "Q403463"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q403463"
+  ], 
+  "utterance": "Aicardi syndrome", 
+  "active_set": [
+   "(c(Q2057971),P689,Q15978631)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q15978631"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P427"
+  ], 
+  "type_list": [
+   "Q3343211"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the taxonomic type of Homo sapiens ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1043"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1043"
+  ], 
+  "utterance": "Carl Linnaeus", 
+  "active_set": [
+   "(Q15978631,P427,c(Q3343211))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q1055079"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q3343211"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about Cereus hexagonus?"
+ }, 
+ {
+  "all_entities": [
+   "Q19359631"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q19359631"
+  ], 
+  "utterance": "Cereus sirinamensis - plate 8 in Trew 1733", 
+  "active_set": [
+   "(Q1055079,P427,c(Q3343211))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q18966502"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P828"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q2057971", 
+   "Q12136"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which diseases do around the same number of health problems cause as Spirurida infectious disease ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q22236199", 
+   "Q18928556", 
+   "Q23900716", 
+   "Q19850514", 
+   "Q18928417", 
+   "Q18928416", 
+   "Q18928558", 
+   "Q2572879", 
+   "Q18975849", 
+   "Q164818", 
+   "Q2072680", 
+   "Q7193348", 
+   "Q18975495", 
+   "Q3073143", 
+   "Q272002", 
+   "Q18966558", 
+   "Q125367", 
+   "Q18966502", 
+   "Q18967083", 
+   "Q922971", 
+   "Q18928402", 
+   "Q26989045", 
+   "Q18967319", 
+   "Q18928525", 
+   "Q18966466", 
+   "Q18966421", 
+   "Q26805194", 
+   "Q18922523", 
+   "Q1818335", 
+   "Q3498706", 
+   "Q18924573", 
+   "Q1275863", 
+   "Q18928436", 
+   "Q2270671", 
+   "Q5593571", 
+   "Q18928532", 
+   "Q18966395", 
+   "Q11862744", 
+   "Q18975828", 
+   "Q1824410", 
+   "Q706825", 
+   "Q5986402", 
+   "Q18924544", 
+   "Q18966405", 
+   "Q1001920", 
+   "Q1736897", 
+   "Q18928624", 
+   "Q23772742", 
+   "Q6895745", 
+   "Q18928587", 
+   "Q2632404", 
+   "Q6500058", 
+   "Q3410750", 
+   "Q19000697", 
+   "Q5861610", 
+   "Q5458307", 
+   "Q137597", 
+   "Q2394735", 
+   "Q2932525", 
+   "Q19000393", 
+   "Q19000458", 
+   "Q19000493", 
+   "Q18967413", 
+   "Q7933588", 
+   "Q18928599", 
+   "Q7430242", 
+   "Q15964334", 
+   "Q2006636", 
+   "Q4835994", 
+   "Q110315", 
+   "Q3319277", 
+   "Q94796", 
+   "Q2031871", 
+   "Q4059313", 
+   "Q7421081", 
+   "Q18975874", 
+   "Q18967211", 
+   "Q19000403", 
+   "Q19000401", 
+   "Q17123258", 
+   "Q2389289", 
+   "Q205972", 
+   "Q10591185", 
+   "Q7258523", 
+   "Q18932779", 
+   "Q18928560", 
+   "Q18928346", 
+   "Q16654806", 
+   "Q157008", 
+   "Q5348632", 
+   "Q2936210", 
+   "Q1033316", 
+   "Q1455531", 
+   "Q574005", 
+   "Q7074450", 
+   "Q3961638", 
+   "Q3232749", 
+   "Q882181", 
+   "Q18968009", 
+   "Q2859732", 
+   "Q18928351", 
+   "Q9352582", 
+   "Q1807401", 
+   "Q22350879", 
+   "Q18975220", 
+   "Q277254", 
+   "Q444662", 
+   "Q18928370", 
+   "Q19000581"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q110315", 
+   "Q18975220", 
+   "Q125367"
+  ], 
+  "utterance": "lead poisoning, Escherichia coli infectious disease, carbon monoxide poisoning", 
+  "active_set": [
+   "(c(Q12136),P828,c(Q2057971))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q922971"
+  ], 
+  "relations": [
+   "P828"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q2057971", 
+   "Q12136"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And what about Acanthamoeba keratitis?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q22236199", 
+   "Q18928556", 
+   "Q23900716", 
+   "Q19850514", 
+   "Q18928417", 
+   "Q18928416", 
+   "Q18928558", 
+   "Q2572879", 
+   "Q18975849", 
+   "Q164818", 
+   "Q2072680", 
+   "Q7193348", 
+   "Q18975495", 
+   "Q3073143", 
+   "Q272002", 
+   "Q18966558", 
+   "Q125367", 
+   "Q18966502", 
+   "Q18967083", 
+   "Q922971", 
+   "Q18928402", 
+   "Q26989045", 
+   "Q18967319", 
+   "Q18928525", 
+   "Q18966466", 
+   "Q18966421", 
+   "Q26805194", 
+   "Q18922523", 
+   "Q1818335", 
+   "Q3498706", 
+   "Q18924573", 
+   "Q1275863", 
+   "Q18928436", 
+   "Q2270671", 
+   "Q5593571", 
+   "Q18928532", 
+   "Q18966395", 
+   "Q11862744", 
+   "Q18975828", 
+   "Q1824410", 
+   "Q706825", 
+   "Q5986402", 
+   "Q18924544", 
+   "Q18966405", 
+   "Q1001920", 
+   "Q1736897", 
+   "Q18928624", 
+   "Q23772742", 
+   "Q6895745", 
+   "Q18928587", 
+   "Q2632404", 
+   "Q6500058", 
+   "Q3410750", 
+   "Q19000697", 
+   "Q5861610", 
+   "Q5458307", 
+   "Q137597", 
+   "Q2394735", 
+   "Q2932525", 
+   "Q19000393", 
+   "Q19000458", 
+   "Q19000493", 
+   "Q18967413", 
+   "Q7933588", 
+   "Q18928599", 
+   "Q7430242", 
+   "Q15964334", 
+   "Q2006636", 
+   "Q4835994", 
+   "Q110315", 
+   "Q3319277", 
+   "Q94796", 
+   "Q2031871", 
+   "Q4059313", 
+   "Q7421081", 
+   "Q18975874", 
+   "Q18967211", 
+   "Q19000403", 
+   "Q19000401", 
+   "Q17123258", 
+   "Q2389289", 
+   "Q205972", 
+   "Q10591185", 
+   "Q7258523", 
+   "Q18932779", 
+   "Q18928560", 
+   "Q18928346", 
+   "Q16654806", 
+   "Q157008", 
+   "Q5348632", 
+   "Q2936210", 
+   "Q1033316", 
+   "Q1455531", 
+   "Q574005", 
+   "Q7074450", 
+   "Q3961638", 
+   "Q3232749", 
+   "Q882181", 
+   "Q18968009", 
+   "Q2859732", 
+   "Q18928351", 
+   "Q9352582", 
+   "Q1807401", 
+   "Q22350879", 
+   "Q18975220", 
+   "Q277254", 
+   "Q444662", 
+   "Q18928370", 
+   "Q19000581"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q110315", 
+   "Q18975220", 
+   "Q125367"
+  ], 
+  "utterance": "lead poisoning, Escherichia coli infectious disease, carbon monoxide poisoning", 
+  "active_set": [
+   "(c(Q12136),P828,c(Q2057971))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type", 
+  "type_list": [
+   "Q12136", 
+   "Q1441305", 
+   "Q2057971"
+  ], 
+  "entities_in_utterance": [
+   "Q21505506"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P780"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "Which health problems are greater number of diseases and medical signs a symtom of than hypophosphatemic nephrolithiasis/osteoporosis 1 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2583514", 
+   "Q154869", 
+   "Q131755", 
+   "Q836356", 
+   "Q721073", 
+   "Q623031", 
+   "Q48143", 
+   "Q2388598", 
+   "Q6853", 
+   "Q5432941", 
+   "Q719656", 
+   "Q39222", 
+   "Q3508705", 
+   "Q1198391", 
+   "Q190564", 
+   "Q156103", 
+   "Q127724", 
+   "Q209733", 
+   "Q12152", 
+   "Q5526844", 
+   "Q8071861", 
+   "Q1077603", 
+   "Q174651", 
+   "Q326648", 
+   "Q30953", 
+   "Q180266", 
+   "Q212961", 
+   "Q6668132", 
+   "Q47912", 
+   "Q264118", 
+   "Q145790", 
+   "Q221668", 
+   "Q1981276", 
+   "Q432396", 
+   "Q332293", 
+   "Q133087", 
+   "Q7165022", 
+   "Q335555", 
+   "Q265936", 
+   "Q29496", 
+   "Q180664", 
+   "Q664174", 
+   "Q2840", 
+   "Q18557404"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q131755", 
+   "Q221668", 
+   "Q212961"
+  ], 
+  "utterance": "bipolar disorder, acute cystitis, pancreatic cancer", 
+  "active_set": [
+   "(c(Q2057971),P780,c(Q12136)|c(Q1441305))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q12136", 
+   "Q1441305", 
+   "Q2057971"
+  ], 
+  "entities_in_utterance": [
+   "Q18556319"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P780"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And how about sea-blue histiocyte syndrome?"
+ }, 
+ {
+  "all_entities": [
+   "Q2583514", 
+   "Q154869", 
+   "Q131755", 
+   "Q836356", 
+   "Q721073", 
+   "Q623031", 
+   "Q48143", 
+   "Q2388598", 
+   "Q6853", 
+   "Q5432941", 
+   "Q719656", 
+   "Q39222", 
+   "Q3508705", 
+   "Q1198391", 
+   "Q190564", 
+   "Q156103", 
+   "Q127724", 
+   "Q209733", 
+   "Q12152", 
+   "Q5526844", 
+   "Q8071861", 
+   "Q1077603", 
+   "Q174651", 
+   "Q326648", 
+   "Q30953", 
+   "Q180266", 
+   "Q212961", 
+   "Q6668132", 
+   "Q47912", 
+   "Q264118", 
+   "Q145790", 
+   "Q221668", 
+   "Q1981276", 
+   "Q432396", 
+   "Q332293", 
+   "Q133087", 
+   "Q7165022", 
+   "Q335555", 
+   "Q265936", 
+   "Q29496", 
+   "Q180664", 
+   "Q664174", 
+   "Q2840", 
+   "Q18557404"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q131755", 
+   "Q221668", 
+   "Q212961"
+  ], 
+  "utterance": "bipolar disorder, acute cystitis, pancreatic cancer", 
+  "active_set": [
+   "(c(Q2057971),P780,c(Q12136)|c(Q1441305))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q131755", 
+   "Q221668", 
+   "Q212961"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P2176"
+  ], 
+  "type_list": [
+   "Q8386"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which drugs are prescribed for bipolar disorder, acute cystitis and pancreatic cancer ?"
+ }, 
+ {
+  "all_entities": [
+   "Q907219", 
+   "Q152763", 
+   "Q18216", 
+   "Q201872", 
+   "Q410346", 
+   "Q415744", 
+   "Q670131", 
+   "Q414873", 
+   "Q410412", 
+   "Q58614", 
+   "Q251347", 
+   "Q423292", 
+   "Q412443", 
+   "Q417689", 
+   "Q408535", 
+   "Q407988", 
+   "Q411188", 
+   "Q422112", 
+   "Q221174", 
+   "Q412486", 
+   "Q221361", 
+   "Q410352", 
+   "Q240642", 
+   "Q410273", 
+   "Q1758380", 
+   "Q1050019", 
+   "Q1638852", 
+   "Q2313471", 
+   "Q348260", 
+   "Q418725", 
+   "Q2552927", 
+   "Q183554", 
+   "Q367700", 
+   "Q1639588", 
+   "Q1639616", 
+   "Q203618", 
+   "Q216935", 
+   "Q3307752", 
+   "Q20817140", 
+   "Q2319020", 
+   "Q422669", 
+   "Q422482", 
+   "Q411447", 
+   "Q2601530", 
+   "Q412223", 
+   "Q2736402", 
+   "Q808845", 
+   "Q422665", 
+   "Q7636169", 
+   "Q422219", 
+   "Q2878140", 
+   "Q421713", 
+   "Q163901", 
+   "Q418546", 
+   "Q423787", 
+   "Q3976824", 
+   "Q372598", 
+   "Q417897", 
+   "Q425152", 
+   "Q281082", 
+   "Q244150", 
+   "Q411417", 
+   "Q1082945", 
+   "Q417968", 
+   "Q424193", 
+   "Q2365016", 
+   "Q413728", 
+   "Q5119441", 
+   "Q1639595", 
+   "Q415843", 
+   "Q2325775", 
+   "Q415739", 
+   "Q201928", 
+   "Q2602246", 
+   "Q415167", 
+   "Q424940", 
+   "Q2555060", 
+   "Q256602", 
+   "Q421670", 
+   "Q2601832", 
+   "Q419940", 
+   "Q3891664", 
+   "Q20801757", 
+   "Q412197", 
+   "Q412178", 
+   "Q4567614", 
+   "Q420207", 
+   "Q418560", 
+   "Q257331", 
+   "Q421052", 
+   "Q238512", 
+   "Q417775", 
+   "Q905901", 
+   "Q419935", 
+   "Q413299", 
+   "Q2459042", 
+   "Q416451", 
+   "Q7914515", 
+   "Q13896859", 
+   "Q420436", 
+   "Q240642", 
+   "Q7739", 
+   "Q1187179", 
+   "Q423762"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q251347", 
+   "Q670131", 
+   "Q424940"
+  ], 
+  "utterance": "haloperidol, simvastatin, Moxifloxacin", 
+  "active_set": [
+   "(Q131755,P2176,c(Q8386))", 
+   "(Q221668,P2176,c(Q8386))", 
+   "(Q212961,P2176,c(Q8386))"
+  ]
+ }
+]

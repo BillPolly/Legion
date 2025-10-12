@@ -1,0 +1,491 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q4494454"
+  ], 
+  "relations": [
+   "P69"
+  ], 
+  "type_list": [
+   "Q1935049"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is the military school where Vladimir Khavinson was educated ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1459393"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1459393"
+  ], 
+  "utterance": "S.M.Kirov Military Medical Academy", 
+  "active_set": [
+   "(Q4494454,P69,c(Q1935049))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1459393"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P108"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people work for that military school ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2800803", 
+   "Q4491499", 
+   "Q116344", 
+   "Q1681328", 
+   "Q4237293", 
+   "Q19811323", 
+   "Q4516440", 
+   "Q4402515", 
+   "Q4532529", 
+   "Q4123276", 
+   "Q4107019"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q4123276", 
+   "Q1681328", 
+   "Q116344"
+  ], 
+  "utterance": "Veniamin Volkov, Sir James Wylie, Alexey Bystrow", 
+  "active_set": [
+   "(c(Q502895),P108,Q1459393)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Mult. Entity", 
+  "entities_in_utterance": [
+   "Q4123276", 
+   "Q1681328", 
+   "Q116344"
+  ], 
+  "sec_ques_sub_type": 3, 
+  "relations": [
+   "P166"
+  ], 
+  "type_list": [
+   "Q618779"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What were awarded to those people ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1915961", 
+   "Q185493", 
+   "Q18080149", 
+   "Q18200478", 
+   "Q208167", 
+   "Q695106", 
+   "Q18080423", 
+   "Q1986005", 
+   "Q27096841", 
+   "Q15972369", 
+   "Q93732", 
+   "Q21148942", 
+   "Q337463"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q185493", 
+   "Q695106", 
+   "Q1915961"
+  ], 
+  "utterance": "Order of Lenin, Order of the Red Star, Medal for Battle Merit", 
+  "active_set": [
+   "(Q4123276,P166,c(Q618779))", 
+   "(Q1681328,P166,c(Q618779))", 
+   "(Q116344,P166,c(Q618779))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q185493"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P138"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which person is the etymology of Order of Lenin ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1394"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1394"
+  ], 
+  "utterance": "Vladimir Lenin", 
+  "active_set": [
+   "(Q185493,P138,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1394"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P25"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who was the mother of that one ?"
+ }, 
+ {
+  "all_entities": [
+   "Q470041"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q470041"
+  ], 
+  "utterance": "Maria Alexandrovna Ulyanova", 
+  "active_set": [
+   "(Q1394,P25,c(Q502895))"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Single_Relation", 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "entities_in_utterance": [
+   "Q2470746", 
+   "Q116344"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P106"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which occupations are the job of Alexey Bystrow and Andrey Semyonov-Tyan-Shansky ?"
+ }, 
+ {
+  "all_entities": [
+   "Q864503"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q864503"
+  ], 
+  "utterance": "biologist", 
+  "active_set": [
+   "AND((Q116344,P106,c(Q12737077)), (Q2470746,P106,c(Q12737077)))"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Multiple_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q184", 
+   "Q4494454"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P530", 
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories do Vladimir Khavinson belong to and have diplomatic relationships with Belarus ?"
+ }, 
+ {
+  "all_entities": [
+   "Q159"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q159"
+  ], 
+  "utterance": "Russia", 
+  "active_set": [
+   "AND((Q4494454,P27,c(Q15617994)), (Q184,P530,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q159", 
+   "Q5342308"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Is Edward Clark a citizen of that administrative territory ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q5342308,P27,Q159)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, all direct, 2 are query entities", 
+  "entities_in_utterance": [
+   "Q470041", 
+   "Q1230850", 
+   "Q1394"
+  ], 
+  "relations": [
+   "P40"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 4, 
+  "utterance": "Does Maria Alexandrovna Ulyanova have Publius Cornelius Lentulus Marcellinus and Vladimir Lenin as a child ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO and YES respectively", 
+  "active_set": [
+   "(Q470041,P40,Q1230850)", 
+   "(Q470041,P40,Q1394)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q159", 
+   "Q7267281"
+  ], 
+  "relations": [
+   "P35"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Does Qazi Faez Isa have the highest formal authority in Russia ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q159,P35,Q7267281)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q685"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q15617994", 
+   "Q1048835"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which political territories are known to have diplomatic connections with around the same number of administrative territories as Solomon Islands ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1000", 
+   "Q40", 
+   "Q781", 
+   "Q778", 
+   "Q769", 
+   "Q685", 
+   "Q35", 
+   "Q691", 
+   "Q16", 
+   "Q664", 
+   "Q766"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q35", 
+   "Q16", 
+   "Q40"
+  ], 
+  "utterance": "Denmark, Canada, Austria", 
+  "active_set": [
+   "(c(Q1048835),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q40"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1532"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people play for that political territory ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q35"
+  ], 
+  "active_set": [
+   "(c(Q502895),P1532,Q35)", 
+   "(c(Q502895),P1532,Q16)", 
+   "(c(Q502895),P1532,Q40)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q35", 
+   "Q16", 
+   "Q40"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Denmark ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q40"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Austria. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q20993687", 
+   "Q17198667", 
+   "Q22083608", 
+   "Q1927083", 
+   "Q931569"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q931569", 
+   "Q1927083", 
+   "Q22083608"
+  ], 
+  "utterance": "Mensur Suljovi\u0107, Michael Buchleitner, Herwig R\u00f6ttl", 
+  "active_set": [
+   "(c(Q502895),P1532,Q40)"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Single_Relation", 
+  "type_list": [
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q16", 
+   "Q159"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people are a citizen of Russia and Canada ?"
+ }, 
+ {
+  "all_entities": [
+   "Q4228271", 
+   "Q43929", 
+   "Q4105474", 
+   "Q4109286", 
+   "Q4333466", 
+   "Q4498609", 
+   "Q4139260", 
+   "Q7910847"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q4228271", 
+   "Q43929", 
+   "Q4105474", 
+   "Q4109286", 
+   "Q4333466", 
+   "Q4498609", 
+   "Q4139260", 
+   "Q7910847"
+  ], 
+  "utterance": "Yuri Kolokolnikov, Ivan Babikov, Kirill Vats, Mikhail Vershovsky, Alex Battler, Askold G. Khovanskii, Olga Glagoleva, Valentina Battler", 
+  "active_set": [
+   "AND((c(Q502895),P27,Q159), (c(Q502895),P27,Q16))"
+  ]
+ }
+]

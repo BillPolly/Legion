@@ -1,0 +1,318 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q692098"
+  ], 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territory was Lasar Segall born at ?"
+ }, 
+ {
+  "all_entities": [
+   "Q216"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q216"
+  ], 
+  "utterance": "Vilnius", 
+  "active_set": [
+   "(Q692098,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q216"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P551"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people live in that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q79822", 
+   "Q13505930", 
+   "Q557827", 
+   "Q471207", 
+   "Q781971", 
+   "Q4701994", 
+   "Q716559", 
+   "Q8338625"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q79822", 
+   "Q471207", 
+   "Q781971"
+  ], 
+  "utterance": "Adam Mickiewicz, Maksim Bahdanovi\u010d, Tadas Kijanskas", 
+  "active_set": [
+   "(c(Q502895),P551,Q216)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q216"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P119"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person has Vilnius as place of burial ?"
+ }, 
+ {
+  "all_entities": [
+   "Q9369742"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q9369742"
+  ], 
+  "utterance": "Wac\u0142aw Leon Makowski", 
+  "active_set": [
+   "(c(Q502895),P119,Q216)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q9369742"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where did the demise of that person occur ?"
+ }, 
+ {
+  "all_entities": [
+   "Q216"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q216"
+  ], 
+  "utterance": "Vilnius", 
+  "active_set": [
+   "(Q9369742,P20,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P532"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q56061", 
+   "Q2235308"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many ship types have approximately 2 administrative territories as registry port ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q33209", 
+   "Q1514518", 
+   "Q2596850", 
+   "Q468026"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "4", 
+  "active_set": [
+   "(c(Q2235308),P532,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q79822"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P108"
+  ], 
+  "type_list": [
+   "Q41176"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which building is the employer of Adam Mickiewicz ?"
+ }, 
+ {
+  "all_entities": [
+   "Q202660"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q202660"
+  ], 
+  "utterance": "Coll\u00e8ge de France", 
+  "active_set": [
+   "(Q79822,P108,c(Q41176))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q202660", 
+   "Q12882722"
+  ], 
+  "relations": [
+   "P108"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Does Panagiotis Kefalas work for that building ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q12882722,P108,Q202660)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q9369742", 
+   "Q158004"
+  ], 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q486972"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Is Piotrk\u00f3w Trybunalski the birthplace of Wac\u0142aw Leon Makowski ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q9369742,P19,Q158004)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q79822"
+  ], 
+  "relations": [
+   "P551"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories were the place of residence of Adam Mickiewicz ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q807", 
+   "Q216", 
+   "Q4115712", 
+   "Q649", 
+   "Q90", 
+   "Q16869", 
+   "Q1874", 
+   "Q278743"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "8", 
+  "active_set": [
+   "(Q79822,P551,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q21732527"
+  ], 
+  "relations": [
+   "P551"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about Brooks Willis?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q955486", 
+   "Q34804"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(Q21732527,P551,c(Q56061))"
+  ]
+ }
+]

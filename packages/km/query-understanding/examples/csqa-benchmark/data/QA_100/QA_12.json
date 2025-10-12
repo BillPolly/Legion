@@ -1,0 +1,511 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q7324580"
+  ], 
+  "relations": [
+   "P69"
+  ], 
+  "type_list": [
+   "Q163740"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which nonprofit organizations are the alma mater of Richard C Steiner ?"
+ }, 
+ {
+  "all_entities": [
+   "Q49117", 
+   "Q1048851"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q49117", 
+   "Q1048851"
+  ], 
+  "utterance": "University of Pennsylvania, Yeshiva University", 
+  "active_set": [
+   "(Q7324580,P69,c(Q163740))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q7324580"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What does Richard C Steiner do for a living ?"
+ }, 
+ {
+  "all_entities": [
+   "Q14467526"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14467526"
+  ], 
+  "utterance": "linguist", 
+  "active_set": [
+   "(Q7324580,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q466409"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about Richard Bradford?"
+ }, 
+ {
+  "all_entities": [
+   "Q33999", 
+   "Q10798782"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q33999", 
+   "Q10798782"
+  ], 
+  "utterance": "actor, television actor", 
+  "active_set": [
+   "(Q466409,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q33999"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P921"
+  ], 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which works of art have actor as their main topic ?"
+ }, 
+ {
+  "all_entities": [
+   "Q7354481", 
+   "Q1493156", 
+   "Q6967915", 
+   "Q17014102", 
+   "Q16249471", 
+   "Q6763489", 
+   "Q6534023", 
+   "Q7522740", 
+   "Q3824444", 
+   "Q19881856", 
+   "Q6945014", 
+   "Q479455", 
+   "Q258126", 
+   "Q5073244", 
+   "Q10271690", 
+   "Q3414468", 
+   "Q15944402", 
+   "Q6346446", 
+   "Q2996397", 
+   "Q4677083", 
+   "Q1550654", 
+   "Q3845638", 
+   "Q7208837", 
+   "Q18150884", 
+   "Q4876099", 
+   "Q3498669", 
+   "Q17145438", 
+   "Q4101775", 
+   "Q5505677", 
+   "Q7750101", 
+   "Q7728271", 
+   "Q15728502", 
+   "Q19866616", 
+   "Q4885932", 
+   "Q6544705", 
+   "Q6580816", 
+   "Q5120735", 
+   "Q18152725", 
+   "Q18703492", 
+   "Q611137", 
+   "Q1999059", 
+   "Q3488987", 
+   "Q592300", 
+   "Q7721295", 
+   "Q151937", 
+   "Q7644217", 
+   "Q3369396", 
+   "Q6690938", 
+   "Q4877691", 
+   "Q16250107", 
+   "Q7711198", 
+   "Q7680202", 
+   "Q7232271", 
+   "Q5123703", 
+   "Q2928788", 
+   "Q18150429", 
+   "Q1145421", 
+   "Q15052313", 
+   "Q17426190", 
+   "Q7774830"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1550654", 
+   "Q5123703", 
+   "Q3488987"
+  ], 
+  "utterance": "I Knew It Was You, City of God \u2013 10 Years Later, Sois belle et tais-toi", 
+  "active_set": [
+   "(c(Q838948),P921,Q33999)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Mult. Entity", 
+  "entities_in_utterance": [
+   "Q1550654", 
+   "Q5123703", 
+   "Q3488987"
+  ], 
+  "sec_ques_sub_type": 3, 
+  "relations": [
+   "P921"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What were those works of art mainly about ?"
+ }, 
+ {
+  "all_entities": [
+   "Q33999", 
+   "Q33999", 
+   "Q33999"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q33999", 
+   "Q33999", 
+   "Q33999"
+  ], 
+  "utterance": "actor", 
+  "active_set": [
+   "(Q1550654,P921,c(Q12737077))", 
+   "(Q5123703,P921,c(Q12737077))", 
+   "(Q3488987,P921,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q33999"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P425"
+  ], 
+  "type_list": [
+   "Q1914636"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which activity has actor as the associated field of occupation ?"
+ }, 
+ {
+  "all_entities": [
+   "Q222749"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q222749"
+  ], 
+  "utterance": "acting", 
+  "active_set": [
+   "(Q33999,P425,c(Q1914636))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q33999"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P178"
+  ], 
+  "type_list": [
+   "Q166142"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "What was produced by that occupation ?"
+ }, 
+ {
+  "all_entities": [
+   "Q5242936"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5242936"
+  ], 
+  "utterance": "Day of Love", 
+  "active_set": [
+   "(c(Q166142),P178,Q222749)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation|Incomplete", 
+  "type_list": [
+   "Q166142"
+  ], 
+  "entities_in_utterance": [
+   "Q6697870", 
+   "Q33999"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 1, 
+  "relations": [
+   "P178"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Or Lucky Chicken Games?"
+ }, 
+ {
+  "all_entities": [
+   "Q5242936", 
+   "Q7883931", 
+   "Q7821524", 
+   "Q2859161", 
+   "Q7353400", 
+   "Q16266965", 
+   "Q7859749", 
+   "Q5049067"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5242936", 
+   "Q7883931", 
+   "Q7821524", 
+   "Q2859161", 
+   "Q7353400", 
+   "Q16266965", 
+   "Q7859749", 
+   "Q5049067"
+  ], 
+  "utterance": "Day of Love, Underworld: The Eternal War, Tonka: Rescue Patrol, Aquaman: Battle for Atlantis, Robotech: The Macross Saga, NBC Sports Real Golf, Tyco RC: Assault With a Battery, Casper: Spirit Dimensions", 
+  "active_set": [
+   "OR((c(Q166142),P178,Q33999), (c(Q166142),P178,Q6697870))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1445"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q166142", 
+   "Q386724"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which works are recounted in max number of applications ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1203222"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1203222"
+  ], 
+  "utterance": "Shrek", 
+  "active_set": [
+   "(c(Q386724),P1445,c(Q166142))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, 2 direct, 2(direct) are query entities, subject is indirect", 
+  "entities_in_utterance": [
+   "Q1203222", 
+   "Q3375307", 
+   "Q23893416"
+  ], 
+  "relations": [
+   "P1445"
+  ], 
+  "type_list": [
+   "Q166142"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 5, 
+  "utterance": "Was that work described in Perfect Dark and Thapster ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q1203222,P1445,Q3375307)", 
+   "(Q1203222,P1445,Q23893416)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1203222"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P495"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the origin of that work ?"
+ }, 
+ {
+  "all_entities": [
+   "Q30"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "utterance": "United States of America", 
+  "active_set": []
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P30"
+  ], 
+  "type_list": [
+   "Q2221906"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where are that administrative territory located ?"
+ }, 
+ {
+  "all_entities": [
+   "Q49", 
+   "Q538"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q49", 
+   "Q538"
+  ], 
+  "utterance": "North America, Oceania", 
+  "active_set": [
+   "(Q30,P30,c(Q2221906))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q49"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P159"
+  ], 
+  "type_list": [
+   "Q43229"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which organization has its HQ location at that one ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q49"
+  ], 
+  "active_set": [
+   "(c(Q43229),P159,Q49)", 
+   "(c(Q43229),P159,Q538)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q49", 
+   "Q538"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean North America ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "Yes"
+ }, 
+ {
+  "all_entities": [
+   "Q17116256"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q17116256"
+  ], 
+  "utterance": "Leading Brands Incorporation", 
+  "active_set": [
+   "(c(Q43229),P159,Q49)"
+  ]
+ }
+]

@@ -1,0 +1,333 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q204230"
+  ], 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territory was Geremi Njitap born at ?"
+ }, 
+ {
+  "all_entities": [
+   "Q799808"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q799808"
+  ], 
+  "utterance": "Bafoussam", 
+  "active_set": [
+   "(Q204230,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q799808"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory does that administrative territory belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1009"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1009"
+  ], 
+  "utterance": "Cameroon", 
+  "active_set": [
+   "(Q799808,P17,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1009"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people expired at that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1579831", 
+   "Q3308940", 
+   "Q2831155"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1579831", 
+   "Q3308940", 
+   "Q2831155"
+  ], 
+  "utterance": "Hans Glauning, Michel Baroin, Albert Eutrope", 
+  "active_set": [
+   "(c(Q502895),P20,Q1009)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1579831", 
+   "Q3308940", 
+   "Q2831155"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which sexes do Hans Glauning, Michel Baroin and Albert Eutrope possess ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097", 
+   "Q6581097", 
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097", 
+   "Q6581097", 
+   "Q6581097"
+  ], 
+  "utterance": "male", 
+  "active_set": [
+   "(Q1579831,P21,c(Q290))", 
+   "(Q3308940,P21,c(Q290))", 
+   "(Q2831155,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1009"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1001"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which occupations have jurisdiction over Cameroon ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21295975", 
+   "Q21295128", 
+   "Q19158914", 
+   "Q17051823"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q19158914", 
+   "Q21295975", 
+   "Q21295128"
+  ], 
+  "utterance": "President of Cameroon, Member of the National Assembly of Cameroon, Member of the Senate of Cameroon", 
+  "active_set": [
+   "(c(Q12737077),P1001,Q1009)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1009"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P159"
+  ], 
+  "type_list": [
+   "Q43229"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which organizations have headquarters located at Cameroon ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3273242", 
+   "Q2935563"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3273242", 
+   "Q2935563"
+  ], 
+  "utterance": "MTN Cameroon, CAMPOST", 
+  "active_set": [
+   "(c(Q43229),P159,Q1009)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Mult. Entity", 
+  "entities_in_utterance": [
+   "Q3273242", 
+   "Q2935563"
+  ], 
+  "sec_ques_sub_type": 3, 
+  "relations": [
+   "P159"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territories are the headquarter locations of those organizations ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1009", 
+   "Q1009"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1009", 
+   "Q1009"
+  ], 
+  "utterance": "Cameroon", 
+  "active_set": [
+   "(Q3273242,P159,c(Q15617994))", 
+   "(Q2935563,P159,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1009"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P610"
+  ], 
+  "type_list": [
+   "Q14524493"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which is the highest peak of Cameroon ?"
+ }, 
+ {
+  "all_entities": [
+   "Q190562"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q190562"
+  ], 
+  "utterance": "Mount Cameroon", 
+  "active_set": [
+   "(Q1009,P610,c(Q14524493))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1009"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P85"
+  ], 
+  "type_list": [
+   "Q484692"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which is the national anthem of Cameroon ?"
+ }, 
+ {
+  "all_entities": [
+   "Q206429"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q206429"
+  ], 
+  "utterance": "O Cameroon, Cradle of Our Forefathers", 
+  "active_set": [
+   "(Q1009,P85,c(Q484692))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1009"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P36"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is associated to that administrative territory as the capital ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3808"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3808"
+  ], 
+  "utterance": "Yaound\u00e9", 
+  "active_set": [
+   "(Q206429,P36,c(Q56061))"
+  ]
+ }
+]

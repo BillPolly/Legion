@@ -206,22 +206,33 @@ export class QdrantVectorStore {
     if (!this.client) {
       await this._ensureClient();
     }
-    
+
     if (!this.client) {
       throw new Error('Qdrant client not initialized');
     }
-    
+
     const { limit = 10, threshold = 0, filter = {} } = options;
-    
+
+    // Convert filter to Qdrant format
+    let qdrantFilter = undefined;
+    if (Object.keys(filter).length > 0) {
+      qdrantFilter = {
+        must: Object.entries(filter).map(([key, value]) => ({
+          key: key,
+          match: { value: value }
+        }))
+      };
+    }
+
     const results = await this.client.search(collection, {
       vector: queryVector,
       limit,
       score_threshold: threshold,
-      filter: Object.keys(filter).length > 0 ? filter : undefined,
+      filter: qdrantFilter,
       with_payload: true,
       with_vector: options.includeVectors
     });
-    
+
     return results.map(r => ({
       id: r.id,
       score: r.score,

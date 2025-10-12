@@ -1,0 +1,464 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q21116066"
+  ], 
+  "relations": [
+   "P702"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which gene encodes Interleukin-6 receptor subunit beta ?"
+ }, 
+ {
+  "all_entities": [
+   "Q14907597"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14907597"
+  ], 
+  "utterance": "IL6ST", 
+  "active_set": [
+   "(Q21116066,P702,c(Q863908))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q21116066"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P688"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which nucleic acid sequence encodes Interleukin-6 receptor subunit beta ?"
+ }, 
+ {
+  "all_entities": [
+   "Q14907597"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14907597"
+  ], 
+  "utterance": "IL6ST", 
+  "active_set": [
+   "(c(Q863908),P688,Q21116066)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q14907597"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P684"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "What is the name of the species that has that one as its orthologous gene ?"
+ }, 
+ {
+  "all_entities": [
+   "Q14907598"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14907598"
+  ], 
+  "utterance": "Il6st", 
+  "active_set": [
+   "(c(Q863908),P684,Q14907597)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q181394"
+  ], 
+  "entities_in_utterance": [
+   "Q23098488", 
+   "Q14907597"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P702"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which nutrients are the gene that are encoded by IL6ST or 50S ribosomal protein L15    YE3904 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21150367", 
+   "Q23424897", 
+   "Q21116066", 
+   "Q1540648"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21150367", 
+   "Q23424897", 
+   "Q21116066", 
+   "Q1540648"
+  ], 
+  "utterance": "IL6ST isoform 4, 50S ribosomal protein L15    YE3904, Interleukin-6 receptor subunit beta, Interleukin 6 signal transducer (Gp130, oncostatin M receptor)", 
+  "active_set": [
+   "OR((c(Q181394),P702,Q14907597), (c(Q181394),P702,Q23098488))"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Single_Relation", 
+  "type_list": [
+   "Q5058355"
+  ], 
+  "entities_in_utterance": [
+   "Q21151015", 
+   "Q21116066"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P681"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which cellular components are the cell components of Interleukin-6 receptor subunit beta and Glutathione peroxidase 3 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2914458"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2914458"
+  ], 
+  "utterance": "extracellular space", 
+  "active_set": [
+   "AND((Q21116066,P681,c(Q5058355)), (Q21151015,P681,c(Q5058355)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P361"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q5058355", 
+   "Q5058355"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which cellular components are max number of cellular components a part of ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q2914458"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2914458"
+  ], 
+  "utterance": "extracellular space", 
+  "active_set": [
+   "(c(Q5058355),P361,Q193825)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P681"
+  ], 
+  "count_ques_sub_type": 8, 
+  "type_list": [
+   "Q5058355", 
+   "Q181394"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which cellular components are the components of less number of nutrients than that cellular component ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q7322268", 
+   "Q21106124", 
+   "Q21978575", 
+   "Q21116315", 
+   "Q14912978", 
+   "Q14864171", 
+   "Q21108229", 
+   "Q22328732", 
+   "Q21110192", 
+   "Q21146508", 
+   "Q14878067", 
+   "Q14864978", 
+   "Q24629101", 
+   "Q14864977", 
+   "Q14864971", 
+   "Q1604780", 
+   "Q21124326", 
+   "Q21116899", 
+   "Q14860843", 
+   "Q22327688", 
+   "Q22327479", 
+   "Q22327686", 
+   "Q14330626", 
+   "Q22327683", 
+   "Q21172343", 
+   "Q21172341", 
+   "Q24576567", 
+   "Q21108045", 
+   "Q671136", 
+   "Q22326188", 
+   "Q21469807", 
+   "Q14877465", 
+   "Q189094", 
+   "Q14876131", 
+   "Q24629096", 
+   "Q22328493", 
+   "Q21120634", 
+   "Q14864391", 
+   "Q14864390", 
+   "Q14914004", 
+   "Q21095183", 
+   "Q14873624", 
+   "Q14329032", 
+   "Q21199165", 
+   "Q14905221", 
+   "Q22326802", 
+   "Q21199358", 
+   "Q21759948", 
+   "Q21097473", 
+   "Q21105647", 
+   "Q21198643", 
+   "Q21106212", 
+   "Q21423046", 
+   "Q14864382", 
+   "Q14353100", 
+   "Q22326799", 
+   "Q14911512", 
+   "Q22325164", 
+   "Q26253851", 
+   "Q21136996", 
+   "Q21103154", 
+   "Q14863372", 
+   "Q21181370", 
+   "Q420927", 
+   "Q22327404", 
+   "Q22327654", 
+   "Q22327015", 
+   "Q21109092", 
+   "Q22327525", 
+   "Q14905147", 
+   "Q22329412", 
+   "Q180436", 
+   "Q22327092", 
+   "Q21763002", 
+   "Q15320191", 
+   "Q21971414", 
+   "Q21095089", 
+   "Q22327884", 
+   "Q14819352", 
+   "Q21118409", 
+   "Q14762605", 
+   "Q14864266", 
+   "Q21108411", 
+   "Q21750262", 
+   "Q21468808", 
+   "Q21198990", 
+   "Q21104759", 
+   "Q14876059", 
+   "Q21484280", 
+   "Q21758669", 
+   "Q22329407", 
+   "Q22328605", 
+   "Q14877492", 
+   "Q14873267", 
+   "Q22327128", 
+   "Q21760978", 
+   "Q21107992", 
+   "Q22328801", 
+   "Q5419646", 
+   "Q21126899", 
+   "Q14819441", 
+   "Q1640852", 
+   "Q21107481", 
+   "Q21105674", 
+   "Q21097505", 
+   "Q22327033", 
+   "Q14864663", 
+   "Q14863683", 
+   "Q21102478", 
+   "Q14349538", 
+   "Q22328819", 
+   "Q138639", 
+   "Q21120639", 
+   "Q14330629", 
+   "Q776995", 
+   "Q21971286", 
+   "Q21105988", 
+   "Q21095308", 
+   "Q21115425", 
+   "Q14864857", 
+   "Q14888035", 
+   "Q1065756", 
+   "Q22326843", 
+   "Q180951", 
+   "Q7168931", 
+   "Q14906187", 
+   "Q22327475", 
+   "Q14864520", 
+   "Q21112489", 
+   "Q22328743", 
+   "Q22328105", 
+   "Q14860546", 
+   "Q14860540", 
+   "Q14864866", 
+   "Q22328121", 
+   "Q899827", 
+   "Q6414172", 
+   "Q21109697", 
+   "Q22327736", 
+   "Q14906135", 
+   "Q22326919", 
+   "Q14882095", 
+   "Q21095620", 
+   "Q193825", 
+   "Q22327423"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14912978", 
+   "Q24576567", 
+   "Q22326799"
+  ], 
+  "utterance": "mitochondrial nucleoid, perisynaptic extracellular matrix, alpha-1,6-mannosyltransferase complex", 
+  "active_set": [
+   "(c(Q181394),P681,c(Q5058355))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q21150367"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P703"
+  ], 
+  "type_list": [
+   "Q16521"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which taxon is IL6ST isoform 4 found in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q15978631"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q15978631"
+  ], 
+  "utterance": "Homo sapiens", 
+  "active_set": [
+   "(Q21150367,P703,c(Q16521))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q24394456"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q16521"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Zhx2?"
+ }, 
+ {
+  "all_entities": [
+   "Q184224"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q184224"
+  ], 
+  "utterance": "brown rat", 
+  "active_set": [
+   "(Q24394456,P703,c(Q16521))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q863908"
+  ], 
+  "entities_in_utterance": [
+   "Q24138951", 
+   "Q21150367"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P702"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which nucleic acid sequences encode IL6ST isoform 4 or ethanol-active dehydrogenase/acetaldehyde-active reductase    b1478 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q23087452", 
+   "Q14907597"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23087452", 
+   "Q14907597"
+  ], 
+  "utterance": "ethanol-active dehydrogenase/acetaldehyde-active reductase    b1478, IL6ST", 
+  "active_set": [
+   "OR((Q21150367,P702,c(Q863908)), (Q24138951,P702,c(Q863908)))"
+  ]
+ }
+]

@@ -1,0 +1,467 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q24106101"
+  ], 
+  "relations": [
+   "P681"
+  ], 
+  "type_list": [
+   "Q15989253"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which is the part that is a component of diaminopimelate epimerase    NGR_c32280 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q79899"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q79899"
+  ], 
+  "utterance": "cytoplasm", 
+  "active_set": [
+   "(Q24106101,P681,c(Q15989253))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q24106101"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P702"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the gene that encodes that nutrient ?"
+ }, 
+ {
+  "all_entities": [
+   "Q23321925"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23321925"
+  ], 
+  "utterance": "diaminopimelate epimerase    NGR_c32280", 
+  "active_set": [
+   "(Q79899,P702,c(Q863908))"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Single_Relation", 
+  "type_list": [
+   "Q181394"
+  ], 
+  "entities_in_utterance": [
+   "Q14904869", 
+   "Q79899"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P681"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which nutrients have cytoplasm and late endosome membrane as their cell component ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21497336", 
+   "Q21991662", 
+   "Q21111503", 
+   "Q21111505", 
+   "Q21495939", 
+   "Q21127354", 
+   "Q21494881", 
+   "Q21125233", 
+   "Q27553166", 
+   "Q7187516", 
+   "Q21986864", 
+   "Q21126656", 
+   "Q7923213", 
+   "Q4051790", 
+   "Q14914273", 
+   "Q21991492", 
+   "Q21990838", 
+   "Q21990839", 
+   "Q21125670", 
+   "Q21126890", 
+   "Q21433441", 
+   "Q21433440", 
+   "Q27552557", 
+   "Q21990939", 
+   "Q21097465", 
+   "Q21120732", 
+   "Q21981473", 
+   "Q21981471", 
+   "Q21980004", 
+   "Q27549797", 
+   "Q27549567", 
+   "Q21114649", 
+   "Q27547485", 
+   "Q27551337", 
+   "Q21135669", 
+   "Q21130574", 
+   "Q21123577", 
+   "Q21124815", 
+   "Q21125652", 
+   "Q21988425", 
+   "Q21992225", 
+   "Q27547495", 
+   "Q21991984", 
+   "Q21494840", 
+   "Q21991745", 
+   "Q21133283", 
+   "Q21172711", 
+   "Q21172715", 
+   "Q21992726", 
+   "Q21992724", 
+   "Q21992722", 
+   "Q21992723", 
+   "Q21116285", 
+   "Q21992729", 
+   "Q21114033", 
+   "Q14914138", 
+   "Q21111414", 
+   "Q21987990", 
+   "Q6714959", 
+   "Q21986291", 
+   "Q21154929", 
+   "Q14901156", 
+   "Q21172707", 
+   "Q21992714", 
+   "Q14908237", 
+   "Q21980052", 
+   "Q27549647", 
+   "Q21990177", 
+   "Q21136431", 
+   "Q21985496", 
+   "Q21499037", 
+   "Q21117653", 
+   "Q21136801", 
+   "Q21154289", 
+   "Q2851537", 
+   "Q27547590", 
+   "Q21132779", 
+   "Q27549392", 
+   "Q27552051", 
+   "Q21097452", 
+   "Q21121782", 
+   "Q21497342", 
+   "Q21497344", 
+   "Q21497345", 
+   "Q27551412", 
+   "Q21111450", 
+   "Q21499040", 
+   "Q5205645", 
+   "Q21172723", 
+   "Q21992570", 
+   "Q21172728", 
+   "Q22677262", 
+   "Q21986364"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21990939", 
+   "Q21433440", 
+   "Q21125233", 
+   "Q21986864", 
+   "Q21985496", 
+   "Q14914273", 
+   "Q21120732", 
+   "Q21172723", 
+   "Q21992225", 
+   "Q21495939"
+  ], 
+  "utterance": "Some of them are Vacuolar protein sorting-associated protein 33B, Charged multivesicular body protein 1b-1, Sorting nexin-16, Sorting nexin-16, Interferon-induced transmembrane protein 3, Mucolipin-1, Vesicle transport through interaction with t-SNAREs homolog 1B, Charged multivesicular body protein 2b, Tumor susceptibility gene 101 protein, Protein LTV1 homolog", 
+  "active_set": [
+   "AND((c(Q181394),P681,Q79899), (c(Q181394),P681,Q14904869))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q21990939"
+  ], 
+  "relations": [
+   "P688"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many nucleic acid sequences encode Vacuolar protein sorting-associated protein 33B ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q18298218"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(c(Q863908),P688,Q21990939)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P682"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q1190554", 
+   "Q181394"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which events are max number of nutrients involved in ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q2996394"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2996394"
+  ], 
+  "utterance": "biological process", 
+  "active_set": [
+   "(c(Q181394),P682,Q2996394)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q21990939"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P703"
+  ], 
+  "type_list": [
+   "Q16521"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where is Vacuolar protein sorting-associated protein 33B found ?"
+ }, 
+ {
+  "all_entities": [
+   "Q83310"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q83310"
+  ], 
+  "utterance": "Mus musculus", 
+  "active_set": [
+   "(Q21990939,P703,c(Q16521))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q18049150"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q16521"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about GPR146?"
+ }, 
+ {
+  "all_entities": [
+   "Q15978631"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q15978631"
+  ], 
+  "utterance": "Homo sapiens", 
+  "active_set": [
+   "(Q18049150,P703,c(Q16521))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q18049150"
+  ], 
+  "relations": [
+   "P688"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q181394"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many nutrients do GPR146 encode ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q21118993", 
+   "Q21137401"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(Q18049150,P688,c(Q181394))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q23135368"
+  ], 
+  "relations": [
+   "P688"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q181394"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And how about gp27    KPHS_40000?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q24272817"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q23135368,P688,c(Q181394))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q23110958"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q181394"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about N-acetylglucosamine-6-phosphate deacetylase    BF3115?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q23110958,P688,c(Q181394))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Mult. entity type", 
+  "type_list": [
+   "Q181394", 
+   "Q79529", 
+   "Q8386"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P129"
+  ], 
+  "count_ques_sub_type": 3, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which nutrients do max number of chemical substances or drugs communicate with ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1949517"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1949517"
+  ], 
+  "utterance": "5-hydroxytryptamine receptor 2A", 
+  "active_set": [
+   "(c(Q79529)|c(Q8386),P129,c(Q181394))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q863908"
+  ], 
+  "entities_in_utterance": [
+   "Q22336410", 
+   "Q1949517"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P702"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which nucleic acid sequences encode 5-hydroxytryptamine receptor 2A or HipA protein    lpg2369 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q14891424", 
+   "Q22333413"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14891424", 
+   "Q22333413"
+  ], 
+  "utterance": "HTR2A, HipA protein    lpg2369", 
+  "active_set": [
+   "OR((Q1949517,P702,c(Q863908)), (Q22336410,P702,c(Q863908)))"
+  ]
+ }
+]

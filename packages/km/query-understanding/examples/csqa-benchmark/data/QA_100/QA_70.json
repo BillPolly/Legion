@@ -1,0 +1,142 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q348952"
+  ], 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territory is the birthplace of Adam Campbell ?"
+ }, 
+ {
+  "all_entities": [
+   "Q22889"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q22889"
+  ], 
+  "utterance": "Bath", 
+  "active_set": [
+   "(Q348952,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q348952"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P161"
+  ], 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which works of art do that person star in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q7577361", 
+   "Q517740", 
+   "Q841118"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7577361", 
+   "Q517740", 
+   "Q841118"
+  ], 
+  "utterance": "Spin, Date Movie, Epic Movie", 
+  "active_set": [
+   "(c(Q838948),P161,Q22889)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q1212141", 
+   "Q841118"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P710", 
+   "P161"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people are in Epic Movie or were the participants of Die Elf ?"
+ }, 
+ {
+  "all_entities": [
+   "Q310060", 
+   "Q880914", 
+   "Q2993970", 
+   "Q879239", 
+   "Q2755894", 
+   "Q879198", 
+   "Q557948", 
+   "Q210201", 
+   "Q230169", 
+   "Q348952", 
+   "Q499063", 
+   "Q45006", 
+   "Q549366", 
+   "Q552090", 
+   "Q304322", 
+   "Q602549", 
+   "Q449521", 
+   "Q220536", 
+   "Q185122", 
+   "Q618352", 
+   "Q853018", 
+   "Q2706805", 
+   "Q187038", 
+   "Q788717", 
+   "Q316819", 
+   "Q428796", 
+   "Q2260913", 
+   "Q589797", 
+   "Q2646713", 
+   "Q315856", 
+   "Q231006", 
+   "Q2039202", 
+   "Q572163", 
+   "Q230278", 
+   "Q298995"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q348952", 
+   "Q2646713", 
+   "Q304322", 
+   "Q231006", 
+   "Q2260913", 
+   "Q618352", 
+   "Q880914", 
+   "Q210201", 
+   "Q549366", 
+   "Q552090"
+  ], 
+  "utterance": "Some of them are Adam Campbell, Gregory Jbara, Faune A. Chambers, Jayma Mays, Scott L. Schwartz, Kevin Hart, Ludwig Dill, Fritz von Uhde, Tad Hilgenbrink, Rico Rodriguez", 
+  "active_set": [
+   "OR((Q841118,P161,c(Q502895)), (Q1212141,P710,c(Q502895)))"
+  ]
+ }
+]

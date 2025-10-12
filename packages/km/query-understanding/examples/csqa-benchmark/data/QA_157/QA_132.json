@@ -1,0 +1,317 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q4111408"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territory is the native country of Juan de Tassis, 2nd Count of Villamediana ?"
+ }, 
+ {
+  "all_entities": [
+   "Q29"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q29"
+  ], 
+  "utterance": "Spain", 
+  "active_set": [
+   "(Q4111408,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q4111408"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where did Juan de Tassis, 2nd Count of Villamediana expire ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2807"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2807"
+  ], 
+  "utterance": "Madrid", 
+  "active_set": [
+   "(Q4111408,P20,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q2131359"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Raphael Courteville?"
+ }, 
+ {
+  "all_entities": [
+   "Q84"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q84"
+  ], 
+  "utterance": "London", 
+  "active_set": [
+   "(Q2131359,P20,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q2131359"
+  ], 
+  "relations": [
+   "P19"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories are the birthplace of Raphael Courteville ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q84"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q2131359,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q5806689"
+  ], 
+  "relations": [
+   "P19"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And how about Diego de Abreu?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q8717"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q5806689,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q1757186"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Jacques Martineau?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q1757186,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q29"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P495"
+  ], 
+  "type_list": [
+   "Q15709879"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "What are Spain a country of origin of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1782933", 
+   "Q2633337", 
+   "Q2981628", 
+   "Q2981655", 
+   "Q2982846", 
+   "Q2633037"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1782933", 
+   "Q2633337", 
+   "Q2981628"
+  ], 
+  "utterance": "Constellations, Barcelona Series, The hope of a condemned Man", 
+  "active_set": [
+   "(c(Q15709879),P495,Q29)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Mult. Entity", 
+  "entities_in_utterance": [
+   "Q1782933", 
+   "Q2633337", 
+   "Q2981628"
+  ], 
+  "sec_ques_sub_type": 3, 
+  "relations": [
+   "P495"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territories are the countries of origin of those artwork series ?"
+ }, 
+ {
+  "all_entities": [
+   "Q29", 
+   "Q29", 
+   "Q29"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q29", 
+   "Q29", 
+   "Q29"
+  ], 
+  "utterance": "Spain", 
+  "active_set": [
+   "(Q1782933,P495,c(Q15617994))", 
+   "(Q2633337,P495,c(Q15617994))", 
+   "(Q2981628,P495,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q84"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1408"
+  ], 
+  "type_list": [
+   "Q4830453"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which business enterprises are licensed to broadcast to London ?"
+ }, 
+ {
+  "all_entities": [
+   "Q7280695", 
+   "Q5104020", 
+   "Q6394349"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7280695", 
+   "Q5104020", 
+   "Q6394349"
+  ], 
+  "utterance": "Radio Brunel, Choice FM, Kerrang Radio", 
+  "active_set": [
+   "(c(Q4830453),P1408,Q84)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q84"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P206"
+  ], 
+  "type_list": [
+   "Q355304"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which watercourse is situated in the neighbourhood of London ?"
+ }, 
+ {
+  "all_entities": [
+   "Q19686"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q19686"
+  ], 
+  "utterance": "River Thames", 
+  "active_set": [
+   "(Q84,P206,c(Q355304))"
+  ]
+ }
+]

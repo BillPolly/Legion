@@ -1,0 +1,446 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q2537426"
+  ], 
+  "relations": [
+   "P1344"
+  ], 
+  "type_list": [
+   "Q15275719"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which recurring event did Ilian Iliev participate in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q101730"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q101730"
+  ], 
+  "utterance": "1998 FIFA World Cup", 
+  "active_set": [
+   "(Q2537426,P1344,c(Q15275719))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q2537426"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What do Ilian Iliev do for a living ?"
+ }, 
+ {
+  "all_entities": [
+   "Q628099", 
+   "Q937857"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q628099", 
+   "Q937857"
+  ], 
+  "utterance": "association football manager, association football player", 
+  "active_set": [
+   "(Q2537426,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q628099", 
+   "Q937857"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P425"
+  ], 
+  "type_list": [
+   "Q349"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who are associated with the field of occupation association football manager and association football player ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2736", 
+   "Q2736"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2736", 
+   "Q2736"
+  ], 
+  "utterance": "association football", 
+  "active_set": [
+   "(Q628099,P425,c(Q349))", 
+   "(Q937857,P425,c(Q349))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q2736"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P495"
+  ], 
+  "type_list": [
+   "Q1496967"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the origin of association football ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21"
+  ], 
+  "utterance": "England", 
+  "active_set": [
+   "(Q2736,P495,c(Q1496967))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q937857"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P101"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person has specialisation in association football player ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2089026"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2089026"
+  ], 
+  "utterance": "Akaki Devadze", 
+  "active_set": [
+   "(c(Q502895),P101,Q937857)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q937857"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P361"
+  ], 
+  "type_list": [
+   "Q847017"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which sports club is association football player a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q476028"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q476028"
+  ], 
+  "utterance": "association football club", 
+  "active_set": [
+   "(Q937857,P361,c(Q847017))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q21"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q7275"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which states do England belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q161885", 
+   "Q174193"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q161885", 
+   "Q174193"
+  ], 
+  "utterance": "Kingdom of Great Britain, United Kingdom of Great Britain and Ireland", 
+  "active_set": [
+   "(Q21,P17,c(Q7275))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "Incomplete|object parent is changed, subject and predicate remain same", 
+  "entities_in_utterance": [
+   "Q21"
+  ], 
+  "inc_ques_type": 1, 
+  "relations": [], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And which administrative territory?"
+ }, 
+ {
+  "all_entities": [
+   "Q145"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q145"
+  ], 
+  "utterance": "United Kingdom", 
+  "active_set": [
+   "(Q21,P17,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q145"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P163"
+  ], 
+  "type_list": [
+   "Q14660"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which flag is associated with that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q83278"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q83278"
+  ], 
+  "utterance": "flag of the United Kingdom", 
+  "active_set": [
+   "(Q145,P163,c(Q14660))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q145"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P85"
+  ], 
+  "type_list": [
+   "Q7725634"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which is the national anthem of that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q40807"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q40807"
+  ], 
+  "utterance": "God Save the Queen", 
+  "active_set": [
+   "(Q83278,P85,c(Q7725634))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q145"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P706"
+  ], 
+  "type_list": [
+   "Q271669"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which are the landforms in which that administrative territory are located on ?"
+ }, 
+ {
+  "all_entities": [
+   "Q23666", 
+   "Q22890"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23666", 
+   "Q22890"
+  ], 
+  "utterance": "Great Britain, Ireland", 
+  "active_set": [
+   "(Q40807,P706,c(Q271669))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Mult. Entity", 
+  "entities_in_utterance": [
+   "Q23666", 
+   "Q22890"
+  ], 
+  "sec_ques_sub_type": 3, 
+  "relations": [
+   "P921"
+  ], 
+  "type_list": [
+   "Q2342494"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which collectables have those landforms as their principal topic ?"
+ }, 
+ {
+  "all_entities": [
+   "Q24726261", 
+   "Q26261690", 
+   "Q19409800"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q24726261", 
+   "Q26261690", 
+   "Q19409800"
+  ], 
+  "utterance": "Historical descriptions of new and elegant picturesque views of the antiquities of England and Wales, Ellis' British Railway Engineering Encyclopaedia, Burke's Landed Gentry of Ireland", 
+  "active_set": [
+   "(c(Q2342494),P921,Q23666)", 
+   "(c(Q2342494),P921,Q22890)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q19409800"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P629"
+  ], 
+  "type_list": [
+   "Q571"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which book represents an edition or translation of that collectable ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q26261690"
+  ], 
+  "active_set": [
+   "(c(Q571),P629,Q24726261)", 
+   "(c(Q571),P629,Q26261690)", 
+   "(c(Q571),P629,Q19409800)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q24726261", 
+   "Q26261690", 
+   "Q19409800"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Ellis' British Railway Engineering Encyclopaedia ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q19409800"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Burke's Landed Gentry of Ireland. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q19409861"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q19409861"
+  ], 
+  "utterance": "Burke's Landed Gentry of Ireland (3rd Ed.)", 
+  "active_set": [
+   "(c(Q571),P629,Q19409800)"
+  ]
+ }
+]

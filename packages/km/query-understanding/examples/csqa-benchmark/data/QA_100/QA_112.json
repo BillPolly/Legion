@@ -1,0 +1,349 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1263853"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q3024240"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which former country is Karl Becker a civilian of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q43287"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q43287"
+  ], 
+  "utterance": "German Empire", 
+  "active_set": [
+   "(Q1263853,P27,c(Q3024240))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q43287"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P194"
+  ], 
+  "type_list": [
+   "Q1752346"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which assembly is the legislative body for that former country ?"
+ }, 
+ {
+  "all_entities": [
+   "Q160208"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q160208"
+  ], 
+  "utterance": "Reichstag", 
+  "active_set": [
+   "(Q43287,P194,c(Q1752346))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q43287"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P140"
+  ], 
+  "type_list": [
+   "Q874405"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which social group is the religion of German Empire ?"
+ }, 
+ {
+  "all_entities": [
+   "Q23540"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23540"
+  ], 
+  "utterance": "Protestantism", 
+  "active_set": [
+   "(Q43287,P140,c(Q874405))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q43287"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P85"
+  ], 
+  "type_list": [
+   "Q7725634"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which literary work is the anthem for German Empire ?"
+ }, 
+ {
+  "all_entities": [
+   "Q163797"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q163797"
+  ], 
+  "utterance": "Heil dir im Siegerkranz", 
+  "active_set": [
+   "(Q43287,P85,c(Q7725634))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q664"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1001"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which occupations apply to jurisdiction over New Zealand ?"
+ }, 
+ {
+  "all_entities": [
+   "Q18145518", 
+   "Q6866129", 
+   "Q6866167", 
+   "Q6866148", 
+   "Q19571716", 
+   "Q4818600", 
+   "Q6866227", 
+   "Q6866081", 
+   "Q5261068", 
+   "Q6508547", 
+   "Q14931517", 
+   "Q1071117"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18145518", 
+   "Q6866148", 
+   "Q19571716"
+  ], 
+  "utterance": "Member of the New Zealand House of Representatives, Minister of Foreign Affairs, Member of the Legislative Council of New Zealand", 
+  "active_set": [
+   "(c(Q12737077),P1001,Q664)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q664"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P37"
+  ], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is considered to be the official language of New Zealand ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1860"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1860"
+  ], 
+  "utterance": "English", 
+  "active_set": [
+   "(Q664,P37,c(Q34770))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q664"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P463"
+  ], 
+  "type_list": [
+   "Q43229"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which organizations were that political territory a member of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q191384", 
+   "Q899770", 
+   "Q41550", 
+   "Q656801", 
+   "Q7825", 
+   "Q170481", 
+   "Q827525"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7825", 
+   "Q41550", 
+   "Q191384"
+  ], 
+  "utterance": "World Trade Organization, Organisation for Economic Co-operation and Development, International Bank for Reconstruction and Development", 
+  "active_set": [
+   "(Q1860,P463,c(Q43229))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q41550"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P123"
+  ], 
+  "type_list": [
+   "Q2342494"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which collectables produced that organization ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q191384"
+  ], 
+  "active_set": [
+   "(c(Q2342494),P123,Q7825)", 
+   "(c(Q2342494),P123,Q41550)", 
+   "(c(Q2342494),P123,Q191384)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q7825", 
+   "Q41550", 
+   "Q191384"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean International Bank for Reconstruction and Development ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q41550"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Organisation for Economic Co-operation and Development. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q7555891", 
+   "Q5260671", 
+   "Q7775958"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7555891", 
+   "Q5260671", 
+   "Q7775958"
+  ], 
+  "utterance": "Solar Energy Perspectives, Deploying Renewables 2011, The World Economy: Historical Statistics", 
+  "active_set": [
+   "(c(Q2342494),P123,Q41550)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "entities_in_utterance": [
+   "Q13801", 
+   "Q664"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P47"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which political territories are adjacent to New Zealand or Les Masies de Voltreg\u00e0 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q13820", 
+   "Q13832", 
+   "Q13854", 
+   "Q13804", 
+   "Q13797", 
+   "Q408", 
+   "Q13783", 
+   "Q13848"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q13820", 
+   "Q13832", 
+   "Q13854", 
+   "Q13804", 
+   "Q13797", 
+   "Q408", 
+   "Q13783", 
+   "Q13848"
+  ], 
+  "utterance": "Sant Hip\u00f2lit de Voltreg\u00e0, Santa Cec\u00edlia de Voltreg\u00e0, Torell\u00f3, Manlleu, Or\u00eds, Australia, Gurb, Sobremunt", 
+  "active_set": [
+   "OR((Q664,P47,c(Q1048835)), (Q13801,P47,c(Q1048835)))"
+  ]
+ }
+]

@@ -1,0 +1,249 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q236537"
+  ], 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is the sex of Molly Sims ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581072"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581072"
+  ], 
+  "utterance": "female", 
+  "active_set": [
+   "(Q236537,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q236537"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P161"
+  ], 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which works of art do Molly Sims star in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q269887", 
+   "Q847646", 
+   "Q998219", 
+   "Q1418881", 
+   "Q815681"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q847646", 
+   "Q269887", 
+   "Q815681"
+  ], 
+  "utterance": "Starsky & Hutch, Yes Man, The Pink Panther 2", 
+  "active_set": [
+   "(c(Q838948),P161,Q236537)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q815681"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P58"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which people wrote the script for that work of art ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q815681"
+  ], 
+  "active_set": [
+   "(Q847646,P58,c(Q502895))", 
+   "(Q269887,P58,c(Q502895))", 
+   "(Q815681,P58,c(Q502895))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q847646", 
+   "Q269887", 
+   "Q815681"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean The Pink Panther 2 ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "Yes"
+ }, 
+ {
+  "all_entities": [
+   "Q16473", 
+   "Q5965293"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q16473", 
+   "Q5965293"
+  ], 
+  "utterance": "Steve Martin, Scott Neustadter", 
+  "active_set": [
+   "(Q815681,P58,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q3926972"
+  ], 
+  "relations": [
+   "P58"
+  ], 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Are those people a screenwriter of Quando c'era lui... caro lei! ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q3926972,P58,Q16473)", 
+   "(Q3926972,P58,Q5965293)"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators", 
+  "entities_in_utterance": [
+   "Q16473"
+  ], 
+  "relations": [
+   "P1346"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q618779", 
+   "Q4220917"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many awards or film awards were Steve Martin decalred as a champion of ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q503034", 
+   "Q1967731", 
+   "Q1899850"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "3", 
+  "active_set": [
+   "(c(Q618779),P1346,Q16473)", 
+   "(c(Q4220917),P1346,Q16473)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q16473"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1412"
+  ], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which language is spoken by Steve Martin ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1860"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1860"
+  ], 
+  "utterance": "English", 
+  "active_set": [
+   "(Q16473,P1412,c(Q34770))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q9027761"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Manuel D\u00edaz Rubio?"
+ }, 
+ {
+  "all_entities": [
+   "Q1321"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1321"
+  ], 
+  "utterance": "Spanish", 
+  "active_set": [
+   "(Q9027761,P1412,c(Q34770))"
+  ]
+ }
+]

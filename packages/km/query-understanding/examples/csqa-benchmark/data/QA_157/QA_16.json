@@ -1,0 +1,428 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q11091019"
+  ], 
+  "relations": [
+   "P9"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Who are Cao Zizheng a sibling of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q180920", 
+   "Q15929527", 
+   "Q8252909", 
+   "Q8252899", 
+   "Q11561243", 
+   "Q10947311"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q180920", 
+   "Q15929527", 
+   "Q11561243"
+  ], 
+  "utterance": "Empress Cao Jie, Princess Jinxiang, Princess Qinghe", 
+  "active_set": [
+   "(Q11091019,P9,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q180920", 
+   "Q15929527", 
+   "Q11561243"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P22"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which people were the father of Empress Cao Jie, Princess Jinxiang and Princess Qinghe ?"
+ }, 
+ {
+  "all_entities": [
+   "Q204077", 
+   "Q204077", 
+   "Q204077"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q204077", 
+   "Q204077", 
+   "Q204077"
+  ], 
+  "utterance": "Cao Cao", 
+  "active_set": [
+   "(Q180920,P22,c(Q502895))", 
+   "(Q15929527,P22,c(Q502895))", 
+   "(Q11561243,P22,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q11091019"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P7"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who have Cao Zizheng as their sibling ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3178707", 
+   "Q11091072", 
+   "Q11090991", 
+   "Q706866", 
+   "Q698890", 
+   "Q571756", 
+   "Q706827", 
+   "Q557261", 
+   "Q707386", 
+   "Q10323203", 
+   "Q10323773", 
+   "Q711798", 
+   "Q10323269", 
+   "Q580624", 
+   "Q10323222", 
+   "Q5353300", 
+   "Q10323244", 
+   "Q5353322", 
+   "Q11091100", 
+   "Q10323292", 
+   "Q313333", 
+   "Q735448", 
+   "Q699893", 
+   "Q706905"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q313333", 
+   "Q699893", 
+   "Q706866"
+  ], 
+  "utterance": "Cao Pi, Cao Zhang, Cao Lin", 
+  "active_set": [
+   "(Q11091019,P7,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q106777"
+  ], 
+  "relations": [
+   "P7"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Do Erwin Levy have those ones as their sibling ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q106777,P7,Q313333)", 
+   "(Q106777,P7,Q699893)", 
+   "(Q106777,P7,Q706866)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q313333"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q7275"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where did the expiration of Cao Pi occur ?"
+ }, 
+ {
+  "all_entities": [
+   "Q320930"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q320930"
+  ], 
+  "utterance": "Cao Wei", 
+  "active_set": [
+   "(Q313333,P20,c(Q7275))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q313333"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P40"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people have Cao Pi as an offspring ?"
+ }, 
+ {
+  "all_entities": [
+   "Q292698", 
+   "Q204077"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q292698", 
+   "Q204077"
+  ], 
+  "utterance": "Empress Dowager Bian, Cao Cao", 
+  "active_set": [
+   "(c(Q502895),P40,Q313333)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q292698", 
+   "Q204077"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P26"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which people are the life partner of Empress Dowager Bian and Cao Cao ?"
+ }, 
+ {
+  "all_entities": [
+   "Q204077", 
+   "Q292698", 
+   "Q8253522", 
+   "Q8253555"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q204077", 
+   "Q292698", 
+   "Q8253522"
+  ], 
+  "utterance": "Cao Cao, Empress Dowager Bian, Lady Du", 
+  "active_set": [
+   "(Q292698,P26,c(Q502895))", 
+   "(Q204077,P26,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q204077"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P734"
+  ], 
+  "type_list": [
+   "Q101352"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which family name is associated with Cao Cao ?"
+ }, 
+ {
+  "all_entities": [
+   "Q710706"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q710706"
+  ], 
+  "utterance": "Cao", 
+  "active_set": [
+   "(Q204077,P734,c(Q101352))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many musical instruments can around 1689 people perform with ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q80284", 
+   "Q46185", 
+   "Q80019", 
+   "Q8338", 
+   "Q8371", 
+   "Q1444", 
+   "Q128309"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "7", 
+  "active_set": [
+   "(c(Q502895),P1303,c(Q34379))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q320930"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P140"
+  ], 
+  "type_list": [
+   "Q5389993"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the religion associated with Cao Wei ?"
+ }, 
+ {
+  "all_entities": [
+   "Q9598"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q9598"
+  ], 
+  "utterance": "Taoism", 
+  "active_set": [
+   "(Q320930,P140,c(Q5389993))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q22086561", 
+   "Q15929527"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P170", 
+   "P7"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people have Princess Jinxiang as their sibling or are credited with creation of Mother and Child ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3178707", 
+   "Q11091072", 
+   "Q11090991", 
+   "Q706866", 
+   "Q11091019", 
+   "Q698890", 
+   "Q571756", 
+   "Q706827", 
+   "Q5353300", 
+   "Q707386", 
+   "Q10323203", 
+   "Q10323773", 
+   "Q711798", 
+   "Q10323269", 
+   "Q580624", 
+   "Q10323222", 
+   "Q557261", 
+   "Q10323244", 
+   "Q5353322", 
+   "Q11091100", 
+   "Q559281", 
+   "Q10323292", 
+   "Q313333", 
+   "Q735448", 
+   "Q699893", 
+   "Q858941", 
+   "Q706905"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q559281", 
+   "Q571756", 
+   "Q10323773", 
+   "Q580624", 
+   "Q11091100", 
+   "Q10323222", 
+   "Q3178707", 
+   "Q5353322", 
+   "Q10323244", 
+   "Q5353300"
+  ], 
+  "utterance": "Some of them are George Minne, Cao Xiong, Cao Mao, Cao Chong, Cao Hui, Cao Zicheng, Cao Xuan, Cao Ju, Cao Zijing, Cao Ju", 
+  "active_set": [
+   "OR((Q15929527,P7,c(Q502895)), (Q22086561,P170,c(Q502895)))"
+  ]
+ }
+]

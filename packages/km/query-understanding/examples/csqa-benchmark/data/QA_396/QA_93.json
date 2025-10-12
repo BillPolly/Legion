@@ -1,0 +1,331 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1706644"
+  ], 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What are the professions of Alexander Pschera ?"
+ }, 
+ {
+  "all_entities": [
+   "Q333634", 
+   "Q36180"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q333634", 
+   "Q36180"
+  ], 
+  "utterance": "translator, writer", 
+  "active_set": [
+   "(Q1706644,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1706644"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which political territory is the country of citizenship of that person ?"
+ }, 
+ {
+  "all_entities": [
+   "Q183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "utterance": "Germany", 
+  "active_set": [
+   "(Q333634,P27,c(Q1048835))", 
+   "(Q36180,P27,c(Q1048835))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation|Incomplete", 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "entities_in_utterance": [
+   "Q15966561", 
+   "Q1706644"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 1, 
+  "relations": [
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Or Dolors Garcia i Cornell\u00e0?"
+ }, 
+ {
+  "all_entities": [
+   "Q183", 
+   "Q5705"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183", 
+   "Q5705"
+  ], 
+  "utterance": "Germany, Catalonia", 
+  "active_set": [
+   "OR((Q1706644,P27,c(Q1048835)), (Q15966561,P27,c(Q1048835)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q5705"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1313"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which occupation serves as the political office that is fulfilled by the head of the government of that political territory ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q5705"
+  ], 
+  "active_set": [
+   "(Q183,P1313,c(Q12737077))", 
+   "(Q5705,P1313,c(Q12737077))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q183", 
+   "Q5705"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Catalonia ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "Yes"
+ }, 
+ {
+  "all_entities": [
+   "Q16933549"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q16933549"
+  ], 
+  "utterance": "President of the Generalitat of Catalonia", 
+  "active_set": [
+   "(Q5705,P1313,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q3745904"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P417"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q502895", 
+   "Q12737077"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which people are the names of person who are the patron saints of more number of occupations than Fiorenzo di Bastia ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q453698", 
+   "Q229190", 
+   "Q152457", 
+   "Q43689", 
+   "Q328804", 
+   "Q166876", 
+   "Q163900", 
+   "Q170547", 
+   "Q212850", 
+   "Q374822", 
+   "Q9438", 
+   "Q130997", 
+   "Q312758", 
+   "Q5575577", 
+   "Q191107", 
+   "Q242274", 
+   "Q128538", 
+   "Q183240", 
+   "Q119289", 
+   "Q360798", 
+   "Q298845", 
+   "Q48438", 
+   "Q119512", 
+   "Q44281", 
+   "Q170164", 
+   "Q43399", 
+   "Q196653", 
+   "Q508214", 
+   "Q9200", 
+   "Q193507", 
+   "Q463600", 
+   "Q43669", 
+   "Q44265", 
+   "Q192816", 
+   "Q43982", 
+   "Q179718", 
+   "Q40662", 
+   "Q332656", 
+   "Q320171", 
+   "Q137947", 
+   "Q80513", 
+   "Q43600", 
+   "Q324700", 
+   "Q744884", 
+   "Q44015", 
+   "Q151967", 
+   "Q149727", 
+   "Q232427", 
+   "Q60059", 
+   "Q17590", 
+   "Q271474", 
+   "Q200895", 
+   "Q44248", 
+   "Q276148"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q9438", 
+   "Q60059", 
+   "Q166876"
+  ], 
+  "utterance": "Thomas Aquinas, Albertus Magnus, Isidore of Seville", 
+  "active_set": [
+   "(c(Q12737077),P417,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q196527"
+  ], 
+  "relations": [
+   "P417"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q502895", 
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And how about Saint Wenceslaus I, Duke of Bohemia?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q453698", 
+   "Q229190", 
+   "Q152457", 
+   "Q43689", 
+   "Q328804", 
+   "Q166876", 
+   "Q163900", 
+   "Q170547", 
+   "Q212850", 
+   "Q374822", 
+   "Q9438", 
+   "Q130997", 
+   "Q312758", 
+   "Q5575577", 
+   "Q191107", 
+   "Q242274", 
+   "Q128538", 
+   "Q183240", 
+   "Q119289", 
+   "Q360798", 
+   "Q298845", 
+   "Q48438", 
+   "Q119512", 
+   "Q44281", 
+   "Q170164", 
+   "Q43399", 
+   "Q196653", 
+   "Q508214", 
+   "Q9200", 
+   "Q193507", 
+   "Q463600", 
+   "Q43669", 
+   "Q44265", 
+   "Q192816", 
+   "Q43982", 
+   "Q179718", 
+   "Q40662", 
+   "Q332656", 
+   "Q320171", 
+   "Q137947", 
+   "Q80513", 
+   "Q43600", 
+   "Q324700", 
+   "Q744884", 
+   "Q44015", 
+   "Q151967", 
+   "Q149727", 
+   "Q232427", 
+   "Q60059", 
+   "Q17590", 
+   "Q271474", 
+   "Q200895", 
+   "Q44248", 
+   "Q276148"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q9438", 
+   "Q60059", 
+   "Q166876"
+  ], 
+  "utterance": "Thomas Aquinas, Albertus Magnus, Isidore of Seville", 
+  "active_set": [
+   "(c(Q12737077),P417,c(Q502895))"
+  ]
+ }
+]

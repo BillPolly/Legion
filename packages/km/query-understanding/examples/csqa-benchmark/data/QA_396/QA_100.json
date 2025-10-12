@@ -1,0 +1,443 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q6219838"
+  ], 
+  "relations": [
+   "P1196"
+  ], 
+  "type_list": [
+   "Q1931388"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What manner did John Azary die ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3739104"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3739104"
+  ], 
+  "utterance": "natural causes", 
+  "active_set": [
+   "(Q6219838,P1196,c(Q1931388))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q6219838"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P509"
+  ], 
+  "type_list": [
+   "Q2057971"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which health problem was the cause of death of that person ?"
+ }, 
+ {
+  "all_entities": [
+   "Q12152"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q12152"
+  ], 
+  "utterance": "myocardial infarction", 
+  "active_set": [
+   "(Q3739104,P509,c(Q2057971))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation|Incomplete", 
+  "type_list": [
+   "Q2057971"
+  ], 
+  "entities_in_utterance": [
+   "Q3484614", 
+   "Q6219838"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 1, 
+  "relations": [
+   "P509"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Or Simone Silva?"
+ }, 
+ {
+  "all_entities": [
+   "Q12152", 
+   "Q12202"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q12152", 
+   "Q12202"
+  ], 
+  "utterance": "myocardial infarction, stroke", 
+  "active_set": [
+   "OR((Q6219838,P509,c(Q2057971)), (Q3484614,P509,c(Q2057971)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q27301378"
+  ], 
+  "relations": [
+   "P509"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Did Terence Tan Sian Chai have those health problems as the reason for fatality ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q27301378,P509,Q12152)", 
+   "(Q27301378,P509,Q12202)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q12202", 
+   "Q17832572"
+  ], 
+  "relations": [
+   "P2293"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Does ZFHX3 have genetic connection with stroke ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q12202,P2293,Q17832572)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, all direct, 2 are query entities", 
+  "entities_in_utterance": [
+   "Q6219838", 
+   "Q5837518", 
+   "Q61"
+  ], 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 4, 
+  "utterance": "Does John Azary have Mohammadabad-e Tabatbayi and Washington, D.C. as place of death ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO and YES respectively", 
+  "active_set": [
+   "(Q6219838,P20,Q5837518)", 
+   "(Q6219838,P20,Q61)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q2057971"
+  ], 
+  "entities_in_utterance": [
+   "Q8005871", 
+   "Q17832572"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P509", 
+   "P2293"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which health problems have hereditary association with ZFHX3 or were the cause of death of William Brassington ?"
+ }, 
+ {
+  "all_entities": [
+   "Q12202", 
+   "Q1143025", 
+   "Q844935", 
+   "Q265936"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q12202", 
+   "Q1143025", 
+   "Q844935", 
+   "Q265936"
+  ], 
+  "utterance": "stroke, oral cavity cancer, coronary artery disease, Kawasaki disease", 
+  "active_set": [
+   "OR((Q17832572,P2293,c(Q2057971)), (Q8005871,P509,c(Q2057971)))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q2057971"
+  ], 
+  "entities_in_utterance": [
+   "Q162555", 
+   "Q17832572"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P2293", 
+   "P1995"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which health problems are genetically correlated with ZFHX3 or have oncology as the associated medical speciality ?"
+ }, 
+ {
+  "all_entities": [
+   "Q785827", 
+   "Q372701", 
+   "Q7577703", 
+   "Q200741", 
+   "Q1891209", 
+   "Q500695", 
+   "Q612108", 
+   "Q631904", 
+   "Q282142", 
+   "Q189588", 
+   "Q3542027", 
+   "Q5446459", 
+   "Q164952", 
+   "Q861028", 
+   "Q977787", 
+   "Q1418735", 
+   "Q1786513", 
+   "Q7831293", 
+   "Q2578247", 
+   "Q1495661", 
+   "Q1898104", 
+   "Q1200267", 
+   "Q1572384", 
+   "Q1693598", 
+   "Q201299", 
+   "Q6523346", 
+   "Q725345", 
+   "Q623031", 
+   "Q944777", 
+   "Q1143025", 
+   "Q1024546", 
+   "Q7442319", 
+   "Q6743513", 
+   "Q1076053", 
+   "Q4833719", 
+   "Q112670", 
+   "Q654485", 
+   "Q17142640", 
+   "Q5160447", 
+   "Q1318384", 
+   "Q1790134", 
+   "Q160105", 
+   "Q1072716", 
+   "Q864296", 
+   "Q1349259", 
+   "Q1617386", 
+   "Q484827", 
+   "Q1393463", 
+   "Q604075", 
+   "Q4057495", 
+   "Q844935", 
+   "Q3242950", 
+   "Q574694", 
+   "Q192102", 
+   "Q461857", 
+   "Q1124606", 
+   "Q1704531", 
+   "Q180614", 
+   "Q729735", 
+   "Q123251", 
+   "Q940874", 
+   "Q2053690", 
+   "Q7168876", 
+   "Q356372", 
+   "Q7239586", 
+   "Q2072821", 
+   "Q17106360", 
+   "Q948318", 
+   "Q536269", 
+   "Q1898141", 
+   "Q1076078", 
+   "Q188874", 
+   "Q6785569", 
+   "Q954831", 
+   "Q4781026", 
+   "Q549534", 
+   "Q374036", 
+   "Q2090167", 
+   "Q3085434", 
+   "Q3144913", 
+   "Q7169165", 
+   "Q4139987", 
+   "Q3281328", 
+   "Q556281", 
+   "Q870891", 
+   "Q5156845", 
+   "Q172341", 
+   "Q4811532", 
+   "Q1365309", 
+   "Q548070", 
+   "Q1752571", 
+   "Q2031424", 
+   "Q918285", 
+   "Q181257", 
+   "Q570875", 
+   "Q4742183", 
+   "Q826522", 
+   "Q2033138", 
+   "Q7455060", 
+   "Q4677938", 
+   "Q5474322", 
+   "Q212961", 
+   "Q504775", 
+   "Q47912", 
+   "Q5526839", 
+   "Q177755", 
+   "Q4000421", 
+   "Q7315926", 
+   "Q4930125", 
+   "Q786852", 
+   "Q5196687", 
+   "Q3077016", 
+   "Q591256", 
+   "Q4667534", 
+   "Q6901506", 
+   "Q1410808", 
+   "Q499857", 
+   "Q1429863", 
+   "Q1200237", 
+   "Q3680952", 
+   "Q881855", 
+   "Q1504713", 
+   "Q40301", 
+   "Q264118", 
+   "Q1750884", 
+   "Q7799620", 
+   "Q938205", 
+   "Q623668", 
+   "Q6823071", 
+   "Q783644", 
+   "Q1164529", 
+   "Q272741", 
+   "Q1369011", 
+   "Q6742919", 
+   "Q6931143", 
+   "Q4851862", 
+   "Q6931140", 
+   "Q6708277", 
+   "Q2064603", 
+   "Q369157", 
+   "Q459896", 
+   "Q369148", 
+   "Q1501239", 
+   "Q16939433", 
+   "Q12202", 
+   "Q5201212", 
+   "Q2420648", 
+   "Q1783924", 
+   "Q581592", 
+   "Q4763273", 
+   "Q1200239", 
+   "Q1807522", 
+   "Q128581", 
+   "Q475260", 
+   "Q1607658", 
+   "Q4675038", 
+   "Q2936213", 
+   "Q6931266", 
+   "Q1342955", 
+   "Q265936", 
+   "Q539681", 
+   "Q2095252", 
+   "Q7799755", 
+   "Q268713", 
+   "Q1362453", 
+   "Q1077603", 
+   "Q423965", 
+   "Q180664", 
+   "Q1711744", 
+   "Q1076481", 
+   "Q124292", 
+   "Q3542031", 
+   "Q2311457", 
+   "Q2165399", 
+   "Q33525", 
+   "Q7098796", 
+   "Q2030989", 
+   "Q324464", 
+   "Q17126784", 
+   "Q1816041", 
+   "Q3840916", 
+   "Q1545750", 
+   "Q756289", 
+   "Q3347154"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q556281", 
+   "Q2030989", 
+   "Q1607658", 
+   "Q4139987", 
+   "Q6931266", 
+   "Q826522", 
+   "Q938205", 
+   "Q940874", 
+   "Q180664", 
+   "Q268713"
+  ], 
+  "utterance": "Some of them are uterine fibroid, heart cancer, hepatoblastoma, glomus tumor, mucosal melanoma, thyroid cancer, neuroblastoma, granular cell tumor, acute lymphocytic leukemia, mantle cell lymphoma", 
+  "active_set": [
+   "OR((c(Q2057971),P2293,Q17832572), (c(Q2057971),P1995,Q162555))"
+  ]
+ }
+]

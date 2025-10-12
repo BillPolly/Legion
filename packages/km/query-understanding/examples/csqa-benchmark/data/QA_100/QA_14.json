@@ -1,0 +1,226 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q7819994"
+  ], 
+  "relations": [
+   "P641"
+  ], 
+  "type_list": [
+   "Q349"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which sport did Tommy Weale participate in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2736"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2736"
+  ], 
+  "utterance": "association football", 
+  "active_set": [
+   "(Q7819994,P641,c(Q349))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q2736"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P425"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which occupations do that sport belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q18052877", 
+   "Q628099", 
+   "Q937857"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18052877", 
+   "Q628099", 
+   "Q937857"
+  ], 
+  "utterance": "assistant coach, association football manager, association football player", 
+  "active_set": [
+   "(c(Q12737077),P425,Q2736)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q18052877", 
+   "Q628099", 
+   "Q937857"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P425"
+  ], 
+  "type_list": [
+   "Q349"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What sports have assistant coach, association football manager and association football player as thier associated field of occupation ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2736", 
+   "Q2736", 
+   "Q2736"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2736", 
+   "Q2736", 
+   "Q2736"
+  ], 
+  "utterance": "association football", 
+  "active_set": [
+   "(Q18052877,P425,c(Q349))", 
+   "(Q628099,P425,c(Q349))", 
+   "(Q937857,P425,c(Q349))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q937857"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P800"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person has association football player as a notable work ?"
+ }, 
+ {
+  "all_entities": [
+   "Q23047441"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23047441"
+  ], 
+  "utterance": "Hugh Morgan-Owen", 
+  "active_set": [
+   "(c(Q502895),P800,Q937857)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q937857"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P101"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person has field of work as association football player ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2089026"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2089026"
+  ], 
+  "utterance": "Akaki Devadze", 
+  "active_set": [
+   "(c(Q502895),P101,Q937857)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q23047441"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P69"
+  ], 
+  "type_list": [
+   "Q3918"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the university where Hugh Morgan-Owen was educated ?"
+ }, 
+ {
+  "all_entities": [
+   "Q34433"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q34433"
+  ], 
+  "utterance": "University of Oxford", 
+  "active_set": [
+   "(Q23047441,P69,c(Q3918))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q7815629"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q3918"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about Tom Dosch?"
+ }, 
+ {
+  "all_entities": [
+   "Q968559"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q968559"
+  ], 
+  "utterance": "University of North Dakota", 
+  "active_set": [
+   "(Q7815629,P69,c(Q3918))"
+  ]
+ }
+]

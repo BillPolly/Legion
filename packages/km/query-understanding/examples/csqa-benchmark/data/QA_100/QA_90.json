@@ -1,0 +1,252 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1198645"
+  ], 
+  "relations": [
+   "P921"
+  ], 
+  "type_list": [
+   "Q349"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What was the main subject in the work Lessons of a Dream ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2736"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2736"
+  ], 
+  "utterance": "association football", 
+  "active_set": [
+   "(Q1198645,P921,c(Q349))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q2736"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P495"
+  ], 
+  "type_list": [
+   "Q1496967"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where did that sport originate ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21"
+  ], 
+  "utterance": "England", 
+  "active_set": [
+   "(Q2736,P495,c(Q1496967))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P2079"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q2695280", 
+   "Q838948"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which technicss are used for the production of max number of works of art ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1334300", 
+   "Q170593"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1334300", 
+   "Q170593"
+  ], 
+  "utterance": "gilding, collage", 
+  "active_set": [
+   "(c(Q838948),P2079,Q170593)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1334300", 
+   "Q170593"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P425"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which occupations do gilding and collage belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q281795", 
+   "Q22343478"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q281795", 
+   "Q22343478"
+  ], 
+  "utterance": "gilder, collagist", 
+  "active_set": [
+   "(c(Q12737077),P425,Q1334300)", 
+   "(c(Q12737077),P425,Q170593)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q281795"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people have that occupation as his/her means of employment ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q22343478"
+  ], 
+  "active_set": [
+   "(c(Q502895),P106,Q281795)", 
+   "(c(Q502895),P106,Q22343478)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q281795", 
+   "Q22343478"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean collagist ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q281795"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant gilder. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q1504549", 
+   "Q24238820", 
+   "Q2093498", 
+   "Q3262959", 
+   "Q21640660", 
+   "Q20084123", 
+   "Q1684326", 
+   "Q1286351"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q24238820", 
+   "Q1504549", 
+   "Q21640660"
+  ], 
+  "utterance": "John Brydon, Georg Haberland, Petrus Schouten", 
+  "active_set": [
+   "(c(Q502895),P106,Q281795)"
+  ]
+ }, 
+ {
+  "question-type": "Clarification", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Indirect", 
+  "type_list": [
+   "Q502895", 
+   "Q166142", 
+   "Q2342494"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 3, 
+  "relations": [
+   "P123"
+  ], 
+  "count_ques_sub_type": 10, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many people published lesser number of applications and collectables than that person ?"
+ }, 
+ {
+  "description": "Comparative|Count over More/Less|Mult. entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q21640660"
+  ], 
+  "active_set": [
+   "(c(Q166142)|c(Q2342494),P123,c(Q502895))"
+  ], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Petrus Schouten ?"
+ }, 
+ {
+  "ques_type_id": 8, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "count_ques_sub_type": 10, 
+  "entities": [
+   "Q24238820"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "No, I meant John Brydon. Could you tell me the answer for that?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "0", 
+  "active_set": [
+   "(c(Q166142)|c(Q2342494),P123,c(Q502895))"
+  ]
+ }
+]

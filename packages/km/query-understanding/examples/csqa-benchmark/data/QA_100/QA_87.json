@@ -1,0 +1,792 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q7358293"
+  ], 
+  "relations": [
+   "P1412"
+  ], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which language can Roger Handasyd read ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1860"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1860"
+  ], 
+  "utterance": "English", 
+  "active_set": [
+   "(Q7358293,P1412,c(Q34770))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q7358293"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P39"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which occupation was a position occupied by Roger Handasyd ?"
+ }, 
+ {
+  "all_entities": [
+   "Q18015642"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18015642"
+  ], 
+  "utterance": "Member of Parliament in the Parliament of Great Britain", 
+  "active_set": [
+   "(Q7358293,P39,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1860"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P495"
+  ], 
+  "type_list": [
+   "Q2031291"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "What are English a country of origin of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q17544704", 
+   "Q19852570"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q17544704", 
+   "Q19852570"
+  ], 
+  "utterance": "K\u00e4ra vinter, Marry Me, Or Not", 
+  "active_set": [
+   "(c(Q2031291),P495,Q1860)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q18015642"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1001"
+  ], 
+  "type_list": [
+   "Q7275"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which state applies to jurisdiction of Member of Parliament in the Parliament of Great Britain ?"
+ }, 
+ {
+  "all_entities": [
+   "Q161885"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q161885"
+  ], 
+  "utterance": "Kingdom of Great Britain", 
+  "active_set": [
+   "(Q18015642,P1001,c(Q7275))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q18015642"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person has the profession as Member of Parliament in the Parliament of Great Britain ?"
+ }, 
+ {
+  "all_entities": [
+   "Q22087320"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q22087320"
+  ], 
+  "utterance": "Francis Gregg", 
+  "active_set": [
+   "(c(Q502895),P106,Q18015642)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q22087320"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which sex does that person possess ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "utterance": "male", 
+  "active_set": [
+   "(Q22087320,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q22087320"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P22"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who has that one as a father ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21166849"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21166849"
+  ], 
+  "utterance": "Henry Gregg", 
+  "active_set": [
+   "(c(Q502895),P22,Q6581097)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which musical instruments can min number of people perform with ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1879664", 
+   "Q748455", 
+   "Q173453"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1879664", 
+   "Q748455", 
+   "Q173453"
+  ], 
+  "utterance": "spoon, caj\u00f3n, wind instrument", 
+  "active_set": [
+   "(c(Q502895),P1303,Q3623688)"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type", 
+  "type_list": [
+   "Q12737077", 
+   "Q340169", 
+   "Q3516658"
+  ], 
+  "entities_in_utterance": [
+   "Q16624872"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which occupations are demonstrated in around the same number of medias and heraldic symbols as washerwoman ?"
+ }, 
+ {
+  "all_entities": [
+   "Q19754019", 
+   "Q11957145", 
+   "Q1934482", 
+   "Q19937286", 
+   "Q2486919", 
+   "Q1569439", 
+   "Q131512", 
+   "Q16735601", 
+   "Q37226", 
+   "Q1401609", 
+   "Q27621374", 
+   "Q152355", 
+   "Q1218776", 
+   "Q1124183", 
+   "Q652122", 
+   "Q654437", 
+   "Q11631", 
+   "Q38883", 
+   "Q288728", 
+   "Q765778", 
+   "Q33999", 
+   "Q36180", 
+   "Q13472752", 
+   "Q852857", 
+   "Q381353", 
+   "Q15618890", 
+   "Q19595175", 
+   "Q2079936", 
+   "Q901402", 
+   "Q29282", 
+   "Q83307", 
+   "Q1722406", 
+   "Q278138", 
+   "Q1221610", 
+   "Q4610556", 
+   "Q81710", 
+   "Q1259917", 
+   "Q161944", 
+   "Q472898", 
+   "Q7358", 
+   "Q19968805", 
+   "Q329737", 
+   "Q4504549", 
+   "Q842782", 
+   "Q47064", 
+   "Q185196", 
+   "Q486748", 
+   "Q328325", 
+   "Q11900058", 
+   "Q483501", 
+   "Q215536", 
+   "Q212238", 
+   "Q22085061", 
+   "Q3430033", 
+   "Q42973", 
+   "Q14948018", 
+   "Q955464", 
+   "Q19723482", 
+   "Q12902372", 
+   "Q170790", 
+   "Q1139055", 
+   "Q1028181", 
+   "Q30185", 
+   "Q587524", 
+   "Q820037", 
+   "Q852389", 
+   "Q16624872", 
+   "Q13219637", 
+   "Q181765", 
+   "Q327321", 
+   "Q549322", 
+   "Q327029", 
+   "Q2309900", 
+   "Q805221", 
+   "Q5371902", 
+   "Q17126809", 
+   "Q12097", 
+   "Q848550", 
+   "Q386854", 
+   "Q202648", 
+   "Q1753370", 
+   "Q107711", 
+   "Q12059906", 
+   "Q2034021", 
+   "Q11642", 
+   "Q1595811", 
+   "Q13474373", 
+   "Q1413824", 
+   "Q3499072", 
+   "Q520549", 
+   "Q4164507", 
+   "Q5455155", 
+   "Q1163330", 
+   "Q855855", 
+   "Q548320", 
+   "Q843281", 
+   "Q550594", 
+   "Q3074722", 
+   "Q19862215", 
+   "Q19546", 
+   "Q6116659", 
+   "Q537575", 
+   "Q20826540", 
+   "Q715301", 
+   "Q11338576", 
+   "Q622630", 
+   "Q3330547", 
+   "Q3214532", 
+   "Q14009165", 
+   "Q15954519", 
+   "Q2981922", 
+   "Q10833314", 
+   "Q1318187", 
+   "Q29182", 
+   "Q326358", 
+   "Q5575361", 
+   "Q1161133", 
+   "Q250867", 
+   "Q376924", 
+   "Q486839", 
+   "Q808266", 
+   "Q1540158", 
+   "Q638172", 
+   "Q2248045", 
+   "Q1104153", 
+   "Q10873124", 
+   "Q13381689", 
+   "Q15725121", 
+   "Q185992", 
+   "Q178521", 
+   "Q133485", 
+   "Q674067", 
+   "Q901", 
+   "Q3127709", 
+   "Q1639825", 
+   "Q4594605", 
+   "Q54128", 
+   "Q242468", 
+   "Q45722", 
+   "Q2596569", 
+   "Q1234713", 
+   "Q848466", 
+   "Q116", 
+   "Q1509714", 
+   "Q152002", 
+   "Q2730732", 
+   "Q1511216", 
+   "Q16533", 
+   "Q103163", 
+   "Q2412523", 
+   "Q211423", 
+   "Q965417", 
+   "Q845929", 
+   "Q11063", 
+   "Q774306", 
+   "Q2276446", 
+   "Q207651", 
+   "Q170779", 
+   "Q3128486", 
+   "Q5420718", 
+   "Q822146", 
+   "Q15284879", 
+   "Q758780", 
+   "Q36834", 
+   "Q694116", 
+   "Q3090865", 
+   "Q833860", 
+   "Q1627992", 
+   "Q2309784", 
+   "Q253567", 
+   "Q3439798", 
+   "Q2191547", 
+   "Q838811", 
+   "Q1437754", 
+   "Q5832280", 
+   "Q1430627", 
+   "Q154549", 
+   "Q2251335", 
+   "Q189290", 
+   "Q331432", 
+   "Q49757", 
+   "Q160131", 
+   "Q4990607", 
+   "Q680928", 
+   "Q6735310", 
+   "Q15296811", 
+   "Q765541", 
+   "Q2011889", 
+   "Q49476", 
+   "Q1281618", 
+   "Q2891167", 
+   "Q685433", 
+   "Q12299841", 
+   "Q2095549", 
+   "Q5061344", 
+   "Q432386", 
+   "Q191808", 
+   "Q182436", 
+   "Q2259532", 
+   "Q811122", 
+   "Q373017", 
+   "Q2180295", 
+   "Q42603", 
+   "Q1294787", 
+   "Q2627286", 
+   "Q437512", 
+   "Q13414980", 
+   "Q39631", 
+   "Q849424", 
+   "Q842606", 
+   "Q2340797", 
+   "Q156839", 
+   "Q7622988", 
+   "Q157195"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q131512", 
+   "Q242468", 
+   "Q182436"
+  ], 
+  "utterance": "farmer, tailor, librarian", 
+  "active_set": [
+   "(c(Q340169)|c(Q3516658),P180,c(Q12737077))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q12737077", 
+   "Q340169", 
+   "Q3516658"
+  ], 
+  "entities_in_utterance": [
+   "Q288728"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And how about house painter?"
+ }, 
+ {
+  "all_entities": [
+   "Q19754019", 
+   "Q11957145", 
+   "Q1934482", 
+   "Q19937286", 
+   "Q2486919", 
+   "Q1569439", 
+   "Q131512", 
+   "Q16735601", 
+   "Q37226", 
+   "Q1401609", 
+   "Q27621374", 
+   "Q152355", 
+   "Q1218776", 
+   "Q1124183", 
+   "Q652122", 
+   "Q654437", 
+   "Q11631", 
+   "Q38883", 
+   "Q288728", 
+   "Q765778", 
+   "Q33999", 
+   "Q36180", 
+   "Q13472752", 
+   "Q852857", 
+   "Q381353", 
+   "Q15618890", 
+   "Q19595175", 
+   "Q2079936", 
+   "Q901402", 
+   "Q29282", 
+   "Q83307", 
+   "Q1722406", 
+   "Q278138", 
+   "Q1221610", 
+   "Q4610556", 
+   "Q81710", 
+   "Q1259917", 
+   "Q161944", 
+   "Q472898", 
+   "Q7358", 
+   "Q19968805", 
+   "Q329737", 
+   "Q4504549", 
+   "Q842782", 
+   "Q47064", 
+   "Q185196", 
+   "Q486748", 
+   "Q328325", 
+   "Q11900058", 
+   "Q483501", 
+   "Q215536", 
+   "Q212238", 
+   "Q22085061", 
+   "Q3430033", 
+   "Q42973", 
+   "Q14948018", 
+   "Q955464", 
+   "Q19723482", 
+   "Q12902372", 
+   "Q170790", 
+   "Q1139055", 
+   "Q1028181", 
+   "Q30185", 
+   "Q587524", 
+   "Q820037", 
+   "Q852389", 
+   "Q16624872", 
+   "Q13219637", 
+   "Q181765", 
+   "Q327321", 
+   "Q549322", 
+   "Q327029", 
+   "Q2309900", 
+   "Q805221", 
+   "Q5371902", 
+   "Q17126809", 
+   "Q12097", 
+   "Q848550", 
+   "Q386854", 
+   "Q202648", 
+   "Q1753370", 
+   "Q107711", 
+   "Q12059906", 
+   "Q2034021", 
+   "Q11642", 
+   "Q1595811", 
+   "Q13474373", 
+   "Q1413824", 
+   "Q3499072", 
+   "Q520549", 
+   "Q4164507", 
+   "Q5455155", 
+   "Q1163330", 
+   "Q855855", 
+   "Q548320", 
+   "Q843281", 
+   "Q550594", 
+   "Q3074722", 
+   "Q19862215", 
+   "Q19546", 
+   "Q6116659", 
+   "Q537575", 
+   "Q20826540", 
+   "Q715301", 
+   "Q11338576", 
+   "Q622630", 
+   "Q3330547", 
+   "Q3214532", 
+   "Q14009165", 
+   "Q15954519", 
+   "Q2981922", 
+   "Q10833314", 
+   "Q1318187", 
+   "Q29182", 
+   "Q326358", 
+   "Q5575361", 
+   "Q1161133", 
+   "Q250867", 
+   "Q376924", 
+   "Q486839", 
+   "Q808266", 
+   "Q1540158", 
+   "Q638172", 
+   "Q2248045", 
+   "Q1104153", 
+   "Q10873124", 
+   "Q13381689", 
+   "Q15725121", 
+   "Q185992", 
+   "Q178521", 
+   "Q133485", 
+   "Q674067", 
+   "Q901", 
+   "Q3127709", 
+   "Q1639825", 
+   "Q4594605", 
+   "Q54128", 
+   "Q242468", 
+   "Q45722", 
+   "Q2596569", 
+   "Q1234713", 
+   "Q848466", 
+   "Q116", 
+   "Q1509714", 
+   "Q152002", 
+   "Q2730732", 
+   "Q1511216", 
+   "Q16533", 
+   "Q103163", 
+   "Q2412523", 
+   "Q211423", 
+   "Q965417", 
+   "Q845929", 
+   "Q11063", 
+   "Q774306", 
+   "Q2276446", 
+   "Q207651", 
+   "Q170779", 
+   "Q3128486", 
+   "Q5420718", 
+   "Q822146", 
+   "Q15284879", 
+   "Q758780", 
+   "Q36834", 
+   "Q694116", 
+   "Q3090865", 
+   "Q833860", 
+   "Q1627992", 
+   "Q2309784", 
+   "Q253567", 
+   "Q3439798", 
+   "Q2191547", 
+   "Q838811", 
+   "Q1437754", 
+   "Q5832280", 
+   "Q1430627", 
+   "Q154549", 
+   "Q2251335", 
+   "Q189290", 
+   "Q331432", 
+   "Q49757", 
+   "Q160131", 
+   "Q4990607", 
+   "Q680928", 
+   "Q6735310", 
+   "Q15296811", 
+   "Q765541", 
+   "Q2011889", 
+   "Q49476", 
+   "Q1281618", 
+   "Q2891167", 
+   "Q685433", 
+   "Q12299841", 
+   "Q2095549", 
+   "Q5061344", 
+   "Q432386", 
+   "Q191808", 
+   "Q182436", 
+   "Q2259532", 
+   "Q811122", 
+   "Q373017", 
+   "Q2180295", 
+   "Q42603", 
+   "Q1294787", 
+   "Q2627286", 
+   "Q437512", 
+   "Q13414980", 
+   "Q39631", 
+   "Q849424", 
+   "Q842606", 
+   "Q2340797", 
+   "Q156839", 
+   "Q7622988", 
+   "Q157195"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q131512", 
+   "Q242468", 
+   "Q182436"
+  ], 
+  "utterance": "farmer, tailor, librarian", 
+  "active_set": [
+   "(c(Q340169)|c(Q3516658),P180,c(Q12737077))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Mult. entity type", 
+  "type_list": [
+   "Q12737077", 
+   "Q191067", 
+   "Q838948"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P921"
+  ], 
+  "count_ques_sub_type": 4, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which occupations were the main subjects of exactly 2 articles or works of art 's work ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1930187", 
+   "Q101539", 
+   "Q16003605", 
+   "Q16003532"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1930187", 
+   "Q16003532", 
+   "Q16003605"
+  ], 
+  "utterance": "journalist, middle school student, elementary school student", 
+  "active_set": [
+   "(c(Q191067)|c(Q838948),P921,c(Q12737077))"
+  ]
+ }
+]

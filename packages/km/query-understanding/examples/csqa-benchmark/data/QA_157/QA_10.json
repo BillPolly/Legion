@@ -1,0 +1,226 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q90051"
+  ], 
+  "relations": [
+   "P136"
+  ], 
+  "type_list": [
+   "Q151885"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which concept can be considered as genre of Elli Erl ?"
+ }, 
+ {
+  "all_entities": [
+   "Q37073"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q37073"
+  ], 
+  "utterance": "pop music", 
+  "active_set": [
+   "(Q90051,P136,c(Q151885))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q90051"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which political territory does Elli Erl belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "utterance": "Germany", 
+  "active_set": [
+   "(Q90051,P27,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P108"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people work for that political territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2514", 
+   "Q57855", 
+   "Q1492424"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2514", 
+   "Q57855", 
+   "Q1492424"
+  ], 
+  "utterance": "Willy Brandt, Georg Friedrich Grotefend, Marieluise Dei\u00dfmann-Merten", 
+  "active_set": [
+   "(c(Q502895),P108,Q183)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1492424"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P184"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which person was the doctoral advisor of that one ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q2514"
+  ], 
+  "active_set": [
+   "(Q2514,P184,c(Q502895))", 
+   "(Q57855,P184,c(Q502895))", 
+   "(Q1492424,P184,c(Q502895))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q2514", 
+   "Q57855", 
+   "Q1492424"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Willy Brandt ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q1492424"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Marieluise Dei\u00dfmann-Merten. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q1282427"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1282427"
+  ], 
+  "utterance": "Hermann Strasburger", 
+  "active_set": [
+   "(Q1492424,P184,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, 2 direct, 2(direct) are query entities, subject is indirect", 
+  "entities_in_utterance": [
+   "Q1282427", 
+   "Q2833", 
+   "Q92381"
+  ], 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q515"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 5, 
+  "utterance": "Did that person expired at Freiburg im Breisgau and Baicheng ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES and NO respectively", 
+  "active_set": [
+   "(Q1282427,P20,Q2833)", 
+   "(Q1282427,P20,Q92381)"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Mult. entity type", 
+  "entities_in_utterance": [
+   "Q1282427", 
+   "Q175833"
+  ], 
+  "relations": [
+   "P7"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many people have Hermann Strasburger or Wenceslaus I of Bohemia as their sibling ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q2385877", 
+   "Q24306567", 
+   "Q1368797", 
+   "Q2270266", 
+   "Q394727", 
+   "Q263412", 
+   "Q434662"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "7", 
+  "active_set": [
+   "(c(Q502895),P7,Q1282427)", 
+   "(c(Q502895),P7,Q175833)"
+  ]
+ }
+]

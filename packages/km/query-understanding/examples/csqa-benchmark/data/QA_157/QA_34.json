@@ -1,0 +1,1185 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q880515"
+  ], 
+  "relations": [
+   "P162"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Who produced Black Robe ?"
+ }, 
+ {
+  "all_entities": [
+   "Q847366"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q847366"
+  ], 
+  "utterance": "Robert Lantos", 
+  "active_set": [
+   "(Q880515,P162,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q847366"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P26"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person has that one as spouse ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3177047"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3177047"
+  ], 
+  "utterance": "Jennifer Dale", 
+  "active_set": [
+   "(c(Q502895),P26,Q847366)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q3177047"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P161"
+  ], 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which works of art do that person star in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q5598096", 
+   "Q1961623", 
+   "Q4086682", 
+   "Q3010981"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q4086682", 
+   "Q1961623", 
+   "Q3010981"
+  ], 
+  "utterance": "Ticket to Heaven, The Adjuster, Of Unknown Origin", 
+  "active_set": [
+   "(c(Q838948),P161,Q3177047)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1961623"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P86"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who wrote the music for The Adjuster ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1336515"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1336515"
+  ], 
+  "utterance": "Mychael Danna", 
+  "active_set": [
+   "(Q1961623,P86,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, one direct and one indirect, subject is indirect", 
+  "entities_in_utterance": [
+   "Q1336515", 
+   "Q427240"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 2, 
+  "utterance": "Is Amoroto the country of citizenship of that person ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q1336515,P27,Q427240)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1336515"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P344"
+  ], 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which work of art is Mychael Danna the cinematographer of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q165297"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q165297"
+  ], 
+  "utterance": "8mm 2", 
+  "active_set": [
+   "(c(Q838948),P344,Q1336515)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1961623"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P136"
+  ], 
+  "type_list": [
+   "Q1792379"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What can be considered as category for The Adjuster ?"
+ }, 
+ {
+  "all_entities": [
+   "Q130232"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q130232"
+  ], 
+  "utterance": "drama film", 
+  "active_set": [
+   "(Q1961623,P136,c(Q1792379))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1336515"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1411"
+  ], 
+  "type_list": [
+   "Q4220917"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which film award does Mychael Danna have ?"
+ }, 
+ {
+  "all_entities": [
+   "Q488651"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q488651"
+  ], 
+  "utterance": "Academy Award for Best Original Score", 
+  "active_set": [
+   "(Q1336515,P1411,c(Q4220917))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q1168250"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q4220917"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about Herv\u00e9 Schneid?"
+ }, 
+ {
+  "all_entities": [
+   "Q609977", 
+   "Q3473903", 
+   "Q787145"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q609977", 
+   "Q3473903", 
+   "Q787145"
+  ], 
+  "utterance": "European Film Award for Best Editor, Satellite Award for Best Editing, BAFTA Award for Best Editing", 
+  "active_set": [
+   "(Q1168250,P1411,c(Q4220917))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Mult. entity type", 
+  "type_list": [
+   "Q5292", 
+   "Q43229", 
+   "Q502895"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P248"
+  ], 
+  "count_ques_sub_type": 3, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "Which people have been acknowledged in max number of encyclopedias and organizations ?"
+ }, 
+ {
+  "all_entities": [
+   "Q333770"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q333770"
+  ], 
+  "utterance": "Victorinus", 
+  "active_set": [
+   "(c(Q502895),P248,c(Q5292)|c(Q43229))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q333770"
+  ], 
+  "relations": [
+   "P248"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q5292"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many encyclopedias are Victorinus acknowledged in ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q602358", 
+   "Q19180675"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(Q333770,P248,c(Q5292))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q157835"
+  ], 
+  "relations": [
+   "P248"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q5292"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about Zaporizhzhya?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q4091875", 
+   "Q19217220", 
+   "Q4093022", 
+   "Q19190511"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "4", 
+  "active_set": [
+   "(Q157835,P248,c(Q5292))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q2360847"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q5292"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about Zaporizhstal?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q2360847,P248,c(Q5292))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P725"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q502895", 
+   "Q11424"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many films had their voice dubbing done by approximately 22 people ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q191753", 
+   "Q6929072", 
+   "Q785294", 
+   "Q204662", 
+   "Q521082", 
+   "Q270470", 
+   "Q334132", 
+   "Q215617", 
+   "Q216929", 
+   "Q165512", 
+   "Q578595", 
+   "Q933887", 
+   "Q329316", 
+   "Q213787", 
+   "Q19090", 
+   "Q184701", 
+   "Q2059996", 
+   "Q218894", 
+   "Q15270775", 
+   "Q202371", 
+   "Q40302", 
+   "Q189875", 
+   "Q43051", 
+   "Q917278", 
+   "Q498434", 
+   "Q199839", 
+   "Q36479", 
+   "Q39722", 
+   "Q40895"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "29", 
+  "active_set": [
+   "(c(Q11424),P725,c(Q502895))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type", 
+  "type_list": [
+   "Q4220917", 
+   "Q838948", 
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q7971822"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P1411"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which film awards did approximately the same number of works of art and people receive as Washington D.C. Area Film Critics Association Award for Best Supporting Actress ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1062019", 
+   "Q1653839", 
+   "Q966068", 
+   "Q19829650", 
+   "Q1653830", 
+   "Q165313", 
+   "Q1291221", 
+   "Q687123", 
+   "Q11789125", 
+   "Q2634221", 
+   "Q3473903", 
+   "Q838482", 
+   "Q400007", 
+   "Q1419495", 
+   "Q2708642", 
+   "Q778870", 
+   "Q673229", 
+   "Q1534906", 
+   "Q2463699", 
+   "Q7414019", 
+   "Q5211230", 
+   "Q1520004", 
+   "Q1075361", 
+   "Q7414014", 
+   "Q2358089", 
+   "Q7209847", 
+   "Q4377007", 
+   "Q1377745", 
+   "Q696998", 
+   "Q1414485", 
+   "Q1414482", 
+   "Q1257501", 
+   "Q7914164", 
+   "Q2348108", 
+   "Q1414508", 
+   "Q112243", 
+   "Q1255198", 
+   "Q1414504", 
+   "Q41375", 
+   "Q1011509", 
+   "Q2620855", 
+   "Q5569281", 
+   "Q1638207", 
+   "Q3473886", 
+   "Q3473887", 
+   "Q3473882", 
+   "Q3473883", 
+   "Q16258998", 
+   "Q3021821", 
+   "Q15999751", 
+   "Q947811", 
+   "Q387380", 
+   "Q4806635", 
+   "Q11066787", 
+   "Q1062026", 
+   "Q5449066", 
+   "Q5449062", 
+   "Q5449061", 
+   "Q3841639", 
+   "Q7426018", 
+   "Q910299", 
+   "Q376834", 
+   "Q1268927", 
+   "Q2102539", 
+   "Q2102534", 
+   "Q2102530", 
+   "Q4722629", 
+   "Q932281", 
+   "Q768476", 
+   "Q1071890", 
+   "Q822907", 
+   "Q586356", 
+   "Q2947541", 
+   "Q13091028", 
+   "Q1467554", 
+   "Q4220900", 
+   "Q4220901", 
+   "Q3025728", 
+   "Q7601595", 
+   "Q787148", 
+   "Q7601593", 
+   "Q7601591", 
+   "Q22335251", 
+   "Q787145", 
+   "Q5412594", 
+   "Q5412592", 
+   "Q3667647", 
+   "Q765404", 
+   "Q3667644", 
+   "Q547575", 
+   "Q1367639", 
+   "Q1414545", 
+   "Q664212", 
+   "Q3827269", 
+   "Q5971210", 
+   "Q569979", 
+   "Q22235305", 
+   "Q739694", 
+   "Q6718743", 
+   "Q492570", 
+   "Q1790273", 
+   "Q5095597", 
+   "Q5095598", 
+   "Q7414009", 
+   "Q7414008", 
+   "Q652644", 
+   "Q1377752", 
+   "Q1377755", 
+   "Q1377756", 
+   "Q1071903", 
+   "Q736479", 
+   "Q21100238", 
+   "Q1075371", 
+   "Q11789134", 
+   "Q1414511", 
+   "Q1414514", 
+   "Q1720784", 
+   "Q649232", 
+   "Q1255210", 
+   "Q7209845", 
+   "Q787065", 
+   "Q3473891", 
+   "Q3473897", 
+   "Q3473896", 
+   "Q3473898", 
+   "Q1635307", 
+   "Q9256282", 
+   "Q1371682", 
+   "Q1364116", 
+   "Q16936987", 
+   "Q22335263", 
+   "Q7971821", 
+   "Q7971822", 
+   "Q1647268", 
+   "Q820046", 
+   "Q1011564", 
+   "Q1379415", 
+   "Q389636", 
+   "Q596294", 
+   "Q748018", 
+   "Q425675", 
+   "Q930627", 
+   "Q1634847", 
+   "Q7426020", 
+   "Q777921", 
+   "Q2357620", 
+   "Q1377736", 
+   "Q919999", 
+   "Q1582057", 
+   "Q3827280", 
+   "Q3827282", 
+   "Q3827284", 
+   "Q3827286", 
+   "Q492578", 
+   "Q546160", 
+   "Q1800189", 
+   "Q1377763", 
+   "Q1071888", 
+   "Q338757", 
+   "Q22120095", 
+   "Q22344608", 
+   "Q1257493", 
+   "Q6978539", 
+   "Q1414525", 
+   "Q2634461", 
+   "Q3110058", 
+   "Q175235", 
+   "Q2827843", 
+   "Q21995338", 
+   "Q670282", 
+   "Q1414555", 
+   "Q1414550", 
+   "Q21995337", 
+   "Q106800", 
+   "Q2735625", 
+   "Q4068936", 
+   "Q10873945", 
+   "Q5971201", 
+   "Q5449099", 
+   "Q628637", 
+   "Q19867291", 
+   "Q1408039", 
+   "Q1535559", 
+   "Q22117120", 
+   "Q7971810", 
+   "Q928115", 
+   "Q7971813", 
+   "Q463085", 
+   "Q7971815", 
+   "Q7971817", 
+   "Q7971819", 
+   "Q905413", 
+   "Q1707516", 
+   "Q257235", 
+   "Q2856444", 
+   "Q593098", 
+   "Q1627408", 
+   "Q1315008", 
+   "Q894586", 
+   "Q609977", 
+   "Q1422140", 
+   "Q2925687", 
+   "Q1472235", 
+   "Q540977", 
+   "Q1390226", 
+   "Q548389", 
+   "Q1414560", 
+   "Q894598", 
+   "Q894591", 
+   "Q894589", 
+   "Q894596", 
+   "Q4769231", 
+   "Q4769232", 
+   "Q5894560", 
+   "Q4769235", 
+   "Q878902", 
+   "Q1075366", 
+   "Q1075364", 
+   "Q1790281", 
+   "Q580698", 
+   "Q174673", 
+   "Q787123", 
+   "Q787127", 
+   "Q928164", 
+   "Q3110062", 
+   "Q1749539", 
+   "Q723830", 
+   "Q578116", 
+   "Q389628", 
+   "Q1892623", 
+   "Q429700", 
+   "Q3886464", 
+   "Q3886465", 
+   "Q3703452", 
+   "Q3886463", 
+   "Q501004", 
+   "Q819973", 
+   "Q3473910", 
+   "Q1718955", 
+   "Q492564", 
+   "Q492560", 
+   "Q5211222", 
+   "Q1534911", 
+   "Q1967731", 
+   "Q787098", 
+   "Q7524426", 
+   "Q22752734", 
+   "Q7209855", 
+   "Q7209850", 
+   "Q918660", 
+   "Q1377772", 
+   "Q1377771", 
+   "Q1377777", 
+   "Q2418096", 
+   "Q1113428", 
+   "Q15096815", 
+   "Q1468372", 
+   "Q6978540", 
+   "Q6978541", 
+   "Q1414533", 
+   "Q2463743", 
+   "Q849124", 
+   "Q181883", 
+   "Q5579759", 
+   "Q5579758", 
+   "Q5579751", 
+   "Q5579757", 
+   "Q5579756", 
+   "Q168134", 
+   "Q4806633", 
+   "Q22235329", 
+   "Q22335203", 
+   "Q7971807", 
+   "Q7971808", 
+   "Q2354778", 
+   "Q4220897", 
+   "Q4743384", 
+   "Q5449077", 
+   "Q962236", 
+   "Q139184", 
+   "Q1161102", 
+   "Q2092962", 
+   "Q2408100", 
+   "Q511553", 
+   "Q2634446", 
+   "Q1540553", 
+   "Q905247", 
+   "Q5449087", 
+   "Q1377738", 
+   "Q388433", 
+   "Q1377733", 
+   "Q5449109", 
+   "Q5449101", 
+   "Q5449102", 
+   "Q5449104", 
+   "Q5449106", 
+   "Q5449107", 
+   "Q492557", 
+   "Q22120066", 
+   "Q734036", 
+   "Q4745055", 
+   "Q5579760", 
+   "Q5579761", 
+   "Q1414473", 
+   "Q652430", 
+   "Q491025", 
+   "Q1789544", 
+   "Q2437466", 
+   "Q1075356", 
+   "Q1075354", 
+   "Q1075353", 
+   "Q918617", 
+   "Q2350896", 
+   "Q4834543", 
+   "Q4834542", 
+   "Q16687986", 
+   "Q4834546", 
+   "Q2663714", 
+   "Q7601584", 
+   "Q1161101", 
+   "Q1161103", 
+   "Q2694852", 
+   "Q7601589", 
+   "Q787131", 
+   "Q739633", 
+   "Q7601579", 
+   "Q7601578"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q787127", 
+   "Q787148", 
+   "Q2925687"
+  ], 
+  "utterance": "BAFTA Award for Best Special Visual Effects, BAFTA Academy Fellowship Award, BAFTA Award for Best Film Not in the English Language", 
+  "active_set": [
+   "(c(Q838948)|c(Q502895),P1411,c(Q4220917))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q4220917", 
+   "Q838948", 
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q2437466"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P1411"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And what about Empire Award for Best Film?"
+ }, 
+ {
+  "all_entities": [
+   "Q1062019", 
+   "Q1653839", 
+   "Q966068", 
+   "Q19829650", 
+   "Q1653830", 
+   "Q165313", 
+   "Q1291221", 
+   "Q687123", 
+   "Q11789125", 
+   "Q2634221", 
+   "Q3473903", 
+   "Q838482", 
+   "Q400007", 
+   "Q1419495", 
+   "Q2708642", 
+   "Q778870", 
+   "Q673229", 
+   "Q1534906", 
+   "Q2463699", 
+   "Q7414019", 
+   "Q5211230", 
+   "Q1520004", 
+   "Q1075361", 
+   "Q7414014", 
+   "Q2358089", 
+   "Q7209847", 
+   "Q4377007", 
+   "Q1377745", 
+   "Q696998", 
+   "Q1414485", 
+   "Q1414482", 
+   "Q1257501", 
+   "Q7914164", 
+   "Q2348108", 
+   "Q1414508", 
+   "Q112243", 
+   "Q1255198", 
+   "Q1414504", 
+   "Q41375", 
+   "Q1011509", 
+   "Q2620855", 
+   "Q5569281", 
+   "Q1638207", 
+   "Q3473886", 
+   "Q3473887", 
+   "Q3473882", 
+   "Q3473883", 
+   "Q16258998", 
+   "Q3021821", 
+   "Q15999751", 
+   "Q947811", 
+   "Q387380", 
+   "Q4806635", 
+   "Q11066787", 
+   "Q1062026", 
+   "Q5449066", 
+   "Q5449062", 
+   "Q5449061", 
+   "Q3841639", 
+   "Q7426018", 
+   "Q910299", 
+   "Q376834", 
+   "Q1268927", 
+   "Q2102539", 
+   "Q2102534", 
+   "Q2102530", 
+   "Q4722629", 
+   "Q932281", 
+   "Q768476", 
+   "Q1071890", 
+   "Q822907", 
+   "Q586356", 
+   "Q2947541", 
+   "Q13091028", 
+   "Q1467554", 
+   "Q4220900", 
+   "Q4220901", 
+   "Q3025728", 
+   "Q7601595", 
+   "Q787148", 
+   "Q7601593", 
+   "Q7601591", 
+   "Q22335251", 
+   "Q787145", 
+   "Q5412594", 
+   "Q5412592", 
+   "Q3667647", 
+   "Q765404", 
+   "Q3667644", 
+   "Q547575", 
+   "Q1367639", 
+   "Q1414545", 
+   "Q664212", 
+   "Q3827269", 
+   "Q5971210", 
+   "Q569979", 
+   "Q22235305", 
+   "Q739694", 
+   "Q6718743", 
+   "Q492570", 
+   "Q1790273", 
+   "Q5095597", 
+   "Q5095598", 
+   "Q7414009", 
+   "Q7414008", 
+   "Q652644", 
+   "Q1377752", 
+   "Q1377755", 
+   "Q1377756", 
+   "Q1071903", 
+   "Q736479", 
+   "Q21100238", 
+   "Q1075371", 
+   "Q11789134", 
+   "Q1414511", 
+   "Q1414514", 
+   "Q1720784", 
+   "Q649232", 
+   "Q1255210", 
+   "Q7209845", 
+   "Q787065", 
+   "Q3473891", 
+   "Q3473897", 
+   "Q3473896", 
+   "Q3473898", 
+   "Q1635307", 
+   "Q9256282", 
+   "Q1371682", 
+   "Q1364116", 
+   "Q16936987", 
+   "Q22335263", 
+   "Q7971821", 
+   "Q7971822", 
+   "Q1647268", 
+   "Q820046", 
+   "Q1011564", 
+   "Q1379415", 
+   "Q389636", 
+   "Q596294", 
+   "Q748018", 
+   "Q425675", 
+   "Q930627", 
+   "Q1634847", 
+   "Q7426020", 
+   "Q777921", 
+   "Q2357620", 
+   "Q1377736", 
+   "Q919999", 
+   "Q1582057", 
+   "Q3827280", 
+   "Q3827282", 
+   "Q3827284", 
+   "Q3827286", 
+   "Q492578", 
+   "Q546160", 
+   "Q1800189", 
+   "Q1377763", 
+   "Q1071888", 
+   "Q338757", 
+   "Q22120095", 
+   "Q22344608", 
+   "Q1257493", 
+   "Q6978539", 
+   "Q1414525", 
+   "Q2634461", 
+   "Q3110058", 
+   "Q175235", 
+   "Q2827843", 
+   "Q21995338", 
+   "Q670282", 
+   "Q1414555", 
+   "Q1414550", 
+   "Q21995337", 
+   "Q106800", 
+   "Q2735625", 
+   "Q4068936", 
+   "Q10873945", 
+   "Q5971201", 
+   "Q5449099", 
+   "Q628637", 
+   "Q19867291", 
+   "Q1408039", 
+   "Q1535559", 
+   "Q22117120", 
+   "Q7971810", 
+   "Q928115", 
+   "Q7971813", 
+   "Q463085", 
+   "Q7971815", 
+   "Q7971817", 
+   "Q7971819", 
+   "Q905413", 
+   "Q1707516", 
+   "Q257235", 
+   "Q2856444", 
+   "Q593098", 
+   "Q1627408", 
+   "Q1315008", 
+   "Q894586", 
+   "Q609977", 
+   "Q1422140", 
+   "Q2925687", 
+   "Q1472235", 
+   "Q540977", 
+   "Q1390226", 
+   "Q548389", 
+   "Q1414560", 
+   "Q894598", 
+   "Q894591", 
+   "Q894589", 
+   "Q894596", 
+   "Q4769231", 
+   "Q4769232", 
+   "Q5894560", 
+   "Q4769235", 
+   "Q878902", 
+   "Q1075366", 
+   "Q1075364", 
+   "Q1790281", 
+   "Q580698", 
+   "Q174673", 
+   "Q787123", 
+   "Q787127", 
+   "Q928164", 
+   "Q3110062", 
+   "Q1749539", 
+   "Q723830", 
+   "Q578116", 
+   "Q389628", 
+   "Q1892623", 
+   "Q429700", 
+   "Q3886464", 
+   "Q3886465", 
+   "Q3703452", 
+   "Q3886463", 
+   "Q501004", 
+   "Q819973", 
+   "Q3473910", 
+   "Q1718955", 
+   "Q492564", 
+   "Q492560", 
+   "Q5211222", 
+   "Q1534911", 
+   "Q1967731", 
+   "Q787098", 
+   "Q7524426", 
+   "Q22752734", 
+   "Q7209855", 
+   "Q7209850", 
+   "Q918660", 
+   "Q1377772", 
+   "Q1377771", 
+   "Q1377777", 
+   "Q2418096", 
+   "Q1113428", 
+   "Q15096815", 
+   "Q1468372", 
+   "Q6978540", 
+   "Q6978541", 
+   "Q1414533", 
+   "Q2463743", 
+   "Q849124", 
+   "Q181883", 
+   "Q5579759", 
+   "Q5579758", 
+   "Q5579751", 
+   "Q5579757", 
+   "Q5579756", 
+   "Q168134", 
+   "Q4806633", 
+   "Q22235329", 
+   "Q22335203", 
+   "Q7971807", 
+   "Q7971808", 
+   "Q2354778", 
+   "Q4220897", 
+   "Q4743384", 
+   "Q5449077", 
+   "Q962236", 
+   "Q139184", 
+   "Q1161102", 
+   "Q2092962", 
+   "Q2408100", 
+   "Q511553", 
+   "Q2634446", 
+   "Q1540553", 
+   "Q905247", 
+   "Q5449087", 
+   "Q1377738", 
+   "Q388433", 
+   "Q1377733", 
+   "Q5449109", 
+   "Q5449101", 
+   "Q5449102", 
+   "Q5449104", 
+   "Q5449106", 
+   "Q5449107", 
+   "Q492557", 
+   "Q22120066", 
+   "Q734036", 
+   "Q4745055", 
+   "Q5579760", 
+   "Q5579761", 
+   "Q1414473", 
+   "Q652430", 
+   "Q491025", 
+   "Q1789544", 
+   "Q2437466", 
+   "Q1075356", 
+   "Q1075354", 
+   "Q1075353", 
+   "Q918617", 
+   "Q2350896", 
+   "Q4834543", 
+   "Q4834542", 
+   "Q16687986", 
+   "Q4834546", 
+   "Q2663714", 
+   "Q7601584", 
+   "Q1161101", 
+   "Q1161103", 
+   "Q2694852", 
+   "Q7601589", 
+   "Q787131", 
+   "Q739633", 
+   "Q7601579", 
+   "Q7601578"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q787127", 
+   "Q787148", 
+   "Q2925687"
+  ], 
+  "utterance": "BAFTA Award for Best Special Visual Effects, BAFTA Academy Fellowship Award, BAFTA Award for Best Film Not in the English Language", 
+  "active_set": [
+   "(c(Q838948)|c(Q502895),P1411,c(Q4220917))"
+  ]
+ }
+]

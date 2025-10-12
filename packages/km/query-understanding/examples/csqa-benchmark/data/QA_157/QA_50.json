@@ -1,0 +1,448 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q19796730"
+  ], 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is the sex of Rodrigo Oviedo ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "utterance": "male", 
+  "active_set": [
+   "(Q19796730,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person has the profession as that sex ?"
+ }, 
+ {
+  "all_entities": [
+   "Q24877298"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q24877298"
+  ], 
+  "utterance": "Anton\u00edn Straka", 
+  "active_set": [
+   "(c(Q502895),P106,Q6581097)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q19796730"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q486972"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which human settlement was Rodrigo Oviedo born at ?"
+ }, 
+ {
+  "all_entities": [
+   "Q386991"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q386991"
+  ], 
+  "utterance": "Torre\u00f3n", 
+  "active_set": [
+   "(Q19796730,P19,c(Q486972))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q1602937"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q486972"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Hellmut K\u00f6nigshaus?"
+ }, 
+ {
+  "all_entities": [
+   "Q599941"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q599941"
+  ], 
+  "utterance": "Adlershof", 
+  "active_set": [
+   "(Q1602937,P19,c(Q486972))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1602937"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P710"
+  ], 
+  "type_list": [
+   "Q1499496"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which German presidential election did that person participate in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q707051"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q707051"
+  ], 
+  "utterance": "German presidential election, 2009", 
+  "active_set": [
+   "(c(Q1499496),P710,Q599941)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q707051", 
+   "Q824289"
+  ], 
+  "relations": [
+   "P1344"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Did Bernd Steinwendner competite in that German presidential election ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q824289,P1344,Q707051)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q837968"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P1376"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q515", 
+   "Q486972"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many cities have lesser number of human settlements as their county seat than B\u0103ile Tu\u0219nad ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1410", 
+   "Q235", 
+   "Q148540"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "3", 
+  "active_set": [
+   "(c(Q486972),P1376,c(Q515))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q518992"
+  ], 
+  "relations": [
+   "P1376"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q515", 
+   "Q486972"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And what about C\u0103lan?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q1410", 
+   "Q235", 
+   "Q148540"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "3", 
+  "active_set": [
+   "(c(Q486972),P1376,c(Q515))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q599941"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which political territory is Adlershof a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "utterance": "Germany", 
+  "active_set": [
+   "(Q599941,P17,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P6"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which people are the head of government of that political territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2492", 
+   "Q2518", 
+   "Q2530", 
+   "Q2496", 
+   "Q2514", 
+   "Q2516", 
+   "Q2571", 
+   "Q2512", 
+   "Q567"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2492", 
+   "Q2514", 
+   "Q567"
+  ], 
+  "utterance": "Konrad Adenauer, Willy Brandt, Angela Merkel", 
+  "active_set": [
+   "(Q183,P6,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q836967"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about Los Villares de Soria?"
+ }, 
+ {
+  "all_entities": [
+   "Q14121271"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14121271"
+  ], 
+  "utterance": "Jose Maria del Rio Bachiller", 
+  "active_set": [
+   "(Q836967,P6,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q836967"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P47"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which political territories are bordered by Los Villares de Soria ?"
+ }, 
+ {
+  "all_entities": [
+   "Q829600", 
+   "Q833604", 
+   "Q828668", 
+   "Q836868", 
+   "Q835700", 
+   "Q830668", 
+   "Q829730"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q828668", 
+   "Q836868", 
+   "Q830668"
+  ], 
+  "utterance": "Almarza, Renieblas, Ausejo de la Sierra", 
+  "active_set": [
+   "(Q836967,P47,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P194"
+  ], 
+  "type_list": [
+   "Q11204"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which legislature is the legislative body for Germany ?"
+ }, 
+ {
+  "all_entities": [
+   "Q146138"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q146138"
+  ], 
+  "utterance": "Bundesrat", 
+  "active_set": [
+   "(Q183,P194,c(Q11204))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q2514"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P138"
+  ], 
+  "type_list": [
+   "Q618779"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which awards are named after Willy Brandt ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1239632", 
+   "Q2581802"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1239632", 
+   "Q2581802"
+  ], 
+  "utterance": "Willy Brandt Prize, Willy-Brandt-Medaille", 
+  "active_set": [
+   "(c(Q618779),P138,Q2514)"
+  ]
+ }
+]

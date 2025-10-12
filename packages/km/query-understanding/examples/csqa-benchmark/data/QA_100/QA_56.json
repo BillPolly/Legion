@@ -1,0 +1,695 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q4280825"
+  ], 
+  "relations": [
+   "P166"
+  ], 
+  "type_list": [
+   "Q618779"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What were awarded to Vladimir von Manstein ?"
+ }, 
+ {
+  "all_entities": [
+   "Q15972373", 
+   "Q15972370", 
+   "Q15972371", 
+   "Q18084455", 
+   "Q18084456", 
+   "Q21148960"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q15972373", 
+   "Q15972370", 
+   "Q15972371"
+  ], 
+  "utterance": "Order of Saint Anna, 4th class, Order of Saint Anna, 2nd class, Order of Saint Anna, 3rd class", 
+  "active_set": [
+   "(Q4280825,P166,c(Q618779))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q4280825"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P69"
+  ], 
+  "type_list": [
+   "Q1935049"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which military school is Vladimir von Manstein an alumni of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1974517"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1974517"
+  ], 
+  "utterance": "Pavel Military School", 
+  "active_set": [
+   "(Q4280825,P69,c(Q1935049))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q15972373"
+  ], 
+  "relations": [
+   "P138"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many people are Order of Saint Anna, 4th class named after ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q164294"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q15972373,P138,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q834654"
+  ], 
+  "relations": [
+   "P138"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And how about 7968 Elst-Pizarro?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q542713", 
+   "Q312755"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(Q834654,P138,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q2873673"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about avenue Gustave-V-de-Su\u00e8de?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q2873673,P138,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q2873673"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is that street located in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q142"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q142"
+  ], 
+  "utterance": "France", 
+  "active_set": []
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q142"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P706"
+  ], 
+  "type_list": [
+   "Q151885"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which concepts are located in that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1808482", 
+   "Q2379716"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1808482", 
+   "Q2379716"
+  ], 
+  "utterance": "Tardenoisian, S\u00f6gel-Wohlde culture", 
+  "active_set": [
+   "(c(Q151885),P706,Q142)"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type", 
+  "type_list": [
+   "Q8434", 
+   "Q451967", 
+   "Q151885"
+  ], 
+  "entities_in_utterance": [
+   "Q15954665"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P425"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "Which concepts have less number of educations and human actions as thier field of occupation than antisemit ?"
+ }, 
+ {
+  "all_entities": [
+   "Q15978337", 
+   "Q12020057", 
+   "Q19509201", 
+   "Q275186", 
+   "Q22962951", 
+   "Q775318", 
+   "Q21625815", 
+   "Q389565", 
+   "Q21694268", 
+   "Q4621445", 
+   "Q19890761", 
+   "Q11690405", 
+   "Q15472169", 
+   "Q24698392", 
+   "Q15077007", 
+   "Q214917", 
+   "Q15980704", 
+   "Q20725072", 
+   "Q5501373", 
+   "Q10732476", 
+   "Q15627169", 
+   "Q14948222", 
+   "Q24262584", 
+   "Q1939892", 
+   "Q20726620", 
+   "Q4353426", 
+   "Q20971451", 
+   "Q181043", 
+   "Q9394993", 
+   "Q10370560", 
+   "Q3303297", 
+   "Q15962734", 
+   "Q2467532", 
+   "Q12039558", 
+   "Q17351861", 
+   "Q13382576", 
+   "Q16003550", 
+   "Q2159907", 
+   "Q1476215", 
+   "Q24259627", 
+   "Q20708269", 
+   "Q17010072", 
+   "Q12773225", 
+   "Q24293741", 
+   "Q18510179", 
+   "Q18515558", 
+   "Q12961474", 
+   "Q5027838", 
+   "Q19890746", 
+   "Q18510172", 
+   "Q18617002", 
+   "Q22336956", 
+   "Q779458", 
+   "Q23770547", 
+   "Q21263917", 
+   "Q12004621", 
+   "Q21084228", 
+   "Q21694753", 
+   "Q12797895", 
+   "Q14616728", 
+   "Q304787", 
+   "Q18667447", 
+   "Q1125062", 
+   "Q13464374", 
+   "Q3595924", 
+   "Q18702210", 
+   "Q2066131", 
+   "Q16830344", 
+   "Q27431227", 
+   "Q18810049", 
+   "Q16323111", 
+   "Q1414937", 
+   "Q4854747", 
+   "Q2873500", 
+   "Q4330518", 
+   "Q11513337", 
+   "Q26270618", 
+   "Q10871364", 
+   "Q13381376", 
+   "Q26248338", 
+   "Q1201898", 
+   "Q16278103", 
+   "Q27532776", 
+   "Q16240266", 
+   "Q13381863", 
+   "Q1021386", 
+   "Q193432", 
+   "Q20740414", 
+   "Q1636680", 
+   "Q20650523", 
+   "Q11499147", 
+   "Q26102", 
+   "Q1409420", 
+   "Q21578283", 
+   "Q21121588", 
+   "Q2500638", 
+   "Q855091", 
+   "Q860918", 
+   "Q23770318", 
+   "Q17176618", 
+   "Q3578589", 
+   "Q890103", 
+   "Q455011", 
+   "Q4197743", 
+   "Q15966439", 
+   "Q7535502", 
+   "Q3562775", 
+   "Q16003594", 
+   "Q20747150", 
+   "Q20965770", 
+   "Q19509237", 
+   "Q13382749", 
+   "Q20650518", 
+   "Q16004471", 
+   "Q23375738", 
+   "Q1251441", 
+   "Q18120029", 
+   "Q15982795", 
+   "Q18814798", 
+   "Q1413522", 
+   "Q19801627", 
+   "Q15020911", 
+   "Q15986555", 
+   "Q1714828", 
+   "Q22082717", 
+   "Q26219487", 
+   "Q15709642", 
+   "Q3242115", 
+   "Q3738757", 
+   "Q1934684", 
+   "Q17769800", 
+   "Q12761281", 
+   "Q2901587", 
+   "Q22810659", 
+   "Q322170", 
+   "Q13472585", 
+   "Q21286455", 
+   "Q27431213", 
+   "Q23761019", 
+   "Q10729326", 
+   "Q1344452", 
+   "Q16755977", 
+   "Q5276395", 
+   "Q3014296", 
+   "Q27158601", 
+   "Q21081635", 
+   "Q273283", 
+   "Q12216234", 
+   "Q1184268", 
+   "Q455595", 
+   "Q23663603", 
+   "Q4964182", 
+   "Q23038345", 
+   "Q4887411", 
+   "Q15095148", 
+   "Q27247215", 
+   "Q12327806", 
+   "Q10866633", 
+   "Q931260", 
+   "Q15253558", 
+   "Q20706626", 
+   "Q637304", 
+   "Q12912932", 
+   "Q10843402", 
+   "Q18664049", 
+   "Q15883433"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1934684", 
+   "Q4964182", 
+   "Q23038345"
+  ], 
+  "utterance": "housewife, philosopher, Wikipedian", 
+  "active_set": [
+   "(c(Q151885),P425,c(Q8434)|c(Q451967))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q8434", 
+   "Q451967", 
+   "Q151885"
+  ], 
+  "entities_in_utterance": [
+   "Q5307556"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P425"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And also tell me about drill instructor?"
+ }, 
+ {
+  "all_entities": [
+   "Q15978337", 
+   "Q12020057", 
+   "Q19509201", 
+   "Q275186", 
+   "Q22962951", 
+   "Q775318", 
+   "Q21625815", 
+   "Q389565", 
+   "Q21694268", 
+   "Q4621445", 
+   "Q19890761", 
+   "Q11690405", 
+   "Q15472169", 
+   "Q24698392", 
+   "Q15077007", 
+   "Q214917", 
+   "Q15980704", 
+   "Q20725072", 
+   "Q5501373", 
+   "Q10732476", 
+   "Q15627169", 
+   "Q14948222", 
+   "Q24262584", 
+   "Q1939892", 
+   "Q20726620", 
+   "Q4353426", 
+   "Q20971451", 
+   "Q181043", 
+   "Q9394993", 
+   "Q10370560", 
+   "Q3303297", 
+   "Q15962734", 
+   "Q2467532", 
+   "Q12039558", 
+   "Q17351861", 
+   "Q13382576", 
+   "Q16003550", 
+   "Q2159907", 
+   "Q1476215", 
+   "Q24259627", 
+   "Q20708269", 
+   "Q17010072", 
+   "Q12773225", 
+   "Q24293741", 
+   "Q18510179", 
+   "Q18515558", 
+   "Q12961474", 
+   "Q5027838", 
+   "Q19890746", 
+   "Q18510172", 
+   "Q18617002", 
+   "Q22336956", 
+   "Q779458", 
+   "Q23770547", 
+   "Q21263917", 
+   "Q12004621", 
+   "Q21084228", 
+   "Q21694753", 
+   "Q12797895", 
+   "Q14616728", 
+   "Q304787", 
+   "Q18667447", 
+   "Q1125062", 
+   "Q13464374", 
+   "Q3595924", 
+   "Q18702210", 
+   "Q2066131", 
+   "Q16830344", 
+   "Q27431227", 
+   "Q18810049", 
+   "Q16323111", 
+   "Q1414937", 
+   "Q4854747", 
+   "Q2873500", 
+   "Q4330518", 
+   "Q11513337", 
+   "Q26270618", 
+   "Q10871364", 
+   "Q13381376", 
+   "Q26248338", 
+   "Q1201898", 
+   "Q16278103", 
+   "Q27532776", 
+   "Q16240266", 
+   "Q13381863", 
+   "Q1021386", 
+   "Q193432", 
+   "Q20740414", 
+   "Q1636680", 
+   "Q20650523", 
+   "Q11499147", 
+   "Q26102", 
+   "Q1409420", 
+   "Q21578283", 
+   "Q21121588", 
+   "Q2500638", 
+   "Q855091", 
+   "Q860918", 
+   "Q23770318", 
+   "Q17176618", 
+   "Q3578589", 
+   "Q890103", 
+   "Q455011", 
+   "Q4197743", 
+   "Q15966439", 
+   "Q7535502", 
+   "Q3562775", 
+   "Q16003594", 
+   "Q20747150", 
+   "Q20965770", 
+   "Q19509237", 
+   "Q13382749", 
+   "Q20650518", 
+   "Q16004471", 
+   "Q23375738", 
+   "Q1251441", 
+   "Q18120029", 
+   "Q15982795", 
+   "Q18814798", 
+   "Q1413522", 
+   "Q19801627", 
+   "Q15020911", 
+   "Q15986555", 
+   "Q1714828", 
+   "Q22082717", 
+   "Q26219487", 
+   "Q15709642", 
+   "Q3242115", 
+   "Q3738757", 
+   "Q1934684", 
+   "Q17769800", 
+   "Q12761281", 
+   "Q2901587", 
+   "Q22810659", 
+   "Q322170", 
+   "Q13472585", 
+   "Q21286455", 
+   "Q27431213", 
+   "Q23761019", 
+   "Q10729326", 
+   "Q1344452", 
+   "Q16755977", 
+   "Q5276395", 
+   "Q3014296", 
+   "Q27158601", 
+   "Q21081635", 
+   "Q273283", 
+   "Q12216234", 
+   "Q1184268", 
+   "Q455595", 
+   "Q23663603", 
+   "Q4964182", 
+   "Q23038345", 
+   "Q4887411", 
+   "Q15095148", 
+   "Q27247215", 
+   "Q12327806", 
+   "Q10866633", 
+   "Q931260", 
+   "Q15253558", 
+   "Q20706626", 
+   "Q637304", 
+   "Q12912932", 
+   "Q10843402", 
+   "Q18664049", 
+   "Q15883433"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1934684", 
+   "Q4964182", 
+   "Q23038345"
+  ], 
+  "utterance": "housewife, philosopher, Wikipedian", 
+  "active_set": [
+   "(c(Q151885),P425,c(Q8434)|c(Q451967))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q142"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories have diplomatic relationships with France ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q711", 
+   "Q159", 
+   "Q222", 
+   "Q801", 
+   "Q145", 
+   "Q155", 
+   "Q1011", 
+   "Q228", 
+   "Q32", 
+   "Q17", 
+   "Q30", 
+   "Q399", 
+   "Q27", 
+   "Q403", 
+   "Q38"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "15", 
+  "active_set": [
+   "(Q142,P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q419"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about Peru?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q155", 
+   "Q38"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(Q419,P530,c(Q15617994))"
+  ]
+ }
+]

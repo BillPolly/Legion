@@ -1,0 +1,335 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q21110936"
+  ], 
+  "relations": [
+   "P703"
+  ], 
+  "type_list": [
+   "Q16521"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which taxon is G-protein coupled receptor 35 found in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q15978631"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q15978631"
+  ], 
+  "utterance": "Homo sapiens", 
+  "active_set": [
+   "(Q21110936,P703,c(Q16521))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q15978631"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P689"
+  ], 
+  "type_list": [
+   "Q2057971"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which health problem can afflict that taxon ?"
+ }, 
+ {
+  "all_entities": [
+   "Q403463"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q403463"
+  ], 
+  "utterance": "Aicardi syndrome", 
+  "active_set": [
+   "(c(Q2057971),P689,Q15978631)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q15978631"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P427"
+  ], 
+  "type_list": [
+   "Q3343211"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which zoological nomenclature is the taxonomic type of that taxon ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1043"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1043"
+  ], 
+  "utterance": "Carl Linnaeus", 
+  "active_set": [
+   "(Q403463,P427,c(Q3343211))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q1043"
+  ], 
+  "relations": [
+   "P802"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many people were the teachers of Carl Linnaeus ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q5579306", 
+   "Q2573976"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(Q1043,P802,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q4153207"
+  ], 
+  "relations": [
+   "P802"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And how about Henry Robert Gadsby?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q5460555", 
+   "Q706644"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(Q4153207,P802,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q2822063"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Laurentius Abstemius?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q2822063,P802,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1043"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1066"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people are a pupil of Carl Linnaeus ?"
+ }, 
+ {
+  "all_entities": [
+   "Q5579306", 
+   "Q2573976"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5579306", 
+   "Q2573976"
+  ], 
+  "utterance": "Carl Magnus Blom, Peter Ascanius", 
+  "active_set": [
+   "(c(Q502895),P1066,Q1043)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1043"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P26"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who is married to Carl Linnaeus ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3473264"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3473264"
+  ], 
+  "utterance": "Sara Elisabeth Moraea", 
+  "active_set": [
+   "(Q1043,P26,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1043"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P50"
+  ], 
+  "type_list": [
+   "Q2342494"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which collectables are written by Carl Linnaeus ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1474093", 
+   "Q5555587", 
+   "Q5460361", 
+   "Q856421", 
+   "Q5771642", 
+   "Q5991960", 
+   "Q473804", 
+   "Q29270", 
+   "Q5762283", 
+   "Q5762287", 
+   "Q5802506", 
+   "Q21608408", 
+   "Q1501516", 
+   "Q1140510", 
+   "Q849308", 
+   "Q6077857", 
+   "Q5683540", 
+   "Q2010244", 
+   "Q5991958", 
+   "Q5862805", 
+   "Q5063067", 
+   "Q18708920", 
+   "Q15293708", 
+   "Q551911", 
+   "Q2612764", 
+   "Q21856107", 
+   "Q21856106"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q29270", 
+   "Q849308", 
+   "Q21608408"
+  ], 
+  "utterance": "Systema Naturae, Species Plantarum, Systema Naturae. 10th edition, Volume 1", 
+  "active_set": [
+   "(c(Q2342494),P50,Q1043)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1043"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P40"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people have Carl Linnaeus as an offspring ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1992380", 
+   "Q19387900"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1992380", 
+   "Q19387900"
+  ], 
+  "utterance": "Nils Ingemarsson Linnaeus, Christina Brodersonia", 
+  "active_set": [
+   "(c(Q502895),P40,Q1043)"
+  ]
+ }
+]

@@ -1,0 +1,512 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q5211704"
+  ], 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q28640"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which profession is the profession of Dalton McCarthy ?"
+ }, 
+ {
+  "all_entities": [
+   "Q40348"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q40348"
+  ], 
+  "utterance": "lawyer", 
+  "active_set": [
+   "(Q5211704,P106,c(Q28640))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q40348"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P417"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What people are the patron saint of that profession ?"
+ }, 
+ {
+  "all_entities": [
+   "Q179718", 
+   "Q358325"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q179718", 
+   "Q358325"
+  ], 
+  "utterance": "Catherine of Alexandria, Ivo of Kermartin", 
+  "active_set": [
+   "(Q40348,P417,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q611508"
+  ], 
+  "relations": [
+   "P417"
+  ], 
+  "type_list": [
+   "Q28640"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Do Creative Assembly have those people as their patron saint ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q611508,P417,Q179718)", 
+   "(Q611508,P417,Q358325)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q5211704"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P39"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which occupation was a position for which Dalton McCarthy was appointed ?"
+ }, 
+ {
+  "all_entities": [
+   "Q15964890"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q15964890"
+  ], 
+  "utterance": "member of the House of Commons of Canada", 
+  "active_set": [
+   "(Q5211704,P39,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q5211704"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where did the demise of that person occur ?"
+ }, 
+ {
+  "all_entities": [
+   "Q172"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q172"
+  ], 
+  "utterance": "Toronto", 
+  "active_set": [
+   "(Q15964890,P20,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q172", 
+   "Q406"
+  ], 
+  "relations": [
+   "P190"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Is Istanbul the sister city of Toronto ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q172,P190,Q406)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q179718", 
+   "Q2277"
+  ], 
+  "relations": [
+   "P2348"
+  ], 
+  "type_list": [
+   "Q3024240"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Did Catherine of Alexandria occur Roman Empire ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q179718,P2348,Q2277)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q5211704", 
+   "Q4430418"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Is Dalton McCarthy a civilian of Soshky ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q5211704,P27,Q4430418)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "entities_in_utterance": [
+   "Q1687465", 
+   "Q5211704"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which political territories are Dalton McCarthy or Jen\u00f6 Eisenberger an inhabitant of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q16", 
+   "Q40"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q16", 
+   "Q40"
+  ], 
+  "utterance": "Canada, Austria", 
+  "active_set": [
+   "OR((Q5211704,P27,c(Q1048835)), (Q1687465,P27,c(Q1048835)))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type", 
+  "type_list": [
+   "Q1048835", 
+   "Q15617994", 
+   "Q1048835"
+  ], 
+  "entities_in_utterance": [
+   "Q40"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "Which political territories have diplomatic relations with lesser number of political territories and administrative territories than Austria ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1000", 
+   "Q781", 
+   "Q778", 
+   "Q769", 
+   "Q685", 
+   "Q35", 
+   "Q691", 
+   "Q664", 
+   "Q766"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q35", 
+   "Q664", 
+   "Q1000"
+  ], 
+  "utterance": "Denmark, New Zealand, Gabon", 
+  "active_set": [
+   "(c(Q1048835),P530,c(Q1048835)|c(Q15617994))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q1048835", 
+   "Q15617994", 
+   "Q1048835"
+  ], 
+  "entities_in_utterance": [
+   "Q664"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And what about New Zealand?"
+ }, 
+ {
+  "all_entities": [
+   "Q1000", 
+   "Q781", 
+   "Q778", 
+   "Q769", 
+   "Q685", 
+   "Q691", 
+   "Q766"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1000", 
+   "Q769", 
+   "Q691"
+  ], 
+  "utterance": "Gabon, Grenada, Papua New Guinea", 
+  "active_set": [
+   "(c(Q1048835),P530,c(Q1048835)|c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q1048835", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which administrative territories are known to have diplomatic connections with max number of political territories ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q230"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q230"
+  ], 
+  "utterance": "Georgia", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which administrative territories have diplomatic relationships with min number of administrative territories ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q702", 
+   "Q804", 
+   "Q265", 
+   "Q712", 
+   "Q837", 
+   "Q242", 
+   "Q811", 
+   "Q929", 
+   "Q29999", 
+   "Q854", 
+   "Q730", 
+   "Q232", 
+   "Q1027", 
+   "Q1032", 
+   "Q697", 
+   "Q695", 
+   "Q754", 
+   "Q912", 
+   "Q683", 
+   "Q836", 
+   "Q817", 
+   "Q1019", 
+   "Q945", 
+   "Q678", 
+   "Q33788"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q929", 
+   "Q29999", 
+   "Q232"
+  ], 
+  "utterance": "Central African Republic, Kingdom of the Netherlands, Kazakhstan", 
+  "active_set": [
+   "(c(Q15617994),P530,Q953)"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators", 
+  "entities_in_utterance": [
+   "Q230"
+  ], 
+  "relations": [
+   "P463"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q43229", 
+   "Q484652"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many organizations or international organizations were Georgia a member of ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q380340", 
+   "Q7825", 
+   "Q326816", 
+   "Q1065", 
+   "Q81299"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "5", 
+  "active_set": [
+   "(Q230,P463,c(Q43229))", 
+   "(Q230,P463,c(Q484652))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q1048835", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which political territories have a diplomatic relationship with max number of administrative territories ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "utterance": "Germany", 
+  "active_set": [
+   "(c(Q15617994),P530,Q766)"
+  ]
+ }
+]

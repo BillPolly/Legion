@@ -1,0 +1,291 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q3917220"
+  ], 
+  "relations": [
+   "P40"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people are children of Jan Samuelowicz Ogi\u0144ski ?"
+ }, 
+ {
+  "all_entities": [
+   "Q4479335", 
+   "Q4392223", 
+   "Q3692419", 
+   "Q1545072"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3692419", 
+   "Q4392223", 
+   "Q1545072"
+  ], 
+  "utterance": "Kazimierz Dominik Ogi\u0144ski, Mikalojus Pranci\u0161kus Oginskis, Grzegorz Antoni Ogi\u0144ski", 
+  "active_set": [
+   "(Q3917220,P40,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1545072"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P7"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who have that one as their sibling ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q3692419"
+  ], 
+  "active_set": [
+   "(Q3692419,P7,c(Q502895))", 
+   "(Q4392223,P7,c(Q502895))", 
+   "(Q1545072,P7,c(Q502895))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q3692419", 
+   "Q4392223", 
+   "Q1545072"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Kazimierz Dominik Ogi\u0144ski ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q1545072"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Grzegorz Antoni Ogi\u0144ski. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q4479335", 
+   "Q4392223", 
+   "Q3692419"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q4479335", 
+   "Q4392223", 
+   "Q3692419"
+  ], 
+  "utterance": "Leonas Kazimieras Oginskis, Mikalojus Pranci\u0161kus Oginskis, Kazimierz Dominik Ogi\u0144ski", 
+  "active_set": [
+   "(Q1545072,P7,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many musical instruments are played by atleast 3518 people ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q5994", 
+   "Q8355"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(c(Q502895),P1303,c(Q34379))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q3692419"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P39"
+  ], 
+  "type_list": [
+   "Q4164871"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What was a position occupied by Kazimierz Dominik Ogi\u0144ski ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2607541"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2607541"
+  ], 
+  "utterance": "Voivode of Trakai", 
+  "active_set": [
+   "(Q3692419,P39,c(Q4164871))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "Incomplete|object parent is changed, subject and predicate remain same", 
+  "entities_in_utterance": [
+   "Q3692419"
+  ], 
+  "inc_ques_type": 1, 
+  "relations": [], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And which occupation?"
+ }, 
+ {
+  "all_entities": [
+   "Q735687"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q735687"
+  ], 
+  "utterance": "Voivod of Vilnius", 
+  "active_set": [
+   "(Q3692419,P39,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q3692419"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P166"
+  ], 
+  "type_list": [
+   "Q618779"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which award was Kazimierz Dominik Ogi\u0144ski awarded with ?"
+ }, 
+ {
+  "all_entities": [
+   "Q84020"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q84020"
+  ], 
+  "utterance": "Order of the White Eagle", 
+  "active_set": [
+   "(Q3692419,P166,c(Q618779))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q3692419"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P7"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who are Kazimierz Dominik Ogi\u0144ski a brother of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q4479335", 
+   "Q4392223", 
+   "Q1545072"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q4479335", 
+   "Q4392223", 
+   "Q1545072"
+  ], 
+  "utterance": "Leonas Kazimieras Oginskis, Mikalojus Pranci\u0161kus Oginskis, Grzegorz Antoni Ogi\u0144ski", 
+  "active_set": [
+   "(c(Q502895),P7,Q3692419)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q4479335", 
+   "Q4392223", 
+   "Q1545072"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P40"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who have Leonas Kazimieras Oginskis, Mikalojus Pranci\u0161kus Oginskis and Grzegorz Antoni Ogi\u0144ski as an offspring ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3917220"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3917220"
+  ], 
+  "utterance": "Jan Samuelowicz Ogi\u0144ski", 
+  "active_set": [
+   "(c(Q502895),P40,Q4479335)", 
+   "(c(Q502895),P40,Q4392223)", 
+   "(c(Q502895),P40,Q1545072)"
+  ]
+ }
+]

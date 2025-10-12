@@ -1,0 +1,657 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q6890427"
+  ], 
+  "relations": [
+   "P39"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which occupations were the positions for which Mogaligundla Baga Reddy were appointed ?"
+ }, 
+ {
+  "all_entities": [
+   "Q17598882", 
+   "Q16556694"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q17598882", 
+   "Q16556694"
+  ], 
+  "utterance": "Member of the Andhra Pradesh Legislative Assembly, member of the Lok Sabha", 
+  "active_set": [
+   "(Q6890427,P39,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q16556694"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1001"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is linked to member of the Lok Sabha ?"
+ }, 
+ {
+  "all_entities": [
+   "Q668"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q668"
+  ], 
+  "utterance": "India", 
+  "active_set": [
+   "(Q16556694,P1001,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q668"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P194"
+  ], 
+  "type_list": [
+   "Q1752346"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which assembly is the representative body for that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q695252"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q695252"
+  ], 
+  "utterance": "Parliament of India", 
+  "active_set": [
+   "(Q668,P194,c(Q1752346))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q5713057", 
+   "Q668"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P530", 
+   "P17"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories have diplomatic relationships with India or are Henaya Rotawewa located in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q159", 
+   "Q801", 
+   "Q155", 
+   "Q854", 
+   "Q30", 
+   "Q38"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q159", 
+   "Q801", 
+   "Q155", 
+   "Q854", 
+   "Q30", 
+   "Q38"
+  ], 
+  "utterance": "Russia, Israel, Brazil, Sri Lanka, United States of America, Italy", 
+  "active_set": [
+   "OR((Q668,P530,c(Q15617994)), (Q5713057,P17,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q16556694"
+  ], 
+  "relations": [
+   "P17"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories are member of the Lok Sabha situated in ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q668"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q16556694,P17,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q18669986"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about Maribor Art Gallery?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q18669986,P17,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many administrative territories are known to have diplomatic connections with atleast 10 administrative territories ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q801", 
+   "Q805", 
+   "Q142", 
+   "Q148", 
+   "Q159", 
+   "Q155", 
+   "Q30", 
+   "Q929", 
+   "Q38", 
+   "Q230", 
+   "Q184", 
+   "Q17", 
+   "Q114", 
+   "Q858", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "15", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P551"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who reside at United States of America ?"
+ }, 
+ {
+  "all_entities": [
+   "Q961548", 
+   "Q111751", 
+   "Q3767700", 
+   "Q322150", 
+   "Q270662", 
+   "Q19799971", 
+   "Q19876176", 
+   "Q7915490", 
+   "Q268166", 
+   "Q6790970", 
+   "Q373491", 
+   "Q1690702", 
+   "Q186481", 
+   "Q171363", 
+   "Q329630", 
+   "Q3742191", 
+   "Q173028", 
+   "Q16387595", 
+   "Q5235420", 
+   "Q1364019", 
+   "Q530461", 
+   "Q2900133", 
+   "Q21708679", 
+   "Q15070040", 
+   "Q23888162", 
+   "Q667095", 
+   "Q15057907", 
+   "Q19828396", 
+   "Q6699941", 
+   "Q1129529", 
+   "Q3659276", 
+   "Q15044073", 
+   "Q3756604", 
+   "Q1053255", 
+   "Q1143825", 
+   "Q1151429", 
+   "Q109559", 
+   "Q17481148", 
+   "Q21929727", 
+   "Q18592223", 
+   "Q335027", 
+   "Q447351", 
+   "Q109553", 
+   "Q238983", 
+   "Q27808416", 
+   "Q22695397", 
+   "Q299723", 
+   "Q18720176", 
+   "Q3383077", 
+   "Q709148", 
+   "Q43179", 
+   "Q4216907", 
+   "Q3770634", 
+   "Q5237909", 
+   "Q4302801", 
+   "Q4717011", 
+   "Q15069933", 
+   "Q316022", 
+   "Q3856162", 
+   "Q21063007", 
+   "Q19938318", 
+   "Q1939343", 
+   "Q712851", 
+   "Q4711951", 
+   "Q22926323", 
+   "Q3436512", 
+   "Q7361598", 
+   "Q3638183", 
+   "Q5936683", 
+   "Q2719386", 
+   "Q496994", 
+   "Q7217571", 
+   "Q4011245", 
+   "Q939458", 
+   "Q4487", 
+   "Q3839596", 
+   "Q3611327", 
+   "Q15666655", 
+   "Q20720200", 
+   "Q19889136", 
+   "Q1426421", 
+   "Q1375666", 
+   "Q8753", 
+   "Q205850", 
+   "Q6424159", 
+   "Q315454", 
+   "Q2580510", 
+   "Q3810278", 
+   "Q3810279", 
+   "Q1183434", 
+   "Q730889", 
+   "Q7085", 
+   "Q92623", 
+   "Q1522271", 
+   "Q23008424", 
+   "Q12885312", 
+   "Q4013888", 
+   "Q3764275", 
+   "Q1347418", 
+   "Q3809645", 
+   "Q3503829", 
+   "Q983643", 
+   "Q3903877", 
+   "Q133877", 
+   "Q368827", 
+   "Q23843063", 
+   "Q185007", 
+   "Q5998814", 
+   "Q84445", 
+   "Q5257598", 
+   "Q3810289", 
+   "Q16186222", 
+   "Q8006910", 
+   "Q205667", 
+   "Q10959", 
+   "Q359333", 
+   "Q27210579", 
+   "Q186194", 
+   "Q42992", 
+   "Q5563216", 
+   "Q2032354", 
+   "Q1331681", 
+   "Q16240767", 
+   "Q13053091", 
+   "Q1402650", 
+   "Q706235", 
+   "Q468053", 
+   "Q3946212", 
+   "Q93052", 
+   "Q15987799", 
+   "Q275760", 
+   "Q6689774", 
+   "Q377558", 
+   "Q188692", 
+   "Q15068680", 
+   "Q15074339", 
+   "Q926054", 
+   "Q420322", 
+   "Q2259896", 
+   "Q574810", 
+   "Q1876144", 
+   "Q3765354", 
+   "Q2066366", 
+   "Q3613906", 
+   "Q4761944", 
+   "Q17455", 
+   "Q9010725", 
+   "Q16065986", 
+   "Q51492", 
+   "Q41548", 
+   "Q18587597", 
+   "Q1885813", 
+   "Q23888163", 
+   "Q48973", 
+   "Q5671358", 
+   "Q115462", 
+   "Q3856739", 
+   "Q11192918", 
+   "Q661894", 
+   "Q323961", 
+   "Q6141751", 
+   "Q283123", 
+   "Q1707912", 
+   "Q15819340", 
+   "Q3765534", 
+   "Q505358"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7085", 
+   "Q8753", 
+   "Q48973"
+  ], 
+  "utterance": "Niels Bohr, Enrico Fermi, Glenn Seaborg", 
+  "active_set": [
+   "(c(Q502895),P551,Q30)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P6"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which people do that administrative territory serve as the head of government for ?"
+ }, 
+ {
+  "all_entities": [
+   "Q35171", 
+   "Q11815", 
+   "Q11816", 
+   "Q11817", 
+   "Q35498", 
+   "Q11812", 
+   "Q12306", 
+   "Q35236", 
+   "Q12325", 
+   "Q33866", 
+   "Q35648", 
+   "Q9588", 
+   "Q9582", 
+   "Q35041", 
+   "Q207", 
+   "Q11813", 
+   "Q91", 
+   "Q23685", 
+   "Q9696", 
+   "Q22686", 
+   "Q34597", 
+   "Q36023", 
+   "Q11881", 
+   "Q9916", 
+   "Q12312", 
+   "Q11806", 
+   "Q35286", 
+   "Q9640", 
+   "Q35686", 
+   "Q11820", 
+   "Q35678", 
+   "Q11869", 
+   "Q34296", 
+   "Q76", 
+   "Q8612", 
+   "Q34836", 
+   "Q23505", 
+   "Q23", 
+   "Q1124", 
+   "Q11613", 
+   "Q11896", 
+   "Q8007", 
+   "Q9960", 
+   "Q11891"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q76", 
+   "Q9916", 
+   "Q22686"
+  ], 
+  "utterance": "Barack Obama, Dwight D. Eisenhower, Donald Trump", 
+  "active_set": [
+   "(Q7085,P6,c(Q502895))", 
+   "(Q8753,P6,c(Q502895))", 
+   "(Q48973,P6,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q556787"
+  ], 
+  "relations": [
+   "P6"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Do Springstille have a government lead by those people ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q556787,P6,Q76)", 
+   "(Q556787,P6,Q9916)", 
+   "(Q556787,P6,Q22686)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, all direct, 2 are query entities", 
+  "entities_in_utterance": [
+   "Q76", 
+   "Q7241175", 
+   "Q20926389"
+  ], 
+  "relations": [
+   "P166"
+  ], 
+  "type_list": [
+   "Q618779"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 4, 
+  "utterance": "Was Barack Obama awarded with Presidential Medal of Distinction and 33rd Yokohama Film Festival ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES and NO respectively", 
+  "active_set": [
+   "(Q76,P166,Q7241175)", 
+   "(Q76,P166,Q20926389)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "entities_in_utterance": [
+   "Q3805616", 
+   "Q7241175"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P106", 
+   "P1027"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which occupations bestow Presidential Medal of Distinction or are the professions of Jack Manning ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1114448", 
+   "Q327948", 
+   "Q266569"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1114448", 
+   "Q327948", 
+   "Q266569"
+  ], 
+  "utterance": "cartoonist, President of Israel, animator", 
+  "active_set": [
+   "OR((Q7241175,P1027,c(Q12737077)), (Q3805616,P106,c(Q12737077)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Quantitative|Count|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "relations": [
+   "P1001"
+  ], 
+  "count_ques_sub_type": 7, 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories are judicially linked to that occupation ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "description": "Quantitative|Count|Single entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q327948"
+  ], 
+  "active_set": [
+   "(Q1114448,P1001,c(Q15617994))", 
+   "(Q327948,P1001,c(Q15617994))", 
+   "(Q266569,P1001,c(Q15617994))"
+  ], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean President of Israel ?"
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Yes", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q801"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q327948,P1001,c(Q15617994))"
+  ]
+ }
+]

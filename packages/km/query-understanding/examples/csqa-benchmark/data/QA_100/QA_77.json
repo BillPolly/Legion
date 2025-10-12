@@ -1,0 +1,720 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q19892878"
+  ], 
+  "relations": [
+   "P86"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Who wrote the music for A Friend Will Come Tonight ?"
+ }, 
+ {
+  "all_entities": [
+   "Q123164"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q123164"
+  ], 
+  "utterance": "Arthur Honegger", 
+  "active_set": [
+   "(Q19892878,P86,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q19892878"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P495"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where did that work of art originate ?"
+ }, 
+ {
+  "all_entities": [
+   "Q142"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q142"
+  ], 
+  "utterance": "France", 
+  "active_set": [
+   "(Q123164,P495,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many administrative territories are known to have diplomatic connections with atleast 12 administrative territories ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q801", 
+   "Q805", 
+   "Q142", 
+   "Q159", 
+   "Q155", 
+   "Q30", 
+   "Q929", 
+   "Q38", 
+   "Q230", 
+   "Q184", 
+   "Q114", 
+   "Q858", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "13", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q15617994", 
+   "Q2385804", 
+   "Q2235308"
+  ], 
+  "entities_in_utterance": [
+   "Q945"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P17"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories are greater number of educational institutions or ship types a part of than Togo ?"
+ }, 
+ {
+  "all_entities": [
+   "Q801", 
+   "Q398", 
+   "Q419", 
+   "Q668", 
+   "Q414", 
+   "Q142", 
+   "Q55", 
+   "Q145", 
+   "Q262", 
+   "Q148", 
+   "Q265", 
+   "Q214", 
+   "Q712", 
+   "Q711", 
+   "Q717", 
+   "Q837", 
+   "Q252", 
+   "Q399", 
+   "Q403", 
+   "Q258", 
+   "Q45", 
+   "Q159", 
+   "Q43", 
+   "Q41", 
+   "Q155", 
+   "Q790", 
+   "Q794", 
+   "Q889", 
+   "Q884", 
+   "Q881", 
+   "Q986", 
+   "Q4628", 
+   "Q826", 
+   "Q822", 
+   "Q241", 
+   "Q242", 
+   "Q244", 
+   "Q33", 
+   "Q921", 
+   "Q31", 
+   "Q30", 
+   "Q924", 
+   "Q36", 
+   "Q34", 
+   "Q928", 
+   "Q39", 
+   "Q38", 
+   "Q29999", 
+   "Q854", 
+   "Q734", 
+   "Q424", 
+   "Q236", 
+   "Q233", 
+   "Q20", 
+   "Q1044", 
+   "Q27", 
+   "Q28", 
+   "Q189", 
+   "Q843", 
+   "Q842", 
+   "Q1029", 
+   "Q1028", 
+   "Q836", 
+   "Q786", 
+   "Q32", 
+   "Q227", 
+   "Q225", 
+   "Q224", 
+   "Q222", 
+   "Q96", 
+   "Q229", 
+   "Q1050", 
+   "Q17", 
+   "Q902", 
+   "Q1036", 
+   "Q1032", 
+   "Q1033", 
+   "Q1030", 
+   "Q191", 
+   "Q963", 
+   "Q298", 
+   "Q115", 
+   "Q114", 
+   "Q117", 
+   "Q754", 
+   "Q212", 
+   "Q213", 
+   "Q211", 
+   "Q215", 
+   "Q218", 
+   "Q37", 
+   "Q917", 
+   "Q833", 
+   "Q29", 
+   "Q574", 
+   "Q874", 
+   "Q79", 
+   "Q77", 
+   "Q878", 
+   "Q948", 
+   "Q817", 
+   "Q810", 
+   "Q1019", 
+   "Q813", 
+   "Q1011", 
+   "Q869", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "107", 
+  "active_set": [
+   "(c(Q2385804)|c(Q2235308),P17,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q1048835", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many political territories have diplomatic relations with atmost 107 administrative territories ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1000", 
+   "Q40", 
+   "Q781", 
+   "Q778", 
+   "Q408", 
+   "Q769", 
+   "Q685", 
+   "Q35", 
+   "Q691", 
+   "Q16", 
+   "Q664", 
+   "Q766"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "12", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q1048835))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q3069406", 
+   "Q19892878"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P58", 
+   "P175"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people wrote the script for A Friend Will Come Tonight or were performed by Fernande ?"
+ }, 
+ {
+  "all_entities": [
+   "Q176962", 
+   "Q3573379", 
+   "Q3386430", 
+   "Q449", 
+   "Q3187401"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q176962", 
+   "Q3573379", 
+   "Q3386430", 
+   "Q449", 
+   "Q3187401"
+  ], 
+  "utterance": "Jacques Compan\u00e9ez, Yvan No\u00e9, Pierre Nicolas, Georges Brassens, Jo\u00ebl Favreau", 
+  "active_set": [
+   "OR((Q19892878,P58,c(Q502895)), (Q3069406,P175,c(Q502895)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Quantitative|Count|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "relations": [
+   "P175"
+  ], 
+  "count_ques_sub_type": 7, 
+  "type_list": [
+   "Q7725634"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many literary works performed that person ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "description": "Quantitative|Count|Single entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q449"
+  ], 
+  "active_set": [
+   "(c(Q7725634),P175,Q176962)", 
+   "(c(Q7725634),P175,Q3573379)", 
+   "(c(Q7725634),P175,Q3386430)", 
+   "(c(Q7725634),P175,Q449)", 
+   "(c(Q7725634),P175,Q3187401)"
+  ], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Georges Brassens ?"
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "count_ques_sub_type": 7, 
+  "entities": [
+   "Q3187401"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "No, I meant Jo\u00ebl Favreau. Could you tell me the answer for that?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q20666566", 
+   "Q23498347", 
+   "Q25513747", 
+   "Q25513744", 
+   "Q25513748", 
+   "Q25513750", 
+   "Q25513752", 
+   "Q25513753", 
+   "Q25513754", 
+   "Q3206380", 
+   "Q16035232"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "11", 
+  "active_set": [
+   "(c(Q7725634),P175,Q3187401)"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type", 
+  "type_list": [
+   "Q838948", 
+   "Q15709879", 
+   "Q838948"
+  ], 
+  "entities_in_utterance": [
+   "Q130958"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which works of art are demonstrated in greater number of artwork series and works of art than The Great Sphinx ?"
+ }, 
+ {
+  "all_entities": [
+   "Q143912", 
+   "Q178401", 
+   "Q1519294", 
+   "Q766487", 
+   "Q46847", 
+   "Q2439030", 
+   "Q23770419", 
+   "Q1064990", 
+   "Q3497617", 
+   "Q267971", 
+   "Q324926", 
+   "Q3013723", 
+   "Q17305006", 
+   "Q2551806", 
+   "Q185382", 
+   "Q9764", 
+   "Q179900", 
+   "Q826635", 
+   "Q2070542", 
+   "Q733893", 
+   "Q185392", 
+   "Q619135", 
+   "Q848790", 
+   "Q3575260", 
+   "Q907387", 
+   "Q18177089", 
+   "Q374591", 
+   "Q945850", 
+   "Q1989744", 
+   "Q465762", 
+   "Q492461", 
+   "Q7539835", 
+   "Q1349065", 
+   "Q397447", 
+   "Q599302", 
+   "Q208440"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q465762", 
+   "Q848790", 
+   "Q185392"
+  ], 
+  "utterance": "Laoco\u00f6n and His Sons, Dying Gaul, Borghese Gladiator", 
+  "active_set": [
+   "(c(Q15709879)|c(Q838948),P180,c(Q838948))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q838948", 
+   "Q15709879", 
+   "Q838948"
+  ], 
+  "entities_in_utterance": [
+   "Q21743265"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And how about Torso in Metal from Rock Drill?"
+ }, 
+ {
+  "all_entities": [
+   "Q143912", 
+   "Q178401", 
+   "Q1519294", 
+   "Q766487", 
+   "Q46847", 
+   "Q2439030", 
+   "Q23770419", 
+   "Q1064990", 
+   "Q3497617", 
+   "Q267971", 
+   "Q324926", 
+   "Q3013723", 
+   "Q17305006", 
+   "Q2551806", 
+   "Q185382", 
+   "Q9764", 
+   "Q179900", 
+   "Q826635", 
+   "Q2070542", 
+   "Q733893", 
+   "Q185392", 
+   "Q619135", 
+   "Q848790", 
+   "Q3575260", 
+   "Q907387", 
+   "Q18177089", 
+   "Q374591", 
+   "Q945850", 
+   "Q1989744", 
+   "Q465762", 
+   "Q492461", 
+   "Q7539835", 
+   "Q1349065", 
+   "Q397447", 
+   "Q599302", 
+   "Q208440"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q465762", 
+   "Q848790", 
+   "Q185392"
+  ], 
+  "utterance": "Laoco\u00f6n and His Sons, Dying Gaul, Borghese Gladiator", 
+  "active_set": [
+   "(c(Q15709879)|c(Q838948),P180,c(Q838948))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q23759959"
+  ], 
+  "relations": [
+   "P180"
+  ], 
+  "type_list": [
+   "Q15709879"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Does Ed io anche sono architetto demonstrate those works of art ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q23759959,P180,Q465762)", 
+   "(Q23759959,P180,Q848790)", 
+   "(Q23759959,P180,Q185392)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, all direct, 2 are query entities", 
+  "entities_in_utterance": [
+   "Q176962", 
+   "Q547752", 
+   "Q142"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 4, 
+  "utterance": "Is Jacques Compan\u00e9ez a civilian of Tawern and France ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO and YES respectively", 
+  "active_set": [
+   "(Q176962,P27,Q547752)", 
+   "(Q176962,P27,Q142)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q465762", 
+   "Q567142"
+  ], 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Is Laoco\u00f6n and His Sons situated in Kindsbach ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q465762,P17,Q567142)"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type", 
+  "type_list": [
+   "Q838948", 
+   "Q7725634", 
+   "Q2342494"
+  ], 
+  "entities_in_utterance": [
+   "Q784444"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P144"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which works of art do greater number of literary works and collectables extend upon than G-Force ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3136443", 
+   "Q213081", 
+   "Q635441", 
+   "Q320594", 
+   "Q42051", 
+   "Q204670", 
+   "Q165713", 
+   "Q167726", 
+   "Q3635914", 
+   "Q138373", 
+   "Q691611", 
+   "Q221103", 
+   "Q334780", 
+   "Q103569", 
+   "Q181069"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q213081", 
+   "Q334780", 
+   "Q103569"
+  ], 
+  "utterance": "Star Trek, Moonraker, Alien", 
+  "active_set": [
+   "(c(Q7725634)|c(Q2342494),P144,c(Q838948))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q838948", 
+   "Q7725634", 
+   "Q2342494"
+  ], 
+  "entities_in_utterance": [
+   "Q1433065"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P144"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And how about The World of Henry Orient?"
+ }, 
+ {
+  "all_entities": [
+   "Q3136443", 
+   "Q213081", 
+   "Q635441", 
+   "Q320594", 
+   "Q42051", 
+   "Q204670", 
+   "Q165713", 
+   "Q167726", 
+   "Q3635914", 
+   "Q138373", 
+   "Q691611", 
+   "Q221103", 
+   "Q334780", 
+   "Q103569", 
+   "Q181069"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q213081", 
+   "Q334780", 
+   "Q103569"
+  ], 
+  "utterance": "Star Trek, Moonraker, Alien", 
+  "active_set": [
+   "(c(Q7725634)|c(Q2342494),P144,c(Q838948))"
+  ]
+ }
+]

@@ -1,0 +1,421 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1098173"
+  ], 
+  "relations": [
+   "P54"
+  ], 
+  "type_list": [
+   "Q1194951"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which national sports team is Claudio Sala a member of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q676899"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q676899"
+  ], 
+  "utterance": "Italy national football team", 
+  "active_set": [
+   "(Q1098173,P54,c(Q1194951))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1098173"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is the place of birth of Claudio Sala ?"
+ }, 
+ {
+  "all_entities": [
+   "Q40641"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q40641"
+  ], 
+  "utterance": "Macherio", 
+  "active_set": [
+   "(Q1098173,P19,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q23761625"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about Ashok Shetty?"
+ }, 
+ {
+  "all_entities": [
+   "Q668"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q668"
+  ], 
+  "utterance": "India", 
+  "active_set": [
+   "(Q23761625,P19,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q668"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1376"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which administrative territory is the county seat of that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q987"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q987"
+  ], 
+  "utterance": "New Delhi", 
+  "active_set": [
+   "(c(Q56061),P1376,Q668)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q668"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P37"
+  ], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is considered to be the official language of that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1860"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1860"
+  ], 
+  "utterance": "English", 
+  "active_set": [
+   "(Q987,P37,c(Q34770))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type", 
+  "type_list": [
+   "Q8192", 
+   "Q9779", 
+   "Q34770"
+  ], 
+  "entities_in_utterance": [
+   "Q36464"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P282"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "Which languages are less number of writing systems or alphabets the writing system of than Nivkh language ?"
+ }, 
+ {
+  "all_entities": [
+   "Q7102906", 
+   "Q20832", 
+   "Q29572", 
+   "Q20831", 
+   "Q1133488", 
+   "Q13414913", 
+   "Q402878", 
+   "Q36708", 
+   "Q35470", 
+   "Q36741", 
+   "Q35668", 
+   "Q8785", 
+   "Q35726", 
+   "Q1321", 
+   "Q21161949", 
+   "Q25167", 
+   "Q18130932", 
+   "Q11732220", 
+   "Q33976", 
+   "Q856383", 
+   "Q149838", 
+   "Q47625", 
+   "Q36822", 
+   "Q2705672", 
+   "Q33879", 
+   "Q7362035", 
+   "Q36795", 
+   "Q56472", 
+   "Q6047309", 
+   "Q8752", 
+   "Q36178", 
+   "Q9056", 
+   "Q397", 
+   "Q20972034", 
+   "Q56512", 
+   "Q35505", 
+   "Q36957", 
+   "Q25164", 
+   "Q56982", 
+   "Q35308", 
+   "Q36790", 
+   "Q1860", 
+   "Q36116", 
+   "Q36751", 
+   "Q29977", 
+   "Q837985", 
+   "Q447117", 
+   "Q7511561", 
+   "Q33982"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q29572", 
+   "Q1860", 
+   "Q447117"
+  ], 
+  "utterance": "Avestan, English, Old Egyptian", 
+  "active_set": [
+   "(c(Q34770),P282,c(Q8192)|c(Q9779))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q8192", 
+   "Q9779", 
+   "Q34770"
+  ], 
+  "entities_in_utterance": [
+   "Q13211"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P282"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And also tell me about Ruthenian?"
+ }, 
+ {
+  "all_entities": [
+   "Q7102906", 
+   "Q20832", 
+   "Q29572", 
+   "Q20831", 
+   "Q1133488", 
+   "Q13414913", 
+   "Q402878", 
+   "Q36708", 
+   "Q35470", 
+   "Q36741", 
+   "Q35668", 
+   "Q8785", 
+   "Q35726", 
+   "Q1321", 
+   "Q21161949", 
+   "Q25167", 
+   "Q18130932", 
+   "Q11732220", 
+   "Q33976", 
+   "Q856383", 
+   "Q149838", 
+   "Q47625", 
+   "Q36822", 
+   "Q2705672", 
+   "Q33879", 
+   "Q7362035", 
+   "Q36795", 
+   "Q56472", 
+   "Q6047309", 
+   "Q8752", 
+   "Q36178", 
+   "Q9056", 
+   "Q397", 
+   "Q20972034", 
+   "Q56512", 
+   "Q35505", 
+   "Q36957", 
+   "Q25164", 
+   "Q56982", 
+   "Q35308", 
+   "Q36790", 
+   "Q1860", 
+   "Q36116", 
+   "Q36751", 
+   "Q29977", 
+   "Q837985", 
+   "Q447117", 
+   "Q7511561", 
+   "Q33982"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q29572", 
+   "Q1860", 
+   "Q447117"
+  ], 
+  "utterance": "Avestan, English, Old Egyptian", 
+  "active_set": [
+   "(c(Q34770),P282,c(Q8192)|c(Q9779))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q29572"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P361"
+  ], 
+  "type_list": [
+   "Q5962346"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which classification schemes are that language a portion of ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q447117"
+  ], 
+  "active_set": [
+   "(Q29572,P361,c(Q5962346))", 
+   "(Q1860,P361,c(Q5962346))", 
+   "(Q447117,P361,c(Q5962346))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q29572", 
+   "Q1860", 
+   "Q447117"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Old Egyptian ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q29572"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Avestan. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q33527", 
+   "Q391015", 
+   "Q33514"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q391015", 
+   "Q33527", 
+   "Q33514"
+  ], 
+  "utterance": "Eastern Iranian languages, Iranian languages, Indo-Iranian languages", 
+  "active_set": [
+   "(Q29572,P361,c(Q5962346))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q16233807", 
+   "Q1098173"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are the countries of citizenship of Claudio Sala or Nenad Gavri\u0107 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q403", 
+   "Q38"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q403", 
+   "Q38"
+  ], 
+  "utterance": "Serbia, Italy", 
+  "active_set": [
+   "OR((Q1098173,P27,c(Q15617994)), (Q16233807,P27,c(Q15617994)))"
+  ]
+ }
+]

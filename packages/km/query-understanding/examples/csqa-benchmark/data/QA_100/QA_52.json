@@ -1,0 +1,563 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q3007936"
+  ], 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which occupation is the profession of Cuthbert Malajila ?"
+ }, 
+ {
+  "all_entities": [
+   "Q937857"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q937857"
+  ], 
+  "utterance": "association football player", 
+  "active_set": [
+   "(Q3007936,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q3007936"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P54"
+  ], 
+  "type_list": [
+   "Q1194951"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which national sports team is Cuthbert Malajila a member of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q327100"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q327100"
+  ], 
+  "utterance": "Zimbabwe national football team", 
+  "active_set": [
+   "(Q3007936,P54,c(Q1194951))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q786087"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q1194951"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Olivier Deschacht?"
+ }, 
+ {
+  "all_entities": [
+   "Q166776"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q166776"
+  ], 
+  "utterance": "Belgium national football team", 
+  "active_set": [
+   "(Q786087,P54,c(Q1194951))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q1345787", 
+   "Q3007936"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories do Cuthbert Malajila or Marc MacSharry belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q954", 
+   "Q27"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q954", 
+   "Q27"
+  ], 
+  "utterance": "Zimbabwe, Ireland", 
+  "active_set": [
+   "OR((Q3007936,P27,c(Q15617994)), (Q1345787,P27,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q16"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q1048835", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which political territories have diplomatic relations with less number of administrative territories than Canada ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1000", 
+   "Q40", 
+   "Q781", 
+   "Q778", 
+   "Q769", 
+   "Q685", 
+   "Q35", 
+   "Q691", 
+   "Q664", 
+   "Q766"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q35", 
+   "Q40", 
+   "Q664"
+  ], 
+  "utterance": "Denmark, Austria, New Zealand", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q1048835))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type", 
+  "type_list": [
+   "Q1048835", 
+   "Q271669", 
+   "Q12737077"
+  ], 
+  "entities_in_utterance": [
+   "Q781"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P17"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which political territories do lesser number of landforms or occupations belong to than Antigua and Barbuda ?"
+ }, 
+ {
+  "all_entities": [
+   "Q193714", 
+   "Q1000", 
+   "Q195972", 
+   "Q21590062", 
+   "Q746558", 
+   "Q838261", 
+   "Q785", 
+   "Q193619", 
+   "Q769", 
+   "Q699964", 
+   "Q763", 
+   "Q13767", 
+   "Q34617", 
+   "Q22880", 
+   "Q9676", 
+   "Q641138", 
+   "Q693551", 
+   "Q13353", 
+   "Q766", 
+   "Q848383", 
+   "Q5705", 
+   "Q13726", 
+   "Q953068", 
+   "Q5785", 
+   "Q38610", 
+   "Q3405693", 
+   "Q1054923", 
+   "Q13862", 
+   "Q79965", 
+   "Q223793", 
+   "Q319376", 
+   "Q13869", 
+   "Q407199", 
+   "Q18221", 
+   "Q2002138", 
+   "Q3899", 
+   "Q35672", 
+   "Q25228", 
+   "Q1747689", 
+   "Q757", 
+   "Q231", 
+   "Q234", 
+   "Q2991382", 
+   "Q168651", 
+   "Q399702", 
+   "Q35086", 
+   "Q208279", 
+   "Q192184", 
+   "Q1615455", 
+   "Q31747", 
+   "Q25305", 
+   "Q129286"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5705", 
+   "Q1000", 
+   "Q769"
+  ], 
+  "utterance": "Catalonia, Gabon, Grenada", 
+  "active_set": [
+   "(c(Q271669)|c(Q12737077),P17,c(Q1048835))"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators", 
+  "entities_in_utterance": [
+   "Q27"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q16887380", 
+   "Q15619164"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many groups or abstract beings are a native of Ireland ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q2982572", 
+   "Q2005341", 
+   "Q23308249"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "3", 
+  "active_set": [
+   "(c(Q16887380),P27,Q27)", 
+   "(c(Q15619164),P27,Q27)"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Mult. entity type", 
+  "type_list": [
+   "Q1048835", 
+   "Q15617994", 
+   "Q1048835"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 4, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which political territories have diplomatic relations with exactly 1 administrative territories or political territories ?"
+ }, 
+ {
+  "all_entities": [
+   "Q685", 
+   "Q691"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q685", 
+   "Q691"
+  ], 
+  "utterance": "Solomon Islands, Papua New Guinea", 
+  "active_set": [
+   "(c(Q15617994)|c(Q1048835),P530,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q1048835", 
+   "Q1048835"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which political territories have diplomatic associations with atmost 6 political territories ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1000", 
+   "Q40", 
+   "Q781", 
+   "Q778", 
+   "Q183", 
+   "Q769", 
+   "Q685", 
+   "Q35", 
+   "Q691", 
+   "Q16", 
+   "Q664", 
+   "Q766"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183", 
+   "Q35", 
+   "Q16"
+  ], 
+  "utterance": "Germany, Denmark, Canada", 
+  "active_set": [
+   "(c(Q1048835),P530,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q16"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P463"
+  ], 
+  "type_list": [
+   "Q484652"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which organizations were that political territory a member of ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q16"
+  ], 
+  "active_set": [
+   "(Q183,P463,c(Q484652))", 
+   "(Q35,P463,c(Q484652))", 
+   "(Q16,P463,c(Q484652))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q183", 
+   "Q35", 
+   "Q16"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Canada ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "Yes"
+ }, 
+ {
+  "all_entities": [
+   "Q81299", 
+   "Q19771", 
+   "Q7785", 
+   "Q1065", 
+   "Q188822", 
+   "Q37143", 
+   "Q674182", 
+   "Q134102", 
+   "Q7184", 
+   "Q1043527"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1065", 
+   "Q81299", 
+   "Q19771"
+  ], 
+  "utterance": "United Nations, Organization for Security and Co-operation in Europe, G20", 
+  "active_set": [
+   "(Q16,P463,c(Q484652))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "entities_in_utterance": [
+   "Q18378258", 
+   "Q1000"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P530", 
+   "P17"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which political territories have a diplomatic relationship with Gabon or are Municipality of Russell \u2013 Binscarth located in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q16", 
+   "Q183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q16", 
+   "Q183"
+  ], 
+  "utterance": "Canada, Germany", 
+  "active_set": [
+   "OR((Q1000,P530,c(Q1048835)), (Q18378258,P17,c(Q1048835)))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Mult. entity type", 
+  "type_list": [
+   "Q15324", 
+   "Q1267889", 
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P206"
+  ], 
+  "count_ques_sub_type": 4, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "Which administrative territories are located next to around 1 bodies of water and waterways ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21111", 
+   "Q446425", 
+   "Q55", 
+   "Q568926", 
+   "Q216422", 
+   "Q36", 
+   "Q38", 
+   "Q769680", 
+   "Q236", 
+   "Q20", 
+   "Q3038", 
+   "Q225", 
+   "Q224", 
+   "Q222", 
+   "Q17", 
+   "Q1577", 
+   "Q516567", 
+   "Q215", 
+   "Q1009", 
+   "Q1438"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q38", 
+   "Q55", 
+   "Q36"
+  ], 
+  "utterance": "Italy, Netherlands, Poland", 
+  "active_set": [
+   "(c(Q15617994),P206,c(Q15324)|c(Q1267889))"
+  ]
+ }, 
+ {
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators", 
+  "entities_in_utterance": [
+   "Q16"
+  ], 
+  "relations": [
+   "P463"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q1129645", 
+   "Q874405"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many trade blocs and social groups were Canada a member of ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q181574", 
+   "Q782942", 
+   "Q38130"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1 trade blocs and 2 social groups", 
+  "active_set": [
+   "(Q16,P463,c(Q1129645))", 
+   "(Q16,P463,c(Q874405))"
+  ]
+ }
+]

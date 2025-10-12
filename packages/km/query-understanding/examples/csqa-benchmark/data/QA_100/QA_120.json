@@ -1,0 +1,670 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q2645984"
+  ], 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territory is the place of death of Alfred Stuiber ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2103"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2103"
+  ], 
+  "utterance": "Bochum", 
+  "active_set": [
+   "(Q2645984,P20,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q2103"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P159"
+  ], 
+  "type_list": [
+   "Q43229"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which organizations have HQ at that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1485085", 
+   "Q2230373", 
+   "Q681157", 
+   "Q565734", 
+   "Q835969", 
+   "Q521922", 
+   "Q889093", 
+   "Q446895", 
+   "Q25894686", 
+   "Q1151226"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q446895", 
+   "Q681157", 
+   "Q25894686"
+  ], 
+  "utterance": "GEA Group, G Data, Kelvion Holding", 
+  "active_set": [
+   "(c(Q43229),P159,Q2103)"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q1445650", 
+   "Q502895", 
+   "Q56061"
+  ], 
+  "entities_in_utterance": [
+   "Q73450"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P417"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many administrative territories have adopted less number of holidays and people as their patron saint than Caldarola ?"
+ }, 
+ {
+  "all_entities": [
+   "Q264716", 
+   "Q12883498", 
+   "Q54494", 
+   "Q50057", 
+   "Q117388", 
+   "Q6221", 
+   "Q46718", 
+   "Q54119", 
+   "Q81258", 
+   "Q47074", 
+   "Q59257", 
+   "Q4361", 
+   "Q2914723", 
+   "Q100129", 
+   "Q52547", 
+   "Q116440", 
+   "Q2284679", 
+   "Q496890", 
+   "Q297224", 
+   "Q259039", 
+   "Q54556", 
+   "Q487786", 
+   "Q100943", 
+   "Q244193", 
+   "Q1747381", 
+   "Q492475", 
+   "Q334577", 
+   "Q39493", 
+   "Q329984", 
+   "Q47034", 
+   "Q215080", 
+   "Q270288", 
+   "Q102820"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "33", 
+  "active_set": [
+   "(c(Q56061),P417,c(Q1445650)|c(Q502895))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q1445650", 
+   "Q502895", 
+   "Q56061"
+  ], 
+  "entities_in_utterance": [
+   "Q101229"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P417"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And how about Martinengo?"
+ }, 
+ {
+  "all_entities": [
+   "Q264716", 
+   "Q12883498", 
+   "Q54494", 
+   "Q50057", 
+   "Q117388", 
+   "Q6221", 
+   "Q46718", 
+   "Q54119", 
+   "Q81258", 
+   "Q47074", 
+   "Q59257", 
+   "Q4361", 
+   "Q2914723", 
+   "Q100129", 
+   "Q52547", 
+   "Q116440", 
+   "Q2284679", 
+   "Q496890", 
+   "Q297224", 
+   "Q259039", 
+   "Q54556", 
+   "Q487786", 
+   "Q100943", 
+   "Q244193", 
+   "Q1747381", 
+   "Q492475", 
+   "Q334577", 
+   "Q39493", 
+   "Q329984", 
+   "Q47034", 
+   "Q215080", 
+   "Q270288", 
+   "Q102820"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "33", 
+  "active_set": [
+   "(c(Q56061),P417,c(Q1445650)|c(Q502895))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "entities_in_utterance": [
+   "Q71399", 
+   "Q25894686"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27", 
+   "P17"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which political territories are Kelvion Holding a part of or are the native countriesof Max Schneckenburger ?"
+ }, 
+ {
+  "all_entities": [
+   "Q183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "utterance": "Germany", 
+  "active_set": [
+   "OR((Q25894686,P17,c(Q1048835)), (Q71399,P27,c(Q1048835)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q71399"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What are the professions of that person ?"
+ }, 
+ {
+  "all_entities": [
+   "Q49757", 
+   "Q36180"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q49757", 
+   "Q36180"
+  ], 
+  "utterance": "poet, writer", 
+  "active_set": [
+   "(Q183,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q24228279"
+  ], 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Do Bent Andersen have career as those occupations ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q24228279,P106,Q49757)", 
+   "(Q24228279,P106,Q36180)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q132100"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P417"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q502895", 
+   "Q12737077"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many people are the names of the patron saint of greater number of occupations than Anterus ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q453698", 
+   "Q229190", 
+   "Q152457", 
+   "Q43689", 
+   "Q328804", 
+   "Q166876", 
+   "Q163900", 
+   "Q170547", 
+   "Q212850", 
+   "Q374822", 
+   "Q9438", 
+   "Q130997", 
+   "Q312758", 
+   "Q5575577", 
+   "Q191107", 
+   "Q242274", 
+   "Q128538", 
+   "Q183240", 
+   "Q119289", 
+   "Q360798", 
+   "Q298845", 
+   "Q48438", 
+   "Q119512", 
+   "Q44281", 
+   "Q170164", 
+   "Q43399", 
+   "Q196653", 
+   "Q508214", 
+   "Q9200", 
+   "Q193507", 
+   "Q463600", 
+   "Q43669", 
+   "Q44265", 
+   "Q192816", 
+   "Q43982", 
+   "Q179718", 
+   "Q40662", 
+   "Q332656", 
+   "Q320171", 
+   "Q137947", 
+   "Q80513", 
+   "Q43600", 
+   "Q324700", 
+   "Q744884", 
+   "Q44015", 
+   "Q151967", 
+   "Q149727", 
+   "Q232427", 
+   "Q60059", 
+   "Q17590", 
+   "Q271474", 
+   "Q200895", 
+   "Q44248", 
+   "Q276148"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "54", 
+  "active_set": [
+   "(c(Q12737077),P417,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q2824511"
+  ], 
+  "relations": [
+   "P417"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q502895", 
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about Adjutor?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q453698", 
+   "Q229190", 
+   "Q152457", 
+   "Q43689", 
+   "Q328804", 
+   "Q166876", 
+   "Q163900", 
+   "Q170547", 
+   "Q212850", 
+   "Q374822", 
+   "Q9438", 
+   "Q130997", 
+   "Q312758", 
+   "Q5575577", 
+   "Q191107", 
+   "Q242274", 
+   "Q128538", 
+   "Q183240", 
+   "Q119289", 
+   "Q360798", 
+   "Q298845", 
+   "Q48438", 
+   "Q119512", 
+   "Q44281", 
+   "Q170164", 
+   "Q43399", 
+   "Q196653", 
+   "Q508214", 
+   "Q9200", 
+   "Q193507", 
+   "Q463600", 
+   "Q43669", 
+   "Q44265", 
+   "Q192816", 
+   "Q43982", 
+   "Q179718", 
+   "Q40662", 
+   "Q332656", 
+   "Q320171", 
+   "Q137947", 
+   "Q80513", 
+   "Q43600", 
+   "Q324700", 
+   "Q744884", 
+   "Q44015", 
+   "Q151967", 
+   "Q149727", 
+   "Q232427", 
+   "Q60059", 
+   "Q17590", 
+   "Q271474", 
+   "Q200895", 
+   "Q44248", 
+   "Q276148"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "54", 
+  "active_set": [
+   "(c(Q12737077),P417,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q49757"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P425"
+  ], 
+  "type_list": [
+   "Q1792379"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which art genre is associated with the field of occupation poet ?"
+ }, 
+ {
+  "all_entities": [
+   "Q482"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q482"
+  ], 
+  "utterance": "poetry", 
+  "active_set": [
+   "(Q49757,P425,c(Q1792379))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P47"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which administrative territories are next to the border of Germany ?"
+ }, 
+ {
+  "all_entities": [
+   "Q142", 
+   "Q213", 
+   "Q55", 
+   "Q29999", 
+   "Q32", 
+   "Q31", 
+   "Q36", 
+   "Q39"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q55", 
+   "Q142", 
+   "Q36"
+  ], 
+  "utterance": "Netherlands, France, Poland", 
+  "active_set": [
+   "(c(Q15617994),P47,Q183)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q142"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P85"
+  ], 
+  "type_list": [
+   "Q571"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the national anthem of France ?"
+ }, 
+ {
+  "all_entities": [
+   "Q41180"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q41180"
+  ], 
+  "utterance": "La Marseillaise", 
+  "active_set": [
+   "(Q142,P85,c(Q571))"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators|Indirect", 
+  "entities_in_utterance": [], 
+  "relations": [
+   "P85"
+  ], 
+  "count_ques_sub_type": 8, 
+  "type_list": [
+   "Q7275", 
+   "Q33837"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many states or archipelagos have that book as their national anthem ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q70802", 
+   "Q190571", 
+   "Q797214", 
+   "Q58296"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "4", 
+  "active_set": [
+   "(c(Q7275),P85,Q41180)", 
+   "(c(Q33837),P85,Q41180)", 
+   "(c(Q7275),P85,Q41180)", 
+   "(c(Q33837),P85,Q41180)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q142"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P706"
+  ], 
+  "type_list": [
+   "Q151885"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which concepts have their location as France ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1808482", 
+   "Q2379716"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1808482", 
+   "Q2379716"
+  ], 
+  "utterance": "Tardenoisian, S\u00f6gel-Wohlde culture", 
+  "active_set": [
+   "(c(Q151885),P706,Q142)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1808482", 
+   "Q2379716"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P61"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who discovered or invented Tardenoisian and S\u00f6gel-Wohlde culture ?"
+ }, 
+ {
+  "all_entities": [
+   "Q740782", 
+   "Q1460695"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q740782", 
+   "Q1460695"
+  ], 
+  "utterance": "Louis Laurent Gabriel de Mortillet, Friedrich Laux", 
+  "active_set": [
+   "(Q1808482,P61,c(Q502895))", 
+   "(Q2379716,P61,c(Q502895))"
+  ]
+ }
+]

@@ -1,0 +1,241 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q3014955"
+  ], 
+  "relations": [
+   "P39"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What were the positions for which Danielle Auroi were appointed ?"
+ }, 
+ {
+  "all_entities": [
+   "Q27169", 
+   "Q3044918"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q27169", 
+   "Q3044918"
+  ], 
+  "utterance": "member of the European Parliament, member of the French\u00a0National Assembly", 
+  "active_set": [
+   "(Q3014955,P39,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q3044918"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1001"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory belongs to jurisdiction of member of the French\u00a0National Assembly ?"
+ }, 
+ {
+  "all_entities": [
+   "Q142"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q142"
+  ], 
+  "utterance": "France", 
+  "active_set": [
+   "(Q3044918,P1001,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q142"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P463"
+  ], 
+  "type_list": [
+   "Q180516"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which room was that administrative territory a member of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q141720"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q141720"
+  ], 
+  "utterance": "European Air Transport Command", 
+  "active_set": [
+   "(Q142,P463,c(Q180516))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q180516"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about Germany?"
+ }, 
+ {
+  "all_entities": [
+   "Q141720"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q141720"
+  ], 
+  "utterance": "European Air Transport Command", 
+  "active_set": [
+   "(Q183,P463,c(Q180516))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P85"
+  ], 
+  "type_list": [
+   "Q7725634"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the national anthem of that political territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q44042"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q44042"
+  ], 
+  "utterance": "Das Lied der Deutschen", 
+  "active_set": [
+   "(Q141720,P85,c(Q7725634))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1445"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q7725634", 
+   "Q386724"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which works are recounted in max number of literary works ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q384426"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q384426"
+  ], 
+  "utterance": "Pirates of the Caribbean", 
+  "active_set": [
+   "(c(Q386724),P1445,c(Q7725634))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q384426", 
+   "Q18535399"
+  ], 
+  "relations": [
+   "P1080"
+  ], 
+  "type_list": [
+   "Q6619679"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Is Vin featured in that work ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q18535399,P1080,Q384426)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, all direct, 2 are query entities", 
+  "entities_in_utterance": [
+   "Q3044918", 
+   "Q142", 
+   "Q4704105"
+  ], 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 4, 
+  "utterance": "Is member of the French\u00a0National Assembly situated in France and Al Jahrah District ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES and NO respectively", 
+  "active_set": [
+   "(Q3044918,P17,Q142)", 
+   "(Q3044918,P17,Q4704105)"
+  ]
+ }
+]

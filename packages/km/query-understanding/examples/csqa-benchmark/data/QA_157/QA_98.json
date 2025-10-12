@@ -1,0 +1,427 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q118885"
+  ], 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is the job of Boris Rhein ?"
+ }, 
+ {
+  "all_entities": [
+   "Q82955"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q82955"
+  ], 
+  "utterance": "politician", 
+  "active_set": [
+   "(Q118885,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q118885"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P937"
+  ], 
+  "type_list": [
+   "Q515"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which city is the work location of Boris Rhein ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1721"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1721"
+  ], 
+  "utterance": "Wiesbaden", 
+  "active_set": [
+   "(Q118885,P937,c(Q515))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q118885"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P102"
+  ], 
+  "type_list": [
+   "Q7278"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which political party is that person a member of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q49762"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q49762"
+  ], 
+  "utterance": "Christian Democratic Union", 
+  "active_set": [
+   "(Q1721,P102,c(Q7278))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q49762", 
+   "Q2599420"
+  ], 
+  "relations": [
+   "P102"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Does Yanina Weiland belong to the political party that one ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q2599420,P102,Q49762)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q118885"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P39"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What was the position for which Boris Rhein was appointed ?"
+ }, 
+ {
+  "all_entities": [
+   "Q17519166"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q17519166"
+  ], 
+  "utterance": "Member of the Hessian Parliament", 
+  "active_set": [
+   "(Q118885,P39,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q49762"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P466"
+  ], 
+  "type_list": [
+   "Q41176"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which building is occupied by Christian Democratic Union ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1781884"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1781884"
+  ], 
+  "utterance": "Konrad-Adenauer-Haus", 
+  "active_set": [
+   "(c(Q41176),P466,Q49762)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q49762"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1142"
+  ], 
+  "type_list": [
+   "Q1047113"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which special field is the political ideology of Christian Democratic Union ?"
+ }, 
+ {
+  "all_entities": [
+   "Q7169"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7169"
+  ], 
+  "utterance": "conservatism", 
+  "active_set": [
+   "(Q49762,P1142,c(Q1047113))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q49762"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P361"
+  ], 
+  "type_list": [
+   "Q15911314"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which associations are a portion of that political party ?"
+ }, 
+ {
+  "all_entities": [
+   "Q830247", 
+   "Q1023151", 
+   "Q1023150"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q830247", 
+   "Q1023151", 
+   "Q1023150"
+  ], 
+  "utterance": "CDU Baden-W\u00fcrttemberg, CDU Thuringia, CDU Sachsen", 
+  "active_set": [
+   "(c(Q15911314),P361,Q7169)"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Mult. entity type", 
+  "type_list": [
+   "Q1190554", 
+   "Q1656682", 
+   "Q41176"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P793"
+  ], 
+  "count_ques_sub_type": 3, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "Which buildings had max number of events and events as their key event ?"
+ }, 
+ {
+  "all_entities": [
+   "Q674032", 
+   "Q321040", 
+   "Q15649756", 
+   "Q1781884", 
+   "Q15911383", 
+   "Q1642585", 
+   "Q3399781", 
+   "Q12495", 
+   "Q20974169", 
+   "Q15728912", 
+   "Q6724382", 
+   "Q801555"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q12495", 
+   "Q1781884", 
+   "Q801555"
+  ], 
+  "utterance": "Burj Khalifa, Konrad-Adenauer-Haus, Veendam railway station", 
+  "active_set": [
+   "(c(Q41176),P793,c(Q1190554)|c(Q1656682))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q3841948", 
+   "Q830247"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P488", 
+   "P161"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people served as the chairperson of CDU Baden-W\u00fcrttemberg or starred in Macario Against Zagomar ?"
+ }, 
+ {
+  "all_entities": [
+   "Q112109", 
+   "Q556400", 
+   "Q690874", 
+   "Q1042419", 
+   "Q2143595", 
+   "Q1522638", 
+   "Q1963136", 
+   "Q3877167", 
+   "Q69361", 
+   "Q3761183", 
+   "Q69349", 
+   "Q57956", 
+   "Q2029645", 
+   "Q3208891", 
+   "Q3764239", 
+   "Q868532", 
+   "Q1056178", 
+   "Q69338", 
+   "Q3629615"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q57956", 
+   "Q69361", 
+   "Q556400", 
+   "Q112109", 
+   "Q2143595", 
+   "Q69349", 
+   "Q3877167", 
+   "Q3208891", 
+   "Q3761183", 
+   "Q1056178"
+  ], 
+  "utterance": "Some of them are G\u00fcnther Oettinger, Stefan Mappus, Erminio Macario, Thomas Strobl, Renato Chiantoni, Lothar Sp\u00e4th, Nino Crisman, Olga Villi, Gero Zambuto, Umberto Spadaro", 
+  "active_set": [
+   "OR((Q830247,P488,c(Q502895)), (Q3841948,P161,c(Q502895)))"
+  ]
+ }, 
+ {
+  "set_op": 1, 
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Quantitative|Count|Logical operators|Indirect", 
+  "entities_in_utterance": [], 
+  "relations": [
+   "P488"
+  ], 
+  "count_ques_sub_type": 8, 
+  "type_list": [
+   "Q15911314", 
+   "Q1802419"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many associations and regional governments are that person a chairperson of ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "description": "Quantitative|Count|Mult. entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q57956"
+  ], 
+  "active_set": [], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean G\u00fcnther Oettinger ?"
+ }, 
+ {
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "count_ques_sub_type": 8, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "Yes", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1720192", 
+   "Q1720191", 
+   "Q830247"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1 associations and 2 regional governments", 
+  "active_set": [
+   "(c(Q15911314),P488,Q57956)", 
+   "(c(Q1802419),P488,Q57956)", 
+   "(c(Q15911314),P488,Q57956)", 
+   "(c(Q1802419),P488,Q57956)", 
+   "(c(Q15911314),P488,Q69361)", 
+   "(c(Q1802419),P488,Q69361)", 
+   "(c(Q15911314),P488,Q556400)", 
+   "(c(Q1802419),P488,Q556400)", 
+   "(c(Q15911314),P488,Q112109)", 
+   "(c(Q1802419),P488,Q112109)", 
+   "(c(Q15911314),P488,Q2143595)", 
+   "(c(Q1802419),P488,Q2143595)", 
+   "(c(Q15911314),P488,Q69349)", 
+   "(c(Q1802419),P488,Q69349)", 
+   "(c(Q15911314),P488,Q3877167)", 
+   "(c(Q1802419),P488,Q3877167)", 
+   "(c(Q15911314),P488,Q3208891)", 
+   "(c(Q1802419),P488,Q3208891)", 
+   "(c(Q15911314),P488,Q3761183)", 
+   "(c(Q1802419),P488,Q3761183)", 
+   "(c(Q15911314),P488,Q1056178)", 
+   "(c(Q1802419),P488,Q1056178)"
+  ]
+ }
+]

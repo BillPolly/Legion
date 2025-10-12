@@ -1,0 +1,652 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q2835265"
+  ], 
+  "relations": [
+   "P641"
+  ], 
+  "type_list": [
+   "Q349"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which sport did Alfred Leonard Caiels participate in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2736"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2736"
+  ], 
+  "utterance": "association football", 
+  "active_set": [
+   "(Q2835265,P641,c(Q349))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q2736"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P495"
+  ], 
+  "type_list": [
+   "Q1496967"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which territory is the origin of that sport ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21"
+  ], 
+  "utterance": "England", 
+  "active_set": [
+   "(Q2736,P495,c(Q1496967))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q21"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P85"
+  ], 
+  "type_list": [
+   "Q484692"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What are the national anthems of that territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q489607", 
+   "Q182268"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q489607", 
+   "Q182268"
+  ], 
+  "utterance": "And did those feet in ancient time, Land of Hope and Glory", 
+  "active_set": [
+   "(Q21,P85,c(Q484692))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q489607"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P50"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which person authored that hymn ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q489607"
+  ], 
+  "active_set": [
+   "(Q489607,P50,c(Q502895))", 
+   "(Q182268,P50,c(Q502895))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q489607", 
+   "Q182268"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean And did those feet in ancient time ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "Yes"
+ }, 
+ {
+  "all_entities": [
+   "Q41513"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q41513"
+  ], 
+  "utterance": "William Blake", 
+  "active_set": [
+   "(Q489607,P50,c(Q502895))"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators|Indirect", 
+  "entities_in_utterance": [], 
+  "relations": [
+   "P551"
+  ], 
+  "count_ques_sub_type": 8, 
+  "type_list": [
+   "Q83620", 
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many thoroughfares or administrative territories did that person reside ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q7567974", 
+   "Q4972570", 
+   "Q2227185"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "3", 
+  "active_set": [
+   "(Q41513,P551,c(Q83620))", 
+   "(Q41513,P551,c(Q56061))", 
+   "(Q41513,P551,c(Q83620))", 
+   "(Q41513,P551,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q21"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P38"
+  ], 
+  "type_list": [
+   "Q8142"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the currency of England ?"
+ }, 
+ {
+  "all_entities": [
+   "Q25224"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q25224"
+  ], 
+  "utterance": "pound sterling", 
+  "active_set": [
+   "(Q21,P38,c(Q8142))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, 2 direct, 2(direct) are query entities, subject is indirect", 
+  "entities_in_utterance": [
+   "Q25224", 
+   "Q3924533", 
+   "Q560420"
+  ], 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 5, 
+  "utterance": "Is that currency present in Province of Brescia and Lohnweiler ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q25224,P17,Q3924533)", 
+   "(Q25224,P17,Q560420)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q21"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P163"
+  ], 
+  "type_list": [
+   "Q14660"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which flag is associated with England ?"
+ }, 
+ {
+  "all_entities": [
+   "Q171117"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q171117"
+  ], 
+  "utterance": "flag of England", 
+  "active_set": [
+   "(Q21,P163,c(Q14660))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q171117"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1001"
+  ], 
+  "type_list": [
+   "Q1496967"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which territory belongs to jurisdiction of that flag ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21"
+  ], 
+  "utterance": "England", 
+  "active_set": [
+   "(Q171117,P1001,c(Q1496967))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q21"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P172"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people have that territory as his/her race ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6829817", 
+   "Q7683973", 
+   "Q4767120", 
+   "Q5424077", 
+   "Q5107509", 
+   "Q7519325", 
+   "Q8006577", 
+   "Q7341902", 
+   "Q5730252", 
+   "Q21151748"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21151748", 
+   "Q7341902", 
+   "Q5730252"
+  ], 
+  "utterance": "Rosemary Stjernstedt, Robert Barrington-Ward, Henry William Wilberforce", 
+  "active_set": [
+   "(c(Q502895),P172,Q21)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q18559016"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P725"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q502895", 
+   "Q15416"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many television programs had less number of people as the dubbing artist than Berserk ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1280574", 
+   "Q4049303", 
+   "Q715723", 
+   "Q1135343", 
+   "Q613823", 
+   "Q239937", 
+   "Q1857269", 
+   "Q1195326", 
+   "Q5227700", 
+   "Q4773554", 
+   "Q4120156", 
+   "Q962161", 
+   "Q1617715", 
+   "Q696310", 
+   "Q15176855", 
+   "Q472309", 
+   "Q2573191", 
+   "Q2581704", 
+   "Q917980", 
+   "Q3547706", 
+   "Q845452", 
+   "Q307507", 
+   "Q483943", 
+   "Q3106852", 
+   "Q25059", 
+   "Q1284240", 
+   "Q14493917", 
+   "Q749629", 
+   "Q10913555", 
+   "Q1315951", 
+   "Q1361413", 
+   "Q128969", 
+   "Q2455207", 
+   "Q2452999", 
+   "Q702039", 
+   "Q7496805", 
+   "Q699760", 
+   "Q1146803", 
+   "Q2140751", 
+   "Q4033639", 
+   "Q1640364", 
+   "Q483106", 
+   "Q3098248", 
+   "Q633432", 
+   "Q12019559", 
+   "Q1072208", 
+   "Q304290", 
+   "Q1215573", 
+   "Q2619211", 
+   "Q1140254", 
+   "Q1317932", 
+   "Q5139461", 
+   "Q430369", 
+   "Q1494222", 
+   "Q452374", 
+   "Q2339582", 
+   "Q15039539", 
+   "Q5976198", 
+   "Q1353486", 
+   "Q45035"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "60", 
+  "active_set": [
+   "(c(Q15416),P725,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q15863567"
+  ], 
+  "relations": [
+   "P725"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q502895", 
+   "Q15416"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And what about K-On!?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q1280574", 
+   "Q4049303", 
+   "Q715723", 
+   "Q1135343", 
+   "Q613823", 
+   "Q689114", 
+   "Q467722", 
+   "Q2042834", 
+   "Q239937", 
+   "Q1857269", 
+   "Q1195326", 
+   "Q5227700", 
+   "Q4773554", 
+   "Q4120156", 
+   "Q962161", 
+   "Q1617715", 
+   "Q696310", 
+   "Q15176855", 
+   "Q472309", 
+   "Q2573191", 
+   "Q2581704", 
+   "Q917980", 
+   "Q3547706", 
+   "Q845452", 
+   "Q307507", 
+   "Q483943", 
+   "Q3596105", 
+   "Q757148", 
+   "Q3106852", 
+   "Q25059", 
+   "Q1284240", 
+   "Q14493917", 
+   "Q749629", 
+   "Q10913555", 
+   "Q1315951", 
+   "Q1361413", 
+   "Q543203", 
+   "Q128969", 
+   "Q2455207", 
+   "Q2452999", 
+   "Q2275664", 
+   "Q702039", 
+   "Q7496805", 
+   "Q962132", 
+   "Q18579178", 
+   "Q20669175", 
+   "Q1050091", 
+   "Q699760", 
+   "Q1146803", 
+   "Q2140751", 
+   "Q1002254", 
+   "Q4033639", 
+   "Q550555", 
+   "Q20899576", 
+   "Q1640364", 
+   "Q483106", 
+   "Q3098248", 
+   "Q633432", 
+   "Q12019559", 
+   "Q18558839", 
+   "Q1072208", 
+   "Q304290", 
+   "Q1215573", 
+   "Q428130", 
+   "Q2619211", 
+   "Q1140254", 
+   "Q1317932", 
+   "Q5139461", 
+   "Q18559016", 
+   "Q430369", 
+   "Q1494222", 
+   "Q452374", 
+   "Q18575654", 
+   "Q2339582", 
+   "Q15039539", 
+   "Q3492143", 
+   "Q5976198", 
+   "Q1353486", 
+   "Q1143800", 
+   "Q331031", 
+   "Q45035"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "81", 
+  "active_set": [
+   "(c(Q15416),P725,c(Q502895))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q44539", 
+   "Q11028", 
+   "Q14660"
+  ], 
+  "entities_in_utterance": [
+   "Q252995"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many flags demonstrate greater number of temples and information than flag of the Australian Capital Territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q162999", 
+   "Q4633"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(c(Q14660),P180,c(Q44539)|c(Q11028))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q44539", 
+   "Q11028", 
+   "Q14660"
+  ], 
+  "entities_in_utterance": [
+   "Q484249"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And how about Flag of Mozambique?"
+ }, 
+ {
+  "all_entities": [
+   "Q162999", 
+   "Q4633"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(c(Q14660),P180,c(Q44539)|c(Q11028))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q41513"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P110"
+  ], 
+  "type_list": [
+   "Q2342494"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which collectables were designed by William Blake ?"
+ }, 
+ {
+  "all_entities": [
+   "Q23682789", 
+   "Q2705647"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23682789", 
+   "Q2705647"
+  ], 
+  "utterance": "Poems, Original Stories from Real Life", 
+  "active_set": [
+   "(c(Q2342494),P110,Q41513)"
+  ]
+ }
+]

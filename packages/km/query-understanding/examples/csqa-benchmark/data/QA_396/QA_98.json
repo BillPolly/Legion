@@ -1,0 +1,485 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q12875161"
+  ], 
+  "relations": [
+   "P22"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Who was the dad of Georgios Simitis ?"
+ }, 
+ {
+  "all_entities": [
+   "Q16328816"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q16328816"
+  ], 
+  "utterance": "Spyridon Simitis", 
+  "active_set": [
+   "(Q12875161,P22,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q12875161"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P40"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who has Georgios Simitis as a child ?"
+ }, 
+ {
+  "all_entities": [
+   "Q16328816"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q16328816"
+  ], 
+  "utterance": "Spyridon Simitis", 
+  "active_set": [
+   "(c(Q502895),P40,Q12875161)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, one direct and one indirect, subject is indirect", 
+  "entities_in_utterance": [
+   "Q16328816", 
+   "Q504662"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 2, 
+  "utterance": "Is Marktschorgast the country of citizenship of that person ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q16328816,P27,Q504662)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q12875161", 
+   "Q41"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Does Georgios Simitis belong to Greece ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q12875161,P27,Q41)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, all direct, 2 are query entities", 
+  "entities_in_utterance": [
+   "Q16328816", 
+   "Q41", 
+   "Q52161"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 4, 
+  "utterance": "Is Spyridon Simitis a native of Greece and Minervino di Lecce ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES and NO respectively", 
+  "active_set": [
+   "(Q16328816,P27,Q41)", 
+   "(Q16328816,P27,Q52161)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q16328816"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories do Spyridon Simitis belong to ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q41"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q16328816,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q4669061"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about Abraham Lubelski?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q30"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q4669061,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q21130887"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Valery Yakushev?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q21130887,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Mult. entity type", 
+  "type_list": [
+   "Q234460", 
+   "Q15961987", 
+   "Q502895"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P1441"
+  ], 
+  "count_ques_sub_type": 3, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "Which people are from the works of min number of texts or television genres ?"
+ }, 
+ {
+  "all_entities": [
+   "Q603233", 
+   "Q660359", 
+   "Q2447493", 
+   "Q80048", 
+   "Q529984", 
+   "Q23885172", 
+   "Q4430779", 
+   "Q249381", 
+   "Q232525", 
+   "Q240258", 
+   "Q24579400", 
+   "Q7307192", 
+   "Q131195", 
+   "Q2426699", 
+   "Q24624067", 
+   "Q2574151", 
+   "Q160116", 
+   "Q785349", 
+   "Q2052042", 
+   "Q318912", 
+   "Q3858588", 
+   "Q4154984", 
+   "Q4006447", 
+   "Q363623", 
+   "Q3343834", 
+   "Q2451581", 
+   "Q2046277", 
+   "Q715713", 
+   "Q24577230", 
+   "Q494455", 
+   "Q673959", 
+   "Q185801", 
+   "Q6239779", 
+   "Q34428", 
+   "Q2033697", 
+   "Q24622402", 
+   "Q20656752", 
+   "Q311556", 
+   "Q294192", 
+   "Q19975705", 
+   "Q560559", 
+   "Q25885222", 
+   "Q1867479", 
+   "Q134646", 
+   "Q879668", 
+   "Q2170784", 
+   "Q181538", 
+   "Q24623408", 
+   "Q8413", 
+   "Q2600794", 
+   "Q2282686", 
+   "Q459606", 
+   "Q437417", 
+   "Q3778878", 
+   "Q3774081", 
+   "Q1348720", 
+   "Q24624893", 
+   "Q1396131", 
+   "Q3591188", 
+   "Q716237", 
+   "Q2264125", 
+   "Q608841", 
+   "Q2124082", 
+   "Q3259530", 
+   "Q24625686", 
+   "Q2137929", 
+   "Q315276", 
+   "Q3148218", 
+   "Q24577318", 
+   "Q515828", 
+   "Q24625326", 
+   "Q25858050", 
+   "Q26858752", 
+   "Q923021", 
+   "Q24633210", 
+   "Q715547", 
+   "Q3745274", 
+   "Q3867479", 
+   "Q1446", 
+   "Q1641601", 
+   "Q19348839", 
+   "Q2073479", 
+   "Q2723049", 
+   "Q1093885", 
+   "Q1346246", 
+   "Q2578955", 
+   "Q3010053", 
+   "Q550255", 
+   "Q1851709", 
+   "Q164889", 
+   "Q24625073", 
+   "Q27621044", 
+   "Q1380878", 
+   "Q16879711", 
+   "Q24623579", 
+   "Q366070", 
+   "Q1377025", 
+   "Q2276030", 
+   "Q264699", 
+   "Q270438", 
+   "Q2711883", 
+   "Q886399", 
+   "Q1341779", 
+   "Q326585", 
+   "Q972487", 
+   "Q313395", 
+   "Q2304442", 
+   "Q8581", 
+   "Q2651263", 
+   "Q24577238", 
+   "Q209793", 
+   "Q24632700", 
+   "Q1808889", 
+   "Q587893", 
+   "Q24626363", 
+   "Q2685920", 
+   "Q256076", 
+   "Q24633126", 
+   "Q1091513", 
+   "Q3658171", 
+   "Q2601106", 
+   "Q4804479", 
+   "Q26721185", 
+   "Q2292243", 
+   "Q2448083", 
+   "Q633681", 
+   "Q24623790", 
+   "Q2296791", 
+   "Q200947", 
+   "Q24083251", 
+   "Q1947936", 
+   "Q211396", 
+   "Q25923184", 
+   "Q2075711", 
+   "Q312311", 
+   "Q2361344", 
+   "Q3275910", 
+   "Q169329", 
+   "Q2477603", 
+   "Q110436", 
+   "Q23906252", 
+   "Q2519772", 
+   "Q879088", 
+   "Q302322", 
+   "Q183089", 
+   "Q7734", 
+   "Q3761044", 
+   "Q2168182", 
+   "Q878882", 
+   "Q76721", 
+   "Q26858995", 
+   "Q2487300", 
+   "Q283466", 
+   "Q9441", 
+   "Q372783", 
+   "Q16006746", 
+   "Q17457", 
+   "Q786748", 
+   "Q24626010", 
+   "Q26858919", 
+   "Q2047062", 
+   "Q1227361"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q17457", 
+   "Q110436", 
+   "Q270438"
+  ], 
+  "utterance": "Donald Knuth, Cory Doctorow, Charles of Valois", 
+  "active_set": [
+   "(c(Q502895),P1441,c(Q234460)|c(Q15961987))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q110436"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1346"
+  ], 
+  "type_list": [
+   "Q618779"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which awards were won by that person ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q110436"
+  ], 
+  "active_set": [
+   "(c(Q618779),P1346,Q17457)", 
+   "(c(Q618779),P1346,Q110436)", 
+   "(c(Q618779),P1346,Q270438)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q17457", 
+   "Q110436", 
+   "Q270438"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Cory Doctorow ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "Yes"
+ }, 
+ {
+  "all_entities": [
+   "Q958630", 
+   "Q1030402"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q958630", 
+   "Q1030402"
+  ], 
+  "utterance": "John W. Campbell Award for Best New Writer, John W. Campbell Memorial Award for Best Science Fiction Novel", 
+  "active_set": [
+   "(c(Q618779),P1346,Q110436)"
+  ]
+ }
+]

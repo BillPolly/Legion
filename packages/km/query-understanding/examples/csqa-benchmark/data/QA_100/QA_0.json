@@ -1,0 +1,506 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q5479433"
+  ], 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is the job of B\u00f6rje Larsson ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3455803"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3455803"
+  ], 
+  "utterance": "director", 
+  "active_set": [
+   "(Q5479433,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q5479433"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P57"
+  ], 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "What is B\u00f6rje Larsson a director of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q10691559"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q10691559"
+  ], 
+  "utterance": "Taxi 13", 
+  "active_set": [
+   "(c(Q838948),P57,Q5479433)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q5479433"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P58"
+  ], 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "What is that person a screwriter of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q10691559"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q10691559"
+  ], 
+  "utterance": "Taxi 13", 
+  "active_set": [
+   "(c(Q838948),P58,Q10691559)"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q15619164", 
+   "Q6619679", 
+   "Q838948"
+  ], 
+  "entities_in_utterance": [
+   "Q3221640"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P674"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many works of art are approximately the same number of abstract beings or fictional humanoids a character of as Maigret a Pigalle ?"
+ }, 
+ {
+  "all_entities": [
+   "Q309048", 
+   "Q3091040", 
+   "Q20736738", 
+   "Q2893677", 
+   "Q7230176", 
+   "Q1216139", 
+   "Q3226385", 
+   "Q3230758", 
+   "Q23701769", 
+   "Q2312519", 
+   "Q20711488", 
+   "Q969098", 
+   "Q1764277", 
+   "Q206400", 
+   "Q868483", 
+   "Q286381", 
+   "Q846870", 
+   "Q945342", 
+   "Q320594", 
+   "Q26768828", 
+   "Q903424", 
+   "Q18170404", 
+   "Q3481943", 
+   "Q3320792", 
+   "Q3231331", 
+   "Q568928", 
+   "Q241077", 
+   "Q471066", 
+   "Q512807", 
+   "Q2911576", 
+   "Q1196012", 
+   "Q29478", 
+   "Q11053391", 
+   "Q788676", 
+   "Q754687", 
+   "Q614607", 
+   "Q542055", 
+   "Q632743", 
+   "Q5437016", 
+   "Q5071342", 
+   "Q961492", 
+   "Q2864475", 
+   "Q3820032", 
+   "Q375786", 
+   "Q3221287", 
+   "Q3278137", 
+   "Q3247743", 
+   "Q3332723", 
+   "Q16933688", 
+   "Q559310", 
+   "Q3213141", 
+   "Q788458", 
+   "Q148643", 
+   "Q3278101", 
+   "Q130283", 
+   "Q1246408", 
+   "Q4205446", 
+   "Q705232", 
+   "Q3483718", 
+   "Q1189436", 
+   "Q7283713", 
+   "Q4409901", 
+   "Q758588", 
+   "Q672319", 
+   "Q3221640", 
+   "Q12900461", 
+   "Q1368693", 
+   "Q3246902", 
+   "Q4146306", 
+   "Q1233164", 
+   "Q11688406", 
+   "Q341482", 
+   "Q3211245", 
+   "Q498150", 
+   "Q16201590", 
+   "Q412341", 
+   "Q2022683", 
+   "Q294001", 
+   "Q733444", 
+   "Q24060599", 
+   "Q4261490", 
+   "Q506546", 
+   "Q41567", 
+   "Q2869617", 
+   "Q3457623", 
+   "Q1183443", 
+   "Q2972876", 
+   "Q746818", 
+   "Q1216943", 
+   "Q1476152", 
+   "Q1415903", 
+   "Q2882090", 
+   "Q102754", 
+   "Q83186", 
+   "Q4851394", 
+   "Q1233203", 
+   "Q888131", 
+   "Q667750", 
+   "Q2834224", 
+   "Q5380161", 
+   "Q7752052", 
+   "Q4796620", 
+   "Q3246423", 
+   "Q1224659", 
+   "Q23395", 
+   "Q934597", 
+   "Q793366", 
+   "Q3515611", 
+   "Q587921", 
+   "Q844836", 
+   "Q337078", 
+   "Q583392", 
+   "Q740134", 
+   "Q2924384"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "114", 
+  "active_set": [
+   "(c(Q838948),P674,c(Q15619164)|c(Q6619679))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q15619164", 
+   "Q6619679", 
+   "Q838948"
+  ], 
+  "entities_in_utterance": [
+   "Q542055"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P674"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And how about Sir Thomas More?"
+ }, 
+ {
+  "all_entities": [
+   "Q309048", 
+   "Q3091040", 
+   "Q20736738", 
+   "Q2893677", 
+   "Q7230176", 
+   "Q1216139", 
+   "Q3226385", 
+   "Q3230758", 
+   "Q23701769", 
+   "Q2312519", 
+   "Q20711488", 
+   "Q969098", 
+   "Q1764277", 
+   "Q868483", 
+   "Q286381", 
+   "Q846870", 
+   "Q945342", 
+   "Q320594", 
+   "Q26768828", 
+   "Q903424", 
+   "Q18170404", 
+   "Q3481943", 
+   "Q3320792", 
+   "Q3231331", 
+   "Q568928", 
+   "Q241077", 
+   "Q471066", 
+   "Q512807", 
+   "Q2911576", 
+   "Q1196012", 
+   "Q29478", 
+   "Q11053391", 
+   "Q788676", 
+   "Q754687", 
+   "Q614607", 
+   "Q542055", 
+   "Q632743", 
+   "Q5437016", 
+   "Q5071342", 
+   "Q961492", 
+   "Q2864475", 
+   "Q3820032", 
+   "Q375786", 
+   "Q3221287", 
+   "Q3278137", 
+   "Q3247743", 
+   "Q3332723", 
+   "Q16933688", 
+   "Q559310", 
+   "Q3213141", 
+   "Q788458", 
+   "Q148643", 
+   "Q3278101", 
+   "Q130283", 
+   "Q1246408", 
+   "Q4205446", 
+   "Q705232", 
+   "Q3483718", 
+   "Q1189436", 
+   "Q7283713", 
+   "Q4409901", 
+   "Q758588", 
+   "Q672319", 
+   "Q3221640", 
+   "Q12900461", 
+   "Q1368693", 
+   "Q3246902", 
+   "Q4146306", 
+   "Q1233164", 
+   "Q11688406", 
+   "Q341482", 
+   "Q3211245", 
+   "Q498150", 
+   "Q16201590", 
+   "Q412341", 
+   "Q2022683", 
+   "Q294001", 
+   "Q733444", 
+   "Q24060599", 
+   "Q4261490", 
+   "Q506546", 
+   "Q41567", 
+   "Q2869617", 
+   "Q3457623", 
+   "Q1183443", 
+   "Q2972876", 
+   "Q746818", 
+   "Q1216943", 
+   "Q1476152", 
+   "Q1415903", 
+   "Q2882090", 
+   "Q102754", 
+   "Q83186", 
+   "Q4851394", 
+   "Q1233203", 
+   "Q888131", 
+   "Q667750", 
+   "Q2834224", 
+   "Q5380161", 
+   "Q7752052", 
+   "Q4796620", 
+   "Q3246423", 
+   "Q1224659", 
+   "Q23395", 
+   "Q934597", 
+   "Q793366", 
+   "Q3515611", 
+   "Q587921", 
+   "Q844836", 
+   "Q337078", 
+   "Q583392", 
+   "Q740134", 
+   "Q2924384"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "113", 
+  "active_set": [
+   "(c(Q838948),P674,c(Q15619164)|c(Q6619679))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P2079"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q2695280", 
+   "Q838948"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many technicss are used for the assembly of around 1 work of art ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1334300", 
+   "Q170593"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(c(Q838948),P2079,c(Q2695280))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P2079"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q2695280", 
+   "Q838948"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which technicss are used for the production of approximately 1 work of art ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1334300", 
+   "Q170593"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1334300", 
+   "Q170593"
+  ], 
+  "utterance": "gilding, collage", 
+  "active_set": [
+   "(c(Q838948),P2079,c(Q2695280))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q170593"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1056"
+  ], 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which work of art is produced by that technics ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q1334300"
+  ], 
+  "active_set": [
+   "(Q1334300,P1056,c(Q838948))", 
+   "(Q170593,P1056,c(Q838948))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q1334300", 
+   "Q170593"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean gilding ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q170593"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant collage. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q22669857"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q22669857"
+  ], 
+  "utterance": "collage", 
+  "active_set": [
+   "(Q170593,P1056,c(Q838948))"
+  ]
+ }
+]

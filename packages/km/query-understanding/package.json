@@ -1,0 +1,39 @@
+{
+  "name": "@legion/query-understanding",
+  "version": "1.0.0-MVP",
+  "type": "module",
+  "private": true,
+  "description": "Natural language question understanding and query generation for Legion knowledge management",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch --runInBand",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage --runInBand"
+  },
+  "keywords": [
+    "nlp",
+    "query-understanding",
+    "semantic-search",
+    "knowledge-graph",
+    "question-answering",
+    "query-generation"
+  ],
+  "author": "Legion Team",
+  "license": "MIT",
+  "dependencies": {
+    "@legion/resource-manager": "^1.0.0",
+    "@legion/prompting-manager": "^1.0.0",
+    "@legion/semantic-search": "^0.1.0",
+    "@legion/ontology": "^1.0.0",
+    "@legion/data-store": "^1.0.0",
+    "@legion/triplestore": "^1.0.0",
+    "@legion/schema": "^0.0.1",
+    "@legion/nlp": "^1.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

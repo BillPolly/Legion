@@ -1,0 +1,677 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1360144"
+  ], 
+  "relations": [
+   "P166"
+  ], 
+  "type_list": [
+   "Q618779"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What were awarded to Ernst Schr\u00f6der ?"
+ }, 
+ {
+  "all_entities": [
+   "Q10905171", 
+   "Q10905276"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q10905171", 
+   "Q10905276"
+  ], 
+  "utterance": "Grand Cross of the Order of Merit of the Federal Republic of Germany, Commander's Cross of the Order of Merit of the Federal Republic of Germany", 
+  "active_set": [
+   "(Q1360144,P166,c(Q618779))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q10905171"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which political territory is Grand Cross of the Order of Merit of the Federal Republic of Germany present in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "utterance": "Germany", 
+  "active_set": [
+   "(Q10905171,P17,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q1362118"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about First Mayor of Hamburg?"
+ }, 
+ {
+  "all_entities": [
+   "Q183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "utterance": "Germany", 
+  "active_set": [
+   "(Q1362118,P17,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q183", 
+   "Q27092742"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Is Liviu-\u0218tefan Tomulea a citizen of that political territory ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q27092742,P27,Q183)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P163"
+  ], 
+  "type_list": [
+   "Q14660"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is associated with that political territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q48160"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q48160"
+  ], 
+  "utterance": "flag of Germany", 
+  "active_set": []
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q604735"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P941"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q14660", 
+   "Q14660"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which flags were around the same number of flags a source of inspiration for as Flag of Sint Maarten ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q429900", 
+   "Q604735"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q429900", 
+   "Q604735"
+  ], 
+  "utterance": "Flag of Saba, Flag of Sint Maarten", 
+  "active_set": [
+   "(c(Q14660),P941,c(Q14660))"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "relations": [
+   "P137"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q811430", 
+   "Q3084961"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many constructions or product linings are the administrator of Germany ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q58725", 
+   "Q151384", 
+   "Q313740", 
+   "Q324833"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "4", 
+  "active_set": [
+   "(c(Q811430),P137,Q183)", 
+   "(c(Q3084961),P137,Q183)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P176"
+  ], 
+  "type_list": [
+   "Q81103"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "What was produced by Germany ?"
+ }, 
+ {
+  "all_entities": [
+   "Q813702"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q813702"
+  ], 
+  "utterance": "Becker Type M2", 
+  "active_set": [
+   "(c(Q81103),P176,Q183)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P610"
+  ], 
+  "type_list": [
+   "Q14524493"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which is the highest peak of Germany ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3375"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3375"
+  ], 
+  "utterance": "Zugspitze", 
+  "active_set": [
+   "(Q183,P610,c(Q14524493))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P138"
+  ], 
+  "type_list": [
+   "Q484652"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which international organization is the origin of that political territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q132990"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q132990"
+  ], 
+  "utterance": "Alamanni", 
+  "active_set": [
+   "(Q3375,P138,c(Q484652))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q594834"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P706"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q15324", 
+   "Q14524493"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many bodies of water are the location where around the same number of terrains are located as Sibuyan Sea ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q27092", 
+   "Q41430", 
+   "Q1359524", 
+   "Q12630", 
+   "Q1004067", 
+   "Q204703", 
+   "Q947086", 
+   "Q114575", 
+   "Q141376", 
+   "Q271043", 
+   "Q211779", 
+   "Q33254", 
+   "Q810532", 
+   "Q13924", 
+   "Q805470", 
+   "Q5003930", 
+   "Q948291", 
+   "Q2879789", 
+   "Q3377211", 
+   "Q717765", 
+   "Q321837", 
+   "Q481734", 
+   "Q4176307", 
+   "Q19876312", 
+   "Q1631174", 
+   "Q131217", 
+   "Q47632", 
+   "Q531060", 
+   "Q1779743", 
+   "Q867460", 
+   "Q702691", 
+   "Q164466", 
+   "Q45341", 
+   "Q159183", 
+   "Q183455", 
+   "Q140290", 
+   "Q2344806", 
+   "Q217501", 
+   "Q20680338", 
+   "Q5413918", 
+   "Q21906844", 
+   "Q3740577", 
+   "Q178914", 
+   "Q13234218", 
+   "Q1247", 
+   "Q254164", 
+   "Q281813", 
+   "Q2203907", 
+   "Q7988", 
+   "Q648954", 
+   "Q938327", 
+   "Q223810", 
+   "Q11416963", 
+   "Q1185210", 
+   "Q35367", 
+   "Q2292350", 
+   "Q186733", 
+   "Q41573", 
+   "Q76925", 
+   "Q540179", 
+   "Q1144680", 
+   "Q1693", 
+   "Q173343", 
+   "Q271198", 
+   "Q21885510", 
+   "Q700309", 
+   "Q317006", 
+   "Q594834", 
+   "Q3059070", 
+   "Q2621502", 
+   "Q474708", 
+   "Q494927", 
+   "Q37495", 
+   "Q3306188", 
+   "Q231312", 
+   "Q14686", 
+   "Q379063", 
+   "Q21973072", 
+   "Q2879577", 
+   "Q1127599", 
+   "Q7355798", 
+   "Q695074", 
+   "Q1267413", 
+   "Q21922838", 
+   "Q312433", 
+   "Q4161995", 
+   "Q7963133", 
+   "Q4812258", 
+   "Q767824", 
+   "Q202083", 
+   "Q7838780", 
+   "Q22351839", 
+   "Q242326", 
+   "Q1649939", 
+   "Q207468", 
+   "Q132868", 
+   "Q1680511", 
+   "Q647879", 
+   "Q34675", 
+   "Q201385", 
+   "Q11613279", 
+   "Q326170", 
+   "Q1419628", 
+   "Q81499", 
+   "Q545", 
+   "Q42820", 
+   "Q141017", 
+   "Q803717", 
+   "Q213517", 
+   "Q1064776", 
+   "Q193149", 
+   "Q132811", 
+   "Q41735", 
+   "Q213367", 
+   "Q37660", 
+   "Q1679819", 
+   "Q1165951", 
+   "Q650654", 
+   "Q1368308", 
+   "Q82931", 
+   "Q20922822", 
+   "Q2879639", 
+   "Q392623"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "123", 
+  "active_set": [
+   "(c(Q14524493),P706,c(Q15324))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q47632"
+  ], 
+  "relations": [
+   "P706"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q15324", 
+   "Q14524493"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about Andaman Sea?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q27092", 
+   "Q41430", 
+   "Q1359524", 
+   "Q12630", 
+   "Q1004067", 
+   "Q204703", 
+   "Q947086", 
+   "Q114575", 
+   "Q141376", 
+   "Q271043", 
+   "Q211779", 
+   "Q33254", 
+   "Q810532", 
+   "Q13924", 
+   "Q805470", 
+   "Q5003930", 
+   "Q948291", 
+   "Q2879789", 
+   "Q3377211", 
+   "Q717765", 
+   "Q321837", 
+   "Q481734", 
+   "Q4176307", 
+   "Q19876312", 
+   "Q1631174", 
+   "Q131217", 
+   "Q47632", 
+   "Q531060", 
+   "Q1779743", 
+   "Q867460", 
+   "Q702691", 
+   "Q164466", 
+   "Q45341", 
+   "Q159183", 
+   "Q183455", 
+   "Q140290", 
+   "Q2344806", 
+   "Q217501", 
+   "Q20680338", 
+   "Q5413918", 
+   "Q21906844", 
+   "Q3740577", 
+   "Q178914", 
+   "Q13234218", 
+   "Q1247", 
+   "Q254164", 
+   "Q281813", 
+   "Q2203907", 
+   "Q7988", 
+   "Q648954", 
+   "Q938327", 
+   "Q223810", 
+   "Q11416963", 
+   "Q1185210", 
+   "Q35367", 
+   "Q2292350", 
+   "Q186733", 
+   "Q41573", 
+   "Q76925", 
+   "Q540179", 
+   "Q1144680", 
+   "Q1693", 
+   "Q173343", 
+   "Q271198", 
+   "Q21885510", 
+   "Q700309", 
+   "Q317006", 
+   "Q594834", 
+   "Q3059070", 
+   "Q2621502", 
+   "Q474708", 
+   "Q494927", 
+   "Q37495", 
+   "Q3306188", 
+   "Q231312", 
+   "Q14686", 
+   "Q379063", 
+   "Q21973072", 
+   "Q2879577", 
+   "Q1127599", 
+   "Q7355798", 
+   "Q695074", 
+   "Q1267413", 
+   "Q21922838", 
+   "Q312433", 
+   "Q4161995", 
+   "Q7963133", 
+   "Q4812258", 
+   "Q767824", 
+   "Q202083", 
+   "Q7838780", 
+   "Q22351839", 
+   "Q242326", 
+   "Q1649939", 
+   "Q207468", 
+   "Q132868", 
+   "Q1680511", 
+   "Q647879", 
+   "Q34675", 
+   "Q201385", 
+   "Q11613279", 
+   "Q326170", 
+   "Q1419628", 
+   "Q81499", 
+   "Q545", 
+   "Q42820", 
+   "Q141017", 
+   "Q803717", 
+   "Q213517", 
+   "Q1064776", 
+   "Q193149", 
+   "Q132811", 
+   "Q41735", 
+   "Q213367", 
+   "Q37660", 
+   "Q1679819", 
+   "Q1165951", 
+   "Q650654", 
+   "Q1368308", 
+   "Q82931", 
+   "Q20922822", 
+   "Q2879639", 
+   "Q392623"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "123", 
+  "active_set": [
+   "(c(Q14524493),P706,c(Q15324))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P194"
+  ], 
+  "type_list": [
+   "Q11204"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which legislature is the legislative body for Germany ?"
+ }, 
+ {
+  "all_entities": [
+   "Q146138"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q146138"
+  ], 
+  "utterance": "Bundesrat", 
+  "active_set": [
+   "(Q183,P194,c(Q11204))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q1447"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q11204"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about Apulia?"
+ }, 
+ {
+  "all_entities": [
+   "Q14562680"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14562680"
+  ], 
+  "utterance": "Regional Council of Apulia", 
+  "active_set": [
+   "(Q1447,P194,c(Q11204))"
+  ]
+ }
+]

@@ -1,0 +1,210 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q21118497"
+  ], 
+  "relations": [
+   "P703"
+  ], 
+  "type_list": [
+   "Q16521"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which taxon is Protein Jade-3 found in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q15978631"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q15978631"
+  ], 
+  "utterance": "Homo sapiens", 
+  "active_set": [
+   "(Q21118497,P703,c(Q16521))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q15978631"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P427"
+  ], 
+  "type_list": [
+   "Q3343211"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the taxonomic type of that taxon ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1043"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1043"
+  ], 
+  "utterance": "Carl Linnaeus", 
+  "active_set": [
+   "(Q15978631,P427,c(Q3343211))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q3238275"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q3343211"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about Homo sapiens sapiens?"
+ }, 
+ {
+  "all_entities": [
+   "Q1043"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1043"
+  ], 
+  "utterance": "Carl Linnaeus", 
+  "active_set": [
+   "(Q3238275,P427,c(Q3343211))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, one direct and one indirect, subject is indirect", 
+  "entities_in_utterance": [
+   "Q1043", 
+   "Q6733641"
+  ], 
+  "relations": [
+   "P184"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 2, 
+  "utterance": "Was Mahbub Ali Khan the doctoral superviser of that zoological nomenclature ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q1043,P184,Q6733641)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1043"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P26"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person is married to that zoological nomenclature ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3473264"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3473264"
+  ], 
+  "utterance": "Sara Elisabeth Moraea", 
+  "active_set": []
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q3473264"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the sex of that person ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581072"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581072"
+  ], 
+  "utterance": "female", 
+  "active_set": [
+   "(Q3473264,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Multiple_Relation", 
+  "type_list": [
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q6581097", 
+   "Q3473264"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P25", 
+   "P21"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people have Sara Elisabeth Moraea as mom and have male as the sex ?"
+ }, 
+ {
+  "all_entities": [
+   "Q178823"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q178823"
+  ], 
+  "utterance": "Carl Linnaeus the Younger", 
+  "active_set": [
+   "AND((c(Q502895),P25,Q3473264), (c(Q502895),P21,Q6581097))"
+  ]
+ }
+]

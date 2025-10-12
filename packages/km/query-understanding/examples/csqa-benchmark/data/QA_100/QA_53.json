@@ -1,0 +1,250 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q15651974"
+  ], 
+  "relations": [
+   "P86"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Who did the compostion for The Midnight After ?"
+ }, 
+ {
+  "all_entities": [
+   "Q5364900"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5364900"
+  ], 
+  "utterance": "Ellen Joyce Loo", 
+  "active_set": [
+   "(Q15651974,P86,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q15651974"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1431"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who does The Midnight After have as its executive producer ?"
+ }, 
+ {
+  "all_entities": [
+   "Q704027"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q704027"
+  ], 
+  "utterance": "Fruit Chan", 
+  "active_set": [
+   "(Q15651974,P1431,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "relations": [
+   "P57"
+  ], 
+  "count_ques_sub_type": 7, 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many works of art are that person a director of ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1734874", 
+   "Q484291", 
+   "Q3035666", 
+   "Q842442", 
+   "Q3256663", 
+   "Q5091308", 
+   "Q7748329", 
+   "Q3041576", 
+   "Q5882802", 
+   "Q491962", 
+   "Q1265160", 
+   "Q15651974", 
+   "Q23013681"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "13", 
+  "active_set": [
+   "(c(Q838948),P57,Q704027)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q4992177"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P725"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q502895", 
+   "Q6619679"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many fictional humanoids did more number of people dub for than Cave Johnson ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q15707554", 
+   "Q11609133", 
+   "Q15726751", 
+   "Q11479883", 
+   "Q994344", 
+   "Q11677249", 
+   "Q718965", 
+   "Q3784876", 
+   "Q1148698", 
+   "Q11382982", 
+   "Q18073923", 
+   "Q18156023", 
+   "Q6989902", 
+   "Q11514862", 
+   "Q15726744", 
+   "Q601978", 
+   "Q19796729", 
+   "Q931", 
+   "Q15711517", 
+   "Q716636"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "20", 
+  "active_set": [
+   "(c(Q6619679),P725,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q18156023"
+  ], 
+  "relations": [
+   "P725"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q502895", 
+   "Q6619679"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And what about Maud Pie?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q15707554", 
+   "Q11609133", 
+   "Q15726751", 
+   "Q11479883", 
+   "Q994344", 
+   "Q11677249", 
+   "Q11382982", 
+   "Q18073923", 
+   "Q11514862", 
+   "Q931", 
+   "Q15711517"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "11", 
+  "active_set": [
+   "(c(Q6619679),P725,c(Q502895))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q908213", 
+   "Q15651974"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P161"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people were casted in The Midnight After or Pet Sematary ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1059865", 
+   "Q15923684", 
+   "Q1157858", 
+   "Q6154296", 
+   "Q5115987", 
+   "Q5094228", 
+   "Q963498", 
+   "Q234474", 
+   "Q9198771", 
+   "Q222833", 
+   "Q896789", 
+   "Q6309487", 
+   "Q701940", 
+   "Q707211", 
+   "Q2906303", 
+   "Q667260", 
+   "Q39829"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1157858", 
+   "Q15923684", 
+   "Q234474", 
+   "Q1059865", 
+   "Q896789", 
+   "Q5094228", 
+   "Q39829", 
+   "Q6154296", 
+   "Q5115987", 
+   "Q701940"
+  ], 
+  "utterance": "Some of them are Dale Midkiff, Cherry Ngan, Denise Crosby, Sam Lee, Brad Greenquist, Cheuk Wan Chi, Stephen King, Janice Man, Chui Tien-you, Lam Suet", 
+  "active_set": [
+   "OR((Q15651974,P161,c(Q502895)), (Q908213,P161,c(Q502895)))"
+  ]
+ }
+]

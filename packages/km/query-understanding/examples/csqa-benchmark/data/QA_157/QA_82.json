@@ -1,0 +1,62 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1151447"
+  ], 
+  "relations": [
+   "P7"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which person is the brother of Toma Ikuta ?"
+ }, 
+ {
+  "all_entities": [
+   "Q5354764"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5354764"
+  ], 
+  "utterance": "Ry\u016bsei Ikuta", 
+  "active_set": [
+   "(Q1151447,P7,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q5354764"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P26"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who is married to that one ?"
+ }, 
+ {
+  "all_entities": [
+   "Q8335082"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q8335082"
+  ], 
+  "utterance": "Yuri Akimoto", 
+  "active_set": [
+   "(c(Q502895),P26,Q5354764)"
+  ]
+ }
+]

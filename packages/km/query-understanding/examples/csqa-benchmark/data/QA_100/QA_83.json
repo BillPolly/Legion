@@ -1,0 +1,1224 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q11778323"
+  ], 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is the sex of Michael Brun ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "utterance": "male", 
+  "active_set": [
+   "(Q11778323,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q11778323"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P264"
+  ], 
+  "type_list": [
+   "Q334453"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which division is the record label of Michael Brun ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2310883"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2310883"
+  ], 
+  "utterance": "Spinnin' Records", 
+  "active_set": [
+   "(Q11778323,P264,c(Q334453))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q11778323"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P136"
+  ], 
+  "type_list": [
+   "Q151885"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which concept is the genre for Michael Brun ?"
+ }, 
+ {
+  "all_entities": [
+   "Q627906"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q627906"
+  ], 
+  "utterance": "electro house", 
+  "active_set": [
+   "(Q11778323,P136,c(Q151885))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q11778323"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is the country of citizenship of Michael Brun ?"
+ }, 
+ {
+  "all_entities": [
+   "Q790"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q790"
+  ], 
+  "utterance": "Haiti", 
+  "active_set": [
+   "(Q11778323,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q6118275"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about Jacob Adriaensz Bellevois?"
+ }, 
+ {
+  "all_entities": [
+   "Q55"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q55"
+  ], 
+  "utterance": "Netherlands", 
+  "active_set": [
+   "(Q6118275,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Indirect", 
+  "type_list": [
+   "Q15617994", 
+   "Q2342494", 
+   "Q7725634"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P495"
+  ], 
+  "count_ques_sub_type": 10, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories are the countries of origin of more number of collectables and literary works than that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q668", 
+   "Q142", 
+   "Q145", 
+   "Q155", 
+   "Q30", 
+   "Q34", 
+   "Q38", 
+   "Q17", 
+   "Q29"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "9", 
+  "active_set": [
+   "(c(Q2342494)|c(Q7725634),P495,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many administrative territories have tactful political relations with atmost 63 administrative territories ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q702", 
+   "Q804", 
+   "Q801", 
+   "Q800", 
+   "Q805", 
+   "Q419", 
+   "Q668", 
+   "Q414", 
+   "Q142", 
+   "Q55", 
+   "Q145", 
+   "Q262", 
+   "Q148", 
+   "Q783", 
+   "Q265", 
+   "Q37", 
+   "Q712", 
+   "Q711", 
+   "Q717", 
+   "Q837", 
+   "Q252", 
+   "Q399", 
+   "Q398", 
+   "Q403", 
+   "Q657", 
+   "Q258", 
+   "Q45", 
+   "Q159", 
+   "Q43", 
+   "Q41", 
+   "Q155", 
+   "Q792", 
+   "Q790", 
+   "Q796", 
+   "Q794", 
+   "Q954", 
+   "Q889", 
+   "Q884", 
+   "Q958", 
+   "Q881", 
+   "Q986", 
+   "Q822", 
+   "Q241", 
+   "Q242", 
+   "Q244", 
+   "Q811", 
+   "Q33", 
+   "Q32", 
+   "Q31", 
+   "Q30", 
+   "Q924", 
+   "Q36", 
+   "Q34", 
+   "Q928", 
+   "Q929", 
+   "Q39", 
+   "Q739", 
+   "Q423", 
+   "Q983", 
+   "Q851", 
+   "Q733", 
+   "Q29999", 
+   "Q854", 
+   "Q734", 
+   "Q819", 
+   "Q424", 
+   "Q730", 
+   "Q736", 
+   "Q236", 
+   "Q232", 
+   "Q233", 
+   "Q238", 
+   "Q20", 
+   "Q1045", 
+   "Q1041", 
+   "Q27", 
+   "Q28", 
+   "Q921", 
+   "Q1049", 
+   "Q1027", 
+   "Q1020", 
+   "Q189", 
+   "Q843", 
+   "Q842", 
+   "Q184", 
+   "Q1029", 
+   "Q1028", 
+   "Q786", 
+   "Q228", 
+   "Q227", 
+   "Q225", 
+   "Q224", 
+   "Q222", 
+   "Q221", 
+   "Q96", 
+   "Q229", 
+   "Q347", 
+   "Q17", 
+   "Q902", 
+   "Q1036", 
+   "Q1037", 
+   "Q974", 
+   "Q1032", 
+   "Q1033", 
+   "Q1030", 
+   "Q191", 
+   "Q965", 
+   "Q967", 
+   "Q962", 
+   "Q963", 
+   "Q697", 
+   "Q298", 
+   "Q695", 
+   "Q115", 
+   "Q114", 
+   "Q117", 
+   "Q754", 
+   "Q750", 
+   "Q212", 
+   "Q213", 
+   "Q211", 
+   "Q217", 
+   "Q214", 
+   "Q215", 
+   "Q218", 
+   "Q219", 
+   "Q912", 
+   "Q917", 
+   "Q916", 
+   "Q1007", 
+   "Q1006", 
+   "Q1005", 
+   "Q833", 
+   "Q977", 
+   "Q1009", 
+   "Q1008", 
+   "Q971", 
+   "Q683", 
+   "Q34020", 
+   "Q686", 
+   "Q836", 
+   "Q574", 
+   "Q79", 
+   "Q77", 
+   "Q858", 
+   "Q878", 
+   "Q774", 
+   "Q948", 
+   "Q817", 
+   "Q810", 
+   "Q1019", 
+   "Q1016", 
+   "Q1011", 
+   "Q945", 
+   "Q678", 
+   "Q29", 
+   "Q33788", 
+   "Q869", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "159", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type", 
+  "type_list": [
+   "Q15617994", 
+   "Q7725634", 
+   "Q15416"
+  ], 
+  "entities_in_utterance": [
+   "Q219"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P495"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which administrative territories are the countries of origin of around the same number of literary works or television programs as Bulgaria ?"
+ }, 
+ {
+  "all_entities": [
+   "Q805", 
+   "Q804", 
+   "Q801", 
+   "Q800", 
+   "Q1462", 
+   "Q419", 
+   "Q668", 
+   "Q414", 
+   "Q142", 
+   "Q55", 
+   "Q12536", 
+   "Q262", 
+   "Q148", 
+   "Q783", 
+   "Q265", 
+   "Q37", 
+   "Q36678", 
+   "Q712", 
+   "Q711", 
+   "Q717", 
+   "Q837", 
+   "Q252", 
+   "Q1460", 
+   "Q399", 
+   "Q398", 
+   "Q403", 
+   "Q657", 
+   "Q258", 
+   "Q45", 
+   "Q159", 
+   "Q43", 
+   "Q41", 
+   "Q155", 
+   "Q792", 
+   "Q790", 
+   "Q4628", 
+   "Q796", 
+   "Q794", 
+   "Q954", 
+   "Q889", 
+   "Q884", 
+   "Q958", 
+   "Q881", 
+   "Q986", 
+   "Q826", 
+   "Q822", 
+   "Q241", 
+   "Q242", 
+   "Q244", 
+   "Q811", 
+   "Q153136", 
+   "Q33", 
+   "Q32", 
+   "Q31", 
+   "Q924", 
+   "Q36", 
+   "Q34", 
+   "Q928", 
+   "Q39", 
+   "Q38", 
+   "Q739", 
+   "Q423", 
+   "Q983", 
+   "Q851", 
+   "Q733", 
+   "Q29999", 
+   "Q854", 
+   "Q819", 
+   "Q424", 
+   "Q730", 
+   "Q1013", 
+   "Q159626", 
+   "Q236", 
+   "Q230", 
+   "Q232", 
+   "Q233", 
+   "Q238", 
+   "Q20", 
+   "Q1045", 
+   "Q1044", 
+   "Q1041", 
+   "Q27", 
+   "Q28", 
+   "Q921", 
+   "Q1049", 
+   "Q1025", 
+   "Q1027", 
+   "Q1020", 
+   "Q189", 
+   "Q843", 
+   "Q184", 
+   "Q1029", 
+   "Q1028", 
+   "Q736", 
+   "Q786", 
+   "Q227", 
+   "Q225", 
+   "Q224", 
+   "Q223", 
+   "Q222", 
+   "Q221", 
+   "Q96", 
+   "Q229", 
+   "Q347", 
+   "Q17", 
+   "Q902", 
+   "Q1036", 
+   "Q1037", 
+   "Q974", 
+   "Q1032", 
+   "Q1033", 
+   "Q1030", 
+   "Q191", 
+   "Q965", 
+   "Q967", 
+   "Q962", 
+   "Q963", 
+   "Q298", 
+   "Q115", 
+   "Q114", 
+   "Q117", 
+   "Q754", 
+   "Q750", 
+   "Q212", 
+   "Q213", 
+   "Q211", 
+   "Q217", 
+   "Q214", 
+   "Q215", 
+   "Q218", 
+   "Q219", 
+   "Q912", 
+   "Q917", 
+   "Q916", 
+   "Q1007", 
+   "Q1006", 
+   "Q1005", 
+   "Q833", 
+   "Q1009", 
+   "Q1008", 
+   "Q971", 
+   "Q970", 
+   "Q239502", 
+   "Q686", 
+   "Q836", 
+   "Q574", 
+   "Q874", 
+   "Q79", 
+   "Q77", 
+   "Q858", 
+   "Q878", 
+   "Q774", 
+   "Q948", 
+   "Q817", 
+   "Q810", 
+   "Q1019", 
+   "Q813", 
+   "Q1014", 
+   "Q1016", 
+   "Q1011", 
+   "Q945", 
+   "Q29", 
+   "Q672", 
+   "Q176", 
+   "Q863", 
+   "Q869", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q38", 
+   "Q155", 
+   "Q230"
+  ], 
+  "utterance": "Italy, Brazil, Georgia", 
+  "active_set": [
+   "(c(Q7725634)|c(Q15416),P495,c(Q15617994))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q15617994", 
+   "Q7725634", 
+   "Q15416"
+  ], 
+  "entities_in_utterance": [
+   "Q29999"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P495"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And how about Kingdom of the Netherlands?"
+ }, 
+ {
+  "all_entities": [
+   "Q805", 
+   "Q804", 
+   "Q801", 
+   "Q800", 
+   "Q1462", 
+   "Q419", 
+   "Q668", 
+   "Q414", 
+   "Q142", 
+   "Q55", 
+   "Q12536", 
+   "Q262", 
+   "Q148", 
+   "Q783", 
+   "Q265", 
+   "Q37", 
+   "Q36678", 
+   "Q712", 
+   "Q711", 
+   "Q717", 
+   "Q837", 
+   "Q252", 
+   "Q1460", 
+   "Q399", 
+   "Q398", 
+   "Q403", 
+   "Q657", 
+   "Q258", 
+   "Q45", 
+   "Q159", 
+   "Q43", 
+   "Q41", 
+   "Q155", 
+   "Q792", 
+   "Q790", 
+   "Q4628", 
+   "Q796", 
+   "Q794", 
+   "Q954", 
+   "Q889", 
+   "Q884", 
+   "Q958", 
+   "Q881", 
+   "Q986", 
+   "Q826", 
+   "Q822", 
+   "Q241", 
+   "Q242", 
+   "Q244", 
+   "Q811", 
+   "Q153136", 
+   "Q33", 
+   "Q32", 
+   "Q31", 
+   "Q924", 
+   "Q36", 
+   "Q34", 
+   "Q928", 
+   "Q39", 
+   "Q38", 
+   "Q739", 
+   "Q423", 
+   "Q983", 
+   "Q851", 
+   "Q733", 
+   "Q29999", 
+   "Q854", 
+   "Q819", 
+   "Q424", 
+   "Q730", 
+   "Q1013", 
+   "Q159626", 
+   "Q236", 
+   "Q230", 
+   "Q232", 
+   "Q233", 
+   "Q238", 
+   "Q20", 
+   "Q1045", 
+   "Q1044", 
+   "Q1041", 
+   "Q27", 
+   "Q28", 
+   "Q921", 
+   "Q1049", 
+   "Q1025", 
+   "Q1027", 
+   "Q1020", 
+   "Q189", 
+   "Q843", 
+   "Q184", 
+   "Q1029", 
+   "Q1028", 
+   "Q736", 
+   "Q786", 
+   "Q227", 
+   "Q225", 
+   "Q224", 
+   "Q223", 
+   "Q222", 
+   "Q221", 
+   "Q96", 
+   "Q229", 
+   "Q347", 
+   "Q17", 
+   "Q902", 
+   "Q1036", 
+   "Q1037", 
+   "Q974", 
+   "Q1032", 
+   "Q1033", 
+   "Q1030", 
+   "Q191", 
+   "Q965", 
+   "Q967", 
+   "Q962", 
+   "Q963", 
+   "Q298", 
+   "Q115", 
+   "Q114", 
+   "Q117", 
+   "Q754", 
+   "Q750", 
+   "Q212", 
+   "Q213", 
+   "Q211", 
+   "Q217", 
+   "Q214", 
+   "Q215", 
+   "Q218", 
+   "Q219", 
+   "Q912", 
+   "Q917", 
+   "Q916", 
+   "Q1007", 
+   "Q1006", 
+   "Q1005", 
+   "Q833", 
+   "Q1009", 
+   "Q1008", 
+   "Q971", 
+   "Q970", 
+   "Q239502", 
+   "Q686", 
+   "Q836", 
+   "Q574", 
+   "Q874", 
+   "Q79", 
+   "Q77", 
+   "Q858", 
+   "Q878", 
+   "Q774", 
+   "Q948", 
+   "Q817", 
+   "Q810", 
+   "Q1019", 
+   "Q813", 
+   "Q1014", 
+   "Q1016", 
+   "Q1011", 
+   "Q945", 
+   "Q29", 
+   "Q672", 
+   "Q176", 
+   "Q863", 
+   "Q869", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q38", 
+   "Q155", 
+   "Q230"
+  ], 
+  "utterance": "Italy, Brazil, Georgia", 
+  "active_set": [
+   "(c(Q7725634)|c(Q15416),P495,c(Q15617994))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q151885"
+  ], 
+  "entities_in_utterance": [
+   "Q3156201", 
+   "Q11778323"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P106"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which concepts do Michael Brun or Ivan Vaughan do for a living ?"
+ }, 
+ {
+  "all_entities": [
+   "Q18814623", 
+   "Q855091", 
+   "Q21263917"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18814623", 
+   "Q855091", 
+   "Q21263917"
+  ], 
+  "utterance": "autobiographer, guitarist, medical student", 
+  "active_set": [
+   "OR((Q11778323,P106,c(Q151885)), (Q3156201,P106,c(Q151885)))"
+  ]
+ }, 
+ {
+  "question-type": "Clarification", 
+  "description": "Comparative|More/Less|Mult. entity type|Indirect", 
+  "type_list": [
+   "Q151885", 
+   "Q9332", 
+   "Q151885"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 3, 
+  "relations": [
+   "P425"
+  ], 
+  "count_ques_sub_type": 9, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "Which concepts do lesser number of concepts or behaviors belong to than that concept ?"
+ }, 
+ {
+  "description": "Comparative|More/Less|Mult. entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q18814623"
+  ], 
+  "active_set": [
+   "(c(Q151885),P425,c(Q151885)|c(Q9332))"
+  ], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean autobiographer ?"
+ }, 
+ {
+  "ques_type_id": 8, 
+  "question-type": "Comparative Reasoning (All)", 
+  "count_ques_sub_type": 9, 
+  "entities": [
+   "Q855091"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "No, I meant guitarist. Could you tell me the answer for that?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "0", 
+  "active_set": [
+   "(c(Q151885),P425,c(Q151885)|c(Q9332))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q15617994", 
+   "Q1048835", 
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q115"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many administrative territories have diplomatic relations with lesser number of administrative territories and political territories than Ethiopia ?"
+ }, 
+ {
+  "all_entities": [
+   "Q702", 
+   "Q804", 
+   "Q262", 
+   "Q265", 
+   "Q712", 
+   "Q837", 
+   "Q398", 
+   "Q657", 
+   "Q792", 
+   "Q790", 
+   "Q958", 
+   "Q986", 
+   "Q242", 
+   "Q244", 
+   "Q811", 
+   "Q924", 
+   "Q983", 
+   "Q29999", 
+   "Q854", 
+   "Q819", 
+   "Q424", 
+   "Q730", 
+   "Q236", 
+   "Q232", 
+   "Q238", 
+   "Q1045", 
+   "Q921", 
+   "Q1049", 
+   "Q1027", 
+   "Q1020", 
+   "Q189", 
+   "Q842", 
+   "Q1028", 
+   "Q786", 
+   "Q221", 
+   "Q1036", 
+   "Q1037", 
+   "Q974", 
+   "Q1032", 
+   "Q191", 
+   "Q965", 
+   "Q967", 
+   "Q962", 
+   "Q963", 
+   "Q697", 
+   "Q695", 
+   "Q117", 
+   "Q754", 
+   "Q211", 
+   "Q217", 
+   "Q214", 
+   "Q912", 
+   "Q917", 
+   "Q1007", 
+   "Q1006", 
+   "Q1005", 
+   "Q977", 
+   "Q1009", 
+   "Q1008", 
+   "Q971", 
+   "Q683", 
+   "Q34020", 
+   "Q686", 
+   "Q836", 
+   "Q574", 
+   "Q774", 
+   "Q817", 
+   "Q1019", 
+   "Q945", 
+   "Q678", 
+   "Q33788"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "71", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994)|c(Q1048835))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q15617994", 
+   "Q1048835", 
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q258"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And also tell me about South Africa?"
+ }, 
+ {
+  "all_entities": [
+   "Q702", 
+   "Q804", 
+   "Q800", 
+   "Q419", 
+   "Q55", 
+   "Q262", 
+   "Q783", 
+   "Q265", 
+   "Q37", 
+   "Q712", 
+   "Q717", 
+   "Q837", 
+   "Q399", 
+   "Q398", 
+   "Q657", 
+   "Q45", 
+   "Q41", 
+   "Q792", 
+   "Q790", 
+   "Q954", 
+   "Q958", 
+   "Q881", 
+   "Q986", 
+   "Q822", 
+   "Q241", 
+   "Q242", 
+   "Q244", 
+   "Q811", 
+   "Q33", 
+   "Q32", 
+   "Q31", 
+   "Q924", 
+   "Q36", 
+   "Q34", 
+   "Q928", 
+   "Q739", 
+   "Q423", 
+   "Q983", 
+   "Q851", 
+   "Q733", 
+   "Q29999", 
+   "Q854", 
+   "Q734", 
+   "Q819", 
+   "Q424", 
+   "Q730", 
+   "Q736", 
+   "Q236", 
+   "Q232", 
+   "Q233", 
+   "Q238", 
+   "Q20", 
+   "Q1045", 
+   "Q1041", 
+   "Q28", 
+   "Q921", 
+   "Q1049", 
+   "Q1027", 
+   "Q1020", 
+   "Q189", 
+   "Q842", 
+   "Q1029", 
+   "Q1028", 
+   "Q786", 
+   "Q228", 
+   "Q227", 
+   "Q224", 
+   "Q222", 
+   "Q221", 
+   "Q96", 
+   "Q229", 
+   "Q902", 
+   "Q1036", 
+   "Q1037", 
+   "Q974", 
+   "Q1032", 
+   "Q1033", 
+   "Q1030", 
+   "Q191", 
+   "Q965", 
+   "Q967", 
+   "Q962", 
+   "Q963", 
+   "Q697", 
+   "Q298", 
+   "Q695", 
+   "Q115", 
+   "Q117", 
+   "Q754", 
+   "Q750", 
+   "Q211", 
+   "Q217", 
+   "Q214", 
+   "Q215", 
+   "Q219", 
+   "Q912", 
+   "Q917", 
+   "Q916", 
+   "Q1007", 
+   "Q1006", 
+   "Q1005", 
+   "Q833", 
+   "Q977", 
+   "Q1009", 
+   "Q1008", 
+   "Q971", 
+   "Q683", 
+   "Q34020", 
+   "Q686", 
+   "Q836", 
+   "Q574", 
+   "Q77", 
+   "Q878", 
+   "Q774", 
+   "Q948", 
+   "Q817", 
+   "Q810", 
+   "Q1019", 
+   "Q1016", 
+   "Q945", 
+   "Q678", 
+   "Q29", 
+   "Q33788", 
+   "Q869"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "124", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994)|c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q258"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P88"
+  ], 
+  "type_list": [
+   "Q811979"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which architectural structure was commissioned by that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q14906466"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14906466"
+  ], 
+  "utterance": "Embassy of South Africa, Bonn", 
+  "active_set": []
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q155"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P172"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who has Brazil as ethnic group ?"
+ }, 
+ {
+  "all_entities": [
+   "Q30865"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30865"
+  ], 
+  "utterance": "Eike Batista", 
+  "active_set": [
+   "(c(Q502895),P172,Q155)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q30865"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P26"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person is married to that one ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1396558"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1396558"
+  ], 
+  "utterance": "Luma de Oliveira", 
+  "active_set": [
+   "(c(Q502895),P26,Q30865)"
+  ]
+ }
+]

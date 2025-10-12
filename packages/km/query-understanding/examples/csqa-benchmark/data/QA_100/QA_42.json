@@ -1,0 +1,593 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q7029645"
+  ], 
+  "relations": [
+   "P7"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Who is Nicolas Fran\u00e7ois Vuillaume a sibling of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q621838"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q621838"
+  ], 
+  "utterance": "Jean-Baptiste Vuillaume", 
+  "active_set": [
+   "(Q7029645,P7,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q621838"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P22"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who is the offspring of that one ?"
+ }, 
+ {
+  "all_entities": [
+   "Q20202349"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q20202349"
+  ], 
+  "utterance": "Jeanne-\u00c9milie Vuillaume", 
+  "active_set": [
+   "(c(Q502895),P22,Q621838)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q20202349"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P26"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which person is the spouse of that one ?"
+ }, 
+ {
+  "all_entities": [
+   "Q633796"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q633796"
+  ], 
+  "utterance": "Jean-Delphin Alard", 
+  "active_set": [
+   "(Q20202349,P26,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q633796", 
+   "Q90"
+  ], 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Did the demise of Jean-Delphin Alard occur Paris ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q633796,P20,Q90)"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Mult. entity type", 
+  "type_list": [
+   "Q502895", 
+   "Q2668072", 
+   "Q18783400"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P88"
+  ], 
+  "count_ques_sub_type": 4, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which people commissioned atleast 1 collections or genres of sculpture ?"
+ }, 
+ {
+  "all_entities": [
+   "Q48544", 
+   "Q7811659", 
+   "Q2161266", 
+   "Q3291384", 
+   "Q60568", 
+   "Q57628", 
+   "Q150726", 
+   "Q49237", 
+   "Q2871482", 
+   "Q177854", 
+   "Q51056", 
+   "Q3766950", 
+   "Q715054", 
+   "Q6224954", 
+   "Q336580", 
+   "Q540802", 
+   "Q153586", 
+   "Q590218", 
+   "Q62594", 
+   "Q2551650", 
+   "Q517", 
+   "Q25690"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q517", 
+   "Q150726", 
+   "Q153586"
+  ], 
+  "utterance": "Napoleon, Maximilian I, Holy Roman Emperor, Christian IV of Denmark", 
+  "active_set": [
+   "(c(Q2668072)|c(Q18783400),P88,c(Q502895))"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators", 
+  "entities_in_utterance": [
+   "Q517"
+  ], 
+  "relations": [
+   "P39"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q4164871", 
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many positions or occupations were the positions for which Napoleon were appointed ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q683337", 
+   "Q1131971", 
+   "Q271148", 
+   "Q39018"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "4", 
+  "active_set": [
+   "(Q517,P39,c(Q4164871))", 
+   "(Q517,P39,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q517"
+  ], 
+  "relations": [
+   "P39"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many occupations were the positions held by Napoleon ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q683337", 
+   "Q1131971", 
+   "Q271148"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "3", 
+  "active_set": [
+   "(Q517,P39,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q1429668"
+  ], 
+  "relations": [
+   "P39"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And what about Florian F\u00f6dermayr?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q17535155"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q1429668,P39,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q2340088"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Varina Tjon-A-Ten?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q2340088,P39,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q1879664"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many musical instruments can approximately the same number of people perform with as spoon ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q80284", 
+   "Q201129", 
+   "Q424017", 
+   "Q890073", 
+   "Q80019", 
+   "Q1178361", 
+   "Q2563510", 
+   "Q604538", 
+   "Q2660670", 
+   "Q39777", 
+   "Q3574843", 
+   "Q678090", 
+   "Q81982", 
+   "Q182718", 
+   "Q490054", 
+   "Q873588", 
+   "Q593995", 
+   "Q1327500", 
+   "Q206987", 
+   "Q1879664", 
+   "Q189737", 
+   "Q1759986", 
+   "Q1798603", 
+   "Q1099153", 
+   "Q120585", 
+   "Q713298", 
+   "Q8371", 
+   "Q1024685", 
+   "Q213461", 
+   "Q3382191", 
+   "Q816793", 
+   "Q862501", 
+   "Q213100", 
+   "Q244976", 
+   "Q537750", 
+   "Q626035", 
+   "Q1179017", 
+   "Q742180", 
+   "Q320341", 
+   "Q1300012", 
+   "Q748455", 
+   "Q669370", 
+   "Q290951", 
+   "Q220971", 
+   "Q178933", 
+   "Q16875637", 
+   "Q790468", 
+   "Q1129422", 
+   "Q379248", 
+   "Q726306", 
+   "Q173453", 
+   "Q483994", 
+   "Q744831", 
+   "Q963150", 
+   "Q16155191", 
+   "Q644440", 
+   "Q1343007", 
+   "Q11404", 
+   "Q497224", 
+   "Q3623688"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "60", 
+  "active_set": [
+   "(c(Q502895),P1303,c(Q34379))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q744831"
+  ], 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about Mridangam?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q80284", 
+   "Q201129", 
+   "Q424017", 
+   "Q890073", 
+   "Q80019", 
+   "Q1178361", 
+   "Q2563510", 
+   "Q604538", 
+   "Q2660670", 
+   "Q39777", 
+   "Q3574843", 
+   "Q678090", 
+   "Q81982", 
+   "Q182718", 
+   "Q490054", 
+   "Q873588", 
+   "Q593995", 
+   "Q1327500", 
+   "Q206987", 
+   "Q1879664", 
+   "Q189737", 
+   "Q1759986", 
+   "Q1798603", 
+   "Q1099153", 
+   "Q120585", 
+   "Q713298", 
+   "Q8371", 
+   "Q1024685", 
+   "Q213461", 
+   "Q3382191", 
+   "Q816793", 
+   "Q862501", 
+   "Q213100", 
+   "Q244976", 
+   "Q537750", 
+   "Q626035", 
+   "Q1179017", 
+   "Q742180", 
+   "Q320341", 
+   "Q1300012", 
+   "Q748455", 
+   "Q669370", 
+   "Q290951", 
+   "Q220971", 
+   "Q178933", 
+   "Q16875637", 
+   "Q790468", 
+   "Q1129422", 
+   "Q379248", 
+   "Q726306", 
+   "Q173453", 
+   "Q483994", 
+   "Q744831", 
+   "Q963150", 
+   "Q16155191", 
+   "Q644440", 
+   "Q1343007", 
+   "Q11404", 
+   "Q497224", 
+   "Q3623688"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "60", 
+  "active_set": [
+   "(c(Q502895),P1303,c(Q34379))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q633053"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P725"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q502895", 
+   "Q1001378"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which cinematic techniques did greater number of people do the dubbing for than Surf's Up ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q120367", 
+   "Q1093555", 
+   "Q15270647", 
+   "Q2329413", 
+   "Q9321426", 
+   "Q6144664", 
+   "Q392530", 
+   "Q15728879", 
+   "Q2388653", 
+   "Q246283", 
+   "Q18647981", 
+   "Q191803", 
+   "Q4243413"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q9321426", 
+   "Q15270647", 
+   "Q6144664"
+  ], 
+  "utterance": "Finding Dory, Zootopia, Inside Out", 
+  "active_set": [
+   "(c(Q1001378),P725,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q656396"
+  ], 
+  "relations": [
+   "P725"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q502895", 
+   "Q1001378"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And also tell me about Mickey's Magical Christmas: Snowed in at the House of Mouse?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q656998", 
+   "Q6505964", 
+   "Q120367", 
+   "Q2388260", 
+   "Q21079862", 
+   "Q1093555", 
+   "Q15270742", 
+   "Q15270647", 
+   "Q27229786", 
+   "Q2329413", 
+   "Q9321426", 
+   "Q562140", 
+   "Q6144664", 
+   "Q392530", 
+   "Q192212", 
+   "Q23647031", 
+   "Q182153", 
+   "Q15728879", 
+   "Q2388653", 
+   "Q246283", 
+   "Q908816", 
+   "Q244434", 
+   "Q4096274", 
+   "Q18647981", 
+   "Q655133", 
+   "Q2615381", 
+   "Q191803", 
+   "Q2613318", 
+   "Q171048", 
+   "Q15140309", 
+   "Q15975680", 
+   "Q4243413", 
+   "Q329603", 
+   "Q633053"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q9321426", 
+   "Q15270647", 
+   "Q6144664"
+  ], 
+  "utterance": "Finding Dory, Zootopia, Inside Out", 
+  "active_set": [
+   "(c(Q1001378),P725,c(Q502895))"
+  ]
+ }
+]

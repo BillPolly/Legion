@@ -11,14 +11,14 @@
     "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/integration --runInBand --no-coverage"
   },
   "dependencies": {
-    "@legion/resource-manager": "workspace:*",
-    "@legion/llm-client": "workspace:*",
-    "@legion/prompt-manager": "workspace:*",
-    "@legion/semantic-search": "workspace:*",
-    "@legion/neurosymbolic-reasoning": "workspace:*",
-    "@legion/triplestore": "workspace:*",
-    "@legion/km-entity-store": "workspace:*",
-    "@legion/ontology": "workspace:*"
+    "@legion/resource-manager": "^1.0.0",
+    "@legion/llm-client": "^1.0.0",
+    "@legion/prompt-manager": "^1.0.0",
+    "@legion/semantic-search": "^0.1.0",
+    "@legion/neurosymbolic-reasoning": "*",
+    "@legion/triplestore": "^1.0.0",
+    "@legion/km-entity-store": "*",
+    "@legion/ontology": "^1.0.0"
   },
   "devDependencies": {
     "jest": "^29.7.0"

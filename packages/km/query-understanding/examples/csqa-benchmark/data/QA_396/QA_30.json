@@ -1,0 +1,376 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q489831"
+  ], 
+  "relations": [
+   "P40"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Who is an offspring of Kevin Smith ?"
+ }, 
+ {
+  "all_entities": [
+   "Q19300018"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q19300018"
+  ], 
+  "utterance": "Harley Quinn Smith", 
+  "active_set": [
+   "(Q489831,P40,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q1099153"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many musical instruments can more number of people perform with than clavinet ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q80284", 
+   "Q46185", 
+   "Q201129", 
+   "Q424017", 
+   "Q80019", 
+   "Q2563510", 
+   "Q5994", 
+   "Q3574843", 
+   "Q81982", 
+   "Q182718", 
+   "Q206987", 
+   "Q189737", 
+   "Q8338", 
+   "Q8371", 
+   "Q8355", 
+   "Q213461", 
+   "Q3382191", 
+   "Q862501", 
+   "Q213100", 
+   "Q537750", 
+   "Q626035", 
+   "Q742180", 
+   "Q1300012", 
+   "Q1444", 
+   "Q220971", 
+   "Q128309", 
+   "Q726306", 
+   "Q483994", 
+   "Q1343007", 
+   "Q11404"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "30", 
+  "active_set": [
+   "(c(Q502895),P1303,c(Q34379))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q213461"
+  ], 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And what about harmonium?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q80284", 
+   "Q46185", 
+   "Q80019", 
+   "Q2563510", 
+   "Q5994", 
+   "Q81982", 
+   "Q206987", 
+   "Q8338", 
+   "Q8371", 
+   "Q8355", 
+   "Q3382191", 
+   "Q742180", 
+   "Q1444", 
+   "Q220971", 
+   "Q128309", 
+   "Q1343007", 
+   "Q11404"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "17", 
+  "active_set": [
+   "(c(Q502895),P1303,c(Q34379))"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Multiple_Relation", 
+  "type_list": [
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q6581097", 
+   "Q1099153"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P21", 
+   "P1303"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people plays clavinet and have the gender as male ?"
+ }, 
+ {
+  "all_entities": [
+   "Q45909"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q45909"
+  ], 
+  "utterance": "John Cale", 
+  "active_set": [
+   "AND((c(Q502895),P1303,Q1099153), (c(Q502895),P21,Q6581097))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q45909", 
+   "Q4551117"
+  ], 
+  "relations": [
+   "P40"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Is Eden Cale a successor of John Cale ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q45909,P40,Q4551117)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q489831", 
+   "Q463692"
+  ], 
+  "relations": [
+   "P26"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Is Jennifer Schwalbach Smith the life partner of Kevin Smith ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q489831,P26,Q463692)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q45909", 
+   "Q19367121"
+  ], 
+  "relations": [
+   "P69"
+  ], 
+  "type_list": [
+   "Q2385804"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Was John Cale educated at Ammanford Grammar School ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q45909,P69,Q19367121)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q15502464"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P725"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q502895", 
+   "Q15619164"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many abstract beings did greater number of people dub for than Akari Akaza ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q21009638", 
+   "Q15710470", 
+   "Q3190648", 
+   "Q15055569", 
+   "Q5409355", 
+   "Q14432243", 
+   "Q15725453", 
+   "Q15711505", 
+   "Q20948918", 
+   "Q15141427", 
+   "Q20972916", 
+   "Q3222756", 
+   "Q21036253", 
+   "Q12739035", 
+   "Q9300505", 
+   "Q3152983", 
+   "Q10343913", 
+   "Q2270749", 
+   "Q20949674", 
+   "Q2293269", 
+   "Q4023191", 
+   "Q819519", 
+   "Q15520173", 
+   "Q2320215", 
+   "Q2081430", 
+   "Q977511", 
+   "Q17628767", 
+   "Q15710705", 
+   "Q3565718", 
+   "Q3271686", 
+   "Q3631585", 
+   "Q16040855", 
+   "Q11297446", 
+   "Q282514", 
+   "Q3858633", 
+   "Q844697", 
+   "Q2291154", 
+   "Q3482136", 
+   "Q8212419", 
+   "Q14432283", 
+   "Q2151996", 
+   "Q15730337", 
+   "Q2663645", 
+   "Q3479120", 
+   "Q2566378", 
+   "Q3054222", 
+   "Q3054224", 
+   "Q568553", 
+   "Q7468973", 
+   "Q6076547", 
+   "Q3966728", 
+   "Q4810757", 
+   "Q4874693", 
+   "Q819851", 
+   "Q15710460", 
+   "Q3222748", 
+   "Q14429586"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "57", 
+  "active_set": [
+   "(c(Q15619164),P725,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q3054222"
+  ], 
+  "relations": [
+   "P725"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q502895", 
+   "Q15619164"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And what about Slippy Toad?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q5409355", 
+   "Q20949674", 
+   "Q2293269", 
+   "Q2320215", 
+   "Q2081430", 
+   "Q3054224", 
+   "Q568553"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "7", 
+  "active_set": [
+   "(c(Q15619164),P725,c(Q502895))"
+  ]
+ }
+]

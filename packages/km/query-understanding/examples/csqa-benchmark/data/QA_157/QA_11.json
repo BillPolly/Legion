@@ -1,0 +1,604 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q278308"
+  ], 
+  "relations": [
+   "P47"
+  ], 
+  "type_list": [
+   "Q20667921"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which french administrative divisions are adjacent to Tillay-le-P\u00e9neux ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1075525", 
+   "Q1075253", 
+   "Q1075287", 
+   "Q1072397", 
+   "Q1073539", 
+   "Q1139455"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1072397", 
+   "Q1139455", 
+   "Q1075525"
+  ], 
+  "utterance": "Germignonville, Lumeau, Loigny-la-Bataille", 
+  "active_set": [
+   "(Q278308,P47,c(Q20667921))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1075525"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is Loigny-la-Bataille situated in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q142"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q142"
+  ], 
+  "utterance": "France", 
+  "active_set": [
+   "(Q1075525,P17,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q1048835", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many political territories have diplomatic relationships with around 38 administrative territories ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1000", 
+   "Q40", 
+   "Q781", 
+   "Q778", 
+   "Q769", 
+   "Q685", 
+   "Q35", 
+   "Q691", 
+   "Q16", 
+   "Q664", 
+   "Q766"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "11", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q142"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P706"
+  ], 
+  "type_list": [
+   "Q151885"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which concepts are located in France ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1808482", 
+   "Q2379716"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1808482", 
+   "Q2379716"
+  ], 
+  "utterance": "Tardenoisian, S\u00f6gel-Wohlde culture", 
+  "active_set": [
+   "(c(Q151885),P706,Q142)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1808482", 
+   "Q2379716"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P61"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who discovered or invented Tardenoisian and S\u00f6gel-Wohlde culture ?"
+ }, 
+ {
+  "all_entities": [
+   "Q740782", 
+   "Q1460695"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q740782", 
+   "Q1460695"
+  ], 
+  "utterance": "Louis Laurent Gabriel de Mortillet, Friedrich Laux", 
+  "active_set": [
+   "(Q1808482,P61,c(Q502895))", 
+   "(Q2379716,P61,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1808482"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P361"
+  ], 
+  "type_list": [
+   "Q1790144"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which unit of time is that concept a part of ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q1808482"
+  ], 
+  "active_set": [
+   "(Q740782,P361,c(Q1790144))", 
+   "(Q1460695,P361,c(Q1790144))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q740782", 
+   "Q1460695"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Tardenoisian ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "Yes"
+ }, 
+ {
+  "all_entities": [
+   "Q44155"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q44155"
+  ], 
+  "utterance": "Mesolithic", 
+  "active_set": [
+   "(Q1808482,P361,c(Q1790144))"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Multiple_Relation", 
+  "type_list": [
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q6581097", 
+   "Q740782"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P21", 
+   "P22"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people have Louis Laurent Gabriel de Mortillet as dad and are a male ?"
+ }, 
+ {
+  "all_entities": [
+   "Q17600883"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q17600883"
+  ], 
+  "utterance": "Adrien de Mortillet", 
+  "active_set": [
+   "AND((c(Q502895),P22,Q740782), (c(Q502895),P21,Q6581097))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q17600883", 
+   "Q740782"
+  ], 
+  "relations": [
+   "P40"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Does Louis Laurent Gabriel de Mortillet have that one as a child ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q740782,P40,Q17600883)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, all direct, 2 are query entities", 
+  "entities_in_utterance": [
+   "Q142", 
+   "Q228", 
+   "Q801"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 4, 
+  "utterance": "Does France have diplomatic associations with Andorra and Israel ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q142,P530,Q228)", 
+   "(Q142,P530,Q801)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q655133"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P725"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q502895", 
+   "Q1001378"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many cinematic techniques had their voice dubbing done by less number of people than Treasure Island ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q562140", 
+   "Q221679", 
+   "Q908816", 
+   "Q3623997", 
+   "Q170035", 
+   "Q2613318", 
+   "Q223217", 
+   "Q6739642", 
+   "Q15709928", 
+   "Q14545073", 
+   "Q467678", 
+   "Q656396", 
+   "Q187266", 
+   "Q104905"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "14", 
+  "active_set": [
+   "(c(Q1001378),P725,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q2615381"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P725"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q502895", 
+   "Q1001378"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which cinematic techniques had their voice dubbing done by around the same number of people as Korgoth of Barbaria ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q656998", 
+   "Q6505964", 
+   "Q120367", 
+   "Q2388260", 
+   "Q21079862", 
+   "Q1093555", 
+   "Q15270742", 
+   "Q27229786", 
+   "Q562140", 
+   "Q6144664", 
+   "Q221679", 
+   "Q392530", 
+   "Q192212", 
+   "Q23647031", 
+   "Q182153", 
+   "Q15728879", 
+   "Q2388653", 
+   "Q246283", 
+   "Q908816", 
+   "Q244434", 
+   "Q3623997", 
+   "Q4096274", 
+   "Q18647981", 
+   "Q655133", 
+   "Q2615381", 
+   "Q191803", 
+   "Q170035", 
+   "Q2613318", 
+   "Q171048", 
+   "Q223217", 
+   "Q6739642", 
+   "Q15709928", 
+   "Q14545073", 
+   "Q467678", 
+   "Q15140309", 
+   "Q656396", 
+   "Q187266", 
+   "Q15975680", 
+   "Q4243413", 
+   "Q104905", 
+   "Q329603", 
+   "Q633053"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q104905", 
+   "Q6144664", 
+   "Q15728879"
+  ], 
+  "utterance": "WALL\u2022E, Inside Out, My Little Pony: Equestria Girls 2 \u2013 Rainbow Rocks", 
+  "active_set": [
+   "(c(Q1001378),P725,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q170035"
+  ], 
+  "relations": [
+   "P725"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q502895", 
+   "Q1001378"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And also tell me about Ratatouille?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q656998", 
+   "Q6505964", 
+   "Q120367", 
+   "Q2388260", 
+   "Q21079862", 
+   "Q1093555", 
+   "Q15270742", 
+   "Q27229786", 
+   "Q562140", 
+   "Q6144664", 
+   "Q221679", 
+   "Q392530", 
+   "Q192212", 
+   "Q23647031", 
+   "Q182153", 
+   "Q15728879", 
+   "Q246283", 
+   "Q908816", 
+   "Q244434", 
+   "Q3623997", 
+   "Q4096274", 
+   "Q18647981", 
+   "Q655133", 
+   "Q2615381", 
+   "Q191803", 
+   "Q170035", 
+   "Q2613318", 
+   "Q171048", 
+   "Q223217", 
+   "Q6739642", 
+   "Q15709928", 
+   "Q14545073", 
+   "Q467678", 
+   "Q15140309", 
+   "Q656396", 
+   "Q187266", 
+   "Q15975680", 
+   "Q4243413", 
+   "Q104905", 
+   "Q329603", 
+   "Q633053"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q104905", 
+   "Q6144664", 
+   "Q15728879"
+  ], 
+  "utterance": "WALL\u2022E, Inside Out, My Little Pony: Equestria Girls 2 \u2013 Rainbow Rocks", 
+  "active_set": [
+   "(c(Q1001378),P725,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1445"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q1001378", 
+   "Q386724"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which works represents a fictional universe described in max number of cinematic techniques ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1203222"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1203222"
+  ], 
+  "utterance": "Shrek", 
+  "active_set": [
+   "(c(Q386724),P1445,c(Q1001378))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1445"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q838948", 
+   "Q386724"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which works of art outline min number of works ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q107940", 
+   "Q83495", 
+   "Q699684", 
+   "Q1853270", 
+   "Q691611", 
+   "Q105801", 
+   "Q21427173", 
+   "Q39970", 
+   "Q156069", 
+   "Q153484", 
+   "Q83542", 
+   "Q23759268", 
+   "Q150044", 
+   "Q189600", 
+   "Q478626", 
+   "Q24871", 
+   "Q207536", 
+   "Q161400", 
+   "Q102235", 
+   "Q171711", 
+   "Q903885", 
+   "Q12049257", 
+   "Q324557", 
+   "Q1004318", 
+   "Q171453"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q102235", 
+   "Q83542", 
+   "Q24871"
+  ], 
+  "utterance": "Harry Potter and the Order of the Phoenix, Resident Evil: Retribution, Avatar", 
+  "active_set": [
+   "(c(Q386724),P1445,Q171453)"
+  ]
+ }
+]

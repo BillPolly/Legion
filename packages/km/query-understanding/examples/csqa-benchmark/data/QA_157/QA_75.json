@@ -1,0 +1,235 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q873435"
+  ], 
+  "relations": [
+   "P1344"
+  ], 
+  "type_list": [
+   "Q15275719"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What did Alfred Beni participate in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q763822", 
+   "Q1343333", 
+   "Q1494216", 
+   "Q1463291", 
+   "Q700917", 
+   "Q956843", 
+   "Q695884"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q700917", 
+   "Q695884", 
+   "Q763822"
+  ], 
+  "utterance": "14th Chess Olympiad, 13th Chess Olympiad, 16th Chess Olympiad", 
+  "active_set": [
+   "(Q873435,P1344,c(Q15275719))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q700917", 
+   "Q695884", 
+   "Q763822"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P641"
+  ], 
+  "type_list": [
+   "Q31629"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What types of sport were 14th Chess Olympiad, 13th Chess Olympiad and 16th Chess Olympiad a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q718", 
+   "Q718", 
+   "Q718"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q718", 
+   "Q718", 
+   "Q718"
+  ], 
+  "utterance": "chess", 
+  "active_set": [
+   "(Q700917,P641,c(Q31629))", 
+   "(Q695884,P641,c(Q31629))", 
+   "(Q763822,P641,c(Q31629))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q700917"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which political territory is 14th Chess Olympiad a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "utterance": "Germany", 
+  "active_set": [
+   "(Q700917,P17,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P361"
+  ], 
+  "type_list": [
+   "Q2221906"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which geographic locations are that political territory a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q46", 
+   "Q27509"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q46", 
+   "Q27509"
+  ], 
+  "utterance": "Europe, Central Europe", 
+  "active_set": [
+   "(Q183,P361,c(Q2221906))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q7589733"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q2221906"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about St. Lucie Inlet, Florida?"
+ }, 
+ {
+  "all_entities": [
+   "Q12060726"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q12060726"
+  ], 
+  "utterance": "Indian River Lagoon", 
+  "active_set": [
+   "(Q7589733,P361,c(Q2221906))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q12060726"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P177"
+  ], 
+  "type_list": [
+   "Q811979"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which architectural structure ranges over that geographic location ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6811733"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6811733"
+  ], 
+  "utterance": "Melbourne Causeway", 
+  "active_set": [
+   "(c(Q811979),P177,Q12060726)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q2221906"
+  ], 
+  "entities_in_utterance": [
+   "Q15303", 
+   "Q27509"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P361"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which geographic locations are Central Europe or Tweralpspitz a component of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q46", 
+   "Q333934"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q46", 
+   "Q333934"
+  ], 
+  "utterance": "Europe, Swiss Plateau", 
+  "active_set": [
+   "OR((Q27509,P361,c(Q2221906)), (Q15303,P361,c(Q2221906)))"
+  ]
+ }
+]

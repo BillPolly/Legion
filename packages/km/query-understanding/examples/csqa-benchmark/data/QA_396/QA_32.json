@@ -1,0 +1,410 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1729443"
+  ], 
+  "relations": [
+   "P39"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which occupation was a position held by Karin Hakl ?"
+ }, 
+ {
+  "all_entities": [
+   "Q17535155"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q17535155"
+  ], 
+  "utterance": "Member of the National Council of Austria", 
+  "active_set": [
+   "(Q1729443,P39,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1729443"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P102"
+  ], 
+  "type_list": [
+   "Q7210356"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which political organization is that person a member of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q186867"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q186867"
+  ], 
+  "utterance": "Austrian People's Party", 
+  "active_set": [
+   "(Q17535155,P102,c(Q7210356))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, one direct and one indirect, subject is indirect", 
+  "entities_in_utterance": [
+   "Q186867", 
+   "Q1741"
+  ], 
+  "relations": [
+   "P159"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 2, 
+  "utterance": "Is Vienna the head office for that political organization located ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q186867,P159,Q1741)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "entities_in_utterance": [
+   "Q973641", 
+   "Q1729443"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P47", 
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which political territories are the countries of citizenship of Karin Hakl or share border with Ontinyent ?"
+ }, 
+ {
+  "all_entities": [
+   "Q574105", 
+   "Q508503", 
+   "Q40", 
+   "Q648740", 
+   "Q621626", 
+   "Q1993371", 
+   "Q619122", 
+   "Q932861"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q574105", 
+   "Q508503", 
+   "Q40", 
+   "Q648740", 
+   "Q621626", 
+   "Q1993371", 
+   "Q619122", 
+   "Q932861"
+  ], 
+  "utterance": "Bocairent, Aielo de Malferit, Austria, Vallada, Banyeres de Mariola, Moixent, Alfafara, Agullent", 
+  "active_set": [
+   "OR((Q1729443,P27,c(Q1048835)), (Q973641,P47,c(Q1048835)))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Mult. entity type", 
+  "type_list": [
+   "Q1048835", 
+   "Q14524493", 
+   "Q811430"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P17"
+  ], 
+  "count_ques_sub_type": 6, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many political territories are around 13 terrains or constructions situated in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q193714", 
+   "Q1000", 
+   "Q195972", 
+   "Q21590062", 
+   "Q746558", 
+   "Q838261", 
+   "Q183", 
+   "Q785", 
+   "Q193619", 
+   "Q769", 
+   "Q685", 
+   "Q699964", 
+   "Q763", 
+   "Q13767", 
+   "Q34617", 
+   "Q22880", 
+   "Q9676", 
+   "Q641138", 
+   "Q664", 
+   "Q693551", 
+   "Q13353", 
+   "Q766", 
+   "Q848383", 
+   "Q5705", 
+   "Q13726", 
+   "Q953068", 
+   "Q16", 
+   "Q5785", 
+   "Q35", 
+   "Q38610", 
+   "Q3405693", 
+   "Q1054923", 
+   "Q13862", 
+   "Q79965", 
+   "Q223793", 
+   "Q319376", 
+   "Q13869", 
+   "Q407199", 
+   "Q18221", 
+   "Q778", 
+   "Q2002138", 
+   "Q3899", 
+   "Q35672", 
+   "Q25228", 
+   "Q1747689", 
+   "Q781", 
+   "Q691", 
+   "Q757", 
+   "Q9648", 
+   "Q231", 
+   "Q234", 
+   "Q2991382", 
+   "Q40", 
+   "Q168651", 
+   "Q399702", 
+   "Q35086", 
+   "Q23635", 
+   "Q208279", 
+   "Q192184", 
+   "Q1615455", 
+   "Q31747", 
+   "Q25305", 
+   "Q129286"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "63", 
+  "active_set": [
+   "(c(Q14524493)|c(Q811430),P17,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q40"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P36"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is associated to Austria as the capital ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1741"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1741"
+  ], 
+  "utterance": "Vienna", 
+  "active_set": [
+   "(Q40,P36,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, 2 direct, 2(direct) are query entities, subject is indirect", 
+  "entities_in_utterance": [
+   "Q1741", 
+   "Q214945", 
+   "Q1844"
+  ], 
+  "relations": [
+   "P190"
+  ], 
+  "type_list": [
+   "Q515"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 5, 
+  "utterance": "Is that administrative territory a sister city of P\u00e1pa and Vaduz ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO and YES respectively", 
+  "active_set": [
+   "(Q1741,P190,Q214945)", 
+   "(Q1741,P190,Q1844)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q574105", 
+   "Q168376"
+  ], 
+  "relations": [
+   "P47"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Does Vit\u00f3ria have a shared border with Bocairent ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q574105,P47,Q168376)"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q12737077", 
+   "Q18783400", 
+   "Q340169"
+  ], 
+  "entities_in_utterance": [
+   "Q11957145"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many occupations are depicted in greater number of genres of sculpture or medias than acrobat ?"
+ }, 
+ {
+  "all_entities": [
+   "Q177220", 
+   "Q131512", 
+   "Q2995983", 
+   "Q45199", 
+   "Q186360", 
+   "Q733786", 
+   "Q4991371", 
+   "Q273108", 
+   "Q589897", 
+   "Q20489032", 
+   "Q5716684", 
+   "Q18575684", 
+   "Q639669", 
+   "Q384593", 
+   "Q1630100"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "15", 
+  "active_set": [
+   "(c(Q18783400)|c(Q340169),P180,c(Q12737077))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q12737077", 
+   "Q18783400", 
+   "Q340169"
+  ], 
+  "entities_in_utterance": [
+   "Q1401609"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about vaquero?"
+ }, 
+ {
+  "all_entities": [
+   "Q177220", 
+   "Q131512", 
+   "Q2995983", 
+   "Q45199", 
+   "Q186360", 
+   "Q733786", 
+   "Q4991371", 
+   "Q273108", 
+   "Q589897", 
+   "Q20489032", 
+   "Q5716684", 
+   "Q18575684", 
+   "Q639669", 
+   "Q384593", 
+   "Q1630100"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "15", 
+  "active_set": [
+   "(c(Q18783400)|c(Q340169),P180,c(Q12737077))"
+  ]
+ }
+]

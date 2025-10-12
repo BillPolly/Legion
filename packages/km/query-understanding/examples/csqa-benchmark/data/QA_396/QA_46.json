@@ -1,0 +1,746 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q3440302"
+  ], 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Where did Roland de Cand\u00e9 die ?"
+ }, 
+ {
+  "all_entities": [
+   "Q90"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q90"
+  ], 
+  "utterance": "Paris", 
+  "active_set": [
+   "(Q3440302,P20,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q90"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P119"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people were burried at that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q4021080", 
+   "Q25918077", 
+   "Q25703693", 
+   "Q6535805", 
+   "Q18059134", 
+   "Q17352455"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6535805", 
+   "Q18059134", 
+   "Q17352455"
+  ], 
+  "utterance": "Levon Pashalian, Lydia Winkel, B\u00e9nigne Vachet", 
+  "active_set": [
+   "(c(Q502895),P119,Q90)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q6535805", 
+   "Q18059134", 
+   "Q17352455"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which sexes do Levon Pashalian, Lydia Winkel and B\u00e9nigne Vachet belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097", 
+   "Q6581072", 
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097", 
+   "Q6581072", 
+   "Q6581097"
+  ], 
+  "utterance": "male for 1st, 3rd, female for 2nd", 
+  "active_set": [
+   "(Q6535805,P21,c(Q290))", 
+   "(Q18059134,P21,c(Q290))", 
+   "(Q17352455,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P138"
+  ], 
+  "type_list": [
+   "Q2088357"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which musical ensemble comes from that sex ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q6581072"
+  ], 
+  "active_set": [
+   "(c(Q2088357),P138,Q6581097)", 
+   "(c(Q2088357),P138,Q6581072)", 
+   "(c(Q2088357),P138,Q6581097)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q6581097", 
+   "Q6581072", 
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean female ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q6581097"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant male. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q15181127"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q15181127"
+  ], 
+  "utterance": "Ausekarane", 
+  "active_set": [
+   "(c(Q2088357),P138,Q6581097)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, 2 direct, 2(direct) are query entities, subject is indirect", 
+  "entities_in_utterance": [
+   "Q15181127", 
+   "Q20", 
+   "Q665243"
+  ], 
+  "relations": [
+   "P495"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 5, 
+  "utterance": "Does that musical ensemble have Norway and Reichenau an der Rax as its place of origin ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES and NO respectively", 
+  "active_set": [
+   "(Q15181127,P495,Q20)", 
+   "(Q15181127,P495,Q665243)"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type", 
+  "type_list": [
+   "Q56061", 
+   "Q166142", 
+   "Q2342494"
+  ], 
+  "entities_in_utterance": [
+   "Q1764"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P840"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which administrative territories are the narrative locations of greater number of applications and collectables than Reykjav\u00edk ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3579", 
+   "Q704257", 
+   "Q1874", 
+   "Q1826473", 
+   "Q25287", 
+   "Q128499", 
+   "Q804569", 
+   "Q467664", 
+   "Q23337", 
+   "Q2656", 
+   "Q1289", 
+   "Q10690", 
+   "Q1425428", 
+   "Q1754", 
+   "Q2500974", 
+   "Q7054337", 
+   "Q90", 
+   "Q12892", 
+   "Q82858", 
+   "Q334", 
+   "Q3437", 
+   "Q215177", 
+   "Q27168", 
+   "Q16555", 
+   "Q2048321", 
+   "Q1891", 
+   "Q39121", 
+   "Q83317", 
+   "Q5083", 
+   "Q23154", 
+   "Q3561", 
+   "Q406", 
+   "Q8678", 
+   "Q6346", 
+   "Q495", 
+   "Q2044", 
+   "Q2141", 
+   "Q192517", 
+   "Q23436", 
+   "Q43301", 
+   "Q490584", 
+   "Q3141", 
+   "Q1246235", 
+   "Q25410", 
+   "Q5212975", 
+   "Q16554", 
+   "Q16556", 
+   "Q16557", 
+   "Q8686", 
+   "Q3130", 
+   "Q52437", 
+   "Q1297", 
+   "Q131491", 
+   "Q1741", 
+   "Q1748", 
+   "Q26881", 
+   "Q1911961", 
+   "Q84", 
+   "Q85", 
+   "Q42462", 
+   "Q37320", 
+   "Q735022", 
+   "Q45301", 
+   "Q11592", 
+   "Q34863", 
+   "Q72", 
+   "Q71", 
+   "Q16869", 
+   "Q172", 
+   "Q2028", 
+   "Q2073798", 
+   "Q26887", 
+   "Q184587", 
+   "Q79980", 
+   "Q1861", 
+   "Q2177880", 
+   "Q5092", 
+   "Q1011683", 
+   "Q956", 
+   "Q1490", 
+   "Q134672", 
+   "Q2302168", 
+   "Q2807", 
+   "Q1353", 
+   "Q1352", 
+   "Q27119", 
+   "Q1524", 
+   "Q220", 
+   "Q617", 
+   "Q612", 
+   "Q21855637", 
+   "Q2634", 
+   "Q863058", 
+   "Q34404", 
+   "Q8717", 
+   "Q64", 
+   "Q65", 
+   "Q60", 
+   "Q61", 
+   "Q62", 
+   "Q5818", 
+   "Q12439", 
+   "Q23556", 
+   "Q13362", 
+   "Q6537", 
+   "Q42810", 
+   "Q641", 
+   "Q727", 
+   "Q649", 
+   "Q2301524", 
+   "Q852778", 
+   "Q43919", 
+   "Q12340625", 
+   "Q47716", 
+   "Q100", 
+   "Q10686", 
+   "Q350", 
+   "Q62677", 
+   "Q1781238", 
+   "Q24826", 
+   "Q1348", 
+   "Q1156", 
+   "Q3619316", 
+   "Q485186", 
+   "Q42448", 
+   "Q33986"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q72", 
+   "Q649", 
+   "Q2807"
+  ], 
+  "utterance": "Z\u00fcrich, Moscow, Madrid", 
+  "active_set": [
+   "(c(Q166142)|c(Q2342494),P840,c(Q56061))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q56061", 
+   "Q166142", 
+   "Q2342494"
+  ], 
+  "entities_in_utterance": [
+   "Q501661"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P840"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And what about Schleswig?"
+ }, 
+ {
+  "all_entities": [
+   "Q3579", 
+   "Q704257", 
+   "Q1874", 
+   "Q1826473", 
+   "Q25287", 
+   "Q128499", 
+   "Q804569", 
+   "Q467664", 
+   "Q23337", 
+   "Q2656", 
+   "Q1289", 
+   "Q10690", 
+   "Q1425428", 
+   "Q1754", 
+   "Q2500974", 
+   "Q7054337", 
+   "Q90", 
+   "Q12892", 
+   "Q82858", 
+   "Q334", 
+   "Q3437", 
+   "Q215177", 
+   "Q27168", 
+   "Q16555", 
+   "Q2048321", 
+   "Q1891", 
+   "Q39121", 
+   "Q83317", 
+   "Q5083", 
+   "Q23154", 
+   "Q3561", 
+   "Q406", 
+   "Q8678", 
+   "Q6346", 
+   "Q495", 
+   "Q2044", 
+   "Q2141", 
+   "Q192517", 
+   "Q23436", 
+   "Q43301", 
+   "Q490584", 
+   "Q3141", 
+   "Q1246235", 
+   "Q25410", 
+   "Q5212975", 
+   "Q16554", 
+   "Q16556", 
+   "Q16557", 
+   "Q8686", 
+   "Q3130", 
+   "Q52437", 
+   "Q1297", 
+   "Q131491", 
+   "Q1741", 
+   "Q1748", 
+   "Q26881", 
+   "Q1911961", 
+   "Q84", 
+   "Q85", 
+   "Q42462", 
+   "Q37320", 
+   "Q735022", 
+   "Q45301", 
+   "Q11592", 
+   "Q34863", 
+   "Q72", 
+   "Q71", 
+   "Q16869", 
+   "Q172", 
+   "Q2028", 
+   "Q2073798", 
+   "Q26887", 
+   "Q184587", 
+   "Q79980", 
+   "Q1861", 
+   "Q2177880", 
+   "Q5092", 
+   "Q1011683", 
+   "Q956", 
+   "Q1490", 
+   "Q134672", 
+   "Q2302168", 
+   "Q2807", 
+   "Q1353", 
+   "Q1352", 
+   "Q27119", 
+   "Q1524", 
+   "Q220", 
+   "Q617", 
+   "Q612", 
+   "Q21855637", 
+   "Q2634", 
+   "Q863058", 
+   "Q34404", 
+   "Q8717", 
+   "Q64", 
+   "Q65", 
+   "Q60", 
+   "Q61", 
+   "Q62", 
+   "Q5818", 
+   "Q12439", 
+   "Q23556", 
+   "Q13362", 
+   "Q6537", 
+   "Q42810", 
+   "Q641", 
+   "Q727", 
+   "Q649", 
+   "Q2301524", 
+   "Q852778", 
+   "Q43919", 
+   "Q12340625", 
+   "Q47716", 
+   "Q100", 
+   "Q10686", 
+   "Q350", 
+   "Q62677", 
+   "Q1781238", 
+   "Q24826", 
+   "Q1348", 
+   "Q1156", 
+   "Q3619316", 
+   "Q485186", 
+   "Q42448", 
+   "Q33986"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q72", 
+   "Q649", 
+   "Q2807"
+  ], 
+  "utterance": "Z\u00fcrich, Moscow, Madrid", 
+  "active_set": [
+   "(c(Q166142)|c(Q2342494),P840,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q2807"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P159"
+  ], 
+  "type_list": [
+   "Q163740"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which nonprofit organizations have headquarters located at that administrative territory ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q649"
+  ], 
+  "active_set": [
+   "(c(Q163740),P159,Q72)", 
+   "(c(Q163740),P159,Q649)", 
+   "(c(Q163740),P159,Q2807)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q72", 
+   "Q649", 
+   "Q2807"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Moscow ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q2807"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Madrid. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q5709349", 
+   "Q8963086", 
+   "Q16565368"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5709349", 
+   "Q8963086", 
+   "Q16565368"
+  ], 
+  "utterance": "Asociaci\u00f3n de la Prensa de Madrid, Fundaci\u00f3n Pablo Iglesias, Europa Laica", 
+  "active_set": [
+   "(c(Q163740),P159,Q2807)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q5709349", 
+   "Q8963086", 
+   "Q16565368"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P159"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where are the head office for Asociaci\u00f3n de la Prensa de Madrid, Fundaci\u00f3n Pablo Iglesias and Europa Laica located ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2807", 
+   "Q2807", 
+   "Q2807"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2807", 
+   "Q2807", 
+   "Q2807"
+  ], 
+  "utterance": "Madrid", 
+  "active_set": [
+   "(Q5709349,P159,c(Q56061))", 
+   "(Q8963086,P159,c(Q56061))", 
+   "(Q16565368,P159,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q2807"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1427"
+  ], 
+  "type_list": [
+   "Q15091377"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which cycling race has Madrid as the start location ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21030967"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21030967"
+  ], 
+  "utterance": "2015 La Madrid Challenge by La Vuelta", 
+  "active_set": [
+   "(c(Q15091377),P1427,Q2807)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q6535805"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P102"
+  ], 
+  "type_list": [
+   "Q7210356"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which party does Levon Pashalian belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q139617"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q139617"
+  ], 
+  "utterance": "Social Democrat Hunchakian Party", 
+  "active_set": [
+   "(Q6535805,P102,c(Q7210356))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q6535805"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1412"
+  ], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which language can that person read ?"
+ }, 
+ {
+  "all_entities": [
+   "Q8785"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q8785"
+  ], 
+  "utterance": "Armenian", 
+  "active_set": [
+   "(Q139617,P1412,c(Q34770))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q8785", 
+   "Q7357417"
+  ], 
+  "relations": [
+   "P1412"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Does Rodrigo Saraz talk in that language ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q7357417,P1412,Q8785)"
+  ]
+ }
+]

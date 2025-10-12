@@ -1,0 +1,330 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1388609"
+  ], 
+  "relations": [
+   "P54"
+  ], 
+  "type_list": [
+   "Q1194951"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which national sports team is Julius James a member of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q192149"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q192149"
+  ], 
+  "utterance": "Trinidad and Tobago national football team", 
+  "active_set": [
+   "(Q1388609,P54,c(Q1194951))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1388609"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P641"
+  ], 
+  "type_list": [
+   "Q349"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which sport was Julius James a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2736"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2736"
+  ], 
+  "utterance": "association football", 
+  "active_set": [
+   "(Q1388609,P641,c(Q349))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q4589729"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q349"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about 1994 South Carolina Gamecocks football team?"
+ }, 
+ {
+  "all_entities": [
+   "Q41323"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q41323"
+  ], 
+  "utterance": "American football", 
+  "active_set": [
+   "(Q4589729,P641,c(Q349))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q41323", 
+   "Q4821515"
+  ], 
+  "relations": [
+   "P641"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Does Augustus Parrish play that sport ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q4821515,P641,Q41323)"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type", 
+  "type_list": [
+   "Q3745054", 
+   "Q502895", 
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q1332346"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P3091"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "Which people rides on a around the same number of horse breeds or people as Mark Todd ?"
+ }, 
+ {
+  "all_entities": [
+   "Q71451", 
+   "Q64650", 
+   "Q186164", 
+   "Q7934379", 
+   "Q262338", 
+   "Q2965770", 
+   "Q1038847", 
+   "Q20240956", 
+   "Q364502", 
+   "Q3081121", 
+   "Q25906162", 
+   "Q355148", 
+   "Q3035045", 
+   "Q3351282", 
+   "Q678324", 
+   "Q151754", 
+   "Q997380", 
+   "Q84536", 
+   "Q3056396", 
+   "Q207535", 
+   "Q2941011", 
+   "Q3565906", 
+   "Q942215", 
+   "Q3385955", 
+   "Q249233", 
+   "Q364920", 
+   "Q2162566", 
+   "Q3573625", 
+   "Q450267", 
+   "Q2577320", 
+   "Q4351964", 
+   "Q317846", 
+   "Q3501998", 
+   "Q840001", 
+   "Q3167944", 
+   "Q6409976", 
+   "Q3299860", 
+   "Q19630255", 
+   "Q444585", 
+   "Q34479", 
+   "Q312391", 
+   "Q1061259", 
+   "Q2041036", 
+   "Q2966249", 
+   "Q1739026", 
+   "Q1081174", 
+   "Q16104944", 
+   "Q5908769", 
+   "Q967780", 
+   "Q488277", 
+   "Q1332346", 
+   "Q3147326", 
+   "Q454614"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q34479", 
+   "Q312391", 
+   "Q151754"
+  ], 
+  "utterance": "Hirohito, Philippe Leclerc de Hauteclocque, Anne, Princess Royal", 
+  "active_set": [
+   "(c(Q502895),P3091,c(Q3745054)|c(Q502895))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q3745054", 
+   "Q502895", 
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q2903241"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P3091"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And also tell me about Bill Hartack?"
+ }, 
+ {
+  "all_entities": [
+   "Q2831786", 
+   "Q2964761", 
+   "Q2643622", 
+   "Q1682742", 
+   "Q451395", 
+   "Q1311486", 
+   "Q682476", 
+   "Q1088130", 
+   "Q527657", 
+   "Q364671", 
+   "Q3089727", 
+   "Q919677", 
+   "Q16208274", 
+   "Q3400624", 
+   "Q15782408", 
+   "Q947032", 
+   "Q3428317", 
+   "Q131691", 
+   "Q17350580", 
+   "Q438197", 
+   "Q2396962", 
+   "Q19630218", 
+   "Q3106094", 
+   "Q958372", 
+   "Q319522", 
+   "Q78028", 
+   "Q7647583", 
+   "Q823503", 
+   "Q147663", 
+   "Q513487", 
+   "Q494315", 
+   "Q377345", 
+   "Q5247967", 
+   "Q8409", 
+   "Q2831635", 
+   "Q1710812", 
+   "Q467676", 
+   "Q1545318", 
+   "Q34836", 
+   "Q238769", 
+   "Q745510", 
+   "Q318626", 
+   "Q608440", 
+   "Q19839389", 
+   "Q3134506", 
+   "Q926771", 
+   "Q3309932", 
+   "Q517", 
+   "Q1351428", 
+   "Q62177", 
+   "Q458399", 
+   "Q2903241", 
+   "Q529497", 
+   "Q3380679", 
+   "Q1337633", 
+   "Q953867", 
+   "Q364659", 
+   "Q19880092", 
+   "Q1119157", 
+   "Q1581746", 
+   "Q72502", 
+   "Q25906137", 
+   "Q6765126", 
+   "Q15972334", 
+   "Q6148833", 
+   "Q1391424", 
+   "Q2094373", 
+   "Q5079900", 
+   "Q1342822", 
+   "Q76246", 
+   "Q1691413", 
+   "Q270476", 
+   "Q272533", 
+   "Q3074167", 
+   "Q449891", 
+   "Q1292304", 
+   "Q1343527", 
+   "Q690536", 
+   "Q43958", 
+   "Q3428878", 
+   "Q886901", 
+   "Q1261810", 
+   "Q77560", 
+   "Q3524341", 
+   "Q3591324", 
+   "Q9682", 
+   "Q1633084", 
+   "Q2420937"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q9682", 
+   "Q517", 
+   "Q131691"
+  ], 
+  "utterance": "Elizabeth II, Napoleon, Arthur Wellesley, 1st Duke of Wellington", 
+  "active_set": [
+   "(c(Q502895),P3091,c(Q3745054)|c(Q502895))"
+  ]
+ }
+]

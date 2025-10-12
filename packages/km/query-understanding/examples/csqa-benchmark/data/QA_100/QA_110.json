@@ -1,0 +1,260 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q21985756"
+  ], 
+  "relations": [
+   "P680"
+  ], 
+  "type_list": [
+   "Q44424"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What represents the molecular function of Methylcrotonoyl-CoA carboxylase subunit alpha, mitochondrial ?"
+ }, 
+ {
+  "all_entities": [
+   "Q13667380"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q13667380"
+  ], 
+  "utterance": "metal ion binding", 
+  "active_set": [
+   "(Q21985756,P680,c(Q44424))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q21985756"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P681"
+  ], 
+  "type_list": [
+   "Q15989253"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which is the part that is a component of Methylcrotonoyl-CoA carboxylase subunit alpha, mitochondrial ?"
+ }, 
+ {
+  "all_entities": [
+   "Q39572"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q39572"
+  ], 
+  "utterance": "mitochondrion", 
+  "active_set": [
+   "(Q21985756,P681,c(Q15989253))"
+  ]
+ }, 
+ {
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Mult. entity type", 
+  "entities_in_utterance": [
+   "Q39572", 
+   "Q7868"
+  ], 
+  "relations": [
+   "P681"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q181394"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many nutrients have mitochondrion and cell as their cell component ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q15326939", 
+   "Q21115593", 
+   "Q21980361", 
+   "Q6714402"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "4", 
+  "active_set": [
+   "(c(Q181394),P681,Q39572)", 
+   "(c(Q181394),P681,Q7868)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q863908"
+  ], 
+  "entities_in_utterance": [
+   "Q24110258", 
+   "Q21985756"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P702"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which nucleic acid sequences genes encode Methylcrotonoyl-CoA carboxylase subunit alpha, mitochondrial or hypothetical protein    SMc02842 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q23168416", 
+   "Q18265241"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23168416", 
+   "Q18265241"
+  ], 
+  "utterance": "hypothetical protein    SMc02842, Mccc1", 
+  "active_set": [
+   "OR((Q21985756,P702,c(Q863908)), (Q24110258,P702,c(Q863908)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q23168416", 
+   "Q18265241"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P702"
+  ], 
+  "type_list": [
+   "Q181394"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which nutrients are encoded by hypothetical protein    SMc02842 and Mccc1 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q24110258", 
+   "Q21985756"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q24110258", 
+   "Q21985756"
+  ], 
+  "utterance": "hypothetical protein    SMc02842, Methylcrotonoyl-CoA carboxylase subunit alpha, mitochondrial", 
+  "active_set": [
+   "(c(Q181394),P702,Q23168416)", 
+   "(c(Q181394),P702,Q18265241)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q18265241"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P684"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which is the species that has Mccc1 as its orthologous gene ?"
+ }, 
+ {
+  "all_entities": [
+   "Q18042611"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18042611"
+  ], 
+  "utterance": "MCCC1", 
+  "active_set": [
+   "(c(Q863908),P684,Q18265241)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q18265241"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P688"
+  ], 
+  "type_list": [
+   "Q181394"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the nutrient encoded by Mccc1 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21985756"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21985756"
+  ], 
+  "utterance": "Methylcrotonoyl-CoA carboxylase subunit alpha, mitochondrial", 
+  "active_set": [
+   "(Q18265241,P688,c(Q181394))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q39572"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P361"
+  ], 
+  "type_list": [
+   "Q15989253"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is mitochondrion a component of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q22327470"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q22327470"
+  ], 
+  "utterance": "mitochondrion-associated adherens complex", 
+  "active_set": [
+   "(Q39572,P361,c(Q15989253))"
+  ]
+ }
+]

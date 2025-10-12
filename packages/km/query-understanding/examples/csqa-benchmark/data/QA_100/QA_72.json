@@ -1,0 +1,273 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q6209138"
+  ], 
+  "relations": [
+   "P641"
+  ], 
+  "type_list": [
+   "Q349"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What did Joe Cockroft participate in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2736"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2736"
+  ], 
+  "utterance": "association football", 
+  "active_set": [
+   "(Q6209138,P641,c(Q349))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q2736"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P495"
+  ], 
+  "type_list": [
+   "Q1496967"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the country of origin of that sport ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21"
+  ], 
+  "utterance": "England", 
+  "active_set": [
+   "(Q2736,P495,c(Q1496967))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q21"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P163"
+  ], 
+  "type_list": [
+   "Q14660"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is associated with that territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q171117"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q171117"
+  ], 
+  "utterance": "flag of England", 
+  "active_set": [
+   "(Q21,P163,c(Q14660))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "relations": [
+   "P163"
+  ], 
+  "count_ques_sub_type": 7, 
+  "type_list": [
+   "Q7275"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many states are associated with that flag ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q179876"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(c(Q7275),P163,Q171117)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q21"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P84"
+  ], 
+  "type_list": [
+   "Q18142"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "What was designed by England ?"
+ }, 
+ {
+  "all_entities": [
+   "Q7863864"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7863864"
+  ], 
+  "utterance": "UBL Tower", 
+  "active_set": [
+   "(c(Q18142),P84,Q21)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q21"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P417"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which person is the patron saint of that territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q48438"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q48438"
+  ], 
+  "utterance": "Saint George", 
+  "active_set": [
+   "(Q7863864,P417,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q21"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P30"
+  ], 
+  "type_list": [
+   "Q2221906"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where is that territory situated ?"
+ }, 
+ {
+  "all_entities": [
+   "Q46"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q46"
+  ], 
+  "utterance": "Europe", 
+  "active_set": [
+   "(Q48438,P30,c(Q2221906))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q46"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P610"
+  ], 
+  "type_list": [
+   "Q14524493"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which is the zenith of that geographic location ?"
+ }, 
+ {
+  "all_entities": [
+   "Q43105"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q43105"
+  ], 
+  "utterance": "Mount Elbrus", 
+  "active_set": [
+   "(Q46,P610,c(Q14524493))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q211616"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q14524493"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Korab?"
+ }, 
+ {
+  "all_entities": [
+   "Q912579"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q912579"
+  ], 
+  "utterance": "Golem Korab", 
+  "active_set": [
+   "(Q211616,P610,c(Q14524493))"
+  ]
+ }
+]

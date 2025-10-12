@@ -1,0 +1,328 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q572643"
+  ], 
+  "relations": [
+   "P735"
+  ], 
+  "type_list": [
+   "Q82799"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which name is Anthonius Lucius known by ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21141858"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21141858"
+  ], 
+  "utterance": "Anthonius", 
+  "active_set": [
+   "(Q572643,P735,c(Q82799))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q572643"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where did the demise of Anthonius Lucius occur ?"
+ }, 
+ {
+  "all_entities": [
+   "Q157035"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q157035"
+  ], 
+  "utterance": "B\u00fcckeburg", 
+  "active_set": [
+   "(Q572643,P20,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q157035"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P119"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person has that administrative territory as resting place ?"
+ }, 
+ {
+  "all_entities": [
+   "Q23926751"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23926751"
+  ], 
+  "utterance": "Brigitte Poschmann", 
+  "active_set": [
+   "(c(Q502895),P119,Q157035)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q157035"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1376"
+  ], 
+  "type_list": [
+   "Q7275"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What has B\u00fcckeburg as its capital ?"
+ }, 
+ {
+  "all_entities": [
+   "Q427703"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q427703"
+  ], 
+  "utterance": "Free State of Schaumburg-Lippe", 
+  "active_set": [
+   "(Q157035,P1376,c(Q7275))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q157035"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people were born at that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q108971", 
+   "Q63147", 
+   "Q1549412", 
+   "Q16509467", 
+   "Q498778", 
+   "Q6490795", 
+   "Q66085", 
+   "Q1927917", 
+   "Q5503954", 
+   "Q1534067", 
+   "Q18333863", 
+   "Q72120", 
+   "Q63158", 
+   "Q2975885", 
+   "Q528660", 
+   "Q1350050", 
+   "Q17352883", 
+   "Q1100178", 
+   "Q1912190", 
+   "Q15821459", 
+   "Q1321901", 
+   "Q15455466", 
+   "Q99060", 
+   "Q5740512", 
+   "Q1636023", 
+   "Q1463193", 
+   "Q1794320", 
+   "Q1782382", 
+   "Q1360605", 
+   "Q1124800", 
+   "Q68601", 
+   "Q107330", 
+   "Q215837", 
+   "Q15445772", 
+   "Q1764604", 
+   "Q2174229", 
+   "Q505267", 
+   "Q65045", 
+   "Q2158444", 
+   "Q1400494", 
+   "Q1379777", 
+   "Q15836284", 
+   "Q51007", 
+   "Q1443419", 
+   "Q1258858", 
+   "Q95233", 
+   "Q1168508", 
+   "Q782868", 
+   "Q70932", 
+   "Q21032030", 
+   "Q762001", 
+   "Q3745185", 
+   "Q1475544", 
+   "Q363364", 
+   "Q2637641", 
+   "Q11295773", 
+   "Q1618866", 
+   "Q1599971", 
+   "Q1505127", 
+   "Q766973", 
+   "Q824229", 
+   "Q1503613", 
+   "Q1820577", 
+   "Q828204", 
+   "Q1745058", 
+   "Q2008283", 
+   "Q1039509", 
+   "Q3157958", 
+   "Q692120", 
+   "Q115024", 
+   "Q19297770", 
+   "Q1730763", 
+   "Q1459695", 
+   "Q1117490", 
+   "Q975223", 
+   "Q19201042", 
+   "Q2020107", 
+   "Q21543894", 
+   "Q1508691", 
+   "Q1612176", 
+   "Q1553730", 
+   "Q72378", 
+   "Q96486", 
+   "Q1580087"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1100178", 
+   "Q70932", 
+   "Q692120"
+  ], 
+  "utterance": "Clemens von Althaus, Prince William of Schaumburg-Lippe, Duke Eugen of W\u00fcrttemberg", 
+  "active_set": [
+   "(c(Q502895),P19,Q427703)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q70932"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P25"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who was the mother of that one ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q692120"
+  ], 
+  "active_set": [
+   "(Q1100178,P25,c(Q502895))", 
+   "(Q70932,P25,c(Q502895))", 
+   "(Q692120,P25,c(Q502895))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q1100178", 
+   "Q70932", 
+   "Q692120"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Duke Eugen of W\u00fcrttemberg ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q70932"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Prince William of Schaumburg-Lippe. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q1461132"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1461132"
+  ], 
+  "utterance": "Princess Ida of Waldeck and Pyrmont", 
+  "active_set": [
+   "(Q70932,P25,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q1461132", 
+   "Q3938271"
+  ], 
+  "relations": [
+   "P25"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Does Robert Flint have that one as a mother ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q3938271,P25,Q1461132)"
+  ]
+ }
+]

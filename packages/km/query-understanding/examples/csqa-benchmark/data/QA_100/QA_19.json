@@ -1,0 +1,341 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1079447"
+  ], 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What are the job of Christian Ernst von Windheim ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1234713", 
+   "Q1622272"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1234713", 
+   "Q1622272"
+  ], 
+  "utterance": "theologian, university teacher", 
+  "active_set": [
+   "(Q1079447,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1234713"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P39"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people were appointed for the position of that occupation ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q1622272"
+  ], 
+  "active_set": [
+   "(c(Q502895),P39,Q1234713)", 
+   "(c(Q502895),P39,Q1622272)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q1234713", 
+   "Q1622272"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean university teacher ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q1234713"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant theologian. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q26215129", 
+   "Q11294693", 
+   "Q3189576"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q26215129", 
+   "Q11294693", 
+   "Q3189576"
+  ], 
+  "utterance": "Morteza Azari, Henri de Saint-Ignace, Julien Loriot", 
+  "active_set": [
+   "(c(Q502895),P39,Q1234713)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q11294693"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1412"
+  ], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which language is spoken by that person ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q26215129"
+  ], 
+  "active_set": [
+   "(Q26215129,P1412,c(Q34770))", 
+   "(Q11294693,P1412,c(Q34770))", 
+   "(Q3189576,P1412,c(Q34770))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q26215129", 
+   "Q11294693", 
+   "Q3189576"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Morteza Azari ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q11294693"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Henri de Saint-Ignace. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q397"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q397"
+  ], 
+  "utterance": "Latin", 
+  "active_set": [
+   "(Q11294693,P1412,c(Q34770))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type|Indirect", 
+  "type_list": [
+   "Q34770", 
+   "Q49848", 
+   "Q1969448"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P2439"
+  ], 
+  "count_ques_sub_type": 9, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which languages have a connection with lesser number of documents and terms than that language ?"
+ }, 
+ {
+  "all_entities": [
+   "Q36765", 
+   "Q18130932", 
+   "Q9056", 
+   "Q13414913", 
+   "Q652", 
+   "Q8752", 
+   "Q1321", 
+   "Q35505", 
+   "Q25167", 
+   "Q25164"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q9056", 
+   "Q8752", 
+   "Q35505"
+  ], 
+  "utterance": "Czech, Basque, Old Norse language", 
+  "active_set": [
+   "(c(Q49848)|c(Q1969448),P2439,c(Q34770))"
+  ]
+ }, 
+ {
+  "question-type": "Clarification", 
+  "description": "Comparative|More/Less|Mult. entity type|Indirect", 
+  "type_list": [
+   "Q34770", 
+   "Q21114848", 
+   "Q4894405"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 3, 
+  "relations": [
+   "P2439"
+  ], 
+  "count_ques_sub_type": 9, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which languages have a connection with around the same number of magazine genres or journalism genres as that language ?"
+ }, 
+ {
+  "description": "Comparative|More/Less|Mult. entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q8752"
+  ], 
+  "active_set": [
+   "(c(Q21114848)|c(Q4894405),P2439,c(Q34770))"
+  ], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Basque ?"
+ }, 
+ {
+  "ques_type_id": 8, 
+  "question-type": "Comparative Reasoning (All)", 
+  "count_ques_sub_type": 9, 
+  "entities": [
+   "Q9056"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "No, I meant Czech. Could you tell me the answer for that?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q36765", 
+   "Q18130932", 
+   "Q9056", 
+   "Q13414913", 
+   "Q652", 
+   "Q8752", 
+   "Q1321", 
+   "Q397", 
+   "Q35505", 
+   "Q25167", 
+   "Q25164"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q9056", 
+   "Q8752", 
+   "Q397"
+  ], 
+  "utterance": "Czech, Basque, Latin", 
+  "active_set": [
+   "(c(Q21114848)|c(Q4894405),P2439,c(Q34770))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q9056"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P361"
+  ], 
+  "type_list": [
+   "Q5962346"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is that language a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q145852"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q145852"
+  ], 
+  "utterance": "West Slavic languages", 
+  "active_set": [
+   "(Q9056,P361,c(Q5962346))", 
+   "(Q8752,P361,c(Q5962346))", 
+   "(Q397,P361,c(Q5962346))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Mult. entity type", 
+  "type_list": [
+   "Q34770", 
+   "Q82799", 
+   "Q7725634"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P407"
+  ], 
+  "count_ques_sub_type": 4, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which languages are atleast 70 names or literary works composed in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1860", 
+   "Q1321", 
+   "Q652"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1860", 
+   "Q1321", 
+   "Q652"
+  ], 
+  "utterance": "English, Spanish, Italian", 
+  "active_set": [
+   "(c(Q82799)|c(Q7725634),P407,c(Q34770))"
+  ]
+ }
+]

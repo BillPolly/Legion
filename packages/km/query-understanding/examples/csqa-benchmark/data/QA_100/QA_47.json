@@ -1,0 +1,272 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q20876608"
+  ], 
+  "relations": [
+   "P937"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territory is the work location of Antoni Rosal i Sala ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2807"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2807"
+  ], 
+  "utterance": "Madrid", 
+  "active_set": [
+   "(Q20876608,P937,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q20876608"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which sex does that person have ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "utterance": "male", 
+  "active_set": [
+   "(Q2807,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q20876608"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1412"
+  ], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which language is that person capable of writing ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1321"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1321"
+  ], 
+  "utterance": "Spanish", 
+  "active_set": [
+   "(Q6581097,P1412,c(Q34770))"
+  ]
+ }, 
+ {
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Mult. entity type", 
+  "entities_in_utterance": [
+   "Q2807", 
+   "Q613"
+  ], 
+  "relations": [
+   "P190"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many administrative territories are twin town of Madrid and Emirate of Dubai ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q3766", 
+   "Q3579"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(c(Q56061),P190,Q2807)", 
+   "(c(Q56061),P190,Q613)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "entities_in_utterance": [
+   "Q12751364", 
+   "Q20876608"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P39", 
+   "P106"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which occupations were a position held by Antoni Rosal i Sala or are the job of Du\u0161an Srezojevi\u0107 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q18171345", 
+   "Q49757"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18171345", 
+   "Q49757"
+  ], 
+  "utterance": "Member of the Congress of Deputies of Spain, poet", 
+  "active_set": [
+   "OR((Q20876608,P39,c(Q12737077)), (Q12751364,P106,c(Q12737077)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q12751364"
+  ], 
+  "relations": [
+   "P172"
+  ], 
+  "type_list": [
+   "Q2472587"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 1, 
+  "utterance": "What is the ethnicity of Du\u0161an Srezojevi\u0107 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q127885"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q127885"
+  ], 
+  "utterance": "Serbs", 
+  "active_set": [
+   "(Q18171345,P172,c(Q2472587))", 
+   "(Q49757,P172,c(Q2472587))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q34770", 
+   "Q838948", 
+   "Q15416"
+  ], 
+  "entities_in_utterance": [
+   "Q397"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P364"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many languages are considered to be the original language of creation of greater number of works of art and television programs than Latin ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1860", 
+   "Q8785", 
+   "Q1321", 
+   "Q9056", 
+   "Q652"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "5", 
+  "active_set": [
+   "(c(Q838948)|c(Q15416),P364,c(Q34770))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q34770", 
+   "Q838948", 
+   "Q15416"
+  ], 
+  "entities_in_utterance": [
+   "Q34909"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P364"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about Old Icelandic?"
+ }, 
+ {
+  "all_entities": [
+   "Q1860", 
+   "Q8785", 
+   "Q1321", 
+   "Q397", 
+   "Q10862919", 
+   "Q9056", 
+   "Q8752", 
+   "Q652", 
+   "Q3110592"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "9", 
+  "active_set": [
+   "(c(Q838948)|c(Q15416),P364,c(Q34770))"
+  ]
+ }
+]

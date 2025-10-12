@@ -1,0 +1,76 @@
+{
+  "countries": [
+    {
+      "id": 1,
+      "type": "Country",
+      "name": "Germany",
+      "population": 83000000,
+      "area": 357022,
+      "continent": "Europe",
+      "borders": [2, 3, 4, 5, 6]
+    },
+    {
+      "id": 2,
+      "type": "Country",
+      "name": "France",
+      "population": 67000000,
+      "area": 643801,
+      "continent": "Europe",
+      "borders": [1, 7, 8, 5, 6]
+    },
+    {
+      "id": 3,
+      "type": "Country",
+      "name": "Poland",
+      "population": 38000000,
+      "area": 312696,
+      "continent": "Europe",
+      "borders": [1]
+    },
+    {
+      "id": 4,
+      "type": "Country",
+      "name": "Austria",
+      "population": 9000000,
+      "area": 83879,
+      "continent": "Europe",
+      "borders": [1, 5, 8]
+    },
+    {
+      "id": 5,
+      "type": "Country",
+      "name": "Switzerland",
+      "population": 8700000,
+      "area": 41285,
+      "continent": "Europe",
+      "borders": [1, 2, 4, 8]
+    },
+    {
+      "id": 6,
+      "type": "Country",
+      "name": "Belgium",
+      "population": 11500000,
+      "area": 30528,
+      "continent": "Europe",
+      "borders": [1, 2]
+    },
+    {
+      "id": 7,
+      "type": "Country",
+      "name": "Spain",
+      "population": 47000000,
+      "area": 505990,
+      "continent": "Europe",
+      "borders": [2]
+    },
+    {
+      "id": 8,
+      "type": "Country",
+      "name": "Italy",
+      "population": 60000000,
+      "area": 301340,
+      "continent": "Europe",
+      "borders": [2, 4, 5]
+    }
+  ]
+}

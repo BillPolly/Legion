@@ -1,0 +1,71 @@
+{
+  "timestamp": "2025-10-12T09:33:12.452Z",
+  "totalExamples": 1,
+  "totalTurns": 6,
+  "correctTurns": 5,
+  "accuracy": 0.8333333333333334,
+  "results": [
+    {
+      "id": "Single_UPS/2009/page_33.pdf-2",
+      "correctCount": 5,
+      "totalTurns": 6,
+      "accuracy": 0.8333333333333334,
+      "results": [
+        {
+          "turnNumber": 1,
+          "question": "what was the change in the performance of the united parcel service inc . from 2004 to 2009?",
+          "groundTruth": "-24.05",
+          "predicted": -24.049999999999997,
+          "correct": true,
+          "type": "computed",
+          "program": "subtract(75.95, 100)"
+        },
+        {
+          "turnNumber": 2,
+          "question": "and how much does this change represent in relation to that performance in 2004, in percentage?",
+          "groundTruth": "-24.05%",
+          "predicted": -24.049999999999997,
+          "correct": true,
+          "type": "computed",
+          "program": "divide(-24.049999999999997, 100), multiply(#0, 100)"
+        },
+        {
+          "turnNumber": 3,
+          "question": "what was the performance value of the s&p 500 index in 2009?",
+          "groundTruth": "102.11",
+          "predicted": 102.11,
+          "correct": true,
+          "type": "lookup",
+          "program": null
+        },
+        {
+          "turnNumber": 4,
+          "question": "what was, then, the change in that performance from 2004 to 2009?",
+          "groundTruth": "2.11",
+          "predicted": 2.1099999999999994,
+          "correct": true,
+          "type": "computed",
+          "program": "subtract(102.11, 100)"
+        },
+        {
+          "turnNumber": 5,
+          "question": "and how much does this change represent in relation to that performance in 2004, in percentage?",
+          "groundTruth": "2.11%",
+          "predicted": 2.1099999999999994,
+          "correct": true,
+          "type": "computed",
+          "program": "divide(2.1099999999999994, 100), multiply(#0, 100)"
+        },
+        {
+          "turnNumber": 6,
+          "question": "what is, then, the difference between the percent representation of the united parcel service inc . and the s&p 500 index?",
+          "groundTruth": "-26.16%",
+          "predicted": null,
+          "correct": false,
+          "type": "error",
+          "program": null
+        }
+      ]
+    }
+  ]
+}

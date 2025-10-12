@@ -1,0 +1,322 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q7819962"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territory is the country of citizenship of Tommy Vardell ?"
+ }, 
+ {
+  "all_entities": [
+   "Q30"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "utterance": "United States of America", 
+  "active_set": [
+   "(Q7819962,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q7819962"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which occupation is the profession of that person ?"
+ }, 
+ {
+  "all_entities": [
+   "Q19204627"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q19204627"
+  ], 
+  "utterance": "American football player", 
+  "active_set": [
+   "(Q30,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P463"
+  ], 
+  "type_list": [
+   "Q874405"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What social groups were United States of America a member of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q782942", 
+   "Q295875"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q782942", 
+   "Q295875"
+  ], 
+  "utterance": "Australia Group, ANZUS", 
+  "active_set": [
+   "(Q30,P463,c(Q874405))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P38"
+  ], 
+  "type_list": [
+   "Q8142"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is considered to be the currency of United States of America ?"
+ }, 
+ {
+  "all_entities": [
+   "Q4917"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q4917"
+  ], 
+  "utterance": "United States dollar", 
+  "active_set": [
+   "(Q30,P38,c(Q8142))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P183"
+  ], 
+  "type_list": [
+   "Q16521"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which taxon belongs to United States of America ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2205148"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2205148"
+  ], 
+  "utterance": "Northern dwarf siren", 
+  "active_set": [
+   "(c(Q16521),P183,Q30)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P36"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territories are known as the capital of United States of America ?"
+ }, 
+ {
+  "all_entities": [
+   "Q60", 
+   "Q61"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q60", 
+   "Q61"
+  ], 
+  "utterance": "New York City, Washington, D.C.", 
+  "active_set": [
+   "(Q30,P36,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q781344"
+  ], 
+  "relations": [
+   "P840"
+  ], 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Do Private Parts have their narrative set in those administrative territories ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q781344,P840,Q60)", 
+   "(Q781344,P840,Q61)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P137"
+  ], 
+  "type_list": [
+   "Q43229"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which organization was operated by United States of America ?"
+ }, 
+ {
+  "all_entities": [
+   "Q5369960"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5369960"
+  ], 
+  "utterance": "Embassy of the United States, London", 
+  "active_set": [
+   "(c(Q43229),P137,Q30)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P937"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who are an people who works at that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q20006819", 
+   "Q12017811", 
+   "Q20747363", 
+   "Q20829615", 
+   "Q20879213", 
+   "Q21705837", 
+   "Q4426737", 
+   "Q20894879", 
+   "Q21155013", 
+   "Q23775987", 
+   "Q26198053"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q20747363", 
+   "Q4426737", 
+   "Q21705837"
+  ], 
+  "utterance": "Cecilia Sternberg, Cesare Sodero, Eliana Machado Meug\u00e9", 
+  "active_set": [
+   "(c(Q502895),P937,Q5369960)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q2526255"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P425"
+  ], 
+  "type_list": [
+   "Q268592"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which economic branch has film director as the associated field of occupation ?"
+ }, 
+ {
+  "all_entities": [
+   "Q932586"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q932586"
+  ], 
+  "utterance": "filmmaking", 
+  "active_set": [
+   "(Q2526255,P425,c(Q268592))"
+  ]
+ }
+]

@@ -1,0 +1,371 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q5487339"
+  ], 
+  "relations": [
+   "P264"
+  ], 
+  "type_list": [
+   "Q334453"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which division is the record label of Frank Hovland ?"
+ }, 
+ {
+  "all_entities": [
+   "Q4574114"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q4574114"
+  ], 
+  "utterance": "Grappa Music", 
+  "active_set": [
+   "(Q5487339,P264,c(Q334453))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q5487339"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What do Frank Hovland do for a living ?"
+ }, 
+ {
+  "all_entities": [
+   "Q639669", 
+   "Q183945", 
+   "Q36834"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q639669", 
+   "Q183945", 
+   "Q36834"
+  ], 
+  "utterance": "musician, record producer, composer", 
+  "active_set": [
+   "(Q5487339,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q5487339"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory was Frank Hovland born in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q26793"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q26793"
+  ], 
+  "utterance": "Bergen", 
+  "active_set": [
+   "(Q5487339,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q5487339"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory does Frank Hovland belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q20"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q20"
+  ], 
+  "utterance": "Norway", 
+  "active_set": [
+   "(Q5487339,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation|Incomplete", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q2820964", 
+   "Q5487339"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 1, 
+  "relations": [
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Or Abdelali Abdelmoula?"
+ }, 
+ {
+  "all_entities": [
+   "Q20", 
+   "Q1028"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q20", 
+   "Q1028"
+  ], 
+  "utterance": "Norway, Morocco", 
+  "active_set": [
+   "OR((Q5487339,P27,c(Q15617994)), (Q2820964,P27,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "set_op": 1, 
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Quantitative|Count|Logical operators|Indirect", 
+  "entities_in_utterance": [], 
+  "relations": [
+   "P138"
+  ], 
+  "count_ques_sub_type": 8, 
+  "type_list": [
+   "Q811979", 
+   "Q7946"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many architectural structures and minerals are the eponym of that administrative territory ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "description": "Quantitative|Count|Mult. entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q1028"
+  ], 
+  "active_set": [], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Morocco ?"
+ }, 
+ {
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "count_ques_sub_type": 8, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "Yes", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q3849782", 
+   "Q3390645"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1 architectural structures and 1 minerals", 
+  "active_set": [
+   "(c(Q811979),P138,Q1028)", 
+   "(c(Q7946),P138,Q1028)", 
+   "(c(Q811979),P138,Q20)", 
+   "(c(Q7946),P138,Q20)", 
+   "(c(Q811979),P138,Q1028)", 
+   "(c(Q7946),P138,Q1028)"
+  ]
+ }, 
+ {
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators", 
+  "entities_in_utterance": [
+   "Q26793"
+  ], 
+  "relations": [
+   "P159"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q636497", 
+   "Q28640"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many stock characters and professions have their HQ location at Bergen ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q27665087", 
+   "Q628248", 
+   "Q7853820", 
+   "Q24695424"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1 stock characters and 3 professions", 
+  "active_set": [
+   "(c(Q636497),P159,Q26793)", 
+   "(c(Q28640),P159,Q26793)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q20"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P740"
+  ], 
+  "type_list": [
+   "Q2088357"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "What are the musical ensembles that were formed at Norway ?"
+ }, 
+ {
+  "all_entities": [
+   "Q193172", 
+   "Q5492450", 
+   "Q1783900", 
+   "Q7754472", 
+   "Q1164216", 
+   "Q1542643", 
+   "Q16839908", 
+   "Q4583992", 
+   "Q262385", 
+   "Q653022", 
+   "Q3043504", 
+   "Q5438290", 
+   "Q3003716", 
+   "Q187576", 
+   "Q625324", 
+   "Q10429044", 
+   "Q7539336", 
+   "Q1022385", 
+   "Q500578", 
+   "Q7935903", 
+   "Q4575784", 
+   "Q5757815", 
+   "Q1140449", 
+   "Q374868"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1542643", 
+   "Q193172", 
+   "Q5757815"
+  ], 
+  "utterance": "Paperboys, Burzum, Highasakite", 
+  "active_set": [
+   "(c(Q2088357),P740,Q20)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1542643"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P136"
+  ], 
+  "type_list": [
+   "Q151885"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What can be considered as category for that musical ensemble ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q5757815"
+  ], 
+  "active_set": [
+   "(Q1542643,P136,c(Q151885))", 
+   "(Q193172,P136,c(Q151885))", 
+   "(Q5757815,P136,c(Q151885))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q1542643", 
+   "Q193172", 
+   "Q5757815"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Highasakite ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q1542643"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Paperboys. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q11401"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q11401"
+  ], 
+  "utterance": "hip hop", 
+  "active_set": [
+   "(Q1542643,P136,c(Q151885))"
+  ]
+ }
+]

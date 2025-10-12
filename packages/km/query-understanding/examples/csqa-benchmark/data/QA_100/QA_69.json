@@ -1,0 +1,219 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q12181439"
+  ], 
+  "relations": [
+   "P39"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What was the position for which Ayman Odeh was appointed ?"
+ }, 
+ {
+  "all_entities": [
+   "Q4047513"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q4047513"
+  ], 
+  "utterance": "Knesset member", 
+  "active_set": [
+   "(Q12181439,P39,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q4047513"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person has that occupation as his/her means of employment ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3594005"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3594005"
+  ], 
+  "utterance": "Michal Rozin", 
+  "active_set": [
+   "(c(Q502895),P106,Q4047513)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q3594005"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P551"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where did that person live ?"
+ }, 
+ {
+  "all_entities": [
+   "Q190828"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q190828"
+  ], 
+  "utterance": "Petah Tikva", 
+  "active_set": [
+   "(Q3594005,P551,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q190828"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P740"
+  ], 
+  "type_list": [
+   "Q43229"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which organization was formed at that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q5058279"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5058279"
+  ], 
+  "utterance": "Cellebrite", 
+  "active_set": [
+   "(c(Q43229),P740,Q190828)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P137"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q43229", 
+   "Q55488"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which railway stations can be described as facility operator of exactly 3 organizations ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q6456"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6456"
+  ], 
+  "utterance": "Hamburg Central Station", 
+  "active_set": [
+   "(c(Q55488),P137,c(Q43229))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Mult. entity type", 
+  "type_list": [
+   "Q43229", 
+   "Q811979", 
+   "Q41176"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P193"
+  ], 
+  "count_ques_sub_type": 3, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which organizations are the main building contractors of max number of architectural structures and buildings ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2461310"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2461310"
+  ], 
+  "utterance": "Turner Construction", 
+  "active_set": [
+   "(c(Q811979)|c(Q41176),P193,c(Q43229))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q2461310"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P159"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where is the headquarter of that organization located ?"
+ }, 
+ {
+  "all_entities": [
+   "Q60"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q60"
+  ], 
+  "utterance": "New York City", 
+  "active_set": [
+   "(Q2461310,P159,c(Q56061))"
+  ]
+ }
+]

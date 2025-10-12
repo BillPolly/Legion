@@ -1,0 +1,402 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q19289048"
+  ], 
+  "relations": [
+   "P1412"
+  ], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which language does Salvador Serentill i Costa speak in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1321"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1321"
+  ], 
+  "utterance": "Spanish", 
+  "active_set": [
+   "(Q19289048,P1412,c(Q34770))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q19289048"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P39"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which occupations were the positions occupied by Salvador Serentill i Costa ?"
+ }, 
+ {
+  "all_entities": [
+   "Q30185", 
+   "Q708492"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30185", 
+   "Q708492"
+  ], 
+  "utterance": "mayor, councillor", 
+  "active_set": [
+   "(Q19289048,P39,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q30185"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P361"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is that occupation a component of ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q30185"
+  ], 
+  "active_set": [
+   "(Q30185,P361,c(Q15617994))", 
+   "(Q708492,P361,c(Q15617994))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q30185", 
+   "Q708492"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean mayor ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "Yes"
+ }, 
+ {
+  "all_entities": [
+   "Q15284"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q15284"
+  ], 
+  "utterance": "municipality", 
+  "active_set": [
+   "(Q30185,P361,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q15284"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1313"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What are the occupations held by that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q30185", 
+   "Q496728"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30185", 
+   "Q496728"
+  ], 
+  "utterance": "mayor, municipal manager", 
+  "active_set": [
+   "(Q15284,P1313,c(Q12737077))"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Mult. entity type", 
+  "entities_in_utterance": [
+   "Q496728", 
+   "Q3089050"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P1001"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories are judicially linked to municipal manager or Cameroon\u2013Nigeria border ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q33", 
+   "Q1009", 
+   "Q1033"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "3", 
+  "active_set": [
+   "(Q496728,P1001,c(Q15617994))", 
+   "(Q3089050,P1001,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q496728"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is municipal manager located in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q33"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q33"
+  ], 
+  "utterance": "Finland", 
+  "active_set": [
+   "(Q496728,P17,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q496728"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person has the profession of municipal manager ?"
+ }, 
+ {
+  "all_entities": [
+   "Q11865505"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q11865505"
+  ], 
+  "utterance": "Jaakko Lov\u00e9n", 
+  "active_set": [
+   "(c(Q502895),P106,Q496728)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q11865505"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory was that person born in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q14657"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14657"
+  ], 
+  "utterance": "Vyborg", 
+  "active_set": [
+   "(Q11865505,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q11865505"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where did the expiration of Jaakko Lov\u00e9n occur ?"
+ }, 
+ {
+  "all_entities": [
+   "Q134620"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q134620"
+  ], 
+  "utterance": "Jyv\u00e4skyl\u00e4", 
+  "active_set": [
+   "(Q11865505,P20,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q14657"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P190"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territories are sister towns of Vyborg ?"
+ }, 
+ {
+  "all_entities": [
+   "Q181854", 
+   "Q221447"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q181854", 
+   "Q221447"
+  ], 
+  "utterance": "Lappeenranta, Ramla", 
+  "active_set": [
+   "(Q14657,P190,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "Incomplete|object parent is changed, subject and predicate remain same", 
+  "entities_in_utterance": [
+   "Q14657"
+  ], 
+  "inc_ques_type": 1, 
+  "relations": [], 
+  "type_list": [
+   "Q15700808"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And which urban unit definition?"
+ }, 
+ {
+  "all_entities": [
+   "Q54356"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q54356"
+  ], 
+  "utterance": "Nyk\u00f6ping", 
+  "active_set": [
+   "(Q14657,P190,c(Q15700808))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, 2 direct, 2(direct) are query entities, subject is indirect", 
+  "entities_in_utterance": [
+   "Q54356", 
+   "Q14657", 
+   "Q1487593"
+  ], 
+  "relations": [
+   "P190"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 5, 
+  "utterance": "Is that urban unit definition twin city of Vyborg and Rampur ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES and NO respectively", 
+  "active_set": [
+   "(Q54356,P190,Q14657)", 
+   "(Q54356,P190,Q1487593)"
+  ]
+ }
+]

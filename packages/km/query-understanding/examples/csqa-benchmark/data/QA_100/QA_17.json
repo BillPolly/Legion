@@ -1,0 +1,269 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q17612456"
+  ], 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q28640"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is the job of Juan Ram\u00f3n Vidal ?"
+ }, 
+ {
+  "all_entities": [
+   "Q40348"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q40348"
+  ], 
+  "utterance": "lawyer", 
+  "active_set": [
+   "(Q17612456,P106,c(Q28640))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q40348"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P452"
+  ], 
+  "type_list": [
+   "Q7748"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who is associated with the industry that profession ?"
+ }, 
+ {
+  "all_entities": [
+   "Q4122235"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q4122235"
+  ], 
+  "utterance": "private law", 
+  "active_set": [
+   "(c(Q7748),P452,Q40348)"
+  ]
+ }, 
+ {
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators|Indirect", 
+  "entities_in_utterance": [], 
+  "relations": [
+   "P361"
+  ], 
+  "count_ques_sub_type": 8, 
+  "type_list": [
+   "Q7748", 
+   "Q1076579"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many laws and acts of Parliament are a component of that law ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q14550951", 
+   "Q818977", 
+   "Q731962", 
+   "Q2250905", 
+   "Q2250903", 
+   "Q2588140"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "5 laws and 1 acts of Parliament", 
+  "active_set": [
+   "(c(Q7748),P361,Q4122235)", 
+   "(c(Q1076579),P361,Q4122235)", 
+   "(c(Q7748),P361,Q4122235)", 
+   "(c(Q1076579),P361,Q4122235)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q40348"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P417"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What are the names of person who are the patron saints of lawyer ?"
+ }, 
+ {
+  "all_entities": [
+   "Q179718", 
+   "Q358325"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q179718", 
+   "Q358325"
+  ], 
+  "utterance": "Catherine of Alexandria, Ivo of Kermartin", 
+  "active_set": [
+   "(Q40348,P417,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which musical instruments are played by around 2848 people ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q8338", 
+   "Q1444", 
+   "Q128309"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q8338", 
+   "Q1444", 
+   "Q128309"
+  ], 
+  "utterance": "trumpet, organ, drum kit", 
+  "active_set": [
+   "(c(Q502895),P1303,c(Q34379))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Mult. Entity", 
+  "entities_in_utterance": [
+   "Q8338", 
+   "Q1444", 
+   "Q128309"
+  ], 
+  "sec_ques_sub_type": 3, 
+  "relations": [
+   "P425"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which occupations do those musical instruments belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q17093672", 
+   "Q765778", 
+   "Q1937431", 
+   "Q386854"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q17093672", 
+   "Q765778", 
+   "Q1937431"
+  ], 
+  "utterance": "trumpeter, organist, organ maker", 
+  "active_set": [
+   "(c(Q12737077),P425,Q8338)", 
+   "(c(Q12737077),P425,Q1444)", 
+   "(c(Q12737077),P425,Q128309)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q765778"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P921"
+  ], 
+  "type_list": [
+   "Q223393"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which literary genre has that occupation as its principal topic ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q1937431"
+  ], 
+  "active_set": [
+   "(c(Q223393),P921,Q17093672)", 
+   "(c(Q223393),P921,Q765778)", 
+   "(c(Q223393),P921,Q1937431)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q17093672", 
+   "Q765778", 
+   "Q1937431"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean organ maker ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q765778"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant organist. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q21993902"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21993902"
+  ], 
+  "utterance": "Biographical Dictionary of the Organ", 
+  "active_set": [
+   "(c(Q223393),P921,Q765778)"
+  ]
+ }
+]

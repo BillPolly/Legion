@@ -1,0 +1,426 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q2440897"
+  ], 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which sex does Jon Harley have ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "utterance": "male", 
+  "active_set": [
+   "(Q2440897,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P138"
+  ], 
+  "type_list": [
+   "Q7946"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which minerals come from that sex ?"
+ }, 
+ {
+  "all_entities": [
+   "Q19861020", 
+   "Q18375263", 
+   "Q19862060", 
+   "Q19861231", 
+   "Q4006570", 
+   "Q3565842", 
+   "Q19833301"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q19861020", 
+   "Q19861231", 
+   "Q4006570"
+  ], 
+  "utterance": "mendeleevite-(Ce), reynoldsite, urusovite", 
+  "active_set": [
+   "(c(Q7946),P138,Q6581097)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q19861020"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P2695"
+  ], 
+  "type_list": [
+   "Q15324"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which body of water is famous for containing mendeleevite-(Ce) ?"
+ }, 
+ {
+  "all_entities": [
+   "Q23803396"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23803396"
+  ], 
+  "utterance": "Darai-Pioz glacier", 
+  "active_set": [
+   "(Q19861020,P2695,c(Q15324))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q6930606"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P706"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q15324", 
+   "Q107425"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many landscapes are located in less number of bodies of water than Samui archipelago ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q3593577", 
+   "Q23941408", 
+   "Q201698", 
+   "Q23943453", 
+   "Q23941645", 
+   "Q23941402", 
+   "Q23941405", 
+   "Q16039555", 
+   "Q205711", 
+   "Q4483480", 
+   "Q1070802", 
+   "Q649384", 
+   "Q821626", 
+   "Q6549341", 
+   "Q6420219", 
+   "Q20978866", 
+   "Q20829724", 
+   "Q131198", 
+   "Q23943069", 
+   "Q3307738", 
+   "Q23943370", 
+   "Q23942941", 
+   "Q1060445", 
+   "Q519782", 
+   "Q23941363", 
+   "Q880803", 
+   "Q23941366", 
+   "Q23943388", 
+   "Q23936773", 
+   "Q1413786", 
+   "Q23936774", 
+   "Q924897", 
+   "Q21489350", 
+   "Q23941411", 
+   "Q23941416", 
+   "Q17134727", 
+   "Q23941414", 
+   "Q21040865", 
+   "Q16040106", 
+   "Q1160526", 
+   "Q23943279", 
+   "Q942849", 
+   "Q8534941", 
+   "Q23936376", 
+   "Q805845", 
+   "Q20724847", 
+   "Q846021", 
+   "Q292158", 
+   "Q23942951", 
+   "Q23942956", 
+   "Q1309953", 
+   "Q23942944", 
+   "Q212893", 
+   "Q23936766", 
+   "Q23936764", 
+   "Q236601", 
+   "Q23941626", 
+   "Q23941620", 
+   "Q23941623", 
+   "Q23941424", 
+   "Q23941628", 
+   "Q23941420", 
+   "Q23943430", 
+   "Q140298", 
+   "Q667910", 
+   "Q216869", 
+   "Q23941384", 
+   "Q640228", 
+   "Q23942960", 
+   "Q23941380", 
+   "Q23943361", 
+   "Q23943046", 
+   "Q369269", 
+   "Q1029322", 
+   "Q1999082", 
+   "Q23941711", 
+   "Q23941490", 
+   "Q23936769", 
+   "Q23936759", 
+   "Q23941716", 
+   "Q1554172", 
+   "Q23941557", 
+   "Q23936751", 
+   "Q23941432", 
+   "Q23941635", 
+   "Q23941632", 
+   "Q23943123", 
+   "Q23941638", 
+   "Q3264388", 
+   "Q23943350", 
+   "Q23941674", 
+   "Q280158", 
+   "Q128172", 
+   "Q303431", 
+   "Q23943055", 
+   "Q478104", 
+   "Q344617", 
+   "Q1631429", 
+   "Q23936425", 
+   "Q1099717", 
+   "Q5642826", 
+   "Q23942977", 
+   "Q11767", 
+   "Q46772", 
+   "Q23936744", 
+   "Q23941605", 
+   "Q2119428", 
+   "Q205695", 
+   "Q472207", 
+   "Q202816", 
+   "Q3593538", 
+   "Q292608", 
+   "Q504043", 
+   "Q419567", 
+   "Q1167034", 
+   "Q23943415", 
+   "Q23943342", 
+   "Q165570", 
+   "Q7592509", 
+   "Q23936779", 
+   "Q23936430", 
+   "Q292688", 
+   "Q292684", 
+   "Q47700", 
+   "Q214011", 
+   "Q13257169", 
+   "Q620481", 
+   "Q292600", 
+   "Q23941426", 
+   "Q17012", 
+   "Q1532665", 
+   "Q15710830", 
+   "Q23942947", 
+   "Q11980098", 
+   "Q3375611", 
+   "Q23936771", 
+   "Q1236059", 
+   "Q2739116", 
+   "Q23943033", 
+   "Q3538668", 
+   "Q23941686", 
+   "Q23941684", 
+   "Q76936", 
+   "Q292695", 
+   "Q1530568", 
+   "Q23936777", 
+   "Q1924039", 
+   "Q23942987", 
+   "Q23941600", 
+   "Q23941607", 
+   "Q292594", 
+   "Q618528", 
+   "Q3437623", 
+   "Q140948", 
+   "Q183963", 
+   "Q292672", 
+   "Q23936697", 
+   "Q18402136", 
+   "Q906924", 
+   "Q143330", 
+   "Q23936419", 
+   "Q1945440", 
+   "Q596485", 
+   "Q23943006", 
+   "Q192626", 
+   "Q23936411", 
+   "Q23941598", 
+   "Q307143", 
+   "Q1268823", 
+   "Q2110514", 
+   "Q23941697", 
+   "Q23941690", 
+   "Q23936711", 
+   "Q2860229", 
+   "Q665321", 
+   "Q23943465", 
+   "Q1632713", 
+   "Q620269", 
+   "Q3454571", 
+   "Q23941616", 
+   "Q23941611", 
+   "Q23941613", 
+   "Q26878046", 
+   "Q23941678", 
+   "Q23943440", 
+   "Q23936695", 
+   "Q3593561", 
+   "Q3593563", 
+   "Q312914", 
+   "Q2860242", 
+   "Q23943019", 
+   "Q15139", 
+   "Q1537020", 
+   "Q23941434", 
+   "Q15909115", 
+   "Q23936705", 
+   "Q23936706", 
+   "Q23936700", 
+   "Q23936702", 
+   "Q23943399", 
+   "Q23941376", 
+   "Q23941374", 
+   "Q17155498"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "203", 
+  "active_set": [
+   "(c(Q107425),P706,c(Q15324))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P706"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q56061", 
+   "Q15324"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which administrative territories are max number of bodies of water located on ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q463937", 
+   "Q849441"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q463937", 
+   "Q849441"
+  ], 
+  "utterance": "Saint Thomas, Saint John", 
+  "active_set": [
+   "(c(Q15324),P706,Q1073089)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q463937"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P119"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person was burried at that administrative territory ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q849441"
+  ], 
+  "active_set": [
+   "(c(Q502895),P119,Q463937)", 
+   "(c(Q502895),P119,Q849441)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q463937", 
+   "Q849441"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Saint John ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q463937"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Saint Thomas. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q423634"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q423634"
+  ], 
+  "utterance": "Carl Wilhelm Jessen", 
+  "active_set": [
+   "(c(Q502895),P119,Q463937)"
+  ]
+ }
+]

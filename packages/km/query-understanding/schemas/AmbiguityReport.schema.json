@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "AmbiguityReport.schema.json",
+  "title": "Ambiguity Report",
+  "description": "Report of ambiguities and unmapped tokens during semantic mapping",
+  "type": "object",
+  "required": ["unmapped_tokens", "multi_sense", "role_conflicts", "comparator_missing"],
+  "properties": {
+    "unmapped_tokens": {
+      "type": "array",
+      "description": "Tokens with no ontology mapping",
+      "items": {"type": "string"}
+    },
+    "multi_sense": {
+      "type": "array",
+      "description": "Tokens with multiple candidate mappings",
+      "items": {
+        "type": "object",
+        "required": ["token", "candidates"],
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Ambiguous token"
+          },
+          "candidates": {
+            "type": "array",
+            "description": "Candidate ontology mappings with scores",
+            "items": {
+              "type": "object",
+              "required": ["iri", "score"],
+              "properties": {
+                "iri": {
+                  "type": "string",
+                  "description": "Candidate IRI",
+                  "pattern": "^:"
+                },
+                "score": {
+                  "type": "number",
+                  "description": "Confidence score",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Ontology type (class, property, individual)"
+                },
+                "domain": {
+                  "type": "string",
+                  "description": "Domain hint"
+                }
+              }
+            },
+            "minItems": 2
+          },
+          "chosen": {
+            "type": "string",
+            "description": "IRI that was chosen",
+            "pattern": "^:"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Why this choice was made"
+          }
+        }
+      }
+    },
+    "role_conflicts": {
+      "type": "array",
+      "description": "Ambiguous role assignments",
+      "items": {
+        "type": "object",
+        "required": ["prep", "options"],
+        "properties": {
+          "prep": {
+            "type": "string",
+            "description": "Ambiguous preposition"
+          },
+          "options": {
+            "type": "array",
+            "description": "Possible role interpretations",
+            "items": {
+              "type": "object",
+              "required": ["role", "type", "score"],
+              "properties": {
+                "role": {
+                  "type": "string",
+                  "description": "Role IRI",
+                  "pattern": "^:"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": ["temporal", "spatial", "instrumental", "manner", "purpose"],
+                  "description": "Role type"
+                },
+                "score": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              }
+            },
+            "minItems": 2
+          },
+          "chosen": {
+            "type": "string",
+            "description": "Role that was chosen",
+            "pattern": "^:"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Why this choice was made"
+          }
+        }
+      }
+    },
+    "comparator_missing": {
+      "type": "boolean",
+      "description": "True if comparative detected but no baseline found"
+    },
+    "notes": {
+      "type": "array",
+      "description": "Additional warnings or clarifications",
+      "items": {"type": "string"}
+    }
+  }
+}

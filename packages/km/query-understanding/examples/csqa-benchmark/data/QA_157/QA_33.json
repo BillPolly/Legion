@@ -1,0 +1,697 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q19480615"
+  ], 
+  "relations": [
+   "P1344"
+  ], 
+  "type_list": [
+   "Q13406554"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which sport competition did Seren Bundy-Davies participate in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1026555"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1026555"
+  ], 
+  "utterance": "2015 World Championships in Athletics", 
+  "active_set": [
+   "(Q19480615,P1344,c(Q13406554))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q19480615"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is Seren Bundy-Davies a civilian of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q145"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q145"
+  ], 
+  "utterance": "United Kingdom", 
+  "active_set": [
+   "(Q19480615,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q145"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people have that administrative territory as place of death ?"
+ }, 
+ {
+  "all_entities": [
+   "Q7817268", 
+   "Q335542", 
+   "Q5534717", 
+   "Q6306769", 
+   "Q24718696", 
+   "Q8020816", 
+   "Q11779634", 
+   "Q14475998", 
+   "Q4963943", 
+   "Q6238020", 
+   "Q19691583", 
+   "Q6830997", 
+   "Q6939267", 
+   "Q1396742", 
+   "Q4974317", 
+   "Q1936169", 
+   "Q1365993", 
+   "Q5512494", 
+   "Q20731799", 
+   "Q980378", 
+   "Q7613410", 
+   "Q3990658", 
+   "Q9145644", 
+   "Q5539833", 
+   "Q3688020", 
+   "Q21463011", 
+   "Q2442632", 
+   "Q18187112", 
+   "Q237173", 
+   "Q5492577", 
+   "Q1359962", 
+   "Q7364940", 
+   "Q9341573", 
+   "Q3290343", 
+   "Q186025", 
+   "Q6144189", 
+   "Q5721354", 
+   "Q1929333", 
+   "Q5538120", 
+   "Q4197339", 
+   "Q221531", 
+   "Q15407593", 
+   "Q26271864", 
+   "Q21486114", 
+   "Q4977129", 
+   "Q633377", 
+   "Q1380910", 
+   "Q215338", 
+   "Q7351194", 
+   "Q26769386", 
+   "Q9342769", 
+   "Q11727985", 
+   "Q9373968", 
+   "Q12090836", 
+   "Q987769", 
+   "Q555531", 
+   "Q16016409", 
+   "Q1540307", 
+   "Q23562565", 
+   "Q20030044", 
+   "Q6151168", 
+   "Q5661723", 
+   "Q1626539", 
+   "Q5539480", 
+   "Q1387763", 
+   "Q6846684", 
+   "Q369526", 
+   "Q3087092", 
+   "Q1749799", 
+   "Q9250815", 
+   "Q18954454", 
+   "Q678500", 
+   "Q6843597", 
+   "Q6468384", 
+   "Q3714622", 
+   "Q23806790", 
+   "Q6768302", 
+   "Q4896071", 
+   "Q3666599", 
+   "Q4734252", 
+   "Q5540255", 
+   "Q3023747", 
+   "Q6015750", 
+   "Q3809424", 
+   "Q3087086", 
+   "Q7794001", 
+   "Q6243769", 
+   "Q8018603", 
+   "Q6414262", 
+   "Q21062905", 
+   "Q17355643", 
+   "Q3430369", 
+   "Q509528", 
+   "Q17402715", 
+   "Q1359932", 
+   "Q11754242", 
+   "Q7147156", 
+   "Q6220520", 
+   "Q5730399", 
+   "Q6231765", 
+   "Q1515768", 
+   "Q725880", 
+   "Q249849", 
+   "Q1701043", 
+   "Q14623452", 
+   "Q358754"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q11727985", 
+   "Q5539480", 
+   "Q5661723"
+  ], 
+  "utterance": "John Sinclair, 1st Baron Pentland, George Frederick Stanley, Harold McCusker", 
+  "active_set": [
+   "(c(Q502895),P20,Q145)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q11727985"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P50"
+  ], 
+  "type_list": [
+   "Q191067"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which article is that person an author of ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q5661723"
+  ], 
+  "active_set": [
+   "(c(Q191067),P50,Q11727985)", 
+   "(c(Q191067),P50,Q5539480)", 
+   "(c(Q191067),P50,Q5661723)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q11727985", 
+   "Q5539480", 
+   "Q5661723"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Harold McCusker ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q11727985"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant John Sinclair, 1st Baron Pentland. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q21484538"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21484538"
+  ], 
+  "utterance": "Campbell-Bannerman, Henry (DNB12)", 
+  "active_set": [
+   "(c(Q191067),P50,Q11727985)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q21484538"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1433"
+  ], 
+  "type_list": [
+   "Q571"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where is that article published ?"
+ }, 
+ {
+  "all_entities": [
+   "Q16014697"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q16014697"
+  ], 
+  "utterance": "Dictionary of National Biography, second supplement", 
+  "active_set": [
+   "(Q21484538,P1433,c(Q571))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q1741"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P291"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q56061", 
+   "Q571"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which administrative territories were greater number of books published than Vienna ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q909146", 
+   "Q2512312", 
+   "Q501661", 
+   "Q982367", 
+   "Q23337", 
+   "Q33959", 
+   "Q586", 
+   "Q9920", 
+   "Q1757", 
+   "Q1754", 
+   "Q1022", 
+   "Q90", 
+   "Q3846", 
+   "Q597", 
+   "Q365", 
+   "Q5836", 
+   "Q8818", 
+   "Q1155", 
+   "Q209055", 
+   "Q3561", 
+   "Q40347", 
+   "Q739452", 
+   "Q8678", 
+   "Q490", 
+   "Q495", 
+   "Q2044", 
+   "Q23436", 
+   "Q2280", 
+   "Q3141", 
+   "Q671288", 
+   "Q72", 
+   "Q334", 
+   "Q621", 
+   "Q3130", 
+   "Q192517", 
+   "Q1297", 
+   "Q3033", 
+   "Q936183", 
+   "Q1748", 
+   "Q45412", 
+   "Q84", 
+   "Q5112", 
+   "Q2103", 
+   "Q178093", 
+   "Q49111", 
+   "Q71", 
+   "Q2617448", 
+   "Q36405", 
+   "Q270", 
+   "Q60", 
+   "Q1931927", 
+   "Q16567", 
+   "Q5092", 
+   "Q1492", 
+   "Q1479", 
+   "Q2807", 
+   "Q42735", 
+   "Q242478", 
+   "Q220", 
+   "Q26421", 
+   "Q37995", 
+   "Q6761", 
+   "Q761", 
+   "Q2634", 
+   "Q3584", 
+   "Q1726", 
+   "Q8717", 
+   "Q3519", 
+   "Q64", 
+   "Q65", 
+   "Q2028", 
+   "Q61", 
+   "Q62", 
+   "Q18125", 
+   "Q12439", 
+   "Q470445", 
+   "Q1352", 
+   "Q8385", 
+   "Q72259", 
+   "Q19785", 
+   "Q647", 
+   "Q641", 
+   "Q193367", 
+   "Q727", 
+   "Q649", 
+   "Q24826", 
+   "Q128306", 
+   "Q997170", 
+   "Q580", 
+   "Q585", 
+   "Q34370", 
+   "Q207639", 
+   "Q2066", 
+   "Q100", 
+   "Q3834", 
+   "Q216", 
+   "Q350", 
+   "Q1348", 
+   "Q1085"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1085", 
+   "Q72", 
+   "Q649"
+  ], 
+  "utterance": "Prague, Z\u00fcrich, Moscow", 
+  "active_set": [
+   "(c(Q571),P291,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q87"
+  ], 
+  "relations": [
+   "P291"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q56061", 
+   "Q571"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And what about Alexandria?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q909146", 
+   "Q2512312", 
+   "Q501661", 
+   "Q982367", 
+   "Q23337", 
+   "Q33959", 
+   "Q586", 
+   "Q9920", 
+   "Q1757", 
+   "Q1754", 
+   "Q1022", 
+   "Q90", 
+   "Q3846", 
+   "Q597", 
+   "Q365", 
+   "Q5836", 
+   "Q8818", 
+   "Q1155", 
+   "Q209055", 
+   "Q3561", 
+   "Q40347", 
+   "Q739452", 
+   "Q8678", 
+   "Q490", 
+   "Q495", 
+   "Q2044", 
+   "Q23436", 
+   "Q2280", 
+   "Q3141", 
+   "Q671288", 
+   "Q72", 
+   "Q334", 
+   "Q621", 
+   "Q3130", 
+   "Q192517", 
+   "Q1297", 
+   "Q3033", 
+   "Q936183", 
+   "Q1748", 
+   "Q45412", 
+   "Q84", 
+   "Q5112", 
+   "Q2103", 
+   "Q178093", 
+   "Q49111", 
+   "Q71", 
+   "Q2617448", 
+   "Q36405", 
+   "Q270", 
+   "Q60", 
+   "Q1931927", 
+   "Q16567", 
+   "Q5092", 
+   "Q1492", 
+   "Q1479", 
+   "Q2807", 
+   "Q42735", 
+   "Q242478", 
+   "Q220", 
+   "Q26421", 
+   "Q37995", 
+   "Q6761", 
+   "Q761", 
+   "Q2634", 
+   "Q3584", 
+   "Q1726", 
+   "Q8717", 
+   "Q3519", 
+   "Q64", 
+   "Q65", 
+   "Q2028", 
+   "Q61", 
+   "Q62", 
+   "Q18125", 
+   "Q12439", 
+   "Q470445", 
+   "Q1352", 
+   "Q8385", 
+   "Q72259", 
+   "Q19785", 
+   "Q647", 
+   "Q641", 
+   "Q193367", 
+   "Q727", 
+   "Q649", 
+   "Q24826", 
+   "Q128306", 
+   "Q997170", 
+   "Q580", 
+   "Q585", 
+   "Q34370", 
+   "Q207639", 
+   "Q2066", 
+   "Q100", 
+   "Q3834", 
+   "Q216", 
+   "Q350", 
+   "Q1348", 
+   "Q1085"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1085", 
+   "Q72", 
+   "Q649"
+  ], 
+  "utterance": "Prague, Z\u00fcrich, Moscow", 
+  "active_set": [
+   "(c(Q571),P291,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q649"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P272"
+  ], 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which work of art was released from the production company named that administrative territory ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q72"
+  ], 
+  "active_set": [
+   "(c(Q838948),P272,Q1085)", 
+   "(c(Q838948),P272,Q72)", 
+   "(c(Q838948),P272,Q649)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q1085", 
+   "Q72", 
+   "Q649"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Z\u00fcrich ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q649"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Moscow. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q873313"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q873313"
+  ], 
+  "utterance": "The Red and the White", 
+  "active_set": [
+   "(c(Q838948),P272,Q649)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q649"
+  ], 
+  "relations": [
+   "P190"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories are sister towns of Moscow ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q807", 
+   "Q41572", 
+   "Q13498", 
+   "Q994", 
+   "Q437", 
+   "Q1353", 
+   "Q727", 
+   "Q472", 
+   "Q23564", 
+   "Q179830", 
+   "Q178373", 
+   "Q42308", 
+   "Q1770", 
+   "Q1718", 
+   "Q18808", 
+   "Q1297", 
+   "Q1490", 
+   "Q1741", 
+   "Q196678", 
+   "Q3805", 
+   "Q1520", 
+   "Q1524", 
+   "Q1491", 
+   "Q987", 
+   "Q1780", 
+   "Q3630", 
+   "Q140147", 
+   "Q25409", 
+   "Q33935", 
+   "Q131290", 
+   "Q3561", 
+   "Q84", 
+   "Q85", 
+   "Q486282", 
+   "Q19566", 
+   "Q1861", 
+   "Q3820", 
+   "Q216", 
+   "Q43070", 
+   "Q270", 
+   "Q239", 
+   "Q2807", 
+   "Q956", 
+   "Q3640", 
+   "Q64", 
+   "Q1218", 
+   "Q133026", 
+   "Q186576", 
+   "Q1085"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "49", 
+  "active_set": [
+   "(Q649,P190,c(Q56061))"
+  ]
+ }
+]

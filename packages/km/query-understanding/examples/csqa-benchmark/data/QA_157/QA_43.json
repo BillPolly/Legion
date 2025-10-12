@@ -1,0 +1,90 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q89127"
+  ], 
+  "relations": [
+   "P734"
+  ], 
+  "type_list": [
+   "Q82799"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Who has the surname Richard Lugner ?"
+ }, 
+ {
+  "all_entities": [
+   "Q22692019"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q22692019"
+  ], 
+  "utterance": "Lugner", 
+  "active_set": [
+   "(Q89127,P734,c(Q82799))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q89127"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P26"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which person is the life partner of Richard Lugner ?"
+ }, 
+ {
+  "all_entities": [
+   "Q20798793"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q20798793"
+  ], 
+  "utterance": "Cathy Lugner", 
+  "active_set": [
+   "(Q89127,P26,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q996093"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about \u00d6d\u00f6n Farag\u00f3?"
+ }, 
+ {
+  "all_entities": [
+   "Q18977366"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18977366"
+  ], 
+  "utterance": "Ir\u00e9n Biller", 
+  "active_set": [
+   "(Q996093,P26,c(Q502895))"
+  ]
+ }
+]

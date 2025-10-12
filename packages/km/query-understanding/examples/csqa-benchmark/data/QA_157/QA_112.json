@@ -1,0 +1,602 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q7415926"
+  ], 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which sex does Sanda Oumarou possess ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "utterance": "male", 
+  "active_set": [
+   "(Q7415926,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q7415926"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where was Sanda Oumarou born ?"
+ }, 
+ {
+  "all_entities": [
+   "Q745906"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q745906"
+  ], 
+  "utterance": "Ngaound\u00e9r\u00e9", 
+  "active_set": [
+   "(Q7415926,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q7415926"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which occupation has Sanda Oumarou as his/her 's career ?"
+ }, 
+ {
+  "all_entities": [
+   "Q937857"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q937857"
+  ], 
+  "utterance": "association football player", 
+  "active_set": [
+   "(Q7415926,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q447925"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about Konrad Kujau?"
+ }, 
+ {
+  "all_entities": [
+   "Q1028181", 
+   "Q18511668"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1028181", 
+   "Q18511668"
+  ], 
+  "utterance": "painter, art forger", 
+  "active_set": [
+   "(Q447925,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q18511668"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P425"
+  ], 
+  "type_list": [
+   "Q1914636"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What activities have that one as thier associated field of occupation ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q1028181"
+  ], 
+  "active_set": [
+   "(Q1028181,P425,c(Q1914636))", 
+   "(Q18511668,P425,c(Q1914636))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q1028181", 
+   "Q18511668"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean painter ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q18511668"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant art forger. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q1400612", 
+   "Q502918"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1400612", 
+   "Q502918"
+  ], 
+  "utterance": "art forgery, counterfeit", 
+  "active_set": [
+   "(Q18511668,P425,c(Q1914636))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q18511668"
+  ], 
+  "relations": [
+   "P425"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Do those activities belong to art forger ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q18511668,P425,Q1400612)", 
+   "(Q18511668,P425,Q502918)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1028181"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P417"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the name of the patron saint of painter ?"
+ }, 
+ {
+  "all_entities": [
+   "Q128538"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q128538"
+  ], 
+  "utterance": "Luke the Evangelist", 
+  "active_set": [
+   "(Q1028181,P417,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q17677"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about Spineto Scrivia?"
+ }, 
+ {
+  "all_entities": [
+   "Q43999"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q43999"
+  ], 
+  "utterance": "James", 
+  "active_set": [
+   "(Q17677,P417,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q43999", 
+   "Q3862683"
+  ], 
+  "relations": [
+   "P180"
+  ], 
+  "type_list": [
+   "Q3305213"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Does Equestrian Statue of Niccol\u00f2 da Tolentino express that person ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q3862683,P180,Q43999)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q43999"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q2221906"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where did that person expire ?"
+ }, 
+ {
+  "all_entities": [
+   "Q104028"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q104028"
+  ], 
+  "utterance": "Judea", 
+  "active_set": []
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q43999"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P825"
+  ], 
+  "type_list": [
+   "Q44539"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which temples have dedication towards that person ?"
+ }, 
+ {
+  "all_entities": [
+   "Q18708279", 
+   "Q23691663"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18708279", 
+   "Q23691663"
+  ], 
+  "utterance": "St James's Church, San Giacomo della Giudecca", 
+  "active_set": [
+   "(c(Q44539),P825,Q104028)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q558148"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P417"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q502895", 
+   "Q44539"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many people are the patron saint of greater number of temples than Leonard of Noblac ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q453698", 
+   "Q133704", 
+   "Q152457", 
+   "Q394727", 
+   "Q268087", 
+   "Q61914", 
+   "Q315640", 
+   "Q719683", 
+   "Q118087", 
+   "Q320199", 
+   "Q43689", 
+   "Q378656", 
+   "Q61620", 
+   "Q128267", 
+   "Q2987904", 
+   "Q2574015", 
+   "Q1834624", 
+   "Q328804", 
+   "Q174044", 
+   "Q163900", 
+   "Q31966", 
+   "Q170547", 
+   "Q676555", 
+   "Q244380", 
+   "Q192236", 
+   "Q44091", 
+   "Q181715", 
+   "Q2617668", 
+   "Q670456", 
+   "Q1284971", 
+   "Q188411", 
+   "Q727316", 
+   "Q686948", 
+   "Q309953", 
+   "Q515953", 
+   "Q177903", 
+   "Q207113", 
+   "Q8018", 
+   "Q43675", 
+   "Q618214", 
+   "Q216946", 
+   "Q33923", 
+   "Q161775", 
+   "Q221522", 
+   "Q44047", 
+   "Q128538", 
+   "Q183240", 
+   "Q145746", 
+   "Q15284282", 
+   "Q360798", 
+   "Q298845", 
+   "Q167477", 
+   "Q297742", 
+   "Q48438", 
+   "Q159834", 
+   "Q44281", 
+   "Q63070", 
+   "Q43399", 
+   "Q379914", 
+   "Q196527", 
+   "Q336731", 
+   "Q913528", 
+   "Q231256", 
+   "Q560531", 
+   "Q9200", 
+   "Q174880", 
+   "Q346", 
+   "Q180936", 
+   "Q7226", 
+   "Q243427", 
+   "Q417686", 
+   "Q43999", 
+   "Q64196", 
+   "Q359259", 
+   "Q43669", 
+   "Q369691", 
+   "Q44269", 
+   "Q831571", 
+   "Q44265", 
+   "Q192816", 
+   "Q43982", 
+   "Q179718", 
+   "Q445357", 
+   "Q40662", 
+   "Q210096", 
+   "Q160374", 
+   "Q80513", 
+   "Q43600", 
+   "Q283447", 
+   "Q158504", 
+   "Q151967", 
+   "Q312314", 
+   "Q149727", 
+   "Q367208", 
+   "Q164294", 
+   "Q103556", 
+   "Q60059", 
+   "Q651226", 
+   "Q159862", 
+   "Q17590", 
+   "Q235619", 
+   "Q200895", 
+   "Q160445", 
+   "Q44248", 
+   "Q470608", 
+   "Q196157", 
+   "Q310633", 
+   "Q208331"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "108", 
+  "active_set": [
+   "(c(Q44539),P417,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q231256"
+  ], 
+  "relations": [
+   "P417"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q502895", 
+   "Q44539"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about Francis de Sales?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q133704", 
+   "Q152457", 
+   "Q394727", 
+   "Q61914", 
+   "Q320199", 
+   "Q43689", 
+   "Q128267", 
+   "Q328804", 
+   "Q163900", 
+   "Q170547", 
+   "Q676555", 
+   "Q244380", 
+   "Q181715", 
+   "Q686948", 
+   "Q177903", 
+   "Q207113", 
+   "Q8018", 
+   "Q33923", 
+   "Q161775", 
+   "Q221522", 
+   "Q145746", 
+   "Q167477", 
+   "Q297742", 
+   "Q48438", 
+   "Q63070", 
+   "Q43399", 
+   "Q196527", 
+   "Q560531", 
+   "Q9200", 
+   "Q346", 
+   "Q180936", 
+   "Q43999", 
+   "Q43669", 
+   "Q44269", 
+   "Q44265", 
+   "Q43982", 
+   "Q179718", 
+   "Q40662", 
+   "Q210096", 
+   "Q80513", 
+   "Q149727", 
+   "Q164294", 
+   "Q159862", 
+   "Q17590", 
+   "Q200895", 
+   "Q310633"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "46", 
+  "active_set": [
+   "(c(Q44539),P417,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q231256"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P7"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person has that one as their brother ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3165969"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3165969"
+  ], 
+  "utterance": "Jean-Fran\u00e7ois de Sales", 
+  "active_set": []
+ }
+]

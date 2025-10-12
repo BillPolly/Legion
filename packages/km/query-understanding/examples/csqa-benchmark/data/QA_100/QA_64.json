@@ -1,0 +1,337 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q327738"
+  ], 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territory was J\u00f3zef Simmler born at ?"
+ }, 
+ {
+  "all_entities": [
+   "Q270"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q270"
+  ], 
+  "utterance": "Warsaw", 
+  "active_set": [
+   "(Q327738,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q327738"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which occupation has J\u00f3zef Simmler as his/her 's career ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1028181"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1028181"
+  ], 
+  "utterance": "painter", 
+  "active_set": [
+   "(Q327738,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1028181"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P417"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the name of person who is the patron saint of that occupation ?"
+ }, 
+ {
+  "all_entities": [
+   "Q128538"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q128538"
+  ], 
+  "utterance": "Luke the Evangelist", 
+  "active_set": [
+   "(Q1028181,P417,c(Q502895))"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Mult. entity type", 
+  "entities_in_utterance": [
+   "Q270", 
+   "Q28513"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P206"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q337567"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many still waterss are located in the neighbourhood of Warsaw or Austria-Hungary ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q4127", 
+   "Q6414"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(Q270,P206,c(Q337567))", 
+   "(Q28513,P206,c(Q337567))"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators", 
+  "entities_in_utterance": [
+   "Q270"
+  ], 
+  "relations": [
+   "P36"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q7275", 
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many states or administrative territories have Warsaw as their administrative centre ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q207272", 
+   "Q36", 
+   "Q172107", 
+   "Q696908", 
+   "Q211274"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "5", 
+  "active_set": [
+   "(c(Q7275),P36,Q270)", 
+   "(c(Q15617994),P36,Q270)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1028181"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P101"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people have field of work as painter ?"
+ }, 
+ {
+  "all_entities": [
+   "Q5582", 
+   "Q352", 
+   "Q102139"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5582", 
+   "Q352", 
+   "Q102139"
+  ], 
+  "utterance": "Vincent van Gogh, Adolf Hitler, Margrethe II of Denmark", 
+  "active_set": [
+   "(c(Q502895),P101,Q1028181)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q352"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1038"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who are related to that one ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q5582"
+  ], 
+  "active_set": [
+   "(c(Q502895),P1038,Q5582)", 
+   "(c(Q502895),P1038,Q352)", 
+   "(c(Q502895),P1038,Q102139)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q5582", 
+   "Q352", 
+   "Q102139"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Vincent van Gogh ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q352"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Adolf Hitler. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q22116705", 
+   "Q385804", 
+   "Q1903961", 
+   "Q22133397", 
+   "Q22677145", 
+   "Q6216378", 
+   "Q698102", 
+   "Q22090133", 
+   "Q22085679", 
+   "Q22086756", 
+   "Q22117373", 
+   "Q6001165", 
+   "Q22087758", 
+   "Q22121831", 
+   "Q22092225", 
+   "Q84642", 
+   "Q22121817", 
+   "Q22133423", 
+   "Q22087732", 
+   "Q22117389", 
+   "Q85046", 
+   "Q4613831", 
+   "Q22116733", 
+   "Q22572343", 
+   "Q22132490", 
+   "Q22132157", 
+   "Q22132150", 
+   "Q2779550", 
+   "Q1165052", 
+   "Q22101705", 
+   "Q22114544", 
+   "Q454576", 
+   "Q22087804", 
+   "Q22085545", 
+   "Q64799"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q22132490", 
+   "Q2779550", 
+   "Q6216378"
+  ], 
+  "utterance": "Johann Baptist P\u00f6lzl, Maria Schicklgruber, Johanna Hiedler", 
+  "active_set": [
+   "(c(Q502895),P1038,Q352)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q56061"
+  ], 
+  "entities_in_utterance": [
+   "Q54165", 
+   "Q352"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P937", 
+   "P36"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are the locations where Adolf Hitler worked or are known as the capital of Berkshire County ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1726", 
+   "Q1741", 
+   "Q41329", 
+   "Q64", 
+   "Q49184"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1726", 
+   "Q1741", 
+   "Q41329", 
+   "Q64", 
+   "Q49184"
+  ], 
+  "utterance": "Munich, Vienna, Linz, Berlin, Pittsfield", 
+  "active_set": [
+   "OR((Q352,P937,c(Q56061)), (Q54165,P36,c(Q56061)))"
+  ]
+ }
+]

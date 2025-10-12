@@ -1,0 +1,125 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "CanonicalQuestion.schema.json",
+  "title": "Canonical Question",
+  "description": "Normalized question after reference resolution, entity/date/unit normalization",
+  "type": "object",
+  "required": ["text", "wh_role", "lang"],
+  "properties": {
+    "text": {
+      "type": "string",
+      "description": "Canonicalized sentence with resolved references",
+      "minLength": 1
+    },
+    "entities": {
+      "type": "array",
+      "description": "Normalized named entities with spans and canonical IRIs",
+      "items": {
+        "type": "object",
+        "required": ["span", "value", "type"],
+        "properties": {
+          "span": {
+            "type": "array",
+            "description": "Character offsets [start, end]",
+            "items": {"type": "integer", "minimum": 0},
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "value": {
+            "type": "string",
+            "description": "Original entity text",
+            "minLength": 1
+          },
+          "type": {
+            "type": "string",
+            "description": "Entity type (PERSON, PLACE, MEASURE, etc.)",
+            "minLength": 1
+          },
+          "canonical": {
+            "type": "string",
+            "description": "Canonical IRI (e.g., :Ada_Lovelace)",
+            "pattern": "^:"
+          }
+        }
+      }
+    },
+    "dates": {
+      "type": "array",
+      "description": "Parsed dates in ISO 8601 format",
+      "items": {
+        "type": "object",
+        "required": ["span", "iso"],
+        "properties": {
+          "span": {
+            "type": "array",
+            "description": "Character offsets [start, end]",
+            "items": {"type": "integer", "minimum": 0},
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "iso": {
+            "type": "string",
+            "description": "ISO 8601 date or date range",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}"
+          }
+        }
+      }
+    },
+    "units": {
+      "type": "array",
+      "description": "Parsed numbers with units",
+      "items": {
+        "type": "object",
+        "required": ["span", "value"],
+        "properties": {
+          "span": {
+            "type": "array",
+            "description": "Character offsets [start, end]",
+            "items": {"type": "integer", "minimum": 0},
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "value": {
+            "type": "number",
+            "description": "Numeric value"
+          },
+          "unit": {
+            "type": ["string", "null"],
+            "description": "Unit of measurement (USD, km, etc.) or null"
+          }
+        }
+      }
+    },
+    "wh_role": {
+      "type": "string",
+      "description": "WH-word indicating query type",
+      "enum": ["what", "which", "who", "where", "when", "how-many", "how-much", "why", "how", "yn"]
+    },
+    "lang": {
+      "type": "string",
+      "description": "Language code",
+      "pattern": "^[a-z]{2}$"
+    },
+    "needs_clarification": {
+      "type": "boolean",
+      "description": "True if context is insufficient"
+    },
+    "missing": {
+      "type": "array",
+      "description": "What information is missing if needs_clarification is true",
+      "items": {"type": "string"}
+    },
+    "alternatives": {
+      "type": "array",
+      "description": "Alternative interpretations if ambiguous",
+      "items": {
+        "type": "object",
+        "required": ["text", "confidence"],
+        "properties": {
+          "text": {"type": "string"},
+          "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+        }
+      }
+    }
+  }
+}

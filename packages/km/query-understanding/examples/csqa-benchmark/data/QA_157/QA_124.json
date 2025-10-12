@@ -1,0 +1,415 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q27470057"
+  ], 
+  "relations": [
+   "P681"
+  ], 
+  "type_list": [
+   "Q15989253"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is a component of TMAO reductase III (TorYZ), cytochrome c-type subunit    NRG857_09390 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q14349455"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14349455"
+  ], 
+  "utterance": "membrane", 
+  "active_set": [
+   "(Q27470057,P681,c(Q15989253))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q27470057"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P688"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which nucleic acid sequence encodes TMAO reductase III (TorYZ), cytochrome c-type subunit    NRG857_09390 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q23102939"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23102939"
+  ], 
+  "utterance": "TMAO reductase III (TorYZ), cytochrome c-type subunit    NRG857_09390", 
+  "active_set": [
+   "(c(Q863908),P688,Q27470057)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q27470057"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P682"
+  ], 
+  "type_list": [
+   "Q1057"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which metabolic process is TMAO reductase III (TorYZ), cytochrome c-type subunit    NRG857_09390 involved in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q14349764"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14349764"
+  ], 
+  "utterance": "oxidation-reduction process", 
+  "active_set": [
+   "(Q27470057,P682,c(Q1057))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P682"
+  ], 
+  "count_ques_sub_type": 8, 
+  "type_list": [
+   "Q1057", 
+   "Q181394"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which metabolic processes are lesser number of nutrients involved in than that metabolic process ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q14864889", 
+   "Q14907628", 
+   "Q14913194", 
+   "Q22274727", 
+   "Q22251129", 
+   "Q14905693", 
+   "Q14860777", 
+   "Q21134382", 
+   "Q21097138", 
+   "Q14819379", 
+   "Q21759902", 
+   "Q21133617", 
+   "Q133895", 
+   "Q21157940", 
+   "Q21116483", 
+   "Q14863351", 
+   "Q21102358", 
+   "Q21114210", 
+   "Q14907178", 
+   "Q21121151", 
+   "Q14880758", 
+   "Q21761098", 
+   "Q14762260", 
+   "Q22275051", 
+   "Q21100626", 
+   "Q14913439", 
+   "Q14916189", 
+   "Q14349667", 
+   "Q21159531", 
+   "Q21111970", 
+   "Q898365", 
+   "Q22274640", 
+   "Q22279483", 
+   "Q21119973", 
+   "Q14865941", 
+   "Q22282595", 
+   "Q14907180", 
+   "Q14907181", 
+   "Q14905125", 
+   "Q21096256", 
+   "Q14863432", 
+   "Q14902250", 
+   "Q21124879", 
+   "Q14909347", 
+   "Q15313450", 
+   "Q179924", 
+   "Q21101220", 
+   "Q21095286", 
+   "Q14863986", 
+   "Q14358591", 
+   "Q838181", 
+   "Q21116485", 
+   "Q14859896", 
+   "Q21103172", 
+   "Q22276072", 
+   "Q14914233", 
+   "Q14897831", 
+   "Q14645736", 
+   "Q14864262", 
+   "Q14859628", 
+   "Q14819787", 
+   "Q21119193", 
+   "Q22274791", 
+   "Q14819781", 
+   "Q22279537", 
+   "Q22283508", 
+   "Q14327719", 
+   "Q22279533", 
+   "Q21124620", 
+   "Q14860507", 
+   "Q21112195", 
+   "Q14890104", 
+   "Q14864417", 
+   "Q14864414", 
+   "Q21759328", 
+   "Q900386", 
+   "Q14912265", 
+   "Q21760838"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q22251129", 
+   "Q14905693", 
+   "Q133895"
+  ], 
+  "utterance": "proteolysis in other organism, translational initiation, tricarboxylic acid cycle", 
+  "active_set": [
+   "(c(Q181394),P682,c(Q1057))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q27470057"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P680"
+  ], 
+  "type_list": [
+   "Q44424"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which the chemical bonds that represents the molecular function of TMAO reductase III (TorYZ), cytochrome c-type subunit    NRG857_09390 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q13667380", 
+   "Q14358439"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q13667380", 
+   "Q14358439"
+  ], 
+  "utterance": "metal ion binding, iron ion binding", 
+  "active_set": [
+   "(Q27470057,P680,c(Q44424))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q24137876"
+  ], 
+  "relations": [
+   "P680"
+  ], 
+  "type_list": [
+   "Q181394"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Do putative DNA-binding transcriptional regulator    b3872 have molecular function as those chemical bonds ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q24137876,P680,Q13667380)", 
+   "(Q24137876,P680,Q14358439)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q23102939"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P703"
+  ], 
+  "type_list": [
+   "Q631147"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which taxon does TMAO reductase III (TorYZ), cytochrome c-type subunit    NRG857_09390 belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21102934"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21102934"
+  ], 
+  "utterance": "Escherichia coli O83:H1 str. NRG 857C", 
+  "active_set": [
+   "(Q23102939,P703,c(Q631147))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q22234908"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q631147"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about ESX-5 type VII secretion system protein EccA    Rv1798?"
+ }, 
+ {
+  "all_entities": [
+   "Q21102987"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21102987"
+  ], 
+  "utterance": "Mycobacterium tuberculosis H37Rv", 
+  "active_set": [
+   "(Q22234908,P703,c(Q631147))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q21102987", 
+   "Q22135442"
+  ], 
+  "relations": [
+   "P703"
+  ], 
+  "type_list": [
+   "Q181394"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Is serine hydroxymethyltransferase    ECIAI39_2754 a part of the taxon that infraspecific name ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q22135442,P703,Q21102987)"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Mult. entity type", 
+  "type_list": [
+   "Q15989253", 
+   "Q5058355", 
+   "Q234460"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P361"
+  ], 
+  "count_ques_sub_type": 4, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which parts are exactly 1 cellular components or texts a component of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q22328948", 
+   "Q22327470", 
+   "Q165963", 
+   "Q40260"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q22328948", 
+   "Q165963", 
+   "Q22327470"
+  ], 
+  "utterance": "virion, plastid, mitochondrion-associated adherens complex", 
+  "active_set": [
+   "(c(Q5058355)|c(Q234460),P361,c(Q15989253))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q24722427"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q181394"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Potassium channel domain?"
+ }, 
+ {
+  "all_entities": [
+   "Q7390712"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7390712"
+  ], 
+  "utterance": "Potassium channel, calcium-activated, SK", 
+  "active_set": [
+   "(Q24722427,P361,c(Q181394))"
+  ]
+ }
+]

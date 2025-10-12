@@ -1,0 +1,447 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q4141511"
+  ], 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territory is the birthplace of Paul Nadar ?"
+ }, 
+ {
+  "all_entities": [
+   "Q90"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q90"
+  ], 
+  "utterance": "Paris", 
+  "active_set": [
+   "(Q4141511,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q4141511"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the profession of Paul Nadar ?"
+ }, 
+ {
+  "all_entities": [
+   "Q33231"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q33231"
+  ], 
+  "utterance": "photographer", 
+  "active_set": [
+   "(Q4141511,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q4141511"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P22"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which male person was the parent of Paul Nadar ?"
+ }, 
+ {
+  "all_entities": [
+   "Q40116"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q40116"
+  ], 
+  "utterance": "Nadar", 
+  "active_set": [
+   "(Q4141511,P22,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q40116"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P119"
+  ], 
+  "type_list": [
+   "Q39614"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which cemetery is the resting place of that person ?"
+ }, 
+ {
+  "all_entities": [
+   "Q311"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q311"
+  ], 
+  "utterance": "P\u00e8re Lachaise Cemetery", 
+  "active_set": [
+   "(Q40116,P119,c(Q39614))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, one direct and one indirect, subject is indirect", 
+  "entities_in_utterance": [
+   "Q311", 
+   "Q552777"
+  ], 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 2, 
+  "utterance": "Is that cemetery situated in Eichstruth ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q311,P17,Q552777)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, all direct, 2 are query entities", 
+  "entities_in_utterance": [
+   "Q40116", 
+   "Q16512842", 
+   "Q1868552"
+  ], 
+  "relations": [
+   "P108"
+  ], 
+  "type_list": [
+   "Q1002697"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 4, 
+  "utterance": "Does Nadar work for Gaceta de Catalu\u00f1a and local newspaper ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q40116,P108,Q16512842)", 
+   "(Q40116,P108,Q1868552)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q33231", 
+   "Q10421658"
+  ], 
+  "relations": [
+   "P425"
+  ], 
+  "type_list": [
+   "Q735"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Does Atlantis have photographer as thier associated field of occupation ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q33231,P425,Q10421658)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P669"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q79007", 
+   "Q39614"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many streets are approximately 1 cemetery located on ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q2921810", 
+   "Q2921989", 
+   "Q2873818"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "3", 
+  "active_set": [
+   "(c(Q39614),P669,c(Q79007))"
+  ]
+ }, 
+ {
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators", 
+  "entities_in_utterance": [
+   "Q311"
+  ], 
+  "relations": [
+   "P669"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q79007", 
+   "Q34442"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many streets and roads are P\u00e8re Lachaise Cemetery located on ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q3452562", 
+   "Q2921989"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1 streets and 1 roads", 
+  "active_set": [
+   "(Q311,P669,c(Q79007))", 
+   "(Q311,P669,c(Q34442))"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Mult. entity type", 
+  "entities_in_utterance": [
+   "Q311", 
+   "Q2866149"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P138"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many people are namesakes of P\u00e8re Lachaise Cemetery or Picasso's Arenas ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q5593", 
+   "Q960159"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(Q311,P138,c(Q502895))", 
+   "(Q2866149,P138,c(Q502895))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q7708755", 
+   "Q311"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P17"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are P\u00e8re Lachaise Cemetery or Tha Ngon present in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q142", 
+   "Q819"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q142", 
+   "Q819"
+  ], 
+  "utterance": "France, Laos", 
+  "active_set": [
+   "OR((Q311,P17,c(Q15617994)), (Q7708755,P17,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q142"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P137"
+  ], 
+  "type_list": [
+   "Q811430"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which constructions can be described as facility operator of France ?"
+ }, 
+ {
+  "all_entities": [
+   "Q653784", 
+   "Q578060", 
+   "Q554046"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q653784", 
+   "Q578060", 
+   "Q554046"
+  ], 
+  "utterance": "Embassy of France, Ottawa, Longwood House, Embassy of France, Berlin", 
+  "active_set": [
+   "(c(Q811430),P137,Q142)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Mult. Entity", 
+  "entities_in_utterance": [
+   "Q653784", 
+   "Q578060", 
+   "Q554046"
+  ], 
+  "sec_ques_sub_type": 3, 
+  "relations": [
+   "P137"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territories can manage those constructions ?"
+ }, 
+ {
+  "all_entities": [
+   "Q142", 
+   "Q142", 
+   "Q142"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q142", 
+   "Q142", 
+   "Q142"
+  ], 
+  "utterance": "France", 
+  "active_set": [
+   "(Q653784,P137,c(Q15617994))", 
+   "(Q578060,P137,c(Q15617994))", 
+   "(Q554046,P137,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q142"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P264"
+  ], 
+  "type_list": [
+   "Q2031291"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which release has that administrative territory as its recording sponsor ?"
+ }, 
+ {
+  "all_entities": [
+   "Q7707947"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7707947"
+  ], 
+  "utterance": "Texas Rock and Roll", 
+  "active_set": [
+   "(c(Q2031291),P264,Q142)", 
+   "(c(Q2031291),P264,Q142)", 
+   "(c(Q2031291),P264,Q142)"
+  ]
+ }
+]

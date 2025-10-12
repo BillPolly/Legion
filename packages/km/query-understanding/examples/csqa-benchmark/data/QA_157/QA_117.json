@@ -1,0 +1,62 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q12057614"
+  ], 
+  "relations": [
+   "P184"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which person was the doctoral advisor of Charles H. Fernald ?"
+ }, 
+ {
+  "all_entities": [
+   "Q122972"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q122972"
+  ], 
+  "utterance": "Louis Agassiz", 
+  "active_set": [
+   "(Q12057614,P184,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q122972"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P40"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which person is a successor of that one ?"
+ }, 
+ {
+  "all_entities": [
+   "Q122968"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q122968"
+  ], 
+  "utterance": "Alexander Emanuel Agassiz", 
+  "active_set": [
+   "(Q122972,P40,c(Q502895))"
+  ]
+ }
+]

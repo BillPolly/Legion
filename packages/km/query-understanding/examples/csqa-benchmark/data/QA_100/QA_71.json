@@ -1,0 +1,412 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q5334492"
+  ], 
+  "relations": [
+   "P241"
+  ], 
+  "type_list": [
+   "Q781132"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which military branch was Ed Albosta a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q9212"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q9212"
+  ], 
+  "utterance": "United States Army", 
+  "active_set": [
+   "(Q5334492,P241,c(Q781132))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q5334492"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P607"
+  ], 
+  "type_list": [
+   "Q198"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What battle was Ed Albosta a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q362"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q362"
+  ], 
+  "utterance": "World War II", 
+  "active_set": [
+   "(Q5334492,P607,c(Q198))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q5334492"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q151885"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which concept has Ed Albosta as his/her 's career ?"
+ }, 
+ {
+  "all_entities": [
+   "Q10871364"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q10871364"
+  ], 
+  "utterance": "baseball player", 
+  "active_set": [
+   "(Q5334492,P106,c(Q151885))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q5334492"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is Ed Albosta an inhabitant of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q30"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "utterance": "United States of America", 
+  "active_set": [
+   "(Q5334492,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P859"
+  ], 
+  "type_list": [
+   "Q939954"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which Magnetic confinement fusion was sponsored by that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q191788"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q191788"
+  ], 
+  "utterance": "ITER", 
+  "active_set": [
+   "(c(Q939954),P859,Q30)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1313"
+  ], 
+  "type_list": [
+   "Q895526"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which authority organ serves as the political office that is fulfilled by the head of the government of United States of America ?"
+ }, 
+ {
+  "all_entities": [
+   "Q11696"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q11696"
+  ], 
+  "utterance": "President of the United States of America", 
+  "active_set": [
+   "(Q30,P1313,c(Q895526))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q191788"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is ITER situated in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q142"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q142"
+  ], 
+  "utterance": "France", 
+  "active_set": [
+   "(Q191788,P17,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q5759720"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about Hightower Falls?"
+ }, 
+ {
+  "all_entities": [
+   "Q30"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "utterance": "United States of America", 
+  "active_set": [
+   "(Q5759720,P17,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which administrative territories have tactful political relations with min number of administrative territories ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q702", 
+   "Q804", 
+   "Q262", 
+   "Q265", 
+   "Q712", 
+   "Q837", 
+   "Q657", 
+   "Q792", 
+   "Q986", 
+   "Q242", 
+   "Q811", 
+   "Q924", 
+   "Q29999", 
+   "Q854", 
+   "Q819", 
+   "Q424", 
+   "Q730", 
+   "Q232", 
+   "Q921", 
+   "Q1027", 
+   "Q1020", 
+   "Q1028", 
+   "Q786", 
+   "Q1036", 
+   "Q1037", 
+   "Q974", 
+   "Q1032", 
+   "Q1030", 
+   "Q965", 
+   "Q967", 
+   "Q963", 
+   "Q697", 
+   "Q695", 
+   "Q115", 
+   "Q117", 
+   "Q754", 
+   "Q912", 
+   "Q1007", 
+   "Q1006", 
+   "Q1005", 
+   "Q1009", 
+   "Q1008", 
+   "Q971", 
+   "Q683", 
+   "Q686", 
+   "Q836", 
+   "Q774", 
+   "Q817", 
+   "Q1019", 
+   "Q945", 
+   "Q678", 
+   "Q33788"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q29999", 
+   "Q786", 
+   "Q924"
+  ], 
+  "utterance": "Kingdom of the Netherlands, Dominican Republic, Tanzania", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P840"
+  ], 
+  "type_list": [
+   "Q166142"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which applications have their setting located at United States of America ?"
+ }, 
+ {
+  "all_entities": [
+   "Q633046", 
+   "Q17183996", 
+   "Q1133204", 
+   "Q166226", 
+   "Q791439", 
+   "Q728061", 
+   "Q1092945", 
+   "Q811024", 
+   "Q206653", 
+   "Q648128", 
+   "Q791454", 
+   "Q4104"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q728061", 
+   "Q1133204", 
+   "Q791439"
+  ], 
+  "utterance": "Duke Nukem 3D, Street Fighter II: The World Warrior, Battlefield 1942", 
+  "active_set": [
+   "(c(Q166142),P840,Q30)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q728061", 
+   "Q1133204", 
+   "Q791439"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P136"
+  ], 
+  "type_list": [
+   "Q483394"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What can be considered as category for Duke Nukem 3D, Street Fighter II: The World Warrior and Battlefield 1942 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q185029", 
+   "Q846224", 
+   "Q185029"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q185029", 
+   "Q846224", 
+   "Q185029"
+  ], 
+  "utterance": "fighting game for 2nd, first-person shooter for 1st, 3rd", 
+  "active_set": [
+   "(Q728061,P136,c(Q483394))", 
+   "(Q1133204,P136,c(Q483394))", 
+   "(Q791439,P136,c(Q483394))"
+  ]
+ }
+]

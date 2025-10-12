@@ -1,0 +1,308 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q5549692"
+  ], 
+  "relations": [
+   "P241"
+  ], 
+  "type_list": [
+   "Q781132"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which military branch did Gerald Wills belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q222595"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q222595"
+  ], 
+  "utterance": "British Army", 
+  "active_set": [
+   "(Q5549692,P241,c(Q781132))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q5549692"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P39"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What was the position held by Gerald Wills ?"
+ }, 
+ {
+  "all_entities": [
+   "Q16707842"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q16707842"
+  ], 
+  "utterance": "Member of Parliament in the United Kingdom", 
+  "active_set": [
+   "(Q5549692,P39,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q16707842", 
+   "Q11409027"
+  ], 
+  "relations": [
+   "P39"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Was Hirotaka Urabe responsible for occupying the position of that occupation ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q11409027,P39,Q16707842)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q5549692", 
+   "Q145"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Is United Kingdom the country of citizenship of Gerald Wills ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q5549692,P27,Q145)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q16707842"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people have Member of Parliament in the United Kingdom as his/her means of employment ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21548870", 
+   "Q24292009", 
+   "Q24573112", 
+   "Q21856725"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q24573112", 
+   "Q21856725", 
+   "Q24292009"
+  ], 
+  "utterance": "David Lewis, Edward Stanley, Sir James Hamlyn-Williams, 3rd Baronet", 
+  "active_set": [
+   "(c(Q502895),P106,Q16707842)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q24573112", 
+   "Q21856725", 
+   "Q24292009"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which occupations have David Lewis, Edward Stanley and Sir James Hamlyn-Williams, 3rd Baronet as his/her 's career ?"
+ }, 
+ {
+  "all_entities": [
+   "Q16707842", 
+   "Q82955", 
+   "Q16707842", 
+   "Q82955", 
+   "Q16707842"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q16707842", 
+   "Q16707842", 
+   "Q16707842"
+  ], 
+  "utterance": "Member of Parliament in the United Kingdom", 
+  "active_set": [
+   "(Q24573112,P106,c(Q12737077))", 
+   "(Q21856725,P106,c(Q12737077))", 
+   "(Q24292009,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q16707842"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1001"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory comes under the supervision of that occupation ?"
+ }, 
+ {
+  "all_entities": [
+   "Q145"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q145"
+  ], 
+  "utterance": "United Kingdom", 
+  "active_set": [
+   "(Q16707842,P1001,c(Q15617994))", 
+   "(Q16707842,P1001,c(Q15617994))", 
+   "(Q16707842,P1001,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which administrative territories have diplomatic relations with around 23 administrative territories ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q801", 
+   "Q805", 
+   "Q142", 
+   "Q159", 
+   "Q30", 
+   "Q929", 
+   "Q114", 
+   "Q858", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30", 
+   "Q159", 
+   "Q142"
+  ], 
+  "utterance": "United States of America, Russia, France", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q159"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P463"
+  ], 
+  "type_list": [
+   "Q43229"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What organizations had Russia as their member ?"
+ }, 
+ {
+  "all_entities": [
+   "Q191384", 
+   "Q7779", 
+   "Q656801", 
+   "Q380340", 
+   "Q485207", 
+   "Q7825", 
+   "Q170481", 
+   "Q243630", 
+   "Q827525"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7779", 
+   "Q7825", 
+   "Q191384"
+  ], 
+  "utterance": "Commonwealth of Independent States, World Trade Organization, International Bank for Reconstruction and Development", 
+  "active_set": [
+   "(Q159,P463,c(Q43229))"
+  ]
+ }
+]

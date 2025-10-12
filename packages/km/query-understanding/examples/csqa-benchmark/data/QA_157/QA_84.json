@@ -1,0 +1,251 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q7183761"
+  ], 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is the job of Philip Honywood ?"
+ }, 
+ {
+  "all_entities": [
+   "Q82955"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q82955"
+  ], 
+  "utterance": "politician", 
+  "active_set": [
+   "(Q7183761,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q82955"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P39"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who was responsible for occupying the position of that occupation ?"
+ }, 
+ {
+  "all_entities": [
+   "Q26215129"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q26215129"
+  ], 
+  "utterance": "Morteza Azari", 
+  "active_set": [
+   "(c(Q502895),P39,Q82955)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q7183761"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q7275"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which state is Philip Honywood an inhabitant of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q161885"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q161885"
+  ], 
+  "utterance": "Kingdom of Great Britain", 
+  "active_set": [
+   "(Q7183761,P27,c(Q7275))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q345749"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q7275"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Filippo Corridoni?"
+ }, 
+ {
+  "all_entities": [
+   "Q172579"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q172579"
+  ], 
+  "utterance": "Kingdom of Italy", 
+  "active_set": [
+   "(Q345749,P27,c(Q7275))"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Multiple_Relation", 
+  "type_list": [
+   "Q34770"
+  ], 
+  "entities_in_utterance": [
+   "Q24670738", 
+   "Q7183761"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P1412", 
+   "P364"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What are spoken by Philip Honywood and are considered to be the original language of creation of Mob as tumor suppressor is activated by Hippo kinase for growth inhibition in Drosophila ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1860"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1860"
+  ], 
+  "utterance": "English", 
+  "active_set": [
+   "AND((Q7183761,P1412,c(Q34770)), (Q24670738,P364,c(Q34770)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1860"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P361"
+  ], 
+  "type_list": [
+   "Q5962346"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which classification schemes are that language a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1346342", 
+   "Q5329170"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1346342", 
+   "Q5329170"
+  ], 
+  "utterance": "Anglic languages, Anglo-Frisian languages", 
+  "active_set": [
+   "(Q1860,P361,c(Q5962346))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q20829"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q5962346"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about Tsetsaut?"
+ }, 
+ {
+  "all_entities": [
+   "Q20738", 
+   "Q26986"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q20738", 
+   "Q26986"
+  ], 
+  "utterance": "Northern Athabaskan languages, Na-Dene languages", 
+  "active_set": [
+   "(Q20829,P361,c(Q5962346))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q20012148", 
+   "Q345749"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P19"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories were Filippo Corridoni or Vincenzo Noto born ?"
+ }, 
+ {
+  "all_entities": [
+   "Q73690", 
+   "Q496914"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q73690", 
+   "Q496914"
+  ], 
+  "utterance": "Corridonia, Bisacquino", 
+  "active_set": [
+   "OR((Q345749,P19,c(Q15617994)), (Q20012148,P19,c(Q15617994)))"
+  ]
+ }
+]

@@ -1,0 +1,799 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q223854"
+  ], 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territory was Jackson Rathbone born in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q334"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q334"
+  ], 
+  "utterance": "Singapore", 
+  "active_set": [
+   "(Q223854,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q334"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P47"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territories are bordered by that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q833", 
+   "Q252"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q833", 
+   "Q252"
+  ], 
+  "utterance": "Malaysia, Indonesia", 
+  "active_set": [
+   "(Q334,P47,c(Q15617994))"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators", 
+  "entities_in_utterance": [
+   "Q833"
+  ], 
+  "relations": [
+   "P127"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q483110", 
+   "Q811979"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many stadia or architectural structures belongs to Malaysia ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q2014912", 
+   "Q635363"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(c(Q483110),P127,Q833)", 
+   "(c(Q811979),P127,Q833)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q986"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which administrative territories have diplomatic relations with greater number of administrative territories than Eritrea ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q801", 
+   "Q800", 
+   "Q805", 
+   "Q419", 
+   "Q668", 
+   "Q414", 
+   "Q142", 
+   "Q55", 
+   "Q145", 
+   "Q148", 
+   "Q783", 
+   "Q37", 
+   "Q711", 
+   "Q717", 
+   "Q252", 
+   "Q399", 
+   "Q398", 
+   "Q403", 
+   "Q258", 
+   "Q45", 
+   "Q159", 
+   "Q43", 
+   "Q41", 
+   "Q155", 
+   "Q790", 
+   "Q796", 
+   "Q794", 
+   "Q954", 
+   "Q889", 
+   "Q884", 
+   "Q958", 
+   "Q881", 
+   "Q822", 
+   "Q241", 
+   "Q244", 
+   "Q33", 
+   "Q32", 
+   "Q31", 
+   "Q30", 
+   "Q36", 
+   "Q34", 
+   "Q928", 
+   "Q929", 
+   "Q39", 
+   "Q38", 
+   "Q739", 
+   "Q423", 
+   "Q983", 
+   "Q851", 
+   "Q733", 
+   "Q734", 
+   "Q736", 
+   "Q236", 
+   "Q230", 
+   "Q233", 
+   "Q238", 
+   "Q20", 
+   "Q1045", 
+   "Q1041", 
+   "Q27", 
+   "Q28", 
+   "Q1049", 
+   "Q189", 
+   "Q843", 
+   "Q842", 
+   "Q184", 
+   "Q1029", 
+   "Q228", 
+   "Q227", 
+   "Q225", 
+   "Q224", 
+   "Q222", 
+   "Q221", 
+   "Q96", 
+   "Q229", 
+   "Q347", 
+   "Q17", 
+   "Q902", 
+   "Q1033", 
+   "Q191", 
+   "Q962", 
+   "Q298", 
+   "Q114", 
+   "Q750", 
+   "Q212", 
+   "Q213", 
+   "Q211", 
+   "Q217", 
+   "Q214", 
+   "Q215", 
+   "Q218", 
+   "Q219", 
+   "Q917", 
+   "Q916", 
+   "Q833", 
+   "Q977", 
+   "Q34020", 
+   "Q574", 
+   "Q79", 
+   "Q77", 
+   "Q858", 
+   "Q878", 
+   "Q948", 
+   "Q810", 
+   "Q1016", 
+   "Q1011", 
+   "Q29", 
+   "Q869", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q38", 
+   "Q155", 
+   "Q30"
+  ], 
+  "utterance": "Italy, Brazil, United States of America", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q962"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And how about Benin?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q801", 
+   "Q805", 
+   "Q419", 
+   "Q668", 
+   "Q414", 
+   "Q142", 
+   "Q145", 
+   "Q148", 
+   "Q37", 
+   "Q711", 
+   "Q717", 
+   "Q252", 
+   "Q399", 
+   "Q403", 
+   "Q258", 
+   "Q45", 
+   "Q159", 
+   "Q43", 
+   "Q41", 
+   "Q155", 
+   "Q796", 
+   "Q794", 
+   "Q889", 
+   "Q884", 
+   "Q881", 
+   "Q822", 
+   "Q241", 
+   "Q32", 
+   "Q31", 
+   "Q30", 
+   "Q36", 
+   "Q34", 
+   "Q928", 
+   "Q929", 
+   "Q39", 
+   "Q38", 
+   "Q739", 
+   "Q423", 
+   "Q733", 
+   "Q230", 
+   "Q27", 
+   "Q28", 
+   "Q843", 
+   "Q184", 
+   "Q228", 
+   "Q227", 
+   "Q225", 
+   "Q222", 
+   "Q96", 
+   "Q347", 
+   "Q17", 
+   "Q902", 
+   "Q298", 
+   "Q114", 
+   "Q212", 
+   "Q213", 
+   "Q218", 
+   "Q916", 
+   "Q79", 
+   "Q77", 
+   "Q858", 
+   "Q948", 
+   "Q1016", 
+   "Q1011", 
+   "Q29", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q38", 
+   "Q155", 
+   "Q30"
+  ], 
+  "utterance": "Italy, Brazil, United States of America", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q781"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q1048835", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many political territories have diplomatic relations with lesser number of administrative territories than Antigua and Barbuda ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q685", 
+   "Q691"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q1048835", 
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And what about Germany?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q1000", 
+   "Q40", 
+   "Q781", 
+   "Q778", 
+   "Q408", 
+   "Q769", 
+   "Q685", 
+   "Q35", 
+   "Q691", 
+   "Q16", 
+   "Q664", 
+   "Q766"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "12", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q155"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P138"
+  ], 
+  "type_list": [
+   "Q16521"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which taxons are the etymology of Brazil ?"
+ }, 
+ {
+  "all_entities": [
+   "Q216469", 
+   "Q14080"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q216469", 
+   "Q14080"
+  ], 
+  "utterance": "Caesalpinia echinata, Arecaceae", 
+  "active_set": [
+   "(Q155,P138,c(Q16521))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q216469", 
+   "Q14080"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P138"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which administrative territories have Caesalpinia echinata and Arecaceae as their namesake ?"
+ }, 
+ {
+  "all_entities": [
+   "Q155"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q155"
+  ], 
+  "utterance": "Brazil", 
+  "active_set": [
+   "(c(Q15617994),P138,Q216469)", 
+   "(c(Q15617994),P138,Q14080)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q236"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories have diplomatic relationships with more number of administrative territories than Montenegro ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q801", 
+   "Q805", 
+   "Q668", 
+   "Q414", 
+   "Q142", 
+   "Q145", 
+   "Q262", 
+   "Q148", 
+   "Q37", 
+   "Q711", 
+   "Q252", 
+   "Q399", 
+   "Q403", 
+   "Q258", 
+   "Q45", 
+   "Q159", 
+   "Q43", 
+   "Q41", 
+   "Q155", 
+   "Q796", 
+   "Q794", 
+   "Q954", 
+   "Q889", 
+   "Q884", 
+   "Q881", 
+   "Q822", 
+   "Q241", 
+   "Q32", 
+   "Q31", 
+   "Q30", 
+   "Q36", 
+   "Q34", 
+   "Q928", 
+   "Q39", 
+   "Q38", 
+   "Q739", 
+   "Q423", 
+   "Q851", 
+   "Q27", 
+   "Q1049", 
+   "Q843", 
+   "Q228", 
+   "Q227", 
+   "Q224", 
+   "Q222", 
+   "Q347", 
+   "Q17", 
+   "Q974", 
+   "Q1033", 
+   "Q298", 
+   "Q115", 
+   "Q114", 
+   "Q212", 
+   "Q213", 
+   "Q211", 
+   "Q215", 
+   "Q916", 
+   "Q79", 
+   "Q810", 
+   "Q1016", 
+   "Q1011", 
+   "Q29", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "63", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q191"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about Estonia?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q801", 
+   "Q805", 
+   "Q668", 
+   "Q414", 
+   "Q142", 
+   "Q145", 
+   "Q262", 
+   "Q148", 
+   "Q37", 
+   "Q711", 
+   "Q252", 
+   "Q399", 
+   "Q403", 
+   "Q258", 
+   "Q45", 
+   "Q159", 
+   "Q43", 
+   "Q41", 
+   "Q155", 
+   "Q796", 
+   "Q794", 
+   "Q954", 
+   "Q889", 
+   "Q884", 
+   "Q881", 
+   "Q822", 
+   "Q241", 
+   "Q32", 
+   "Q31", 
+   "Q30", 
+   "Q36", 
+   "Q34", 
+   "Q928", 
+   "Q39", 
+   "Q38", 
+   "Q739", 
+   "Q423", 
+   "Q851", 
+   "Q27", 
+   "Q1049", 
+   "Q843", 
+   "Q228", 
+   "Q227", 
+   "Q224", 
+   "Q222", 
+   "Q347", 
+   "Q17", 
+   "Q974", 
+   "Q1033", 
+   "Q298", 
+   "Q115", 
+   "Q114", 
+   "Q212", 
+   "Q213", 
+   "Q211", 
+   "Q215", 
+   "Q916", 
+   "Q79", 
+   "Q810", 
+   "Q1016", 
+   "Q1011", 
+   "Q29", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "63", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q26447620", 
+   "Q223854"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27", 
+   "P17"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are Jackson Rathbone an inhabitant of or are York Lodge located in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q30", 
+   "Q145"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30", 
+   "Q145"
+  ], 
+  "utterance": "United States of America, United Kingdom", 
+  "active_set": [
+   "OR((Q223854,P27,c(Q15617994)), (Q26447620,P17,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Mult. entity type", 
+  "type_list": [
+   "Q15617994", 
+   "Q17335294", 
+   "Q192350"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P1001"
+  ], 
+  "count_ques_sub_type": 3, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which administrative territories come under the supervision of max number of coats of arms or ministries ?"
+ }, 
+ {
+  "all_entities": [
+   "Q30"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "utterance": "United States of America", 
+  "active_set": [
+   "(c(Q17335294)|c(Q192350),P1001,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, one direct and one indirect, subject is indirect", 
+  "entities_in_utterance": [
+   "Q30", 
+   "Q5178008"
+  ], 
+  "relations": [
+   "P47"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 2, 
+  "utterance": "Does Coupland Independent School District have a shared border with that one ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q30,P47,Q5178008)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "entities_in_utterance": [
+   "Q22681937", 
+   "Q334"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P530", 
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which political territories have diplomatic relationships with Singapore or are Joshua Stritzinger a civilian of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q408", 
+   "Q16", 
+   "Q183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q408", 
+   "Q16", 
+   "Q183"
+  ], 
+  "utterance": "Australia, Canada, Germany", 
+  "active_set": [
+   "OR((Q334,P530,c(Q1048835)), (Q22681937,P27,c(Q1048835)))"
+  ]
+ }
+]

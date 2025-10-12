@@ -1,0 +1,498 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1240501"
+  ], 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q151885"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is the job of Vladimir Sukharev ?"
+ }, 
+ {
+  "all_entities": [
+   "Q11513337"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q11513337"
+  ], 
+  "utterance": "athletics competitor", 
+  "active_set": [
+   "(Q1240501,P106,c(Q151885))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1240501"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which sex does that person have ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "utterance": "male", 
+  "active_set": [
+   "(Q11513337,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P136"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people have that sex as their type ?"
+ }, 
+ {
+  "all_entities": [
+   "Q19796723", 
+   "Q23766532", 
+   "Q313288", 
+   "Q18221191"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q313288", 
+   "Q18221191", 
+   "Q23766532"
+  ], 
+  "utterance": "Augustus Pugin, Alessandro Gregorio Capponi, Pierre Laviron", 
+  "active_set": [
+   "(c(Q502895),P136,Q6581097)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q313288", 
+   "Q18221191", 
+   "Q23766532"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What are the professions of Augustus Pugin, Alessandro Gregorio Capponi and Pierre Laviron ?"
+ }, 
+ {
+  "all_entities": [
+   "Q42973", 
+   "Q17145081", 
+   "Q3621491", 
+   "Q1281618"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q42973", 
+   "Q3621491", 
+   "Q17145081"
+  ], 
+  "utterance": "architect, archaeologist, museologist", 
+  "active_set": [
+   "(Q313288,P106,c(Q12737077))", 
+   "(Q18221191,P106,c(Q12737077))", 
+   "(Q23766532,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1240501"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P641"
+  ], 
+  "type_list": [
+   "Q31629"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What was the type of sport that Vladimir Sukharev was a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q542"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q542"
+  ], 
+  "utterance": "athletics", 
+  "active_set": [
+   "(Q1240501,P641,c(Q31629))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q313288"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P84"
+  ], 
+  "type_list": [
+   "Q16970"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which churches were designed by Augustus Pugin ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1357895", 
+   "Q20642155", 
+   "Q1638891", 
+   "Q1451262", 
+   "Q1897809", 
+   "Q1545350", 
+   "Q1138066", 
+   "Q1138085"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1638891", 
+   "Q1545350", 
+   "Q1138085"
+  ], 
+  "utterance": "St Mary's Cathedral, Newcastle upon Tyne, Nottingham Cathedral, St Chad's Cathedral", 
+  "active_set": [
+   "(c(Q16970),P84,Q313288)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1638891"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1435"
+  ], 
+  "type_list": [
+   "Q41176"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which building is the heritage status of that church ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q1638891"
+  ], 
+  "active_set": [
+   "(Q1638891,P1435,c(Q41176))", 
+   "(Q1545350,P1435,c(Q41176))", 
+   "(Q1138085,P1435,c(Q41176))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q1638891", 
+   "Q1545350", 
+   "Q1138085"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean St Mary's Cathedral, Newcastle upon Tyne ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "Yes"
+ }, 
+ {
+  "all_entities": [
+   "Q15700818"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q15700818"
+  ], 
+  "utterance": "Grade I listed building", 
+  "active_set": [
+   "(Q1638891,P1435,c(Q41176))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q56061"
+  ], 
+  "entities_in_utterance": [
+   "Q1170234", 
+   "Q18221191"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P20"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories did the expiration of Alessandro Gregorio Capponi or Ludovico di Caporiacco occur ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2683", 
+   "Q220"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2683", 
+   "Q220"
+  ], 
+  "utterance": "Parma, Rome", 
+  "active_set": [
+   "OR((Q18221191,P20,c(Q56061)), (Q1170234,P20,c(Q56061)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q220768"
+  ], 
+  "relations": [
+   "P937"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Does Giambattista Bodoni work at those administrative territories ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q220768,P937,Q2683)", 
+   "(Q220768,P937,Q220)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1170234"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is the native country of Ludovico di Caporiacco ?"
+ }, 
+ {
+  "all_entities": [
+   "Q38"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q38"
+  ], 
+  "utterance": "Italy", 
+  "active_set": [
+   "(Q1170234,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators|Indirect", 
+  "entities_in_utterance": [], 
+  "relations": [
+   "P276"
+  ], 
+  "count_ques_sub_type": 8, 
+  "type_list": [
+   "Q1344963", 
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many world championships and administrative territories are located at that administrative territory ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q677935", 
+   "Q2411088"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1 world championships and 1 administrative territories", 
+  "active_set": [
+   "(c(Q1344963),P276,Q38)", 
+   "(c(Q56061),P276,Q38)", 
+   "(c(Q1344963),P276,Q38)", 
+   "(c(Q56061),P276,Q38)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which administrative territories have a diplomatic relationship with approximately 14 administrative territories ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q801", 
+   "Q805", 
+   "Q668", 
+   "Q142", 
+   "Q145", 
+   "Q148", 
+   "Q403", 
+   "Q43", 
+   "Q17", 
+   "Q79", 
+   "Q1016", 
+   "Q1011", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q142", 
+   "Q953", 
+   "Q148"
+  ], 
+  "utterance": "France, Zambia, People's Republic of China", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q220"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P47"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territories share border with Rome ?"
+ }, 
+ {
+  "all_entities": [
+   "Q241693", 
+   "Q242710", 
+   "Q242637", 
+   "Q242558", 
+   "Q242513", 
+   "Q191115", 
+   "Q243364", 
+   "Q242926", 
+   "Q243188", 
+   "Q140255", 
+   "Q242965", 
+   "Q242942", 
+   "Q242105", 
+   "Q19326", 
+   "Q242661", 
+   "Q242120", 
+   "Q243172", 
+   "Q241733", 
+   "Q242703", 
+   "Q243133", 
+   "Q241911", 
+   "Q243311", 
+   "Q242998", 
+   "Q243497", 
+   "Q159605", 
+   "Q190963", 
+   "Q243168", 
+   "Q242645"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q242703", 
+   "Q243133", 
+   "Q242926"
+  ], 
+  "utterance": "Grottaferrata, Palestrina, Marino, Lazio", 
+  "active_set": [
+   "(Q220,P47,c(Q15617994))"
+  ]
+ }
+]

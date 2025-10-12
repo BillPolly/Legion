@@ -1,0 +1,495 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1599941"
+  ], 
+  "relations": [
+   "P108"
+  ], 
+  "type_list": [
+   "Q163740"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which nonprofit organization employs Heinz-Otto Kreiss ?"
+ }, 
+ {
+  "all_entities": [
+   "Q161562"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q161562"
+  ], 
+  "utterance": "California Institute of Technology", 
+  "active_set": [
+   "(Q1599941,P108,c(Q163740))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1599941"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P463"
+  ], 
+  "type_list": [
+   "Q811430"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which construction was that person a member of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q463303"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q463303"
+  ], 
+  "utterance": "American Academy of Arts and Sciences", 
+  "active_set": [
+   "(Q161562,P463,c(Q811430))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q463303"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P166"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people were honoured with that construction ?"
+ }, 
+ {
+  "all_entities": [
+   "Q4706834", 
+   "Q6829484"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q4706834", 
+   "Q6829484"
+  ], 
+  "utterance": "Alan Hastings, Michael Cosmopoulos", 
+  "active_set": [
+   "(c(Q502895),P166,Q463303)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Mult. Entity", 
+  "entities_in_utterance": [
+   "Q4706834", 
+   "Q6829484"
+  ], 
+  "sec_ques_sub_type": 3, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which occupations are the professions of those people ?"
+ }, 
+ {
+  "all_entities": [
+   "Q15839134", 
+   "Q4773904", 
+   "Q3621491"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q15839134", 
+   "Q4773904", 
+   "Q3621491"
+  ], 
+  "utterance": "ecologist, anthropologist, archaeologist", 
+  "active_set": [
+   "(Q4706834,P106,c(Q12737077))", 
+   "(Q6829484,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q4706834"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P101"
+  ], 
+  "type_list": [
+   "Q1047113"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which discipline does that person belong to ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q4706834"
+  ], 
+  "active_set": [
+   "(Q15839134,P101,c(Q1047113))", 
+   "(Q4773904,P101,c(Q1047113))", 
+   "(Q3621491,P101,c(Q1047113))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q15839134", 
+   "Q4773904", 
+   "Q3621491"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Alan Hastings ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "Yes"
+ }, 
+ {
+  "all_entities": [
+   "Q7782365"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7782365"
+  ], 
+  "utterance": "Theoretical ecology", 
+  "active_set": [
+   "(Q4706834,P101,c(Q1047113))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q7782365", 
+   "Q712025"
+  ], 
+  "relations": [
+   "P101"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Does Arthur Whitten Brown work in the domain of that special field ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q712025,P101,Q7782365)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q4702438", 
+   "Q1599941"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27", 
+   "P17"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are the native countriesof Heinz-Otto Kreiss or are Al-Hadar present in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q796", 
+   "Q34"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q796", 
+   "Q34"
+  ], 
+  "utterance": "Iraq, Sweden", 
+  "active_set": [
+   "OR((Q1599941,P27,c(Q15617994)), (Q4702438,P17,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q5820349", 
+   "Q6829484"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are Michael Cosmopoulos or Carl-Gustaf H\u00e5rdh an inhabitant of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q41", 
+   "Q34"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q41", 
+   "Q34"
+  ], 
+  "utterance": "Greece, Sweden", 
+  "active_set": [
+   "OR((Q6829484,P27,c(Q15617994)), (Q5820349,P27,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q313410"
+  ], 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q83620"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Are European route E55 present in those administrative territories ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q313410,P17,Q41)", 
+   "(Q313410,P17,Q34)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q1006"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories holds diplomatic relationship with approximately the same number of administrative territories as Guinea ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q702", 
+   "Q804", 
+   "Q800", 
+   "Q419", 
+   "Q668", 
+   "Q414", 
+   "Q55", 
+   "Q262", 
+   "Q783", 
+   "Q784", 
+   "Q265", 
+   "Q37", 
+   "Q712", 
+   "Q711", 
+   "Q710", 
+   "Q717", 
+   "Q837", 
+   "Q252", 
+   "Q399", 
+   "Q398", 
+   "Q657", 
+   "Q258", 
+   "Q45", 
+   "Q41", 
+   "Q792", 
+   "Q790", 
+   "Q796", 
+   "Q794", 
+   "Q954", 
+   "Q889", 
+   "Q884", 
+   "Q958", 
+   "Q881", 
+   "Q986", 
+   "Q822", 
+   "Q241", 
+   "Q242", 
+   "Q244", 
+   "Q811", 
+   "Q33", 
+   "Q32", 
+   "Q31", 
+   "Q924", 
+   "Q36", 
+   "Q34", 
+   "Q928", 
+   "Q929", 
+   "Q39", 
+   "Q739", 
+   "Q423", 
+   "Q983", 
+   "Q851", 
+   "Q733", 
+   "Q29999", 
+   "Q854", 
+   "Q734", 
+   "Q819", 
+   "Q424", 
+   "Q730", 
+   "Q1013", 
+   "Q236", 
+   "Q230", 
+   "Q232", 
+   "Q233", 
+   "Q238", 
+   "Q20", 
+   "Q1045", 
+   "Q1041", 
+   "Q27", 
+   "Q28", 
+   "Q921", 
+   "Q1049", 
+   "Q1027", 
+   "Q1020", 
+   "Q189", 
+   "Q843", 
+   "Q842", 
+   "Q184", 
+   "Q1029", 
+   "Q1028", 
+   "Q736", 
+   "Q786", 
+   "Q228", 
+   "Q227", 
+   "Q225", 
+   "Q224", 
+   "Q222", 
+   "Q221", 
+   "Q96", 
+   "Q229", 
+   "Q347", 
+   "Q902", 
+   "Q1036", 
+   "Q1037", 
+   "Q974", 
+   "Q1032", 
+   "Q1033", 
+   "Q1030", 
+   "Q191", 
+   "Q965", 
+   "Q967", 
+   "Q962", 
+   "Q963", 
+   "Q697", 
+   "Q298", 
+   "Q695", 
+   "Q115", 
+   "Q114", 
+   "Q117", 
+   "Q754", 
+   "Q750", 
+   "Q212", 
+   "Q213", 
+   "Q211", 
+   "Q217", 
+   "Q214", 
+   "Q215", 
+   "Q218", 
+   "Q219", 
+   "Q912", 
+   "Q917", 
+   "Q916", 
+   "Q1007", 
+   "Q1006", 
+   "Q1005", 
+   "Q833", 
+   "Q977", 
+   "Q1009", 
+   "Q1008", 
+   "Q971", 
+   "Q970", 
+   "Q683", 
+   "Q34020", 
+   "Q686", 
+   "Q836", 
+   "Q574", 
+   "Q874", 
+   "Q77", 
+   "Q858", 
+   "Q878", 
+   "Q774", 
+   "Q948", 
+   "Q817", 
+   "Q810", 
+   "Q1019", 
+   "Q1016", 
+   "Q945", 
+   "Q678", 
+   "Q29", 
+   "Q33788", 
+   "Q869", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "152", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994))"
+  ]
+ }
+]

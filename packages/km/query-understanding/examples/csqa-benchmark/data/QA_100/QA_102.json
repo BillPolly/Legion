@@ -1,0 +1,280 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q160260"
+  ], 
+  "relations": [
+   "P180"
+  ], 
+  "type_list": [
+   "Q6999"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which astronomical object is depicted in flag of New Zealand ?"
+ }, 
+ {
+  "all_entities": [
+   "Q10542"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q10542"
+  ], 
+  "utterance": "Crux", 
+  "active_set": [
+   "(Q160260,P180,c(Q6999))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q160260"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P462"
+  ], 
+  "type_list": [
+   "Q4373292"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which color is that flag associated with ?"
+ }, 
+ {
+  "all_entities": [
+   "Q23444"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23444"
+  ], 
+  "utterance": "white", 
+  "active_set": [
+   "(Q10542,P462,c(Q4373292))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q160260"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1001"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which political territory belongs to jurisdiction of that flag ?"
+ }, 
+ {
+  "all_entities": [
+   "Q664"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q664"
+  ], 
+  "utterance": "New Zealand", 
+  "active_set": [
+   "(Q23444,P1001,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q160260"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P163"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which political territory has its flag named that one ?"
+ }, 
+ {
+  "all_entities": [
+   "Q664"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q664"
+  ], 
+  "utterance": "New Zealand", 
+  "active_set": [
+   "(c(Q1048835),P163,Q664)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q664"
+  ], 
+  "relations": [
+   "P463"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q43229"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many organizations were New Zealand a member of ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q191384", 
+   "Q899770", 
+   "Q41550", 
+   "Q656801", 
+   "Q7825", 
+   "Q170481", 
+   "Q827525"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "7", 
+  "active_set": [
+   "(Q664,P463,c(Q43229))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q229"
+  ], 
+  "relations": [
+   "P463"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q43229"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about Cyprus?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q191384", 
+   "Q899770", 
+   "Q656801", 
+   "Q7825", 
+   "Q827525"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "5", 
+  "active_set": [
+   "(Q229,P463,c(Q43229))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q61133"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q43229"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about Christian Klar?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q61133,P463,c(Q43229))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q664"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which political territory is New Zealand situated in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q664"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q664"
+  ], 
+  "utterance": "New Zealand", 
+  "active_set": [
+   "(Q664,P17,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q664"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1376"
+  ], 
+  "type_list": [
+   "Q515"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "What is the capital of that political territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q23661"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23661"
+  ], 
+  "utterance": "Wellington", 
+  "active_set": [
+   "(c(Q515),P1376,Q664)"
+  ]
+ }
+]

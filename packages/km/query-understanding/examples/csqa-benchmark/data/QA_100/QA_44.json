@@ -1,0 +1,97 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1587889"
+  ], 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Where did the demise of Harvey Butler Fergusson occur ?"
+ }, 
+ {
+  "all_entities": [
+   "Q34804"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q34804"
+  ], 
+  "utterance": "Albuquerque", 
+  "active_set": [
+   "(Q1587889,P20,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1587889"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P69"
+  ], 
+  "type_list": [
+   "Q163740"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which nonprofit organization was that person educated at ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1785291"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1785291"
+  ], 
+  "utterance": "Washington and Lee University", 
+  "active_set": [
+   "(Q34804,P69,c(Q163740))"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators", 
+  "entities_in_utterance": [
+   "Q34804"
+  ], 
+  "relations": [
+   "P190"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q515", 
+   "Q486972"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many cities or human settlements are twin towns of Albuquerque ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q9022", 
+   "Q183584", 
+   "Q61302"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "3", 
+  "active_set": [
+   "(Q34804,P190,c(Q515))", 
+   "(Q34804,P190,c(Q486972))"
+  ]
+ }
+]

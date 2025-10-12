@@ -1,0 +1,435 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1288128"
+  ], 
+  "relations": [
+   "P1196"
+  ], 
+  "type_list": [
+   "Q1914636"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which activity best describes with type of death of Berry Berenson ?"
+ }, 
+ {
+  "all_entities": [
+   "Q149086"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q149086"
+  ], 
+  "utterance": "homicide", 
+  "active_set": [
+   "(Q1288128,P1196,c(Q1914636))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1288128"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is Berry Berenson an inhabitant of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q30"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "utterance": "United States of America", 
+  "active_set": [
+   "(Q1288128,P27,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1288128"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1038"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who is related to that one ?"
+ }, 
+ {
+  "all_entities": [
+   "Q464023"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q464023"
+  ], 
+  "utterance": "Elsa Schiaparelli", 
+  "active_set": [
+   "(c(Q502895),P1038,Q30)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q464023", 
+   "Q220"
+  ], 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Is Rome the place of birth of Elsa Schiaparelli ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q464023,P19,Q220)"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Mult. entity type", 
+  "type_list": [
+   "Q5962346", 
+   "Q34770", 
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P37"
+  ], 
+  "count_ques_sub_type": 3, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "Which administrative territories are known to have min number of classification schemes and languages as their official language ?"
+ }, 
+ {
+  "all_entities": [
+   "Q805", 
+   "Q801", 
+   "Q473259", 
+   "Q398", 
+   "Q142", 
+   "Q1039", 
+   "Q21671144", 
+   "Q32", 
+   "Q12536", 
+   "Q262", 
+   "Q148", 
+   "Q265", 
+   "Q30", 
+   "Q37", 
+   "Q16006", 
+   "Q711", 
+   "Q837", 
+   "Q252", 
+   "Q2068764", 
+   "Q21850324", 
+   "Q403", 
+   "Q657", 
+   "Q45", 
+   "Q159", 
+   "Q43", 
+   "Q41", 
+   "Q155", 
+   "Q673813", 
+   "Q790", 
+   "Q4628", 
+   "Q796", 
+   "Q794", 
+   "Q669945", 
+   "Q884", 
+   "Q881", 
+   "Q503181", 
+   "Q219", 
+   "Q826", 
+   "Q247613", 
+   "Q603392", 
+   "Q33", 
+   "Q921", 
+   "Q31", 
+   "Q36", 
+   "Q929", 
+   "Q165934", 
+   "Q423", 
+   "Q889", 
+   "Q851", 
+   "Q29999", 
+   "Q854", 
+   "Q819", 
+   "Q253445", 
+   "Q424", 
+   "Q730", 
+   "Q236", 
+   "Q230", 
+   "Q232", 
+   "Q1045", 
+   "Q1041", 
+   "Q28", 
+   "Q21853467", 
+   "Q189", 
+   "Q842", 
+   "Q184", 
+   "Q1029", 
+   "Q1028", 
+   "Q228", 
+   "Q227", 
+   "Q225", 
+   "Q224", 
+   "Q223", 
+   "Q222", 
+   "Q221", 
+   "Q229", 
+   "Q347", 
+   "Q17", 
+   "Q10957559", 
+   "Q902", 
+   "Q974", 
+   "Q1032", 
+   "Q191", 
+   "Q965", 
+   "Q967", 
+   "Q962", 
+   "Q697", 
+   "Q115", 
+   "Q59118", 
+   "Q212", 
+   "Q211", 
+   "Q217", 
+   "Q214", 
+   "Q215", 
+   "Q218", 
+   "Q160307", 
+   "Q1483510", 
+   "Q912", 
+   "Q917", 
+   "Q916", 
+   "Q1007", 
+   "Q1006", 
+   "Q977", 
+   "Q1008", 
+   "Q971", 
+   "Q970", 
+   "Q836", 
+   "Q574", 
+   "Q637451", 
+   "Q874", 
+   "Q3365904", 
+   "Q79", 
+   "Q858", 
+   "Q199688", 
+   "Q878", 
+   "Q948", 
+   "Q817", 
+   "Q810", 
+   "Q770", 
+   "Q813", 
+   "Q1016", 
+   "Q1011", 
+   "Q945", 
+   "Q8575586", 
+   "Q21848848", 
+   "Q176", 
+   "Q61698", 
+   "Q822", 
+   "Q863", 
+   "Q869", 
+   "Q1230929"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q155", 
+   "Q30", 
+   "Q230"
+  ], 
+  "utterance": "Brazil, United States of America, Georgia", 
+  "active_set": [
+   "(c(Q15617994),P37,c(Q5962346)|c(Q34770))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P136"
+  ], 
+  "type_list": [
+   "Q2342494"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which collectable has that administrative territory as genre ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q155"
+  ], 
+  "active_set": [
+   "(c(Q2342494),P136,Q155)", 
+   "(c(Q2342494),P136,Q30)", 
+   "(c(Q2342494),P136,Q230)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q155", 
+   "Q30", 
+   "Q230"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Brazil ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q30"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant United States of America. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q7979149"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7979149"
+  ], 
+  "utterance": "Wedge: The Secret War between the FBI and CIA", 
+  "active_set": [
+   "(c(Q2342494),P136,Q30)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, 2 direct, 2(direct) are query entities, subject is indirect", 
+  "entities_in_utterance": [
+   "Q7979149", 
+   "Q9056", 
+   "Q1738480"
+  ], 
+  "relations": [
+   "P364"
+  ], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 5, 
+  "utterance": "Does that collectable have Czech and Kemet (km) as its original language of creation ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES and NO respectively", 
+  "active_set": [
+   "(Q7979149,P364,Q9056)", 
+   "(Q7979149,P364,Q1738480)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q16188673", 
+   "Q464023"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories do Elsa Schiaparelli or Maria Olivia Budiman belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q38", 
+   "Q252"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q38", 
+   "Q252"
+  ], 
+  "utterance": "Italy, Indonesia", 
+  "active_set": [
+   "OR((Q464023,P27,c(Q15617994)), (Q16188673,P27,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q392770"
+  ], 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q484652"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Are Organisation of Eastern Caribbean States situated in those administrative territories ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q392770,P17,Q38)", 
+   "(Q392770,P17,Q252)"
+  ]
+ }
+]

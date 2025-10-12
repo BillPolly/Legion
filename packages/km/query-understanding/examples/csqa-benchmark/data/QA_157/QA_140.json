@@ -1,0 +1,366 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q23429633"
+  ], 
+  "relations": [
+   "P681"
+  ], 
+  "type_list": [
+   "Q15989253"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which is the cell component of transcriptional regulator    AHA_1069 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q14349455"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14349455"
+  ], 
+  "utterance": "membrane", 
+  "active_set": [
+   "(Q23429633,P681,c(Q15989253))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q23429633"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P688"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which nucleic acid sequence encodes transcriptional regulator    AHA_1069 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q23117434"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23117434"
+  ], 
+  "utterance": "transcriptional regulator    AHA_1069", 
+  "active_set": [
+   "(c(Q863908),P688,Q23429633)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q23429633"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P703"
+  ], 
+  "type_list": [
+   "Q631147"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which taxon does that nutrient belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21102944"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21102944"
+  ], 
+  "utterance": "Aeromonas hydrophila subsp. hydrophila ATCC 7966", 
+  "active_set": [
+   "(Q23117434,P703,c(Q631147))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q23117434"
+  ], 
+  "relations": [
+   "P688"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q181394"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many nutrients are transcriptional regulator    AHA_1069 an encoding of ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q23429633"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q23117434,P688,c(Q181394))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q23086985"
+  ], 
+  "relations": [
+   "P688"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q181394"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about d-gluconate inducible gluconate regulon transcriptional repressor    b3438?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q24138326"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q23086985,P688,c(Q181394))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q22288751"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q181394"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about hypothetical protein    TDE0738?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q22288751,P688,c(Q181394))"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Multiple_Relation", 
+  "type_list": [
+   "Q863908"
+  ], 
+  "entities_in_utterance": [
+   "Q23429161", 
+   "Q21102944"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P703", 
+   "P688"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which nucleic acid sequences are found in the taxon Aeromonas hydrophila subsp. hydrophila ATCC 7966 and encodes potassium/proton antiporter    AHA_1475 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q23115776"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23115776"
+  ], 
+  "utterance": "potassium/proton antiporter    AHA_1475", 
+  "active_set": [
+   "AND((c(Q863908),P703,Q21102944), (c(Q863908),P688,Q23429161))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, one direct and one indirect, subject is indirect", 
+  "entities_in_utterance": [
+   "Q23115776", 
+   "Q23631495"
+  ], 
+  "relations": [
+   "P688"
+  ], 
+  "type_list": [
+   "Q181394"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 2, 
+  "utterance": "Is hypothetical protein    RB12643 encoded by that nucleic acid sequence ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q23115776,P688,Q23631495)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q5058355"
+  ], 
+  "entities_in_utterance": [
+   "Q21495922", 
+   "Q23429633"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P681"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which cellular components are the components of transcriptional regulator    AHA_1069 or Low-density lipoprotein receptor-related protein 6 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q29548", 
+   "Q14877465", 
+   "Q189094", 
+   "Q3824358", 
+   "Q79927"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q29548", 
+   "Q14877465", 
+   "Q189094", 
+   "Q3824358", 
+   "Q79927"
+  ], 
+  "utterance": "plasma membrane, receptor complex, cell surface, intracellular, endoplasmic reticulum", 
+  "active_set": [
+   "OR((Q23429633,P681,c(Q5058355)), (Q21495922,P681,c(Q5058355)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P361"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q5058355", 
+   "Q5058355"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which cellular components are min number of cellular components a portion of ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q14912978", 
+   "Q1604780", 
+   "Q14860843", 
+   "Q22327683", 
+   "Q22330482", 
+   "Q22326188", 
+   "Q21095183", 
+   "Q22329159", 
+   "Q22329397", 
+   "Q22327884", 
+   "Q47263", 
+   "Q14819352", 
+   "Q22327889", 
+   "Q14864266", 
+   "Q21198990", 
+   "Q776995", 
+   "Q22328884", 
+   "Q22329076", 
+   "Q5419646", 
+   "Q21126899", 
+   "Q22325459", 
+   "Q22327714", 
+   "Q22327805", 
+   "Q21107481", 
+   "Q21102478", 
+   "Q22327502", 
+   "Q138639", 
+   "Q22329104", 
+   "Q14864857", 
+   "Q1065756", 
+   "Q180951", 
+   "Q14860540", 
+   "Q6414172"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14912978", 
+   "Q22329159", 
+   "Q22329076"
+  ], 
+  "utterance": "mitochondrial nucleoid, ventral disc microtubule array, plastid nucleoid", 
+  "active_set": [
+   "(c(Q5058355),P361,Q193825)"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q127702"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q5058355"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about vacuole?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q127702,P361,c(Q5058355))"
+  ]
+ }
+]

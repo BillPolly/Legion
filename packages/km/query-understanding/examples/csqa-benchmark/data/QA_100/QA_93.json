@@ -1,0 +1,248 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q15455549"
+  ], 
+  "relations": [
+   "P937"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Where did Manfred Harder work ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2861"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2861"
+  ], 
+  "utterance": "Rostock", 
+  "active_set": [
+   "(Q15455549,P937,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q15455549"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P102"
+  ], 
+  "type_list": [
+   "Q7278"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which political party is that person a member of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q49750"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q49750"
+  ], 
+  "utterance": "Socialist Unity Party of Germany", 
+  "active_set": [
+   "(Q2861,P102,c(Q7278))"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators", 
+  "entities_in_utterance": [
+   "Q2861"
+  ], 
+  "relations": [
+   "P138"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q34442", 
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many roads or political territories have Rostock as their namesake ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q22957371", 
+   "Q2898"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(c(Q34442),P138,Q2861)", 
+   "(c(Q1048835),P138,Q2861)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q26698429"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1001"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which political territory applies to jurisdiction of mayor of Santa Eufemia del Barco ?"
+ }, 
+ {
+  "all_entities": [
+   "Q520984"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q520984"
+  ], 
+  "utterance": "Santa Eufemia del Barco", 
+  "active_set": [
+   "(Q26698429,P1001,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q26696909"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about mayor of Dehesa de Romanos?"
+ }, 
+ {
+  "all_entities": [
+   "Q1906992"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1906992"
+  ], 
+  "utterance": "Dehesa de Romanos", 
+  "active_set": [
+   "(Q26696909,P1001,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q26696909"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1313"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which political territory has mayor of Dehesa de Romanos as title of head of government ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1906992"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1906992"
+  ], 
+  "utterance": "Dehesa de Romanos", 
+  "active_set": [
+   "(c(Q1048835),P1313,Q26696909)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q26696909"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is mayor of Dehesa de Romanos located in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q29"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q29"
+  ], 
+  "utterance": "Spain", 
+  "active_set": [
+   "(Q26696909,P17,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q29"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P163"
+  ], 
+  "type_list": [
+   "Q14660"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is associated with that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q121688"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q121688"
+  ], 
+  "utterance": "flag of Spain", 
+  "active_set": [
+   "(Q29,P163,c(Q14660))"
+  ]
+ }
+]

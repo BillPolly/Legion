@@ -1,0 +1,810 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q3384423"
+  ], 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is the job of Pierre Chevallier ?"
+ }, 
+ {
+  "all_entities": [
+   "Q82955"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q82955"
+  ], 
+  "utterance": "politician", 
+  "active_set": [
+   "(Q3384423,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q82955"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P425"
+  ], 
+  "type_list": [
+   "Q3769299"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who has that one as the associated field of occupation ?"
+ }, 
+ {
+  "all_entities": [
+   "Q7163"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7163"
+  ], 
+  "utterance": "politics", 
+  "active_set": [
+   "(Q82955,P425,c(Q3769299))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P417"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q502895", 
+   "Q12737077"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which people are the patron saint of max number of occupations ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q179718"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q179718"
+  ], 
+  "utterance": "Catherine of Alexandria", 
+  "active_set": [
+   "(c(Q12737077),P417,Q208331)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q3384423"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P734"
+  ], 
+  "type_list": [
+   "Q82799"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who is associated with Pierre Chevallier ?"
+ }, 
+ {
+  "all_entities": [
+   "Q25340706"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q25340706"
+  ], 
+  "utterance": "Chevallier", 
+  "active_set": [
+   "(Q3384423,P734,c(Q82799))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Mult. entity type", 
+  "type_list": [
+   "Q12737077", 
+   "Q18783400", 
+   "Q11060274"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 4, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which occupations are depicted in atmost 3 genres of sculpture and prints ?"
+ }, 
+ {
+  "all_entities": [
+   "Q19754019", 
+   "Q11957145", 
+   "Q1934482", 
+   "Q19937286", 
+   "Q2486919", 
+   "Q177220", 
+   "Q1569439", 
+   "Q131512", 
+   "Q16735601", 
+   "Q37226", 
+   "Q1401609", 
+   "Q27621374", 
+   "Q152355", 
+   "Q1218776", 
+   "Q1124183", 
+   "Q652122", 
+   "Q654437", 
+   "Q11631", 
+   "Q38883", 
+   "Q288728", 
+   "Q765778", 
+   "Q2995983", 
+   "Q33999", 
+   "Q36180", 
+   "Q13472752", 
+   "Q852857", 
+   "Q381353", 
+   "Q15618890", 
+   "Q19595175", 
+   "Q2079936", 
+   "Q901402", 
+   "Q29282", 
+   "Q83307", 
+   "Q1722406", 
+   "Q278138", 
+   "Q1221610", 
+   "Q1250916", 
+   "Q4610556", 
+   "Q81710", 
+   "Q1259917", 
+   "Q161944", 
+   "Q472898", 
+   "Q45199", 
+   "Q7358", 
+   "Q19968805", 
+   "Q329737", 
+   "Q4504549", 
+   "Q842782", 
+   "Q47064", 
+   "Q185196", 
+   "Q486748", 
+   "Q328325", 
+   "Q11900058", 
+   "Q483501", 
+   "Q215536", 
+   "Q212238", 
+   "Q22085061", 
+   "Q3430033", 
+   "Q42973", 
+   "Q14948018", 
+   "Q186360", 
+   "Q955464", 
+   "Q19723482", 
+   "Q12902372", 
+   "Q170790", 
+   "Q1139055", 
+   "Q1028181", 
+   "Q30185", 
+   "Q587524", 
+   "Q820037", 
+   "Q852389", 
+   "Q16624872", 
+   "Q13219637", 
+   "Q181765", 
+   "Q327321", 
+   "Q549322", 
+   "Q327029", 
+   "Q733786", 
+   "Q2309900", 
+   "Q805221", 
+   "Q5371902", 
+   "Q17126809", 
+   "Q12097", 
+   "Q848550", 
+   "Q386854", 
+   "Q202648", 
+   "Q1753370", 
+   "Q107711", 
+   "Q12059906", 
+   "Q2034021", 
+   "Q11642", 
+   "Q1595811", 
+   "Q13474373", 
+   "Q1413824", 
+   "Q3499072", 
+   "Q520549", 
+   "Q4164507", 
+   "Q5455155", 
+   "Q1163330", 
+   "Q855855", 
+   "Q548320", 
+   "Q843281", 
+   "Q550594", 
+   "Q3074722", 
+   "Q19862215", 
+   "Q19546", 
+   "Q6116659", 
+   "Q537575", 
+   "Q20826540", 
+   "Q715301", 
+   "Q11338576", 
+   "Q622630", 
+   "Q3330547", 
+   "Q3214532", 
+   "Q14009165", 
+   "Q15954519", 
+   "Q2981922", 
+   "Q10833314", 
+   "Q1318187", 
+   "Q29182", 
+   "Q326358", 
+   "Q4991371", 
+   "Q5575361", 
+   "Q1161133", 
+   "Q250867", 
+   "Q376924", 
+   "Q486839", 
+   "Q808266", 
+   "Q1540158", 
+   "Q638172", 
+   "Q2248045", 
+   "Q273108", 
+   "Q1104153", 
+   "Q10873124", 
+   "Q13381689", 
+   "Q15725121", 
+   "Q185992", 
+   "Q178521", 
+   "Q133485", 
+   "Q674067", 
+   "Q901", 
+   "Q3127709", 
+   "Q1639825", 
+   "Q589897", 
+   "Q4594605", 
+   "Q54128", 
+   "Q242468", 
+   "Q45722", 
+   "Q2596569", 
+   "Q1234713", 
+   "Q848466", 
+   "Q116", 
+   "Q20489032", 
+   "Q1509714", 
+   "Q152002", 
+   "Q2730732", 
+   "Q1511216", 
+   "Q16533", 
+   "Q103163", 
+   "Q2412523", 
+   "Q211423", 
+   "Q965417", 
+   "Q845929", 
+   "Q11063", 
+   "Q774306", 
+   "Q2276446", 
+   "Q207651", 
+   "Q5716684", 
+   "Q170779", 
+   "Q18575684", 
+   "Q3128486", 
+   "Q5420718", 
+   "Q822146", 
+   "Q15284879", 
+   "Q758780", 
+   "Q36834", 
+   "Q694116", 
+   "Q3090865", 
+   "Q833860", 
+   "Q1627992", 
+   "Q2309784", 
+   "Q253567", 
+   "Q3439798", 
+   "Q2191547", 
+   "Q838811", 
+   "Q1437754", 
+   "Q5832280", 
+   "Q1430627", 
+   "Q154549", 
+   "Q2251335", 
+   "Q189290", 
+   "Q331432", 
+   "Q639669", 
+   "Q49757", 
+   "Q160131", 
+   "Q4990607", 
+   "Q384593", 
+   "Q680928", 
+   "Q6735310", 
+   "Q15296811", 
+   "Q765541", 
+   "Q2011889", 
+   "Q49476", 
+   "Q1281618", 
+   "Q2891167", 
+   "Q685433", 
+   "Q12299841", 
+   "Q2095549", 
+   "Q5061344", 
+   "Q432386", 
+   "Q191808", 
+   "Q182436", 
+   "Q2259532", 
+   "Q811122", 
+   "Q373017", 
+   "Q2180295", 
+   "Q42603", 
+   "Q1294787", 
+   "Q1630100", 
+   "Q2627286", 
+   "Q437512", 
+   "Q13414980", 
+   "Q39631", 
+   "Q849424", 
+   "Q842606", 
+   "Q2340797", 
+   "Q156839", 
+   "Q7622988", 
+   "Q157195"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q131512", 
+   "Q186360", 
+   "Q242468"
+  ], 
+  "utterance": "farmer, nurse, tailor", 
+  "active_set": [
+   "(c(Q18783400)|c(Q11060274),P180,c(Q12737077))"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q23017763", 
+   "Q3384423"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are the native countriesof Pierre Chevallier and Hadia Ben Abdelghani ?"
+ }, 
+ {
+  "all_entities": [
+   "Q142"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q142"
+  ], 
+  "utterance": "France", 
+  "active_set": [
+   "AND((Q3384423,P27,c(Q15617994)), (Q23017763,P27,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type", 
+  "type_list": [
+   "Q12737077", 
+   "Q15709879", 
+   "Q838948"
+  ], 
+  "entities_in_utterance": [
+   "Q12059906"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which occupations are depicted in lesser number of artwork series and works of art than herder ?"
+ }, 
+ {
+  "all_entities": [
+   "Q19754019", 
+   "Q11957145", 
+   "Q1934482", 
+   "Q19937286", 
+   "Q2486919", 
+   "Q177220", 
+   "Q1569439", 
+   "Q131512", 
+   "Q16735601", 
+   "Q37226", 
+   "Q1401609", 
+   "Q27621374", 
+   "Q152355", 
+   "Q1218776", 
+   "Q1124183", 
+   "Q652122", 
+   "Q654437", 
+   "Q11631", 
+   "Q38883", 
+   "Q288728", 
+   "Q765778", 
+   "Q2995983", 
+   "Q33999", 
+   "Q36180", 
+   "Q13472752", 
+   "Q852857", 
+   "Q381353", 
+   "Q15618890", 
+   "Q19595175", 
+   "Q2079936", 
+   "Q901402", 
+   "Q29282", 
+   "Q83307", 
+   "Q1722406", 
+   "Q278138", 
+   "Q1221610", 
+   "Q4610556", 
+   "Q1259917", 
+   "Q161944", 
+   "Q472898", 
+   "Q45199", 
+   "Q7358", 
+   "Q19968805", 
+   "Q329737", 
+   "Q4504549", 
+   "Q842782", 
+   "Q185196", 
+   "Q486748", 
+   "Q328325", 
+   "Q11900058", 
+   "Q483501", 
+   "Q215536", 
+   "Q212238", 
+   "Q22085061", 
+   "Q3430033", 
+   "Q42973", 
+   "Q14948018", 
+   "Q186360", 
+   "Q955464", 
+   "Q19723482", 
+   "Q12902372", 
+   "Q170790", 
+   "Q1139055", 
+   "Q1028181", 
+   "Q30185", 
+   "Q587524", 
+   "Q820037", 
+   "Q852389", 
+   "Q16624872", 
+   "Q13219637", 
+   "Q181765", 
+   "Q327321", 
+   "Q549322", 
+   "Q327029", 
+   "Q733786", 
+   "Q2309900", 
+   "Q805221", 
+   "Q5371902", 
+   "Q17126809", 
+   "Q12097", 
+   "Q848550", 
+   "Q386854", 
+   "Q202648", 
+   "Q1753370", 
+   "Q107711", 
+   "Q2034021", 
+   "Q11642", 
+   "Q1595811", 
+   "Q13474373", 
+   "Q1413824", 
+   "Q3499072", 
+   "Q520549", 
+   "Q4164507", 
+   "Q5455155", 
+   "Q1163330", 
+   "Q855855", 
+   "Q548320", 
+   "Q843281", 
+   "Q550594", 
+   "Q3074722", 
+   "Q19862215", 
+   "Q19546", 
+   "Q6116659", 
+   "Q537575", 
+   "Q20826540", 
+   "Q715301", 
+   "Q11338576", 
+   "Q622630", 
+   "Q3330547", 
+   "Q3214532", 
+   "Q14009165", 
+   "Q15954519", 
+   "Q2981922", 
+   "Q10833314", 
+   "Q1318187", 
+   "Q29182", 
+   "Q326358", 
+   "Q5575361", 
+   "Q1161133", 
+   "Q250867", 
+   "Q376924", 
+   "Q486839", 
+   "Q808266", 
+   "Q1540158", 
+   "Q638172", 
+   "Q2248045", 
+   "Q273108", 
+   "Q1104153", 
+   "Q10873124", 
+   "Q13381689", 
+   "Q15725121", 
+   "Q185992", 
+   "Q178521", 
+   "Q133485", 
+   "Q674067", 
+   "Q901", 
+   "Q3127709", 
+   "Q1639825", 
+   "Q589897", 
+   "Q4594605", 
+   "Q54128", 
+   "Q242468", 
+   "Q45722", 
+   "Q2596569", 
+   "Q1234713", 
+   "Q848466", 
+   "Q116", 
+   "Q20489032", 
+   "Q1509714", 
+   "Q152002", 
+   "Q1511216", 
+   "Q16533", 
+   "Q103163", 
+   "Q2412523", 
+   "Q211423", 
+   "Q965417", 
+   "Q845929", 
+   "Q11063", 
+   "Q774306", 
+   "Q2276446", 
+   "Q207651", 
+   "Q170779", 
+   "Q18575684", 
+   "Q3128486", 
+   "Q5420718", 
+   "Q822146", 
+   "Q15284879", 
+   "Q758780", 
+   "Q36834", 
+   "Q694116", 
+   "Q3090865", 
+   "Q833860", 
+   "Q1627992", 
+   "Q2309784", 
+   "Q253567", 
+   "Q3439798", 
+   "Q2191547", 
+   "Q1437754", 
+   "Q5832280", 
+   "Q1430627", 
+   "Q154549", 
+   "Q2251335", 
+   "Q189290", 
+   "Q160131", 
+   "Q4990607", 
+   "Q384593", 
+   "Q680928", 
+   "Q6735310", 
+   "Q15296811", 
+   "Q765541", 
+   "Q2011889", 
+   "Q49476", 
+   "Q1281618", 
+   "Q2891167", 
+   "Q685433", 
+   "Q12299841", 
+   "Q2095549", 
+   "Q5061344", 
+   "Q432386", 
+   "Q191808", 
+   "Q182436", 
+   "Q2259532", 
+   "Q811122", 
+   "Q373017", 
+   "Q2180295", 
+   "Q42603", 
+   "Q1294787", 
+   "Q1630100", 
+   "Q2627286", 
+   "Q437512", 
+   "Q13414980", 
+   "Q849424", 
+   "Q842606", 
+   "Q2340797", 
+   "Q156839", 
+   "Q7622988", 
+   "Q157195"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q131512", 
+   "Q186360", 
+   "Q242468"
+  ], 
+  "utterance": "farmer, nurse, tailor", 
+  "active_set": [
+   "(c(Q15709879)|c(Q838948),P180,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Mult. Entity", 
+  "entities_in_utterance": [
+   "Q131512", 
+   "Q186360", 
+   "Q242468"
+  ], 
+  "sec_ques_sub_type": 3, 
+  "relations": [
+   "P417"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who are the patron saints of those occupations ?"
+ }, 
+ {
+  "all_entities": [
+   "Q119289", 
+   "Q166876", 
+   "Q151967", 
+   "Q44265", 
+   "Q43982", 
+   "Q332656", 
+   "Q200895", 
+   "Q229190", 
+   "Q137947", 
+   "Q179718", 
+   "Q179718", 
+   "Q43982"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q166876", 
+   "Q229190", 
+   "Q44265"
+  ], 
+  "utterance": "Isidore of Seville, Catherine of Siena, Benedict of Nursia", 
+  "active_set": [
+   "(Q131512,P417,c(Q502895))", 
+   "(Q186360,P417,c(Q502895))", 
+   "(Q242468,P417,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q166876"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P9"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who is the sister of that one ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q229190"
+  ], 
+  "active_set": [
+   "(Q166876,P9,c(Q502895))", 
+   "(Q229190,P9,c(Q502895))", 
+   "(Q44265,P9,c(Q502895))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q166876", 
+   "Q229190", 
+   "Q44265"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Catherine of Siena ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q166876"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Isidore of Seville. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q2626436"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2626436"
+  ], 
+  "utterance": "Saint Florentina", 
+  "active_set": [
+   "(Q166876,P9,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, 2 direct, 2(direct) are query entities, subject is indirect", 
+  "entities_in_utterance": [
+   "Q2626436", 
+   "Q23927716", 
+   "Q2616176"
+  ], 
+  "relations": [
+   "P7"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 5, 
+  "utterance": "Does that person have Mary Rooks and Fulgentius of Cartagena as their brother ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO and YES respectively", 
+  "active_set": [
+   "(Q2626436,P7,Q23927716)", 
+   "(Q2626436,P7,Q2616176)"
+  ]
+ }
+]

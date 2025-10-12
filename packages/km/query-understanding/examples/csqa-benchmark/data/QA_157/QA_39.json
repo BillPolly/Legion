@@ -1,0 +1,743 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q4889845"
+  ], 
+  "relations": [
+   "P463"
+  ], 
+  "type_list": [
+   "Q811430"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which organization was Edgar Allison Peers a member of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q463303"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q463303"
+  ], 
+  "utterance": "American Academy of Arts and Sciences", 
+  "active_set": [
+   "(Q4889845,P463,c(Q811430))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q463303"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P166"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people were awarded with that construction ?"
+ }, 
+ {
+  "all_entities": [
+   "Q4706834", 
+   "Q6829484"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q4706834", 
+   "Q6829484"
+  ], 
+  "utterance": "Alan Hastings, Michael Cosmopoulos", 
+  "active_set": [
+   "(c(Q502895),P166,Q463303)"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Multiple_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q3274367", 
+   "Q463303"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27", 
+   "P17"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are American Academy of Arts and Sciences located in and are the countries of citizenship of Carlos Surinach ?"
+ }, 
+ {
+  "all_entities": [
+   "Q30"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "utterance": "United States of America", 
+  "active_set": [
+   "AND((Q463303,P17,c(Q15617994)), (Q3274367,P27,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, 2 direct, 2(direct) are query entities, subject is indirect", 
+  "entities_in_utterance": [
+   "Q30", 
+   "Q26928869", 
+   "Q3165708"
+  ], 
+  "relations": [
+   "P6"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 5, 
+  "utterance": "Does that administrative territory have Giorgio Berkleef and Jean-Fran\u00e7ois Kieffer as its administrative leader ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q30,P6,Q26928869)", 
+   "(Q30,P6,Q3165708)"
+  ]
+ }, 
+ {
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "relations": [
+   "P840"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q838948", 
+   "Q36649"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many works of art or visual artss have their narrative set in United States of America ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q168853", 
+   "Q951002", 
+   "Q352431", 
+   "Q15040754", 
+   "Q131840", 
+   "Q7721017", 
+   "Q1085302", 
+   "Q3317837", 
+   "Q490375", 
+   "Q6879164", 
+   "Q638883", 
+   "Q2101653", 
+   "Q3793183", 
+   "Q1196699", 
+   "Q13653730", 
+   "Q1620043", 
+   "Q5793574", 
+   "Q5887360", 
+   "Q2260885", 
+   "Q2251564", 
+   "Q1459428", 
+   "Q574583", 
+   "Q331265", 
+   "Q4875602", 
+   "Q26970", 
+   "Q325204", 
+   "Q1733779", 
+   "Q232166", 
+   "Q937934", 
+   "Q1376285", 
+   "Q702270", 
+   "Q4443241", 
+   "Q7823964", 
+   "Q1493714", 
+   "Q2368040", 
+   "Q7291396", 
+   "Q5002116", 
+   "Q701977", 
+   "Q401721", 
+   "Q3652038", 
+   "Q15917312", 
+   "Q3492321", 
+   "Q1429111", 
+   "Q1118503", 
+   "Q2409672", 
+   "Q5418420", 
+   "Q3520573", 
+   "Q4007150", 
+   "Q230488", 
+   "Q2055033", 
+   "Q1319963", 
+   "Q4829820", 
+   "Q3640592", 
+   "Q153484", 
+   "Q1632128", 
+   "Q558927", 
+   "Q1723325", 
+   "Q11860556", 
+   "Q4271817", 
+   "Q116187", 
+   "Q2885834", 
+   "Q1521934", 
+   "Q3867388", 
+   "Q16950129", 
+   "Q1131221", 
+   "Q3535610", 
+   "Q776037", 
+   "Q1269017", 
+   "Q4400743", 
+   "Q324013", 
+   "Q3024977", 
+   "Q280094", 
+   "Q6130409", 
+   "Q4004300", 
+   "Q7722390", 
+   "Q2690260", 
+   "Q1605596", 
+   "Q694770", 
+   "Q18150696", 
+   "Q180638", 
+   "Q1757053", 
+   "Q5274998", 
+   "Q3905599", 
+   "Q1902007", 
+   "Q2905622", 
+   "Q192115", 
+   "Q4854546", 
+   "Q1540554", 
+   "Q12125890", 
+   "Q1217883", 
+   "Q3226852", 
+   "Q1305391", 
+   "Q7417858", 
+   "Q7791238", 
+   "Q12126017", 
+   "Q3689349", 
+   "Q2421355", 
+   "Q3683691", 
+   "Q325574", 
+   "Q319783", 
+   "Q3182263", 
+   "Q4812497", 
+   "Q797970", 
+   "Q13422940", 
+   "Q161400", 
+   "Q1215668", 
+   "Q3212060", 
+   "Q16827842", 
+   "Q3176321", 
+   "Q4916136", 
+   "Q771408", 
+   "Q13418416", 
+   "Q43925", 
+   "Q323592", 
+   "Q6419759", 
+   "Q1687806", 
+   "Q112747", 
+   "Q467379", 
+   "Q1088880", 
+   "Q12103990", 
+   "Q327681", 
+   "Q3844588", 
+   "Q880141", 
+   "Q990766", 
+   "Q1409481", 
+   "Q1168778", 
+   "Q50861", 
+   "Q7845818", 
+   "Q116734", 
+   "Q1740639", 
+   "Q16242153", 
+   "Q1180803", 
+   "Q3714724", 
+   "Q316555", 
+   "Q868706", 
+   "Q2249387", 
+   "Q5129294", 
+   "Q3828989", 
+   "Q1216820", 
+   "Q7219297", 
+   "Q4659823", 
+   "Q2869573", 
+   "Q6123360", 
+   "Q1128499", 
+   "Q7770062", 
+   "Q1861395", 
+   "Q778161", 
+   "Q4742560", 
+   "Q2346325", 
+   "Q3411014", 
+   "Q5261193", 
+   "Q3812382", 
+   "Q11611022", 
+   "Q953231", 
+   "Q1170322", 
+   "Q12126585", 
+   "Q388506", 
+   "Q2298220", 
+   "Q469708", 
+   "Q2438601", 
+   "Q182254", 
+   "Q1984885", 
+   "Q451250", 
+   "Q1266142", 
+   "Q3976041", 
+   "Q473861", 
+   "Q232175", 
+   "Q1339523", 
+   "Q16253364", 
+   "Q4729722", 
+   "Q3482906", 
+   "Q565143", 
+   "Q5995253", 
+   "Q333558", 
+   "Q3522385", 
+   "Q1199777", 
+   "Q692367", 
+   "Q505297", 
+   "Q3934349", 
+   "Q1195956", 
+   "Q7600909", 
+   "Q19309311", 
+   "Q1978253", 
+   "Q1445622", 
+   "Q999502", 
+   "Q738052", 
+   "Q869993", 
+   "Q1962163", 
+   "Q392825", 
+   "Q174284", 
+   "Q3504799", 
+   "Q4742739", 
+   "Q3795091", 
+   "Q3480269", 
+   "Q775140", 
+   "Q4159327", 
+   "Q1528731", 
+   "Q7439317", 
+   "Q16250532", 
+   "Q7771695", 
+   "Q5044761", 
+   "Q1120732", 
+   "Q3233113", 
+   "Q276772", 
+   "Q1537670", 
+   "Q1093026", 
+   "Q5250084", 
+   "Q4004117", 
+   "Q942657", 
+   "Q157044", 
+   "Q6536210", 
+   "Q6881927", 
+   "Q823137", 
+   "Q4920544", 
+   "Q826451", 
+   "Q1710012", 
+   "Q2267587", 
+   "Q3752432", 
+   "Q5439352", 
+   "Q1192783", 
+   "Q12101183", 
+   "Q848785", 
+   "Q7250018", 
+   "Q5449972", 
+   "Q1627096", 
+   "Q833502", 
+   "Q174811", 
+   "Q5246911", 
+   "Q6451967", 
+   "Q7714226", 
+   "Q1214819", 
+   "Q3024999", 
+   "Q39956", 
+   "Q3902478", 
+   "Q477370", 
+   "Q1246152", 
+   "Q942134", 
+   "Q1141731", 
+   "Q6544857", 
+   "Q4752657", 
+   "Q1534418", 
+   "Q1197465", 
+   "Q758591", 
+   "Q758592", 
+   "Q963045", 
+   "Q1140738", 
+   "Q3808688", 
+   "Q2492221", 
+   "Q926845", 
+   "Q1759154", 
+   "Q6204157", 
+   "Q4413366", 
+   "Q3667377", 
+   "Q2901398", 
+   "Q617833", 
+   "Q558795", 
+   "Q7111521", 
+   "Q3821632", 
+   "Q1219927", 
+   "Q16251048", 
+   "Q880236", 
+   "Q1957691", 
+   "Q1375493", 
+   "Q232007", 
+   "Q5245253", 
+   "Q4121945", 
+   "Q7782781", 
+   "Q3926963", 
+   "Q325836", 
+   "Q367216", 
+   "Q616780", 
+   "Q4742921", 
+   "Q18154863", 
+   "Q3818961", 
+   "Q2707950", 
+   "Q3373131", 
+   "Q6383509", 
+   "Q641897", 
+   "Q5135339", 
+   "Q1481667", 
+   "Q368136", 
+   "Q3861013", 
+   "Q222064", 
+   "Q1723175", 
+   "Q16249942", 
+   "Q1602612", 
+   "Q961235", 
+   "Q3039240", 
+   "Q7737002", 
+   "Q967238", 
+   "Q850096", 
+   "Q3427986", 
+   "Q3978547", 
+   "Q25858", 
+   "Q429144", 
+   "Q4820305", 
+   "Q564802", 
+   "Q5871798", 
+   "Q7453162", 
+   "Q1382283", 
+   "Q1702797", 
+   "Q1253121", 
+   "Q668928", 
+   "Q4661023", 
+   "Q315356", 
+   "Q12109062", 
+   "Q3820004", 
+   "Q1484012", 
+   "Q4880863", 
+   "Q1763191", 
+   "Q2134996", 
+   "Q12126156", 
+   "Q7900011"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "313", 
+  "active_set": [
+   "(c(Q838948),P840,Q30)", 
+   "(c(Q36649),P840,Q30)"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Mult. entity type", 
+  "type_list": [
+   "Q502895", 
+   "Q502895", 
+   "Q11424"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P941"
+  ], 
+  "count_ques_sub_type": 6, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many people were around 1 people or films inspired by ?"
+ }, 
+ {
+  "all_entities": [
+   "Q207939", 
+   "Q19526", 
+   "Q207447", 
+   "Q205002", 
+   "Q30755", 
+   "Q666171", 
+   "Q5383", 
+   "Q5361548", 
+   "Q7836", 
+   "Q156268", 
+   "Q5577", 
+   "Q9061", 
+   "Q2601617", 
+   "Q835175", 
+   "Q229437", 
+   "Q1744", 
+   "Q5589", 
+   "Q296", 
+   "Q352954", 
+   "Q25328", 
+   "Q624868", 
+   "Q1896700", 
+   "Q156622", 
+   "Q354832", 
+   "Q2965760", 
+   "Q5053466", 
+   "Q513644", 
+   "Q44122", 
+   "Q576222"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "29", 
+  "active_set": [
+   "(c(Q502895)|c(Q11424),P941,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P710"
+  ], 
+  "type_list": [
+   "Q20937557"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which series was United States of America a participant of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1753858"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1753858"
+  ], 
+  "utterance": "Moscow Conference", 
+  "active_set": [
+   "(c(Q20937557),P710,Q30)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1753858"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P467"
+  ], 
+  "type_list": [
+   "Q7257"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which ideology was passed by that series ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1697092"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1697092"
+  ], 
+  "utterance": "victim theory", 
+  "active_set": [
+   "(c(Q7257),P467,Q1753858)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q1697092", 
+   "Q40"
+  ], 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Is victim theory present in Austria ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q1697092,P17,Q40)"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type", 
+  "type_list": [
+   "Q83620", 
+   "Q79007", 
+   "Q811430"
+  ], 
+  "entities_in_utterance": [
+   "Q816289"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P669"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "Which constructions are located on more number of thoroughfares or streets than Villa Belvoir ?"
+ }, 
+ {
+  "all_entities": [
+   "Q4645806", 
+   "Q4546413", 
+   "Q640412", 
+   "Q7344191", 
+   "Q4546522", 
+   "Q968295", 
+   "Q2477653", 
+   "Q4546509", 
+   "Q2887732", 
+   "Q526847"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7344191", 
+   "Q968295", 
+   "Q4546413"
+  ], 
+  "utterance": "Robert F. Kennedy Department of Justice Building, Eliseyev Emporium, 102 Petty France", 
+  "active_set": [
+   "(c(Q811430),P669,c(Q83620)|c(Q79007))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q83620", 
+   "Q79007", 
+   "Q811430"
+  ], 
+  "entities_in_utterance": [
+   "Q1006170"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P669"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And what about Bundeshaus?"
+ }, 
+ {
+  "all_entities": [
+   "Q4645806", 
+   "Q4546413", 
+   "Q640412", 
+   "Q7344191", 
+   "Q4546522", 
+   "Q968295", 
+   "Q2477653", 
+   "Q4546509", 
+   "Q2887732", 
+   "Q526847"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7344191", 
+   "Q968295", 
+   "Q4546413"
+  ], 
+  "utterance": "Robert F. Kennedy Department of Justice Building, Eliseyev Emporium, 102 Petty France", 
+  "active_set": [
+   "(c(Q811430),P669,c(Q83620)|c(Q79007))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P149"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q32880", 
+   "Q811430"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many architectural styles are the architectural styles of atmost 5 constructions ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q660311", 
+   "Q2568026", 
+   "Q654057", 
+   "Q192664"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "4", 
+  "active_set": [
+   "(c(Q811430),P149,c(Q32880))"
+  ]
+ }
+]

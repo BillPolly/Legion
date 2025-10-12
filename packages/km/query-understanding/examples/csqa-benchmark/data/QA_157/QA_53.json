@@ -1,0 +1,528 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q14907600"
+  ], 
+  "relations": [
+   "P702"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What encodes Interleukin-6 receptor subunit beta ?"
+ }, 
+ {
+  "all_entities": [
+   "Q14907598"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14907598"
+  ], 
+  "utterance": "Il6st", 
+  "active_set": [
+   "(Q14907600,P702,c(Q863908))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q14907598"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P684"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which nucleic acid sequence has that one as its orthologous gene ?"
+ }, 
+ {
+  "all_entities": [
+   "Q14907597"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14907597"
+  ], 
+  "utterance": "IL6ST", 
+  "active_set": [
+   "(c(Q863908),P684,Q14907598)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q14907597"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P703"
+  ], 
+  "type_list": [
+   "Q16521"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which taxon is that nucleic acid sequence found in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q15978631"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q15978631"
+  ], 
+  "utterance": "Homo sapiens", 
+  "active_set": [
+   "(Q14907597,P703,c(Q16521))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q15978631", 
+   "Q22335562"
+  ], 
+  "relations": [
+   "P703"
+  ], 
+  "type_list": [
+   "Q181394"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Is transcription elongation factor NusA    lpg2773 found in the taxon that one ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q22335562,P703,Q15978631)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q16521", 
+   "Q17335294"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many coats of arms express around 1 taxon ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q18033274", 
+   "Q21004690", 
+   "Q15883689", 
+   "Q18033264", 
+   "Q1927446", 
+   "Q21857194", 
+   "Q22231186", 
+   "Q15883707"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "8", 
+  "active_set": [
+   "(c(Q17335294),P180,c(Q16521))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P566"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q82799", 
+   "Q16521"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many names are a basionyms of atleast 1 taxon ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q11110263", 
+   "Q15554028", 
+   "Q15591212", 
+   "Q20980558", 
+   "Q17139204", 
+   "Q17237867", 
+   "Q18676027", 
+   "Q17574563", 
+   "Q17243481", 
+   "Q19849758", 
+   "Q15289232", 
+   "Q15316623", 
+   "Q4670687", 
+   "Q9566669", 
+   "Q15588490", 
+   "Q21877024", 
+   "Q12213837", 
+   "Q12213834", 
+   "Q15553767", 
+   "Q23455986", 
+   "Q21251956", 
+   "Q23764842", 
+   "Q15589384", 
+   "Q16751136", 
+   "Q17241894", 
+   "Q5782811", 
+   "Q17271859", 
+   "Q3395594", 
+   "Q10952844", 
+   "Q15041676", 
+   "Q15587091", 
+   "Q17244878", 
+   "Q19849746", 
+   "Q5753000", 
+   "Q9562692", 
+   "Q21251992", 
+   "Q22665879", 
+   "Q11079289", 
+   "Q18080091", 
+   "Q22084977", 
+   "Q23764973", 
+   "Q17250251", 
+   "Q24056509", 
+   "Q15583309", 
+   "Q21871946", 
+   "Q17252881", 
+   "Q10377714", 
+   "Q15177375", 
+   "Q1279712", 
+   "Q17236806", 
+   "Q17248248", 
+   "Q17250774", 
+   "Q3299543", 
+   "Q12154833", 
+   "Q14866909", 
+   "Q17250902", 
+   "Q14947404", 
+   "Q17363798", 
+   "Q161463", 
+   "Q19689942", 
+   "Q15289796", 
+   "Q22111547", 
+   "Q17252798", 
+   "Q4670968", 
+   "Q17250828", 
+   "Q23369043", 
+   "Q15239372", 
+   "Q17243719", 
+   "Q15554168", 
+   "Q17251695", 
+   "Q15226539", 
+   "Q15235379", 
+   "Q15289719", 
+   "Q15590140", 
+   "Q2110890", 
+   "Q15289671", 
+   "Q15594126", 
+   "Q9568508", 
+   "Q6502429", 
+   "Q5197630", 
+   "Q15588438", 
+   "Q15591347", 
+   "Q292441", 
+   "Q10898709", 
+   "Q15554917", 
+   "Q10891753", 
+   "Q5404905", 
+   "Q3296746", 
+   "Q15570652", 
+   "Q15491693", 
+   "Q21876720", 
+   "Q17243128", 
+   "Q21872248", 
+   "Q17252941", 
+   "Q15586773", 
+   "Q10911562", 
+   "Q21252003", 
+   "Q17241647", 
+   "Q7116174", 
+   "Q17234659", 
+   "Q1543836", 
+   "Q15588272", 
+   "Q2511266", 
+   "Q1911022", 
+   "Q9075194", 
+   "Q15554771", 
+   "Q21877255", 
+   "Q17131294", 
+   "Q21876863", 
+   "Q15587361", 
+   "Q1477103", 
+   "Q8964445", 
+   "Q3355377", 
+   "Q15596992", 
+   "Q6502432", 
+   "Q17252230", 
+   "Q163351", 
+   "Q15043538", 
+   "Q810563", 
+   "Q10377711", 
+   "Q10377712", 
+   "Q21872297", 
+   "Q10377715", 
+   "Q10377717", 
+   "Q557431", 
+   "Q21872299", 
+   "Q17363805", 
+   "Q11065993", 
+   "Q15595862", 
+   "Q21876734", 
+   "Q15587177", 
+   "Q4113856", 
+   "Q17252939", 
+   "Q17271348", 
+   "Q1953932", 
+   "Q289461", 
+   "Q10303514", 
+   "Q15587375", 
+   "Q8194945", 
+   "Q15587463", 
+   "Q10448107", 
+   "Q15583464", 
+   "Q15377365", 
+   "Q10870363", 
+   "Q21872846", 
+   "Q15289427", 
+   "Q21251980", 
+   "Q159688", 
+   "Q162568", 
+   "Q21740218", 
+   "Q21252027", 
+   "Q21877025", 
+   "Q9567258", 
+   "Q21399892", 
+   "Q15586900", 
+   "Q15571943", 
+   "Q15555026", 
+   "Q9564261", 
+   "Q15593897", 
+   "Q17251228", 
+   "Q15554513", 
+   "Q10428810", 
+   "Q19796530", 
+   "Q19796532", 
+   "Q21251909", 
+   "Q17250356", 
+   "Q15289416", 
+   "Q4251509", 
+   "Q5152595", 
+   "Q811549", 
+   "Q164032", 
+   "Q15584208", 
+   "Q15574011", 
+   "Q19849736", 
+   "Q17234595", 
+   "Q15586934", 
+   "Q15588832", 
+   "Q15975690", 
+   "Q21877273", 
+   "Q21251933", 
+   "Q13720561", 
+   "Q22696075", 
+   "Q7226467", 
+   "Q15587603", 
+   "Q10906008", 
+   "Q1499421", 
+   "Q2936421", 
+   "Q15553746", 
+   "Q160334", 
+   "Q11326699", 
+   "Q15553640", 
+   "Q17237311", 
+   "Q15289831", 
+   "Q17244388", 
+   "Q15587959", 
+   "Q18111284", 
+   "Q3065169", 
+   "Q15586536", 
+   "Q17247619", 
+   "Q14939287", 
+   "Q15251066", 
+   "Q15571468", 
+   "Q12032320", 
+   "Q1366184", 
+   "Q17574551", 
+   "Q26976481", 
+   "Q15586733", 
+   "Q9567671", 
+   "Q21251921", 
+   "Q15554301", 
+   "Q11087064", 
+   "Q15587046", 
+   "Q15589000", 
+   "Q13405372", 
+   "Q18371411", 
+   "Q15584692", 
+   "Q19849683", 
+   "Q11038585", 
+   "Q15289634", 
+   "Q21872305", 
+   "Q15587436", 
+   "Q17243301", 
+   "Q21872302", 
+   "Q21876829", 
+   "Q11179445", 
+   "Q21872308", 
+   "Q24006173"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "227", 
+  "active_set": [
+   "(c(Q16521),P566,c(Q82799))"
+  ]
+ }, 
+ {
+  "set_op_choice": 3, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Difference|Single_Relation", 
+  "type_list": [
+   "Q5058355"
+  ], 
+  "entities_in_utterance": [
+   "Q151233", 
+   "Q14907600"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P681"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which cellular components are components of Interleukin-6 receptor subunit beta but not Hemojuvelin ?"
+ }, 
+ {
+  "all_entities": [
+   "Q14864866"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14864866"
+  ], 
+  "utterance": "cell body", 
+  "active_set": [
+   "AND((Q14907600,P681,c(Q5058355)), NOT((Q151233,P681,c(Q5058355))))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q151233"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P688"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which nucleic acid sequence encodes Hemojuvelin ?"
+ }, 
+ {
+  "all_entities": [
+   "Q14905785"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14905785"
+  ], 
+  "utterance": "HFE2", 
+  "active_set": [
+   "(c(Q863908),P688,Q151233)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q14905785", 
+   "Q151233"
+  ], 
+  "relations": [
+   "P702"
+  ], 
+  "type_list": [
+   "Q181394"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Does that nucleic acid sequence encode Hemojuvelin ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q151233,P702,Q14905785)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q14907597", 
+   "Q1540648"
+  ], 
+  "relations": [
+   "P688"
+  ], 
+  "type_list": [
+   "Q181394"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Is Interleukin 6 signal transducer (Gp130, oncostatin M receptor) encoded by IL6ST ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q14907597,P688,Q1540648)"
+  ]
+ }
+]

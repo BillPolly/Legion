@@ -1,0 +1,417 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q5480193"
+  ], 
+  "relations": [
+   "P463"
+  ], 
+  "type_list": [
+   "Q48204"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which voluntary association was Francis Bennett-Goldney a member of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q5417893"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5417893"
+  ], 
+  "utterance": "Society of Antiquaries of London", 
+  "active_set": [
+   "(Q5480193,P463,c(Q48204))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q5480193"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P937"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the work location of that person ?"
+ }, 
+ {
+  "all_entities": [
+   "Q84"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q84"
+  ], 
+  "utterance": "London", 
+  "active_set": [
+   "(Q5417893,P937,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q84"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P159"
+  ], 
+  "type_list": [
+   "Q83620"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where is the headquarter of that administrative territory located ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3494229"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3494229"
+  ], 
+  "utterance": "Spring Gardens", 
+  "active_set": [
+   "(Q84,P159,c(Q83620))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P669"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q83620", 
+   "Q16970"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many churches are located on atleast 1 thoroughfare ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q5108630"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(c(Q16970),P669,c(Q83620))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q19830060"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P669"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q83620", 
+   "Q3914"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which schools are located on around the same number of thoroughfares as 6e Montessorischool Anne Frank ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q7628092", 
+   "Q1641001", 
+   "Q17574356", 
+   "Q7649450", 
+   "Q49126", 
+   "Q6514349", 
+   "Q273626", 
+   "Q16259388", 
+   "Q1816228", 
+   "Q3276962", 
+   "Q3268696", 
+   "Q16258686", 
+   "Q337454", 
+   "Q19830060"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q273626", 
+   "Q17574356", 
+   "Q49126"
+  ], 
+  "utterance": "\u00c9cole Polytechnique, Haagaas School, Harvard Business School", 
+  "active_set": [
+   "(c(Q3914),P669,c(Q83620))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q15077306", 
+   "Q5480193"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are the countries of citizenship of Francis Bennett-Goldney or Eugene Litvinkovich ?"
+ }, 
+ {
+  "all_entities": [
+   "Q184", 
+   "Q145"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q184", 
+   "Q145"
+  ], 
+  "utterance": "Belarus, United Kingdom", 
+  "active_set": [
+   "OR((Q5480193,P27,c(Q15617994)), (Q15077306,P27,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q230"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Do Georgia have diplomatic relations with those ones ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q230,P530,Q184)", 
+   "(Q230,P530,Q145)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which administrative territories have ambassadorial relations with exactly 10 administrative territories ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q148"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q148"
+  ], 
+  "utterance": "People's Republic of China", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q17574356"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P127"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which person owned Haagaas School ?"
+ }, 
+ {
+  "all_entities": [
+   "Q17119772"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q17119772"
+  ], 
+  "utterance": "Theodor Haagaas", 
+  "active_set": [
+   "(Q17574356,P127,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q148"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P36"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the capital of People's Republic of China ?"
+ }, 
+ {
+  "all_entities": [
+   "Q956"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q956"
+  ], 
+  "utterance": "Beijing", 
+  "active_set": [
+   "(Q148,P36,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q148"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P189"
+  ], 
+  "type_list": [
+   "Q17444909"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which astronomical object type was discovered at that administrative territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q138642"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q138642"
+  ], 
+  "utterance": "139 Juewa", 
+  "active_set": [
+   "(c(Q17444909),P189,Q956)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "relations": [
+   "P189"
+  ], 
+  "count_ques_sub_type": 7, 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories are the places of discovery of that astronomical object type ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q148"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q138642,P189,c(Q15617994))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q322183", 
+   "Q273626"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P17"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are \u00c9cole Polytechnique or Riga Castle present in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q142", 
+   "Q211"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q142", 
+   "Q211"
+  ], 
+  "utterance": "France, Latvia", 
+  "active_set": [
+   "OR((Q273626,P17,c(Q15617994)), (Q322183,P17,c(Q15617994)))"
+  ]
+ }
+]

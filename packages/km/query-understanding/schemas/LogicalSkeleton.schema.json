@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "LogicalSkeleton.schema.json",
+  "title": "Logical Skeleton",
+  "description": "Backend-agnostic logical query representation",
+  "type": "object",
+  "required": ["vars", "atoms", "project", "force"],
+  "properties": {
+    "vars": {
+      "type": "array",
+      "description": "All variables used in query",
+      "items": {
+        "type": "string",
+        "pattern": "^\\?[a-zA-Z0-9_]+$"
+      }
+    },
+    "atoms": {
+      "type": "array",
+      "description": "Logical atoms (isa, rel, has, filter, op)",
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "items": [
+          {
+            "type": "string",
+            "enum": ["isa", "rel", "has", "filter", "op"],
+            "description": "Atom type"
+          }
+        ]
+      }
+    },
+    "whereNot": {
+      "type": "array",
+      "description": "Negated atoms (things that must NOT be true)",
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "items": [
+          {
+            "type": "string",
+            "enum": ["isa", "rel", "has", "filter", "op"],
+            "description": "Negated atom type"
+          }
+        ]
+      }
+    },
+    "project": {
+      "type": "array",
+      "description": "Variables or aggregations to return (strings for vars, arrays for aggregations)"
+    },
+    "order": {
+      "type": "array",
+      "description": "Sort specification",
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": [
+          {
+            "type": "string",
+            "pattern": "^\\?[a-zA-Z0-9_]+$",
+            "description": "Variable to sort by"
+          },
+          {
+            "type": "string",
+            "enum": ["asc", "desc"],
+            "description": "Sort direction"
+          }
+        ]
+      }
+    },
+    "limit": {
+      "type": ["number", "null"],
+      "description": "Result limit or null",
+      "minimum": 1,
+      "multipleOf": 1
+    },
+    "force": {
+      "type": "string",
+      "enum": ["ask", "select", "aggregate"],
+      "description": "Query type"
+    },
+    "notes": {
+      "type": "array",
+      "description": "Warnings, assumptions, clarifications",
+      "items": {"type": "string"}
+    }
+  }
+}

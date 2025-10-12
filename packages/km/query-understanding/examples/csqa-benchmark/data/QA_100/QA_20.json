@@ -1,0 +1,551 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q26196707"
+  ], 
+  "relations": [
+   "P241"
+  ], 
+  "type_list": [
+   "Q781132"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which military branch contains William Dickson as its part ?"
+ }, 
+ {
+  "all_entities": [
+   "Q222595"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q222595"
+  ], 
+  "utterance": "British Army", 
+  "active_set": [
+   "(Q26196707,P241,c(Q781132))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q222595"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P108"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people have that military branch as their employer ?"
+ }, 
+ {
+  "all_entities": [
+   "Q15872181", 
+   "Q1387374", 
+   "Q7529427", 
+   "Q6386213", 
+   "Q5567913", 
+   "Q5447258", 
+   "Q7529416"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7529427", 
+   "Q1387374", 
+   "Q5567913"
+  ], 
+  "utterance": "Sir Watkin Williams-Wynn, 9th Baronet, John Jeffries, Kenneth Macdonald Beaumont", 
+  "active_set": [
+   "(c(Q502895),P108,Q222595)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q222595"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1001"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which occupation presides the jurisdiction over that military branch ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6737999"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6737999"
+  ], 
+  "utterance": "Major-General commanding the Household Division", 
+  "active_set": [
+   "(c(Q12737077),P1001,Q7529427)", 
+   "(c(Q12737077),P1001,Q1387374)", 
+   "(c(Q12737077),P1001,Q5567913)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q6737999", 
+   "Q3366916"
+  ], 
+  "relations": [
+   "P39"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Did Iwan Fr\u00e4nkel hold the position of that occupation ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q3366916,P39,Q6737999)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q1387374", 
+   "Q30"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Is United States of America the country of citizenship of John Jeffries ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q1387374,P27,Q30)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P417"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q502895", 
+   "Q12737077"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which people are the patron saint of max number of occupations ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q179718"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q179718"
+  ], 
+  "utterance": "Catherine of Alexandria", 
+  "active_set": [
+   "(c(Q12737077),P417,Q208331)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, both direct", 
+  "entities_in_utterance": [
+   "Q179718", 
+   "Q79"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 1, 
+  "utterance": "Is Catherine of Alexandria a civilian of Egypt ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q179718,P27,Q79)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P725"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q502895", 
+   "Q386724"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many works have been dubbed by approximately 10 people ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q26987217", 
+   "Q26701981", 
+   "Q23752771", 
+   "Q27627540", 
+   "Q26712000", 
+   "Q26390366", 
+   "Q26715049", 
+   "Q26299860", 
+   "Q25858085", 
+   "Q26457246", 
+   "Q26301623", 
+   "Q13516675", 
+   "Q26829863", 
+   "Q23894983"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "14", 
+  "active_set": [
+   "(c(Q386724),P725,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which musical instruments can max number of people perform with ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q5994"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5994"
+  ], 
+  "utterance": "piano", 
+  "active_set": [
+   "(c(Q502895),P1303,Q3623688)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, all direct, 2 are query entities", 
+  "entities_in_utterance": [
+   "Q5994", 
+   "Q301597", 
+   "Q16728084"
+  ], 
+  "relations": [
+   "P61"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 4, 
+  "utterance": "Was piano invented or discovered by Bartolomeo Cristofori and Mike Clasper ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES and NO respectively", 
+  "active_set": [
+   "(Q5994,P61,Q301597)", 
+   "(Q5994,P61,Q16728084)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q34379", 
+   "Q386724"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which works demonstrate min number of musical instruments ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q27266011", 
+   "Q18818942", 
+   "Q20018619", 
+   "Q18822501", 
+   "Q3227124", 
+   "Q7604478", 
+   "Q18822442", 
+   "Q20655984", 
+   "Q23301843", 
+   "Q27245162", 
+   "Q3842557", 
+   "Q25351982", 
+   "Q16961954", 
+   "Q20668011", 
+   "Q20668010", 
+   "Q18760514", 
+   "Q20667952", 
+   "Q20018598", 
+   "Q18350631", 
+   "Q208120", 
+   "Q7772874", 
+   "Q20035907", 
+   "Q20012212", 
+   "Q20012204", 
+   "Q20012272", 
+   "Q20012219", 
+   "Q577890", 
+   "Q1638622", 
+   "Q11725617", 
+   "Q27783590", 
+   "Q2410932", 
+   "Q1684762", 
+   "Q18602499", 
+   "Q18676635", 
+   "Q3000066", 
+   "Q3387593", 
+   "Q20667955", 
+   "Q20655689", 
+   "Q17986845", 
+   "Q20667953", 
+   "Q18397036", 
+   "Q1213160", 
+   "Q2619037", 
+   "Q7884355", 
+   "Q2908939"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18676635", 
+   "Q20668011", 
+   "Q18602499"
+  ], 
+  "utterance": "Splatter Analysis, Funerary stele of Thalea, Mountain Stream, Yemen Valley, Palestine", 
+  "active_set": [
+   "(c(Q386724),P180,c(Q34379))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Quantitative|Count|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "relations": [
+   "P17"
+  ], 
+  "count_ques_sub_type": 7, 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories are that work a part of ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "description": "Quantitative|Count|Single entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q20668011"
+  ], 
+  "active_set": [
+   "(Q18676635,P17,c(Q15617994))", 
+   "(Q20668011,P17,c(Q15617994))", 
+   "(Q18602499,P17,c(Q15617994))"
+  ], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Funerary stele of Thalea ?"
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "count_ques_sub_type": 7, 
+  "entities": [
+   "Q18676635"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "No, I meant Splatter Analysis. Could you tell me the answer for that?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q30"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q18676635,P17,c(Q15617994))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q79529", 
+   "Q8063", 
+   "Q386724"
+  ], 
+  "entities_in_utterance": [
+   "Q18397036"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P186"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many works are made from more number of chemical substances or rocks than Landscape with castle ?"
+ }, 
+ {
+  "all_entities": [
+   "Q5114395", 
+   "Q20667955", 
+   "Q6815569", 
+   "Q25412656", 
+   "Q7451349", 
+   "Q23301712", 
+   "Q23301718", 
+   "Q26884760", 
+   "Q18217123", 
+   "Q20012212", 
+   "Q24764950", 
+   "Q18602499", 
+   "Q27087815", 
+   "Q20012272", 
+   "Q20667953", 
+   "Q20667952", 
+   "Q22953889", 
+   "Q261274", 
+   "Q18760514"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "19", 
+  "active_set": [
+   "(c(Q386724),P186,c(Q79529)|c(Q8063))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q79529", 
+   "Q8063", 
+   "Q386724"
+  ], 
+  "entities_in_utterance": [
+   "Q5652403"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P186"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And also tell me about Happy-Go-Luckies of Nature and Technology?"
+ }, 
+ {
+  "all_entities": [
+   "Q5114395", 
+   "Q20667955", 
+   "Q6815569", 
+   "Q25412656", 
+   "Q7451349", 
+   "Q23301712", 
+   "Q23301718", 
+   "Q26884760", 
+   "Q18217123", 
+   "Q20012212", 
+   "Q24764950", 
+   "Q18602499", 
+   "Q27087815", 
+   "Q20012272", 
+   "Q20667953", 
+   "Q20667952", 
+   "Q22953889", 
+   "Q261274", 
+   "Q18760514"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "19", 
+  "active_set": [
+   "(c(Q386724),P186,c(Q79529)|c(Q8063))"
+  ]
+ }
+]

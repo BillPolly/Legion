@@ -1,0 +1,358 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q21427956"
+  ], 
+  "relations": [
+   "P702"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which gene encodes Disintegrin and metalloproteinase domain-containing protein 1a ?"
+ }, 
+ {
+  "all_entities": [
+   "Q18301231"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18301231"
+  ], 
+  "utterance": "Adam1a", 
+  "active_set": [
+   "(Q21427956,P702,c(Q863908))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q21427956"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P680"
+  ], 
+  "type_list": [
+   "Q44424"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which the chemical bonds that represents the molecular function of that nutrient ?"
+ }, 
+ {
+  "all_entities": [
+   "Q14633865", 
+   "Q13667380"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14633865", 
+   "Q13667380"
+  ], 
+  "utterance": "zinc ion binding, metal ion binding", 
+  "active_set": [
+   "(Q18301231,P680,c(Q44424))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q21427956"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P688"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which nucleic acid sequence encodes that nutrient ?"
+ }, 
+ {
+  "all_entities": [
+   "Q18301231"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18301231"
+  ], 
+  "utterance": "Adam1a", 
+  "active_set": [
+   "(c(Q863908),P688,Q14633865)", 
+   "(c(Q863908),P688,Q13667380)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q21427956"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P681"
+  ], 
+  "type_list": [
+   "Q15989253"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which part is a component of that nutrient ?"
+ }, 
+ {
+  "all_entities": [
+   "Q14349455"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q14349455"
+  ], 
+  "utterance": "membrane", 
+  "active_set": [
+   "(Q18301231,P681,c(Q15989253))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q21427956"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P703"
+  ], 
+  "type_list": [
+   "Q16521"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which taxon is that nutrient found in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q83310"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q83310"
+  ], 
+  "utterance": "Mus musculus", 
+  "active_set": [
+   "(Q14349455,P703,c(Q16521))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type", 
+  "entities_in_utterance": [
+   "Q18301231"
+  ], 
+  "relations": [
+   "P702"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q181394"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many nutrients are encoded by Adam1a ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q21427956"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(c(Q181394),P702,Q18301231)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q23119942"
+  ], 
+  "relations": [
+   "P702"
+  ], 
+  "count_ques_sub_type": 1, 
+  "type_list": [
+   "Q181394"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And how about 5'-deoxynucleotidase    AHA_2008?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q23430703"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(c(Q181394),P702,Q23119942)"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Incomplete count-based ques", 
+  "entities_in_utterance": [
+   "Q21148684"
+  ], 
+  "inc_ques_type": 3, 
+  "relations": [], 
+  "type_list": [
+   "Q181394"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about Coiled-coil domain-containing protein 40?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(Q21148684,P702,c(Q181394))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q16521", 
+   "Q3516658"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which heraldic symbols depict max number of taxons ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q3844422", 
+   "Q3621125", 
+   "Q3978297", 
+   "Q3882779", 
+   "Q3840866", 
+   "Q3759316", 
+   "Q3608001", 
+   "Q3900720", 
+   "Q3930188", 
+   "Q3801980"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3844422", 
+   "Q3621125", 
+   "Q3978297"
+  ], 
+  "utterance": "almond tree, columbine, plum tree", 
+  "active_set": [
+   "(c(Q3516658),P180,c(Q16521))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q1136525"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q483247", 
+   "Q3516658"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many phenomena are demonstrated in approximately the same number of heraldic symbols as winter storm ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1136525", 
+   "Q165939", 
+   "Q8094", 
+   "Q7944", 
+   "Q7925", 
+   "Q8070", 
+   "Q8065"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "7", 
+  "active_set": [
+   "(c(Q3516658),P180,c(Q483247))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q8094"
+  ], 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q483247", 
+   "Q3516658"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And how about wind?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q1136525", 
+   "Q165939", 
+   "Q8094", 
+   "Q7944", 
+   "Q7925", 
+   "Q8070", 
+   "Q8065"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "7", 
+  "active_set": [
+   "(c(Q3516658),P180,c(Q483247))"
+  ]
+ }
+]

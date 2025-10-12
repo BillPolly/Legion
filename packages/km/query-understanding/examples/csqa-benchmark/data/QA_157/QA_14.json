@@ -1,0 +1,583 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q7282448"
+  ], 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which sex does Rafa\u0142 Lasocki possess ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "utterance": "male", 
+  "active_set": [
+   "(Q7282448,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P136"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people as that sex as their class ?"
+ }, 
+ {
+  "all_entities": [
+   "Q19796723", 
+   "Q23766532", 
+   "Q313288", 
+   "Q18221191"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q313288", 
+   "Q18221191", 
+   "Q23766532"
+  ], 
+  "utterance": "Augustus Pugin, Alessandro Gregorio Capponi, Pierre Laviron", 
+  "active_set": [
+   "(c(Q502895),P136,Q6581097)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q313288"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P800"
+  ], 
+  "type_list": [
+   "Q16970"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What were notable works done by that person ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q23766532"
+  ], 
+  "active_set": [
+   "(Q313288,P800,c(Q16970))", 
+   "(Q18221191,P800,c(Q16970))", 
+   "(Q23766532,P800,c(Q16970))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q313288", 
+   "Q18221191", 
+   "Q23766532"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Pierre Laviron ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q313288"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Augustus Pugin. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q1638891", 
+   "Q1138066", 
+   "Q1451262", 
+   "Q1545350"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1638891", 
+   "Q1138066", 
+   "Q1545350"
+  ], 
+  "utterance": "St Mary's Cathedral, Newcastle upon Tyne, St. Aidan's Cathedral, Nottingham Cathedral", 
+  "active_set": [
+   "(Q313288,P800,c(Q16970))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Comparative|More/Less|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P84"
+  ], 
+  "count_ques_sub_type": 8, 
+  "type_list": [
+   "Q4830453", 
+   "Q16970"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which churches were approximately the same number of business enterprises the designer of as that church ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "description": "Comparative|More/Less|Single entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q1638891"
+  ], 
+  "active_set": [
+   "(c(Q16970),P84,c(Q4830453))"
+  ], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean St Mary's Cathedral, Newcastle upon Tyne ?"
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "count_ques_sub_type": 8, 
+  "entities": [
+   "Q1138066"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "No, I meant St. Aidan's Cathedral. Could you tell me the answer for that?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q16987016", 
+   "Q4729408", 
+   "Q1421317", 
+   "Q128058", 
+   "Q2942264", 
+   "Q5052256", 
+   "Q526650"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q526650", 
+   "Q1421317", 
+   "Q128058"
+  ], 
+  "utterance": "Clifton Cathedral, Sheffield Cathedral, Cathedral Basilica of Saint Louis", 
+  "active_set": [
+   "(c(Q16970),P84,c(Q4830453))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Comparative|Count over More/Less|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P84"
+  ], 
+  "count_ques_sub_type": 9, 
+  "type_list": [
+   "Q4830453", 
+   "Q16970"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many churches were designed by more number of business enterprises than that church ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "description": "Comparative|Count over More/Less|Single entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q1421317"
+  ], 
+  "active_set": [
+   "(c(Q16970),P84,c(Q4830453))"
+  ], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Sheffield Cathedral ?"
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "count_ques_sub_type": 9, 
+  "entities": [
+   "Q526650"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "No, I meant Clifton Cathedral. Could you tell me the answer for that?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q16987016", 
+   "Q4729408", 
+   "Q1421317", 
+   "Q128058", 
+   "Q2942264", 
+   "Q5052256", 
+   "Q526650"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "7", 
+  "active_set": [
+   "(c(Q16970),P84,c(Q4830453))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Mult. entity type", 
+  "type_list": [
+   "Q502895", 
+   "Q1445650", 
+   "Q16970"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P417"
+  ], 
+  "count_ques_sub_type": 4, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "Which churches have adopted atleast 1 people and holidays as patron saint ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2942927", 
+   "Q18288367", 
+   "Q569428", 
+   "Q22720", 
+   "Q17592509", 
+   "Q17592467", 
+   "Q1160413", 
+   "Q2617274", 
+   "Q810123", 
+   "Q18011474", 
+   "Q1086358", 
+   "Q12354023", 
+   "Q18028087", 
+   "Q20478672", 
+   "Q1296233", 
+   "Q19309758", 
+   "Q1514860", 
+   "Q17592514", 
+   "Q20478415", 
+   "Q2064095", 
+   "Q17592510", 
+   "Q641447", 
+   "Q1249452", 
+   "Q2088363", 
+   "Q20479842", 
+   "Q568214", 
+   "Q770458", 
+   "Q638519", 
+   "Q279402", 
+   "Q723968", 
+   "Q3670118", 
+   "Q402221", 
+   "Q12354030", 
+   "Q668710", 
+   "Q18202203", 
+   "Q18028099", 
+   "Q1686988", 
+   "Q312220", 
+   "Q1736160", 
+   "Q693869", 
+   "Q12350456", 
+   "Q715099", 
+   "Q747856", 
+   "Q1450280", 
+   "Q1177463", 
+   "Q1259104", 
+   "Q17496222", 
+   "Q21189410", 
+   "Q31204", 
+   "Q2225340", 
+   "Q184407", 
+   "Q1124051", 
+   "Q20478883", 
+   "Q1048587", 
+   "Q1493222", 
+   "Q3790872", 
+   "Q20478966", 
+   "Q3668341", 
+   "Q17278606", 
+   "Q19364191", 
+   "Q1421317", 
+   "Q43282", 
+   "Q2994043", 
+   "Q1329512", 
+   "Q18202199", 
+   "Q18287950", 
+   "Q17662962", 
+   "Q464437", 
+   "Q20479643", 
+   "Q26907430", 
+   "Q2322737", 
+   "Q739366", 
+   "Q207985", 
+   "Q20478555", 
+   "Q1758749", 
+   "Q852606", 
+   "Q2561189", 
+   "Q17662892", 
+   "Q12354089", 
+   "Q338665", 
+   "Q1296368", 
+   "Q2942510", 
+   "Q14943786", 
+   "Q476529", 
+   "Q2655072", 
+   "Q26935191", 
+   "Q408847", 
+   "Q17614328", 
+   "Q94744", 
+   "Q20478524", 
+   "Q666960", 
+   "Q17561181", 
+   "Q261423", 
+   "Q1415669", 
+   "Q18028045", 
+   "Q18028044", 
+   "Q21525871", 
+   "Q1062101", 
+   "Q586471", 
+   "Q2443243", 
+   "Q11737349", 
+   "Q987211", 
+   "Q1107406", 
+   "Q1603677", 
+   "Q937290", 
+   "Q1107408", 
+   "Q20479897", 
+   "Q12354066", 
+   "Q2091893", 
+   "Q736587", 
+   "Q2411716", 
+   "Q764251", 
+   "Q2942772", 
+   "Q20478584", 
+   "Q1423005", 
+   "Q20067763", 
+   "Q654904", 
+   "Q84090", 
+   "Q18333522", 
+   "Q20480580", 
+   "Q20479807", 
+   "Q1774485", 
+   "Q22691575", 
+   "Q24705751", 
+   "Q20479888", 
+   "Q18130877", 
+   "Q17614265", 
+   "Q16736846", 
+   "Q12354072", 
+   "Q1236564", 
+   "Q603289", 
+   "Q2668017", 
+   "Q23365744", 
+   "Q1635337", 
+   "Q1236697", 
+   "Q489014", 
+   "Q906753", 
+   "Q18515916", 
+   "Q5938", 
+   "Q1037844", 
+   "Q18286751", 
+   "Q3395146", 
+   "Q526650", 
+   "Q20436021", 
+   "Q1296408", 
+   "Q20479978", 
+   "Q1636756", 
+   "Q20480060", 
+   "Q5949", 
+   "Q12354009", 
+   "Q12354008", 
+   "Q2737833", 
+   "Q5943", 
+   "Q12354006", 
+   "Q2268666", 
+   "Q17278642", 
+   "Q5429578", 
+   "Q19984103", 
+   "Q167017", 
+   "Q18028079", 
+   "Q573881", 
+   "Q20439328", 
+   "Q17278662", 
+   "Q910211", 
+   "Q19799294", 
+   "Q1499188", 
+   "Q12786853", 
+   "Q2942303", 
+   "Q17606582", 
+   "Q1076146", 
+   "Q17592485", 
+   "Q17592482", 
+   "Q2319644", 
+   "Q12354014", 
+   "Q18155878", 
+   "Q17592489", 
+   "Q20480107", 
+   "Q634112", 
+   "Q1736144", 
+   "Q45033", 
+   "Q12345556", 
+   "Q12097186"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2942772", 
+   "Q1423005", 
+   "Q1086358"
+  ], 
+  "utterance": "Cathedral of Saint-J\u00e9r\u00f4me, Nantes Cathedral, St. Rumbold's Cathedral", 
+  "active_set": [
+   "(c(Q16970),P417,c(Q502895)|c(Q1445650))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q2942772", 
+   "Q1423005", 
+   "Q1086358"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P417"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What people are the patron saint of Cathedral of Saint-J\u00e9r\u00f4me, Nantes Cathedral and St. Rumbold's Cathedral ?"
+ }, 
+ {
+  "all_entities": [
+   "Q44248", 
+   "Q9200", 
+   "Q33923", 
+   "Q965463"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q9200", 
+   "Q33923", 
+   "Q44248"
+  ], 
+  "utterance": "Paul, Peter, Jerome", 
+  "active_set": [
+   "(Q2942772,P417,c(Q502895))", 
+   "(Q1423005,P417,c(Q502895))", 
+   "(Q1086358,P417,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Mult. Entity", 
+  "entities_in_utterance": [
+   "Q9200", 
+   "Q33923", 
+   "Q44248"
+  ], 
+  "sec_ques_sub_type": 3, 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which sexes do those people possess ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097", 
+   "Q6581097", 
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097", 
+   "Q6581097", 
+   "Q6581097"
+  ], 
+  "utterance": "male", 
+  "active_set": [
+   "(Q9200,P21,c(Q290))", 
+   "(Q33923,P21,c(Q290))", 
+   "(Q44248,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1423005"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P276"
+  ], 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which work of art is located at Nantes Cathedral ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1026644"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1026644"
+  ], 
+  "utterance": "Tomb of Francis II, Duke of Brittany", 
+  "active_set": [
+   "(c(Q838948),P276,Q1423005)"
+  ]
+ }
+]

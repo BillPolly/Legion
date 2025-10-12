@@ -1,0 +1,507 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q27642893"
+  ], 
+  "relations": [
+   "P1532"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territory did Nick Rogers play for ?"
+ }, 
+ {
+  "all_entities": [
+   "Q30"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "utterance": "United States of America", 
+  "active_set": [
+   "(Q27642893,P1532,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q27642893"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P641"
+  ], 
+  "type_list": [
+   "Q212434"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which Olympic sport was Nick Rogers a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3312129"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3312129"
+  ], 
+  "utterance": "track and field", 
+  "active_set": [
+   "(Q27642893,P641,c(Q212434))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q521753", 
+   "Q27642893"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories do Nick Rogers or Lidija Nikolajewna Smirnowa belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q30", 
+   "Q159"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30", 
+   "Q159"
+  ], 
+  "utterance": "United States of America, Russia", 
+  "active_set": [
+   "OR((Q27642893,P27,c(Q15617994)), (Q521753,P27,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Quantitative|Count|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "relations": [
+   "P47"
+  ], 
+  "count_ques_sub_type": 7, 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories share border with that administrative territory ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "description": "Quantitative|Count|Single entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "active_set": [
+   "(Q30,P47,c(Q15617994))", 
+   "(Q159,P47,c(Q15617994))"
+  ], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean United States of America ?"
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "count_ques_sub_type": 7, 
+  "entities": [
+   "Q159"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "No, I meant Russia. Could you tell me the answer for that?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q227", 
+   "Q20", 
+   "Q423", 
+   "Q211", 
+   "Q230", 
+   "Q232", 
+   "Q191", 
+   "Q184", 
+   "Q711", 
+   "Q33", 
+   "Q17", 
+   "Q30", 
+   "Q37", 
+   "Q36", 
+   "Q212", 
+   "Q148"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "16", 
+  "active_set": [
+   "(Q159,P47,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q664"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q1048835", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which political territories have diplomatic relationships with less number of administrative territories than New Zealand ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1000", 
+   "Q781", 
+   "Q778", 
+   "Q769", 
+   "Q685", 
+   "Q691", 
+   "Q766"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1000", 
+   "Q769", 
+   "Q691"
+  ], 
+  "utterance": "Gabon, Grenada, Papua New Guinea", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q769"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P610"
+  ], 
+  "type_list": [
+   "Q14524493"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which is the zenith of that political territory ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q1000"
+  ], 
+  "active_set": [
+   "(Q1000,P610,c(Q14524493))", 
+   "(Q769,P610,c(Q14524493))", 
+   "(Q691,P610,c(Q14524493))"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q1000", 
+   "Q769", 
+   "Q691"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Gabon ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q769"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Grenada. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q525281"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q525281"
+  ], 
+  "utterance": "Mount Saint Catherine", 
+  "active_set": [
+   "(Q769,P610,c(Q14524493))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q525281"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P361"
+  ], 
+  "type_list": [
+   "Q271669"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which landform is that terrain a component of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3116419"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3116419"
+  ], 
+  "utterance": "Grenada", 
+  "active_set": [
+   "(Q525281,P361,c(Q271669))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Mult. entity type", 
+  "type_list": [
+   "Q271669", 
+   "Q340169", 
+   "Q838948"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 6, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many landforms are expressed in around 1 medias and works of art ?"
+ }, 
+ {
+  "all_entities": [
+   "Q93352", 
+   "Q207239", 
+   "Q7985558", 
+   "Q22502", 
+   "Q18432"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "5", 
+  "active_set": [
+   "(c(Q340169)|c(Q838948),P180,c(Q271669))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Mult. entity type", 
+  "type_list": [
+   "Q701632", 
+   "Q1752346", 
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P194"
+  ], 
+  "count_ques_sub_type": 4, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "Which administrative territories have atmost 1 municipal councils or assemblies as their council ?"
+ }, 
+ {
+  "all_entities": [
+   "Q805", 
+   "Q804", 
+   "Q801", 
+   "Q800", 
+   "Q1462", 
+   "Q1250", 
+   "Q419", 
+   "Q668", 
+   "Q2806757", 
+   "Q414", 
+   "Q142", 
+   "Q55", 
+   "Q1948", 
+   "Q145", 
+   "Q148", 
+   "Q189", 
+   "Q786", 
+   "Q710", 
+   "Q717", 
+   "Q252320", 
+   "Q187035", 
+   "Q1460", 
+   "Q3361", 
+   "Q657", 
+   "Q258", 
+   "Q1979", 
+   "Q45", 
+   "Q159", 
+   "Q43", 
+   "Q41", 
+   "Q155", 
+   "Q792", 
+   "Q4628", 
+   "Q779011", 
+   "Q889", 
+   "Q884", 
+   "Q958", 
+   "Q12574", 
+   "Q153529", 
+   "Q1965", 
+   "Q12761", 
+   "Q242", 
+   "Q244", 
+   "Q1974", 
+   "Q33", 
+   "Q32", 
+   "Q31", 
+   "Q30", 
+   "Q37", 
+   "Q36", 
+   "Q34", 
+   "Q929", 
+   "Q39", 
+   "Q38", 
+   "Q739", 
+   "Q3685392", 
+   "Q733", 
+   "Q29999", 
+   "Q854", 
+   "Q153091", 
+   "Q1447", 
+   "Q104192", 
+   "Q603676", 
+   "Q1282", 
+   "Q1284", 
+   "Q3389", 
+   "Q236", 
+   "Q747074", 
+   "Q72449", 
+   "Q233", 
+   "Q238", 
+   "Q12661", 
+   "Q20", 
+   "Q1273", 
+   "Q28", 
+   "Q29", 
+   "Q1279", 
+   "Q1049", 
+   "Q783", 
+   "Q2009", 
+   "Q2007", 
+   "Q184", 
+   "Q2003", 
+   "Q1458", 
+   "Q1904", 
+   "Q228", 
+   "Q227", 
+   "Q224", 
+   "Q223", 
+   "Q222", 
+   "Q221", 
+   "Q815731", 
+   "Q96", 
+   "Q229", 
+   "Q347", 
+   "Q17", 
+   "Q1989", 
+   "Q902", 
+   "Q191", 
+   "Q697", 
+   "Q298", 
+   "Q114", 
+   "Q754", 
+   "Q750", 
+   "Q212", 
+   "Q213", 
+   "Q211", 
+   "Q214", 
+   "Q215", 
+   "Q218", 
+   "Q219", 
+   "Q1210", 
+   "Q917", 
+   "Q16110", 
+   "Q736", 
+   "Q34020", 
+   "Q686", 
+   "Q760", 
+   "Q574", 
+   "Q694594", 
+   "Q79", 
+   "Q77", 
+   "Q1222", 
+   "Q774", 
+   "Q948", 
+   "Q811", 
+   "Q1016", 
+   "Q27", 
+   "Q1011", 
+   "Q1243", 
+   "Q1013", 
+   "Q12620", 
+   "Q12626", 
+   "Q672", 
+   "Q176", 
+   "Q1951", 
+   "Q1952", 
+   "Q2023", 
+   "Q869", 
+   "Q1237"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q38", 
+   "Q155", 
+   "Q30"
+  ], 
+  "utterance": "Italy, Brazil, United States of America", 
+  "active_set": [
+   "(c(Q15617994),P194,c(Q701632)|c(Q1752346))"
+  ]
+ }
+]

@@ -1,0 +1,456 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1243640"
+  ], 
+  "relations": [
+   "P495"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is the country of origin of King of the Gypsies ?"
+ }, 
+ {
+  "all_entities": [
+   "Q30"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "utterance": "United States of America", 
+  "active_set": [
+   "(Q1243640,P495,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1243640"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1040"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which person is the editor of that work of art ?"
+ }, 
+ {
+  "all_entities": [
+   "Q429973"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q429973"
+  ], 
+  "utterance": "Paul Hirsch", 
+  "active_set": [
+   "(Q30,P1040,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q429973", 
+   "Q2825107"
+  ], 
+  "relations": [
+   "P344"
+  ], 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Does Adrien have that person as the director of photography ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q2825107,P344,Q429973)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, all direct, 2 are query entities", 
+  "entities_in_utterance": [
+   "Q30", 
+   "Q10289137", 
+   "Q5592271"
+  ], 
+  "relations": [
+   "P6"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 4, 
+  "utterance": "Does United States of America have a government lead by Gerardo Ponte Cavalcante and Graeme Goodings ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q30,P6,Q10289137)", 
+   "(Q30,P6,Q5592271)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which musical instruments do max number of people know to play ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q5994"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5994"
+  ], 
+  "utterance": "piano", 
+  "active_set": [
+   "(c(Q502895),P1303,Q3623688)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which musical instruments do exactly 5 people know to play ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q213461", 
+   "Q213100"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q213461", 
+   "Q213100"
+  ], 
+  "utterance": "harmonium, tabla", 
+  "active_set": [
+   "(c(Q502895),P1303,c(Q34379))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 3, 
+  "type_list": [
+   "Q34379", 
+   "Q340169"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which medias demonstrate around 1 musical instrument ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q19868516", 
+   "Q17519439"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q19868516", 
+   "Q17519439"
+  ], 
+  "utterance": "Violin Hanging on a Wall, Achille Henri Victor Gouff\u00e9", 
+  "active_set": [
+   "(c(Q340169),P180,c(Q34379))"
+  ]
+ }, 
+ {
+  "question-type": "Clarification", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Indirect", 
+  "type_list": [
+   "Q19603939", 
+   "Q186081", 
+   "Q340169"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 3, 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 10, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many medias depict greater number of building components or time intervals than that media ?"
+ }, 
+ {
+  "description": "Comparative|Count over More/Less|Mult. entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q19868516"
+  ], 
+  "active_set": [
+   "(c(Q340169),P180,c(Q19603939)|c(Q186081))"
+  ], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Violin Hanging on a Wall ?"
+ }, 
+ {
+  "ques_type_id": 8, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "count_ques_sub_type": 10, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "Yes", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q4812449", 
+   "Q20199491", 
+   "Q20051675", 
+   "Q27334854", 
+   "Q21778278", 
+   "Q20202025"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "6", 
+  "active_set": [
+   "(c(Q340169),P180,c(Q19603939)|c(Q186081))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q429973"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q28640"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the job of Paul Hirsch ?"
+ }, 
+ {
+  "all_entities": [
+   "Q7042855"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7042855"
+  ], 
+  "utterance": "film editor", 
+  "active_set": [
+   "(Q429973,P106,c(Q28640))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q16583763"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q28640"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about Jos\u00e9 Ram\u00f3n Luna?"
+ }, 
+ {
+  "all_entities": [
+   "Q28389"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q28389"
+  ], 
+  "utterance": "screenwriter", 
+  "active_set": [
+   "(Q16583763,P106,c(Q28640))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P108"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which person works for United States of America ?"
+ }, 
+ {
+  "all_entities": [
+   "Q231417"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q231417"
+  ], 
+  "utterance": "Barbara Walters", 
+  "active_set": [
+   "(c(Q502895),P108,Q30)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q231417"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory was that person born at ?"
+ }, 
+ {
+  "all_entities": [
+   "Q100"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q100"
+  ], 
+  "utterance": "Boston", 
+  "active_set": [
+   "(Q231417,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q231417"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which sex does that person have ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581072"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581072"
+  ], 
+  "utterance": "female", 
+  "active_set": [
+   "(Q100,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q7042855"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P425"
+  ], 
+  "type_list": [
+   "Q1792379"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who has film editor as the associated field of occupation ?"
+ }, 
+ {
+  "all_entities": [
+   "Q93204"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q93204"
+  ], 
+  "utterance": "documentary film", 
+  "active_set": [
+   "(Q7042855,P425,c(Q1792379))"
+  ]
+ }
+]

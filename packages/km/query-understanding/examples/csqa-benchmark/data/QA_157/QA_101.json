@@ -1,0 +1,385 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1609005"
+  ], 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which occupations are the professions of Herbert Schachtschneider ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1622272", 
+   "Q177220"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1622272", 
+   "Q177220"
+  ], 
+  "utterance": "university teacher, singer", 
+  "active_set": [
+   "(Q1609005,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1609005"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which political territory is the country of citizenship of Herbert Schachtschneider ?"
+ }, 
+ {
+  "all_entities": [
+   "Q183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "utterance": "Germany", 
+  "active_set": [
+   "(Q1609005,P27,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1609005"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q486972"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which human settlement was that person born at ?"
+ }, 
+ {
+  "all_entities": [
+   "Q82765"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q82765"
+  ], 
+  "utterance": "Olsztyn", 
+  "active_set": [
+   "(Q183,P19,c(Q486972))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation|Incomplete", 
+  "type_list": [
+   "Q486972"
+  ], 
+  "entities_in_utterance": [
+   "Q11451520", 
+   "Q1609005"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 1, 
+  "relations": [
+   "P19"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Or Tetsur\u014d Adachi?"
+ }, 
+ {
+  "all_entities": [
+   "Q232641", 
+   "Q82765"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q232641", 
+   "Q82765"
+  ], 
+  "utterance": "Tait\u014d-ku, Olsztyn", 
+  "active_set": [
+   "OR((Q1609005,P19,c(Q486972)), (Q11451520,P19,c(Q486972)))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q8081561", 
+   "Q183"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P530", 
+   "P17"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories have diplomatic relationships with Germany or are \u014ckawano Station located in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q804", 
+   "Q801", 
+   "Q800", 
+   "Q419", 
+   "Q668", 
+   "Q414", 
+   "Q142", 
+   "Q55", 
+   "Q145", 
+   "Q262", 
+   "Q148", 
+   "Q783", 
+   "Q265", 
+   "Q833", 
+   "Q711", 
+   "Q717", 
+   "Q252", 
+   "Q403", 
+   "Q657", 
+   "Q258", 
+   "Q45", 
+   "Q159", 
+   "Q43", 
+   "Q41", 
+   "Q155", 
+   "Q796", 
+   "Q794", 
+   "Q954", 
+   "Q889", 
+   "Q884", 
+   "Q958", 
+   "Q881", 
+   "Q739", 
+   "Q241", 
+   "Q242", 
+   "Q811", 
+   "Q33", 
+   "Q32", 
+   "Q31", 
+   "Q30", 
+   "Q924", 
+   "Q36", 
+   "Q34", 
+   "Q929", 
+   "Q39", 
+   "Q38", 
+   "Q986", 
+   "Q423", 
+   "Q983", 
+   "Q851", 
+   "Q733", 
+   "Q734", 
+   "Q736", 
+   "Q730", 
+   "Q230", 
+   "Q232", 
+   "Q233", 
+   "Q238", 
+   "Q20", 
+   "Q1045", 
+   "Q1041", 
+   "Q27", 
+   "Q28", 
+   "Q29", 
+   "Q1049", 
+   "Q189", 
+   "Q843", 
+   "Q184", 
+   "Q1029", 
+   "Q1028", 
+   "Q786", 
+   "Q347", 
+   "Q227", 
+   "Q225", 
+   "Q224", 
+   "Q222", 
+   "Q96", 
+   "Q229", 
+   "Q228", 
+   "Q17", 
+   "Q902", 
+   "Q1036", 
+   "Q1037", 
+   "Q1008", 
+   "Q1032", 
+   "Q1033", 
+   "Q1030", 
+   "Q965", 
+   "Q967", 
+   "Q962", 
+   "Q963", 
+   "Q298", 
+   "Q115", 
+   "Q114", 
+   "Q117", 
+   "Q750", 
+   "Q212", 
+   "Q213", 
+   "Q217", 
+   "Q214", 
+   "Q215", 
+   "Q218", 
+   "Q219", 
+   "Q912", 
+   "Q917", 
+   "Q916", 
+   "Q1007", 
+   "Q1006", 
+   "Q1005", 
+   "Q1009", 
+   "Q974", 
+   "Q971", 
+   "Q79", 
+   "Q77", 
+   "Q878", 
+   "Q774", 
+   "Q948", 
+   "Q810", 
+   "Q1019", 
+   "Q1016", 
+   "Q1011", 
+   "Q945", 
+   "Q869", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q668", 
+   "Q1007", 
+   "Q114", 
+   "Q224", 
+   "Q965", 
+   "Q189", 
+   "Q217", 
+   "Q929", 
+   "Q1033", 
+   "Q958"
+  ], 
+  "utterance": "Some of them are India, Guinea-Bissau, Kenya, Croatia, Burkina Faso, Iceland, Republic of Moldova, Central African Republic, Nigeria, South Sudan", 
+  "active_set": [
+   "OR((Q183,P530,c(Q15617994)), (Q8081561,P17,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Comparative|More/Less|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P941"
+  ], 
+  "count_ques_sub_type": 8, 
+  "type_list": [
+   "Q15617994", 
+   "Q3895768"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which administrative territories inspired around the same number of fictional locations as that administrative territory ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "description": "Comparative|More/Less|Single entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q114"
+  ], 
+  "active_set": [
+   "(c(Q3895768),P941,c(Q15617994))"
+  ], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Kenya ?"
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "count_ques_sub_type": 8, 
+  "entities": [
+   "Q668"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "No, I meant India. Could you tell me the answer for that?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q668"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q668"
+  ], 
+  "utterance": "India", 
+  "active_set": [
+   "(c(Q3895768),P941,c(Q15617994))"
+  ]
+ }, 
+ {
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count|Logical operators|Indirect", 
+  "entities_in_utterance": [], 
+  "relations": [
+   "P361"
+  ], 
+  "count_ques_sub_type": 8, 
+  "type_list": [
+   "Q484652", 
+   "Q2221906"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many international organizations and geographic locations are that administrative territory a component of ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q7768", 
+   "Q7785", 
+   "Q771405"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2 international organizations and 1 geographic locations", 
+  "active_set": [
+   "(Q668,P361,c(Q484652))", 
+   "(Q668,P361,c(Q2221906))", 
+   "(Q668,P361,c(Q484652))", 
+   "(Q668,P361,c(Q2221906))"
+  ]
+ }
+]

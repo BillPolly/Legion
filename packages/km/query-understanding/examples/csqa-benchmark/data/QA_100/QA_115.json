@@ -1,0 +1,933 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1398773"
+  ], 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is the sex of Fausto Gullo ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "utterance": "male", 
+  "active_set": [
+   "(Q1398773,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1398773"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1412"
+  ], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which language does Fausto Gullo speak in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q652"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q652"
+  ], 
+  "utterance": "Italian", 
+  "active_set": [
+   "(Q1398773,P1412,c(Q34770))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q623878"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about Horace Grant Underwood?"
+ }, 
+ {
+  "all_entities": [
+   "Q1860"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1860"
+  ], 
+  "utterance": "English", 
+  "active_set": [
+   "(Q623878,P1412,c(Q34770))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q34770", 
+   "Q15416", 
+   "Q2342494"
+  ], 
+  "entities_in_utterance": [
+   "Q182695"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P364"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "How many languages are considered to be the original language of creation of approximately the same number of television programs or collectables as Late Old Japanese ?"
+ }, 
+ {
+  "all_entities": [
+   "Q132659", 
+   "Q13414913", 
+   "Q13211", 
+   "Q35499", 
+   "Q35668", 
+   "Q8785", 
+   "Q1072111", 
+   "Q34909", 
+   "Q36765", 
+   "Q33251", 
+   "Q18130932", 
+   "Q35726", 
+   "Q36206", 
+   "Q1321", 
+   "Q33976", 
+   "Q397", 
+   "Q10862919", 
+   "Q9056", 
+   "Q8752", 
+   "Q37041", 
+   "Q652", 
+   "Q35505", 
+   "Q25167", 
+   "Q56530", 
+   "Q25164", 
+   "Q36790", 
+   "Q29977", 
+   "Q182695", 
+   "Q3110592", 
+   "Q837985", 
+   "Q783605"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "31", 
+  "active_set": [
+   "(c(Q15416)|c(Q2342494),P364,c(Q34770))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q34770", 
+   "Q15416", 
+   "Q2342494"
+  ], 
+  "entities_in_utterance": [
+   "Q1072111"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P364"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And how about Galician-Portuguese?"
+ }, 
+ {
+  "all_entities": [
+   "Q132659", 
+   "Q13414913", 
+   "Q13211", 
+   "Q35499", 
+   "Q35668", 
+   "Q8785", 
+   "Q1072111", 
+   "Q34909", 
+   "Q36765", 
+   "Q33251", 
+   "Q18130932", 
+   "Q35726", 
+   "Q36206", 
+   "Q1321", 
+   "Q33976", 
+   "Q397", 
+   "Q10862919", 
+   "Q9056", 
+   "Q8752", 
+   "Q37041", 
+   "Q652", 
+   "Q35505", 
+   "Q25167", 
+   "Q56530", 
+   "Q25164", 
+   "Q36790", 
+   "Q29977", 
+   "Q182695", 
+   "Q3110592", 
+   "Q837985", 
+   "Q783605"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "31", 
+  "active_set": [
+   "(c(Q15416)|c(Q2342494),P364,c(Q34770))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q33868"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P282"
+  ], 
+  "type_list": [
+   "Q8192"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which writing system is used as the script for Meitei language ?"
+ }, 
+ {
+  "all_entities": [
+   "Q756802"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q756802"
+  ], 
+  "utterance": "Bengali alphabet", 
+  "active_set": [
+   "(Q33868,P282,c(Q8192))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1860"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P361"
+  ], 
+  "type_list": [
+   "Q5962346"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which classification schemes are English a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1346342", 
+   "Q5329170"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1346342", 
+   "Q5329170"
+  ], 
+  "utterance": "Anglic languages, Anglo-Frisian languages", 
+  "active_set": [
+   "(Q1860,P361,c(Q5962346))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type", 
+  "type_list": [
+   "Q5962346", 
+   "Q166142", 
+   "Q2342494"
+  ], 
+  "entities_in_utterance": [
+   "Q216545"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P136"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which classification schemes are the genre of lesser number of applications and collectables than Christian theology ?"
+ }, 
+ {
+  "all_entities": [
+   "Q968679", 
+   "Q5227671", 
+   "Q21188110", 
+   "Q1153495", 
+   "Q4949058", 
+   "Q581714", 
+   "Q1273568", 
+   "Q281111", 
+   "Q338632", 
+   "Q336181", 
+   "Q7724161", 
+   "Q16894224", 
+   "Q3546572", 
+   "Q5434357", 
+   "Q3421644", 
+   "Q861402", 
+   "Q29197", 
+   "Q23745", 
+   "Q188504", 
+   "Q380313", 
+   "Q20267837", 
+   "Q4382232", 
+   "Q1407245", 
+   "Q4922471", 
+   "Q17113138", 
+   "Q5465514", 
+   "Q23739", 
+   "Q204698", 
+   "Q2290276", 
+   "Q20220309", 
+   "Q6546170", 
+   "Q4765080", 
+   "Q349479", 
+   "Q336059", 
+   "Q288608", 
+   "Q2091526", 
+   "Q7603925", 
+   "Q1457145", 
+   "Q12322867", 
+   "Q1962634", 
+   "Q399811", 
+   "Q775344", 
+   "Q6022825", 
+   "Q482612", 
+   "Q182415", 
+   "Q21232614", 
+   "Q3951815", 
+   "Q20652466", 
+   "Q1413406", 
+   "Q178840", 
+   "Q1924856", 
+   "Q986699", 
+   "Q5428822", 
+   "Q7988576"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q380313", 
+   "Q349479", 
+   "Q1457145"
+  ], 
+  "utterance": "archival science, building industry, cooking show", 
+  "active_set": [
+   "(c(Q166142)|c(Q2342494),P136,c(Q5962346))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q5962346", 
+   "Q166142", 
+   "Q2342494"
+  ], 
+  "entities_in_utterance": [
+   "Q380313"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P136"
+  ], 
+  "count_ques_sub_type": 5, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about archival science?"
+ }, 
+ {
+  "all_entities": [
+   "Q968679", 
+   "Q5227671", 
+   "Q21188110", 
+   "Q4949058", 
+   "Q581714", 
+   "Q1273568", 
+   "Q338632", 
+   "Q336181", 
+   "Q7724161", 
+   "Q16894224", 
+   "Q3546572", 
+   "Q5434357", 
+   "Q3421644", 
+   "Q861402", 
+   "Q29197", 
+   "Q23745", 
+   "Q20267837", 
+   "Q4382232", 
+   "Q1407245", 
+   "Q4922471", 
+   "Q17113138", 
+   "Q5465514", 
+   "Q204698", 
+   "Q2290276", 
+   "Q20220309", 
+   "Q6546170", 
+   "Q4765080", 
+   "Q349479", 
+   "Q336059", 
+   "Q288608", 
+   "Q2091526", 
+   "Q7603925", 
+   "Q1457145", 
+   "Q12322867", 
+   "Q1962634", 
+   "Q399811", 
+   "Q775344", 
+   "Q6022825", 
+   "Q482612", 
+   "Q182415", 
+   "Q21232614", 
+   "Q3951815", 
+   "Q20652466", 
+   "Q1413406", 
+   "Q178840", 
+   "Q1924856", 
+   "Q986699", 
+   "Q5428822", 
+   "Q7988576"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q349479", 
+   "Q1457145", 
+   "Q21188110"
+  ], 
+  "utterance": "building industry, cooking show, American television sitcom", 
+  "active_set": [
+   "(c(Q166142)|c(Q2342494),P136,c(Q5962346))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type", 
+  "type_list": [
+   "Q43229", 
+   "Q4830453", 
+   "Q5962346"
+  ], 
+  "entities_in_utterance": [
+   "Q1626579"
+  ], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P176"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many classification schemes were manufactured by around the same number of organizations and business enterprises as Japanese submarine I-351 ?"
+ }, 
+ {
+  "all_entities": [
+   "Q4310117", 
+   "Q2714941", 
+   "Q1075135", 
+   "Q3792937", 
+   "Q2657561", 
+   "Q633556", 
+   "Q7862873", 
+   "Q861626", 
+   "Q6424119", 
+   "Q1626579", 
+   "Q624804", 
+   "Q1530956", 
+   "Q1491613", 
+   "Q7918762", 
+   "Q640482", 
+   "Q19735220", 
+   "Q1136699", 
+   "Q1224797", 
+   "Q4001382", 
+   "Q6995590", 
+   "Q15240025", 
+   "Q7860857", 
+   "Q2599168", 
+   "Q1661540", 
+   "Q4785927", 
+   "Q5068938", 
+   "Q2994200", 
+   "Q969480", 
+   "Q628759", 
+   "Q15631817", 
+   "Q3021196", 
+   "Q925594", 
+   "Q6158319", 
+   "Q337990", 
+   "Q580314", 
+   "Q1203377", 
+   "Q373977", 
+   "Q2366375", 
+   "Q3496128", 
+   "Q2455100", 
+   "Q921222", 
+   "Q2638670", 
+   "Q647854", 
+   "Q528109", 
+   "Q1378687", 
+   "Q13360812", 
+   "Q643854", 
+   "Q938245", 
+   "Q321093", 
+   "Q19734842", 
+   "Q7862874", 
+   "Q4789677", 
+   "Q5234874", 
+   "Q2975771", 
+   "Q3679320", 
+   "Q699842", 
+   "Q1516486", 
+   "Q1144934", 
+   "Q2892685", 
+   "Q1141901", 
+   "Q5631890", 
+   "Q2443866", 
+   "Q3679481", 
+   "Q835312", 
+   "Q1089274", 
+   "Q3679523", 
+   "Q3442947", 
+   "Q19735154", 
+   "Q6980321", 
+   "Q913332", 
+   "Q2062612", 
+   "Q7632661", 
+   "Q1207283", 
+   "Q2993149", 
+   "Q2117340", 
+   "Q3442929", 
+   "Q4172473", 
+   "Q819452", 
+   "Q4367164", 
+   "Q482835", 
+   "Q736723", 
+   "Q3545010", 
+   "Q389149", 
+   "Q796474", 
+   "Q1476763", 
+   "Q2257275", 
+   "Q2449695", 
+   "Q719824", 
+   "Q10599228", 
+   "Q2481447", 
+   "Q11706017", 
+   "Q4367179", 
+   "Q4367178", 
+   "Q2140361", 
+   "Q914213", 
+   "Q1086999", 
+   "Q5306791", 
+   "Q4367170", 
+   "Q1968562", 
+   "Q55520", 
+   "Q167991", 
+   "Q1363244", 
+   "Q1046757", 
+   "Q385242", 
+   "Q611047", 
+   "Q1152494", 
+   "Q5569474", 
+   "Q5551294", 
+   "Q3792815", 
+   "Q4670007", 
+   "Q3679466", 
+   "Q5035812", 
+   "Q5551292", 
+   "Q5551291", 
+   "Q301329", 
+   "Q1185553", 
+   "Q584865", 
+   "Q5009407", 
+   "Q2558183", 
+   "Q494403", 
+   "Q1194834", 
+   "Q967977", 
+   "Q477419", 
+   "Q842423", 
+   "Q11706010", 
+   "Q3792787", 
+   "Q11295226", 
+   "Q694684", 
+   "Q4649708", 
+   "Q2118043", 
+   "Q1279940", 
+   "Q1968997", 
+   "Q6405680", 
+   "Q1800152", 
+   "Q596164", 
+   "Q3793315", 
+   "Q4267279", 
+   "Q4789611", 
+   "Q264912", 
+   "Q808804", 
+   "Q6424030", 
+   "Q732680", 
+   "Q2975986", 
+   "Q5306773", 
+   "Q686973", 
+   "Q621854", 
+   "Q1061181", 
+   "Q820105", 
+   "Q3508746", 
+   "Q180719", 
+   "Q15378718", 
+   "Q1194312", 
+   "Q2590674", 
+   "Q2975856", 
+   "Q1541289", 
+   "Q869092", 
+   "Q698417", 
+   "Q2165906", 
+   "Q19735064", 
+   "Q1109767", 
+   "Q378777", 
+   "Q1078065", 
+   "Q2914356", 
+   "Q5288990", 
+   "Q2307521", 
+   "Q1626183", 
+   "Q2976020", 
+   "Q2976023", 
+   "Q7083233", 
+   "Q3087816", 
+   "Q278397", 
+   "Q19735183", 
+   "Q7862861", 
+   "Q553917", 
+   "Q1719789", 
+   "Q1661538", 
+   "Q2455127", 
+   "Q19735216", 
+   "Q1661534", 
+   "Q1462910", 
+   "Q10669459", 
+   "Q1754293", 
+   "Q2257235", 
+   "Q121982", 
+   "Q4310421", 
+   "Q5847242", 
+   "Q17054854", 
+   "Q7905814", 
+   "Q1366715", 
+   "Q765764"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "190", 
+  "active_set": [
+   "(c(Q5962346),P176,c(Q43229)|c(Q4830453))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Incomplete", 
+  "type_list": [
+   "Q43229", 
+   "Q4830453", 
+   "Q5962346"
+  ], 
+  "entities_in_utterance": [
+   "Q1491613"
+  ], 
+  "is_incomplete": 1, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P176"
+  ], 
+  "count_ques_sub_type": 7, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "And what about Gal-class submarine?"
+ }, 
+ {
+  "all_entities": [
+   "Q4310117", 
+   "Q2714941", 
+   "Q1075135", 
+   "Q3792937", 
+   "Q2657561", 
+   "Q633556", 
+   "Q7862873", 
+   "Q861626", 
+   "Q6424119", 
+   "Q1626579", 
+   "Q624804", 
+   "Q1530956", 
+   "Q1491613", 
+   "Q7918762", 
+   "Q640482", 
+   "Q19735220", 
+   "Q1136699", 
+   "Q1224797", 
+   "Q4001382", 
+   "Q6995590", 
+   "Q15240025", 
+   "Q7860857", 
+   "Q2599168", 
+   "Q1661540", 
+   "Q4785927", 
+   "Q5068938", 
+   "Q2994200", 
+   "Q969480", 
+   "Q628759", 
+   "Q15631817", 
+   "Q3021196", 
+   "Q925594", 
+   "Q6158319", 
+   "Q337990", 
+   "Q580314", 
+   "Q1203377", 
+   "Q373977", 
+   "Q2366375", 
+   "Q3496128", 
+   "Q2455100", 
+   "Q921222", 
+   "Q2638670", 
+   "Q647854", 
+   "Q528109", 
+   "Q1378687", 
+   "Q13360812", 
+   "Q643854", 
+   "Q938245", 
+   "Q321093", 
+   "Q19734842", 
+   "Q7862874", 
+   "Q4789677", 
+   "Q5234874", 
+   "Q2975771", 
+   "Q3679320", 
+   "Q699842", 
+   "Q1516486", 
+   "Q1144934", 
+   "Q2892685", 
+   "Q1141901", 
+   "Q5631890", 
+   "Q2443866", 
+   "Q3679481", 
+   "Q835312", 
+   "Q1089274", 
+   "Q3679523", 
+   "Q3442947", 
+   "Q19735154", 
+   "Q6980321", 
+   "Q913332", 
+   "Q2062612", 
+   "Q7632661", 
+   "Q1207283", 
+   "Q2993149", 
+   "Q2117340", 
+   "Q3442929", 
+   "Q4172473", 
+   "Q819452", 
+   "Q4367164", 
+   "Q482835", 
+   "Q736723", 
+   "Q3545010", 
+   "Q389149", 
+   "Q796474", 
+   "Q1476763", 
+   "Q2257275", 
+   "Q2449695", 
+   "Q719824", 
+   "Q10599228", 
+   "Q2481447", 
+   "Q11706017", 
+   "Q4367179", 
+   "Q4367178", 
+   "Q2140361", 
+   "Q914213", 
+   "Q1086999", 
+   "Q5306791", 
+   "Q4367170", 
+   "Q1968562", 
+   "Q55520", 
+   "Q167991", 
+   "Q1363244", 
+   "Q1046757", 
+   "Q385242", 
+   "Q611047", 
+   "Q1152494", 
+   "Q5569474", 
+   "Q5551294", 
+   "Q3792815", 
+   "Q4670007", 
+   "Q3679466", 
+   "Q5035812", 
+   "Q5551292", 
+   "Q5551291", 
+   "Q301329", 
+   "Q1185553", 
+   "Q584865", 
+   "Q5009407", 
+   "Q2558183", 
+   "Q494403", 
+   "Q1194834", 
+   "Q967977", 
+   "Q477419", 
+   "Q842423", 
+   "Q11706010", 
+   "Q3792787", 
+   "Q11295226", 
+   "Q694684", 
+   "Q4649708", 
+   "Q2118043", 
+   "Q1279940", 
+   "Q1968997", 
+   "Q6405680", 
+   "Q1800152", 
+   "Q596164", 
+   "Q3793315", 
+   "Q4267279", 
+   "Q4789611", 
+   "Q264912", 
+   "Q808804", 
+   "Q6424030", 
+   "Q732680", 
+   "Q2975986", 
+   "Q5306773", 
+   "Q686973", 
+   "Q621854", 
+   "Q1061181", 
+   "Q820105", 
+   "Q3508746", 
+   "Q180719", 
+   "Q15378718", 
+   "Q1194312", 
+   "Q2590674", 
+   "Q2975856", 
+   "Q1541289", 
+   "Q869092", 
+   "Q698417", 
+   "Q2165906", 
+   "Q19735064", 
+   "Q1109767", 
+   "Q378777", 
+   "Q1078065", 
+   "Q2914356", 
+   "Q5288990", 
+   "Q2307521", 
+   "Q1626183", 
+   "Q2976020", 
+   "Q2976023", 
+   "Q7083233", 
+   "Q3087816", 
+   "Q278397", 
+   "Q19735183", 
+   "Q7862861", 
+   "Q553917", 
+   "Q1719789", 
+   "Q1661538", 
+   "Q2455127", 
+   "Q19735216", 
+   "Q1661534", 
+   "Q1462910", 
+   "Q10669459", 
+   "Q1754293", 
+   "Q2257235", 
+   "Q121982", 
+   "Q4310421", 
+   "Q5847242", 
+   "Q17054854", 
+   "Q7905814", 
+   "Q1366715", 
+   "Q765764"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "190", 
+  "active_set": [
+   "(c(Q5962346),P176,c(Q43229)|c(Q4830453))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q2001982"
+  ], 
+  "entities_in_utterance": [
+   "Q33390", 
+   "Q182695"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P282"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which notations are used as the alphabet set for Late Old Japanese or Cree ?"
+ }, 
+ {
+  "all_entities": [
+   "Q82772", 
+   "Q2479183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q82772", 
+   "Q2479183"
+  ], 
+  "utterance": "kanji, Canadian Aboriginal syllabics", 
+  "active_set": [
+   "OR((Q182695,P282,c(Q2001982)), (Q33390,P282,c(Q2001982)))"
+  ]
+ }
+]

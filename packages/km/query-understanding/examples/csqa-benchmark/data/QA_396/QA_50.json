@@ -1,0 +1,755 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q3903800"
+  ], 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Where was Pietro Conti born ?"
+ }, 
+ {
+  "all_entities": [
+   "Q20571"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q20571"
+  ], 
+  "utterance": "Spoleto", 
+  "active_set": [
+   "(Q3903800,P19,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q3903800"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P20"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where did that person expire ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3437"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3437"
+  ], 
+  "utterance": "Perugia", 
+  "active_set": [
+   "(Q20571,P20,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q3903800"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P734"
+  ], 
+  "type_list": [
+   "Q82799"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who has the surname that person ?"
+ }, 
+ {
+  "all_entities": [
+   "Q21448867"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q21448867"
+  ], 
+  "utterance": "Conti", 
+  "active_set": [
+   "(Q3437,P734,c(Q82799))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q20571"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P190"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which administrative territories are partner town of Spoleto ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3232", 
+   "Q205119", 
+   "Q47716"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3232", 
+   "Q205119", 
+   "Q47716"
+  ], 
+  "utterance": "Schwetzingen, Cajamarca, Charleston", 
+  "active_set": [
+   "(c(Q56061),P190,Q20571)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Mult. Entity", 
+  "entities_in_utterance": [
+   "Q3232", 
+   "Q205119", 
+   "Q47716"
+  ], 
+  "sec_ques_sub_type": 3, 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which people were born at those administrative territories ?"
+ }, 
+ {
+  "all_entities": [
+   "Q311409", 
+   "Q1592232", 
+   "Q9155454", 
+   "Q15792164", 
+   "Q3742511", 
+   "Q19959259", 
+   "Q2141432", 
+   "Q1702998", 
+   "Q19964379", 
+   "Q213615", 
+   "Q15479701", 
+   "Q44319", 
+   "Q67614", 
+   "Q1702882", 
+   "Q1707658", 
+   "Q1600236", 
+   "Q15449264", 
+   "Q1514785", 
+   "Q1732234", 
+   "Q18029416", 
+   "Q440434", 
+   "Q1910311", 
+   "Q1597683", 
+   "Q1703028", 
+   "Q22828", 
+   "Q4154878", 
+   "Q241173", 
+   "Q268896", 
+   "Q19842694", 
+   "Q2615108", 
+   "Q2857267", 
+   "Q239030", 
+   "Q6069042", 
+   "Q16583924", 
+   "Q6123862", 
+   "Q21573962", 
+   "Q158878", 
+   "Q5444928", 
+   "Q268163", 
+   "Q22093581", 
+   "Q5999102", 
+   "Q19358235", 
+   "Q133914", 
+   "Q16526147", 
+   "Q16575897", 
+   "Q7367040", 
+   "Q6165409", 
+   "Q21029152", 
+   "Q645188", 
+   "Q5935903", 
+   "Q16208517", 
+   "Q15451764", 
+   "Q1534319", 
+   "Q1555306", 
+   "Q16185366", 
+   "Q5544383", 
+   "Q3183613", 
+   "Q2281991", 
+   "Q1332475", 
+   "Q468272", 
+   "Q5216447", 
+   "Q3956858", 
+   "Q23580666", 
+   "Q3273772", 
+   "Q1815058", 
+   "Q1286971", 
+   "Q7792054", 
+   "Q119925", 
+   "Q8015189", 
+   "Q18808797", 
+   "Q27808429", 
+   "Q817547", 
+   "Q7368464", 
+   "Q8003424", 
+   "Q16732678", 
+   "Q20162047", 
+   "Q7452273", 
+   "Q113129", 
+   "Q3189245", 
+   "Q5076022", 
+   "Q6697470", 
+   "Q451470", 
+   "Q1606971", 
+   "Q221339", 
+   "Q20931228", 
+   "Q259653", 
+   "Q7901608", 
+   "Q6288383", 
+   "Q20825658", 
+   "Q361400", 
+   "Q1064153", 
+   "Q1558701", 
+   "Q1573050", 
+   "Q1606981", 
+   "Q325942", 
+   "Q472084", 
+   "Q287639", 
+   "Q166351", 
+   "Q20177273", 
+   "Q657569", 
+   "Q2581010", 
+   "Q878666", 
+   "Q636345", 
+   "Q273104", 
+   "Q6763024", 
+   "Q232242", 
+   "Q5268391", 
+   "Q7412333", 
+   "Q6219356", 
+   "Q6774534", 
+   "Q16145201", 
+   "Q320945", 
+   "Q524896", 
+   "Q1680329", 
+   "Q141494", 
+   "Q3827112", 
+   "Q881165", 
+   "Q4885543", 
+   "Q3750937", 
+   "Q1701325", 
+   "Q1160550", 
+   "Q633103", 
+   "Q16858037", 
+   "Q2544441", 
+   "Q235243", 
+   "Q881585", 
+   "Q6113123", 
+   "Q19667326", 
+   "Q1933351", 
+   "Q2556925", 
+   "Q980680", 
+   "Q16985699", 
+   "Q817545", 
+   "Q5292300", 
+   "Q2062198", 
+   "Q64480", 
+   "Q7341192", 
+   "Q504871", 
+   "Q5539260", 
+   "Q5107415", 
+   "Q2582579", 
+   "Q6873283", 
+   "Q881227", 
+   "Q1673396", 
+   "Q2603993", 
+   "Q1594736", 
+   "Q2850195", 
+   "Q367094", 
+   "Q3180413", 
+   "Q7383199", 
+   "Q24004535", 
+   "Q5703777", 
+   "Q2218994", 
+   "Q6881161", 
+   "Q5547086", 
+   "Q1332591", 
+   "Q711966", 
+   "Q6198795", 
+   "Q20900266", 
+   "Q1427073", 
+   "Q1472733", 
+   "Q517219", 
+   "Q123223", 
+   "Q6283892", 
+   "Q15911547", 
+   "Q928855", 
+   "Q21524694", 
+   "Q761967", 
+   "Q443371", 
+   "Q15149303", 
+   "Q5084609", 
+   "Q969896", 
+   "Q817523", 
+   "Q1941306", 
+   "Q8013488", 
+   "Q2382900", 
+   "Q5568803", 
+   "Q93802", 
+   "Q432726", 
+   "Q332770", 
+   "Q1757682", 
+   "Q317037", 
+   "Q633065", 
+   "Q2422384", 
+   "Q956665", 
+   "Q6818921", 
+   "Q23616725", 
+   "Q1387561", 
+   "Q6228322", 
+   "Q7974802", 
+   "Q3365459", 
+   "Q1086696", 
+   "Q5079268", 
+   "Q5108092", 
+   "Q5031690", 
+   "Q16031018", 
+   "Q74932", 
+   "Q440948", 
+   "Q7812383", 
+   "Q16043654", 
+   "Q7945684", 
+   "Q5734879", 
+   "Q4799721", 
+   "Q2218150", 
+   "Q3056206", 
+   "Q2579902", 
+   "Q723956", 
+   "Q129719", 
+   "Q1903713", 
+   "Q2592908", 
+   "Q22005664", 
+   "Q16233513", 
+   "Q16011077", 
+   "Q2578650", 
+   "Q6077167", 
+   "Q1803878", 
+   "Q561315", 
+   "Q5078973", 
+   "Q1699840", 
+   "Q3183419", 
+   "Q5052697", 
+   "Q6121361", 
+   "Q596008", 
+   "Q15427434", 
+   "Q1699493", 
+   "Q5540812", 
+   "Q7162900", 
+   "Q4701013", 
+   "Q6847909", 
+   "Q1368645", 
+   "Q14586103", 
+   "Q6136587", 
+   "Q2344492", 
+   "Q6128391", 
+   "Q7167105", 
+   "Q176134", 
+   "Q638456", 
+   "Q16227591", 
+   "Q6820728", 
+   "Q888415", 
+   "Q17021401", 
+   "Q3518694", 
+   "Q405463", 
+   "Q5490006", 
+   "Q1456498", 
+   "Q2900071", 
+   "Q1700181", 
+   "Q4759824", 
+   "Q3181906", 
+   "Q5084719", 
+   "Q9201086", 
+   "Q1116409", 
+   "Q2849426", 
+   "Q4799896", 
+   "Q6774460", 
+   "Q4678233", 
+   "Q5081791", 
+   "Q3837596", 
+   "Q5497892", 
+   "Q7965189", 
+   "Q7292136", 
+   "Q5487895", 
+   "Q5112385", 
+   "Q1261589", 
+   "Q16063317", 
+   "Q4765615", 
+   "Q1513826", 
+   "Q6536419", 
+   "Q546956", 
+   "Q1332698", 
+   "Q11288156", 
+   "Q549738", 
+   "Q7287582", 
+   "Q22330586", 
+   "Q1305263", 
+   "Q6759982", 
+   "Q5218405", 
+   "Q373146", 
+   "Q1421133", 
+   "Q6467944", 
+   "Q2579645", 
+   "Q5586639", 
+   "Q2641905", 
+   "Q2642369", 
+   "Q2043271", 
+   "Q5205461", 
+   "Q143317", 
+   "Q204285", 
+   "Q8019262", 
+   "Q2328870", 
+   "Q7468", 
+   "Q3527957", 
+   "Q2605527", 
+   "Q370781", 
+   "Q16885920", 
+   "Q18149641", 
+   "Q25861088", 
+   "Q1533882", 
+   "Q3161872", 
+   "Q5538719", 
+   "Q1704777", 
+   "Q16061814", 
+   "Q21062663", 
+   "Q2579212", 
+   "Q16983687", 
+   "Q7802172", 
+   "Q1270714", 
+   "Q6119609", 
+   "Q709413", 
+   "Q5703478", 
+   "Q6150421", 
+   "Q886120", 
+   "Q2425864", 
+   "Q15122111", 
+   "Q13563148", 
+   "Q7076836", 
+   "Q15490362", 
+   "Q2579242", 
+   "Q7788284", 
+   "Q7148518", 
+   "Q23541214", 
+   "Q15980211", 
+   "Q604564", 
+   "Q3081775", 
+   "Q878907", 
+   "Q5129947", 
+   "Q22575818", 
+   "Q127181", 
+   "Q7342797", 
+   "Q705636", 
+   "Q724591", 
+   "Q445405", 
+   "Q8022825", 
+   "Q2472643", 
+   "Q1711971", 
+   "Q2580066", 
+   "Q1374183", 
+   "Q3479672", 
+   "Q5229372", 
+   "Q15925517", 
+   "Q810037", 
+   "Q6217577", 
+   "Q662054", 
+   "Q1934624", 
+   "Q708756", 
+   "Q2336138", 
+   "Q7342649", 
+   "Q4786341", 
+   "Q4760913", 
+   "Q4861429", 
+   "Q4877339", 
+   "Q889421", 
+   "Q5460681", 
+   "Q1029166", 
+   "Q6759144", 
+   "Q932422", 
+   "Q17020874", 
+   "Q2149074", 
+   "Q327002", 
+   "Q4888845", 
+   "Q1673422", 
+   "Q8017647", 
+   "Q6286030", 
+   "Q1570121", 
+   "Q1701634", 
+   "Q4720114", 
+   "Q24581082", 
+   "Q4799409", 
+   "Q2059974", 
+   "Q5484665", 
+   "Q558663", 
+   "Q722441", 
+   "Q3938389", 
+   "Q1065037", 
+   "Q108880", 
+   "Q13560699", 
+   "Q5044245", 
+   "Q5042831", 
+   "Q3237312", 
+   "Q1700990", 
+   "Q7964812"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q44319", 
+   "Q166351", 
+   "Q705636"
+  ], 
+  "utterance": "Maximilian I Joseph of Bavaria, Robert Jordan, Frank L. Culbertson", 
+  "active_set": [
+   "(c(Q502895),P19,Q3232)", 
+   "(c(Q502895),P19,Q205119)", 
+   "(c(Q502895),P19,Q47716)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q705636"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P138"
+  ], 
+  "type_list": [
+   "Q17444909"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which astronomical object type has that person as its toponym ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q44319"
+  ], 
+  "active_set": [
+   "(c(Q17444909),P138,Q44319)", 
+   "(c(Q17444909),P138,Q166351)", 
+   "(c(Q17444909),P138,Q705636)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q44319", 
+   "Q166351", 
+   "Q705636"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Maximilian I Joseph of Bavaria ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q705636"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant Frank L. Culbertson. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q3598418"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3598418"
+  ], 
+  "utterance": "26990 Culbertson", 
+  "active_set": [
+   "(c(Q17444909),P138,Q705636)"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Single_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q3599", 
+   "Q3232"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P190"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories are twin town of Schwetzingen or Bicske ?"
+ }, 
+ {
+  "all_entities": [
+   "Q42932", 
+   "Q179013", 
+   "Q20571"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q42932", 
+   "Q179013", 
+   "Q20571"
+  ], 
+  "utterance": "Melegnano, Altshausen, Spoleto", 
+  "active_set": [
+   "OR((c(Q15617994),P190,Q3232), (c(Q15617994),P190,Q3599))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q15617994", 
+   "Q15617994"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many administrative territories have diplomatic associations with exactly 53 administrative territories ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q155"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(c(Q15617994),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q166351"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1411"
+  ], 
+  "type_list": [
+   "Q378427"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which literary award was Robert Jordan a recipient of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q607354"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q607354"
+  ], 
+  "utterance": "Locus Award for Best Fantasy Novel", 
+  "active_set": [
+   "(Q166351,P1411,c(Q378427))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q607354"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P166"
+  ], 
+  "type_list": [
+   "Q2342494"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which collectables received the award titled that one ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2360806", 
+   "Q2261855", 
+   "Q3142271", 
+   "Q2469019", 
+   "Q605697", 
+   "Q430514", 
+   "Q20992497", 
+   "Q3520291", 
+   "Q610680", 
+   "Q28306", 
+   "Q47598", 
+   "Q1751870", 
+   "Q942972", 
+   "Q431927", 
+   "Q3226029", 
+   "Q14548336", 
+   "Q3089022", 
+   "Q1010653", 
+   "Q300370", 
+   "Q79762", 
+   "Q4410342"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q28306", 
+   "Q3520291", 
+   "Q430514"
+  ], 
+  "utterance": "A Dance with Dragons, The City & the City, American Gods", 
+  "active_set": [
+   "(c(Q2342494),P166,Q607354)"
+  ]
+ }
+]

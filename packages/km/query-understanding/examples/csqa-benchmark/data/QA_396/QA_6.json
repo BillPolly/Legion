@@ -1,0 +1,412 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q85899"
+  ], 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which political territory does Hans Hermann von Berlepsch belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "utterance": "Germany", 
+  "active_set": [
+   "(Q85899,P27,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q85899"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P937"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is the work location of that person ?"
+ }, 
+ {
+  "all_entities": [
+   "Q64"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q64"
+  ], 
+  "utterance": "Berlin", 
+  "active_set": [
+   "(Q183,P937,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which political territory is Germany present in ?"
+ }, 
+ {
+  "all_entities": [
+   "Q183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "utterance": "Germany", 
+  "active_set": [
+   "(Q183,P17,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1313"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which occupation serves as the political office that is fulfilled by the head of the government of that political territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q4970706"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q4970706"
+  ], 
+  "utterance": "Federal Chancellor of Germany", 
+  "active_set": [
+   "(Q183,P1313,c(Q12737077))"
+  ]
+ }, 
+ {
+  "set_op_choice": 3, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Difference|Multiple_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q5642360", 
+   "Q183"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P530", 
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories have diplomatic relationships with Germany and are not the countries of citizenship of Halina Biegun ?"
+ }, 
+ {
+  "all_entities": [
+   "Q804", 
+   "Q801", 
+   "Q800", 
+   "Q419", 
+   "Q668", 
+   "Q414", 
+   "Q142", 
+   "Q55", 
+   "Q145", 
+   "Q262", 
+   "Q148", 
+   "Q783", 
+   "Q265", 
+   "Q833", 
+   "Q711", 
+   "Q717", 
+   "Q252", 
+   "Q403", 
+   "Q657", 
+   "Q258", 
+   "Q45", 
+   "Q159", 
+   "Q43", 
+   "Q41", 
+   "Q155", 
+   "Q796", 
+   "Q794", 
+   "Q954", 
+   "Q889", 
+   "Q884", 
+   "Q958", 
+   "Q881", 
+   "Q739", 
+   "Q241", 
+   "Q242", 
+   "Q811", 
+   "Q33", 
+   "Q32", 
+   "Q31", 
+   "Q30", 
+   "Q924", 
+   "Q34", 
+   "Q929", 
+   "Q39", 
+   "Q38", 
+   "Q986", 
+   "Q423", 
+   "Q983", 
+   "Q851", 
+   "Q733", 
+   "Q734", 
+   "Q736", 
+   "Q730", 
+   "Q230", 
+   "Q232", 
+   "Q233", 
+   "Q238", 
+   "Q20", 
+   "Q1045", 
+   "Q1041", 
+   "Q27", 
+   "Q28", 
+   "Q29", 
+   "Q1049", 
+   "Q189", 
+   "Q843", 
+   "Q184", 
+   "Q1029", 
+   "Q1028", 
+   "Q786", 
+   "Q347", 
+   "Q227", 
+   "Q225", 
+   "Q224", 
+   "Q222", 
+   "Q96", 
+   "Q229", 
+   "Q228", 
+   "Q17", 
+   "Q902", 
+   "Q1036", 
+   "Q1037", 
+   "Q1008", 
+   "Q1032", 
+   "Q1033", 
+   "Q1030", 
+   "Q965", 
+   "Q967", 
+   "Q962", 
+   "Q963", 
+   "Q298", 
+   "Q115", 
+   "Q114", 
+   "Q117", 
+   "Q750", 
+   "Q212", 
+   "Q213", 
+   "Q217", 
+   "Q214", 
+   "Q215", 
+   "Q218", 
+   "Q219", 
+   "Q912", 
+   "Q917", 
+   "Q916", 
+   "Q1007", 
+   "Q1006", 
+   "Q1005", 
+   "Q1009", 
+   "Q974", 
+   "Q971", 
+   "Q79", 
+   "Q77", 
+   "Q878", 
+   "Q774", 
+   "Q948", 
+   "Q810", 
+   "Q1019", 
+   "Q1016", 
+   "Q1011", 
+   "Q945", 
+   "Q869", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1016", 
+   "Q298", 
+   "Q30", 
+   "Q881", 
+   "Q347", 
+   "Q1006", 
+   "Q39", 
+   "Q711", 
+   "Q958", 
+   "Q811"
+  ], 
+  "utterance": "Some of them are Libya, Chile, United States of America, Vietnam, Liechtenstein, Guinea, Switzerland, Mongolia, South Sudan, Nicaragua", 
+  "active_set": [
+   "AND((Q183,P530,c(Q15617994)), NOT((Q5642360,P27,c(Q15617994))))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Are Germany known to have diplomatic connections with those administrative territories ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q183,P530,Q1016)", 
+   "(Q183,P530,Q298)", 
+   "(Q183,P530,Q30)", 
+   "(Q183,P530,Q881)", 
+   "(Q183,P530,Q347)", 
+   "(Q183,P530,Q1006)", 
+   "(Q183,P530,Q39)", 
+   "(Q183,P530,Q711)", 
+   "(Q183,P530,Q958)", 
+   "(Q183,P530,Q811)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q64"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P1376"
+  ], 
+  "type_list": [
+   "Q183366"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which territory has Berlin as its county seat ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2415901"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2415901"
+  ], 
+  "utterance": "Allied-occupied Germany", 
+  "active_set": [
+   "(Q64,P1376,c(Q183366))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q2415901"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P36"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is called the capital of that territory ?"
+ }, 
+ {
+  "all_entities": [
+   "Q64"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q64"
+  ], 
+  "utterance": "Berlin", 
+  "active_set": [
+   "(Q2415901,P36,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|2 entities, one direct and one indirect, subject is indirect", 
+  "entities_in_utterance": [
+   "Q64", 
+   "Q183"
+  ], 
+  "relations": [
+   "P1376"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 2, 
+  "utterance": "Does Germany have that administrative territory has its first city ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q64,P1376,Q183)"
+  ]
+ }
+]

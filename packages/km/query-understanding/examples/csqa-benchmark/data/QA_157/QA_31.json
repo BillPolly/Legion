@@ -1,0 +1,411 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q5296851"
+  ], 
+  "relations": [
+   "P69"
+  ], 
+  "type_list": [
+   "Q3918"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which university is Donovan Olson an alumni of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1136919"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1136919"
+  ], 
+  "utterance": "Iowa State University", 
+  "active_set": [
+   "(Q5296851,P69,c(Q3918))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q5296851"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P39"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which occupation was a position held by that person ?"
+ }, 
+ {
+  "all_entities": [
+   "Q17486706"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q17486706"
+  ], 
+  "utterance": "member of the Iowa House of Representatives", 
+  "active_set": [
+   "(Q1136919,P39,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q17486706", 
+   "Q865887"
+  ], 
+  "relations": [
+   "P39"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Did Birte Karalus hold the position of that occupation ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q865887,P39,Q17486706)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q200895"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P417"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q502895", 
+   "Q12737077"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which people are the patron saint of approximately the same number of occupations as Agatha of Sicily ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q128538", 
+   "Q192816", 
+   "Q200895"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q128538", 
+   "Q192816", 
+   "Q200895"
+  ], 
+  "utterance": "Luke the Evangelist, Saint Barbara, Agatha of Sicily", 
+  "active_set": [
+   "(c(Q12737077),P417,c(Q502895))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Mult. entity type", 
+  "type_list": [
+   "Q2342494", 
+   "Q35749", 
+   "Q502895"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P248"
+  ], 
+  "count_ques_sub_type": 6, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many people have been referred in approximately 1 collectables or parliaments ?"
+ }, 
+ {
+  "all_entities": [
+   "Q7342716", 
+   "Q6237321", 
+   "Q16859511", 
+   "Q6249883", 
+   "Q6236088", 
+   "Q5606264", 
+   "Q5606262", 
+   "Q22936292", 
+   "Q6255172", 
+   "Q16908903", 
+   "Q8018837", 
+   "Q6145020", 
+   "Q15990337", 
+   "Q16850547", 
+   "Q17626521", 
+   "Q16031816", 
+   "Q6228730", 
+   "Q6237308", 
+   "Q15452052", 
+   "Q5537315", 
+   "Q18166520", 
+   "Q5239885", 
+   "Q17385895", 
+   "Q5241196", 
+   "Q5233462"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "25", 
+  "active_set": [
+   "(c(Q502895),P248,c(Q2342494)|c(Q35749))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q790468"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which musical instruments do less number of people know to play than baritone horn ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1879664", 
+   "Q748455", 
+   "Q173453"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1879664", 
+   "Q748455", 
+   "Q173453"
+  ], 
+  "utterance": "spoon, caj\u00f3n, wind instrument", 
+  "active_set": [
+   "(c(Q502895),P1303,c(Q34379))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q862501"
+  ], 
+  "relations": [
+   "P1303"
+  ], 
+  "count_ques_sub_type": 4, 
+  "type_list": [
+   "Q34379", 
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about ondes Martenot?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q890073", 
+   "Q1178361", 
+   "Q604538", 
+   "Q2660670", 
+   "Q39777", 
+   "Q678090", 
+   "Q490054", 
+   "Q873588", 
+   "Q593995", 
+   "Q1327500", 
+   "Q1879664", 
+   "Q1759986", 
+   "Q1798603", 
+   "Q1099153", 
+   "Q120585", 
+   "Q713298", 
+   "Q1024685", 
+   "Q816793", 
+   "Q244976", 
+   "Q1179017", 
+   "Q320341", 
+   "Q748455", 
+   "Q669370", 
+   "Q290951", 
+   "Q178933", 
+   "Q16875637", 
+   "Q790468", 
+   "Q1129422", 
+   "Q379248", 
+   "Q173453", 
+   "Q744831", 
+   "Q963150", 
+   "Q16155191", 
+   "Q644440", 
+   "Q497224", 
+   "Q3623688"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1178361", 
+   "Q1759986", 
+   "Q816793"
+  ], 
+  "utterance": "davul, Wurlitzer electric piano, Bendir", 
+  "active_set": [
+   "(c(Q502895),P1303,c(Q34379))"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Single_Relation", 
+  "type_list": [
+   "Q3024240"
+  ], 
+  "entities_in_utterance": [
+   "Q746667", 
+   "Q192816"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P2348"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which former countries did Saint Barbara and Maternus Cynegius take place ?"
+ }, 
+ {
+  "all_entities": [
+   "Q2277"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q2277"
+  ], 
+  "utterance": "Roman Empire", 
+  "active_set": [
+   "AND((Q192816,P2348,c(Q3024240)), (Q746667,P2348,c(Q3024240)))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Mult. entity type|Indirect", 
+  "type_list": [
+   "Q1307214", 
+   "Q28108", 
+   "Q3024240"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P122"
+  ], 
+  "count_ques_sub_type": 10, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "How many former countries have more number of forms of government and political systems as the type of government than that former country ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "0", 
+  "active_set": [
+   "(c(Q3024240),P122,c(Q1307214)|c(Q28108))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q2277"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P37"
+  ], 
+  "type_list": [
+   "Q34770"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What is considered to be the official language of Roman Empire ?"
+ }, 
+ {
+  "all_entities": [
+   "Q397"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q397"
+  ], 
+  "utterance": "Latin", 
+  "active_set": [
+   "(Q2277,P37,c(Q34770))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q128538"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P138"
+  ], 
+  "type_list": [
+   "Q1400264"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which artist collective is named after Luke the Evangelist ?"
+ }, 
+ {
+  "all_entities": [
+   "Q18508801"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q18508801"
+  ], 
+  "utterance": "Antwerp Guild of Saint Luke", 
+  "active_set": [
+   "(c(Q1400264),P138,Q128538)"
+  ]
+ }
+]

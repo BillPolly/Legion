@@ -1,0 +1,397 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q1920283"
+  ], 
+  "relations": [
+   "P166"
+  ], 
+  "type_list": [
+   "Q193622"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which order was received by Nancy Kemp-Arendt ?"
+ }, 
+ {
+  "all_entities": [
+   "Q15042141"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q15042141"
+  ], 
+  "utterance": "officer of the Order of the Oak Crown", 
+  "active_set": [
+   "(Q1920283,P166,c(Q193622))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1920283"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q12737077"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What are the professions of Nancy Kemp-Arendt ?"
+ }, 
+ {
+  "all_entities": [
+   "Q15306067", 
+   "Q82955"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q15306067", 
+   "Q82955"
+  ], 
+  "utterance": "triathlete, politician", 
+  "active_set": [
+   "(Q1920283,P106,c(Q12737077))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q82955"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P425"
+  ], 
+  "type_list": [
+   "Q3769299"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who is associated with the field of occupation politician ?"
+ }, 
+ {
+  "all_entities": [
+   "Q7163"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q7163"
+  ], 
+  "utterance": "politics", 
+  "active_set": [
+   "(Q82955,P425,c(Q3769299))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q7163"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P921"
+  ], 
+  "type_list": [
+   "Q4894405"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which journalism genres were primarily based on that human behaviour ?"
+ }, 
+ {
+  "all_entities": [
+   "Q23933641", 
+   "Q23759499"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q23933641", 
+   "Q23759499"
+  ], 
+  "utterance": "The Premier Outlines No Policy For Government, The Andean condor among the hawks", 
+  "active_set": [
+   "(c(Q4894405),P921,Q7163)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1920283"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which sex does Nancy Kemp-Arendt possess ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581072"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581072"
+  ], 
+  "utterance": "female", 
+  "active_set": [
+   "(Q1920283,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Single_Relation|Incomplete", 
+  "type_list": [
+   "Q290"
+  ], 
+  "entities_in_utterance": [
+   "Q11423301", 
+   "Q1920283"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 1, 
+  "relations": [
+   "P21"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also Mayumi Tsuchiya"
+ }, 
+ {
+  "all_entities": [
+   "Q6581072"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581072"
+  ], 
+  "utterance": "female", 
+  "active_set": [
+   "AND((Q1920283,P21,c(Q290)), (Q11423301,P21,c(Q290)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q6581072", 
+   "Q86078"
+  ], 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 3, 
+  "utterance": "Does Anni Albers have the gender as that sex ?", 
+  "description": "Verification|2 entities, one direct and one indirect, object is indirect"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "YES", 
+  "active_set": [
+   "(Q86078,P21,Q6581072)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q1920283"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P102"
+  ], 
+  "type_list": [
+   "Q7210356"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which party does Nancy Kemp-Arendt belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1344670"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1344670"
+  ], 
+  "utterance": "Christian Social People's Party", 
+  "active_set": [
+   "(Q1920283,P102,c(Q7210356))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q5302103"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q7210356"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And what about Douglas Wicks?"
+ }, 
+ {
+  "all_entities": [
+   "Q29552"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q29552"
+  ], 
+  "utterance": "Democratic Party", 
+  "active_set": [
+   "(Q5302103,P102,c(Q7210356))"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type|Indirect", 
+  "type_list": [
+   "Q7210356", 
+   "Q43229", 
+   "Q874405"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P361"
+  ], 
+  "count_ques_sub_type": 9, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which political organizations are lesser number of organizations and social groups a component of than that political organization ?"
+ }, 
+ {
+  "all_entities": [
+   "Q15513264", 
+   "Q3896805", 
+   "Q1128321", 
+   "Q110832", 
+   "Q1111191", 
+   "Q2547133", 
+   "Q204543", 
+   "Q2152252", 
+   "Q500190", 
+   "Q10647", 
+   "Q216082", 
+   "Q862603", 
+   "Q937319", 
+   "Q902619", 
+   "Q686228", 
+   "Q21405813", 
+   "Q2482138", 
+   "Q940628", 
+   "Q44623", 
+   "Q212712", 
+   "Q41053", 
+   "Q7663194", 
+   "Q747910", 
+   "Q4229911", 
+   "Q9626", 
+   "Q9624", 
+   "Q513521", 
+   "Q667785", 
+   "Q110857", 
+   "Q1134161", 
+   "Q903671", 
+   "Q18907386", 
+   "Q602390", 
+   "Q179111", 
+   "Q6979084", 
+   "Q166073", 
+   "Q7248622", 
+   "Q31113", 
+   "Q47720", 
+   "Q47729", 
+   "Q7210193", 
+   "Q1138768", 
+   "Q1185894", 
+   "Q5059248", 
+   "Q103748", 
+   "Q1046657", 
+   "Q1136032", 
+   "Q1897793", 
+   "Q249960", 
+   "Q7229678", 
+   "Q849158", 
+   "Q233591", 
+   "Q964642", 
+   "Q49764", 
+   "Q241149", 
+   "Q2243980", 
+   "Q17511792", 
+   "Q1376486", 
+   "Q1353232", 
+   "Q756180", 
+   "Q3539620", 
+   "Q939354", 
+   "Q2102613", 
+   "Q21062915", 
+   "Q15925608", 
+   "Q13124", 
+   "Q657089", 
+   "Q6621940", 
+   "Q847263", 
+   "Q727724", 
+   "Q369707", 
+   "Q9630", 
+   "Q151179", 
+   "Q622441", 
+   "Q131692", 
+   "Q156019", 
+   "Q1148537", 
+   "Q438433", 
+   "Q15778639", 
+   "Q1455015", 
+   "Q2264753", 
+   "Q2400447", 
+   "Q3366202", 
+   "Q47750", 
+   "Q9015026", 
+   "Q10230"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q47750", 
+   "Q13124", 
+   "Q47729"
+  ], 
+  "utterance": "Northern League, Free Democratic Party, Democratic Party", 
+  "active_set": [
+   "(c(Q43229)|c(Q874405),P361,c(Q7210356))"
+  ]
+ }
+]

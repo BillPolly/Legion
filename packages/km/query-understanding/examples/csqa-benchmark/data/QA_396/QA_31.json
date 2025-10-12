@@ -1,0 +1,331 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q2925023"
+  ], 
+  "relations": [
+   "P21"
+  ], 
+  "type_list": [
+   "Q290"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which sex does Brian Thomas belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q6581097"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q6581097"
+  ], 
+  "utterance": "male", 
+  "active_set": [
+   "(Q2925023,P21,c(Q290))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q2925023"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P54"
+  ], 
+  "type_list": [
+   "Q618123"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which geographical objects are Brian Thomas a member of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1521270", 
+   "Q841966"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1521270", 
+   "Q841966"
+  ], 
+  "utterance": "Neath RFC, Swansea RFC", 
+  "active_set": [
+   "(Q2925023,P54,c(Q618123))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q1521270"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P466"
+  ], 
+  "type_list": [
+   "Q1076486"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "What was inhabited by that geographical object ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q1521270"
+  ], 
+  "active_set": [
+   "(c(Q1076486),P466,Q1521270)", 
+   "(c(Q1076486),P466,Q841966)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q1521270", 
+   "Q841966"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Neath RFC ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "Yes"
+ }, 
+ {
+  "all_entities": [
+   "Q12137653"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q12137653"
+  ], 
+  "utterance": "The Gnoll", 
+  "active_set": [
+   "(c(Q1076486),P466,Q1521270)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, 2 direct, 2(direct) are query entities, subject is indirect", 
+  "entities_in_utterance": [
+   "Q12137653", 
+   "Q46797", 
+   "Q145"
+  ], 
+  "relations": [
+   "P17"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 5, 
+  "utterance": "Is that sports venue located in Mirano and United Kingdom ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO and YES respectively", 
+  "active_set": [
+   "(Q12137653,P17,Q46797)", 
+   "(Q12137653,P17,Q145)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q12137653"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P466"
+  ], 
+  "type_list": [
+   "Q618123"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Who is an occupant of The Gnoll ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1521270"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1521270"
+  ], 
+  "utterance": "Neath RFC", 
+  "active_set": [
+   "(Q12137653,P466,c(Q618123))"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Multiple_Relation", 
+  "type_list": [
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q6581097", 
+   "Q1521270"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P54", 
+   "P21"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people play for the team named Neath RFC and are a male ?"
+ }, 
+ {
+  "all_entities": [
+   "Q5495530", 
+   "Q525873", 
+   "Q5623800", 
+   "Q16212127", 
+   "Q5237721", 
+   "Q5593419", 
+   "Q7176932", 
+   "Q4797944", 
+   "Q3195767", 
+   "Q3228892", 
+   "Q3050840", 
+   "Q350686", 
+   "Q6244480", 
+   "Q4799486", 
+   "Q6513047", 
+   "Q5235622", 
+   "Q2825023", 
+   "Q6147393", 
+   "Q5208990", 
+   "Q6260713", 
+   "Q3001503", 
+   "Q5386454", 
+   "Q7626511", 
+   "Q2925033", 
+   "Q3453280", 
+   "Q4925842", 
+   "Q3237297", 
+   "Q2979449", 
+   "Q5921699", 
+   "Q4714179", 
+   "Q15998730", 
+   "Q16008200", 
+   "Q3012016", 
+   "Q2925023", 
+   "Q5523005", 
+   "Q2866086", 
+   "Q3476218", 
+   "Q3524230", 
+   "Q2837676", 
+   "Q930461", 
+   "Q6228764", 
+   "Q6393873", 
+   "Q7814803", 
+   "Q6519569", 
+   "Q6317431", 
+   "Q16223279", 
+   "Q5951282", 
+   "Q8014552", 
+   "Q3498970", 
+   "Q6708332", 
+   "Q6969374", 
+   "Q2885809", 
+   "Q4741760", 
+   "Q531221", 
+   "Q5346920", 
+   "Q5218391", 
+   "Q3445784", 
+   "Q1115849", 
+   "Q20022443", 
+   "Q7791892", 
+   "Q2662059", 
+   "Q5209004", 
+   "Q5921747", 
+   "Q5234750", 
+   "Q5292513", 
+   "Q7814961", 
+   "Q7372175", 
+   "Q5661301", 
+   "Q285258", 
+   "Q7678702", 
+   "Q7965960", 
+   "Q261477", 
+   "Q4799063", 
+   "Q6536435", 
+   "Q6437973", 
+   "Q6530999", 
+   "Q3063897", 
+   "Q5233468", 
+   "Q2924631", 
+   "Q4910477", 
+   "Q5085414", 
+   "Q4685352", 
+   "Q7817632", 
+   "Q3304186", 
+   "Q5236691", 
+   "Q6193677", 
+   "Q1558855", 
+   "Q3195786", 
+   "Q3372289", 
+   "Q3423032", 
+   "Q5209027", 
+   "Q3399714", 
+   "Q7790756", 
+   "Q8017521", 
+   "Q5572885", 
+   "Q5496060", 
+   "Q5572880", 
+   "Q4965353", 
+   "Q5238568", 
+   "Q5572889", 
+   "Q5344807", 
+   "Q6768286", 
+   "Q7325568", 
+   "Q3016529", 
+   "Q7411123", 
+   "Q16228121", 
+   "Q6529155", 
+   "Q5543774", 
+   "Q503776", 
+   "Q863024"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3476218", 
+   "Q6193677", 
+   "Q5234750", 
+   "Q7678702", 
+   "Q6536435", 
+   "Q2866086", 
+   "Q3050840", 
+   "Q5623800", 
+   "Q5292513", 
+   "Q3012016"
+  ], 
+  "utterance": "Some of them are Scott Gibbs, Jim Birch, David Harris Davies, Tal Harris, Lewis Cobden Thomas, Arwel Thomas, Elgan Rees, Gwyn Thomas, Don Devereux, Dai Morris", 
+  "active_set": [
+   "AND((c(Q502895),P54,Q1521270), (c(Q502895),P21,Q6581097))"
+  ]
+ }
+]

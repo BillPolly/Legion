@@ -1,0 +1,815 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q361763"
+  ], 
+  "relations": [
+   "P140"
+  ], 
+  "type_list": [
+   "Q879146"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is the religion associated with Adolf Fritzen ?"
+ }, 
+ {
+  "all_entities": [
+   "Q9592"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q9592"
+  ], 
+  "utterance": "Roman Catholic Church", 
+  "active_set": [
+   "(Q361763,P140,c(Q879146))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q361763"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which political territory is the native country of Adolf Fritzen ?"
+ }, 
+ {
+  "all_entities": [
+   "Q183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "utterance": "Germany", 
+  "active_set": [
+   "(Q361763,P27,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q16269175"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And how about Peter G\u00f6tz von Olenhusen?"
+ }, 
+ {
+  "all_entities": [
+   "Q183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183"
+  ], 
+  "utterance": "Germany", 
+  "active_set": [
+   "(Q16269175,P27,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, all direct, 2 are query entities", 
+  "entities_in_utterance": [
+   "Q183", 
+   "Q6793315", 
+   "Q22280019"
+  ], 
+  "relations": [
+   "P35"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 4, 
+  "utterance": "Is Maurice L\u00e9na and Richard McLaren the head of state of Germany ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q183,P35,Q6793315)", 
+   "(Q183,P35,Q22280019)"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q1048835", 
+   "Q1048835"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which political territories have diplomatic associations with max number of political territories ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q408"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q408"
+  ], 
+  "utterance": "Australia", 
+  "active_set": [
+   "(c(Q1048835),P530,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q1048835", 
+   "Q1048835"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "Which political territories are known to have diplomatic connections with min number of political territories ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q1000", 
+   "Q781", 
+   "Q778", 
+   "Q769", 
+   "Q685", 
+   "Q691", 
+   "Q766"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1000", 
+   "Q769", 
+   "Q691"
+  ], 
+  "utterance": "Gabon, Grenada, Papua New Guinea", 
+  "active_set": [
+   "(c(Q1048835),P530,c(Q1048835))"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Multiple_Relation", 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "entities_in_utterance": [
+   "Q26719650", 
+   "Q183"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P530", 
+   "P17"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territories have diplomatic relations with Germany and are Amuri a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q252"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q252"
+  ], 
+  "utterance": "Indonesia", 
+  "active_set": [
+   "AND((Q183,P530,c(Q15617994)), (Q26719650,P17,c(Q15617994)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 6, 
+  "question-type": "Simple Question (Ellipsis)", 
+  "description": "only subject is changed, parent and predicate remains same", 
+  "entities_in_utterance": [
+   "Q5643510"
+  ], 
+  "inc_ques_type": 2, 
+  "relations": [], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "utterance": "And also tell me about Halsa Church?"
+ }, 
+ {
+  "all_entities": [
+   "Q20"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q20"
+  ], 
+  "utterance": "Norway", 
+  "active_set": [
+   "(Q5643510,P17,c(Q15617994))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Mult. entity type", 
+  "type_list": [
+   "Q1048835", 
+   "Q20667921", 
+   "Q56061"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P1376"
+  ], 
+  "count_ques_sub_type": 3, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which political territories have max number of french administrative divisions or administrative territories as their capital ?"
+ }, 
+ {
+  "all_entities": [
+   "Q13353", 
+   "Q193619", 
+   "Q183"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q13353", 
+   "Q193619", 
+   "Q183"
+  ], 
+  "utterance": "Montserrat, Union of South Africa, Germany", 
+  "active_set": [
+   "(c(Q20667921)|c(Q56061),P1376,c(Q1048835))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type", 
+  "entities_in_utterance": [
+   "Q822"
+  ], 
+  "speaker": "USER", 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q15617994", 
+   "Q1048835"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many administrative territories have diplomatic relationships with more number of political territories than Lebanon ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q804", 
+   "Q801", 
+   "Q800", 
+   "Q419", 
+   "Q668", 
+   "Q414", 
+   "Q142", 
+   "Q55", 
+   "Q145", 
+   "Q148", 
+   "Q783", 
+   "Q711", 
+   "Q252", 
+   "Q403", 
+   "Q258", 
+   "Q45", 
+   "Q159", 
+   "Q43", 
+   "Q41", 
+   "Q155", 
+   "Q796", 
+   "Q794", 
+   "Q954", 
+   "Q889", 
+   "Q884", 
+   "Q881", 
+   "Q811", 
+   "Q33", 
+   "Q31", 
+   "Q30", 
+   "Q924", 
+   "Q36", 
+   "Q34", 
+   "Q928", 
+   "Q39", 
+   "Q38", 
+   "Q739", 
+   "Q423", 
+   "Q851", 
+   "Q733", 
+   "Q734", 
+   "Q233", 
+   "Q20", 
+   "Q1041", 
+   "Q27", 
+   "Q843", 
+   "Q1029", 
+   "Q1028", 
+   "Q736", 
+   "Q786", 
+   "Q225", 
+   "Q224", 
+   "Q96", 
+   "Q229", 
+   "Q347", 
+   "Q17", 
+   "Q902", 
+   "Q1036", 
+   "Q1033", 
+   "Q1030", 
+   "Q963", 
+   "Q298", 
+   "Q115", 
+   "Q114", 
+   "Q117", 
+   "Q750", 
+   "Q212", 
+   "Q213", 
+   "Q215", 
+   "Q218", 
+   "Q219", 
+   "Q916", 
+   "Q833", 
+   "Q1009", 
+   "Q79", 
+   "Q77", 
+   "Q878", 
+   "Q774", 
+   "Q810", 
+   "Q29", 
+   "Q869", 
+   "Q953"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "82", 
+  "active_set": [
+   "(c(Q1048835),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "description": "Comparative|Count over More/Less|Single entity type|Incomplete", 
+  "entities_in_utterance": [
+   "Q229"
+  ], 
+  "relations": [
+   "P530"
+  ], 
+  "count_ques_sub_type": 6, 
+  "type_list": [
+   "Q15617994", 
+   "Q1048835"
+  ], 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "And also tell me about Cyprus?", 
+  "is_incomplete": 1
+ }, 
+ {
+  "all_entities": [
+   "Q155", 
+   "Q38"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "2", 
+  "active_set": [
+   "(c(Q1048835),P530,c(Q15617994))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Mult. entity type", 
+  "type_list": [
+   "Q4164871", 
+   "Q22676587", 
+   "Q1048835"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 1, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P122"
+  ], 
+  "count_ques_sub_type": 3, 
+  "speaker": "USER", 
+  "count_ques_type": 2, 
+  "utterance": "Which political territories have min number of positions and monarchic systems as the type of government ?"
+ }, 
+ {
+  "all_entities": [
+   "Q183", 
+   "Q601252", 
+   "Q193619", 
+   "Q1059046", 
+   "Q664", 
+   "Q1925048", 
+   "Q785", 
+   "Q178084", 
+   "Q16", 
+   "Q35", 
+   "Q38610", 
+   "Q79965", 
+   "Q223793", 
+   "Q2594990", 
+   "Q408", 
+   "Q757", 
+   "Q40", 
+   "Q1250464", 
+   "Q151938", 
+   "Q31747", 
+   "Q129286"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q183", 
+   "Q408", 
+   "Q35"
+  ], 
+  "utterance": "Germany, Australia, Denmark", 
+  "active_set": [
+   "(c(Q1048835),P122,c(Q4164871)|c(Q22676587))"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Single_Relation", 
+  "type_list": [
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q159", 
+   "Q183"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P27"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people are a native of Germany and Russia ?"
+ }, 
+ {
+  "all_entities": [
+   "Q4077747", 
+   "Q57552", 
+   "Q67207", 
+   "Q106515", 
+   "Q4222022", 
+   "Q2529359", 
+   "Q107995", 
+   "Q2547664", 
+   "Q4084933", 
+   "Q1790765", 
+   "Q1372896", 
+   "Q21088", 
+   "Q664649", 
+   "Q1844592", 
+   "Q4420790", 
+   "Q15065877", 
+   "Q365299", 
+   "Q91563", 
+   "Q91118", 
+   "Q86839", 
+   "Q4090506", 
+   "Q7177958", 
+   "Q92216", 
+   "Q77959", 
+   "Q2387506", 
+   "Q830197", 
+   "Q4072663", 
+   "Q1647119", 
+   "Q1360932", 
+   "Q15894235", 
+   "Q4247217", 
+   "Q1567643", 
+   "Q707253", 
+   "Q4181039", 
+   "Q1264756", 
+   "Q73027", 
+   "Q443384", 
+   "Q108008", 
+   "Q664157", 
+   "Q69720", 
+   "Q91324", 
+   "Q1733612", 
+   "Q454630", 
+   "Q529869", 
+   "Q7501018", 
+   "Q1657749", 
+   "Q534421"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q4181039", 
+   "Q106515", 
+   "Q4247217", 
+   "Q707253", 
+   "Q4084933", 
+   "Q830197", 
+   "Q69720", 
+   "Q92216", 
+   "Q91324", 
+   "Q1647119"
+  ], 
+  "utterance": "Some of them are Nikita Zholkver, Jacob von St\u00e4hlin, Vladimir Kunin, Robert Dietrich, Yevgeny Berkovich, Alexander Tchigir, Tatiana von Metternich-Winneburg, Johann Georg Siegesbeck, Plato von Ustinov, Igor Berezovsky", 
+  "active_set": [
+   "AND((c(Q502895),P27,Q183), (c(Q502895),P27,Q159))"
+  ]
+ }, 
+ {
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Mult. entity type", 
+  "type_list": [
+   "Q502895", 
+   "Q234460", 
+   "Q2342494"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P110"
+  ], 
+  "count_ques_sub_type": 3, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which people illustrated min number of texts or collectables ?"
+ }, 
+ {
+  "all_entities": [
+   "Q11535004", 
+   "Q19677001", 
+   "Q22292226", 
+   "Q3480805", 
+   "Q1654509", 
+   "Q285282", 
+   "Q1684981", 
+   "Q463346", 
+   "Q675791", 
+   "Q24259036", 
+   "Q24259034", 
+   "Q1266750", 
+   "Q3476767", 
+   "Q353277", 
+   "Q1191638", 
+   "Q11264875", 
+   "Q34743", 
+   "Q6682", 
+   "Q10854926", 
+   "Q5488651", 
+   "Q465460", 
+   "Q2846567", 
+   "Q3476776", 
+   "Q24259199", 
+   "Q8318812", 
+   "Q11583599", 
+   "Q5593", 
+   "Q22322914", 
+   "Q5082131", 
+   "Q7026779", 
+   "Q2182384", 
+   "Q27042725", 
+   "Q3280981", 
+   "Q27003356", 
+   "Q1074276", 
+   "Q7279220", 
+   "Q27043229", 
+   "Q361970", 
+   "Q7340147", 
+   "Q772558", 
+   "Q941468", 
+   "Q11544351", 
+   "Q9201330", 
+   "Q378710", 
+   "Q17114155", 
+   "Q27056252", 
+   "Q16737250", 
+   "Q2220411", 
+   "Q6137934", 
+   "Q16263698", 
+   "Q27048344", 
+   "Q8874782", 
+   "Q5228678", 
+   "Q599530", 
+   "Q3565597", 
+   "Q12026771", 
+   "Q7819621", 
+   "Q1653798", 
+   "Q128027", 
+   "Q282121", 
+   "Q1444152", 
+   "Q1591928", 
+   "Q1132235", 
+   "Q27624911", 
+   "Q374823", 
+   "Q4674564", 
+   "Q4506136", 
+   "Q11667616", 
+   "Q1738276", 
+   "Q27037931", 
+   "Q313945", 
+   "Q11428452", 
+   "Q838142", 
+   "Q1387300", 
+   "Q3608043", 
+   "Q7678636", 
+   "Q27055441", 
+   "Q7182001", 
+   "Q27037932", 
+   "Q3519209", 
+   "Q309945", 
+   "Q650946", 
+   "Q5721334", 
+   "Q11898377", 
+   "Q27042606", 
+   "Q295073", 
+   "Q3337062", 
+   "Q2558737", 
+   "Q16218861", 
+   "Q16213683", 
+   "Q858144", 
+   "Q16065421", 
+   "Q15987640", 
+   "Q3272581", 
+   "Q3260577", 
+   "Q8003099", 
+   "Q1866386", 
+   "Q11482611", 
+   "Q2857246", 
+   "Q2957653", 
+   "Q18534452", 
+   "Q301112", 
+   "Q11451126", 
+   "Q27267646", 
+   "Q19364029", 
+   "Q27493479", 
+   "Q27055483", 
+   "Q388589", 
+   "Q744325", 
+   "Q272324", 
+   "Q384225", 
+   "Q2932464", 
+   "Q2107880", 
+   "Q13769198", 
+   "Q102139", 
+   "Q16683333", 
+   "Q729902", 
+   "Q742959", 
+   "Q11599255", 
+   "Q15987638", 
+   "Q943783", 
+   "Q8085517", 
+   "Q24259053", 
+   "Q531358", 
+   "Q15912340", 
+   "Q164279", 
+   "Q22138337", 
+   "Q17284472", 
+   "Q15725991", 
+   "Q7803591", 
+   "Q660225", 
+   "Q1439484", 
+   "Q27042763", 
+   "Q87115", 
+   "Q6810831", 
+   "Q11540237", 
+   "Q4951135", 
+   "Q27055506", 
+   "Q4701123", 
+   "Q6224222", 
+   "Q347220", 
+   "Q206685", 
+   "Q2966099", 
+   "Q617115", 
+   "Q6787709", 
+   "Q57968", 
+   "Q5363905", 
+   "Q27067551", 
+   "Q551359", 
+   "Q999229", 
+   "Q3528336", 
+   "Q9014744", 
+   "Q5761007", 
+   "Q610576", 
+   "Q3160351", 
+   "Q1291233", 
+   "Q660917", 
+   "Q15051455", 
+   "Q741744", 
+   "Q3371273", 
+   "Q27031075", 
+   "Q1811732", 
+   "Q1113788", 
+   "Q3188310", 
+   "Q27031857", 
+   "Q1131289", 
+   "Q309240", 
+   "Q3018977", 
+   "Q7331547", 
+   "Q3433199", 
+   "Q1538469", 
+   "Q211619", 
+   "Q11586417", 
+   "Q27055497", 
+   "Q11522912", 
+   "Q352365", 
+   "Q7821750", 
+   "Q3268108", 
+   "Q1375265", 
+   "Q313703", 
+   "Q24259135", 
+   "Q24259046", 
+   "Q16030513", 
+   "Q5387393", 
+   "Q11644966", 
+   "Q27067564", 
+   "Q3811956", 
+   "Q5490097", 
+   "Q1018606", 
+   "Q20155972", 
+   "Q24259104", 
+   "Q983349", 
+   "Q23771657", 
+   "Q19359177", 
+   "Q15970956", 
+   "Q379795", 
+   "Q11621987", 
+   "Q3195781", 
+   "Q24547769", 
+   "Q27055509", 
+   "Q5301002", 
+   "Q1143876", 
+   "Q3675880", 
+   "Q3573286", 
+   "Q7426424", 
+   "Q11627987", 
+   "Q622678", 
+   "Q7366035"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q102139", 
+   "Q5593", 
+   "Q17114155"
+  ], 
+  "utterance": "Margrethe II of Denmark, Pablo Picasso, Aliy Zirkle", 
+  "active_set": [
+   "(c(Q234460)|c(Q2342494),P110,c(Q502895))"
+  ]
+ }
+]

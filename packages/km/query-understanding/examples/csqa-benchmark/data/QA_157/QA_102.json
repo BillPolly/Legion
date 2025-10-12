@@ -1,0 +1,229 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q27548615"
+  ], 
+  "relations": [
+   "P681"
+  ], 
+  "type_list": [
+   "Q5058355"
+  ], 
+  "speaker": "USER", 
+  "utterance": "What is a component of Bud6p YLR319C ?"
+ }, 
+ {
+  "all_entities": [
+   "Q22327686"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q22327686"
+  ], 
+  "utterance": "prospore membrane", 
+  "active_set": [
+   "(Q27548615,P681,c(Q5058355))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q27548615"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P688"
+  ], 
+  "type_list": [
+   "Q863908"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which nucleic acid sequence encodes Bud6p YLR319C ?"
+ }, 
+ {
+  "all_entities": [
+   "Q27541448"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q27541448"
+  ], 
+  "utterance": "Bud6p YLR319C", 
+  "active_set": [
+   "(c(Q863908),P688,Q27548615)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q27541448"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P702"
+  ], 
+  "type_list": [
+   "Q181394"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "What gene does that nucleic acid sequence encode ?"
+ }, 
+ {
+  "all_entities": [
+   "Q27548615"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q27548615"
+  ], 
+  "utterance": "Bud6p YLR319C", 
+  "active_set": [
+   "(c(Q181394),P702,Q27541448)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q27541448"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P703"
+  ], 
+  "type_list": [
+   "Q631147"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Where is that nucleic acid sequence found ?"
+ }, 
+ {
+  "all_entities": [
+   "Q27510868"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q27510868"
+  ], 
+  "utterance": "Saccharomyces cerevisiae S288c", 
+  "active_set": [
+   "(Q27548615,P703,c(Q631147))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (All)", 
+  "description": "Quantitative|Min/Max|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P682"
+  ], 
+  "count_ques_sub_type": 2, 
+  "type_list": [
+   "Q1190554", 
+   "Q181394"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "Which events are a biological processes that min number of nutrients are involved in ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q719426"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q719426"
+  ], 
+  "utterance": "lactation", 
+  "active_set": [
+   "(c(Q181394),P682,Q2996394)"
+  ]
+ }, 
+ {
+  "question-type": "Comparative Reasoning (All)", 
+  "description": "Comparative|More/Less|Mult. entity type|Indirect", 
+  "type_list": [
+   "Q1190554", 
+   "Q15709879", 
+   "Q340169"
+  ], 
+  "entities_in_utterance": [], 
+  "is_incomplete": 0, 
+  "set_op": 2, 
+  "ques_type_id": 8, 
+  "relations": [
+   "P180"
+  ], 
+  "count_ques_sub_type": 9, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Which events are expressed in greater number of artwork series or medias than that event ?"
+ }, 
+ {
+  "all_entities": [
+   "Q385378", 
+   "Q124734", 
+   "Q334029", 
+   "Q7561", 
+   "Q2750241", 
+   "Q808132", 
+   "Q650711", 
+   "Q3030248"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q334029", 
+   "Q7561", 
+   "Q385378"
+  ], 
+  "utterance": "Battle of Bunker Hill, snow, construction", 
+  "active_set": [
+   "(c(Q15709879)|c(Q340169),P180,c(Q1190554))"
+  ]
+ }, 
+ {
+  "set_op_choice": 2, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Intersection|Single_Relation", 
+  "type_list": [
+   "Q631147"
+  ], 
+  "entities_in_utterance": [
+   "Q27552856", 
+   "Q27548615"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P703"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which infraspecific names are Bud6p YLR319C and Rec114p YMR133W a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q27510868"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q27510868"
+  ], 
+  "utterance": "Saccharomyces cerevisiae S288c", 
+  "active_set": [
+   "AND((Q27548615,P703,c(Q631147)), (Q27552856,P703,c(Q631147)))"
+  ]
+ }
+]

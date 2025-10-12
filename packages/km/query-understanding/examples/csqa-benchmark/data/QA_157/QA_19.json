@@ -1,0 +1,407 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q2824842"
+  ], 
+  "relations": [
+   "P19"
+  ], 
+  "type_list": [
+   "Q56061"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which administrative territory is the place of birth of Adolphe Jaime ?"
+ }, 
+ {
+  "all_entities": [
+   "Q90"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q90"
+  ], 
+  "utterance": "Paris", 
+  "active_set": [
+   "(Q2824842,P19,c(Q56061))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q90"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1376"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What have that administrative territory as their capital ?"
+ }, 
+ {
+  "all_entities": [
+   "Q142", 
+   "Q1142326"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q142", 
+   "Q1142326"
+  ], 
+  "utterance": "France, Seine", 
+  "active_set": [
+   "(Q90,P1376,c(Q15617994))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q90"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P127"
+  ], 
+  "type_list": [
+   "Q3305213"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which paintings belongs to Paris ?"
+ }, 
+ {
+  "all_entities": [
+   "Q3837491", 
+   "Q326503"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q3837491", 
+   "Q326503"
+  ], 
+  "utterance": "Jacob Wrestling with the Angel, The Sleepers", 
+  "active_set": [
+   "(c(Q3305213),P127,Q90)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Mult. Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q3837491", 
+   "Q326503"
+  ], 
+  "sec_ques_sub_type": 4, 
+  "relations": [
+   "P186"
+  ], 
+  "type_list": [
+   "Q214609"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which materials are used to make Jacob Wrestling with the Angel and The Sleepers ?"
+ }, 
+ {
+  "all_entities": [
+   "Q296955", 
+   "Q274988", 
+   "Q296955", 
+   "Q4259259"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q296955", 
+   "Q274988", 
+   "Q296955"
+  ], 
+  "utterance": "oil paint for 1st, 3rd, plaster for 2nd", 
+  "active_set": [
+   "(Q3837491,P186,c(Q214609))", 
+   "(Q326503,P186,c(Q214609))"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q296955"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P101"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who works in the domain of that material ?"
+ }, 
+ {
+  "description": "Clarification for simple ques.", 
+  "entities_in_utterance": [
+   "Q274988"
+  ], 
+  "active_set": [
+   "(c(Q502895),P101,Q296955)", 
+   "(c(Q502895),P101,Q274988)", 
+   "(c(Q502895),P101,Q296955)"
+  ], 
+  "relations": [], 
+  "all_entities": [
+   "Q296955", 
+   "Q274988", 
+   "Q296955"
+  ], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean plaster ?"
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "entities": [
+   "Q296955"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "sec_ques_sub_type": 2, 
+  "utterance": "No, I meant oil paint. Could you tell me the answer for that?"
+ }, 
+ {
+  "all_entities": [
+   "Q264559"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q264559"
+  ], 
+  "utterance": "Ariana Richards", 
+  "active_set": [
+   "(c(Q502895),P101,Q296955)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q264559"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P161"
+  ], 
+  "type_list": [
+   "Q838948"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Which works of art have that person as actor ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1961727", 
+   "Q167726", 
+   "Q200873", 
+   "Q1688276", 
+   "Q329145", 
+   "Q835650", 
+   "Q1507513", 
+   "Q1320234"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q200873", 
+   "Q167726", 
+   "Q835650"
+  ], 
+  "utterance": "The Lost World: Jurassic Park, Jurassic Park, Tremors", 
+  "active_set": [
+   "(c(Q838948),P161,Q264559)"
+  ]
+ }, 
+ {
+  "ques_type_id": 3, 
+  "question-type": "Clarification", 
+  "description": "Comparative|Count over More/Less|Single entity type|Indirect", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P144"
+  ], 
+  "count_ques_sub_type": 9, 
+  "type_list": [
+   "Q838948", 
+   "Q5398426"
+  ], 
+  "count_ques_type": 1, 
+  "utterance": "How many works of art are lesser number of television series a fork of than that work of art ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "description": "Comparative|Count over More/Less|Single entity type|Clarification", 
+  "entities_in_utterance": [
+   "Q167726"
+  ], 
+  "active_set": [
+   "(c(Q5398426),P144,c(Q838948))"
+  ], 
+  "relations": [], 
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "utterance": "Did you mean Jurassic Park ?"
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Comparative Reasoning (Count) (All)", 
+  "count_ques_sub_type": 9, 
+  "speaker": "USER", 
+  "count_ques_type": 1, 
+  "utterance": "Yes", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "0", 
+  "active_set": [
+   "(c(Q5398426),P144,c(Q838948))"
+  ]
+ }, 
+ {
+  "ques_type_id": 7, 
+  "question-type": "Quantitative Reasoning (Count) (All)", 
+  "description": "Quantitative|Count over Atleast/ Atmost/ Approx. the same/Equal|Single entity type", 
+  "entities_in_utterance": [], 
+  "speaker": "USER", 
+  "relations": [
+   "P1445"
+  ], 
+  "count_ques_sub_type": 5, 
+  "type_list": [
+   "Q838948", 
+   "Q386724"
+  ], 
+  "count_ques_type": 2, 
+  "utterance": "How many works are recounted in atleast 5 works of art ?", 
+  "is_incomplete": 0
+ }, 
+ {
+  "all_entities": [
+   "Q384426"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "1", 
+  "active_set": [
+   "(c(Q386724),P1445,c(Q838948))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q167726"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P915"
+  ], 
+  "type_list": [
+   "Q852446"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which city was Jurassic Park filmed on ?"
+ }, 
+ {
+  "all_entities": [
+   "Q782"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q782"
+  ], 
+  "utterance": "Hawaii", 
+  "active_set": [
+   "(Q167726,P915,c(Q852446))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q167726"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P1040"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which person is the editor of that work of art ?"
+ }, 
+ {
+  "all_entities": [
+   "Q692550"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q692550"
+  ], 
+  "utterance": "Michael Kahn", 
+  "active_set": [
+   "(Q782,P1040,c(Q502895))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q692550"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P27"
+  ], 
+  "type_list": [
+   "Q15617994"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which administrative territory is the native country of that person ?"
+ }, 
+ {
+  "all_entities": [
+   "Q30"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q30"
+  ], 
+  "utterance": "United States of America", 
+  "active_set": [
+   "(Q692550,P27,c(Q15617994))"
+  ]
+ }
+]

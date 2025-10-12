@@ -1,0 +1,273 @@
+[
+ {
+  "ques_type_id": 1, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question", 
+  "entities_in_utterance": [
+   "Q16232666"
+  ], 
+  "relations": [
+   "P641"
+  ], 
+  "type_list": [
+   "Q349"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which sport was Taylor Jungmann a part of ?"
+ }, 
+ {
+  "all_entities": [
+   "Q5369"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q5369"
+  ], 
+  "utterance": "baseball", 
+  "active_set": [
+   "(Q16232666,P641,c(Q349))"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Single Entity|Indirect", 
+  "entities_in_utterance": [
+   "Q5369"
+  ], 
+  "sec_ques_sub_type": 2, 
+  "relations": [
+   "P417"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "Which person is the patron saint of that sport ?"
+ }, 
+ {
+  "all_entities": [
+   "Q153024"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q153024"
+  ], 
+  "utterance": "Rita of Cascia", 
+  "active_set": [
+   "(Q5369,P417,c(Q502895))"
+  ]
+ }, 
+ {
+  "set_op_choice": 1, 
+  "question-type": "Logical Reasoning (All)", 
+  "description": "Logical|Union|Multiple_Relation", 
+  "type_list": [
+   "Q502895"
+  ], 
+  "entities_in_utterance": [
+   "Q4119087", 
+   "Q5369"
+  ], 
+  "ques_type_id": 4, 
+  "is_inc": 0, 
+  "relations": [
+   "P417", 
+   "P7"
+  ], 
+  "speaker": "USER", 
+  "utterance": "Which people are the names of person who are the patron saints of baseball or have Hazloul bin Abdulaziz Al Saud as their sibling ?"
+ }, 
+ {
+  "all_entities": [
+   "Q12203730", 
+   "Q4120307", 
+   "Q367825", 
+   "Q2460829", 
+   "Q6751859", 
+   "Q6745575", 
+   "Q4549135", 
+   "Q307463", 
+   "Q401645", 
+   "Q57298", 
+   "Q208301", 
+   "Q315587", 
+   "Q4120312", 
+   "Q712690", 
+   "Q981846", 
+   "Q3133541", 
+   "Q183187", 
+   "Q6982977", 
+   "Q317832", 
+   "Q4115542", 
+   "Q124710", 
+   "Q12242559", 
+   "Q244206", 
+   "Q1998925", 
+   "Q1975943", 
+   "Q217167", 
+   "Q6967643", 
+   "Q2602302", 
+   "Q7395569", 
+   "Q4665420", 
+   "Q153024", 
+   "Q4854440"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q401645", 
+   "Q12242559", 
+   "Q4120312", 
+   "Q208301", 
+   "Q367825", 
+   "Q315587", 
+   "Q4120307", 
+   "Q317832", 
+   "Q1998925", 
+   "Q183187"
+  ], 
+  "utterance": "Some of them are Ahmed bin Abdulaziz Al Saud, Musa'id bin Abdulaziz Al Saud, Fawwaz bin Abdulaziz Al Saud, Khalid of Saudi Arabia, Salman bin Abdulaziz Al Saud, Sultan bin Abdulaziz, Badr bin Abdulaziz Al Saud, Nayef bin Abdul-Aziz Al Saud, Turki I bin Abdul-Aziz Al Saud, Fahd of Saudi Arabia", 
+  "active_set": [
+   "OR((Q5369,P417,c(Q502895)), (Q4119087,P7,c(Q502895)))"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "question-type": "Verification (Boolean) (All)", 
+  "entities_in_utterance": [
+   "Q3611091"
+  ], 
+  "relations": [
+   "P7"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "bool_ques_type": 6, 
+  "utterance": "Are those ones a brother of Alfio Belluso ?", 
+  "description": "Verification|one entity, multiple entities (as object) referred indirectly"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q3611091,P7,Q401645)", 
+   "(Q3611091,P7,Q12242559)", 
+   "(Q3611091,P7,Q4120312)", 
+   "(Q3611091,P7,Q208301)", 
+   "(Q3611091,P7,Q367825)", 
+   "(Q3611091,P7,Q315587)", 
+   "(Q3611091,P7,Q4120307)", 
+   "(Q3611091,P7,Q317832)", 
+   "(Q3611091,P7,Q1998925)", 
+   "(Q3611091,P7,Q183187)"
+  ]
+ }, 
+ {
+  "ques_type_id": 5, 
+  "description": "Verification|3 entities, all direct, 2 are query entities", 
+  "entities_in_utterance": [
+   "Q153024", 
+   "Q3830116", 
+   "Q8062893"
+  ], 
+  "relations": [
+   "P106"
+  ], 
+  "type_list": [
+   "Q151885"
+  ], 
+  "speaker": "USER", 
+  "question-type": "Verification (Boolean) (All)", 
+  "bool_ques_type": 4, 
+  "utterance": "Does Rita of Cascia have the profession of Tube lemma and z/Architecture ?"
+ }, 
+ {
+  "all_entities": [], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [], 
+  "utterance": "NO", 
+  "active_set": [
+   "(Q153024,P106,Q3830116)", 
+   "(Q153024,P106,Q8062893)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Direct)", 
+  "description": "Simple Question|Single Entity", 
+  "entities_in_utterance": [
+   "Q208301"
+  ], 
+  "sec_ques_sub_type": 1, 
+  "relations": [
+   "P40"
+  ], 
+  "type_list": [
+   "Q502895"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 2, 
+  "utterance": "Who have Khalid of Saudi Arabia as a child ?"
+ }, 
+ {
+  "all_entities": [
+   "Q1319659", 
+   "Q151509", 
+   "Q4704130"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q1319659", 
+   "Q151509", 
+   "Q4704130"
+  ], 
+  "utterance": "Muhammad bin Saud, Ibn Saud, Al Jawhara bint Musaed Al Jiluwi", 
+  "active_set": [
+   "(c(Q502895),P40,Q208301)"
+  ]
+ }, 
+ {
+  "ques_type_id": 2, 
+  "question-type": "Simple Question (Coreferenced)", 
+  "description": "Simple Question|Mult. Entity", 
+  "entities_in_utterance": [
+   "Q1319659", 
+   "Q151509", 
+   "Q4704130"
+  ], 
+  "sec_ques_sub_type": 3, 
+  "relations": [
+   "P53"
+  ], 
+  "type_list": [
+   "Q8436"
+  ], 
+  "speaker": "USER", 
+  "sec_ques_type": 1, 
+  "utterance": "What dynasty do those people belong to ?"
+ }, 
+ {
+  "all_entities": [
+   "Q31711", 
+   "Q31711", 
+   "Q31711"
+  ], 
+  "speaker": "SYSTEM", 
+  "entities_in_utterance": [
+   "Q31711", 
+   "Q31711", 
+   "Q31711"
+  ], 
+  "utterance": "House of Saud", 
+  "active_set": [
+   "(Q1319659,P53,c(Q8436))", 
+   "(Q151509,P53,c(Q8436))", 
+   "(Q4704130,P53,c(Q8436))"
+  ]
+ }
+]

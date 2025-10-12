@@ -1,0 +1,44 @@
+#!/bin/bash
+# Extract Wikidata subset for QA_100 conversation only (120 entities)
+
+WIKIDATA_DIR="/private/tmp/convquestions/wikidata_proc_json 2"
+OUTPUT_FILE="wikidata-qa100-subset.json"
+
+# Entities from QA_100 conversation
+ENTITIES="Q5479433 Q3455803 Q10691559 Q3221640 Q309048 Q3091040 Q20736738 Q2893677 Q7230176 Q1216139 Q3226385 Q3230758 Q23701769 Q2312519 Q20711488 Q969098 Q1764277 Q206400 Q868483 Q286381 Q846870 Q945342 Q320594 Q26768828 Q903424 Q18170404 Q3481943 Q3320792 Q3231331 Q568928 Q241077 Q471066 Q512807 Q2911576 Q1196012 Q29478 Q11053391 Q788676 Q754687 Q614607 Q542055 Q632743 Q5437016 Q5071342 Q961492 Q2864475 Q3820032 Q375786 Q3221287 Q3278137 Q3247743 Q3332723 Q16933688 Q559310 Q3213141 Q788458 Q148643 Q3278101 Q130283 Q1246408 Q4205446 Q705232 Q3483718 Q1189436 Q7283713 Q4409901 Q758588 Q672319 Q12900461 Q1368693 Q3246902 Q4146306 Q1233164 Q11688406 Q341482 Q3211245 Q498150 Q16201590 Q412341 Q2022683 Q294001 Q733444 Q24060599 Q4261490 Q506546 Q41567 Q2869617 Q3457623 Q1183443 Q2972876 Q746818 Q1216943 Q1476152 Q1415903 Q2882090 Q102754 Q83186 Q4851394 Q1233203 Q888131 Q667750 Q2834224 Q5380161 Q7752052 Q4796620 Q3246423 Q1224659 Q23395 Q934597 Q793366 Q3515611 Q587921 Q844836 Q337078 Q583392 Q740134 Q2924384 Q1334300 Q170593 Q22669857"
+
+# Properties from QA_100
+PROPS="P106 P57 P58 P674 P2079 P1056"
+
+echo "{"
+echo '  "entities": {'
+
+# Extract entity labels
+first=true
+for entity in $ENTITIES; do
+  label=$(grep "\"$entity\":" "$WIKIDATA_DIR/items_wikidata_n.json" | sed 's/.*: "\(.*\)",/\1/')
+  if [ -n "$label" ]; then
+    if [ "$first" = false ]; then echo ","; fi
+    echo -n "    \"$entity\": \"$label\""
+    first=false
+  fi
+done
+
+echo ""
+echo "  },"
+echo '  "properties": {'
+
+# Extract property labels
+first=true
+for prop in $PROPS; do
+  label=$(grep "\"$prop\":" "$WIKIDATA_DIR/filtered_property_wikidata4.json" | sed 's/.*: "\(.*\)",/\1/')
+  if [ -n "$label" ]; then
+    if [ "$first" = false ]; then echo ","; fi
+    echo -n "    \"$prop\": \"$label\""
+    first=false
+  fi
+done
+
+echo ""
+echo "  }"
+echo "}"
