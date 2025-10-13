@@ -1,0 +1,439 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-12" ;
+    kg:builtWithOntologyVersion "1.0.22" .
+
+entity:Company_Discovery a kg:Company ;
+    kg:hasMetric entity:Metric_DISCA_2008,
+        entity:Metric_DISCA_2009,
+        entity:Metric_DISCA_2010,
+        entity:Metric_DISCA_2011,
+        entity:Metric_DISCA_2012,
+        entity:Metric_DISCB_2008,
+        entity:Metric_DISCB_2009,
+        entity:Metric_DISCB_2010,
+        entity:Metric_DISCB_2011,
+        entity:Metric_DISCB_2012,
+        entity:Metric_DISCK_2008,
+        entity:Metric_DISCK_2009,
+        entity:Metric_DISCK_2010,
+        entity:Metric_DISCK_2011,
+        entity:Metric_DISCK_2012,
+        entity:Metric_PeerGroup_2008,
+        entity:Metric_PeerGroup_2009,
+        entity:Metric_PeerGroup_2010,
+        entity:Metric_PeerGroup_2011,
+        entity:Metric_PeerGroup_2012,
+        entity:Metric_SP500_2008,
+        entity:Metric_SP500_2009,
+        entity:Metric_SP500_2010,
+        entity:Metric_SP500_2011,
+        entity:Metric_SP500_2012 ;
+    kg:label "Discovery Communications" .
+
+entity:FinancialTable a kg:Table ;
+    kg:hasColumn entity:TableColumn_0,
+        entity:TableColumn_1,
+        entity:TableColumn_2,
+        entity:TableColumn_3,
+        entity:TableColumn_4 ;
+    kg:hasRow entity:TableRow_0,
+        entity:TableRow_1,
+        entity:TableRow_2,
+        entity:TableRow_3,
+        entity:TableRow_4 ;
+    kg:tableCaption "Cumulative Total Shareholder Return Comparison" ;
+    kg:tableOrientation "row-first" .
+
+entity:Year_2008 a kg:Year ;
+    kg:yearValue 2008 .
+
+entity:Year_2009 a kg:Year ;
+    kg:yearValue 2009 .
+
+entity:Year_2010 a kg:Year ;
+    kg:yearValue 2010 .
+
+entity:Year_2011 a kg:Year ;
+    kg:yearValue 2011 .
+
+entity:Year_2012 a kg:Year ;
+    kg:yearValue 2012 .
+
+entity:Metric_DISCA_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:DISCA_2008 ;
+    kg:label "DISCA Cumulative Return",
+        "DISCA Total Shareholder Return 2008" ;
+    kg:tableColumn "december 312008",
+        "disca" ;
+    kg:tableRow "december 312008",
+        "disca" ;
+    rdfs:comment "Cumulative total shareholder return, base = $100 invested on September 18, 2008" .
+
+entity:Metric_DISCA_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:DISCA_2009 ;
+    kg:label "DISCA Cumulative Return",
+        "DISCA Total Shareholder Return 2009" ;
+    kg:tableColumn "december 312009",
+        "disca" ;
+    kg:tableRow "december 312009",
+        "disca" ;
+    rdfs:comment "Cumulative total shareholder return, base = $100 invested on September 18, 2008" .
+
+entity:Metric_DISCA_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:DISCA_2010 ;
+    kg:label "DISCA Total Shareholder Return 2010" ;
+    kg:tableColumn "disca" ;
+    kg:tableRow "december 312010" ;
+    rdfs:comment "Cumulative total shareholder return, base = $100 invested on September 18, 2008" .
+
+entity:Metric_DISCA_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:DISCA_2011 ;
+    kg:label "DISCA Total Shareholder Return 2011" ;
+    kg:tableColumn "disca" ;
+    kg:tableRow "december 312011" ;
+    rdfs:comment "Cumulative total shareholder return, base = $100 invested on September 18, 2008" .
+
+entity:Metric_DISCA_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:DISCA_2012 ;
+    kg:label "DISCA Total Shareholder Return 2012" ;
+    kg:tableColumn "disca" ;
+    kg:tableRow "december 312012" ;
+    rdfs:comment "Cumulative total shareholder return, base = $100 invested on September 18, 2008" .
+
+entity:Metric_DISCB_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:DISCB_2008 ;
+    kg:label "DISCB Total Shareholder Return 2008" ;
+    kg:tableColumn "discb" ;
+    kg:tableRow "december 312008" ;
+    rdfs:comment "Cumulative total shareholder return, base = $100 invested on September 18, 2008" .
+
+entity:Metric_DISCB_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:DISCB_2009 ;
+    kg:label "DISCB Total Shareholder Return 2009" ;
+    kg:tableColumn "discb" ;
+    kg:tableRow "december 312009" ;
+    rdfs:comment "Cumulative total shareholder return, base = $100 invested on September 18, 2008" .
+
+entity:Metric_DISCB_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:DISCB_2010 ;
+    kg:label "DISCB Total Shareholder Return 2010" ;
+    kg:tableColumn "discb" ;
+    kg:tableRow "december 312010" ;
+    rdfs:comment "Cumulative total shareholder return, base = $100 invested on September 18, 2008" .
+
+entity:Metric_DISCB_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:DISCB_2011 ;
+    kg:label "DISCB Total Shareholder Return 2011" ;
+    kg:tableColumn "discb" ;
+    kg:tableRow "december 312011" ;
+    rdfs:comment "Cumulative total shareholder return, base = $100 invested on September 18, 2008" .
+
+entity:Metric_DISCB_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:DISCB_2012 ;
+    kg:label "DISCB Total Shareholder Return 2012" ;
+    kg:tableColumn "discb" ;
+    kg:tableRow "december 312012" ;
+    rdfs:comment "Cumulative total shareholder return, base = $100 invested on September 18, 2008" .
+
+entity:Metric_DISCK_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:DISCK_2008 ;
+    kg:label "DISCK Total Shareholder Return 2008" ;
+    kg:tableColumn "disck" ;
+    kg:tableRow "december 312008" ;
+    rdfs:comment "Cumulative total shareholder return, base = $100 invested on September 18, 2008" .
+
+entity:Metric_DISCK_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:DISCK_2009 ;
+    kg:label "DISCK Total Shareholder Return 2009" ;
+    kg:tableColumn "disck" ;
+    kg:tableRow "december 312009" ;
+    rdfs:comment "Cumulative total shareholder return, base = $100 invested on September 18, 2008" .
+
+entity:Metric_DISCK_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:DISCK_2010 ;
+    kg:label "DISCK Total Shareholder Return 2010" ;
+    kg:tableColumn "disck" ;
+    kg:tableRow "december 312010" ;
+    rdfs:comment "Cumulative total shareholder return, base = $100 invested on September 18, 2008" .
+
+entity:Metric_DISCK_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:DISCK_2011 ;
+    kg:label "DISCK Total Shareholder Return 2011" ;
+    kg:tableColumn "disck" ;
+    kg:tableRow "december 312011" ;
+    rdfs:comment "Cumulative total shareholder return, base = $100 invested on September 18, 2008" .
+
+entity:Metric_DISCK_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:DISCK_2012 ;
+    kg:label "DISCK Total Shareholder Return 2012" ;
+    kg:tableColumn "disck" ;
+    kg:tableRow "december 312012" ;
+    rdfs:comment "Cumulative total shareholder return, base = $100 invested on September 18, 2008" .
+
+entity:Metric_PeerGroup_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:PeerGroup_2008 ;
+    kg:label "Peer Group Total Shareholder Return 2008" ;
+    kg:tableColumn "peer group" ;
+    kg:tableRow "december 312008" ;
+    rdfs:comment "Cumulative total shareholder return, base = $100 invested on September 18, 2008" .
+
+entity:Metric_PeerGroup_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:PeerGroup_2009 ;
+    kg:label "Peer Group Total Shareholder Return 2009" ;
+    kg:tableColumn "peer group" ;
+    kg:tableRow "december 312009" ;
+    rdfs:comment "Cumulative total shareholder return, base = $100 invested on September 18, 2008" .
+
+entity:Metric_PeerGroup_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:PeerGroup_2010 ;
+    kg:label "Peer Group Total Shareholder Return 2010" ;
+    kg:tableColumn "peer group" ;
+    kg:tableRow "december 312010" ;
+    rdfs:comment "Cumulative total shareholder return, base = $100 invested on September 18, 2008" .
+
+entity:Metric_PeerGroup_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:PeerGroup_2011 ;
+    kg:label "Peer Group Total Shareholder Return 2011" ;
+    kg:tableColumn "peer group" ;
+    kg:tableRow "december 312011" ;
+    rdfs:comment "Cumulative total shareholder return, base = $100 invested on September 18, 2008" .
+
+entity:Metric_PeerGroup_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:PeerGroup_2012 ;
+    kg:label "Peer Group Total Shareholder Return 2012" ;
+    kg:tableColumn "peer group" ;
+    kg:tableRow "december 312012" ;
+    rdfs:comment "Cumulative total shareholder return, base = $100 invested on September 18, 2008" .
+
+entity:Metric_SP500_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:SP500_2008 ;
+    kg:label "S&P 500 Total Shareholder Return 2008" ;
+    kg:tableColumn "s&p 500" ;
+    kg:tableRow "december 312008" ;
+    rdfs:comment "Cumulative total shareholder return, base = $100 invested on September 18, 2008" .
+
+entity:Metric_SP500_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:SP500_2009 ;
+    kg:label "S&P 500 Total Shareholder Return 2009" ;
+    kg:tableColumn "s&p 500" ;
+    kg:tableRow "december 312009" ;
+    rdfs:comment "Cumulative total shareholder return, base = $100 invested on September 18, 2008" .
+
+entity:Metric_SP500_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:SP500_2010 ;
+    kg:label "S&P 500 Total Shareholder Return 2010" ;
+    kg:tableColumn "s&p 500" ;
+    kg:tableRow "december 312010" ;
+    rdfs:comment "Cumulative total shareholder return, base = $100 invested on September 18, 2008" .
+
+entity:Metric_SP500_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:SP500_2011 ;
+    kg:label "S&P 500 Total Shareholder Return 2011" ;
+    kg:tableColumn "s&p 500" ;
+    kg:tableRow "december 312011" ;
+    rdfs:comment "Cumulative total shareholder return, base = $100 invested on September 18, 2008" .
+
+entity:Metric_SP500_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:SP500_2012 ;
+    kg:label "S&P 500 Total Shareholder Return 2012" ;
+    kg:tableColumn "s&p 500" ;
+    kg:tableRow "december 312012" ;
+    rdfs:comment "Cumulative total shareholder return, base = $100 invested on September 18, 2008" .
+
+entity:TableColumn_0 a kg:TableColumn ;
+    kg:columnIndex 0 ;
+    kg:label "{'index': 0, 'label': 'disca', 'numeric_value': None}" .
+
+entity:TableColumn_1 a kg:TableColumn ;
+    kg:columnIndex 1 ;
+    kg:label "{'index': 1, 'label': 'discb', 'numeric_value': None}" .
+
+entity:TableColumn_2 a kg:TableColumn ;
+    kg:columnIndex 2 ;
+    kg:label "{'index': 2, 'label': 'disck', 'numeric_value': None}" .
+
+entity:TableColumn_3 a kg:TableColumn ;
+    kg:columnIndex 3 ;
+    kg:label "{'index': 3, 'label': 'peer group', 'numeric_value': None}" .
+
+entity:TableColumn_4 a kg:TableColumn ;
+    kg:columnIndex 4 ;
+    kg:label "{'index': 4, 'label': 's&p 500', 'numeric_value': None}" .
+
+entity:TableRow_0 a kg:TableRow ;
+    kg:label "{'index': 0, 'label': 'december 312008', 'numeric_value': None}" ;
+    kg:rowIndex 0 .
+
+entity:TableRow_1 a kg:TableRow ;
+    kg:label "{'index': 1, 'label': 'december 312009', 'numeric_value': None}" ;
+    kg:rowIndex 1 .
+
+entity:TableRow_2 a kg:TableRow ;
+    kg:label "{'index': 2, 'label': 'december 312010', 'numeric_value': None}" ;
+    kg:rowIndex 2 .
+
+entity:TableRow_3 a kg:TableRow ;
+    kg:label "{'index': 3, 'label': 'december 312011', 'numeric_value': None}" ;
+    kg:rowIndex 3 .
+
+entity:TableRow_4 a kg:TableRow ;
+    kg:label "{'index': 4, 'label': 'december 312012', 'numeric_value': None}" ;
+    kg:rowIndex 4 .
+
+value:DISCA_2008 a kg:MonetaryValue ;
+    kg:displayValue "102.53" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 102.53 .
+
+value:DISCA_2009 a kg:MonetaryValue ;
+    kg:displayValue "222.09" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 222.09 .
+
+value:DISCA_2010 a kg:MonetaryValue ;
+    kg:displayValue "301.96" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 301.96 .
+
+value:DISCA_2011 a kg:MonetaryValue ;
+    kg:displayValue "296.67" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 296.67 .
+
+value:DISCA_2012 a kg:MonetaryValue ;
+    kg:displayValue "459.67" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 459.67 .
+
+value:DISCB_2008 a kg:MonetaryValue ;
+    kg:displayValue "78.53" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 78.53 .
+
+value:DISCB_2009 a kg:MonetaryValue ;
+    kg:displayValue "162.82" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 162.82 .
+
+value:DISCB_2010 a kg:MonetaryValue ;
+    kg:displayValue "225.95" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 225.95 .
+
+value:DISCB_2011 a kg:MonetaryValue ;
+    kg:displayValue "217.56" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 217.56 .
+
+value:DISCB_2012 a kg:MonetaryValue ;
+    kg:displayValue "327.11" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 327.11 .
+
+value:DISCK_2008 a kg:MonetaryValue ;
+    kg:displayValue "83.69" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 83.69 .
+
+value:DISCK_2009 a kg:MonetaryValue ;
+    kg:displayValue "165.75" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 165.75 .
+
+value:DISCK_2010 a kg:MonetaryValue ;
+    kg:displayValue "229.31" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 229.31 .
+
+value:DISCK_2011 a kg:MonetaryValue ;
+    kg:displayValue "235.63" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 235.63 .
+
+value:DISCK_2012 a kg:MonetaryValue ;
+    kg:displayValue "365.63" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 365.63 .
+
+value:PeerGroup_2008 a kg:MonetaryValue ;
+    kg:displayValue "68.79" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 68.79 .
+
+value:PeerGroup_2009 a kg:MonetaryValue ;
+    kg:displayValue "100.70" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 100.7 .
+
+value:PeerGroup_2010 a kg:MonetaryValue ;
+    kg:displayValue "121.35" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 121.35 .
+
+value:PeerGroup_2011 a kg:MonetaryValue ;
+    kg:displayValue "138.19" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 138.19 .
+
+value:PeerGroup_2012 a kg:MonetaryValue ;
+    kg:displayValue "190.58" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 190.58 .
+
+value:SP500_2008 a kg:MonetaryValue ;
+    kg:displayValue "74.86" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 74.86 .
+
+value:SP500_2009 a kg:MonetaryValue ;
+    kg:displayValue "92.42" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 92.42 .
+
+value:SP500_2010 a kg:MonetaryValue ;
+    kg:displayValue "104.24" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 104.24 .
+
+value:SP500_2011 a kg:MonetaryValue ;
+    kg:displayValue "104.23" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 104.23 .
+
+value:SP500_2012 a kg:MonetaryValue ;
+    kg:displayValue "118.21" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 118.21 .
+

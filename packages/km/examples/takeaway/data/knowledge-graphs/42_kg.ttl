@@ -1,0 +1,313 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-12" ;
+    kg:builtWithOntologyVersion "1.0.13" .
+
+entity:Company_OReilly a kg:Company ;
+    kg:hasMetric entity:Metric_InitialInvestment,
+        entity:Metric_OReilly_2010,
+        entity:Metric_OReilly_2011,
+        entity:Metric_OReilly_2012,
+        entity:Metric_OReilly_2013,
+        entity:Metric_OReilly_2014,
+        entity:Metric_OReilly_2015 ;
+    kg:label "O'Reilly Automotive Inc." .
+
+entity:FinancialTable a kg:Table ;
+    kg:hasColumn entity:TableColumn_0,
+        entity:TableColumn_1,
+        entity:TableColumn_2 ;
+    kg:hasRow entity:TableRow_0,
+        entity:TableRow_1,
+        entity:TableRow_2,
+        entity:TableRow_3,
+        entity:TableRow_4,
+        entity:TableRow_5 ;
+    kg:tableCaption "Stock Performance Graph - Cumulative Total Shareholder Return" ;
+    kg:tableOrientation "row-first" .
+
+entity:Metric_SP500Retail_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:SP500Retail_2010 ;
+    kg:label "S&P 500 Retail Index Performance" ;
+    kg:tableColumn "december 31 , 2010" ;
+    kg:tableRow "s&p 500 retail index" .
+
+entity:Metric_SP500Retail_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:SP500Retail_2011 ;
+    kg:label "S&P 500 Retail Index Performance" ;
+    kg:tableColumn "december 31 , 2011" ;
+    kg:tableRow "s&p 500 retail index" .
+
+entity:Metric_SP500Retail_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:SP500Retail_2012 ;
+    kg:label "S&P 500 Retail Index Performance" ;
+    kg:tableColumn "december 31 , 2012" ;
+    kg:tableRow "s&p 500 retail index" .
+
+entity:Metric_SP500Retail_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:SP500Retail_2013 ;
+    kg:label "S&P 500 Retail Index Performance" ;
+    kg:tableColumn "december 31 , 2013" ;
+    kg:tableRow "s&p 500 retail index" .
+
+entity:Metric_SP500Retail_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:SP500Retail_2014 ;
+    kg:label "S&P 500 Retail Index Performance" ;
+    kg:tableColumn "december 31 , 2014" ;
+    kg:tableRow "s&p 500 retail index" .
+
+entity:Metric_SP500Retail_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2015 ;
+    kg:hasValue value:SP500Retail_2015 ;
+    kg:label "S&P 500 Retail Index Performance" ;
+    kg:tableColumn "december 31 , 2015" ;
+    kg:tableRow "s&p 500 retail index" .
+
+entity:Metric_SP500_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:SP500_2010 ;
+    kg:label "S&P 500 Index Performance" ;
+    kg:tableColumn "december 31 , 2010" ;
+    kg:tableRow "s&p 500" .
+
+entity:Metric_SP500_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:SP500_2011 ;
+    kg:label "S&P 500 Index Performance" ;
+    kg:tableColumn "december 31 , 2011" ;
+    kg:tableRow "s&p 500" .
+
+entity:Metric_SP500_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:SP500_2012 ;
+    kg:label "S&P 500 Index Performance" ;
+    kg:tableColumn "december 31 , 2012" ;
+    kg:tableRow "s&p 500" .
+
+entity:Metric_SP500_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:SP500_2013 ;
+    kg:label "S&P 500 Index Performance" ;
+    kg:tableColumn "december 31 , 2013" ;
+    kg:tableRow "s&p 500" .
+
+entity:Metric_SP500_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:SP500_2014 ;
+    kg:label "S&P 500 Index Performance" ;
+    kg:tableColumn "december 31 , 2014" ;
+    kg:tableRow "s&p 500" .
+
+entity:Metric_SP500_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2015 ;
+    kg:hasValue value:SP500_2015 ;
+    kg:label "S&P 500 Index Performance" ;
+    kg:tableColumn "december 31 , 2015" ;
+    kg:tableRow "s&p 500" .
+
+entity:Year_2010 a kg:Year ;
+    kg:yearValue 2010 .
+
+entity:Year_2011 a kg:Year ;
+    kg:yearValue 2011 .
+
+entity:Year_2012 a kg:Year ;
+    kg:yearValue 2012 .
+
+entity:Year_2013 a kg:Year ;
+    kg:yearValue 2013 .
+
+entity:Year_2014 a kg:Year ;
+    kg:yearValue 2014 .
+
+entity:Year_2015 a kg:Year ;
+    kg:yearValue 2015 .
+
+entity:Metric_InitialInvestment a kg:FinancialMetric ;
+    kg:hasValue value:InitialInvestment ;
+    kg:label "Initial investment amount" .
+
+entity:Metric_OReilly_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:OReilly_2010 ;
+    kg:label "O'Reilly Automotive Inc. Stock Performance" ;
+    kg:tableColumn "december 31 , 2010" ;
+    kg:tableRow "o'reilly automotive inc ." .
+
+entity:Metric_OReilly_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:OReilly_2011 ;
+    kg:label "O'Reilly Automotive Inc. Stock Performance" ;
+    kg:tableColumn "december 31 , 2011" ;
+    kg:tableRow "o'reilly automotive inc ." .
+
+entity:Metric_OReilly_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:OReilly_2012 ;
+    kg:label "O'Reilly Automotive Inc. Stock Performance" ;
+    kg:tableColumn "december 31 , 2012" ;
+    kg:tableRow "o'reilly automotive inc ." .
+
+entity:Metric_OReilly_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:OReilly_2013 ;
+    kg:label "O'Reilly Automotive Inc. Stock Performance" ;
+    kg:tableColumn "december 31 , 2013" ;
+    kg:tableRow "o'reilly automotive inc ." .
+
+entity:Metric_OReilly_2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:OReilly_2014 ;
+    kg:label "O'Reilly Automotive Inc. Stock Performance" ;
+    kg:tableColumn "december 31 , 2014" ;
+    kg:tableRow "o'reilly automotive inc ." .
+
+entity:Metric_OReilly_2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2015 ;
+    kg:hasValue value:OReilly_2015 ;
+    kg:label "O'Reilly Automotive Inc. Stock Performance" ;
+    kg:tableColumn "december 31 , 2015" ;
+    kg:tableRow "o'reilly automotive inc ." .
+
+entity:TableColumn_0 a kg:TableColumn ;
+    kg:columnIndex 0 ;
+    kg:label "{'index': 0, 'label': \"o'reilly automotive inc .\", 'numeric_value': None}" .
+
+entity:TableColumn_1 a kg:TableColumn ;
+    kg:columnIndex 1 ;
+    kg:label "{'index': 1, 'label': 's&p 500', 'numeric_value': None}" .
+
+entity:TableColumn_2 a kg:TableColumn ;
+    kg:columnIndex 2 ;
+    kg:label "{'index': 2, 'label': 's&p 500 retail index', 'numeric_value': None}" .
+
+entity:TableRow_0 a kg:TableRow ;
+    kg:label "{'index': 0, 'label': 'december 31 , 2010', 'numeric_value': None}" ;
+    kg:rowIndex 0 .
+
+entity:TableRow_1 a kg:TableRow ;
+    kg:label "{'index': 1, 'label': 'december 31 , 2011', 'numeric_value': None}" ;
+    kg:rowIndex 1 .
+
+entity:TableRow_2 a kg:TableRow ;
+    kg:label "{'index': 2, 'label': 'december 31 , 2012', 'numeric_value': None}" ;
+    kg:rowIndex 2 .
+
+entity:TableRow_3 a kg:TableRow ;
+    kg:label "{'index': 3, 'label': 'december 31 , 2013', 'numeric_value': None}" ;
+    kg:rowIndex 3 .
+
+entity:TableRow_4 a kg:TableRow ;
+    kg:label "{'index': 4, 'label': 'december 31 , 2014', 'numeric_value': None}" ;
+    kg:rowIndex 4 .
+
+entity:TableRow_5 a kg:TableRow ;
+    kg:label "{'index': 5, 'label': 'december 31 , 2015', 'numeric_value': None}" ;
+    kg:rowIndex 5 .
+
+value:InitialInvestment a kg:MonetaryValue ;
+    kg:displayValue "$100" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 100.0 .
+
+value:OReilly_2010 a kg:MonetaryValue ;
+    kg:displayValue "100.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 100.0 .
+
+value:OReilly_2011 a kg:MonetaryValue ;
+    kg:displayValue "132.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 132.0 .
+
+value:OReilly_2012 a kg:MonetaryValue ;
+    kg:displayValue "148.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 148.0 .
+
+value:OReilly_2013 a kg:MonetaryValue ;
+    kg:displayValue "213.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 213.0 .
+
+value:OReilly_2014 a kg:MonetaryValue ;
+    kg:displayValue "319.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 319.0 .
+
+value:OReilly_2015 a kg:MonetaryValue ;
+    kg:displayValue "419.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 419.0 .
+
+value:SP500Retail_2010 a kg:MonetaryValue ;
+    kg:displayValue "100.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 100.0 .
+
+value:SP500Retail_2011 a kg:MonetaryValue ;
+    kg:displayValue "103.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 103.0 .
+
+value:SP500Retail_2012 a kg:MonetaryValue ;
+    kg:displayValue "128.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 128.0 .
+
+value:SP500Retail_2013 a kg:MonetaryValue ;
+    kg:displayValue "185.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 185.0 .
+
+value:SP500Retail_2014 a kg:MonetaryValue ;
+    kg:displayValue "203.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 203.0 .
+
+value:SP500Retail_2015 a kg:MonetaryValue ;
+    kg:displayValue "252.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 252.0 .
+
+value:SP500_2010 a kg:MonetaryValue ;
+    kg:displayValue "100.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 100.0 .
+
+value:SP500_2011 a kg:MonetaryValue ;
+    kg:displayValue "100.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 100.0 .
+
+value:SP500_2012 a kg:MonetaryValue ;
+    kg:displayValue "113.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 113.0 .
+
+value:SP500_2013 a kg:MonetaryValue ;
+    kg:displayValue "147.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 147.0 .
+
+value:SP500_2014 a kg:MonetaryValue ;
+    kg:displayValue "164.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 164.0 .
+
+value:SP500_2015 a kg:MonetaryValue ;
+    kg:displayValue "163.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 163.0 .
+

@@ -1,0 +1,278 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-12" ;
+    kg:builtWithOntologyVersion "1.0.19" .
+
+entity:Company_Apple a kg:Company ;
+    kg:hasMetric entity:Metric_RD_2009,
+        entity:Metric_RD_2010,
+        entity:Metric_SGA_2009,
+        entity:Metric_SGA_2010,
+        entity:Metric_SoftwareDev_2008,
+        entity:Metric_SoftwareDev_2009 ;
+    kg:label "Apple Inc." .
+
+entity:Company_Example51 a kg:Company ;
+    kg:hasMetric entity:Metric_InterestIncome_2008,
+        entity:Metric_InterestIncome_2009,
+        entity:Metric_InterestIncome_2010,
+        entity:Metric_OtherIncomeExpense_2008,
+        entity:Metric_OtherIncomeExpense_2009,
+        entity:Metric_OtherIncomeExpense_2010,
+        entity:Metric_TotalOtherIncome_2008,
+        entity:Metric_TotalOtherIncome_2009,
+        entity:Metric_TotalOtherIncome_2010 ;
+    kg:label "Example Company 51" .
+
+entity:FinancialTable a kg:Table ;
+    kg:hasColumn entity:TableColumn_0,
+        entity:TableColumn_1,
+        entity:TableColumn_2 ;
+    kg:hasRow entity:TableRow_0,
+        entity:TableRow_1,
+        entity:TableRow_2 ;
+    kg:tableCaption "Income Components" ;
+    kg:tableOrientation "row-first" .
+
+entity:Metric_RowHeaderValue_0 a kg:FinancialMetric ;
+    kg:hasValue value:RowHeaderValue_0 ;
+    kg:label "Row header value: 2010" ;
+    kg:tableRow "2010" .
+
+entity:Metric_RowHeaderValue_1 a kg:FinancialMetric ;
+    kg:hasValue value:RowHeaderValue_1 ;
+    kg:label "Row header value: 2009" ;
+    kg:tableRow "2009" .
+
+entity:Metric_RowHeaderValue_2 a kg:FinancialMetric ;
+    kg:hasValue value:RowHeaderValue_2 ;
+    kg:label "Row header value: 2008" ;
+    kg:tableRow "2008" .
+
+entity:Metric_InterestIncome_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:InterestIncome_2008 ;
+    kg:label "Interest income" ;
+    kg:tableColumn "2008" ;
+    kg:tableRow "interest income" .
+
+entity:Metric_InterestIncome_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:InterestIncome_2009 ;
+    kg:label "Interest income" ;
+    kg:tableColumn "2009" ;
+    kg:tableRow "interest income" .
+
+entity:Metric_InterestIncome_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:InterestIncome_2010 ;
+    kg:label "Interest income" ;
+    kg:tableColumn "2010" ;
+    kg:tableRow "interest income" .
+
+entity:Metric_OtherIncomeExpense_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:OtherIncomeExpense_2008 ;
+    kg:label "Other income (expense) net" ;
+    kg:tableColumn "2008" ;
+    kg:tableRow "other income ( expense ) net" .
+
+entity:Metric_OtherIncomeExpense_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:OtherIncomeExpense_2009 ;
+    kg:label "Other income (expense) net" ;
+    kg:tableColumn "2009" ;
+    kg:tableRow "other income ( expense ) net" .
+
+entity:Metric_OtherIncomeExpense_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:OtherIncomeExpense_2010 ;
+    kg:label "Other income (expense) net" ;
+    kg:tableColumn "2010" ;
+    kg:tableRow "other income ( expense ) net" .
+
+entity:Metric_RD_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2009,
+        entity:entity_Year_2009 ;
+    kg:hasValue value:RD_2009 ;
+    kg:label "Research and development expense" .
+
+entity:Metric_RD_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2010,
+        entity:entity_Year_2010 ;
+    kg:hasValue value:RD_2010 ;
+    kg:label "Research and development expense" .
+
+entity:Metric_SGA_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2009,
+        entity:entity_Year_2009 ;
+    kg:hasValue value:SGA_2009 ;
+    kg:label "Selling, general and administrative expense" .
+
+entity:Metric_SGA_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2010,
+        entity:entity_Year_2010 ;
+    kg:hasValue value:SGA_2010 ;
+    kg:label "Selling, general and administrative expense" .
+
+entity:Metric_SoftwareDev_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2008,
+        entity:entity_Year_2008 ;
+    kg:hasValue value:SoftwareDev_2008 ;
+    kg:label "Software development costs capitalized" .
+
+entity:Metric_SoftwareDev_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2009,
+        entity:entity_Year_2009 ;
+    kg:hasValue value:SoftwareDev_2009 ;
+    kg:label "Software development costs capitalized" .
+
+entity:Metric_TotalOtherIncome_2008 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2008 ;
+    kg:hasValue value:TotalOtherIncome_2008 ;
+    kg:label "Total other income and expense" ;
+    kg:tableColumn "2008" ;
+    kg:tableRow "total other income and expense" .
+
+entity:Metric_TotalOtherIncome_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:TotalOtherIncome_2009 ;
+    kg:label "Total other income and expense" ;
+    kg:tableColumn "2009" ;
+    kg:tableRow "total other income and expense" .
+
+entity:Metric_TotalOtherIncome_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:TotalOtherIncome_2010 ;
+    kg:label "Total other income and expense" ;
+    kg:tableColumn "2010" ;
+    kg:tableRow "total other income and expense" .
+
+entity:TableColumn_0 a kg:TableColumn ;
+    kg:columnIndex 0 ;
+    kg:label "{'index': 0, 'label': 'interest income', 'numeric_value': None}" .
+
+entity:TableColumn_1 a kg:TableColumn ;
+    kg:columnIndex 1 ;
+    kg:label "{'index': 1, 'label': 'other income ( expense ) net', 'numeric_value': None}" .
+
+entity:TableColumn_2 a kg:TableColumn ;
+    kg:columnIndex 2 ;
+    kg:label "{'index': 2, 'label': 'total other income and expense', 'numeric_value': None}" .
+
+entity:TableRow_0 a kg:TableRow ;
+    kg:label "{'index': 0, 'label': '2010', 'numeric_value': 2010.0}" ;
+    kg:rowIndex 0 .
+
+entity:TableRow_1 a kg:TableRow ;
+    kg:label "{'index': 1, 'label': '2009', 'numeric_value': 2009.0}" ;
+    kg:rowIndex 1 .
+
+entity:TableRow_2 a kg:TableRow ;
+    kg:label "{'index': 2, 'label': '2008', 'numeric_value': 2008.0}" ;
+    kg:rowIndex 2 .
+
+entity:Year_2008 a kg:Year ;
+    kg:yearValue 2008 .
+
+value:InterestIncome_2008 a kg:MonetaryValue ;
+    kg:displayValue "653.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 653.0 .
+
+value:InterestIncome_2009 a kg:MonetaryValue ;
+    kg:displayValue "407.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 407.0 .
+
+value:InterestIncome_2010 a kg:MonetaryValue ;
+    kg:displayValue "311.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 311.0 .
+
+value:OtherIncomeExpense_2008 a kg:MonetaryValue ;
+    kg:displayValue "-33.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -33.0 .
+
+value:OtherIncomeExpense_2009 a kg:MonetaryValue ;
+    kg:displayValue "-81.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -81.0 .
+
+value:OtherIncomeExpense_2010 a kg:MonetaryValue ;
+    kg:displayValue "-156.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -156.0 .
+
+value:RD_2009 a kg:MonetaryValue ;
+    kg:displayValue "$1.3 billion" ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 1300000000.0 .
+
+value:RD_2010 a kg:MonetaryValue ;
+    kg:displayValue "$1.8 billion" ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 1800000000.0 .
+
+value:RowHeaderValue_0 a kg:MonetaryValue ;
+    kg:displayValue "2010" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2010.0 .
+
+value:RowHeaderValue_1 a kg:MonetaryValue ;
+    kg:displayValue "2009" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2009.0 .
+
+value:RowHeaderValue_2 a kg:MonetaryValue ;
+    kg:displayValue "2008" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2008.0 .
+
+value:SGA_2009 a kg:MonetaryValue ;
+    kg:displayValue "$4.1 billion" ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 4099999999.9999995 .
+
+value:SGA_2010 a kg:MonetaryValue ;
+    kg:displayValue "$5.5 billion" ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 5500000000.0 .
+
+value:SoftwareDev_2008 a kg:MonetaryValue ;
+    kg:displayValue "$11 million" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 11000000.0 .
+
+value:SoftwareDev_2009 a kg:MonetaryValue ;
+    kg:displayValue "$71 million" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 71000000.0 .
+
+value:TotalOtherIncome_2008 a kg:MonetaryValue ;
+    kg:displayValue "620.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 620.0 .
+
+value:TotalOtherIncome_2009 a kg:MonetaryValue ;
+    kg:displayValue "326.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 326.0 .
+
+value:TotalOtherIncome_2010 a kg:MonetaryValue ;
+    kg:displayValue "155.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 155.0 .
+
+entity:Year_2010 a kg:Year ;
+    kg:yearValue 2010 .
+
+entity:Year_2009 a kg:Year ;
+    kg:yearValue 2009 .
+

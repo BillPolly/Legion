@@ -1,0 +1,787 @@
+{
+  "companies": [
+    {
+      "uri": "entity_Company_UPS",
+      "label": "United Parcel Service"
+    },
+    {
+      "uri": "entity_Company_UPS",
+      "label": "United Parcel Service"
+    }
+  ],
+  "metrics": [
+    {
+      "uri": "entity_Metric_WorkingCapitalChanges_2012",
+      "label": "Changes in working capital and other noncurrent assets and liabilities",
+      "tableRow": "changes in working capital and other noncurrent assets and liabilities",
+      "tableColumn": "2012",
+      "year": 2012,
+      "comment": null,
+      "value": {
+        "uri": "value_WorkingCapitalChanges_2012",
+        "numericValue": -148000000.0,
+        "displayValue": "-148.0",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    },
+    {
+      "uri": "entity_Metric_WorkingCapitalChanges_2011",
+      "label": "Changes in working capital and other noncurrent assets and liabilities",
+      "tableRow": "changes in working capital and other noncurrent assets and liabilities",
+      "tableColumn": "2011",
+      "year": 2011,
+      "comment": null,
+      "value": {
+        "uri": "value_WorkingCapitalChanges_2011",
+        "numericValue": -12000000.0,
+        "displayValue": "-12.0",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    },
+    {
+      "uri": "entity_Metric_WorkingCapitalChanges_2010",
+      "label": "Changes in working capital and other noncurrent assets and liabilities",
+      "tableRow": "changes in working capital and other noncurrent assets and liabilities",
+      "tableColumn": "2010",
+      "year": 2010,
+      "comment": null,
+      "value": {
+        "uri": "value_WorkingCapitalChanges_2010",
+        "numericValue": -340000000.0,
+        "displayValue": "-340.0",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    },
+    {
+      "uri": "entity_Metric_IncomeTaxReceivables_2012",
+      "label": "Income tax receivables and payables",
+      "tableRow": "income tax receivables and payables",
+      "tableColumn": "2012",
+      "year": 2012,
+      "comment": null,
+      "value": {
+        "uri": "value_IncomeTaxReceivables_2012",
+        "numericValue": 280000000.0,
+        "displayValue": "280.0",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    },
+    {
+      "uri": "entity_Metric_IncomeTaxReceivables_2011",
+      "label": "Income tax receivables and payables",
+      "tableRow": "income tax receivables and payables",
+      "tableColumn": "2011",
+      "year": 2011,
+      "comment": null,
+      "value": {
+        "uri": "value_IncomeTaxReceivables_2011",
+        "numericValue": 236000000.0,
+        "displayValue": "236.0",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    },
+    {
+      "uri": "entity_Metric_IncomeTaxReceivables_2010",
+      "label": "Income tax receivables and payables",
+      "tableRow": "income tax receivables and payables",
+      "tableColumn": "2010",
+      "year": 2010,
+      "comment": null,
+      "value": {
+        "uri": "value_IncomeTaxReceivables_2010",
+        "numericValue": -319000000.0,
+        "displayValue": "-319.0",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    },
+    {
+      "uri": "entity_Metric_NetCashOperating_2012",
+      "label": "Net cash from operating activities",
+      "tableRow": "net cash from operating activities",
+      "tableColumn": "2012",
+      "year": 2012,
+      "comment": null,
+      "value": {
+        "uri": "value_NetCashOperating_2012",
+        "numericValue": 7216000000.0,
+        "displayValue": "7216.0",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    },
+    {
+      "uri": "entity_Metric_NetCashOperating_2011",
+      "label": "Net cash from operating activities",
+      "tableRow": "net cash from operating activities",
+      "tableColumn": "2011",
+      "year": 2011,
+      "comment": null,
+      "value": {
+        "uri": "value_NetCashOperating_2011",
+        "numericValue": 7073000000.0,
+        "displayValue": "7073.0",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    },
+    {
+      "uri": "entity_Metric_NetCashOperating_2010",
+      "label": "Net cash from operating activities",
+      "tableRow": "net cash from operating activities",
+      "tableColumn": "2010",
+      "year": 2010,
+      "comment": null,
+      "value": {
+        "uri": "value_NetCashOperating_2010",
+        "numericValue": 3835000000.0,
+        "displayValue": "3835.0",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    },
+    {
+      "uri": "entity_Metric_NetIncome_2012",
+      "label": "Net income",
+      "tableRow": "net income",
+      "tableColumn": "2012",
+      "year": 2012,
+      "comment": null,
+      "value": {
+        "uri": "value_NetIncome_2012",
+        "numericValue": 807000000.0,
+        "displayValue": "807.0",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    },
+    {
+      "uri": "entity_Metric_NetIncome_2011",
+      "label": "Net income",
+      "tableRow": "net income",
+      "tableColumn": "2011",
+      "year": 2011,
+      "comment": null,
+      "value": {
+        "uri": "value_NetIncome_2011",
+        "numericValue": 3804000000.0,
+        "displayValue": "3804.0",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    },
+    {
+      "uri": "entity_Metric_NetIncome_2010",
+      "label": "Net income",
+      "tableRow": "net income",
+      "tableColumn": "2010",
+      "year": 2010,
+      "comment": null,
+      "value": {
+        "uri": "value_NetIncome_2010",
+        "numericValue": 3338000000.0,
+        "displayValue": "3338.0",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    },
+    {
+      "uri": "entity_Metric_NonCashOperating_2012",
+      "label": "Non-cash operating activities",
+      "tableRow": "non-cash operating activities ( a )",
+      "tableColumn": "2012",
+      "year": 2012,
+      "comment": "represents depreciation and amortization, gains and losses on derivative and foreign exchange transactions, deferred income taxes, provisions for uncollectible accounts, pension and postretirement benefit expense, stock compensation expense, impairment charges and other non-cash items",
+      "value": {
+        "uri": "value_NonCashOperating_2012",
+        "numericValue": 7301000000.0,
+        "displayValue": "7301.0",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    },
+    {
+      "uri": "entity_Metric_NonCashOperating_2011",
+      "label": "Non-cash operating activities",
+      "tableRow": "non-cash operating activities ( a )",
+      "tableColumn": "2011",
+      "year": 2011,
+      "comment": "represents depreciation and amortization, gains and losses on derivative and foreign exchange transactions, deferred income taxes, provisions for uncollectible accounts, pension and postretirement benefit expense, stock compensation expense, impairment charges and other non-cash items",
+      "value": {
+        "uri": "value_NonCashOperating_2011",
+        "numericValue": 4505000000.0,
+        "displayValue": "4505.0",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    },
+    {
+      "uri": "entity_Metric_NonCashOperating_2010",
+      "label": "Non-cash operating activities",
+      "tableRow": "non-cash operating activities ( a )",
+      "tableColumn": "2010",
+      "year": 2010,
+      "comment": "represents depreciation and amortization, gains and losses on derivative and foreign exchange transactions, deferred income taxes, provisions for uncollectible accounts, pension and postretirement benefit expense, stock compensation expense, impairment charges and other non-cash items",
+      "value": {
+        "uri": "value_NonCashOperating_2010",
+        "numericValue": 4398000000.0,
+        "displayValue": "4398.0",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    },
+    {
+      "uri": "entity_Metric_OtherOperating_2012",
+      "label": "Other operating activities",
+      "tableRow": "other operating activities",
+      "tableColumn": "2012",
+      "year": 2012,
+      "comment": null,
+      "value": {
+        "uri": "value_OtherOperating_2012",
+        "numericValue": -107000000.0,
+        "displayValue": "-107.0",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    },
+    {
+      "uri": "entity_Metric_OtherOperating_2011",
+      "label": "Other operating activities",
+      "tableRow": "other operating activities",
+      "tableColumn": "2011",
+      "year": 2011,
+      "comment": null,
+      "value": {
+        "uri": "value_OtherOperating_2011",
+        "numericValue": -24000000.0,
+        "displayValue": "-24.0",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    },
+    {
+      "uri": "entity_Metric_OtherOperating_2010",
+      "label": "Other operating activities",
+      "tableRow": "other operating activities",
+      "tableColumn": "2010",
+      "year": 2010,
+      "comment": null,
+      "value": {
+        "uri": "value_OtherOperating_2010",
+        "numericValue": -2000000.0,
+        "displayValue": "-2.0",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    },
+    {
+      "uri": "entity_Metric_PensionContributions_2012",
+      "label": "Pension and postretirement plan contributions",
+      "tableRow": "pension and postretirement plan contributions ( ups-sponsored plans )",
+      "tableColumn": "2012",
+      "year": 2012,
+      "comment": null,
+      "value": {
+        "uri": "value_PensionContributions_2012",
+        "numericValue": -917000000.0,
+        "displayValue": "-917.0",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    },
+    {
+      "uri": "entity_Metric_PensionContributions_2011",
+      "label": "Pension and postretirement plan contributions",
+      "tableRow": "pension and postretirement plan contributions ( ups-sponsored plans )",
+      "tableColumn": "2011",
+      "year": 2011,
+      "comment": null,
+      "value": {
+        "uri": "value_PensionContributions_2011",
+        "numericValue": -1436000000.0,
+        "displayValue": "-1436.0",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    },
+    {
+      "uri": "entity_Metric_PensionContributions_2010",
+      "label": "Pension and postretirement plan contributions",
+      "tableRow": "pension and postretirement plan contributions ( ups-sponsored plans )",
+      "tableColumn": "2010",
+      "year": 2010,
+      "comment": null,
+      "value": {
+        "uri": "value_PensionContributions_2010",
+        "numericValue": -3240000000.0,
+        "displayValue": "-3240.0",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    },
+    {
+      "uri": "entity_Metric_WorkingCapitalChanges_2010",
+      "label": "Changes in working capital and other noncurrent assets and liabilities",
+      "tableRow": "changes in working capital and other noncurrent assets and liabilities",
+      "tableColumn": "2010",
+      "year": 2010,
+      "comment": null,
+      "value": {
+        "uri": "value_WorkingCapitalChanges_2010",
+        "numericValue": -340000000.0,
+        "displayValue": "-340.0",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    },
+    {
+      "uri": "entity_Metric_IncomeTaxReceivables_2010",
+      "label": "Income tax receivables and payables",
+      "tableRow": "income tax receivables and payables",
+      "tableColumn": "2010",
+      "year": 2010,
+      "comment": null,
+      "value": {
+        "uri": "value_IncomeTaxReceivables_2010",
+        "numericValue": -319000000.0,
+        "displayValue": "-319.0",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    },
+    {
+      "uri": "entity_Metric_NetCashOperating_2010",
+      "label": "Net cash from operating activities",
+      "tableRow": "net cash from operating activities",
+      "tableColumn": "2010",
+      "year": 2010,
+      "comment": null,
+      "value": {
+        "uri": "value_NetCashOperating_2010",
+        "numericValue": 3835000000.0,
+        "displayValue": "3835.0",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    }
+  ],
+  "years": [
+    {
+      "uri": "entity_Year_2012",
+      "yearValue": 2012
+    },
+    {
+      "uri": "entity_Year_2011",
+      "yearValue": 2011
+    },
+    {
+      "uri": "entity_Year_2010",
+      "yearValue": 2010
+    },
+    {
+      "uri": "entity_Year_2010",
+      "yearValue": 2010
+    },
+    {
+      "uri": "entity_Year_2011",
+      "yearValue": 2011
+    },
+    {
+      "uri": "entity_Year_2012",
+      "yearValue": 2012
+    }
+  ],
+  "values": [],
+  "triples": [
+    {
+      "subject": "entity_Company_UPS",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_WorkingCapitalChanges_2012"
+    },
+    {
+      "subject": "entity_Company_UPS",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_WorkingCapitalChanges_2011"
+    },
+    {
+      "subject": "entity_Company_UPS",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_WorkingCapitalChanges_2010"
+    },
+    {
+      "subject": "entity_Company_UPS",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_IncomeTaxReceivables_2012"
+    },
+    {
+      "subject": "entity_Company_UPS",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_IncomeTaxReceivables_2011"
+    },
+    {
+      "subject": "entity_Company_UPS",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_IncomeTaxReceivables_2010"
+    },
+    {
+      "subject": "entity_Company_UPS",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_NetCashOperating_2012"
+    },
+    {
+      "subject": "entity_Company_UPS",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_NetCashOperating_2011"
+    },
+    {
+      "subject": "entity_Company_UPS",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_NetCashOperating_2010"
+    },
+    {
+      "subject": "entity_Company_UPS",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_NetIncome_2012"
+    },
+    {
+      "subject": "entity_Company_UPS",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_NetIncome_2011"
+    },
+    {
+      "subject": "entity_Company_UPS",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_NetIncome_2010"
+    },
+    {
+      "subject": "entity_Company_UPS",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_NonCashOperating_2012"
+    },
+    {
+      "subject": "entity_Company_UPS",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_NonCashOperating_2011"
+    },
+    {
+      "subject": "entity_Company_UPS",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_NonCashOperating_2010"
+    },
+    {
+      "subject": "entity_Company_UPS",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_OtherOperating_2012"
+    },
+    {
+      "subject": "entity_Company_UPS",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_OtherOperating_2011"
+    },
+    {
+      "subject": "entity_Company_UPS",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_OtherOperating_2010"
+    },
+    {
+      "subject": "entity_Company_UPS",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_PensionContributions_2012"
+    },
+    {
+      "subject": "entity_Company_UPS",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_PensionContributions_2011"
+    },
+    {
+      "subject": "entity_Company_UPS",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_PensionContributions_2010"
+    },
+    {
+      "subject": "entity_Company_UPS",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_WorkingCapitalChanges_2010"
+    },
+    {
+      "subject": "entity_Company_UPS",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_IncomeTaxReceivables_2010"
+    },
+    {
+      "subject": "entity_Company_UPS",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_NetCashOperating_2010"
+    }
+  ],
+  "_meta": {
+    "example_number": "70",
+    "example_id": "Single_UPS/2012/page_51.pdf-1",
+    "model": "claude-3-5-sonnet-20241022",
+    "extraction_passes": 2,
+    "table_orientation": "column-first",
+    "table_caption": "Summary of Significant Sources and Uses of Cash from Operating Activities"
+  },
+  "_table_structure": {
+    "orientation": "column-first",
+    "columns": [
+      {
+        "index": 0,
+        "label": "2012",
+        "numeric_value": 2012.0
+      },
+      {
+        "index": 1,
+        "label": "2011",
+        "numeric_value": 2011.0
+      },
+      {
+        "index": 2,
+        "label": "2010",
+        "numeric_value": 2010.0
+      }
+    ],
+    "rows": [
+      {
+        "index": 0,
+        "label": "changes in working capital and other noncurrent assets and liabilities",
+        "numeric_value": null
+      },
+      {
+        "index": 1,
+        "label": "income tax receivables and payables",
+        "numeric_value": null
+      },
+      {
+        "index": 2,
+        "label": "net cash from operating activities",
+        "numeric_value": null
+      },
+      {
+        "index": 3,
+        "label": "net income",
+        "numeric_value": null
+      },
+      {
+        "index": 4,
+        "label": "non-cash operating activities ( a )",
+        "numeric_value": null
+      },
+      {
+        "index": 5,
+        "label": "other operating activities",
+        "numeric_value": null
+      },
+      {
+        "index": 6,
+        "label": "pension and postretirement plan contributions ( ups-sponsored plans )",
+        "numeric_value": null
+      }
+    ],
+    "cells": [
+      {
+        "row_index": 3,
+        "col_index": 0,
+        "value": 807.0
+      },
+      {
+        "row_index": 4,
+        "col_index": 0,
+        "value": 7301.0
+      },
+      {
+        "row_index": 6,
+        "col_index": 0,
+        "value": -917.0
+      },
+      {
+        "row_index": 1,
+        "col_index": 0,
+        "value": 280.0
+      },
+      {
+        "row_index": 0,
+        "col_index": 0,
+        "value": -148.0
+      },
+      {
+        "row_index": 5,
+        "col_index": 0,
+        "value": -107.0
+      },
+      {
+        "row_index": 2,
+        "col_index": 0,
+        "value": 7216.0
+      },
+      {
+        "row_index": 3,
+        "col_index": 1,
+        "value": 3804.0
+      },
+      {
+        "row_index": 4,
+        "col_index": 1,
+        "value": 4505.0
+      },
+      {
+        "row_index": 6,
+        "col_index": 1,
+        "value": -1436.0
+      },
+      {
+        "row_index": 1,
+        "col_index": 1,
+        "value": 236.0
+      },
+      {
+        "row_index": 0,
+        "col_index": 1,
+        "value": -12.0
+      },
+      {
+        "row_index": 5,
+        "col_index": 1,
+        "value": -24.0
+      },
+      {
+        "row_index": 2,
+        "col_index": 1,
+        "value": 7073.0
+      },
+      {
+        "row_index": 3,
+        "col_index": 2,
+        "value": 3338.0
+      },
+      {
+        "row_index": 4,
+        "col_index": 2,
+        "value": 4398.0
+      },
+      {
+        "row_index": 6,
+        "col_index": 2,
+        "value": -3240.0
+      },
+      {
+        "row_index": 1,
+        "col_index": 2,
+        "value": -319.0
+      },
+      {
+        "row_index": 0,
+        "col_index": 2,
+        "value": -340.0
+      },
+      {
+        "row_index": 5,
+        "col_index": 2,
+        "value": -2.0
+      },
+      {
+        "row_index": 2,
+        "col_index": 2,
+        "value": 3835.0
+      }
+    ],
+    "text_cells": []
+  },
+  "_table_semantics": {
+    "caption": "Summary of Significant Sources and Uses of Cash from Operating Activities",
+    "units": "Millions",
+    "columns": [
+      {
+        "index": 0,
+        "semantic_type": "Year",
+        "description": "Financial data for year 2012"
+      },
+      {
+        "index": 1,
+        "semantic_type": "Year",
+        "description": "Financial data for year 2011"
+      },
+      {
+        "index": 2,
+        "semantic_type": "Year",
+        "description": "Financial data for year 2010"
+      }
+    ],
+    "rows": [
+      {
+        "index": 0,
+        "semantic_type": "DataPoint",
+        "description": "Changes in working capital and other non-current assets and liabilities",
+        "temporal_info": null
+      },
+      {
+        "index": 1,
+        "semantic_type": "DataPoint",
+        "description": "Income tax receivables and payables",
+        "temporal_info": null
+      },
+      {
+        "index": 2,
+        "semantic_type": "CalculatedTotal",
+        "description": "Total net cash generated from operating activities",
+        "temporal_info": null
+      },
+      {
+        "index": 3,
+        "semantic_type": "DataPoint",
+        "description": "Net income for the period",
+        "temporal_info": null
+      },
+      {
+        "index": 4,
+        "semantic_type": "DataPoint",
+        "description": "Non-cash operating activities including depreciation, amortization, gains/losses on derivatives, deferred taxes, etc.",
+        "temporal_info": null
+      },
+      {
+        "index": 5,
+        "semantic_type": "DataPoint",
+        "description": "Other operating activities",
+        "temporal_info": null
+      },
+      {
+        "index": 6,
+        "semantic_type": "DataPoint",
+        "description": "Contributions made to UPS-sponsored pension and postretirement plans",
+        "temporal_info": null
+      }
+    ],
+    "text_metrics": [
+      {
+        "metric_name": "UPS IBT pension plan contribution 2012",
+        "value": 355.0,
+        "scale": "Millions",
+        "source_text": "in 2012, we made a $ 355 million required contribution to the ups ibt pension plan"
+      },
+      {
+        "metric_name": "UPS IBT pension plan contribution 2011",
+        "value": 1200.0,
+        "scale": "Millions",
+        "source_text": "in 2011, we made a $ 1.2 billion contribution to the ups ibt pension plan"
+      },
+      {
+        "metric_name": "UPS retirement and pension plans discretionary contribution 2010",
+        "value": 2000.0,
+        "scale": "Millions",
+        "source_text": "in 2010, we made $ 2.0 billion in discretionary contributions to our ups retirement and ups pension plans"
+      },
+      {
+        "metric_name": "UPS IBT pension plan contribution 2010",
+        "value": 980.0,
+        "scale": "Millions",
+        "source_text": "$ 980 million in required contributions to our ups ibt pension plan"
+      }
+    ]
+  }
+}

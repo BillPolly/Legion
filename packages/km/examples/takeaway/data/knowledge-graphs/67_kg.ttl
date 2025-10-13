@@ -1,0 +1,232 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-12" ;
+    kg:builtWithOntologyVersion "1.0.22" .
+
+entity:Company_Example67 a kg:Company ;
+    kg:hasMetric entity:Metric_Empty_Approved,
+        entity:Metric_Empty_NotApproved,
+        entity:Metric_Empty_Total,
+        entity:Metric_ExercisePrice_Approved,
+        entity:Metric_ExercisePrice_NotApproved,
+        entity:Metric_ExercisePrice_Total,
+        entity:Metric_RemainingSecurities_Approved,
+        entity:Metric_RemainingSecurities_NotApproved,
+        entity:Metric_RemainingSecurities_Total,
+        entity:Metric_Securities_Approved,
+        entity:Metric_Securities_NotApproved,
+        entity:Metric_Securities_Total ;
+    kg:label "Example Company 67" .
+
+entity:Company_GlobalPayments a kg:Company ;
+    kg:hasMetric entity:Metric_ExercisePrice_Approved,
+        entity:Metric_SecuritiesRemaining_Approved,
+        entity:Metric_SecuritiesToBeIssued_Approved ;
+    kg:label "Global Payments Inc." .
+
+entity:FinancialTable a kg:Table ;
+    kg:hasColumn entity:TableColumn_0,
+        entity:TableColumn_1,
+        entity:TableColumn_2 ;
+    kg:hasRow entity:TableRow_0,
+        entity:TableRow_1,
+        entity:TableRow_2,
+        entity:TableRow_3 ;
+    kg:tableCaption "Equity Compensation Plans Securities Information" ;
+    kg:tableOrientation "row-first" .
+
+entity:Metric_Empty_Approved a kg:FinancialMetric ;
+    kg:hasValue value:Empty_Approved ;
+    kg:label "Empty row - Approved plans" ;
+    kg:tableColumn "equity compensation plans approved by security holders:" .
+
+entity:Metric_Empty_NotApproved a kg:FinancialMetric ;
+    kg:hasValue value:Empty_NotApproved ;
+    kg:label "Empty row - Not approved plans" ;
+    kg:tableColumn "equity compensation plans not approved by security holders:" .
+
+entity:Metric_Empty_Total a kg:FinancialMetric ;
+    kg:hasValue value:Empty_Total ;
+    kg:label "Empty row - Total" ;
+    kg:tableColumn "total" .
+
+entity:Metric_ExercisePrice_NotApproved a kg:FinancialMetric ;
+    kg:hasValue value:ExercisePrice_NotApproved ;
+    kg:label "Weighted average exercise price - Not approved plans" ;
+    kg:tableColumn "equity compensation plans not approved by security holders:" ;
+    kg:tableRow "weighted- average exercise price of outstanding options warrants and rights ( b )" .
+
+entity:Metric_ExercisePrice_Total a kg:FinancialMetric ;
+    kg:hasValue value:ExercisePrice_Total ;
+    kg:label "Weighted average exercise price - Total" ;
+    kg:tableColumn "total" ;
+    kg:tableRow "weighted- average exercise price of outstanding options warrants and rights ( b )" .
+
+entity:Metric_RemainingSecurities_Approved a kg:FinancialMetric ;
+    kg:hasValue value:RemainingSecurities_Approved ;
+    kg:label "Number of securities remaining available - Approved plans" ;
+    kg:tableColumn "equity compensation plans approved by security holders:" ;
+    kg:tableRow "number of securities remaining available for futureissuance under equity compensation plans ( excluding securities reflected in column ( a ) ) ( c )" ;
+    rdfs:comment "Also includes shares of common stock available for issuance other than upon the exercise of an option, warrant or right under the amended and restated 2000 non-employee director stock option plan, the amended and restated 2005 incentive plan and the amended and restated 2000 employee stock purchase" .
+
+entity:Metric_RemainingSecurities_NotApproved a kg:FinancialMetric ;
+    kg:hasValue value:RemainingSecurities_NotApproved ;
+    kg:label "Number of securities remaining available - Not approved plans" ;
+    kg:tableColumn "equity compensation plans not approved by security holders:" ;
+    kg:tableRow "number of securities remaining available for futureissuance under equity compensation plans ( excluding securities reflected in column ( a ) ) ( c )" .
+
+entity:Metric_RemainingSecurities_Total a kg:FinancialMetric ;
+    kg:hasValue value:RemainingSecurities_Total ;
+    kg:label "Number of securities remaining available - Total" ;
+    kg:tableColumn "total" ;
+    kg:tableRow "number of securities remaining available for futureissuance under equity compensation plans ( excluding securities reflected in column ( a ) ) ( c )" .
+
+entity:Metric_SecuritiesRemaining_Approved a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2007 ;
+    kg:hasValue value:SecuritiesRemaining_Approved ;
+    kg:label "Securities remaining available - Approved plans" ;
+    kg:tableColumn "number of securities remaining available for futureissuance under equity compensation plans ( excluding securities reflected in column ( a ) ) ( c )" ;
+    kg:tableRow "equity compensation plans approved by security holders:" .
+
+entity:Metric_SecuritiesToBeIssued_Approved a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2007 ;
+    kg:hasValue value:SecuritiesToBeIssued_Approved ;
+    kg:label "Securities to be issued - Approved plans" ;
+    kg:tableColumn "number of securities to be issued upon exercise of outstanding options warrants and rights ( a )" ;
+    kg:tableRow "equity compensation plans approved by security holders:" .
+
+entity:Metric_Securities_Approved a kg:FinancialMetric ;
+    kg:hasValue value:Securities_Approved ;
+    kg:label "Number of securities to be issued - Approved plans" ;
+    kg:tableColumn "equity compensation plans approved by security holders:" ;
+    kg:tableRow "number of securities to be issued upon exercise of outstanding options warrants and rights ( a )" .
+
+entity:Metric_Securities_NotApproved a kg:FinancialMetric ;
+    kg:hasValue value:Securities_NotApproved ;
+    kg:label "Number of securities to be issued - Not approved plans" ;
+    kg:tableColumn "equity compensation plans not approved by security holders:" ;
+    kg:tableRow "number of securities to be issued upon exercise of outstanding options warrants and rights ( a )" .
+
+entity:Metric_Securities_Total a kg:FinancialMetric ;
+    kg:hasValue value:Securities_Total ;
+    kg:label "Number of securities to be issued - Total" ;
+    kg:tableColumn "total" ;
+    kg:tableRow "number of securities to be issued upon exercise of outstanding options warrants and rights ( a )" .
+
+entity:TableColumn_0 a kg:TableColumn ;
+    kg:columnIndex 0 ;
+    kg:label "{'index': 0, 'label': 'equity compensation plans approved by security holders:', 'numeric_value': None}" .
+
+entity:TableColumn_1 a kg:TableColumn ;
+    kg:columnIndex 1 ;
+    kg:label "{'index': 1, 'label': 'equity compensation plans not approved by security holders:', 'numeric_value': None}" .
+
+entity:TableColumn_2 a kg:TableColumn ;
+    kg:columnIndex 2 ;
+    kg:label "{'index': 2, 'label': 'total', 'numeric_value': None}" .
+
+entity:TableRow_0 a kg:TableRow ;
+    kg:label "{'index': 0, 'label': 'number of securities to be issued upon exercise of outstanding options warrants and rights ( a )', 'numeric_value': None}" ;
+    kg:rowIndex 0 .
+
+entity:TableRow_1 a kg:TableRow ;
+    kg:label "{'index': 1, 'label': 'weighted- average exercise price of outstanding options warrants and rights ( b )', 'numeric_value': None}" ;
+    kg:rowIndex 1 .
+
+entity:TableRow_2 a kg:TableRow ;
+    kg:label "{'index': 2, 'label': 'number of securities remaining available for futureissuance under equity compensation plans ( excluding securities reflected in column ( a ) ) ( c )', 'numeric_value': None}" ;
+    kg:rowIndex 2 .
+
+entity:TableRow_3 a kg:TableRow ;
+    kg:label "{'index': 3, 'label': '', 'numeric_value': None}" ;
+    kg:rowIndex 3 .
+
+value:Empty_Approved a kg:MonetaryValue ;
+    kg:displayValue "-1" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -1.0 .
+
+value:Empty_NotApproved a kg:MonetaryValue ;
+    kg:displayValue "2,014" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2014.0 .
+
+value:Empty_Total a kg:MonetaryValue ;
+    kg:displayValue "-1" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -1.0 .
+
+value:ExercisePrice_Approved a kg:MonetaryValue ;
+    kg:displayValue "$25.00",
+        "25.00" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 25.0 .
+
+value:ExercisePrice_NotApproved a kg:MonetaryValue ;
+    kg:displayValue "2,014" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2014.0 .
+
+value:ExercisePrice_Total a kg:MonetaryValue ;
+    kg:displayValue "25.00" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 25.0 .
+
+value:RemainingSecurities_Approved a kg:MonetaryValue ;
+    kg:displayValue "7,779,000" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 7779000.0 .
+
+value:RemainingSecurities_NotApproved a kg:MonetaryValue ;
+    kg:displayValue "2,014" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2014.0 .
+
+value:RemainingSecurities_Total a kg:MonetaryValue ;
+    kg:displayValue "7,779,000" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 7779000.0 .
+
+value:SecuritiesRemaining_Approved a kg:MonetaryValue ;
+    kg:displayValue "7,779,000" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 7779000.0 .
+
+value:SecuritiesToBeIssued_Approved a kg:MonetaryValue ;
+    kg:displayValue "5,171,000" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 5171000.0 .
+
+value:Securities_Approved a kg:MonetaryValue ;
+    kg:displayValue "5,171,000" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 5171000.0 .
+
+value:Securities_NotApproved a kg:MonetaryValue ;
+    kg:displayValue "2,014" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2014.0 .
+
+value:Securities_Total a kg:MonetaryValue ;
+    kg:displayValue "5,171,000" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 5171000.0 .
+
+entity:Metric_ExercisePrice_Approved a kg:FinancialMetric ;
+    kg:forTimePeriod entity:Year_2007 ;
+    kg:hasValue value:ExercisePrice_Approved ;
+    kg:label "Weighted average exercise price - Approved plans" ;
+    kg:tableColumn "equity compensation plans approved by security holders:",
+        "weighted- average exercise price of outstanding options warrants and rights ( b )" ;
+    kg:tableRow "equity compensation plans approved by security holders:",
+        "weighted- average exercise price of outstanding options warrants and rights ( b )" .
+
+entity:Year_2007 a kg:Year ;
+    kg:yearValue 2007 .
+

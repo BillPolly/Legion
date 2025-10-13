@@ -1,0 +1,118 @@
+You are analyzing a financial table to extract semantic understanding.
+
+You have been given the PROGRAMMATIC STRUCTURE of a table (columns, rows, cells extracted by code).
+Your job is to add SEMANTIC UNDERSTANDING by analyzing the structure + surrounding text.
+
+TABLE STRUCTURE (extracted programmatically):
+==========================================
+
+Orientation: {{ structure.orientation }}
+
+Columns ({{ structure.columns|length }}):
+{% for col in structure.columns %}
+  {{ col.index }}. "{{ col.label }}"
+{% endfor %}
+
+Rows ({{ structure.rows|length }}):
+{% for row in structure.rows %}
+  {{ row.index }}. "{{ row.label }}"
+{% endfor %}
+
+Cells: {{ structure.cells|length }} values
+
+SURROUNDING TEXT:
+================
+{{ text[:2000] }}
+...
+
+YOUR TASK:
+=========
+
+Provide semantic understanding of this table:
+
+1. **Table Caption/Title**: What is this table showing? Look for context in the text.
+
+2. **Units**: What are the default units for values in this table?
+   - Look for phrases like "in thousands", "in millions", "in billions"
+   - If not specified, assume "Units"
+   - Return one of: "Units", "Thousands", "Millions", "Billions"
+
+3. **Column Semantics**: For EACH column (by index), provide:
+   - `semantic_type`: One of:
+     * "Year" - Column represents a time period/year
+     * "Category" - Column represents a category (e.g., "residential", "commercial")
+     * "EntityType" - Column represents different entities (e.g., "class a stock", "class b stock")
+     * "Metric" - Column represents different metrics
+   - `description`: Brief description of what this column represents
+
+4. **Row Semantics**: For EACH row (by index), provide:
+   - `semantic_type`: One of:
+     * "DataPoint" - A source data point from the table
+     * "CalculatedTotal" - A calculated total/sum
+     * "Subtotal" - A subtotal within a category
+     * "Header" - A header/section divider
+   - `description`: Brief description of what this row represents
+   - `temporal_info` (optional): If row references dates/years, extract them as dict
+     Example: {"year": 2017, "date": "july 3 2017"}
+
+5. **Text Metrics**: Extract financial metrics mentioned in the SURROUNDING TEXT that are NOT in the table.
+   - Look for phrases like:
+     * "we are authorized to issue 2 billion shares"
+     * "total assets were $10.5 billion"
+     * "net income of $318 million for fiscal 2018"
+   - For each metric, provide:
+     * `metric_name`: Descriptive name
+     * `value`: Numeric value
+     * `scale`: "Units", "Thousands", "Millions", or "Billions"
+     * `source_text`: The exact text snippet (for verification)
+
+IMPORTANT GUIDELINES:
+- Base your analysis on the LABELS and SURROUNDING TEXT
+- Don't make up information - if unclear, make best judgment
+- For temporal_info, extract actual dates/years mentioned in row labels
+- Text metrics should be ADDITIONAL metrics not already in the table structure
+
+**🚨 CRITICAL: STRUCTURED REASONING PROCESS 🚨**
+
+BEFORE generating your JSON output, you MUST explicitly reason through these steps in XML tags:
+
+<scale-detection>
+Check surrounding text for scale indicators:
+- Last 100 characters of text: "[quote text]"
+- Phrases found: [list phrases like "in millions", "in thousands"]
+- If found: Which scale? [Units/Thousands/Millions/Billions]
+- If NOT found: Default scale = Units
+
+SCALE CONCLUSION: [Units/Thousands/Millions/Billions]
+</scale-detection>
+
+<orientation-analysis>
+Analyze table structure:
+- Column labels look like: [years/categories/metrics/entities]
+- Column label examples: "[first 3 column labels]"
+- Row labels look like: [years/categories/metrics/entities]
+- Row label examples: "[first 3 row labels]"
+
+Pattern recognition:
+- If columns are years/dates → Orientation: column-first
+- If rows are years/dates → Orientation: row-first
+- If columns are metrics → Orientation: row-first
+- If rows are metrics → Orientation: column-first
+
+ORIENTATION CONCLUSION: [column-first / row-first]
+</orientation-analysis>
+
+<semantic-classification>
+For each column:
+Column [index]: "[label]"
+- Pattern: [year YYYY / category name / metric name / entity type]
+- Semantic type: [Year / Category / Metric / EntityType]
+
+For each row:
+Row [index]: "[label]"
+- Pattern: [data point / calculated total / subtotal / header]
+- Semantic type: [DataPoint / CalculatedTotal / Subtotal / Header]
+- Temporal info: [extract dates/years if present]
+</semantic-classification>
+
+NOW OUTPUT YOUR JSON (NO additional text, NO markdown fences, ONLY the JSON object starting with { and ending with }):

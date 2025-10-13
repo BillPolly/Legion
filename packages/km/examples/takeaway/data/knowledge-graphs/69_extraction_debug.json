@@ -1,0 +1,742 @@
+{
+  "companies": [
+    {
+      "uri": "entity_Company_Example69",
+      "label": "Insurance Company"
+    },
+    {
+      "uri": "entity_Company_Example69",
+      "label": "Insurance Company Example 69"
+    }
+  ],
+  "metrics": [
+    {
+      "uri": "entity_Metric_AdditionalCaseReserves_2012",
+      "label": "Additional case reserves",
+      "tableRow": "additional case reserves established by the company ( assumed reinsurance ) ( 1 )",
+      "tableColumn": "years ended december 31 , 2012",
+      "year": 2012,
+      "comment": "additional reserves are case specific reserves established by the company in excess of those reported by the ceding company , based on the company's assessment of the covered loss .",
+      "value": {
+        "uri": "value_AdditionalCaseReserves_2012",
+        "numericValue": 90600000.0,
+        "displayValue": "90.6",
+        "scale": "Millions",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_AdditionalCaseReserves_2011",
+      "label": "Additional case reserves",
+      "tableRow": "additional case reserves established by the company ( assumed reinsurance ) ( 1 )",
+      "tableColumn": "years ended december 31 , 2011",
+      "year": 2011,
+      "comment": "additional reserves are case specific reserves established by the company in excess of those reported by the ceding company , based on the company's assessment of the covered loss .",
+      "value": {
+        "uri": "value_AdditionalCaseReserves_2011",
+        "numericValue": 102900000.0,
+        "displayValue": "102.9",
+        "scale": "Millions",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_AdditionalCaseReserves_2010",
+      "label": "Additional case reserves",
+      "tableRow": "additional case reserves established by the company ( assumed reinsurance ) ( 1 )",
+      "tableColumn": "years ended december 31 , 2010",
+      "year": 2010,
+      "comment": "additional reserves are case specific reserves established by the company in excess of those reported by the ceding company , based on the company's assessment of the covered loss .",
+      "value": {
+        "uri": "value_AdditionalCaseReserves_2010",
+        "numericValue": 116100000.0,
+        "displayValue": "116.1",
+        "scale": "Millions",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_DirectCaseReserves_2012",
+      "label": "Direct insurance case reserves",
+      "tableRow": "case reserves established by the company ( direct insurance )",
+      "tableColumn": "years ended december 31 , 2012",
+      "year": 2012,
+      "comment": null,
+      "value": {
+        "uri": "value_DirectCaseReserves_2012",
+        "numericValue": 36700000.0,
+        "displayValue": "36.7",
+        "scale": "Millions",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_DirectCaseReserves_2011",
+      "label": "Direct insurance case reserves",
+      "tableRow": "case reserves established by the company ( direct insurance )",
+      "tableColumn": "years ended december 31 , 2011",
+      "year": 2011,
+      "comment": null,
+      "value": {
+        "uri": "value_DirectCaseReserves_2011",
+        "numericValue": 40600000.0,
+        "displayValue": "40.6",
+        "scale": "Millions",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_DirectCaseReserves_2010",
+      "label": "Direct insurance case reserves",
+      "tableRow": "case reserves established by the company ( direct insurance )",
+      "tableColumn": "years ended december 31 , 2010",
+      "year": 2010,
+      "comment": null,
+      "value": {
+        "uri": "value_DirectCaseReserves_2010",
+        "numericValue": 38900000.0,
+        "displayValue": "38.9",
+        "scale": "Millions",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_CedingCaseReserves_2012",
+      "label": "Ceding companies case reserves",
+      "tableRow": "case reserves reported by ceding companies",
+      "tableColumn": "years ended december 31 , 2012",
+      "year": 2012,
+      "comment": null,
+      "value": {
+        "uri": "value_CedingCaseReserves_2012",
+        "numericValue": 138400000.0,
+        "displayValue": "138.4",
+        "scale": "Millions",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_CedingCaseReserves_2011",
+      "label": "Ceding companies case reserves",
+      "tableRow": "case reserves reported by ceding companies",
+      "tableColumn": "years ended december 31 , 2011",
+      "year": 2011,
+      "comment": null,
+      "value": {
+        "uri": "value_CedingCaseReserves_2011",
+        "numericValue": 145600000.0,
+        "displayValue": "145.6",
+        "scale": "Millions",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_CedingCaseReserves_2010",
+      "label": "Ceding companies case reserves",
+      "tableRow": "case reserves reported by ceding companies",
+      "tableColumn": "years ended december 31 , 2010",
+      "year": 2010,
+      "comment": null,
+      "value": {
+        "uri": "value_CedingCaseReserves_2010",
+        "numericValue": 135400000.0,
+        "displayValue": "135.4",
+        "scale": "Millions",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_GrossReserves_2012",
+      "label": "Gross reserves",
+      "tableRow": "gross reserves",
+      "tableColumn": "years ended december 31 , 2012",
+      "year": 2012,
+      "comment": null,
+      "value": {
+        "uri": "value_GrossReserves_2012",
+        "numericValue": 442800000.0,
+        "displayValue": "442.8",
+        "scale": "Millions",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_GrossReserves_2011",
+      "label": "Gross reserves",
+      "tableRow": "gross reserves",
+      "tableColumn": "years ended december 31 , 2011",
+      "year": 2011,
+      "comment": null,
+      "value": {
+        "uri": "value_GrossReserves_2011",
+        "numericValue": 499900000.0,
+        "displayValue": "499.9",
+        "scale": "Millions",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_GrossReserves_2010",
+      "label": "Gross reserves",
+      "tableRow": "gross reserves",
+      "tableColumn": "years ended december 31 , 2010",
+      "year": 2010,
+      "comment": null,
+      "value": {
+        "uri": "value_GrossReserves_2010",
+        "numericValue": 554800000.0,
+        "displayValue": "554.8",
+        "scale": "Millions",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_IBNR_2012",
+      "label": "Incurred but not reported reserves",
+      "tableRow": "incurred but not reported reserves",
+      "tableColumn": "years ended december 31 , 2012",
+      "year": 2012,
+      "comment": null,
+      "value": {
+        "uri": "value_IBNR_2012",
+        "numericValue": 177100000.0,
+        "displayValue": "177.1",
+        "scale": "Millions",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_IBNR_2011",
+      "label": "Incurred but not reported reserves",
+      "tableRow": "incurred but not reported reserves",
+      "tableColumn": "years ended december 31 , 2011",
+      "year": 2011,
+      "comment": null,
+      "value": {
+        "uri": "value_IBNR_2011",
+        "numericValue": 210900000.0,
+        "displayValue": "210.9",
+        "scale": "Millions",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_IBNR_2010",
+      "label": "Incurred but not reported reserves",
+      "tableRow": "incurred but not reported reserves",
+      "tableColumn": "years ended december 31 , 2010",
+      "year": 2010,
+      "comment": null,
+      "value": {
+        "uri": "value_IBNR_2010",
+        "numericValue": 264399999.99999997,
+        "displayValue": "264.4",
+        "scale": "Millions",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_NetReserves_2012",
+      "label": "Net reserves",
+      "tableRow": "net reserves",
+      "tableColumn": "years ended december 31 , 2012",
+      "year": 2012,
+      "comment": null,
+      "value": {
+        "uri": "value_NetReserves_2012",
+        "numericValue": 425700000.0,
+        "displayValue": "425.7",
+        "scale": "Millions",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_NetReserves_2011",
+      "label": "Net reserves",
+      "tableRow": "net reserves",
+      "tableColumn": "years ended december 31 , 2011",
+      "year": 2011,
+      "comment": null,
+      "value": {
+        "uri": "value_NetReserves_2011",
+        "numericValue": 480200000.0,
+        "displayValue": "480.2",
+        "scale": "Millions",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_NetReserves_2010",
+      "label": "Net reserves",
+      "tableRow": "net reserves",
+      "tableColumn": "years ended december 31 , 2010",
+      "year": 2010,
+      "comment": null,
+      "value": {
+        "uri": "value_NetReserves_2010",
+        "numericValue": 532900000.0,
+        "displayValue": "532.9",
+        "scale": "Millions",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_ReinsuranceReceivable_2012",
+      "label": "Reinsurance receivable",
+      "tableRow": "reinsurance receivable",
+      "tableColumn": "years ended december 31 , 2012",
+      "year": 2012,
+      "comment": null,
+      "value": {
+        "uri": "value_ReinsuranceReceivable_2012",
+        "numericValue": -17100000.0,
+        "displayValue": "-17.1",
+        "scale": "Millions",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_ReinsuranceReceivable_2011",
+      "label": "Reinsurance receivable",
+      "tableRow": "reinsurance receivable",
+      "tableColumn": "years ended december 31 , 2011",
+      "year": 2011,
+      "comment": null,
+      "value": {
+        "uri": "value_ReinsuranceReceivable_2011",
+        "numericValue": -19800000.0,
+        "displayValue": "-19.8",
+        "scale": "Millions",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_ReinsuranceReceivable_2010",
+      "label": "Reinsurance receivable",
+      "tableRow": "reinsurance receivable",
+      "tableColumn": "years ended december 31 , 2010",
+      "year": 2010,
+      "comment": null,
+      "value": {
+        "uri": "value_ReinsuranceReceivable_2010",
+        "numericValue": -21900000.0,
+        "displayValue": "-21.9",
+        "scale": "Millions",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_AdditionalCaseReserves_2010",
+      "label": "Additional case reserves established by the company (assumed reinsurance)",
+      "tableRow": "additional case reserves established by the company ( assumed reinsurance ) ( 1 )",
+      "tableColumn": "years ended december 31 , 2010",
+      "year": 2010,
+      "comment": "additional reserves are case specific reserves established by the company in excess of those reported by the ceding company , based on the company's assessment of the covered loss",
+      "value": {
+        "uri": "value_AdditionalCaseReserves_2010",
+        "numericValue": 116100000.0,
+        "displayValue": "116.1",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    },
+    {
+      "uri": "entity_Metric_CaseReservesDirect_2010",
+      "label": "Case reserves established by the company (direct insurance)",
+      "tableRow": "case reserves established by the company ( direct insurance )",
+      "tableColumn": "years ended december 31 , 2010",
+      "year": 2010,
+      "comment": null,
+      "value": {
+        "uri": "value_CaseReservesDirect_2010",
+        "numericValue": 38900000.0,
+        "displayValue": "38.9",
+        "scale": "Millions",
+        "currency": "USD"
+      }
+    }
+  ],
+  "years": [
+    {
+      "uri": "entity_Year_2012",
+      "yearValue": 2012
+    },
+    {
+      "uri": "entity_Year_2011",
+      "yearValue": 2011
+    },
+    {
+      "uri": "entity_Year_2010",
+      "yearValue": 2010
+    },
+    {
+      "uri": "entity_Year_2010",
+      "yearValue": 2010
+    },
+    {
+      "uri": "entity_Year_2011",
+      "yearValue": 2011
+    },
+    {
+      "uri": "entity_Year_2012",
+      "yearValue": 2012
+    }
+  ],
+  "values": [],
+  "triples": [
+    {
+      "subject": "entity_Company_Example69",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_AdditionalCaseReserves_2012"
+    },
+    {
+      "subject": "entity_Company_Example69",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_AdditionalCaseReserves_2011"
+    },
+    {
+      "subject": "entity_Company_Example69",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_AdditionalCaseReserves_2010"
+    },
+    {
+      "subject": "entity_Company_Example69",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_DirectCaseReserves_2012"
+    },
+    {
+      "subject": "entity_Company_Example69",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_DirectCaseReserves_2011"
+    },
+    {
+      "subject": "entity_Company_Example69",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_DirectCaseReserves_2010"
+    },
+    {
+      "subject": "entity_Company_Example69",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_CedingCaseReserves_2012"
+    },
+    {
+      "subject": "entity_Company_Example69",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_CedingCaseReserves_2011"
+    },
+    {
+      "subject": "entity_Company_Example69",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_CedingCaseReserves_2010"
+    },
+    {
+      "subject": "entity_Company_Example69",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_GrossReserves_2012"
+    },
+    {
+      "subject": "entity_Company_Example69",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_GrossReserves_2011"
+    },
+    {
+      "subject": "entity_Company_Example69",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_GrossReserves_2010"
+    },
+    {
+      "subject": "entity_Company_Example69",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_IBNR_2012"
+    },
+    {
+      "subject": "entity_Company_Example69",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_IBNR_2011"
+    },
+    {
+      "subject": "entity_Company_Example69",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_IBNR_2010"
+    },
+    {
+      "subject": "entity_Company_Example69",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_NetReserves_2012"
+    },
+    {
+      "subject": "entity_Company_Example69",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_NetReserves_2011"
+    },
+    {
+      "subject": "entity_Company_Example69",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_NetReserves_2010"
+    },
+    {
+      "subject": "entity_Company_Example69",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_ReinsuranceReceivable_2012"
+    },
+    {
+      "subject": "entity_Company_Example69",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_ReinsuranceReceivable_2011"
+    },
+    {
+      "subject": "entity_Company_Example69",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_ReinsuranceReceivable_2010"
+    },
+    {
+      "subject": "entity_Company_Example69",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_AdditionalCaseReserves_2010"
+    },
+    {
+      "subject": "entity_Company_Example69",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_CaseReservesDirect_2010"
+    }
+  ],
+  "_meta": {
+    "example_number": "69",
+    "example_id": "Single_RE/2012/page_31.pdf-3",
+    "model": "claude-3-5-sonnet-20241022",
+    "extraction_passes": 2,
+    "table_orientation": "column-first",
+    "table_caption": "Insurance Reserves Analysis"
+  },
+  "_table_structure": {
+    "orientation": "column-first",
+    "columns": [
+      {
+        "index": 0,
+        "label": "years ended december 31 , 2012",
+        "numeric_value": null
+      },
+      {
+        "index": 1,
+        "label": "years ended december 31 , 2011",
+        "numeric_value": null
+      },
+      {
+        "index": 2,
+        "label": "years ended december 31 , 2010",
+        "numeric_value": null
+      }
+    ],
+    "rows": [
+      {
+        "index": 0,
+        "label": "additional case reserves established by the company ( assumed reinsurance ) ( 1 )",
+        "numeric_value": null
+      },
+      {
+        "index": 1,
+        "label": "case reserves established by the company ( direct insurance )",
+        "numeric_value": null
+      },
+      {
+        "index": 2,
+        "label": "case reserves reported by ceding companies",
+        "numeric_value": null
+      },
+      {
+        "index": 3,
+        "label": "gross reserves",
+        "numeric_value": null
+      },
+      {
+        "index": 4,
+        "label": "incurred but not reported reserves",
+        "numeric_value": null
+      },
+      {
+        "index": 5,
+        "label": "net reserves",
+        "numeric_value": null
+      },
+      {
+        "index": 6,
+        "label": "reinsurance receivable",
+        "numeric_value": null
+      }
+    ],
+    "cells": [
+      {
+        "row_index": 2,
+        "col_index": 0,
+        "value": 138.4
+      },
+      {
+        "row_index": 0,
+        "col_index": 0,
+        "value": 90.6
+      },
+      {
+        "row_index": 1,
+        "col_index": 0,
+        "value": 36.7
+      },
+      {
+        "row_index": 4,
+        "col_index": 0,
+        "value": 177.1
+      },
+      {
+        "row_index": 3,
+        "col_index": 0,
+        "value": 442.8
+      },
+      {
+        "row_index": 6,
+        "col_index": 0,
+        "value": -17.1
+      },
+      {
+        "row_index": 5,
+        "col_index": 0,
+        "value": 425.7
+      },
+      {
+        "row_index": 2,
+        "col_index": 1,
+        "value": 145.6
+      },
+      {
+        "row_index": 0,
+        "col_index": 1,
+        "value": 102.9
+      },
+      {
+        "row_index": 1,
+        "col_index": 1,
+        "value": 40.6
+      },
+      {
+        "row_index": 4,
+        "col_index": 1,
+        "value": 210.9
+      },
+      {
+        "row_index": 3,
+        "col_index": 1,
+        "value": 499.9
+      },
+      {
+        "row_index": 6,
+        "col_index": 1,
+        "value": -19.8
+      },
+      {
+        "row_index": 5,
+        "col_index": 1,
+        "value": 480.2
+      },
+      {
+        "row_index": 2,
+        "col_index": 2,
+        "value": 135.4
+      },
+      {
+        "row_index": 0,
+        "col_index": 2,
+        "value": 116.1
+      },
+      {
+        "row_index": 1,
+        "col_index": 2,
+        "value": 38.9
+      },
+      {
+        "row_index": 4,
+        "col_index": 2,
+        "value": 264.4
+      },
+      {
+        "row_index": 3,
+        "col_index": 2,
+        "value": 554.8
+      },
+      {
+        "row_index": 6,
+        "col_index": 2,
+        "value": -21.9
+      },
+      {
+        "row_index": 5,
+        "col_index": 2,
+        "value": 532.9
+      }
+    ],
+    "text_cells": []
+  },
+  "_table_semantics": {
+    "caption": "Insurance Reserves Analysis",
+    "units": "Units",
+    "columns": [
+      {
+        "index": 0,
+        "semantic_type": "Year",
+        "description": "Financial data for year ending December 31, 2012"
+      },
+      {
+        "index": 1,
+        "semantic_type": "Year",
+        "description": "Financial data for year ending December 31, 2011"
+      },
+      {
+        "index": 2,
+        "semantic_type": "Year",
+        "description": "Financial data for year ending December 31, 2010"
+      }
+    ],
+    "rows": [
+      {
+        "index": 0,
+        "semantic_type": "DataPoint",
+        "description": "Additional case reserves for assumed reinsurance business",
+        "temporal_info": null
+      },
+      {
+        "index": 1,
+        "semantic_type": "DataPoint",
+        "description": "Case reserves established for direct insurance business",
+        "temporal_info": null
+      },
+      {
+        "index": 2,
+        "semantic_type": "DataPoint",
+        "description": "Case reserves reported by companies ceding insurance",
+        "temporal_info": null
+      },
+      {
+        "index": 3,
+        "semantic_type": "CalculatedTotal",
+        "description": "Total gross insurance reserves",
+        "temporal_info": null
+      },
+      {
+        "index": 4,
+        "semantic_type": "DataPoint",
+        "description": "Reserves for incurred but not reported claims",
+        "temporal_info": null
+      },
+      {
+        "index": 5,
+        "semantic_type": "CalculatedTotal",
+        "description": "Total net insurance reserves",
+        "temporal_info": null
+      },
+      {
+        "index": 6,
+        "semantic_type": "DataPoint",
+        "description": "Amount receivable from reinsurance",
+        "temporal_info": null
+      }
+    ],
+    "text_metrics": []
+  }
+}

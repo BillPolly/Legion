@@ -1,0 +1,254 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-12" ;
+    kg:builtWithOntologyVersion "1.0.12" .
+
+entity:Company_Example41 a kg:Company ;
+    kg:hasMetric entity:Metric_CashAndCashEquivalents_2017,
+        entity:Metric_CashAndCashEquivalents_2018,
+        entity:Metric_CurrentDebt_2017,
+        entity:Metric_CurrentDebt_2018,
+        entity:Metric_NetCashFinancing_2016,
+        entity:Metric_NetCashFinancing_2017,
+        entity:Metric_NetCashFinancing_2018,
+        entity:Metric_NetCashInvesting_2016,
+        entity:Metric_NetCashInvesting_2017,
+        entity:Metric_NetCashInvesting_2018,
+        entity:Metric_NetCashOperating_2016,
+        entity:Metric_NetCashOperating_2017,
+        entity:Metric_NetCashOperating_2018,
+        entity:Metric_TotalDebt_2017,
+        entity:Metric_TotalDebt_2018 ;
+    kg:label "Example 41 Company" .
+
+entity:FinancialTable a kg:Table ;
+    kg:hasColumn entity:TableColumn_0,
+        entity:TableColumn_1,
+        entity:TableColumn_2 ;
+    kg:hasRow entity:TableRow_0,
+        entity:TableRow_1,
+        entity:TableRow_2 ;
+    kg:tableCaption "Cash Flow Statement Summary" ;
+    kg:tableOrientation "row-first" .
+
+entity:Year_2016 a kg:Year ;
+    kg:yearValue 2016 .
+
+entity:Year_2017 a kg:Year ;
+    kg:yearValue 2017 .
+
+entity:Year_2018 a kg:Year ;
+    kg:yearValue 2018 .
+
+entity:Metric_CashAndCashEquivalents_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:CashAndCashEquivalents_2017 ;
+    kg:label "Cash and cash equivalents" .
+
+entity:Metric_CashAndCashEquivalents_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2018 ;
+    kg:hasValue value:CashAndCashEquivalents_2018 ;
+    kg:label "Cash and cash equivalents" .
+
+entity:Metric_CurrentDebt_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:CurrentDebt_2017 ;
+    kg:label "Current debt" .
+
+entity:Metric_CurrentDebt_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2018 ;
+    kg:hasValue value:CurrentDebt_2018 ;
+    kg:label "Current debt" .
+
+entity:Metric_NetCashFinancing_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2016 ;
+    kg:hasValue value:NetCashFinancing_2016 ;
+    kg:label "Net cash used for financing activities" ;
+    kg:tableColumn "year ended september 30 , 2016" ;
+    kg:tableRow "net cash used for financing activities" .
+
+entity:Metric_NetCashFinancing_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:NetCashFinancing_2017 ;
+    kg:label "Net cash used for financing activities" ;
+    kg:tableColumn "year ended september 30 , 2017" ;
+    kg:tableRow "net cash used for financing activities" .
+
+entity:Metric_NetCashFinancing_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2018 ;
+    kg:hasValue value:NetCashFinancing_2018 ;
+    kg:label "Net cash used for financing activities" ;
+    kg:tableColumn "year ended september 30 , 2018" ;
+    kg:tableRow "net cash used for financing activities" .
+
+entity:Metric_NetCashInvesting_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2016 ;
+    kg:hasValue value:NetCashInvesting_2016 ;
+    kg:label "Net cash used for investing activities" ;
+    kg:tableColumn "year ended september 30 , 2016" ;
+    kg:tableRow "net cash used for investing activities" .
+
+entity:Metric_NetCashInvesting_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:NetCashInvesting_2017 ;
+    kg:label "Net cash used for investing activities" ;
+    kg:tableColumn "year ended september 30 , 2017" ;
+    kg:tableRow "net cash used for investing activities" .
+
+entity:Metric_NetCashInvesting_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2018 ;
+    kg:hasValue value:NetCashInvesting_2018 ;
+    kg:label "Net cash used for investing activities" ;
+    kg:tableColumn "year ended september 30 , 2018" ;
+    kg:tableRow "net cash used for investing activities" .
+
+entity:Metric_NetCashOperating_2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2016 ;
+    kg:hasValue value:NetCashOperating_2016 ;
+    kg:label "Net cash provided by operating activities" ;
+    kg:tableColumn "year ended september 30 , 2016" ;
+    kg:tableRow "net cash provided by operating activities" .
+
+entity:Metric_NetCashOperating_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:NetCashOperating_2017 ;
+    kg:label "Net cash provided by operating activities" ;
+    kg:tableColumn "year ended september 30 , 2017" ;
+    kg:tableRow "net cash provided by operating activities" .
+
+entity:Metric_NetCashOperating_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2018 ;
+    kg:hasValue value:NetCashOperating_2018 ;
+    kg:label "Net cash provided by operating activities" ;
+    kg:tableColumn "year ended september 30 , 2018" ;
+    kg:tableRow "net cash provided by operating activities" .
+
+entity:Metric_TotalDebt_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:TotalDebt_2017 ;
+    kg:label "Total debt" .
+
+entity:Metric_TotalDebt_2018 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2018 ;
+    kg:hasValue value:TotalDebt_2018 ;
+    kg:label "Total debt" .
+
+entity:TableColumn_0 a kg:TableColumn ;
+    kg:columnIndex 0 ;
+    kg:label "{'index': 0, 'label': 'net cash provided by operating activities', 'numeric_value': None}" .
+
+entity:TableColumn_1 a kg:TableColumn ;
+    kg:columnIndex 1 ;
+    kg:label "{'index': 1, 'label': 'net cash used for financing activities', 'numeric_value': None}" .
+
+entity:TableColumn_2 a kg:TableColumn ;
+    kg:columnIndex 2 ;
+    kg:label "{'index': 2, 'label': 'net cash used for investing activities', 'numeric_value': None}" .
+
+entity:TableRow_0 a kg:TableRow ;
+    kg:label "{'index': 0, 'label': 'year ended september 30 , 2018', 'numeric_value': None}" ;
+    kg:rowIndex 0 .
+
+entity:TableRow_1 a kg:TableRow ;
+    kg:label "{'index': 1, 'label': 'year ended september 30 , 2017', 'numeric_value': None}" ;
+    kg:rowIndex 1 .
+
+entity:TableRow_2 a kg:TableRow ;
+    kg:label "{'index': 2, 'label': 'year ended september 30 , 2016', 'numeric_value': None}" ;
+    kg:rowIndex 2 .
+
+value:CashAndCashEquivalents_2017 a kg:MonetaryValue ;
+    kg:displayValue "$298.1 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 298.1 .
+
+value:CashAndCashEquivalents_2018 a kg:MonetaryValue ;
+    kg:displayValue "$636.8 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 636.8 .
+
+value:CurrentDebt_2017 a kg:MonetaryValue ;
+    kg:displayValue "$608.7 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 608.7 .
+
+value:CurrentDebt_2018 a kg:MonetaryValue ;
+    kg:displayValue "$740.7 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 740.7 .
+
+value:NetCashFinancing_2016 a kg:MonetaryValue ;
+    kg:displayValue "-231.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -231.0 .
+
+value:NetCashFinancing_2017 a kg:MonetaryValue ;
+    kg:displayValue "-655.4" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -655.4 .
+
+value:NetCashFinancing_2018 a kg:MonetaryValue ;
+    kg:displayValue "-755.1" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -755.1 .
+
+value:NetCashInvesting_2016 a kg:MonetaryValue ;
+    kg:displayValue "-1351.4" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -1351.4 .
+
+value:NetCashInvesting_2017 a kg:MonetaryValue ;
+    kg:displayValue "-1285.8" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -1285.8 .
+
+value:NetCashInvesting_2018 a kg:MonetaryValue ;
+    kg:displayValue "-1298.9" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -1298.9 .
+
+value:NetCashOperating_2016 a kg:MonetaryValue ;
+    kg:displayValue "1688.4" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1688.4 .
+
+value:NetCashOperating_2017 a kg:MonetaryValue ;
+    kg:displayValue "1900.5" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 1900.5 .
+
+value:NetCashOperating_2018 a kg:MonetaryValue ;
+    kg:displayValue "2420.9" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2420.9 .
+
+value:TotalDebt_2017 a kg:MonetaryValue ;
+    kg:displayValue "$6,554.8 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 6554.8 .
+
+value:TotalDebt_2018 a kg:MonetaryValue ;
+    kg:displayValue "$6,415.2 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 6415.2 .
+

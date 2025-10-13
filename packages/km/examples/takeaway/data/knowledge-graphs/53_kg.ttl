@@ -1,0 +1,342 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-12" ;
+    kg:builtWithOntologyVersion "1.0.22" .
+
+entity:Company_Example53 a kg:Company ;
+    kg:hasMetric entity:Metric_CompensationExpense_2016T,
+        entity:Metric_CompensationExpense_2017,
+        entity:Metric_FairValue_Dec2016,
+        entity:Metric_FairValue_Dec2017,
+        entity:Metric_FairValue_Forfeited,
+        entity:Metric_FairValue_Granted,
+        entity:Metric_FairValue_May2014,
+        entity:Metric_FairValue_May2015,
+        entity:Metric_FairValue_May2016,
+        entity:Metric_FairValue_Vested,
+        entity:Metric_ForfeitedShares,
+        entity:Metric_GrantedShares,
+        entity:Metric_RestrictedStockVestedValue_2016T,
+        entity:Metric_RestrictedStockVestedValue_2017,
+        entity:Metric_UnrecognizedCompensation_2017,
+        entity:Metric_UnvestedShares_Dec2016,
+        entity:Metric_UnvestedShares_Dec2017,
+        entity:Metric_UnvestedShares_May2014,
+        entity:Metric_UnvestedShares_May2015,
+        entity:Metric_UnvestedShares_May2016,
+        entity:Metric_VestedShares ;
+    kg:label "Example Company 53",
+        "Global Payments Inc" .
+
+entity:FinancialTable a kg:Table ;
+    kg:hasColumn entity:TableColumn_0,
+        entity:TableColumn_1 ;
+    kg:hasRow entity:TableRow_0,
+        entity:TableRow_1,
+        entity:TableRow_2,
+        entity:TableRow_3,
+        entity:TableRow_4,
+        entity:TableRow_5,
+        entity:TableRow_6,
+        entity:TableRow_7 ;
+    kg:tableCaption "Changes in unvested restricted stock and performance awards" ;
+    kg:tableOrientation "column-first" .
+
+entity:Year_2014 a kg:Year ;
+    kg:yearValue 2014 .
+
+entity:Year_2015 a kg:Year ;
+    kg:yearValue 2015 .
+
+entity:Year_2016 a kg:Year ;
+    kg:yearValue 2016 .
+
+entity:Year_2017 a kg:Year ;
+    kg:yearValue 2017 .
+
+entity:Metric_CompensationExpense_2016T a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2016 ;
+    kg:hasValue value:CompensationExpense_2016T ;
+    kg:label "Compensation expense for restricted stock and performance awards - 2016 transition period" .
+
+entity:Metric_CompensationExpense_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:CompensationExpense_2017 ;
+    kg:label "Compensation expense for restricted stock and performance awards" .
+
+entity:Metric_FairValue_Dec2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2016 ;
+    kg:hasValue value:FairValue_Dec2016 ;
+    kg:label "Weighted average grant date fair value at December 31 2016" ;
+    kg:tableColumn "weighted-averagegrant-datefair value" ;
+    kg:tableRow "unvested at december 31 2016" .
+
+entity:Metric_FairValue_Dec2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:FairValue_Dec2017 ;
+    kg:label "Weighted average grant date fair value at December 31 2017" ;
+    kg:tableColumn "weighted-averagegrant-datefair value" ;
+    kg:tableRow "unvested at december 31 2017" .
+
+entity:Metric_FairValue_Forfeited a kg:FinancialMetric ;
+    kg:hasValue value:FairValue_Forfeited ;
+    kg:label "Weighted average grant date fair value of forfeited shares" ;
+    kg:tableColumn "weighted-averagegrant-datefair value" ;
+    kg:tableRow "forfeited" .
+
+entity:Metric_FairValue_Granted a kg:FinancialMetric ;
+    kg:hasValue value:FairValue_Granted ;
+    kg:label "Weighted average grant date fair value of granted shares" ;
+    kg:tableColumn "weighted-averagegrant-datefair value" ;
+    kg:tableRow "granted" .
+
+entity:Metric_FairValue_May2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:FairValue_May2014 ;
+    kg:label "Weighted average grant date fair value at May 31 2014" ;
+    kg:tableColumn "weighted-averagegrant-datefair value" ;
+    kg:tableRow "unvested at may 31 2014" .
+
+entity:Metric_FairValue_May2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2015 ;
+    kg:hasValue value:FairValue_May2015 ;
+    kg:label "Weighted average grant date fair value at May 31 2015" ;
+    kg:tableColumn "weighted-averagegrant-datefair value" ;
+    kg:tableRow "unvested at may 31 2015" .
+
+entity:Metric_FairValue_May2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2016 ;
+    kg:hasValue value:FairValue_May2016 ;
+    kg:label "Weighted average grant date fair value at May 31 2016" ;
+    kg:tableColumn "weighted-averagegrant-datefair value" ;
+    kg:tableRow "unvested at may 31 2016" .
+
+entity:Metric_FairValue_Vested a kg:FinancialMetric ;
+    kg:hasValue value:FairValue_Vested ;
+    kg:label "Weighted average grant date fair value of vested shares" ;
+    kg:tableColumn "weighted-averagegrant-datefair value" ;
+    kg:tableRow "vested" .
+
+entity:Metric_ForfeitedShares a kg:FinancialMetric ;
+    kg:hasValue value:ForfeitedShares ;
+    kg:label "Forfeited shares" ;
+    kg:tableColumn "shares ( in thousands )" ;
+    kg:tableRow "forfeited" .
+
+entity:Metric_GrantedShares a kg:FinancialMetric ;
+    kg:hasValue value:GrantedShares ;
+    kg:label "Granted shares" ;
+    kg:tableColumn "shares ( in thousands )" ;
+    kg:tableRow "granted" .
+
+entity:Metric_RestrictedStockVestedValue_2016T a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2016 ;
+    kg:hasValue value:RestrictedStockVestedValue_2016T ;
+    kg:label "Total fair value of restricted stock and performance awards vested - 2016 transition period" .
+
+entity:Metric_RestrictedStockVestedValue_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:RestrictedStockVestedValue_2017 ;
+    kg:label "Total fair value of restricted stock and performance awards vested" .
+
+entity:Metric_UnrecognizedCompensation_2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:UnrecognizedCompensation_2017 ;
+    kg:label "Unrecognized compensation expense related to unvested restricted stock and performance awards" .
+
+entity:Metric_UnvestedShares_Dec2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2016 ;
+    kg:hasValue value:UnvestedShares_Dec2016 ;
+    kg:label "Unvested shares at December 31 2016" ;
+    kg:tableColumn "shares ( in thousands )" ;
+    kg:tableRow "unvested at december 31 2016" .
+
+entity:Metric_UnvestedShares_Dec2017 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2017 ;
+    kg:hasValue value:UnvestedShares_Dec2017 ;
+    kg:label "Unvested shares at December 31 2017" ;
+    kg:tableColumn "shares ( in thousands )" ;
+    kg:tableRow "unvested at december 31 2017" .
+
+entity:Metric_UnvestedShares_May2014 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2014 ;
+    kg:hasValue value:UnvestedShares_May2014 ;
+    kg:label "Unvested shares at May 31 2014" ;
+    kg:tableColumn "shares ( in thousands )" ;
+    kg:tableRow "unvested at may 31 2014" .
+
+entity:Metric_UnvestedShares_May2015 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2015 ;
+    kg:hasValue value:UnvestedShares_May2015 ;
+    kg:label "Unvested shares at May 31 2015" ;
+    kg:tableColumn "shares ( in thousands )" ;
+    kg:tableRow "unvested at may 31 2015" .
+
+entity:Metric_UnvestedShares_May2016 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2016 ;
+    kg:hasValue value:UnvestedShares_May2016 ;
+    kg:label "Unvested shares at May 31 2016" ;
+    kg:tableColumn "shares ( in thousands )" ;
+    kg:tableRow "unvested at may 31 2016" .
+
+entity:Metric_VestedShares a kg:FinancialMetric ;
+    kg:hasValue value:VestedShares ;
+    kg:label "Vested shares" ;
+    kg:tableColumn "shares ( in thousands )" ;
+    kg:tableRow "vested" .
+
+entity:TableColumn_0 a kg:TableColumn ;
+    kg:columnIndex 0 ;
+    kg:label "{'index': 0, 'label': 'shares ( in thousands )', 'numeric_value': None}" .
+
+entity:TableColumn_1 a kg:TableColumn ;
+    kg:columnIndex 1 ;
+    kg:label "{'index': 1, 'label': 'weighted-averagegrant-datefair value', 'numeric_value': None}" .
+
+entity:TableRow_0 a kg:TableRow ;
+    kg:label "{'index': 0, 'label': 'forfeited', 'numeric_value': None}" ;
+    kg:rowIndex 0 .
+
+entity:TableRow_1 a kg:TableRow ;
+    kg:label "{'index': 1, 'label': 'granted', 'numeric_value': None}" ;
+    kg:rowIndex 1 .
+
+entity:TableRow_2 a kg:TableRow ;
+    kg:label "{'index': 2, 'label': 'unvested at december 31 2016', 'numeric_value': None}" ;
+    kg:rowIndex 2 .
+
+entity:TableRow_3 a kg:TableRow ;
+    kg:label "{'index': 3, 'label': 'unvested at december 31 2017', 'numeric_value': None}" ;
+    kg:rowIndex 3 .
+
+entity:TableRow_4 a kg:TableRow ;
+    kg:label "{'index': 4, 'label': 'unvested at may 31 2014', 'numeric_value': None}" ;
+    kg:rowIndex 4 .
+
+entity:TableRow_5 a kg:TableRow ;
+    kg:label "{'index': 5, 'label': 'unvested at may 31 2015', 'numeric_value': None}" ;
+    kg:rowIndex 5 .
+
+entity:TableRow_6 a kg:TableRow ;
+    kg:label "{'index': 6, 'label': 'unvested at may 31 2016', 'numeric_value': None}" ;
+    kg:rowIndex 6 .
+
+entity:TableRow_7 a kg:TableRow ;
+    kg:label "{'index': 7, 'label': 'vested', 'numeric_value': None}" ;
+    kg:rowIndex 7 .
+
+value:CompensationExpense_2016T a kg:MonetaryValue ;
+    kg:displayValue "$17.2 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 17200000.0 .
+
+value:CompensationExpense_2017 a kg:MonetaryValue ;
+    kg:displayValue "$35.2 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 35200000.0 .
+
+value:FairValue_Dec2016 a kg:MonetaryValue ;
+    kg:displayValue "49.55" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 49.55 .
+
+value:FairValue_Dec2017 a kg:MonetaryValue ;
+    kg:displayValue "78.29" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 78.29 .
+
+value:FairValue_Forfeited a kg:MonetaryValue ;
+    kg:displayValue "59.56" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 59.56 .
+
+value:FairValue_Granted a kg:MonetaryValue ;
+    kg:displayValue "79.79" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 79.79 .
+
+value:FairValue_May2014 a kg:MonetaryValue ;
+    kg:displayValue "22.72" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 22.72 .
+
+value:FairValue_May2015 a kg:MonetaryValue ;
+    kg:displayValue "28.97" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 28.97 .
+
+value:FairValue_May2016 a kg:MonetaryValue ;
+    kg:displayValue "37.25" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 37.25 .
+
+value:FairValue_Vested a kg:MonetaryValue ;
+    kg:displayValue "39.26" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 39.26 .
+
+value:ForfeitedShares a kg:MonetaryValue ;
+    kg:displayValue "-78.0" ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue -78000.0 .
+
+value:GrantedShares a kg:MonetaryValue ;
+    kg:displayValue "899.0" ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 899000.0 .
+
+value:RestrictedStockVestedValue_2016T a kg:MonetaryValue ;
+    kg:displayValue "$20.0 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 20000000.0 .
+
+value:RestrictedStockVestedValue_2017 a kg:MonetaryValue ;
+    kg:displayValue "$33.7 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 33700000.0 .
+
+value:UnrecognizedCompensation_2017 a kg:MonetaryValue ;
+    kg:displayValue "$46.1 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 46100000.0 .
+
+value:UnvestedShares_Dec2016 a kg:MonetaryValue ;
+    kg:displayValue "1263.0" ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 1263000.0 .
+
+value:UnvestedShares_Dec2017 a kg:MonetaryValue ;
+    kg:displayValue "1226.0" ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 1226000.0 .
+
+value:UnvestedShares_May2014 a kg:MonetaryValue ;
+    kg:displayValue "1754.0" ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 1754000.0 .
+
+value:UnvestedShares_May2015 a kg:MonetaryValue ;
+    kg:displayValue "1848.0" ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 1848000.0 .
+
+value:UnvestedShares_May2016 a kg:MonetaryValue ;
+    kg:displayValue "1606.0" ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 1606000.0 .
+
+value:VestedShares a kg:MonetaryValue ;
+    kg:displayValue "-858.0" ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue -858000.0 .
+

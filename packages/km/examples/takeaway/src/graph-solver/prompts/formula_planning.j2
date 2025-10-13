@@ -1,0 +1,200 @@
+You are building the exact mathematical formula to answer a financial question.
+
+QUESTION: {{ resolved_question }}
+
+VALUE DEFINITIONS:
+{% for name, info in values.items() %}
+{{ name }}:
+  - Description: {{ info.description }}
+  - Semantic Type: {{ info.semantic_type }}
+  - Source: {{ info.source }}{% if info.turn_reference %} (turn {{ info.turn_reference }}){% endif %}
+
+{% endfor %}
+
+CALCULATION RULES:
+{{ calculation_rules }}
+
+The rules above describe how to interpret financial questions and build formulas.
+Please consult these rules for guidance on operations, sign preservation, and percentage calculations.
+
+TASK:
+Build the formula step-by-step by analyzing the question and consulting the calculation rules.
+
+STEP 1: Identify Key Phrases
+- Extract semantic phrases from the question
+- Examples: "in relation to", "percentage", "change", "total", "difference"
+
+STEP 2: Consult Rules for Each Phrase
+- Look up each phrase in the LINGUISTIC PATTERNS section above
+- Note the recommended operation and formula guidance
+- Pay attention to CRITICAL notes about sign preservation, multiplication by 100, etc.
+
+STEP 3: Check Semantic Types
+- Review the semantic_type of each value:
+  - "change_value" → PRESERVE SIGN (negative = decrease, positive = increase)
+  - "total_value" → Used as base for percentages
+  - Others → Follow calculation rules
+
+STEP 4: Build the Formula
+- Combine operations based on calculation rules
+- Use ONLY the variable names listed in VALUE DEFINITIONS above
+- Apply transformations indicated by rules (multiply by 100, preserve sign, etc.)
+
+FORMULA SYNTAX:
+Write a valid Python expression using:
+- Arithmetic operators: + - * / ( )
+- Available functions:
+  * abs(x) - absolute value
+  * min(x, y) - minimum of two values
+  * max(x, y) - maximum of two values
+  * round(x, digits) - round to decimal places
+  * to_percentage(ratio) - convert decimal ratio to percentage number (multiplies by 100)
+  * in_millions(value) - convert canonical value to millions for display (e.g., "in millions")
+  * in_thousands(value) - convert canonical value to thousands for display (e.g., "in thousands")
+  * in_billions(value) - convert canonical value to billions for display (e.g., "in billions")
+- Variable names: ONLY those listed in VALUE DEFINITIONS above
+- Numeric constants: integers and decimals like 100, 0.5, etc.
+
+CRITICAL: Use to_percentage() when the answer should be a percentage NUMBER (not decimal ratio)
+- If question asks "in percentage" or answer format is "X%" → use to_percentage()
+- Otherwise, return decimal ratio
+
+CRITICAL: Use scale conversion functions when question specifies output format
+- If question ends with ", in millions?" → wrap formula in in_millions()
+- If question ends with ", in thousands?" → wrap formula in in_thousands()
+- If question ends with ", in billions?" → wrap formula in in_billions()
+- Examples:
+  * "what was the revenue in 2011, in millions?" → in_millions(revenue_2011)
+  * "total debt, in thousands?" → in_thousands(total_debt)
+- These only affect the DISPLAY value, the canonical value is still stored for chaining
+
+Examples of valid formulas:
+- change_in_sales / total  (returns decimal ratio like 0.15)
+- to_percentage(change_in_sales / total)  (returns percentage number like 15)
+- to_percentage((revenue_2008 - revenue_2007) / revenue_2007)  (returns percentage like 1.3)
+- abs(new_value - old_value)
+- min(value_a, value_b) / total
+
+CRITICAL RULES:
+- Consult calculation rules for EVERY decision (when to *100, when to preserve sign, etc.)
+- NO hardcoded assumptions - everything must come from the rules above
+- Preserve sign for change_value variables (don't use abs() unless rules specify)
+- When question asks "in percentage", check rules for whether to multiply by 100
+
+EXAMPLE REASONING:
+Question: "how much does this change represent in relation to that total, in percentage?"
+Phrase: "in relation to" → rules say: RatioCalculation, formula X/Y
+Phrase: "in percentage" → answer should be percentage NUMBER, use to_percentage()
+Semantic type: change_in_sales is "change_value" → preserve sign
+Final formula: to_percentage(change_in_sales / total)
+
+OUTPUT (JSON):
+{
+  "formula": "valid Python expression following FORMULA SYNTAX above",
+  "reasoning": "step-by-step explanation showing:
+    1. Which phrases you identified
+    2. What the calculation rules say about each phrase
+    3. How semantic_type affects the formula
+    4. Why you chose this specific formula"
+}
+
+IMPORTANT: The formula must be a valid Python expression using only:
+- The variable names defined above
+- Arithmetic operators: + - * / ( )
+- Functions: abs(), min(), max(), round(), to_percentage(), in_millions(), in_thousands(), in_billions()
+- Numeric constants
+
+CRITICAL: When question asks "in percentage" or gold answer is in "X%" format, use to_percentage()
+
+**🚨 CRITICAL: STRUCTURED REASONING PROCESS 🚨**
+
+BEFORE generating your JSON output, you MUST explicitly reason through these steps in XML tags:
+
+<phrase-analysis>
+List all semantic phrases from the question:
+1. [phrase 1] → Meaning: [what this phrase indicates]
+2. [phrase 2] → Meaning: [what this phrase indicates]
+3. [phrase 3] → Meaning: [what this phrase indicates]
+...
+
+Key phrases identified: [summary list]
+</phrase-analysis>
+
+<rule-lookup>
+For EACH phrase identified above, look up what the CALCULATION RULES say:
+
+Phrase: "[phrase 1]"
+- Rule found in CALCULATION RULES: [quote the relevant rule]
+- Recommended operation: [operation from rule]
+- Special handling notes: [any CRITICAL notes about sign, *100, etc.]
+
+Phrase: "[phrase 2]"
+- Rule found in CALCULATION RULES: [quote the relevant rule]
+- Recommended operation: [operation from rule]
+- Special handling notes: [any CRITICAL notes]
+
+[Repeat for all phrases]
+
+Summary of operations to apply: [list operations]
+</rule-lookup>
+
+<semantic-type-analysis>
+Review the semantic_type of each value:
+
+Value: [variable_name_1]
+- Semantic type: [semantic_type]
+- Implications: [what this means for the formula - e.g., "preserve sign", "use as base", etc.]
+
+Value: [variable_name_2]
+- Semantic type: [semantic_type]
+- Implications: [what this means for the formula]
+
+[Repeat for all values]
+
+Key constraints from semantic types: [summary]
+</semantic-type-analysis>
+
+<scale-conversion-check>
+Does the question contain scale indicator phrases?
+
+Check 1: Does question end with ", in millions?"
+- Answer: [YES/NO]
+- If YES: Need to wrap formula in in_millions()
+
+Check 2: Does question end with ", in thousands?"
+- Answer: [YES/NO]
+- If YES: Need to wrap formula in in_thousands()
+
+Check 3: Does question end with ", in billions?"
+- Answer: [YES/NO]
+- If YES: Need to wrap formula in in_billions()
+
+Check 4: Does question ask for "in percentage" or "percent"?
+- Answer: [YES/NO]
+- If YES: Need to use to_percentage()
+
+CONCLUSION: Scale conversion needed? [NONE / in_millions / in_thousands / in_billions / to_percentage]
+</scale-conversion-check>
+
+<formula-construction>
+STEP 1: Base operation from rules
+- Primary operation: [operation from rules - e.g., "divide X by Y", "add A and B"]
+- Base formula (before adjustments): [formula]
+
+STEP 2: Apply semantic type constraints
+- Constraint 1: [e.g., "preserve sign for change_value"]
+  → Adjustment: [e.g., "do NOT use abs()"]
+- Constraint 2: [e.g., "use total_value as denominator"]
+  → Adjustment: [e.g., "divide by variable_name"]
+- Adjusted formula: [formula with constraints applied]
+
+STEP 3: Apply scale conversion if needed
+- From <scale-conversion-check>: [conversion needed or NONE]
+- If conversion needed, wrap formula: [wrapper_function(adjusted_formula)]
+- Final formula: [complete formula with all adjustments]
+
+REASONING SUMMARY:
+[1-2 sentences explaining why this is the correct formula based on the rules, semantic types, and scale indicators]
+</formula-construction>
+
+NOW OUTPUT YOUR JSON (NO additional text, NO markdown fences, ONLY the JSON object starting with { and ending with }):

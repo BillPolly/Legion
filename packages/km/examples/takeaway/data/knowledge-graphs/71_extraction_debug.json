@@ -1,0 +1,837 @@
+{
+  "companies": [
+    {
+      "uri": "entity_Company_Altria",
+      "label": "Altria"
+    },
+    {
+      "uri": "entity_Company_Altria",
+      "label": "Altria Group Inc."
+    }
+  ],
+  "metrics": [
+    {
+      "uri": "entity_Metric_AllOther_2017",
+      "label": "All Other Operating Income Percentage",
+      "tableRow": "all other",
+      "tableColumn": "2017",
+      "year": 2017,
+      "comment": null,
+      "value": {
+        "uri": "value_AllOther_2017",
+        "numericValue": -0.5,
+        "displayValue": "-0.5%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_AllOther_2016",
+      "label": "All Other Operating Income Percentage",
+      "tableRow": "all other",
+      "tableColumn": "2016",
+      "year": 2016,
+      "comment": null,
+      "value": {
+        "uri": "value_AllOther_2016",
+        "numericValue": -1.1,
+        "displayValue": "-1.1%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_AllOther_2015",
+      "label": "All Other Operating Income Percentage",
+      "tableRow": "all other",
+      "tableColumn": "2015",
+      "year": 2015,
+      "comment": null,
+      "value": {
+        "uri": "value_AllOther_2015",
+        "numericValue": -2.0,
+        "displayValue": "-2.0%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_SmokeableProducts_2017",
+      "label": "Smokeable Products Operating Income Percentage",
+      "tableRow": "smokeable products",
+      "tableColumn": "2017",
+      "year": 2017,
+      "comment": null,
+      "value": {
+        "uri": "value_SmokeableProducts_2017",
+        "numericValue": -85.8,
+        "displayValue": "-85.8%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_SmokeableProducts_2016",
+      "label": "Smokeable Products Operating Income Percentage",
+      "tableRow": "smokeable products",
+      "tableColumn": "2016",
+      "year": 2016,
+      "comment": null,
+      "value": {
+        "uri": "value_SmokeableProducts_2016",
+        "numericValue": -86.2,
+        "displayValue": "-86.2%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_SmokeableProducts_2015",
+      "label": "Smokeable Products Operating Income Percentage",
+      "tableRow": "smokeable products",
+      "tableColumn": "2015",
+      "year": 2015,
+      "comment": null,
+      "value": {
+        "uri": "value_SmokeableProducts_2015",
+        "numericValue": -87.4,
+        "displayValue": "-87.4%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_SmokelessProducts_2017",
+      "label": "Smokeless Products Operating Income Percentage",
+      "tableRow": "smokeless products",
+      "tableColumn": "2017",
+      "year": 2017,
+      "comment": null,
+      "value": {
+        "uri": "value_SmokelessProducts_2017",
+        "numericValue": 13.2,
+        "displayValue": "13.2%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_SmokelessProducts_2016",
+      "label": "Smokeless Products Operating Income Percentage",
+      "tableRow": "smokeless products",
+      "tableColumn": "2016",
+      "year": 2016,
+      "comment": null,
+      "value": {
+        "uri": "value_SmokelessProducts_2016",
+        "numericValue": 13.1,
+        "displayValue": "13.1%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_SmokelessProducts_2015",
+      "label": "Smokeless Products Operating Income Percentage",
+      "tableRow": "smokeless products",
+      "tableColumn": "2015",
+      "year": 2015,
+      "comment": null,
+      "value": {
+        "uri": "value_SmokelessProducts_2015",
+        "numericValue": 12.8,
+        "displayValue": "12.8%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_Total_2017",
+      "label": "Total Operating Income Percentage",
+      "tableRow": "total",
+      "tableColumn": "2017",
+      "year": 2017,
+      "comment": null,
+      "value": {
+        "uri": "value_Total_2017",
+        "numericValue": -100.0,
+        "displayValue": "-100.0%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_Total_2016",
+      "label": "Total Operating Income Percentage",
+      "tableRow": "total",
+      "tableColumn": "2016",
+      "year": 2016,
+      "comment": null,
+      "value": {
+        "uri": "value_Total_2016",
+        "numericValue": -100.0,
+        "displayValue": "-100.0%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_Total_2015",
+      "label": "Total Operating Income Percentage",
+      "tableRow": "total",
+      "tableColumn": "2015",
+      "year": 2015,
+      "comment": null,
+      "value": {
+        "uri": "value_Total_2015",
+        "numericValue": -100.0,
+        "displayValue": "-100.0%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_Wine_2017",
+      "label": "Wine Operating Income Percentage",
+      "tableRow": "wine",
+      "tableColumn": "2017",
+      "year": 2017,
+      "comment": null,
+      "value": {
+        "uri": "value_Wine_2017",
+        "numericValue": 1.5,
+        "displayValue": "1.5%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_Wine_2016",
+      "label": "Wine Operating Income Percentage",
+      "tableRow": "wine",
+      "tableColumn": "2016",
+      "year": 2016,
+      "comment": null,
+      "value": {
+        "uri": "value_Wine_2016",
+        "numericValue": 1.8,
+        "displayValue": "1.8%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_Wine_2015",
+      "label": "Wine Operating Income Percentage",
+      "tableRow": "wine",
+      "tableColumn": "2015",
+      "year": 2015,
+      "comment": null,
+      "value": {
+        "uri": "value_Wine_2015",
+        "numericValue": 1.8,
+        "displayValue": "1.8%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_AllOther_2015",
+      "label": "All Other Operating Income Percentage",
+      "tableRow": "all other",
+      "tableColumn": "2015",
+      "year": 2015,
+      "comment": null,
+      "value": {
+        "uri": "value_AllOther_2015",
+        "numericValue": -2.0,
+        "displayValue": "-2.0%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_AllOther_2016",
+      "label": "All Other Operating Income Percentage",
+      "tableRow": "all other",
+      "tableColumn": "2016",
+      "year": 2016,
+      "comment": null,
+      "value": {
+        "uri": "value_AllOther_2016",
+        "numericValue": -1.1,
+        "displayValue": "-1.1%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_AllOther_2017",
+      "label": "All Other Operating Income Percentage",
+      "tableRow": "all other",
+      "tableColumn": "2017",
+      "year": 2017,
+      "comment": null,
+      "value": {
+        "uri": "value_AllOther_2017",
+        "numericValue": -0.5,
+        "displayValue": "-0.5%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_SmokeableProducts_2015",
+      "label": "Smokeable Products Operating Income Percentage",
+      "tableRow": "smokeable products",
+      "tableColumn": "2015",
+      "year": 2015,
+      "comment": null,
+      "value": {
+        "uri": "value_SmokeableProducts_2015",
+        "numericValue": -87.4,
+        "displayValue": "-87.4%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_SmokeableProducts_2016",
+      "label": "Smokeable Products Operating Income Percentage",
+      "tableRow": "smokeable products",
+      "tableColumn": "2016",
+      "year": 2016,
+      "comment": null,
+      "value": {
+        "uri": "value_SmokeableProducts_2016",
+        "numericValue": -86.2,
+        "displayValue": "-86.2%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_SmokeableProducts_2017",
+      "label": "Smokeable Products Operating Income Percentage",
+      "tableRow": "smokeable products",
+      "tableColumn": "2017",
+      "year": 2017,
+      "comment": null,
+      "value": {
+        "uri": "value_SmokeableProducts_2017",
+        "numericValue": -85.8,
+        "displayValue": "-85.8%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_SmokelessProducts_2015",
+      "label": "Smokeless Products Operating Income Percentage",
+      "tableRow": "smokeless products",
+      "tableColumn": "2015",
+      "year": 2015,
+      "comment": null,
+      "value": {
+        "uri": "value_SmokelessProducts_2015",
+        "numericValue": 12.8,
+        "displayValue": "12.8%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_SmokelessProducts_2016",
+      "label": "Smokeless Products Operating Income Percentage",
+      "tableRow": "smokeless products",
+      "tableColumn": "2016",
+      "year": 2016,
+      "comment": null,
+      "value": {
+        "uri": "value_SmokelessProducts_2016",
+        "numericValue": 13.1,
+        "displayValue": "13.1%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_SmokelessProducts_2017",
+      "label": "Smokeless Products Operating Income Percentage",
+      "tableRow": "smokeless products",
+      "tableColumn": "2017",
+      "year": 2017,
+      "comment": null,
+      "value": {
+        "uri": "value_SmokelessProducts_2017",
+        "numericValue": 13.2,
+        "displayValue": "13.2%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_Total_2015",
+      "label": "Total Operating Income Percentage",
+      "tableRow": "total",
+      "tableColumn": "2015",
+      "year": 2015,
+      "comment": null,
+      "value": {
+        "uri": "value_Total_2015",
+        "numericValue": -100.0,
+        "displayValue": "-100.0%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_Total_2016",
+      "label": "Total Operating Income Percentage",
+      "tableRow": "total",
+      "tableColumn": "2016",
+      "year": 2016,
+      "comment": null,
+      "value": {
+        "uri": "value_Total_2016",
+        "numericValue": -100.0,
+        "displayValue": "-100.0%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_Total_2017",
+      "label": "Total Operating Income Percentage",
+      "tableRow": "total",
+      "tableColumn": "2017",
+      "year": 2017,
+      "comment": null,
+      "value": {
+        "uri": "value_Total_2017",
+        "numericValue": -100.0,
+        "displayValue": "-100.0%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_Wine_2015",
+      "label": "Wine Operating Income Percentage",
+      "tableRow": "wine",
+      "tableColumn": "2015",
+      "year": 2015,
+      "comment": null,
+      "value": {
+        "uri": "value_Wine_2015",
+        "numericValue": 1.8,
+        "displayValue": "1.8%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_Wine_2016",
+      "label": "Wine Operating Income Percentage",
+      "tableRow": "wine",
+      "tableColumn": "2016",
+      "year": 2016,
+      "comment": null,
+      "value": {
+        "uri": "value_Wine_2016",
+        "numericValue": 1.8,
+        "displayValue": "1.8%",
+        "scale": "Units",
+        "currency": null
+      }
+    },
+    {
+      "uri": "entity_Metric_Wine_2017",
+      "label": "Wine Operating Income Percentage",
+      "tableRow": "wine",
+      "tableColumn": "2017",
+      "year": 2017,
+      "comment": null,
+      "value": {
+        "uri": "value_Wine_2017",
+        "numericValue": 1.5,
+        "displayValue": "1.5%",
+        "scale": "Units",
+        "currency": null
+      }
+    }
+  ],
+  "years": [
+    {
+      "uri": "entity_Year_2017",
+      "yearValue": 2017
+    },
+    {
+      "uri": "entity_Year_2016",
+      "yearValue": 2016
+    },
+    {
+      "uri": "entity_Year_2015",
+      "yearValue": 2015
+    },
+    {
+      "uri": "entity_Year_2015",
+      "yearValue": 2015
+    },
+    {
+      "uri": "entity_Year_2016",
+      "yearValue": 2016
+    },
+    {
+      "uri": "entity_Year_2017",
+      "yearValue": 2017
+    }
+  ],
+  "values": [],
+  "triples": [
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_AllOther_2017"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_AllOther_2016"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_AllOther_2015"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_SmokeableProducts_2017"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_SmokeableProducts_2016"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_SmokeableProducts_2015"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_SmokelessProducts_2017"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_SmokelessProducts_2016"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_SmokelessProducts_2015"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_Total_2017"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_Total_2016"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_Total_2015"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_Wine_2017"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_Wine_2016"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_Wine_2015"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_AllOther_2015"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_AllOther_2016"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_AllOther_2017"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_SmokeableProducts_2015"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_SmokeableProducts_2016"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_SmokeableProducts_2017"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_SmokelessProducts_2015"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_SmokelessProducts_2016"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_SmokelessProducts_2017"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_Total_2015"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_Total_2016"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_Total_2017"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_Wine_2015"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_Wine_2016"
+    },
+    {
+      "subject": "entity_Company_Altria",
+      "predicate": "hasMetric",
+      "object": "entity_Metric_Wine_2017"
+    }
+  ],
+  "_meta": {
+    "example_number": "71",
+    "example_id": "Single_MO/2017/page_10.pdf-4",
+    "model": "claude-3-5-sonnet-20241022",
+    "extraction_passes": 2,
+    "table_orientation": "column-first",
+    "table_caption": "Operating Companies Income (Loss) by Segment"
+  },
+  "_table_structure": {
+    "orientation": "column-first",
+    "columns": [
+      {
+        "index": 0,
+        "label": "2017",
+        "numeric_value": 2017.0
+      },
+      {
+        "index": 1,
+        "label": "2016",
+        "numeric_value": 2016.0
+      },
+      {
+        "index": 2,
+        "label": "2015",
+        "numeric_value": 2015.0
+      }
+    ],
+    "rows": [
+      {
+        "index": 0,
+        "label": "all other",
+        "numeric_value": null
+      },
+      {
+        "index": 1,
+        "label": "smokeable products",
+        "numeric_value": null
+      },
+      {
+        "index": 2,
+        "label": "smokeless products",
+        "numeric_value": null
+      },
+      {
+        "index": 3,
+        "label": "total",
+        "numeric_value": null
+      },
+      {
+        "index": 4,
+        "label": "wine",
+        "numeric_value": null
+      }
+    ],
+    "cells": [
+      {
+        "row_index": 1,
+        "col_index": 0,
+        "value": -85.8
+      },
+      {
+        "row_index": 2,
+        "col_index": 0,
+        "value": 13.2
+      },
+      {
+        "row_index": 4,
+        "col_index": 0,
+        "value": 1.5
+      },
+      {
+        "row_index": 0,
+        "col_index": 0,
+        "value": -0.5
+      },
+      {
+        "row_index": 3,
+        "col_index": 0,
+        "value": -100.0
+      },
+      {
+        "row_index": 1,
+        "col_index": 1,
+        "value": -86.2
+      },
+      {
+        "row_index": 2,
+        "col_index": 1,
+        "value": 13.1
+      },
+      {
+        "row_index": 4,
+        "col_index": 1,
+        "value": 1.8
+      },
+      {
+        "row_index": 0,
+        "col_index": 1,
+        "value": -1.1
+      },
+      {
+        "row_index": 3,
+        "col_index": 1,
+        "value": -100.0
+      },
+      {
+        "row_index": 1,
+        "col_index": 2,
+        "value": -87.4
+      },
+      {
+        "row_index": 2,
+        "col_index": 2,
+        "value": 12.8
+      },
+      {
+        "row_index": 4,
+        "col_index": 2,
+        "value": 1.8
+      },
+      {
+        "row_index": 0,
+        "col_index": 2,
+        "value": -2.0
+      },
+      {
+        "row_index": 3,
+        "col_index": 2,
+        "value": -100.0
+      }
+    ],
+    "text_cells": []
+  },
+  "_table_semantics": {
+    "caption": "Operating Companies Income (Loss) by Segment",
+    "units": "Units",
+    "columns": [
+      {
+        "index": 0,
+        "semantic_type": "Year",
+        "description": "Operating income percentage for year 2017"
+      },
+      {
+        "index": 1,
+        "semantic_type": "Year",
+        "description": "Operating income percentage for year 2016"
+      },
+      {
+        "index": 2,
+        "semantic_type": "Year",
+        "description": "Operating income percentage for year 2015"
+      }
+    ],
+    "rows": [
+      {
+        "index": 0,
+        "semantic_type": "DataPoint",
+        "description": "Operating income percentage from all other business segments",
+        "temporal_info": null
+      },
+      {
+        "index": 1,
+        "semantic_type": "DataPoint",
+        "description": "Operating income percentage from smokeable products segment",
+        "temporal_info": null
+      },
+      {
+        "index": 2,
+        "semantic_type": "DataPoint",
+        "description": "Operating income percentage from smokeless products segment",
+        "temporal_info": null
+      },
+      {
+        "index": 3,
+        "semantic_type": "CalculatedTotal",
+        "description": "Total operating income percentage across all segments",
+        "temporal_info": null
+      },
+      {
+        "index": 4,
+        "semantic_type": "DataPoint",
+        "description": "Operating income percentage from wine segment",
+        "temporal_info": null
+      }
+    ],
+    "text_metrics": [
+      {
+        "metric_name": "smokeable products cigarette shipment volume",
+        "value": 116.6,
+        "scale": "Billions",
+        "source_text": "total smokeable products segment 2019s cigarettes shipment volume in the united states was 116.6 billion units in 2017"
+      }
+    ]
+  }
+}

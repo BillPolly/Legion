@@ -1,0 +1,234 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-12" ;
+    kg:builtWithOntologyVersion "1.0.11" .
+
+entity:Company_Example40 a kg:Company ;
+    kg:hasMetric entity:Metric_LongTermDebt_1to3Years,
+        entity:Metric_LongTermDebt_3to5Years,
+        entity:Metric_LongTermDebt_LessThan1Year,
+        entity:Metric_LongTermDebt_MoreThan5Years,
+        entity:Metric_LongTermDebt_Total,
+        entity:Metric_OperatingLeases_1to3Years,
+        entity:Metric_OperatingLeases_3to5Years,
+        entity:Metric_OperatingLeases_LessThan1Year,
+        entity:Metric_OperatingLeases_MoreThan5Years,
+        entity:Metric_OperatingLeases_Total,
+        entity:Metric_UnrecognizedTaxBenefits ;
+    kg:label "Company 40",
+        "Example Company 40" .
+
+entity:FinancialTable a kg:Table ;
+    kg:hasColumn entity:TableColumn_0,
+        entity:TableColumn_1,
+        entity:TableColumn_2,
+        entity:TableColumn_3,
+        entity:TableColumn_4 ;
+    kg:hasRow entity:TableRow_0,
+        entity:TableRow_1,
+        entity:TableRow_2,
+        entity:TableRow_3,
+        entity:TableRow_4,
+        entity:TableRow_5,
+        entity:TableRow_6 ;
+    kg:tableCaption "Contractual Obligations by Payment Period" ;
+    kg:tableOrientation "column-first" .
+
+entity:Year_2017 a kg:Year ;
+    kg:yearValue 2017 .
+
+entity:Metric_LongTermDebt_1to3Years a kg:FinancialMetric ;
+    kg:hasValue value:LongTermDebt_1to3Years ;
+    kg:label "Long-term debt 1-3 years" ;
+    kg:tableColumn "1-3 years" ;
+    kg:tableRow "long-term debt ( 1 )" ;
+    rdfs:comment "Includes discount and premiums aggregating $0.5 million. Also includes capital leases. The amount excludes deferred financing fees which are included in the consolidated balance sheets as an offset to long-term debt." .
+
+entity:Metric_LongTermDebt_3to5Years a kg:FinancialMetric ;
+    kg:hasValue value:LongTermDebt_3to5Years ;
+    kg:label "Long-term debt 3-5 years" ;
+    kg:tableColumn "3-5 years" ;
+    kg:tableRow "long-term debt ( 1 )" ;
+    rdfs:comment "Includes discount and premiums aggregating $0.5 million. Also includes capital leases. The amount excludes deferred financing fees which are included in the consolidated balance sheets as an offset to long-term debt." .
+
+entity:Metric_LongTermDebt_LessThan1Year a kg:FinancialMetric ;
+    kg:hasValue value:LongTermDebt_LessThan1Year ;
+    kg:label "Long-term debt less than 1 year" ;
+    kg:tableColumn "less than1 year" ;
+    kg:tableRow "long-term debt ( 1 )" ;
+    rdfs:comment "Includes discount and premiums aggregating $0.5 million. Also includes capital leases. The amount excludes deferred financing fees which are included in the consolidated balance sheets as an offset to long-term debt." .
+
+entity:Metric_LongTermDebt_MoreThan5Years a kg:FinancialMetric ;
+    kg:hasValue value:LongTermDebt_MoreThan5Years ;
+    kg:label "Long-term debt more than 5 years" ;
+    kg:tableColumn "more than5 years" ;
+    kg:tableRow "long-term debt ( 1 )" ;
+    rdfs:comment "Includes discount and premiums aggregating $0.5 million. Also includes capital leases. The amount excludes deferred financing fees which are included in the consolidated balance sheets as an offset to long-term debt." .
+
+entity:Metric_LongTermDebt_Total a kg:FinancialMetric ;
+    kg:hasValue value:LongTermDebt_Total ;
+    kg:label "Long-term debt total" ;
+    kg:tableColumn "total" ;
+    kg:tableRow "long-term debt ( 1 )" ;
+    rdfs:comment "Includes discount and premiums aggregating $0.5 million. Also includes capital leases. The amount excludes deferred financing fees which are included in the consolidated balance sheets as an offset to long-term debt." .
+
+entity:Metric_OperatingLeases_1to3Years a kg:FinancialMetric ;
+    kg:hasValue value:OperatingLeases_1to3Years ;
+    kg:label "Operating leases 1-3 years" ;
+    kg:tableColumn "1-3 years" ;
+    kg:tableRow "operating leases ( 2 )" ;
+    rdfs:comment "Primarily for offices, motor vehicles and office equipment." .
+
+entity:Metric_OperatingLeases_3to5Years a kg:FinancialMetric ;
+    kg:hasValue value:OperatingLeases_3to5Years ;
+    kg:label "Operating leases 3-5 years" ;
+    kg:tableColumn "3-5 years" ;
+    kg:tableRow "operating leases ( 2 )" ;
+    rdfs:comment "Primarily for offices, motor vehicles and office equipment." .
+
+entity:Metric_OperatingLeases_LessThan1Year a kg:FinancialMetric ;
+    kg:hasValue value:OperatingLeases_LessThan1Year ;
+    kg:label "Operating leases less than 1 year" ;
+    kg:tableColumn "less than1 year" ;
+    kg:tableRow "operating leases ( 2 )" ;
+    rdfs:comment "Primarily for offices, motor vehicles and office equipment." .
+
+entity:Metric_OperatingLeases_MoreThan5Years a kg:FinancialMetric ;
+    kg:hasValue value:OperatingLeases_MoreThan5Years ;
+    kg:label "Operating leases more than 5 years" ;
+    kg:tableColumn "more than5 years" ;
+    kg:tableRow "operating leases ( 2 )" ;
+    rdfs:comment "Primarily for offices, motor vehicles and office equipment." .
+
+entity:Metric_OperatingLeases_Total a kg:FinancialMetric ;
+    kg:hasValue value:OperatingLeases_Total ;
+    kg:label "Operating leases total" ;
+    kg:tableColumn "total" ;
+    kg:tableRow "operating leases ( 2 )" ;
+    rdfs:comment "Primarily for offices, motor vehicles and office equipment." .
+
+entity:Metric_UnrecognizedTaxBenefits a kg:FinancialMetric ;
+    kg:hasValue value:UnrecognizedTaxBenefits ;
+    kg:label "Unrecognized tax benefits" ;
+    rdfs:comment "From text: 'table above does not include $0.5 million of unrecognized tax benefits'" .
+
+entity:TableColumn_0 a kg:TableColumn ;
+    kg:columnIndex 0 ;
+    kg:label "{'index': 0, 'label': 'total', 'numeric_value': None}" .
+
+entity:TableColumn_1 a kg:TableColumn ;
+    kg:columnIndex 1 ;
+    kg:label "{'index': 1, 'label': 'less than1 year', 'numeric_value': None}" .
+
+entity:TableColumn_2 a kg:TableColumn ;
+    kg:columnIndex 2 ;
+    kg:label "{'index': 2, 'label': '1-3 years', 'numeric_value': None}" .
+
+entity:TableColumn_3 a kg:TableColumn ;
+    kg:columnIndex 3 ;
+    kg:label "{'index': 3, 'label': '3-5 years', 'numeric_value': None}" .
+
+entity:TableColumn_4 a kg:TableColumn ;
+    kg:columnIndex 4 ;
+    kg:label "{'index': 4, 'label': 'more than5 years', 'numeric_value': None}" .
+
+entity:TableRow_0 a kg:TableRow ;
+    kg:label "{'index': 0, 'label': 'interest ( 5 )', 'numeric_value': None}" ;
+    kg:rowIndex 0 .
+
+entity:TableRow_1 a kg:TableRow ;
+    kg:label "{'index': 1, 'label': 'long-term debt ( 1 )', 'numeric_value': None}" ;
+    kg:rowIndex 1 .
+
+entity:TableRow_2 a kg:TableRow ;
+    kg:label "{'index': 2, 'label': 'operating leases ( 2 )', 'numeric_value': None}" ;
+    kg:rowIndex 2 .
+
+entity:TableRow_3 a kg:TableRow ;
+    kg:label "{'index': 3, 'label': 'other ( 6 )', 'numeric_value': None}" ;
+    kg:rowIndex 3 .
+
+entity:TableRow_4 a kg:TableRow ;
+    kg:label "{'index': 4, 'label': 'port facilities ( 4 )', 'numeric_value': None}" ;
+    kg:rowIndex 4 .
+
+entity:TableRow_5 a kg:TableRow ;
+    kg:label "{'index': 5, 'label': 'ship construction contracts ( 3 )', 'numeric_value': None}" ;
+    kg:rowIndex 5 .
+
+entity:TableRow_6 a kg:TableRow ;
+    kg:label "{'index': 6, 'label': 'total', 'numeric_value': None}" ;
+    kg:rowIndex 6 .
+
+value:LongTermDebt_1to3Years a kg:MonetaryValue ;
+    kg:displayValue "1248463.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 1248463.0 .
+
+value:LongTermDebt_3to5Years a kg:MonetaryValue ;
+    kg:displayValue "3002931.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 3002931.0 .
+
+value:LongTermDebt_LessThan1Year a kg:MonetaryValue ;
+    kg:displayValue "619373.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 619373.0 .
+
+value:LongTermDebt_MoreThan5Years a kg:MonetaryValue ;
+    kg:displayValue "1553815.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 1553815.0 .
+
+value:LongTermDebt_Total a kg:MonetaryValue ;
+    kg:displayValue "6424582.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 6424582.0 .
+
+value:OperatingLeases_1to3Years a kg:MonetaryValue ;
+    kg:displayValue "28973.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 28973.0 .
+
+value:OperatingLeases_3to5Years a kg:MonetaryValue ;
+    kg:displayValue "26504.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 26504.0 .
+
+value:OperatingLeases_LessThan1Year a kg:MonetaryValue ;
+    kg:displayValue "15204.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 15204.0 .
+
+value:OperatingLeases_MoreThan5Years a kg:MonetaryValue ;
+    kg:displayValue "61110.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 61110.0 .
+
+value:OperatingLeases_Total a kg:MonetaryValue ;
+    kg:displayValue "131791.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 131791.0 .
+
+value:UnrecognizedTaxBenefits a kg:MonetaryValue ;
+    kg:displayValue "$0.5 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 0.5 .
+

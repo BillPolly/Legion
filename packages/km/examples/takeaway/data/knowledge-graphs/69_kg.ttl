@@ -1,0 +1,371 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-12" ;
+    kg:builtWithOntologyVersion "1.0.23" .
+
+entity:Company_Example69 a kg:Company ;
+    kg:hasMetric entity:Metric_AdditionalCaseReserves_2010,
+        entity:Metric_AdditionalCaseReserves_2011,
+        entity:Metric_AdditionalCaseReserves_2012,
+        entity:Metric_CaseReservesDirect_2010,
+        entity:Metric_CedingCaseReserves_2010,
+        entity:Metric_CedingCaseReserves_2011,
+        entity:Metric_CedingCaseReserves_2012,
+        entity:Metric_DirectCaseReserves_2010,
+        entity:Metric_DirectCaseReserves_2011,
+        entity:Metric_DirectCaseReserves_2012,
+        entity:Metric_GrossReserves_2010,
+        entity:Metric_GrossReserves_2011,
+        entity:Metric_GrossReserves_2012,
+        entity:Metric_IBNR_2010,
+        entity:Metric_IBNR_2011,
+        entity:Metric_IBNR_2012,
+        entity:Metric_NetReserves_2010,
+        entity:Metric_NetReserves_2011,
+        entity:Metric_NetReserves_2012,
+        entity:Metric_ReinsuranceReceivable_2010,
+        entity:Metric_ReinsuranceReceivable_2011,
+        entity:Metric_ReinsuranceReceivable_2012 ;
+    kg:label "Insurance Company",
+        "Insurance Company Example 69" .
+
+entity:FinancialTable a kg:Table ;
+    kg:hasColumn entity:TableColumn_0,
+        entity:TableColumn_1,
+        entity:TableColumn_2 ;
+    kg:hasRow entity:TableRow_0,
+        entity:TableRow_1,
+        entity:TableRow_2,
+        entity:TableRow_3,
+        entity:TableRow_4,
+        entity:TableRow_5,
+        entity:TableRow_6 ;
+    kg:tableCaption "Insurance Reserves Analysis" ;
+    kg:tableOrientation "column-first" .
+
+entity:Year_2010 a kg:Year ;
+    kg:yearValue 2010 .
+
+entity:Year_2011 a kg:Year ;
+    kg:yearValue 2011 .
+
+entity:Year_2012 a kg:Year ;
+    kg:yearValue 2012 .
+
+entity:Metric_AdditionalCaseReserves_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:AdditionalCaseReserves_2010 ;
+    kg:label "Additional case reserves",
+        "Additional case reserves established by the company (assumed reinsurance)" ;
+    kg:tableColumn "years ended december 31 , 2010" ;
+    kg:tableRow "additional case reserves established by the company ( assumed reinsurance ) ( 1 )" ;
+    rdfs:comment "additional reserves are case specific reserves established by the company in excess of those reported by the ceding company , based on the company's assessment of the covered loss",
+        "additional reserves are case specific reserves established by the company in excess of those reported by the ceding company , based on the company's assessment of the covered loss ." .
+
+entity:Metric_AdditionalCaseReserves_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:AdditionalCaseReserves_2011 ;
+    kg:label "Additional case reserves" ;
+    kg:tableColumn "years ended december 31 , 2011" ;
+    kg:tableRow "additional case reserves established by the company ( assumed reinsurance ) ( 1 )" ;
+    rdfs:comment "additional reserves are case specific reserves established by the company in excess of those reported by the ceding company , based on the company's assessment of the covered loss ." .
+
+entity:Metric_AdditionalCaseReserves_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:AdditionalCaseReserves_2012 ;
+    kg:label "Additional case reserves" ;
+    kg:tableColumn "years ended december 31 , 2012" ;
+    kg:tableRow "additional case reserves established by the company ( assumed reinsurance ) ( 1 )" ;
+    rdfs:comment "additional reserves are case specific reserves established by the company in excess of those reported by the ceding company , based on the company's assessment of the covered loss ." .
+
+entity:Metric_CaseReservesDirect_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:CaseReservesDirect_2010 ;
+    kg:label "Case reserves established by the company (direct insurance)" ;
+    kg:tableColumn "years ended december 31 , 2010" ;
+    kg:tableRow "case reserves established by the company ( direct insurance )" .
+
+entity:Metric_CedingCaseReserves_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:CedingCaseReserves_2010 ;
+    kg:label "Ceding companies case reserves" ;
+    kg:tableColumn "years ended december 31 , 2010" ;
+    kg:tableRow "case reserves reported by ceding companies" .
+
+entity:Metric_CedingCaseReserves_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:CedingCaseReserves_2011 ;
+    kg:label "Ceding companies case reserves" ;
+    kg:tableColumn "years ended december 31 , 2011" ;
+    kg:tableRow "case reserves reported by ceding companies" .
+
+entity:Metric_CedingCaseReserves_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:CedingCaseReserves_2012 ;
+    kg:label "Ceding companies case reserves" ;
+    kg:tableColumn "years ended december 31 , 2012" ;
+    kg:tableRow "case reserves reported by ceding companies" .
+
+entity:Metric_DirectCaseReserves_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:DirectCaseReserves_2010 ;
+    kg:label "Direct insurance case reserves" ;
+    kg:tableColumn "years ended december 31 , 2010" ;
+    kg:tableRow "case reserves established by the company ( direct insurance )" .
+
+entity:Metric_DirectCaseReserves_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:DirectCaseReserves_2011 ;
+    kg:label "Direct insurance case reserves" ;
+    kg:tableColumn "years ended december 31 , 2011" ;
+    kg:tableRow "case reserves established by the company ( direct insurance )" .
+
+entity:Metric_DirectCaseReserves_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:DirectCaseReserves_2012 ;
+    kg:label "Direct insurance case reserves" ;
+    kg:tableColumn "years ended december 31 , 2012" ;
+    kg:tableRow "case reserves established by the company ( direct insurance )" .
+
+entity:Metric_GrossReserves_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:GrossReserves_2010 ;
+    kg:label "Gross reserves" ;
+    kg:tableColumn "years ended december 31 , 2010" ;
+    kg:tableRow "gross reserves" .
+
+entity:Metric_GrossReserves_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:GrossReserves_2011 ;
+    kg:label "Gross reserves" ;
+    kg:tableColumn "years ended december 31 , 2011" ;
+    kg:tableRow "gross reserves" .
+
+entity:Metric_GrossReserves_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:GrossReserves_2012 ;
+    kg:label "Gross reserves" ;
+    kg:tableColumn "years ended december 31 , 2012" ;
+    kg:tableRow "gross reserves" .
+
+entity:Metric_IBNR_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:IBNR_2010 ;
+    kg:label "Incurred but not reported reserves" ;
+    kg:tableColumn "years ended december 31 , 2010" ;
+    kg:tableRow "incurred but not reported reserves" .
+
+entity:Metric_IBNR_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:IBNR_2011 ;
+    kg:label "Incurred but not reported reserves" ;
+    kg:tableColumn "years ended december 31 , 2011" ;
+    kg:tableRow "incurred but not reported reserves" .
+
+entity:Metric_IBNR_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:IBNR_2012 ;
+    kg:label "Incurred but not reported reserves" ;
+    kg:tableColumn "years ended december 31 , 2012" ;
+    kg:tableRow "incurred but not reported reserves" .
+
+entity:Metric_NetReserves_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:NetReserves_2010 ;
+    kg:label "Net reserves" ;
+    kg:tableColumn "years ended december 31 , 2010" ;
+    kg:tableRow "net reserves" .
+
+entity:Metric_NetReserves_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:NetReserves_2011 ;
+    kg:label "Net reserves" ;
+    kg:tableColumn "years ended december 31 , 2011" ;
+    kg:tableRow "net reserves" .
+
+entity:Metric_NetReserves_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:NetReserves_2012 ;
+    kg:label "Net reserves" ;
+    kg:tableColumn "years ended december 31 , 2012" ;
+    kg:tableRow "net reserves" .
+
+entity:Metric_ReinsuranceReceivable_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:ReinsuranceReceivable_2010 ;
+    kg:label "Reinsurance receivable" ;
+    kg:tableColumn "years ended december 31 , 2010" ;
+    kg:tableRow "reinsurance receivable" .
+
+entity:Metric_ReinsuranceReceivable_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:ReinsuranceReceivable_2011 ;
+    kg:label "Reinsurance receivable" ;
+    kg:tableColumn "years ended december 31 , 2011" ;
+    kg:tableRow "reinsurance receivable" .
+
+entity:Metric_ReinsuranceReceivable_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:ReinsuranceReceivable_2012 ;
+    kg:label "Reinsurance receivable" ;
+    kg:tableColumn "years ended december 31 , 2012" ;
+    kg:tableRow "reinsurance receivable" .
+
+entity:TableColumn_0 a kg:TableColumn ;
+    kg:columnIndex 0 ;
+    kg:label "{'index': 0, 'label': 'years ended december 31 , 2012', 'numeric_value': None}" .
+
+entity:TableColumn_1 a kg:TableColumn ;
+    kg:columnIndex 1 ;
+    kg:label "{'index': 1, 'label': 'years ended december 31 , 2011', 'numeric_value': None}" .
+
+entity:TableColumn_2 a kg:TableColumn ;
+    kg:columnIndex 2 ;
+    kg:label "{'index': 2, 'label': 'years ended december 31 , 2010', 'numeric_value': None}" .
+
+entity:TableRow_0 a kg:TableRow ;
+    kg:label "{'index': 0, 'label': 'additional case reserves established by the company ( assumed reinsurance ) ( 1 )', 'numeric_value': None}" ;
+    kg:rowIndex 0 .
+
+entity:TableRow_1 a kg:TableRow ;
+    kg:label "{'index': 1, 'label': 'case reserves established by the company ( direct insurance )', 'numeric_value': None}" ;
+    kg:rowIndex 1 .
+
+entity:TableRow_2 a kg:TableRow ;
+    kg:label "{'index': 2, 'label': 'case reserves reported by ceding companies', 'numeric_value': None}" ;
+    kg:rowIndex 2 .
+
+entity:TableRow_3 a kg:TableRow ;
+    kg:label "{'index': 3, 'label': 'gross reserves', 'numeric_value': None}" ;
+    kg:rowIndex 3 .
+
+entity:TableRow_4 a kg:TableRow ;
+    kg:label "{'index': 4, 'label': 'incurred but not reported reserves', 'numeric_value': None}" ;
+    kg:rowIndex 4 .
+
+entity:TableRow_5 a kg:TableRow ;
+    kg:label "{'index': 5, 'label': 'net reserves', 'numeric_value': None}" ;
+    kg:rowIndex 5 .
+
+entity:TableRow_6 a kg:TableRow ;
+    kg:label "{'index': 6, 'label': 'reinsurance receivable', 'numeric_value': None}" ;
+    kg:rowIndex 6 .
+
+value:AdditionalCaseReserves_2010 a kg:MonetaryValue ;
+    kg:displayValue "116.1" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 116100000.0 .
+
+value:AdditionalCaseReserves_2011 a kg:MonetaryValue ;
+    kg:displayValue "102.9" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 102900000.0 .
+
+value:AdditionalCaseReserves_2012 a kg:MonetaryValue ;
+    kg:displayValue "90.6" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 90600000.0 .
+
+value:CaseReservesDirect_2010 a kg:MonetaryValue ;
+    kg:displayValue "38.9" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 38900000.0 .
+
+value:CedingCaseReserves_2010 a kg:MonetaryValue ;
+    kg:displayValue "135.4" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 135400000.0 .
+
+value:CedingCaseReserves_2011 a kg:MonetaryValue ;
+    kg:displayValue "145.6" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 145600000.0 .
+
+value:CedingCaseReserves_2012 a kg:MonetaryValue ;
+    kg:displayValue "138.4" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 138400000.0 .
+
+value:DirectCaseReserves_2010 a kg:MonetaryValue ;
+    kg:displayValue "38.9" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 38900000.0 .
+
+value:DirectCaseReserves_2011 a kg:MonetaryValue ;
+    kg:displayValue "40.6" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 40600000.0 .
+
+value:DirectCaseReserves_2012 a kg:MonetaryValue ;
+    kg:displayValue "36.7" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 36700000.0 .
+
+value:GrossReserves_2010 a kg:MonetaryValue ;
+    kg:displayValue "554.8" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 554800000.0 .
+
+value:GrossReserves_2011 a kg:MonetaryValue ;
+    kg:displayValue "499.9" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 499900000.0 .
+
+value:GrossReserves_2012 a kg:MonetaryValue ;
+    kg:displayValue "442.8" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 442800000.0 .
+
+value:IBNR_2010 a kg:MonetaryValue ;
+    kg:displayValue "264.4" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 264399999.99999997 .
+
+value:IBNR_2011 a kg:MonetaryValue ;
+    kg:displayValue "210.9" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 210900000.0 .
+
+value:IBNR_2012 a kg:MonetaryValue ;
+    kg:displayValue "177.1" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 177100000.0 .
+
+value:NetReserves_2010 a kg:MonetaryValue ;
+    kg:displayValue "532.9" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 532900000.0 .
+
+value:NetReserves_2011 a kg:MonetaryValue ;
+    kg:displayValue "480.2" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 480200000.0 .
+
+value:NetReserves_2012 a kg:MonetaryValue ;
+    kg:displayValue "425.7" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 425700000.0 .
+
+value:ReinsuranceReceivable_2010 a kg:MonetaryValue ;
+    kg:displayValue "-21.9" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -21900000.0 .
+
+value:ReinsuranceReceivable_2011 a kg:MonetaryValue ;
+    kg:displayValue "-19.8" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -19800000.0 .
+
+value:ReinsuranceReceivable_2012 a kg:MonetaryValue ;
+    kg:displayValue "-17.1" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -17100000.0 .
+

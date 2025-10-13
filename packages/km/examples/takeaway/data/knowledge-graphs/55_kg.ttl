@@ -1,0 +1,303 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-12" ;
+    kg:builtWithOntologyVersion "1.0.22" .
+
+entity:Company_Example55 a kg:Company ;
+    kg:hasMetric entity:Metric_AsianPrintingPapersSales_2010,
+        entity:Metric_AsianPrintingPapersSales_2011,
+        entity:Metric_AsianPrintingPapersSales_2012,
+        entity:Metric_IndianPapersSales_2011,
+        entity:Metric_IndianPapersSales_2012,
+        entity:Metric_NAConsumerPackagingSales_2010,
+        entity:Metric_NAConsumerPackagingSales_2011,
+        entity:Metric_NAConsumerPackagingSales_2012,
+        entity:Metric_OperatingProfit_2010,
+        entity:Metric_OperatingProfit_2011,
+        entity:Metric_OperatingProfit_2012,
+        entity:Metric_Sales_2010,
+        entity:Metric_Sales_2011,
+        entity:Metric_Sales_2012,
+        entity:Metric_USPulpSales_2010,
+        entity:Metric_USPulpSales_2011,
+        entity:Metric_USPulpSales_2012 ;
+    kg:label "Example Company 55" .
+
+entity:FinancialTable a kg:Table ;
+    kg:hasColumn entity:TableColumn_0,
+        entity:TableColumn_1 ;
+    kg:hasRow entity:TableRow_0,
+        entity:TableRow_1,
+        entity:TableRow_2 ;
+    kg:tableCaption "Operating Profit and Sales Performance" ;
+    kg:tableOrientation "row-first" .
+
+entity:Metric_RowHeaderValue_0 a kg:FinancialMetric ;
+    kg:hasValue value:RowHeaderValue_0 ;
+    kg:label "Row header value: 2012" ;
+    kg:tableRow "2012" .
+
+entity:Metric_RowHeaderValue_1 a kg:FinancialMetric ;
+    kg:hasValue value:RowHeaderValue_1 ;
+    kg:label "Row header value: 2011" ;
+    kg:tableRow "2011" .
+
+entity:Metric_RowHeaderValue_2 a kg:FinancialMetric ;
+    kg:hasValue value:RowHeaderValue_2 ;
+    kg:label "Row header value: 2010" ;
+    kg:tableRow "2010" .
+
+entity:Year_2010 a kg:Year ;
+    kg:yearValue 2010 .
+
+entity:Year_2011 a kg:Year ;
+    kg:yearValue 2011 .
+
+entity:Year_2012 a kg:Year ;
+    kg:yearValue 2012 .
+
+entity:Metric_AsianPrintingPapersSales_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:AsianPrintingPapersSales_2010 ;
+    kg:label "Asian Printing Papers Net Sales" .
+
+entity:Metric_AsianPrintingPapersSales_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:AsianPrintingPapersSales_2011 ;
+    kg:label "Asian Printing Papers Net Sales" .
+
+entity:Metric_AsianPrintingPapersSales_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:AsianPrintingPapersSales_2012 ;
+    kg:label "Asian Printing Papers Net Sales" .
+
+entity:Metric_IndianPapersSales_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:IndianPapersSales_2011 ;
+    kg:label "Indian Papers Net Sales" .
+
+entity:Metric_IndianPapersSales_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:IndianPapersSales_2012 ;
+    kg:label "Indian Papers Net Sales" .
+
+entity:Metric_NAConsumerPackagingSales_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:NAConsumerPackagingSales_2010 ;
+    kg:label "North American Consumer Packaging Net Sales" .
+
+entity:Metric_NAConsumerPackagingSales_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:NAConsumerPackagingSales_2011 ;
+    kg:label "North American Consumer Packaging Net Sales" .
+
+entity:Metric_NAConsumerPackagingSales_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:NAConsumerPackagingSales_2012 ;
+    kg:label "North American Consumer Packaging Net Sales" .
+
+entity:Metric_OperatingProfit_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:OperatingProfit_2010 ;
+    kg:label "Operating Profit",
+        "Operating profit 2010" ;
+    kg:tableColumn "2010" ;
+    kg:tableRow "operating profit" .
+
+entity:Metric_OperatingProfit_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:OperatingProfit_2011 ;
+    kg:label "Operating Profit",
+        "Operating profit 2011" ;
+    kg:tableColumn "2011" ;
+    kg:tableRow "operating profit" .
+
+entity:Metric_OperatingProfit_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:OperatingProfit_2012 ;
+    kg:label "Operating Profit",
+        "Operating profit 2012" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "operating profit" .
+
+entity:Metric_Sales_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:Sales_2010 ;
+    kg:label "Sales",
+        "Sales 2010" ;
+    kg:tableColumn "2010" ;
+    kg:tableRow "sales" .
+
+entity:Metric_Sales_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:Sales_2011 ;
+    kg:label "Sales",
+        "Sales 2011" ;
+    kg:tableColumn "2011" ;
+    kg:tableRow "sales" .
+
+entity:Metric_Sales_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:Sales_2012 ;
+    kg:label "Sales",
+        "Sales 2012" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "sales" .
+
+entity:Metric_USPulpSales_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:USPulpSales_2010 ;
+    kg:label "U.S. Pulp Net Sales" .
+
+entity:Metric_USPulpSales_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:USPulpSales_2011 ;
+    kg:label "U.S. Pulp Net Sales" .
+
+entity:Metric_USPulpSales_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:USPulpSales_2012 ;
+    kg:label "U.S. Pulp Net Sales" .
+
+entity:TableColumn_0 a kg:TableColumn ;
+    kg:columnIndex 0 ;
+    kg:label "{'index': 0, 'label': 'operating profit', 'numeric_value': None}" .
+
+entity:TableColumn_1 a kg:TableColumn ;
+    kg:columnIndex 1 ;
+    kg:label "{'index': 1, 'label': 'sales', 'numeric_value': None}" .
+
+entity:TableRow_0 a kg:TableRow ;
+    kg:label "{'index': 0, 'label': '2012', 'numeric_value': 2012.0}" ;
+    kg:rowIndex 0 .
+
+entity:TableRow_1 a kg:TableRow ;
+    kg:label "{'index': 1, 'label': '2011', 'numeric_value': 2011.0}" ;
+    kg:rowIndex 1 .
+
+entity:TableRow_2 a kg:TableRow ;
+    kg:label "{'index': 2, 'label': '2010', 'numeric_value': 2010.0}" ;
+    kg:rowIndex 2 .
+
+value:AsianPrintingPapersSales_2010 a kg:MonetaryValue ;
+    kg:displayValue "80.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 80000000.0 .
+
+value:AsianPrintingPapersSales_2011 a kg:MonetaryValue ;
+    kg:displayValue "75.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 75000000.0 .
+
+value:AsianPrintingPapersSales_2012 a kg:MonetaryValue ;
+    kg:displayValue "85.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 85000000.0 .
+
+value:IndianPapersSales_2011 a kg:MonetaryValue ;
+    kg:displayValue "35.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 35000000.0 .
+
+value:IndianPapersSales_2012 a kg:MonetaryValue ;
+    kg:displayValue "185.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 185000000.0 .
+
+value:NAConsumerPackagingSales_2010 a kg:MonetaryValue ;
+    kg:displayValue "2.4" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 2400000000.0 .
+
+value:NAConsumerPackagingSales_2011 a kg:MonetaryValue ;
+    kg:displayValue "2.5" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 2500000000.0 .
+
+value:NAConsumerPackagingSales_2012 a kg:MonetaryValue ;
+    kg:displayValue "2.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 2000000000.0 .
+
+value:OperatingProfit_2010 a kg:MonetaryValue ;
+    kg:displayValue "207.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 207000000.0 .
+
+value:OperatingProfit_2011 a kg:MonetaryValue ;
+    kg:displayValue "163.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 163000000.0 .
+
+value:OperatingProfit_2012 a kg:MonetaryValue ;
+    kg:displayValue "268.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 268000000.0 .
+
+value:RowHeaderValue_0 a kg:MonetaryValue ;
+    kg:displayValue "2012" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2012.0 .
+
+value:RowHeaderValue_1 a kg:MonetaryValue ;
+    kg:displayValue "2011" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2011.0 .
+
+value:RowHeaderValue_2 a kg:MonetaryValue ;
+    kg:displayValue "2010" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2010.0 .
+
+value:Sales_2010 a kg:MonetaryValue ;
+    kg:displayValue "3400.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 3400000000.0 .
+
+value:Sales_2011 a kg:MonetaryValue ;
+    kg:displayValue "3710.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 3710000000.0 .
+
+value:Sales_2012 a kg:MonetaryValue ;
+    kg:displayValue "3170.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 3170000000.0 .
+
+value:USPulpSales_2010 a kg:MonetaryValue ;
+    kg:displayValue "715.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 715000000.0 .
+
+value:USPulpSales_2011 a kg:MonetaryValue ;
+    kg:displayValue "725.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 725000000.0 .
+
+value:USPulpSales_2012 a kg:MonetaryValue ;
+    kg:displayValue "725.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 725000000.0 .
+

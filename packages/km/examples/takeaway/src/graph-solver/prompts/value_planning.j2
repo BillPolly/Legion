@@ -1,0 +1,524 @@
+You are analyzing a financial question to identify all values needed to answer it.
+
+QUESTION: {{ question }}
+
+{% if kg_data %}
+{{ kg_data }}
+
+{% endif %}
+{% if previous_results and previous_results|length > 0 %}
+PREVIOUS RESULTS AVAILABLE (listed from oldest to newest):
+{% for var_name, info in previous_results.items() %}
+[Turn {{ info.turn }}] {{ var_name }}:
+  Description: "{{ info.description }}"
+  Question: "{{ info.question }}"
+  Answer: {{ info.answer }}{% if info.scale %} ({{ info.scale }}){% endif %}
+{%- if loop.last %}
+  ← THIS IS THE MOST RECENT RESULT!
+{%- endif %}
+
+{% endfor %}
+{% endif %}
+
+CALCULATION RULES AND PATTERNS:
+{{ calculation_rules }}
+
+The rules above describe common patterns in financial questions and how to interpret them.
+Please consult these rules when classifying semantic types and understanding question intent.
+
+TASK:
+Analyze this question and identify all values needed to answer it.
+
+STEP 0: Understand Metric Context from Previous Turns (CRITICAL!)
+
+**CRITICAL - "Total Sum" Patterns:**
+
+**Pattern 1: "Total sum including X"** (Cumulative Addition)
+- "Total sum including X" means ADD X TO THE PREVIOUS SUM, not just get X!
+- Pattern: Previous turn asked for "sum of A+B", current turn asks for "total sum including C"
+- This means: Take the previous sum AND ADD C to it
+- Example:
+  * Turn 3: "what is the sum of A and B?" → result = 240000
+  * Turn 4: "what is the total sum including C in location?" → result = 240000 + C
+  * NOT just C alone!
+- Keywords that indicate this pattern:
+  * "total sum including..."
+  * "grand total including..."
+  * "cumulative total including..."
+- Implementation: Use BOTH the previous sum result AND the new specific value mentioned
+
+**Pattern 2: "Total sum of X"** (Grand Total - Sum ALL Values)
+- "Total sum of X" (WITHOUT "including") means sum ALL values that match the criteria
+- This is a GLOBAL question asking for the grand total across the entire conversation
+- Pattern: After discussing multiple individual values, question asks for "total sum"
+- Example:
+  * Turn 1: "square feet of facility A" → 160000
+  * Turn 2: "square feet of facility B" → 80000
+  * Turn 3: "sum of those values" → 240000
+  * Turn 4: "total sum including facility C" → 240000 + 70000 = 310000
+  * Turn 5: "total sum including facility D" → 240000 + 67000 = 307000
+  * Turn 6: "what is the total sum of square feet?" → 160000 + 80000 + 70000 + 67000 = 377000
+  * NOT just the Turn 3 sum (240000)! Sum ALL individual facility values!
+- How to identify: Question asks for "total" with broad scope (e.g., "total sum of X owned")
+- Implementation: Identify ALL individual values from previous results that match the criteria (e.g., "owned"), sum them
+- DO NOT just return a previous partial sum result!
+
+Before identifying values, understand what SPECIFIC METRIC TYPE the conversation is about:
+
+METRIC CONTEXT INHERITANCE:
+- When previous turns establish a specific metric (e.g., "compensation expense", "net revenue", "total debt"):
+  * ALL subsequent questions inherit that metric context UNLESS they explicitly mention a different metric
+  * Vague terms like "total", "expenses", "value" should be interpreted within the established metric context
+
+EXAMPLES:
+
+Example 1 - Compensation Expense Context:
+  Turn 1: "compensation expense in 2015" → 43
+  Turn 2: "what about in 2014?" → asks for compensation expense 2014 (NOT all expenses)
+  Turn 3: "total... in 2015 and 2014" → sum of compensation expenses (NOT all expenses)
+  Turn 4: "total expenses including 2013" → STILL means compensation expenses including 2013!
+  * The word "expenses" here is shorthand for "compensation expenses" established in Turn 1
+  * It does NOT mean "sum ALL expenses for 2013"
+
+Example 2 - Revenue Context:
+  Turn 1: "net revenue in 2017" → 500
+  Turn 2: "what about 2016?" → net revenue 2016
+  Turn 3: "total for both years" → sum of net revenue (NOT gross revenue, NOT total income)
+
+WHEN TO OVERRIDE CONTEXT:
+Only break from established context if the question EXPLICITLY mentions a different metric:
+- "what about total income?" → NEW metric (total income), breaks from net revenue context
+- "gross revenue for 2015?" → NEW metric (gross revenue), breaks from net revenue context
+
+IF IN DOUBT:
+Look at ALL previous turn Questions and Descriptions - what specific metric appears repeatedly?
+That is the context metric for subsequent questions.
+
+NOTE: Pronouns and temporal references have been resolved in the question above.
+
+STEP 1: Identify Values and Create SHORT Variable Names
+
+**CRITICAL - Use Available Data Above:**
+- The AVAILABLE DATA FROM KNOWLEDGE GRAPH section shows you what metrics exist
+- Check table rows and footnotes to identify compound metric names
+- If a question phrase matches a row label EXACTLY, it's ONE value (not multiple to add)
+
+**CRITICAL - Do NOT Split Compound Facility/Metric Names:**
+- Facility/location names with "and" are often SINGLE entities, not multiple values to add!
+- **CRITICAL**: "total X and Y" often means ONE COMPOUND METRIC NAME, NOT "add X and Y"!
+- **CHECK THE AVAILABLE DATA ABOVE FIRST!** If the phrase appears there, it's ONE entity!
+- Examples of SINGLE compound entities:
+  * "total restricted cash and marketable securities" → ONE metric (with "total" in the name), NOT restricted_cash + marketable_securities
+  * "global supply chain distribution and administration offices" → ONE facility type, not two
+  * "research and development offices" → ONE facility type, not two separate things
+  * "sales and marketing expenses" → ONE expense category, not two
+- How to identify compound names vs. multiple values:
+  * If it describes operations AT THE SAME LOCATION → ONE value
+  * If it describes A SINGLE CATEGORY of activity → ONE value
+  * If the question asks for "the X" (singular) → ONE value, not multiple
+  * **If "total" appears BEFORE "X and Y"** → Check KG first! It's likely ONE metric name, not "sum of X and Y"
+  * **If the phrase matches a table row/column label in the AVAILABLE DATA** → It's ONE entity!
+- Example WRONG interpretation:
+  * Question: "what was the total restricted cash and marketable securities in 2012?"
+  * WRONG: Two values to add: (1) restricted_cash_2012 + (2) marketable_securities_2012
+  * RIGHT: ONE value: total_restricted_cash_and_marketable_securities_2012 (compound metric name)
+- Example WRONG interpretation:
+  * Question: "square feet of owned global supply chain distribution and administration offices"
+  * WRONG: Two values: (1) global_supply_chain + (2) administration
+  * RIGHT: ONE value: global_supply_chain_distribution_admin_offices
+- When in doubt, check if the phrase appears in the table labels above - if yes, it's ONE entity!
+
+CRITICAL: For EVERY value you identify as needed, you MUST follow this process:
+
+FOR EACH VALUE NEEDED:
+
+  A. CHECK PREVIOUS RESULTS FIRST (MANDATORY!)
+     Look at the PREVIOUS RESULTS AVAILABLE section above
+     - Does the EXACT value you need already exist there?
+     - Check each previous result's Description and Answer
+     - Is this the value you need? (same entity, same metric, same time period?)
+
+     **CRITICAL - References to Previous Calculations:**
+     - When question mentions "the sum", "the total", "the change", "the difference", "the ratio", "the average":
+       * These phrases with "the" refer to PREVIOUS CALCULATED RESULTS, not new calculations!
+       * Check PREVIOUS RESULTS for a matching result variable that represents that type of calculation
+       * If found, include that previous result as one of the values needed
+       * ALSO include any new values mentioned (e.g., "including 2011", "plus X")
+
+     - Example Pattern - "sum including X":
+       * Turn 1: "what is the sum of A and B?" → result = sum_a_b = 605
+       * Turn 3: "what is the sum including C?"
+       * Phase 1 should identify TWO values:
+         (1) sum_a_b [source: "previous_result"] ← the previous sum
+         (2) c_value [source: "knowledge_graph"] ← the new value to add
+       * NOT just: (1) c_value alone!
+
+     - How to identify:
+       * "the sum including..." → previous sum result + new value
+       * "the total including..." → previous total result + new value
+       * "the change plus..." → previous change result + new value
+       * ANY phrase with definite article "the" before a calculation type likely refers to previous result
+
+     **CRITICAL - Grand Total Pattern (Pattern 2) - ONLY if NO "including":**
+     - **ONLY applies when**: Question asks "total sum of X" WITHOUT the word "including"
+     - **Does NOT apply if**: Question contains "including" → Use Pattern 1 instead (cumulative addition)
+     - If the question asks for "total sum of X" (no "including"), it's asking for a GLOBAL grand total
+     - DON'T just return a previous partial sum! Instead, identify ALL INDIVIDUAL values that match the criteria
+     - Example:
+       * Question: "what is the total sum of square feet owned?" (NO "including")
+       * Previous results include:
+         - Facility A: 160000 (individual - description mentions specific location)
+         - Facility B: 80000 (individual - description mentions specific location)
+         - Sum A+B: 240000 (partial sum - description contains "sum")
+         - Facility C: 70000 (individual - description mentions specific location)
+         - Sum including C: 310000 (partial sum - description contains "sum")
+         - Facility D: 67000 (individual - description mentions specific location)
+       * CORRECT: Return A, B, C, D (all individual values) → 160000 + 80000 + 70000 + 67000 = 377000
+       * WRONG: Return "Sum including C" (310000) or "Sum A+B" (240000) - these are PARTIAL sums!
+     - How to identify individual values vs. sums in descriptions:
+       * Individual: Description mentions SPECIFIC facility/location/entity (e.g., "in Bogart", "in Smithfield", "Dublin Ireland")
+       * Sum: Description contains words like "sum", "total", "including", "cumulative"
+     - **Key test**: Does the question contain "including"?
+       * If YES → Pattern 1 (cumulative addition), not Pattern 2!
+       * If NO and asks for "total" → Pattern 2 (grand total of all individuals)
+
+     **CRITICAL - Contextual Disambiguation:**
+     - If the question contrasts TWO different values (e.g., "X divided by Y", "X compared to Y"):
+       * Check if ONE clearly refers to previous result (e.g., "the sum", "this change")
+       * Check if the OTHER describes a DIFFERENT scope (e.g., "total", "overall", "grand")
+       * If previous result is a PARTIAL total but question asks for GRAND total → They are DIFFERENT values!
+       * Example: Previous = "sum of A+B", Question = "sum divided by total" → "sum" = previous, "total" = NEW (grand total from KG)
+
+     **CRITICAL - "Percent Change" After "Net Change":**
+     - Pattern: Turn N asks for "net change from X to Y", Turn N+M asks for "percent change"
+     - When question is JUST "what is the percent change?" (no explicit years or values):
+       * Check if previous results include BOTH:
+         (1) A "net change" or "change" value
+         (2) A base value (starting value, earlier period value)
+       * If YES: Use those two previous results! Formula: net_change / base_value
+       * Do NOT re-extract start/end values from KG to recalculate the change
+     - Example:
+       * Turn 1: "net change from 2007 to 2009" → net_change = 100
+       * Turn 2: "the 2009 value" → value_2009 = 500 (this is the base/reference)
+       * Turn 3: "what is the percent change?" → Use net_change / value_2009, NOT (new - old) / old
+
+     **CRITICAL - "During This Time" Temporal References:**
+     - Pattern: Previous turns establish a TIME PERIOD (start and end points), current turn asks for "during this time"
+     - "during this time" / "during that time" / "over this period" refers to the time period bounded by the most recent temporal references
+     - How to identify the time period:
+       * Look backwards through previous results for the TWO most recent temporal references
+       * These establish the START and END of "this time"
+       * The time period is: [earlier temporal reference] TO [later temporal reference]
+     - Example:
+       * Turn 4: "balance at the END of 2017" → 93192 (establishes END POINT)
+       * Turn 5: "at the BEGINNING of 2016" → 10258 (establishes START POINT)
+       * Turn 6: "net change during this time" → 93192 - 10258
+       * NOT: 2017 end - 2016 end (that ignores the "beginning of" qualifier!)
+     - Key indicators that establish temporal bounds:
+       * "at the END of [year]" = ending value for that year
+       * "at the BEGINNING of [year]" = starting value for that year
+       * "in [year]" without qualifier = typically end-of-year value
+     - Implementation:
+       * Scan backwards through previous results
+       * Find the two most recent results with temporal qualifiers
+       * Use THOSE SPECIFIC VALUES (not just the years mentioned)
+       * Example: If Turn 4 mentions "end of 2017" and Turn 5 mentions "beginning of 2016", use THOSE exact previous result variables
+
+     IF YES (exact match found):
+       → Use source: "previous_result"
+       → **CRITICAL**: The key in your "values" object MUST be the EXACT VARIABLE NAME shown in square brackets above!
+       → Example: If you see "[Turn 1] north_american_printing_papers_net_sales_2009:", use "north_american_printing_papers_net_sales_2009" as the key
+       → DO NOT shorten it, DO NOT remove the year suffix, DO NOT modify it in any way
+       → COPY-PASTE the exact text between the brackets and the colon
+       → DO NOT create a new variable name
+       → DO NOT mark it as "knowledge_graph"
+
+  B. ONLY IF NOT IN PREVIOUS RESULTS: Create NEW variable
+     If the value does NOT exist in previous results:
+       → Use source: "knowledge_graph"
+       → Create SHORT, CLEAR variable name with abbreviations
+       → Include entity + metric (e.g., "sp500_performance", "ups_revenue")
+       → Include year if specified (e.g., "2007", "2008")
+
+     GOOD variable names (SHORT and CLEAR):
+     ✓ change_sp500_performance
+     ✓ ups_revenue_2007
+     ✓ net_sales_2001
+     ✓ total_debt_2015
+
+     BAD variable names (TOO VERBOSE):
+     ❌ what_was_the_change_in_the_performance_of_the_unit
+     ❌ and_what_was_the_total_of_net_sales_in_2000
+     ❌ what_were_revenues_in_2008
+
+  C. Write a DETAILED description of what it represents
+     - Descriptions can be long and explicit
+     - Descriptions are metadata, not code
+
+  D. Classify its semantic_type:
+     - "change_value" - represents a change/difference/variation (preserve sign!)
+     - "total_value" - represents a sum or total
+     - "monetary_value" - represents money amount
+     - "percentage_value" - represents a percentage
+     - "count_value" - represents a count/quantity
+     - "ratio_value" - represents a ratio
+
+     **CRITICAL - Ratio vs Percentage Disambiguation:**
+     - "X in relation to Y" = RATIO (X/Y), NOT percentage!
+     - "X represent in relation to Y" = RATIO (X/Y), NOT percentage!
+     - "X as a percentage of Y" = PERCENTAGE (X/Y * 100)
+     - "what percentage is X of Y" = PERCENTAGE (X/Y * 100)
+
+     Examples:
+     - "how much does 240 represent in relation to 183?" → 240/183 = 1.3114 (RATIO - semantic_type: "ratio_value")
+     - "what percentage is 240 of 183?" → (240/183)*100 = 131.14% (PERCENTAGE - semantic_type: "percentage_value")
+
+     When you see "in relation to" WITHOUT the word "percentage":
+     → Use semantic_type: "ratio_value"
+     → Result description should say "ratio" NOT "percentage"
+
+     When you see "percentage" or "percent" explicitly:
+     → Use semantic_type: "percentage_value"
+     → Result description should say "percentage"
+
+WARNING: DO NOT create new "knowledge_graph" variables for values that already exist in PREVIOUS RESULTS!
+This is a common mistake that causes unnecessary queries and wrong answers!
+
+CRITICAL: Variable names MUST be valid Python identifiers:
+- MUST NOT start with a digit
+- MUST NOT contain special characters like & , . - / spaces
+- ONLY use letters, numbers, and underscores
+- Use abbreviations for long entity names:
+  - "s&p 500 index" → sp500 or sp500_index
+  - "united parcel service" → ups
+  - "net sales" → net_sales
+
+STEP 2: Name the RESULT Variable
+After identifying what values you need (STEP 1), you must also name the RESULT that will be computed.
+
+- Create a SHORT, CLEAR variable name for what this question computes
+- Include entity + metric type
+- Include time period if relevant
+- Write a DETAILED description of what it represents
+
+Examples:
+- Question: "what was the change in S&P 500 performance from 2004 to 2009?"
+  Result variable: "change_sp500_performance_2004_2009"
+  Description: "Change in S&P 500 index performance from 2004 to 2009"
+
+- Question: "what were revenues in 2008?"
+  Result variable: "revenues_2008"
+  Description: "Total revenues in year 2008"
+
+- Question: "how much does this change represent in percentage?"
+  Result variable: "change_percentage" (or reuse the change variable name if computing percentage of it)
+  Description: "Percentage representation of the change in [entity] [metric]"
+
+OUTPUT (JSON):
+
+Example showing SHORT variable names and variable-based resolution:
+{
+  "resolved_question": "how much does change_sp500_performance represent in relation to sp500_performance_2004, in percentage?",
+  "values": {
+    "change_sp500_performance": {
+      "description": "Change in S&P 500 index performance from 2004 to 2009",
+      "semantic_type": "change_value",
+      "source": "knowledge_graph"
+    },
+    "sp500_performance_2004": {
+      "description": "S&P 500 index performance value in 2004",
+      "semantic_type": "total_value",
+      "source": "knowledge_graph"
+    }
+  },
+  "result": {
+    "variable_name": "sp500_change_percentage_2004_2009",
+    "description": "Percentage that the S&P 500 performance change represents relative to 2004 performance"
+  }
+}
+
+Example preserving scale indicators:
+{
+  "resolved_question": "what was the revenue_2011, in millions?",
+  "values": {
+    "revenue_2011": {
+      "description": "Revenue in year 2011",
+      "semantic_type": "monetary_value",
+      "source": "knowledge_graph"
+    }
+  },
+  "result": {
+    "variable_name": "revenue_2011",
+    "description": "Revenue in year 2011"
+  }
+}
+
+Example using previous result:
+{
+  "resolved_question": "how much does change_revenue represent in relation to revenue_2000, in percentage?",
+  "values": {
+    "change_revenue": {
+      "description": "Change in revenue from 2000 to 2001",
+      "semantic_type": "change_value",
+      "source": "previous_result"
+      // ← Used EXACT name from PREVIOUS RESULTS AVAILABLE
+    },
+    "revenue_2000": {
+      "description": "Revenue in year 2000",
+      "semantic_type": "monetary_value",
+      "source": "knowledge_graph"
+    }
+  },
+  "result": {
+    "variable_name": "revenue_change_percentage",
+    "description": "Percentage that the revenue change represents relative to year 2000 revenue"
+  }
+}
+
+CRITICAL RULES:
+1. If source="previous_result": The key in "values" MUST be the EXACT variable name shown in brackets (e.g., "north_american_printing_papers_net_sales_2009"), NOT a shortened version!
+2. If source="knowledge_graph": Create SHORT, CLEAR variable name with abbreviations
+3. In resolved_question: Replace entity/metric names with variable names BUT preserve the grammatical structure
+   - KEEP all prepositions (from, to, of, by, etc.)
+   - KEEP the sentence structure unchanged
+   - KEEP scale indicators like ", in millions?", ", in thousands?", ", in billions?"
+   - KEEP percentage indicators like ", in percentage?"
+   - ONLY replace the specific entity/metric phrases with variable names
+   - Example: "decline from 2002 to 2004" → "decline from effects_foreign_ops_2002 to effects_foreign_ops_2004"
+   - NOT: "effects_foreign_ops_2002 decline to effects_foreign_ops_2004" (this loses "from")
+   - Example: "what was the revenue in 2011, in millions?" → "what was the revenue_2011, in millions?" (keeps ", in millions?")
+4. Descriptions should be DETAILED - they're metadata, not code
+5. Variable names must be valid Python identifiers (no spaces, special chars, can't start with digit)
+6. ALWAYS include a "result" field with variable_name and description for what will be computed
+
+**OUTPUT FORMAT - CRITICAL:**
+
+YOU MUST return ONLY valid JSON. NO explanatory text before or after. NO markdown code fences. NO examples embedded in your response.
+
+DO NOT write things like:
+- "Let me analyze this step by step"
+- "Here's the JSON:"
+- "```json"
+- Example JSON objects in your explanation
+
+ONLY return the JSON object itself, starting with { and ending with }.
+
+**🚨 CRITICAL: STRUCTURED REASONING PROCESS 🚨**
+
+BEFORE generating your JSON output, you MUST explicitly reason through these steps in XML tags:
+
+<previous-result-scan>
+Systematically check if each value I need exists in PREVIOUS RESULTS:
+
+Value needed 1: [description of value]
+- Search in PREVIOUS RESULTS: [YES - found as "variable_name" / NO - not found]
+- If found, exact variable name to use: [variable_name from brackets]
+
+Value needed 2: [description of value]
+- Search in PREVIOUS RESULTS: [YES - found as "variable_name" / NO - not found]
+- If found, exact variable name to use: [variable_name from brackets]
+
+[Repeat for all values needed]
+
+Summary:
+- Values from previous results: [count] → [list variable names]
+- Values from knowledge graph: [count] → [list descriptions]
+</previous-result-scan>
+
+<context-analysis>
+What metric context is established by previous turns?
+
+Review of previous results:
+- Turn [N]: Question mentioned metric: [metric name]
+- Turn [M]: Question mentioned metric: [metric name]
+- Pattern: [what specific metric is repeatedly discussed]
+
+Current question metric context:
+- Does question explicitly mention a NEW different metric? [YES/NO]
+- If NO: Current question inherits context from: [metric name from previous turns]
+- If YES: Current question breaks context, asking for: [new metric name]
+
+CONTEXT CONCLUSION: This question is asking about [metric name in context]
+</context-analysis>
+
+<compound-name-check>
+Does the question contain phrases like "X and Y" that might be compound names?
+
+Phrase analysis:
+- Phrase: "[phrase from question]"
+- Check AVAILABLE DATA: Does this exact phrase appear as a table row/column label? [YES/NO]
+- If YES: This is ONE compound entity, not multiple values to add
+- If NO: Check if it's asking to sum multiple separate values
+
+COMPOUND NAME CONCLUSION: [ONE entity / Multiple entities to sum]
+</compound-name-check>
+
+<calculation-reference-detection>
+Does the question contain phrases like "the sum", "the total", "the change", "the average"?
+
+Phrases with "the" detected:
+- "[phrase 1]": Refers to PREVIOUS RESULT? [YES/NO]
+  If YES: Which previous result variable: [variable_name]
+- "[phrase 2]": Refers to PREVIOUS RESULT? [YES/NO]
+  If YES: Which previous result variable: [variable_name]
+
+NEW values also mentioned:
+- New value 1: [description]
+- New value 2: [description]
+
+Pattern recognition:
+- Is this Pattern 1 (cumulative addition with "including")? [YES/NO]
+- Is this Pattern 2 (grand total without "including")? [YES/NO]
+- Is this simple reference to single previous result? [YES/NO]
+
+CALCULATION REFERENCE CONCLUSION: [how to handle - use previous result + new values, or sum all individuals, etc.]
+</calculation-reference-detection>
+
+<scale-indicator-preservation>
+Does the question contain scale or percentage indicators?
+
+Check 1: ", in millions?" at end of question? [YES/NO]
+Check 2: ", in thousands?" at end of question? [YES/NO]
+Check 3: ", in billions?" at end of question? [YES/NO]
+Check 4: ", in percentage?" or "percent" in question? [YES/NO]
+
+CONCLUSION: Scale/percentage indicators to preserve in resolved_question: [list or NONE]
+</scale-indicator-preservation>
+
+<value-identification>
+For EACH value identified above:
+
+Value 1:
+- Description: [detailed description]
+- Source: [previous_result / knowledge_graph]
+- If previous_result: Variable name = [exact name from previous results]
+- If knowledge_graph: New variable name = [short clear name]
+- Semantic type: [type] → Reasoning: [why this type]
+
+Value 2:
+- Description: [detailed description]
+- Source: [previous_result / knowledge_graph]
+- If previous_result: Variable name = [exact name from previous results]
+- If knowledge_graph: New variable name = [short clear name]
+- Semantic type: [type] → Reasoning: [why this type]
+
+[Repeat for all values]
+
+FINAL VALUE LIST:
+- Total values: [count]
+- From previous results: [count]
+- From knowledge graph: [count]
+</value-identification>
+
+<resolved-question-construction>
+Build the resolved_question by:
+1. Replace entity/metric phrases with variable names
+2. PRESERVE all prepositions (from, to, of, by)
+3. PRESERVE scale indicators from <scale-indicator-preservation>
+4. KEEP grammatical structure intact
+
+Original question: "{{ question }}"
+Resolved question: [resolved question with variables and preserved indicators]
+</resolved-question-construction>
+
+NOW OUTPUT YOUR JSON (NO additional text, NO markdown fences, ONLY the JSON object starting with { and ending with }):

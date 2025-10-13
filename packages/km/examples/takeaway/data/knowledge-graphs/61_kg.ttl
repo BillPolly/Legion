@@ -1,0 +1,264 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-12" ;
+    kg:builtWithOntologyVersion "1.0.22" .
+
+entity:Company_3M a kg:Company ;
+    kg:hasMetric entity:Metric_Acquisitions_2005,
+        entity:Metric_Acquisitions_2006,
+        entity:Metric_Acquisitions_2007,
+        entity:Metric_NetCashUsed_2005,
+        entity:Metric_NetCashUsed_2006,
+        entity:Metric_NetCashUsed_2007,
+        entity:Metric_PensionContributions_2005,
+        entity:Metric_PensionContributions_2006,
+        entity:Metric_PensionContributions_2007,
+        entity:Metric_RepatriatedEarnings_2006,
+        entity:Metric_TaxPayments_2007 ;
+    kg:label "3M" .
+
+entity:Company_Example61 a kg:Company ;
+    kg:hasMetric entity:Metric_Acquisitions_2007,
+        entity:Metric_NetCashUsed_2007,
+        entity:Metric_ProceedsBusinesses_2007 ;
+    kg:label "Example 61 Company" .
+
+entity:FinancialTable a kg:Table ;
+    kg:hasColumn entity:TableColumn_0,
+        entity:TableColumn_1,
+        entity:TableColumn_2 ;
+    kg:hasRow entity:TableRow_0,
+        entity:TableRow_1,
+        entity:TableRow_2,
+        entity:TableRow_3,
+        entity:TableRow_4,
+        entity:TableRow_5 ;
+    kg:tableCaption "Cash Flow from Investing Activities Components" ;
+    kg:tableOrientation "column-first" .
+
+entity:Metric_ColumnHeaderValue_0 a kg:FinancialMetric ;
+    kg:hasValue value:ColumnHeaderValue_0 ;
+    kg:label "Column header value: 2007" ;
+    kg:tableColumn "2007" .
+
+entity:Metric_ColumnHeaderValue_1 a kg:FinancialMetric ;
+    kg:hasValue value:ColumnHeaderValue_1 ;
+    kg:label "Column header value: 2006" ;
+    kg:tableColumn "2006" .
+
+entity:Metric_ColumnHeaderValue_2 a kg:FinancialMetric ;
+    kg:hasValue value:ColumnHeaderValue_2 ;
+    kg:label "Column header value: 2005" ;
+    kg:tableColumn "2005" .
+
+entity:Year_2005 a kg:Year ;
+    kg:yearValue 2005 .
+
+entity:Year_2006 a kg:Year ;
+    kg:yearValue 2006 .
+
+entity:Year_2007 a kg:Year ;
+    kg:yearValue 2007 .
+
+entity:Metric_Acquisitions_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2005 ;
+    kg:hasValue value:Acquisitions_2005 ;
+    kg:label "Acquisitions net of cash acquired 2005" ;
+    kg:tableColumn "2005" ;
+    kg:tableRow "acquisitions net of cash acquired" .
+
+entity:Metric_Acquisitions_2006 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2006 ;
+    kg:hasValue value:Acquisitions_2006 ;
+    kg:label "Acquisitions net of cash acquired 2006" ;
+    kg:tableColumn "2006" ;
+    kg:tableRow "acquisitions net of cash acquired" .
+
+entity:Metric_NetCashUsed_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2005 ;
+    kg:hasValue value:NetCashUsed_2005 ;
+    kg:label "Net cash used in investing activities 2005" ;
+    kg:tableColumn "2005" ;
+    kg:tableRow "net cash used in investing activities" .
+
+entity:Metric_NetCashUsed_2006 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2006 ;
+    kg:hasValue value:NetCashUsed_2006 ;
+    kg:label "Net cash used in investing activities 2006" ;
+    kg:tableColumn "2006" ;
+    kg:tableRow "net cash used in investing activities" .
+
+entity:Metric_PensionContributions_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2005 ;
+    kg:hasValue value:PensionContributions_2005 ;
+    kg:label "Discretionary pension contributions 2005" .
+
+entity:Metric_PensionContributions_2006 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2006 ;
+    kg:hasValue value:PensionContributions_2006 ;
+    kg:label "Discretionary pension contributions 2006" .
+
+entity:Metric_PensionContributions_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2007 ;
+    kg:hasValue value:PensionContributions_2007 ;
+    kg:label "Discretionary pension contributions 2007" .
+
+entity:Metric_ProceedsBusinesses_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2007 ;
+    kg:hasValue value:ProceedsBusinesses_2007 ;
+    kg:label "Proceeds from sale of businesses 2007" ;
+    kg:tableColumn "2007" ;
+    kg:tableRow "proceeds from sale of businesses" .
+
+entity:Metric_RepatriatedEarnings_2006 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2006 ;
+    kg:hasValue value:RepatriatedEarnings_2006 ;
+    kg:label "Repatriated foreign earnings 2006" .
+
+entity:Metric_TaxPayments_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2007 ;
+    kg:hasValue value:TaxPayments_2007 ;
+    kg:label "Cash tax payments 2007" .
+
+entity:TableColumn_0 a kg:TableColumn ;
+    kg:columnIndex 0 ;
+    kg:label "{'index': 0, 'label': '2007', 'numeric_value': 2007.0}" .
+
+entity:TableColumn_1 a kg:TableColumn ;
+    kg:columnIndex 1 ;
+    kg:label "{'index': 1, 'label': '2006', 'numeric_value': 2006.0}" .
+
+entity:TableColumn_2 a kg:TableColumn ;
+    kg:columnIndex 2 ;
+    kg:label "{'index': 2, 'label': '2005', 'numeric_value': 2005.0}" .
+
+entity:TableRow_0 a kg:TableRow ;
+    kg:label "{'index': 0, 'label': 'acquisitions net of cash acquired', 'numeric_value': None}" ;
+    kg:rowIndex 0 .
+
+entity:TableRow_1 a kg:TableRow ;
+    kg:label "{'index': 1, 'label': 'net cash used in investing activities', 'numeric_value': None}" ;
+    kg:rowIndex 1 .
+
+entity:TableRow_2 a kg:TableRow ;
+    kg:label "{'index': 2, 'label': 'proceeds from sale of businesses', 'numeric_value': None}" ;
+    kg:rowIndex 2 .
+
+entity:TableRow_3 a kg:TableRow ;
+    kg:label "{'index': 3, 'label': 'proceeds from sale of pp&e and other assets', 'numeric_value': None}" ;
+    kg:rowIndex 3 .
+
+entity:TableRow_4 a kg:TableRow ;
+    kg:label "{'index': 4, 'label': 'purchases and proceeds from sale or maturities of marketable securities and investments 2014 net', 'numeric_value': None}" ;
+    kg:rowIndex 4 .
+
+entity:TableRow_5 a kg:TableRow ;
+    kg:label "{'index': 5, 'label': 'purchases of property plant and equipment ( pp&e )', 'numeric_value': None}" ;
+    kg:rowIndex 5 .
+
+value:Acquisitions_2005 a kg:MonetaryValue ;
+    kg:displayValue "-1293.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -1293000000.0 .
+
+value:Acquisitions_2006 a kg:MonetaryValue ;
+    kg:displayValue "-888.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -888000000.0 .
+
+value:Acquisitions_2007 a kg:MonetaryValue ;
+    kg:displayValue "-539.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -539000000.0 .
+
+value:ColumnHeaderValue_0 a kg:MonetaryValue ;
+    kg:displayValue "2007" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2007.0 .
+
+value:ColumnHeaderValue_1 a kg:MonetaryValue ;
+    kg:displayValue "2006" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2006.0 .
+
+value:ColumnHeaderValue_2 a kg:MonetaryValue ;
+    kg:displayValue "2005" ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 2005.0 .
+
+value:NetCashUsed_2005 a kg:MonetaryValue ;
+    kg:displayValue "-2241.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -2241000000.0 .
+
+value:NetCashUsed_2006 a kg:MonetaryValue ;
+    kg:displayValue "-1460.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -1460000000.0 .
+
+value:NetCashUsed_2007 a kg:MonetaryValue ;
+    kg:displayValue "-1367.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue -1367000000.0 .
+
+value:PensionContributions_2005 a kg:MonetaryValue ;
+    kg:displayValue "500.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 500000000.0 .
+
+value:PensionContributions_2006 a kg:MonetaryValue ;
+    kg:displayValue "200.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 200000000.0 .
+
+value:PensionContributions_2007 a kg:MonetaryValue ;
+    kg:displayValue "200.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 200000000.0 .
+
+value:ProceedsBusinesses_2007 a kg:MonetaryValue ;
+    kg:displayValue "897.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 897000000.0 .
+
+value:RepatriatedEarnings_2006 a kg:MonetaryValue ;
+    kg:displayValue "1.7" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 1700000000.0 .
+
+value:TaxPayments_2007 a kg:MonetaryValue ;
+    kg:displayValue "630.0" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 630000000.0 .
+
+entity:Metric_Acquisitions_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2007 ;
+    kg:hasValue value:Acquisitions_2007 ;
+    kg:label "Acquisitions net of cash acquired 2007" ;
+    kg:tableColumn "2007" ;
+    kg:tableRow "acquisitions net of cash acquired" .
+
+entity:Metric_NetCashUsed_2007 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2007 ;
+    kg:hasValue value:NetCashUsed_2007 ;
+    kg:label "Net cash used in investing activities 2007" ;
+    kg:tableColumn "2007" ;
+    kg:tableRow "net cash used in investing activities" .
+

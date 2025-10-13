@@ -1,0 +1,322 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-12" ;
+    kg:builtWithOntologyVersion "1.0.14" .
+
+entity:Company_Example47 a kg:Company ;
+    kg:hasMetric entity:Metric_CashAndCashEquivalents_2005,
+        entity:Metric_CashAndCashEquivalents_2006,
+        entity:Metric_ForwardContracts_2005,
+        entity:Metric_ForwardContracts_2006,
+        entity:Metric_FuelSwaps_2005,
+        entity:Metric_FuelSwaps_2006,
+        entity:Metric_InterestRateSwaps_2005,
+        entity:Metric_InterestRateSwaps_2006,
+        entity:Metric_LongTermDebt_2005,
+        entity:Metric_LongTermDebt_2006 ;
+    kg:label "Example Company 47" .
+
+entity:Company_RoyalCaribbean a kg:Company ;
+    kg:hasMetric entity:Metric_CashFlowHedge_UnrealizedLoss_2005,
+        entity:Metric_ForwardContracts_NotionalAmount_2006,
+        entity:Metric_ForwardContracts_UnrealizedGain_2006,
+        entity:Metric_ForwardContracts_UnrealizedLoss_2005,
+        entity:Metric_PensionCost_2004,
+        entity:Metric_PensionCost_2005,
+        entity:Metric_PensionCost_2006,
+        entity:Metric_TaxImpact_2005,
+        entity:Metric_TaxImpact_2006 ;
+    kg:label "Royal Caribbean Cruises Ltd." .
+
+entity:FinancialTable a kg:Table ;
+    kg:hasColumn entity:TableColumn_0,
+        entity:TableColumn_1 ;
+    kg:hasRow entity:TableRow_0,
+        entity:TableRow_1,
+        entity:TableRow_2,
+        entity:TableRow_3,
+        entity:TableRow_4 ;
+    kg:tableCaption "Estimated Fair Values of Financial Instruments" ;
+    kg:tableOrientation "column-first" .
+
+entity:Metric_ColumnHeaderValue_0 a kg:FinancialMetric ;
+    kg:hasValue value:ColumnHeaderValue_0 ;
+    kg:label "Column header value: 2006" ;
+    kg:tableColumn "2006" .
+
+entity:Metric_ColumnHeaderValue_1 a kg:FinancialMetric ;
+    kg:hasValue value:ColumnHeaderValue_1 ;
+    kg:label "Column header value: 2005" ;
+    kg:tableColumn "2005" .
+
+entity:Year_2004 a kg:Year ;
+    kg:yearValue 2004 .
+
+entity:Year_2005 a kg:Year ;
+    kg:yearValue 2005 .
+
+entity:Year_2006 a kg:Year ;
+    kg:yearValue 2006 .
+
+entity:Metric_CashAndCashEquivalents_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2005 ;
+    kg:hasValue value:CashAndCashEquivalents_2005 ;
+    kg:label "Cash and cash equivalents" ;
+    kg:tableColumn "2005" ;
+    kg:tableRow "cash and cash equivalents" .
+
+entity:Metric_CashAndCashEquivalents_2006 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2006 ;
+    kg:hasValue value:CashAndCashEquivalents_2006 ;
+    kg:label "Cash and cash equivalents" ;
+    kg:tableColumn "2006" ;
+    kg:tableRow "cash and cash equivalents" .
+
+entity:Metric_CashFlowHedge_UnrealizedLoss_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2005 ;
+    kg:hasValue value:CashFlowHedge_UnrealizedLoss_2005 ;
+    kg:label "Cash flow hedge unrealized loss" .
+
+entity:Metric_ForwardContracts_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2005 ;
+    kg:hasValue value:ForwardContracts_2005 ;
+    kg:label "Foreign currency forward contracts in a net (loss) gain position" ;
+    kg:tableColumn "2005" ;
+    kg:tableRow "foreign currency forward contracts in a net ( loss ) gain position" .
+
+entity:Metric_ForwardContracts_2006 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2006 ;
+    kg:hasValue value:ForwardContracts_2006 ;
+    kg:label "Foreign currency forward contracts in a net (loss) gain position" ;
+    kg:tableColumn "2006" ;
+    kg:tableRow "foreign currency forward contracts in a net ( loss ) gain position" .
+
+entity:Metric_ForwardContracts_NotionalAmount_2006 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2006 ;
+    kg:hasValue value:ForwardContracts_NotionalAmount_2006 ;
+    kg:label "Foreign currency forward contracts notional amount" .
+
+entity:Metric_ForwardContracts_UnrealizedGain_2006 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2006 ;
+    kg:hasValue value:ForwardContracts_UnrealizedGain_2006 ;
+    kg:label "Foreign currency forward contracts unrealized gain" .
+
+entity:Metric_ForwardContracts_UnrealizedLoss_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2005 ;
+    kg:hasValue value:ForwardContracts_UnrealizedLoss_2005 ;
+    kg:label "Foreign currency forward contracts unrealized loss" .
+
+entity:Metric_FuelSwaps_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2005 ;
+    kg:hasValue value:FuelSwaps_2005 ;
+    kg:label "Fuel swap agreements in a net payable position" ;
+    kg:tableColumn "2005" ;
+    kg:tableRow "fuel swap agreements in a net payable position" .
+
+entity:Metric_FuelSwaps_2006 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2006 ;
+    kg:hasValue value:FuelSwaps_2006 ;
+    kg:label "Fuel swap agreements in a net payable position" ;
+    kg:tableColumn "2006" ;
+    kg:tableRow "fuel swap agreements in a net payable position" .
+
+entity:Metric_InterestRateSwaps_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2005 ;
+    kg:hasValue value:InterestRateSwaps_2005 ;
+    kg:label "Interest rate swap agreements in a net receivable position" ;
+    kg:tableColumn "2005" ;
+    kg:tableRow "interest rate swap agreements in a net receivable position" .
+
+entity:Metric_InterestRateSwaps_2006 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2006 ;
+    kg:hasValue value:InterestRateSwaps_2006 ;
+    kg:label "Interest rate swap agreements in a net receivable position" ;
+    kg:tableColumn "2006" ;
+    kg:tableRow "interest rate swap agreements in a net receivable position" .
+
+entity:Metric_LongTermDebt_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2005 ;
+    kg:hasValue value:LongTermDebt_2005 ;
+    kg:label "Long-term debt (including current portion)" ;
+    kg:tableColumn "2005" ;
+    kg:tableRow "long-term debt ( including current portion of long-term debt )" .
+
+entity:Metric_LongTermDebt_2006 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2006 ;
+    kg:hasValue value:LongTermDebt_2006 ;
+    kg:label "Long-term debt (including current portion)" ;
+    kg:tableColumn "2006" ;
+    kg:tableRow "long-term debt ( including current portion of long-term debt )" .
+
+entity:Metric_PensionCost_2004 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2004 ;
+    kg:hasValue value:PensionCost_2004 ;
+    kg:label "Pension cost" .
+
+entity:Metric_PensionCost_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2005 ;
+    kg:hasValue value:PensionCost_2005 ;
+    kg:label "Pension cost" .
+
+entity:Metric_PensionCost_2006 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2006 ;
+    kg:hasValue value:PensionCost_2006 ;
+    kg:label "Pension cost" .
+
+entity:Metric_TaxImpact_2005 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2005 ;
+    kg:hasValue value:TaxImpact_2005 ;
+    kg:label "Tax regulation impact on net income" .
+
+entity:Metric_TaxImpact_2006 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2006 ;
+    kg:hasValue value:TaxImpact_2006 ;
+    kg:label "Tax regulation impact on net income" .
+
+entity:TableColumn_0 a kg:TableColumn ;
+    kg:columnIndex 0 ;
+    kg:label "{'index': 0, 'label': '2006', 'numeric_value': 2006.0}" .
+
+entity:TableColumn_1 a kg:TableColumn ;
+    kg:columnIndex 1 ;
+    kg:label "{'index': 1, 'label': '2005', 'numeric_value': 2005.0}" .
+
+entity:TableRow_0 a kg:TableRow ;
+    kg:label "{'index': 0, 'label': 'cash and cash equivalents', 'numeric_value': None}" ;
+    kg:rowIndex 0 .
+
+entity:TableRow_1 a kg:TableRow ;
+    kg:label "{'index': 1, 'label': 'foreign currency forward contracts in a net ( loss ) gain position', 'numeric_value': None}" ;
+    kg:rowIndex 1 .
+
+entity:TableRow_2 a kg:TableRow ;
+    kg:label "{'index': 2, 'label': 'fuel swap agreements in a net payable position', 'numeric_value': None}" ;
+    kg:rowIndex 2 .
+
+entity:TableRow_3 a kg:TableRow ;
+    kg:label "{'index': 3, 'label': 'interest rate swap agreements in a net receivable position', 'numeric_value': None}" ;
+    kg:rowIndex 3 .
+
+entity:TableRow_4 a kg:TableRow ;
+    kg:label "{'index': 4, 'label': 'long-term debt ( including current portion of long-term debt )', 'numeric_value': None}" ;
+    kg:rowIndex 4 .
+
+value:CashAndCashEquivalents_2005 a kg:MonetaryValue ;
+    kg:displayValue "125385.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 125385.0 .
+
+value:CashAndCashEquivalents_2006 a kg:MonetaryValue ;
+    kg:displayValue "104520.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 104520.0 .
+
+value:CashFlowHedge_UnrealizedLoss_2005 a kg:MonetaryValue ;
+    kg:displayValue "$7.8 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 7.8 .
+
+value:ColumnHeaderValue_0 a kg:MonetaryValue ;
+    kg:displayValue "2006" ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 2006.0 .
+
+value:ColumnHeaderValue_1 a kg:MonetaryValue ;
+    kg:displayValue "2005" ;
+    kg:hasScale kg:Thousands ;
+    kg:numericValue 2005.0 .
+
+value:ForwardContracts_2005 a kg:MonetaryValue ;
+    kg:displayValue "-115415.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -115415.0 .
+
+value:ForwardContracts_2006 a kg:MonetaryValue ;
+    kg:displayValue "104159.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 104159.0 .
+
+value:ForwardContracts_NotionalAmount_2006 a kg:MonetaryValue ;
+    kg:displayValue "$3.8 billion" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Billions ;
+    kg:numericValue 3.8 .
+
+value:ForwardContracts_UnrealizedGain_2006 a kg:MonetaryValue ;
+    kg:displayValue "$106.3 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 106.3 .
+
+value:ForwardContracts_UnrealizedLoss_2005 a kg:MonetaryValue ;
+    kg:displayValue "$103.4 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 103.4 .
+
+value:FuelSwaps_2005 a kg:MonetaryValue ;
+    kg:displayValue "-78.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -78.0 .
+
+value:FuelSwaps_2006 a kg:MonetaryValue ;
+    kg:displayValue "-20456.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -20456.0 .
+
+value:InterestRateSwaps_2005 a kg:MonetaryValue ;
+    kg:displayValue "8456.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 8456.0 .
+
+value:InterestRateSwaps_2006 a kg:MonetaryValue ;
+    kg:displayValue "5856.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 5856.0 .
+
+value:LongTermDebt_2005 a kg:MonetaryValue ;
+    kg:displayValue "-4368874.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -4368874.0 .
+
+value:LongTermDebt_2006 a kg:MonetaryValue ;
+    kg:displayValue "-5474988.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue -5474988.0 .
+
+value:PensionCost_2004 a kg:MonetaryValue ;
+    kg:displayValue "$12.2 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 12.2 .
+
+value:PensionCost_2005 a kg:MonetaryValue ;
+    kg:displayValue "$12.8 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 12.8 .
+
+value:PensionCost_2006 a kg:MonetaryValue ;
+    kg:displayValue "$13.9 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 13.9 .
+
+value:TaxImpact_2005 a kg:MonetaryValue ;
+    kg:displayValue "$14.0 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 14.0 .
+
+value:TaxImpact_2006 a kg:MonetaryValue ;
+    kg:displayValue "$6.3 million" ;
+    kg:hasCurrency kg:USD ;
+    kg:hasScale kg:Millions ;
+    kg:numericValue 6.3 .
+

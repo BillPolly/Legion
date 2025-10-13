@@ -1,0 +1,175 @@
+You are resolving pronouns and temporal references in a financial question.
+
+QUESTION: {{ question }}
+
+{% if kg_data %}
+{{ kg_data }}
+
+{% endif %}
+{% if previous_results and previous_results|length > 0 %}
+PREVIOUS RESULTS (from oldest to newest):
+{% for var_name, info in previous_results.items() %}
+[Turn {{ info.turn }}] {{ var_name }}:
+  Question: "{{ info.question }}"
+  Description: "{{ info.description }}"
+  Answer: {{ info.answer }}{% if info.scale %} ({{ info.scale }}){% endif %}
+{%- if loop.last %}
+  ← THIS IS THE MOST RECENT RESULT
+{%- endif %}
+
+{% endfor %}
+{% endif %}
+
+{% if error_context %}
+PREVIOUS ATTEMPT FAILED:
+{% for error in error_context.errors %}
+- {{ error }}
+{% endfor %}
+
+Please fix these issues in your next attempt.
+{% endif %}
+
+TASK: Resolve ALL pronouns and temporal references to explicit ENTITY NAMES ONLY.
+
+**CRITICAL**: You are doing PRONOUN RESOLUTION, not answering the question!
+- Replace pronouns with entity/metric NAMES from the context
+- DO NOT add numeric values or comparisons to the question
+- DO NOT try to make the question "more explicit" by adding values
+- KEEP the question structure unchanged except for pronoun replacement
+
+PRONOUNS TO RESOLVE:
+- "it" → Replace with the entity/metric name (NOT the value!)
+- "this", "that" → Replace with the entity/metric name they refer to
+- "they", "them" → Replace with the group name they refer to
+- "these", "those" → Replace with the entity/metric names they refer to
+
+TEMPORAL REFERENCES TO RESOLVE:
+- "this year", "that year" → Replace with actual year number (e.g., 2004)
+- "this period", "that period" → Replace with actual period (e.g., "2004 to 2009")
+- "current year" → Replace with actual year from context
+
+CRITICAL - REFERENCES TO PREVIOUS CALCULATIONS (DO NOT EXPAND THESE!):
+When you see phrases like "the sum", "the total", "the change", etc., these refer to PREVIOUS COMPUTED RESULTS!
+
+**ABSOLUTELY DO NOT ADD ANY TEXT to these phrases! Keep them EXACTLY as they appear!**
+
+- "the sum" → KEEP EXACTLY AS "the sum" (DO NOT add "of...")
+- "the total" → KEEP EXACTLY AS "the total" (DO NOT add "of...")
+- "the average" → KEEP EXACTLY AS "the average" (DO NOT add "of...")
+- "the change" → KEEP EXACTLY AS "the change" (DO NOT add "from..." or "in...")
+- "the difference" → KEEP EXACTLY AS "the difference" (DO NOT add "between...")
+- "the ratio" → KEEP EXACTLY AS "the ratio" (DO NOT add "of...")
+
+**WHY?** These phrases with definite article "the" refer to PREVIOUSLY COMPUTED results from earlier turns!
+If you expand them, Phase 1 will think you want a NEW calculation instead of using the previous result!
+
+Examples:
+
+Turn 1: "what is the sum of A and B?" → result = sum_a_b = 100
+Turn 2: "what is the sum including C?"
+✅ CORRECT: Keep as "what is the sum including C?"
+  → Phase 1 will recognize "the sum" refers to sum_a_b (100) and add C to it
+❌ WRONG: "what is the sum of A and B including C?"
+  → Phase 1 will think you want to calculate A+B+C from scratch!
+  → This ignores the previous result completely!
+
+Turn 1: "change from 2010 to 2015" → result = change_2010_2015 = 50
+Turn 2: "what is the change as a percentage?"
+✅ CORRECT: Keep as "what is the change as a percentage?"
+  → Phase 1 will use change_2010_2015 (50)
+❌ WRONG: "what is the change from 2010 to 2015 as a percentage?"
+  → Phase 1 will recalculate the change instead of using previous result!
+
+**ONLY resolve temporal references (like "2011" → "year 2011") and direct pronouns (like "it" → entity name).**
+**DO NOT touch phrases like "the sum", "the total", "the change"!**
+
+RESOLUTION STRATEGY:
+1. Look at the MOST RECENT RESULT - pronouns usually refer to it
+2. Read the Description to understand what entity/metric was computed
+3. Replace the pronoun with the entity/metric NAME, not the value
+4. If "it" refers to the SAME METRIC TYPE for a different entity, explain this clearly
+
+EXAMPLES OF CORRECT RESOLUTION:
+
+Original: "and were those effects of foreign operations in 2002?"
+Context: Previous result was "effects_foreign_ops_2002 = 5.6"
+✅ CORRECT: "and were the effects of foreign operations in year 2002?"
+❌ WRONG: "and were the effects of foreign operations in year 2002 equal to 5.6 units?"
+(WRONG because it added a comparison that doesn't exist in the original question!)
+
+Original: "what was it in 2015?"
+Context: Previous result was "total_debt_2014 = 1722.2 Millions"
+✅ CORRECT: "what was total debt in year 2015?"
+❌ WRONG: "what was total debt in year 2015 equal to?"
+(WRONG because it changed the question structure!)
+
+Original: "how much did that represent?"
+Context: Previous result was "net_income_2018 = 10500 Millions"
+✅ CORRECT: "how much did net income represent?"
+❌ WRONG: "how much did the 10500 million net income represent?"
+(WRONG because it embedded the numeric value!)
+
+OUTPUT (JSON):
+{
+  "resolved_question": "the question with all pronouns replaced with explicit references",
+  "resolutions": {
+    "it": "what it was replaced with",
+    "this": "what this was replaced with"
+  },
+  "confidence": 0.95
+}
+
+YOU MUST return ONLY valid JSON. NO explanatory text before or after. NO markdown code fences.
+
+DO NOT write things like "Let me analyze", "Here's the JSON:", or "```json".
+
+ONLY return the JSON object itself, starting with { and ending with }.
+
+**🚨 CRITICAL: STRUCTURED REASONING PROCESS 🚨**
+
+BEFORE generating your JSON output, you MUST explicitly reason through these steps in XML tags:
+
+<pronoun-identification>
+List all pronouns and ambiguous references in the question:
+- Pronoun 1: "[pronoun]" → Might refer to: [potential referents]
+- Pronoun 2: "[pronoun]" → Might refer to: [potential referents]
+- Temporal reference: "[reference]" → Might mean: [potential years/periods]
+
+Total pronouns/references to resolve: [count]
+</pronoun-identification>
+
+<entity-matching>
+For each pronoun, check MOST RECENT RESULTS:
+
+Pronoun: "[pronoun]"
+- Most recent result: [variable_name from Turn N]
+- Description of that result: "[description]"
+- Entity/metric it represents: [entity/metric name]
+- Confidence this is the referent: [high/medium/low]
+- Resolution: Replace "[pronoun]" with "[entity/metric name]"
+
+[Repeat for each pronoun]
+</entity-matching>
+
+<calculation-phrase-detection>
+Does the question contain phrases like "the sum", "the total", "the change", "the average"?
+
+Phrases detected:
+- "[phrase]": This refers to PREVIOUS COMPUTED RESULT → DO NOT EXPAND
+- "[phrase]": This refers to PREVIOUS COMPUTED RESULT → DO NOT EXPAND
+
+Action: KEEP these phrases unchanged in resolved_question
+</calculation-phrase-detection>
+
+<resolved-question-construction>
+Build resolved question by:
+1. Replace pronouns with entity/metric names from <entity-matching>
+2. KEEP calculation phrases ("the sum", "the total") unchanged
+3. KEEP question structure and grammar intact
+4. DO NOT add numeric values or comparisons
+
+Original: "{{ question }}"
+Resolved: [resolved question with pronouns replaced but calculation phrases preserved]
+</resolved-question-construction>
+
+NOW OUTPUT YOUR JSON (NO additional text, NO markdown fences, ONLY the JSON object starting with { and ending with }):

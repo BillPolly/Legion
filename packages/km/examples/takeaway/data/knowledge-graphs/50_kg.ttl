@@ -1,0 +1,544 @@
+@prefix entity: <http://example.org/convfinqa/entity/> .
+@prefix kg: <http://example.org/convfinqa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix value: <http://example.org/convfinqa/value/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+kg:KnowledgeGraph a owl:Ontology ;
+    kg:builtWithOntologyModified "2025-10-12" ;
+    kg:builtWithOntologyVersion "1.0.18" .
+
+entity:Company_Example50 a kg:Company ;
+    kg:hasMetric entity:Metric_AsiaPacificCAGR_2011_2013,
+        entity:Metric_AsiaPacificShare_2013,
+        entity:Metric_EuropeCAGR_2009_2013,
+        entity:Metric_EuropeShare_2013,
+        entity:Metric_NorthAmericaCAGR_2009_2013,
+        entity:Metric_NorthAmericaShare_2013 ;
+    kg:label "Royal Caribbean Cruises Ltd." .
+
+entity:Company_RoyalCaribbean a kg:Company ;
+    kg:hasMetric entity:Metric_EuropeanCruiseGuests_2009,
+        entity:Metric_EuropeanCruiseGuests_2010,
+        entity:Metric_EuropeanCruiseGuests_2011,
+        entity:Metric_EuropeanCruiseGuests_2012,
+        entity:Metric_EuropeanCruiseGuests_2013,
+        entity:Metric_GlobalBerths_2009,
+        entity:Metric_GlobalBerths_2010,
+        entity:Metric_GlobalBerths_2011,
+        entity:Metric_GlobalBerths_2012,
+        entity:Metric_GlobalBerths_2013,
+        entity:Metric_GlobalCruiseGuests_2009,
+        entity:Metric_GlobalCruiseGuests_2010,
+        entity:Metric_GlobalCruiseGuests_2011,
+        entity:Metric_GlobalCruiseGuests_2012,
+        entity:Metric_GlobalCruiseGuests_2013,
+        entity:Metric_NorthAmericanCruiseGuests_2009,
+        entity:Metric_NorthAmericanCruiseGuests_2010,
+        entity:Metric_NorthAmericanCruiseGuests_2011,
+        entity:Metric_NorthAmericanCruiseGuests_2012,
+        entity:Metric_NorthAmericanCruiseGuests_2013,
+        entity:Metric_RCLTotalBerths_2009,
+        entity:Metric_RCLTotalBerths_2010,
+        entity:Metric_RCLTotalBerths_2011,
+        entity:Metric_RCLTotalBerths_2012,
+        entity:Metric_RCLTotalBerths_2013 ;
+    kg:label "Royal Caribbean Cruises Ltd." .
+
+entity:FinancialTable a kg:Table ;
+    kg:hasColumn entity:TableColumn_0,
+        entity:TableColumn_1,
+        entity:TableColumn_2,
+        entity:TableColumn_3,
+        entity:TableColumn_4 ;
+    kg:hasRow entity:TableRow_0,
+        entity:TableRow_1,
+        entity:TableRow_2,
+        entity:TableRow_3,
+        entity:TableRow_4 ;
+    kg:tableCaption "Global Cruise Industry Growth Metrics (2009-2013)" ;
+    kg:tableOrientation "row-first" .
+
+entity:Metric_ColumnHeaderValue_0 a kg:FinancialMetric ;
+    kg:hasValue value:ColumnHeaderValue_0 ;
+    kg:label "Column header value: 2009" ;
+    kg:tableColumn "2009" .
+
+entity:Metric_ColumnHeaderValue_1 a kg:FinancialMetric ;
+    kg:hasValue value:ColumnHeaderValue_1 ;
+    kg:label "Column header value: 2010" ;
+    kg:tableColumn "2010" .
+
+entity:Metric_ColumnHeaderValue_2 a kg:FinancialMetric ;
+    kg:hasValue value:ColumnHeaderValue_2 ;
+    kg:label "Column header value: 2011" ;
+    kg:tableColumn "2011" .
+
+entity:Metric_ColumnHeaderValue_3 a kg:FinancialMetric ;
+    kg:hasValue value:ColumnHeaderValue_3 ;
+    kg:label "Column header value: 2012" ;
+    kg:tableColumn "2012" .
+
+entity:Metric_ColumnHeaderValue_4 a kg:FinancialMetric ;
+    kg:hasValue value:ColumnHeaderValue_4 ;
+    kg:label "Column header value: 2013" ;
+    kg:tableColumn "2013" .
+
+entity:Year_2009 a kg:Year ;
+    kg:yearValue 2009 .
+
+entity:Year_2010 a kg:Year ;
+    kg:yearValue 2010 .
+
+entity:Year_2011 a kg:Year ;
+    kg:yearValue 2011 .
+
+entity:Year_2012 a kg:Year ;
+    kg:yearValue 2012 .
+
+entity:Year_2013 a kg:Year ;
+    kg:yearValue 2013 .
+
+entity:Metric_AsiaPacificCAGR_2011_2013 a kg:FinancialMetric ;
+    kg:hasValue value:AsiaPacificCAGR_2011_2013 ;
+    kg:label "Asia/Pacific cruise guest compound annual growth rate 2011-2013" .
+
+entity:Metric_AsiaPacificShare_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:AsiaPacificShare_2013 ;
+    kg:label "Asia/Pacific cruise guest share" .
+
+entity:Metric_EuropeCAGR_2009_2013 a kg:FinancialMetric ;
+    kg:hasValue value:EuropeCAGR_2009_2013 ;
+    kg:label "Europe cruise guest compound annual growth rate 2009-2013" .
+
+entity:Metric_EuropeShare_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:EuropeShare_2013 ;
+    kg:label "Europe cruise guest share" .
+
+entity:Metric_EuropeanCruiseGuests_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:EuropeanCruiseGuests_2009 ;
+    kg:label "European Cruise Guests" ;
+    kg:tableColumn "2009" ;
+    kg:tableRow "europeancruiseguests ( 3 )" ;
+    rdfs:comment "Source: CLIA Europe, formerly European Cruise Council, for years 2009 through 2012. Year 2013 amounts represent our estimates." .
+
+entity:Metric_EuropeanCruiseGuests_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:EuropeanCruiseGuests_2010 ;
+    kg:label "European Cruise Guests" ;
+    kg:tableColumn "2010" ;
+    kg:tableRow "europeancruiseguests ( 3 )" ;
+    rdfs:comment "Source: CLIA Europe, formerly European Cruise Council, for years 2009 through 2012. Year 2013 amounts represent our estimates." .
+
+entity:Metric_EuropeanCruiseGuests_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:EuropeanCruiseGuests_2011 ;
+    kg:label "European Cruise Guests" ;
+    kg:tableColumn "2011" ;
+    kg:tableRow "europeancruiseguests ( 3 )" ;
+    rdfs:comment "Source: CLIA Europe, formerly European Cruise Council, for years 2009 through 2012. Year 2013 amounts represent our estimates." .
+
+entity:Metric_EuropeanCruiseGuests_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:EuropeanCruiseGuests_2012 ;
+    kg:label "European Cruise Guests" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "europeancruiseguests ( 3 )" ;
+    rdfs:comment "Source: CLIA Europe, formerly European Cruise Council, for years 2009 through 2012. Year 2013 amounts represent our estimates." .
+
+entity:Metric_EuropeanCruiseGuests_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:EuropeanCruiseGuests_2013 ;
+    kg:label "European Cruise Guests" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "europeancruiseguests ( 3 )" ;
+    rdfs:comment "Source: CLIA Europe, formerly European Cruise Council, for years 2009 through 2012. Year 2013 amounts represent our estimates." .
+
+entity:Metric_GlobalBerths_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:GlobalBerths_2009 ;
+    kg:label "Weighted-Average Supply of Berths Marketed Globally" ;
+    kg:tableColumn "2009" ;
+    kg:tableRow "weighted-averagesupply ofberthsmarketedglobally ( 1 )" ;
+    rdfs:comment "Source: Our estimates based on publicly available cruise industry trade information sources including Seatrade Insider, Cruise Industry News and CLIA." .
+
+entity:Metric_GlobalBerths_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:GlobalBerths_2010 ;
+    kg:label "Weighted-Average Supply of Berths Marketed Globally" ;
+    kg:tableColumn "2010" ;
+    kg:tableRow "weighted-averagesupply ofberthsmarketedglobally ( 1 )" ;
+    rdfs:comment "Source: Our estimates based on publicly available cruise industry trade information sources including Seatrade Insider, Cruise Industry News and CLIA." .
+
+entity:Metric_GlobalBerths_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:GlobalBerths_2011 ;
+    kg:label "Weighted-Average Supply of Berths Marketed Globally" ;
+    kg:tableColumn "2011" ;
+    kg:tableRow "weighted-averagesupply ofberthsmarketedglobally ( 1 )" ;
+    rdfs:comment "Source: Our estimates based on publicly available cruise industry trade information sources including Seatrade Insider, Cruise Industry News and CLIA." .
+
+entity:Metric_GlobalBerths_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:GlobalBerths_2012 ;
+    kg:label "Weighted-Average Supply of Berths Marketed Globally" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "weighted-averagesupply ofberthsmarketedglobally ( 1 )" ;
+    rdfs:comment "Source: Our estimates based on publicly available cruise industry trade information sources including Seatrade Insider, Cruise Industry News and CLIA." .
+
+entity:Metric_GlobalBerths_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:GlobalBerths_2013 ;
+    kg:label "Weighted-Average Supply of Berths Marketed Globally" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "weighted-averagesupply ofberthsmarketedglobally ( 1 )" ;
+    rdfs:comment "Source: Our estimates based on publicly available cruise industry trade information sources including Seatrade Insider, Cruise Industry News and CLIA." .
+
+entity:Metric_GlobalCruiseGuests_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:GlobalCruiseGuests_2009 ;
+    kg:label "Global Cruise Guests" ;
+    kg:tableColumn "2009" ;
+    kg:tableRow "globalcruiseguests ( 1 )" ;
+    rdfs:comment "Source: Our estimates based on publicly available cruise industry trade information sources including Seatrade Insider, Cruise Industry News and CLIA." .
+
+entity:Metric_GlobalCruiseGuests_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:GlobalCruiseGuests_2010 ;
+    kg:label "Global Cruise Guests" ;
+    kg:tableColumn "2010" ;
+    kg:tableRow "globalcruiseguests ( 1 )" ;
+    rdfs:comment "Source: Our estimates based on publicly available cruise industry trade information sources including Seatrade Insider, Cruise Industry News and CLIA." .
+
+entity:Metric_GlobalCruiseGuests_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:GlobalCruiseGuests_2011 ;
+    kg:label "Global Cruise Guests" ;
+    kg:tableColumn "2011" ;
+    kg:tableRow "globalcruiseguests ( 1 )" ;
+    rdfs:comment "Source: Our estimates based on publicly available cruise industry trade information sources including Seatrade Insider, Cruise Industry News and CLIA." .
+
+entity:Metric_GlobalCruiseGuests_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:GlobalCruiseGuests_2012 ;
+    kg:label "Global Cruise Guests" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "globalcruiseguests ( 1 )" ;
+    rdfs:comment "Source: Our estimates based on publicly available cruise industry trade information sources including Seatrade Insider, Cruise Industry News and CLIA." .
+
+entity:Metric_GlobalCruiseGuests_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:GlobalCruiseGuests_2013 ;
+    kg:label "Global Cruise Guests" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "globalcruiseguests ( 1 )" ;
+    rdfs:comment "Source: Our estimates based on publicly available cruise industry trade information sources including Seatrade Insider, Cruise Industry News and CLIA." .
+
+entity:Metric_NorthAmericaCAGR_2009_2013 a kg:FinancialMetric ;
+    kg:hasValue value:NorthAmericaCAGR_2009_2013 ;
+    kg:label "North America cruise guest compound annual growth rate 2009-2013" .
+
+entity:Metric_NorthAmericaShare_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:NorthAmericaShare_2013 ;
+    kg:label "North America cruise guest share" .
+
+entity:Metric_NorthAmericanCruiseGuests_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:NorthAmericanCruiseGuests_2009 ;
+    kg:label "North American Cruise Guests" ;
+    kg:tableColumn "2009" ;
+    kg:tableRow "north americancruiseguests ( 2 )" ;
+    rdfs:comment "Source: Cruise Line International Association based on cruise guests carried for at least two consecutive nights. Includes the United States of America and Canada." .
+
+entity:Metric_NorthAmericanCruiseGuests_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:NorthAmericanCruiseGuests_2010 ;
+    kg:label "North American Cruise Guests" ;
+    kg:tableColumn "2010" ;
+    kg:tableRow "north americancruiseguests ( 2 )" ;
+    rdfs:comment "Source: Cruise Line International Association based on cruise guests carried for at least two consecutive nights. Includes the United States of America and Canada." .
+
+entity:Metric_NorthAmericanCruiseGuests_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:NorthAmericanCruiseGuests_2011 ;
+    kg:label "North American Cruise Guests" ;
+    kg:tableColumn "2011" ;
+    kg:tableRow "north americancruiseguests ( 2 )" ;
+    rdfs:comment "Source: Cruise Line International Association based on cruise guests carried for at least two consecutive nights. Includes the United States of America and Canada." .
+
+entity:Metric_NorthAmericanCruiseGuests_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:NorthAmericanCruiseGuests_2012 ;
+    kg:label "North American Cruise Guests" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "north americancruiseguests ( 2 )" ;
+    rdfs:comment "Source: Cruise Line International Association based on cruise guests carried for at least two consecutive nights. Includes the United States of America and Canada." .
+
+entity:Metric_NorthAmericanCruiseGuests_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:NorthAmericanCruiseGuests_2013 ;
+    kg:label "North American Cruise Guests" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "north americancruiseguests ( 2 )" ;
+    rdfs:comment "Source: Cruise Line International Association based on cruise guests carried for at least two consecutive nights. Includes the United States of America and Canada." .
+
+entity:Metric_RCLTotalBerths_2009 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2009 ;
+    kg:hasValue value:RCLTotalBerths_2009 ;
+    kg:label "Royal Caribbean Cruises Ltd. Total Berths" ;
+    kg:tableColumn "2009" ;
+    kg:tableRow "royal caribbean cruises ltd . total berths" .
+
+entity:Metric_RCLTotalBerths_2010 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2010 ;
+    kg:hasValue value:RCLTotalBerths_2010 ;
+    kg:label "Royal Caribbean Cruises Ltd. Total Berths" ;
+    kg:tableColumn "2010" ;
+    kg:tableRow "royal caribbean cruises ltd . total berths" .
+
+entity:Metric_RCLTotalBerths_2011 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2011 ;
+    kg:hasValue value:RCLTotalBerths_2011 ;
+    kg:label "Royal Caribbean Cruises Ltd. Total Berths" ;
+    kg:tableColumn "2011" ;
+    kg:tableRow "royal caribbean cruises ltd . total berths" .
+
+entity:Metric_RCLTotalBerths_2012 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2012 ;
+    kg:hasValue value:RCLTotalBerths_2012 ;
+    kg:label "Royal Caribbean Cruises Ltd. Total Berths" ;
+    kg:tableColumn "2012" ;
+    kg:tableRow "royal caribbean cruises ltd . total berths" .
+
+entity:Metric_RCLTotalBerths_2013 a kg:FinancialMetric ;
+    kg:forTimePeriod entity:entity_Year_2013 ;
+    kg:hasValue value:RCLTotalBerths_2013 ;
+    kg:label "Royal Caribbean Cruises Ltd. Total Berths" ;
+    kg:tableColumn "2013" ;
+    kg:tableRow "royal caribbean cruises ltd . total berths" .
+
+entity:TableColumn_0 a kg:TableColumn ;
+    kg:columnIndex 0 ;
+    kg:label "{'index': 0, 'label': '2009', 'numeric_value': 2009.0}" .
+
+entity:TableColumn_1 a kg:TableColumn ;
+    kg:columnIndex 1 ;
+    kg:label "{'index': 1, 'label': '2010', 'numeric_value': 2010.0}" .
+
+entity:TableColumn_2 a kg:TableColumn ;
+    kg:columnIndex 2 ;
+    kg:label "{'index': 2, 'label': '2011', 'numeric_value': 2011.0}" .
+
+entity:TableColumn_3 a kg:TableColumn ;
+    kg:columnIndex 3 ;
+    kg:label "{'index': 3, 'label': '2012', 'numeric_value': 2012.0}" .
+
+entity:TableColumn_4 a kg:TableColumn ;
+    kg:columnIndex 4 ;
+    kg:label "{'index': 4, 'label': '2013', 'numeric_value': 2013.0}" .
+
+entity:TableRow_0 a kg:TableRow ;
+    kg:label "{'index': 0, 'label': 'weighted-averagesupply ofberthsmarketedglobally ( 1 )', 'numeric_value': None}" ;
+    kg:rowIndex 0 .
+
+entity:TableRow_1 a kg:TableRow ;
+    kg:label "{'index': 1, 'label': 'royal caribbean cruises ltd . total berths', 'numeric_value': None}" ;
+    kg:rowIndex 1 .
+
+entity:TableRow_2 a kg:TableRow ;
+    kg:label "{'index': 2, 'label': 'globalcruiseguests ( 1 )', 'numeric_value': None}" ;
+    kg:rowIndex 2 .
+
+entity:TableRow_3 a kg:TableRow ;
+    kg:label "{'index': 3, 'label': 'north americancruiseguests ( 2 )', 'numeric_value': None}" ;
+    kg:rowIndex 3 .
+
+entity:TableRow_4 a kg:TableRow ;
+    kg:label "{'index': 4, 'label': 'europeancruiseguests ( 3 )', 'numeric_value': None}" ;
+    kg:rowIndex 4 .
+
+value:AsiaPacificCAGR_2011_2013 a kg:MonetaryValue ;
+    kg:displayValue "15%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 15.0 .
+
+value:AsiaPacificShare_2013 a kg:MonetaryValue ;
+    kg:displayValue "4.5%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 4.5 .
+
+value:ColumnHeaderValue_0 a kg:MonetaryValue ;
+    kg:displayValue "2009" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2009.0 .
+
+value:ColumnHeaderValue_1 a kg:MonetaryValue ;
+    kg:displayValue "2010" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2010.0 .
+
+value:ColumnHeaderValue_2 a kg:MonetaryValue ;
+    kg:displayValue "2011" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2011.0 .
+
+value:ColumnHeaderValue_3 a kg:MonetaryValue ;
+    kg:displayValue "2012" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2012.0 .
+
+value:ColumnHeaderValue_4 a kg:MonetaryValue ;
+    kg:displayValue "2013" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 2013.0 .
+
+value:EuropeCAGR_2009_2013 a kg:MonetaryValue ;
+    kg:displayValue "6.0%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 6.0 .
+
+value:EuropeShare_2013 a kg:MonetaryValue ;
+    kg:displayValue "30%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 30.0 .
+
+value:EuropeanCruiseGuests_2009 a kg:MonetaryValue ;
+    kg:displayValue "5000000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 5000000.0 .
+
+value:EuropeanCruiseGuests_2010 a kg:MonetaryValue ;
+    kg:displayValue "5540000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 5540000.0 .
+
+value:EuropeanCruiseGuests_2011 a kg:MonetaryValue ;
+    kg:displayValue "5894000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 5894000.0 .
+
+value:EuropeanCruiseGuests_2012 a kg:MonetaryValue ;
+    kg:displayValue "6139000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 6139000.0 .
+
+value:EuropeanCruiseGuests_2013 a kg:MonetaryValue ;
+    kg:displayValue "6399000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 6399000.0 .
+
+value:GlobalBerths_2009 a kg:MonetaryValue ;
+    kg:displayValue "363000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 363000.0 .
+
+value:GlobalBerths_2010 a kg:MonetaryValue ;
+    kg:displayValue "391000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 391000.0 .
+
+value:GlobalBerths_2011 a kg:MonetaryValue ;
+    kg:displayValue "412000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 412000.0 .
+
+value:GlobalBerths_2012 a kg:MonetaryValue ;
+    kg:displayValue "425000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 425000.0 .
+
+value:GlobalBerths_2013 a kg:MonetaryValue ;
+    kg:displayValue "432000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 432000.0 .
+
+value:GlobalCruiseGuests_2009 a kg:MonetaryValue ;
+    kg:displayValue "17340000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 17340000.0 .
+
+value:GlobalCruiseGuests_2010 a kg:MonetaryValue ;
+    kg:displayValue "18800000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 18800000.0 .
+
+value:GlobalCruiseGuests_2011 a kg:MonetaryValue ;
+    kg:displayValue "20227000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 20227000.0 .
+
+value:GlobalCruiseGuests_2012 a kg:MonetaryValue ;
+    kg:displayValue "20898000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 20898000.0 .
+
+value:GlobalCruiseGuests_2013 a kg:MonetaryValue ;
+    kg:displayValue "21300000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 21300000.0 .
+
+value:NorthAmericaCAGR_2009_2013 a kg:MonetaryValue ;
+    kg:displayValue "3.2%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 3.2 .
+
+value:NorthAmericaShare_2013 a kg:MonetaryValue ;
+    kg:displayValue "56%" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 56.0 .
+
+value:NorthAmericanCruiseGuests_2009 a kg:MonetaryValue ;
+    kg:displayValue "10198000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 10198000.0 .
+
+value:NorthAmericanCruiseGuests_2010 a kg:MonetaryValue ;
+    kg:displayValue "10781000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 10781000.0 .
+
+value:NorthAmericanCruiseGuests_2011 a kg:MonetaryValue ;
+    kg:displayValue "11625000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 11625000.0 .
+
+value:NorthAmericanCruiseGuests_2012 a kg:MonetaryValue ;
+    kg:displayValue "11640000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 11640000.0 .
+
+value:NorthAmericanCruiseGuests_2013 a kg:MonetaryValue ;
+    kg:displayValue "11816000.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 11816000.0 .
+
+value:RCLTotalBerths_2009 a kg:MonetaryValue ;
+    kg:displayValue "84050.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 84050.0 .
+
+value:RCLTotalBerths_2010 a kg:MonetaryValue ;
+    kg:displayValue "92300.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 92300.0 .
+
+value:RCLTotalBerths_2011 a kg:MonetaryValue ;
+    kg:displayValue "92650.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 92650.0 .
+
+value:RCLTotalBerths_2012 a kg:MonetaryValue ;
+    kg:displayValue "98650.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 98650.0 .
+
+value:RCLTotalBerths_2013 a kg:MonetaryValue ;
+    kg:displayValue "98750.0" ;
+    kg:hasScale kg:Units ;
+    kg:numericValue 98750.0 .
+
