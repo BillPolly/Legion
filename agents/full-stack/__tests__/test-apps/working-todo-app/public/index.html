@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todo App</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Login Page -->
+    <div id="login-page" class="page">
+      <div class="container">
+        <h1>Todo App</h1>
+
+        <div class="tab-buttons">
+          <button id="show-login-btn" class="tab-btn active">Login</button>
+          <button id="show-register-btn" class="tab-btn">Register</button>
+        </div>
+
+        <!-- Login Form -->
+        <form id="login-form" class="auth-form">
+          <div class="form-group">
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" name="email" required autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" name="password" required autocomplete="current-password">
+          </div>
+          <div id="login-error" class="error-message" style="display: none;"></div>
+          <button type="submit" class="btn btn-primary">Login</button>
+        </form>
+
+        <!-- Register Form -->
+        <form id="register-form" class="auth-form" style="display: none;">
+          <div class="form-group">
+            <label for="register-name">Name</label>
+            <input type="text" id="register-name" name="name" required autocomplete="name">
+          </div>
+          <div class="form-group">
+            <label for="register-email">Email</label>
+            <input type="email" id="register-email" name="email" required autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label for="register-password">Password</label>
+            <input type="password" id="register-password" name="password" required minlength="6" autocomplete="new-password">
+          </div>
+          <div id="register-error" class="error-message" style="display: none;"></div>
+          <button type="submit" class="btn btn-primary">Register</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Dashboard Page -->
+    <div id="dashboard-page" class="page" style="display: none;">
+      <div class="container">
+        <div class="header">
+          <h1>My Todos</h1>
+          <div class="user-info">
+            <span id="user-name"></span>
+            <button id="logout-btn" class="btn btn-secondary">Logout</button>
+          </div>
+        </div>
+
+        <div class="todo-form">
+          <input type="text" id="new-todo-input" placeholder="What needs to be done?" maxlength="200">
+          <button id="add-todo-btn" class="btn btn-primary">Add Todo</button>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">Loading...</div>
+        <div id="error-message" class="error-message" style="display: none;"></div>
+
+        <div id="todos-list" class="todos-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

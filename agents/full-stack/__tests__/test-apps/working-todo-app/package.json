@@ -1,0 +1,30 @@
+{
+  "name": "working-todo-app",
+  "version": "1.0.0",
+  "description": "Production-ready todo app with authentication and SQLite",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --detectOpenHandles",
+    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest --testMatch='**/__tests__/unit/**/*.test.js'",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest --testMatch='**/__tests__/integration/**/*.test.js' --runInBand",
+    "test:e2e": "NODE_OPTIONS='--experimental-vm-modules' jest --testMatch='**/__tests__/e2e/**/*.test.js' --runInBand",
+    "db:setup": "node src/db/setup.js",
+    "db:seed": "node src/db/seed.js"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "better-sqlite3": "^9.2.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "jest": "^29.7.0",
+    "playwright": "^1.40.1",
+    "supertest": "^6.3.4"
+  }
+}
