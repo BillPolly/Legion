@@ -462,7 +462,11 @@ export class ResourceManager {
    * @returns {Promise<Object>} LLM client instance
    */
   async createLLMClient(config = {}) {
-    // Check for ZAI configuration first, then fall back to Anthropic
+    // Check for Google, ZAI, and Anthropic configuration
+    const googleKey = this.get('env.GOOGLE_API_KEY');
+    const googleBaseURL = this.get('env.GOOGLE_BASE_URL');
+    const googleModel = this.get('env.GOOGLE_MODEL');
+
     const zaiKey = this.get('env.ZAI_API_KEY');
     const zaiBaseURL = this.get('env.ZAI_BASE_URL');
     const zaiModel = this.get('env.ZAI_MODEL');
@@ -471,27 +475,40 @@ export class ResourceManager {
     const anthropicBaseURL = this.get('env.ANTHROPIC_BASE_URL');
     const anthropicModel = this.get('env.ANTHROPIC_MODEL');
 
-    // Determine which provider to use
-    let apiKey, baseURL, model;
-    if (zaiKey) {
+    // Determine which provider to use (priority: Google -> ZAI -> Anthropic)
+    // Allow config.provider to override auto-detection
+    let provider, apiKey, baseURL, model;
+
+    if (config.provider === 'google' || (!config.provider && googleKey)) {
+      provider = 'google';
+      apiKey = googleKey;
+      baseURL = googleBaseURL || 'https://generativelanguage.googleapis.com/v1beta';
+      model = googleModel || 'gemini-2.5-flash';
+      if (!apiKey) {
+        throw new Error('GOOGLE_API_KEY required for Google provider. Set it in your .env file.');
+      }
+      console.log('✓ Using Google API provider');
+    } else if (config.provider === 'zai' || (!config.provider && zaiKey)) {
+      provider = 'anthropic';  // ZAI uses Anthropic provider
       apiKey = zaiKey;
       baseURL = zaiBaseURL;
       model = zaiModel || 'claude-sonnet-4-5-20250929';
       console.log('✓ Using ZAI API provider');
-    } else if (anthropicKey) {
+    } else if (config.provider === 'anthropic' || (!config.provider && anthropicKey)) {
+      provider = 'anthropic';
       apiKey = anthropicKey;
       baseURL = anthropicBaseURL;
       model = anthropicModel || 'claude-3-5-sonnet-20241022';
       console.log('✓ Using Anthropic API provider');
     } else {
-      throw new Error('No LLM API key found. Please set ZAI_API_KEY or ANTHROPIC_API_KEY in your .env file.');
+      throw new Error('No LLM API key found. Please set GOOGLE_API_KEY, ZAI_API_KEY, or ANTHROPIC_API_KEY in your .env file.');
     }
 
     // Import LLMClient dynamically
     const { LLMClient } = await import('@legion/llm-client');
 
     const llmClient = new LLMClient({
-      provider: config.provider || 'anthropic',
+      provider: provider,
       apiKey: apiKey,
       baseURL: baseURL,
       model: config.model || model,
