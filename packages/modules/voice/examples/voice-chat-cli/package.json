@@ -1,0 +1,39 @@
+{
+  "name": "voice-chat-cli-example",
+  "version": "1.0.0",
+  "description": "Voice-enabled chatbot CLI example using Legion Voice Module and ZAI",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/unit",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/integration"
+  },
+  "keywords": [
+    "voice",
+    "chatbot",
+    "cli",
+    "zai",
+    "whisper",
+    "tts",
+    "legion"
+  ],
+  "author": "Legion",
+  "license": "MIT",
+  "dependencies": {
+    "@legion/resource-manager": "*",
+    "@legion/llm-client": "*",
+    "@legion/voice": "*"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ]
+  }
+}

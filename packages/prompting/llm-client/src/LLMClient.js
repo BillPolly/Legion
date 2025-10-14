@@ -3,6 +3,7 @@ import { MockProvider } from './providers/MockProvider.js';
 import { OpenAIProvider } from './providers/OpenAIProvider.js';
 import { DeepSeekProvider } from './providers/DeepSeekProvider.js';
 import { OpenRouterProvider } from './providers/OpenRouterProvider.js';
+import { ZAIProvider } from './providers/ZAIProvider.js';
 import { SimpleEmitter } from '../../../tools-registry/src/core/SimpleEmitter.js';
 
 /**
@@ -93,6 +94,12 @@ export class LLMClient {
           throw new Error('API key is required for OpenRouter provider');
         }
         this.provider = new OpenRouterProvider(config.apiKey);
+        break;
+      case 'zai':
+        if (!config.apiKey) {
+          throw new Error('API key is required for ZAI provider');
+        }
+        this.provider = new ZAIProvider(config.apiKey, config.baseURL);
         break;
       default:
         throw new Error(`Unknown provider: ${providerType}`);
@@ -303,6 +310,14 @@ export class LLMClient {
         files: { text: true, images: true, documents: false },
         parameters: ['temperature', 'topP', 'maxTokens', 'frequencyPenalty', 'presencePenalty'],
         responseFormats: ['text', 'json_object']
+      },
+      'zai': {
+        tools: false,
+        chatHistory: true,
+        systemPrompts: true,
+        files: { text: true, images: false, documents: false },
+        parameters: ['temperature', 'topP', 'maxTokens'],
+        responseFormats: ['text']
       }
     };
 
@@ -324,8 +339,8 @@ export class LLMClient {
 
     // Handle different provider types
     const providerName = this.provider.getProviderName();
-    
-    if (providerName === 'openai' || providerName === 'deepseek' || providerName === 'openrouter') {
+
+    if (providerName === 'openai' || providerName === 'deepseek' || providerName === 'openrouter' || providerName === 'zai') {
       return this.adaptForOpenAI(requestObj, capabilities, adapted);
     } else if (providerName === 'anthropic') {
       return this.adaptForAnthropic(requestObj, capabilities, adapted);
@@ -488,7 +503,7 @@ export class LLMClient {
     const providerName = this.provider.getProviderName();
     
     // Use provider's native message-based API if available
-    if ((providerName === 'openai' || providerName === 'anthropic' || providerName === 'deepseek' || providerName === 'openrouter') && this.provider.completeMessages) {
+    if ((providerName === 'openai' || providerName === 'anthropic' || providerName === 'deepseek' || providerName === 'openrouter' || providerName === 'zai') && this.provider.completeMessages) {
       if (adaptedRequest.messages) {
         return await this.provider.completeMessages(
           adaptedRequest.messages, 

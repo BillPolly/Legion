@@ -6,9 +6,7 @@
  */
 
 // Import Handle architecture components
-import { TripleStoreDataSource } from '@legion/triplestore';
-import { InMemoryTripleStore } from '@legion/triplestore';
-import { FileSystemTripleStore } from '@legion/triplestore';
+import { TripleStoreDataSource, createInMemoryTripleStore, createFileSystemTripleStore } from '@legion/triplestore';
 
 // MongoDB triple store is not available yet, so we'll handle it gracefully
 let MongoTripleStore = null;
@@ -285,14 +283,15 @@ export class KGStatePersistence {
   async _createTripleStore() {
     switch (this.storageType) {
       case 'memory':
-        return new InMemoryTripleStore();
-        
+        return createInMemoryTripleStore();
+
       case 'file':
         const filePath = this.storageConfig.filePath || `./state/${this.agentId}.ttl`;
-        return new FileSystemTripleStore(filePath, {
+        return createFileSystemTripleStore({
+          filePath,
           format: this.storageConfig.format || 'turtle'
         });
-        
+
       case 'mongodb':
         // FAIL FAST - MongoDB triple store not yet implemented
         throw new Error(
@@ -300,7 +299,7 @@ export class KGStatePersistence {
           'Please use "memory" or "file" storage type instead. ' +
           'NO FALLBACK - failing fast as per project requirements.'
         );
-        
+
       default:
         throw new Error(`Unsupported storage type: ${this.storageType}`);
     }

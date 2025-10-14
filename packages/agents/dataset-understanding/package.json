@@ -1,0 +1,20 @@
+{
+  "name": "@legion/dataset-understanding",
+  "version": "1.0.0",
+  "description": "Agent for understanding JSON dataset structure and domain",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --testMatch='**/__tests__/**/*.test.js' --runInBand"
+  },
+  "dependencies": {
+    "@legion/resource-manager": "*",
+    "@legion/tools-registry": "*",
+    "@legion/configurable-agent": "*",
+    "@legion/llm-client": "*",
+    "@legion/prompt-manager": "*"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  }
+}

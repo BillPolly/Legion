@@ -5,8 +5,7 @@
  * Following FAIL FAST principle - no fallbacks or mocks.
  */
 
-import { TripleStoreDataSource } from '@legion/triplestore';
-import { InMemoryTripleStore } from '@legion/triplestore';
+import { TripleStoreDataSource, createInMemoryTripleStore } from '@legion/triplestore';
 
 /**
  * Manages knowledge graph operations for the agent
@@ -41,7 +40,7 @@ export class KnowledgeGraphInterface {
 
     // Create default in-memory store if none provided
     if (!this.tripleStore) {
-      this.tripleStore = new InMemoryTripleStore();
+      this.tripleStore = createInMemoryTripleStore();
     }
 
     // Wrap with DataSource interface

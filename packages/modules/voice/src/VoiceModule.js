@@ -66,18 +66,23 @@ class VoiceModule extends Module {
       try {
         const transcribeTool = this.createToolFromMetadata('transcribe_audio', TranscribeAudioTool);
         const generateTool = this.createToolFromMetadata('generate_voice', GenerateVoiceTool);
-        
+
         // Pass provider to tools
         transcribeTool.provider = this.provider;
         generateTool.provider = this.provider;
-        
+
+        // Store references for compatibility
+        this.transcribeTool = transcribeTool;
+        this.generateTool = generateTool;
+        this.tools = [transcribeTool, generateTool];
+
         this.registerTool(transcribeTool.name, transcribeTool);
         this.registerTool(generateTool.name, generateTool);
-        
+
         console.log('VoiceModule: Initialized using metadata-driven architecture');
       } catch (error) {
         console.warn('VoiceModule: Metadata-driven initialization failed, falling back to legacy mode:', error.message);
-        
+
         // Fallback to legacy
         this._createTools();
       }

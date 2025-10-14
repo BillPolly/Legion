@@ -1,0 +1,28 @@
+{
+  "name": "@legion/voice-chat-cli-realtime-example",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "OpenAI Realtime API voice chat CLI with push-to-talk",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Tests not yet implemented\" && exit 0"
+  },
+  "keywords": [
+    "openai",
+    "realtime-api",
+    "voice",
+    "cli",
+    "push-to-talk",
+    "legion"
+  ],
+  "dependencies": {
+    "@legion/resource-manager": "*",
+    "@openai/realtime-api-beta": "github:openai/openai-realtime-api-beta",
+    "node-record-lpcm16": "^1.0.1",
+    "speaker": "^0.5.4"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  }
+}

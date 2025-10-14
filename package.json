@@ -13,6 +13,7 @@
     "packages/shared/*",
     "packages/shared/data/*",
     "packages/modules/*",
+    "packages/modules/*/examples/*",
     "packages/prompting/*",
     "packages/data/*",
     "packages/km/*",
