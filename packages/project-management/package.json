@@ -1,0 +1,55 @@
+{
+  "name": "@legion/project-management",
+  "version": "1.0.0",
+  "description": "Project Management operations and Neo4j knowledge graph logic",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./get-next-task": "./src/get-next-task.js",
+    "./progress-tracking": "./src/progress-tracking.js",
+    "./task-operations": "./src/task-operations.js",
+    "./bug-operations": "./src/bug-operations.js",
+    "./plan-operations": "./src/plan-operations.js",
+    "./project-status": "./src/project-status.js",
+    "./query-graph": "./src/query-graph.js",
+    "./agent-operations": "./src/agent-operations.js",
+    "./neo4j": "./src/neo4j.js",
+    "./schema": "./src/schema.js"
+  },
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand --forceExit",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch --runInBand",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage --runInBand --forceExit"
+  },
+  "keywords": [
+    "project-management",
+    "neo4j",
+    "knowledge-graph",
+    "agent-coordination",
+    "task-management"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@legion/resource-manager": "*"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.js"
+    ],
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/__tests__/"
+    ],
+    "globalTeardown": "./__tests__/global-teardown.js"
+  }
+}

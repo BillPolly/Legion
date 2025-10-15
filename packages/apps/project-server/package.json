@@ -1,0 +1,29 @@
+{
+  "name": "@legion/project-server",
+  "version": "1.0.0",
+  "description": "Persistent HTTP server for project management operations",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand"
+  },
+  "keywords": [
+    "project-management",
+    "neo4j",
+    "server",
+    "rest-api"
+  ],
+  "dependencies": {
+    "@legion/project-management": "*",
+    "@legion/resource-manager": "*",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3"
+  }
+}
