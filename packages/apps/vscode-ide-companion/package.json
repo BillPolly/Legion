@@ -1,0 +1,149 @@
+{
+  "name": "@legion/vscode-ide-companion",
+  "displayName": "Legion IDE Companion",
+  "description": "Enable Legion AI framework with direct access to your IDE workspace.",
+  "version": "0.1.0",
+  "publisher": "legion",
+  "icon": "assets/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/maxximus-dev/Legion.git",
+    "directory": "packages/apps/vscode-ide-companion"
+  },
+  "engines": {
+    "vscode": "^1.99.0"
+  },
+  "license": "MIT",
+  "preview": true,
+  "categories": [
+    "AI"
+  ],
+  "keywords": [
+    "legion",
+    "legion ai",
+    "ai agents",
+    "cli",
+    "ide integration",
+    "ide companion",
+    "mcp"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "configuration": {
+      "title": "Legion",
+      "properties": {
+        "legion.debug.logging.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable detailed logging for debugging the Legion IDE Companion."
+        }
+      }
+    },
+    "languages": [
+      {
+        "id": "legion-diff-editable"
+      }
+    ],
+    "commands": [
+      {
+        "command": "legion.diff.accept",
+        "title": "Legion: Accept Diff",
+        "icon": "$(check)"
+      },
+      {
+        "command": "legion.diff.cancel",
+        "title": "Legion: Close Diff Editor",
+        "icon": "$(close)"
+      },
+      {
+        "command": "legion.runCLI",
+        "title": "Legion: Run CLI"
+      },
+      {
+        "command": "legion.showNotices",
+        "title": "Legion: View Third-Party Notices"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "legion.diff.accept",
+          "when": "legion.diff.isVisible"
+        },
+        {
+          "command": "legion.diff.cancel",
+          "when": "legion.diff.isVisible"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "legion.diff.accept",
+          "when": "legion.diff.isVisible",
+          "group": "navigation"
+        },
+        {
+          "command": "legion.diff.cancel",
+          "when": "legion.diff.isVisible",
+          "group": "navigation"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "legion.diff.accept",
+        "key": "ctrl+s",
+        "when": "legion.diff.isVisible"
+      },
+      {
+        "command": "legion.diff.accept",
+        "key": "cmd+s",
+        "when": "legion.diff.isVisible"
+      }
+    ]
+  },
+  "main": "./dist/extension.cjs",
+  "type": "module",
+  "scripts": {
+    "prepackage": "npm run generate:notices && npm run check-types && npm run lint && npm run build:prod",
+    "compile": "tsc",
+    "build": "npm run build:dev",
+    "build:dev": "npm run check-types && npm run lint && npm run compile && node esbuild.js",
+    "build:prod": "npm run compile && node esbuild.js --production",
+    "generate:notices": "node ./scripts/generate-notices.js",
+    "prepare": "npm run generate:notices",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src",
+    "watch": "npm-run-all2 -p watch:*",
+    "watch:esbuild": "node esbuild.js --watch",
+    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "package": "vsce package --no-dependencies",
+    "test": "vitest run",
+    "test:ci": "vitest run --coverage",
+    "validate:notices": "node ./scripts/validate-notices.js"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.37.0",
+    "@types/node": "20.x",
+    "@types/semver": "^7.5.0",
+    "@types/vscode": "^1.99.0",
+    "@types/ws": "^8.18.1",
+    "@typescript-eslint/eslint-plugin": "^8.31.1",
+    "@typescript-eslint/parser": "^8.31.1",
+    "@vscode/vsce": "^3.6.0",
+    "esbuild": "^0.25.3",
+    "eslint": "^9.25.1",
+    "npm-run-all2": "^8.0.2",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.46.1",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@legion/actors": "^1.0.0",
+    "@legion/components": "^1.0.0",
+    "@legion/server-framework": "^1.0.0",
+    "semver": "^7.7.2",
+    "ws": "^8.18.3"
+  }
+}
