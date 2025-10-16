@@ -59,6 +59,12 @@ export class PanelManager {
   <div id="app"></div>
 
   <script type="module">
+    // Import Legion packages
+    import { ActorSpace } from '/legion/actors/src/ActorSpace.js';
+    import { DynamicDataStore } from '/legion/data-store/src/DynamicDataStore.js';
+    import { ComponentLifecycle } from '/legion/declarative-components/src/lifecycle/ComponentLifecycle.js';
+    import { RemoteHandle } from '/legion/handle/src/remote/RemoteHandle.js';
+
     // Configuration injected by server
     const CONFIG = {
       processId: '${processId}',
@@ -67,6 +73,7 @@ export class PanelManager {
     };
 
     console.log('[Panel] Config:', CONFIG);
+    console.log('[Panel] Legion modules loaded successfully');
 
     // Panel client actor for communicating with server
     class PanelClientActor {

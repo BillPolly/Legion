@@ -21,7 +21,11 @@ import { WebSocketServer } from 'ws';
 import { ActorSpace } from '@legion/actors';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import path from 'path';
 import { PanelManager } from './panel-manager.js';
+import { ResourceManager } from '@legion/resource-manager';
+import { ImportRewriter } from '@legion/server-framework/src/utils/ImportRewriter.js';
+import fs from 'fs/promises';
 
 const execAsync = promisify(exec);
 
@@ -37,6 +41,12 @@ export class PanelServer {
     this.port = port;
     this.host = host;
     this.log = log;
+
+    // Legion package serving infrastructure
+    this.packageCache = new Map();
+    this.fileCache = new Map();
+    this.monorepoRoot = null;
+    this.importRewriter = new ImportRewriter();
   }
 
   /**
@@ -46,6 +56,13 @@ export class PanelServer {
     if (this.server) {
       this.log('PanelServer already running');
       return;
+    }
+
+    // Get monorepo root from ResourceManager
+    const resourceManager = await ResourceManager.getInstance();
+    this.monorepoRoot = resourceManager.get('env.MONOREPO_ROOT');
+    if (!this.monorepoRoot) {
+      throw new Error('MONOREPO_ROOT not found in ResourceManager');
     }
 
     // Create PanelManager
@@ -64,6 +81,12 @@ export class PanelServer {
           processes: this.processConnections.size,
           panels: this.panelConnections.size,
         }));
+        return;
+      }
+
+      // Legion package serving
+      if (req.url?.startsWith('/legion/')) {
+        this.serveLegionPackage(req, res);
         return;
       }
 
@@ -335,6 +358,110 @@ export class PanelServer {
       processIds: Array.from(this.processConnections.keys()),
       panelIds: Array.from(this.panelConnections.keys()),
     };
+  }
+
+  /**
+   * Serve Legion packages from /legion/* URLs
+   * Based on BaseServer.setupLegionPackageRoutes() pattern
+   */
+  async serveLegionPackage(req, res) {
+    try {
+      // Parse request path: /legion/package-name/file.js
+      const pathParts = req.url.substring('/legion/'.length).split('/');
+      const packageName = pathParts[0];
+      const filePath = pathParts.slice(1).join('/') || 'index.js';
+
+      // Check package cache
+      let packagePath = this.packageCache.get(packageName);
+
+      if (!packagePath) {
+        // Try to locate the package in monorepo
+        // Check all possible package locations in order of likelihood
+        const possiblePaths = [
+          // Direct packages (e.g., @legion/actors)
+          path.join(this.monorepoRoot, 'packages', 'shared', packageName),
+          path.join(this.monorepoRoot, 'packages', 'frontend', packageName),
+          path.join(this.monorepoRoot, 'packages', 'apps', packageName),
+          // Nested data packages (e.g., @legion/data-store -> packages/shared/data/data-store)
+          path.join(this.monorepoRoot, 'packages', 'shared', 'data', packageName),
+          // Nested LLM packages
+          path.join(this.monorepoRoot, 'packages', 'shared', 'llm', packageName),
+          // Root packages
+          path.join(this.monorepoRoot, 'packages', packageName),
+        ];
+
+        // Find the first path that exists
+        for (const tryPath of possiblePaths) {
+          try {
+            await fs.access(tryPath);
+            packagePath = tryPath;
+            this.packageCache.set(packageName, packagePath);
+            break;
+          } catch {
+            // Path doesn't exist, try next
+          }
+        }
+
+        if (!packagePath) {
+          res.writeHead(404, { 'Content-Type': 'text/plain' });
+          res.end(`Legion package not found: ${packageName}`);
+          return;
+        }
+      }
+
+      // Build actual file path
+      const actualFilePath = path.join(packagePath, filePath);
+
+      // Security check - ensure path is within package directory
+      const normalizedFilePath = path.normalize(actualFilePath);
+      if (!normalizedFilePath.startsWith(packagePath)) {
+        res.writeHead(403, { 'Content-Type': 'text/plain' });
+        res.end('Access denied');
+        return;
+      }
+
+      // Check file cache
+      const cacheKey = `${packageName}/${filePath}`;
+      let content = this.fileCache.get(cacheKey);
+
+      if (!content) {
+        // Read file
+        try {
+          content = await fs.readFile(actualFilePath, 'utf8');
+          this.fileCache.set(cacheKey, content);
+        } catch (error) {
+          res.writeHead(404, { 'Content-Type': 'text/plain' });
+          res.end(`File not found: ${filePath}`);
+          return;
+        }
+      }
+
+      // Determine content type and rewrite imports for JS files
+      let contentType = 'text/plain';
+      let finalContent = content;
+
+      if (filePath.endsWith('.js')) {
+        finalContent = this.importRewriter.rewrite(content, {
+          legionPackage: packageName,
+          requestPath: req.url,
+          baseUrl: `/legion/${packageName}`,
+        });
+        contentType = 'application/javascript; charset=utf-8';
+      } else if (filePath.endsWith('.css')) {
+        contentType = 'text/css; charset=utf-8';
+      } else if (filePath.endsWith('.json')) {
+        contentType = 'application/json; charset=utf-8';
+      } else if (filePath.endsWith('.html')) {
+        contentType = 'text/html; charset=utf-8';
+      }
+
+      res.writeHead(200, { 'Content-Type': contentType });
+      res.end(finalContent);
+    } catch (error) {
+      this.log(`[Legion Package] Error serving ${req.url}:`, error);
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('Internal server error');
+    }
   }
 
   /**
