@@ -39,13 +39,13 @@ export class BrowserManager {
     await this.context.tracing.start({ screenshots: true, snapshots: true, sources: true });
 
     // Capture lightweight network log (last 10)
-    this.context.on('requestfinished', async (req) => {
+    this.context.on('requestfinished', (req) => {
       try {
-        const res = await req.response();
+        // Don't await - just capture basic request info without response
         this.recentRequests.push({
           method: req.method(),
           url: req.url(),
-          status: res?.status(),
+          status: null, // Response status not available in sync handler
         });
         if (this.recentRequests.length > 10) this.recentRequests.shift();
       } catch {}

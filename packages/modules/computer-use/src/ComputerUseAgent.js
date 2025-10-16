@@ -25,12 +25,10 @@ export class ComputerUseAgent {
     this.sessionId = `${new Date().toISOString().replace(/[:.]/g, '-')}_${randomUUID().slice(0, 8)}`;
     this.outDir = path.join(this.options.outDir, this.sessionId);
 
-    // Logger
+    // Logger (simple for now - don't create files during construction)
     this.logger = {
       log: async (msg) => {
-        const line = `${new Date().toISOString()} ${msg}\n`;
-        process.stdout.write(line);
-        await appendFile(path.join(this.outDir, 'run.log'), line).catch(() => {});
+        console.log(msg);
       },
     };
 
@@ -214,6 +212,19 @@ export class ComputerUseAgent {
           { inlineData: { mimeType: 'image/png', data: png.toString('base64') } }
         ]
       });
+
+      // Trim conversation history to prevent request size from exceeding limits
+      // Gemini requires function calls and responses to match, so we can't just slice randomly
+      // Instead, keep only the last N complete turns (model message + function responses + state)
+      const MAX_TURNS_TO_KEEP = 3;
+      if (turn > MAX_TURNS_TO_KEEP) {
+        // Keep: first message (initial task) + last N complete turns
+        // Each complete turn = 1 model message + 1 function response message + 1 state+image message
+        const firstMessage = this.conversationHistory[0];
+        const messagesToKeep = MAX_TURNS_TO_KEEP * 3; // 3 messages per turn
+        const recentMessages = this.conversationHistory.slice(-messagesToKeep);
+        this.conversationHistory = [firstMessage, ...recentMessages];
+      }
     }
 
     return { ok: false, error: `Reached maxTurns. Check ${this.outDir}`, outDir: this.outDir };

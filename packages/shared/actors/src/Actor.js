@@ -5,23 +5,11 @@ import {query} from "./Query.js";
  * Defines the fundamental actor contract.
  */
 
-// monkey patch object to default to normal dispatch for receive
-Object.prototype.receive = function(payload, ...args) {
-    if (typeof payload === 'string' && typeof this[payload] === 'function') {
-        return this[payload](...args);
-    }
-    // console.warn('Object received message but has no specific receive implementation or method. Payload:', payload);
-};
-
+// REMOVED: Object.prototype pollution that breaks Playwright and other libraries
+// These monkey patches were causing "headers[5].value: expected string, got function" errors
+// because Object.prototype.receive was being inherited by all objects including Playwright's internal structures
 //
-Object.prototype.CREATE = function(fn,state={}){
-    return fn.bind(state); // state must always have the create function
-}
-
-// monkey patch function to accept Actor input, so it can work as a subscription to a port
-Function.prototype.receive = function (...message) {
-    return this(...message);
-};
+// If you need receive() behavior, implement it explicitly in your classes instead of polluting prototypes!
 
 export class Actor {
     isActor = true;
