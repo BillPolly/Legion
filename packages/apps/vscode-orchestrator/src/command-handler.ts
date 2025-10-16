@@ -4,6 +4,7 @@ import { typeText, chunkedInsert } from './commands/animated-edit.js';
 import { setCursor, reveal, highlight } from './commands/cursor-ops.js';
 import { openUrl, sleep, batch } from './commands/utils.js';
 import { showFlashcard, closeFlashcard } from './commands/flashcard.js';
+import { executeScript, fillInput, clickElement, scrollTo } from './commands/webview-ops.js';
 
 export class CommandRegistry {
   private handlers: Map<string, CommandHandler> = new Map();
@@ -34,6 +35,12 @@ export class CommandRegistry {
     // Flashcard
     this.handlers.set('showFlashcard', showFlashcard);
     this.handlers.set('closeFlashcard', closeFlashcard);
+
+    // Webview manipulation
+    this.handlers.set('executeScript', executeScript);
+    this.handlers.set('fillInput', fillInput);
+    this.handlers.set('clickElement', clickElement);
+    this.handlers.set('scrollTo', scrollTo);
 
     // Batch - special handling needed
     this.handlers.set('batch', async (args) => {

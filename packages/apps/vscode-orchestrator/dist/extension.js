@@ -3846,6 +3846,67 @@ async function highlight(args) {
 
 // src/commands/utils.ts
 var vscode4 = __toESM(require("vscode"));
+
+// src/commands/webview-ops.ts
+var webviewPanels = /* @__PURE__ */ new Map();
+async function executeScript(args) {
+  const panel = webviewPanels.get(args.url);
+  if (!panel) {
+    throw new Error(`No webview found for URL: ${args.url}`);
+  }
+  try {
+    await panel.webview.postMessage({
+      type: "executeScript",
+      script: args.script
+    });
+    return { executed: true, url: args.url };
+  } catch (error) {
+    throw new Error(`Failed to execute script: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+async function fillInput(args) {
+  const script = `
+    (function() {
+      const el = document.querySelector('${args.selector.replace(/'/g, "\\'")}');
+      if (!el) throw new Error('Element not found: ${args.selector.replace(/'/g, "\\'")}');
+      el.value = '${args.value.replace(/'/g, "\\'")}';
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+      return { filled: true, selector: '${args.selector.replace(/'/g, "\\'")}' };
+    })()
+  `;
+  return executeScript({ url: args.url, script });
+}
+async function clickElement(args) {
+  const script = `
+    (function() {
+      const el = document.querySelector('${args.selector.replace(/'/g, "\\'")}');
+      if (!el) throw new Error('Element not found: ${args.selector.replace(/'/g, "\\'")}');
+      el.click();
+      return { clicked: true, selector: '${args.selector.replace(/'/g, "\\'")}' };
+    })()
+  `;
+  return executeScript({ url: args.url, script });
+}
+async function scrollTo(args) {
+  const script = `
+    (function() {
+      const el = document.querySelector('${args.selector.replace(/'/g, "\\'")}');
+      if (!el) throw new Error('Element not found: ${args.selector.replace(/'/g, "\\'")}');
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return { scrolled: true, selector: '${args.selector.replace(/'/g, "\\'")}' };
+    })()
+  `;
+  return executeScript({ url: args.url, script });
+}
+function registerWebviewPanel(url, panel) {
+  webviewPanels.set(url, panel);
+  panel.onDidDispose(() => {
+    webviewPanels.delete(url);
+  });
+}
+
+// src/commands/utils.ts
 async function openUrl(args) {
   const viewColumn = args.column ?? 2;
   try {
@@ -3863,6 +3924,7 @@ async function openUrl(args) {
         // Keep webview state when hidden
       }
     );
+    registerWebviewPanel(args.url, panel);
     panel.webview.onDidReceiveMessage(
       async (message) => {
         console.log("\u{1F3AF} Extension received message from webview:", message);
@@ -3920,11 +3982,34 @@ async function openUrl(args) {
             }
           });
 
-          console.log('\u2705 Message listener registered');
+          // Listen for messages from VSCode extension (for script execution)
+          window.addEventListener('message', (event) => {
+            const message = event.data;
+
+            if (message && message.type === 'executeScript') {
+              console.log('\u{1F3AF} Executing script in iframe:', message.script);
+
+              // Execute script in iframe context
+              const iframe = document.querySelector('iframe');
+              if (iframe && iframe.contentWindow) {
+                try {
+                  iframe.contentWindow.postMessage({
+                    type: 'executeScript',
+                    script: message.script
+                  }, '*');
+                  console.log('\u2705 Script execution message sent to iframe');
+                } catch (error) {
+                  console.error('\u274C Failed to send script to iframe:', error);
+                }
+              }
+            }
+          });
+
+          console.log('\u2705 Message listeners registered');
         </script>
       </head>
       <body>
-        <iframe src="${args.url}" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
+        <iframe src="${args.url}" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-top-navigation allow-top-navigation-by-user-activation"></iframe>
       </body>
       </html>
     `;
@@ -4133,6 +4218,10 @@ var CommandRegistry = class {
     this.handlers.set("sleep", sleep2);
     this.handlers.set("showFlashcard", showFlashcard);
     this.handlers.set("closeFlashcard", closeFlashcard);
+    this.handlers.set("executeScript", executeScript);
+    this.handlers.set("fillInput", fillInput);
+    this.handlers.set("clickElement", clickElement);
+    this.handlers.set("scrollTo", scrollTo);
     this.handlers.set("batch", async (args) => {
       return batch(args, this.execute.bind(this));
     });

@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import type { OpenUrlArgs, SleepArgs, BatchArgs } from '../types.js';
+import { registerWebviewPanel } from './webview-ops.js';
 
 export async function openUrl(args: OpenUrlArgs): Promise<any> {
   const viewColumn = args.column ?? 2;
@@ -15,6 +16,9 @@ export async function openUrl(args: OpenUrlArgs): Promise<any> {
         retainContextWhenHidden: true // Keep webview state when hidden
       }
     );
+
+    // Register panel for later manipulation (script execution, etc.)
+    registerWebviewPanel(args.url, panel);
 
     // Listen for messages from the webview
     panel.webview.onDidReceiveMessage(
@@ -78,11 +82,34 @@ export async function openUrl(args: OpenUrlArgs): Promise<any> {
             }
           });
 
-          console.log('✅ Message listener registered');
+          // Listen for messages from VSCode extension (for script execution)
+          window.addEventListener('message', (event) => {
+            const message = event.data;
+
+            if (message && message.type === 'executeScript') {
+              console.log('🎯 Executing script in iframe:', message.script);
+
+              // Execute script in iframe context
+              const iframe = document.querySelector('iframe');
+              if (iframe && iframe.contentWindow) {
+                try {
+                  iframe.contentWindow.postMessage({
+                    type: 'executeScript',
+                    script: message.script
+                  }, '*');
+                  console.log('✅ Script execution message sent to iframe');
+                } catch (error) {
+                  console.error('❌ Failed to send script to iframe:', error);
+                }
+              }
+            }
+          });
+
+          console.log('✅ Message listeners registered');
         </script>
       </head>
       <body>
-        <iframe src="${args.url}" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
+        <iframe src="${args.url}" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-top-navigation allow-top-navigation-by-user-activation"></iframe>
       </body>
       </html>
     `;

@@ -97,7 +97,7 @@ async function runDemo() {
     await createFileFromSource(ws,
       'src/models.py',
       'python-demo-practice/src/models.py',
-      200
+      600
     );
 
     // Step 2: State
@@ -110,7 +110,7 @@ async function runDemo() {
     await createFileFromSource(ws,
       'src/state.py',
       'python-demo-practice/src/state.py',
-      200
+      600
     );
 
     // Step 3: Web Search Agent
@@ -123,7 +123,7 @@ async function runDemo() {
     await createFileFromSource(ws,
       'src/agents/web_search.py',
       'python-demo-practice/src/agents/web_search.py',
-      200
+      600
     );
 
     // Step 4: Dashboard HTML
@@ -136,7 +136,7 @@ async function runDemo() {
     await createFileFromSource(ws,
       'src/templates/dashboard.html',
       'python-demo-practice/src/templates/dashboard.html',
-      400  // Fast for small HTML
+      600
     );
 
     // Step 5: Dashboard Styles
@@ -149,7 +149,7 @@ async function runDemo() {
     await createFileFromSource(ws,
       'src/static/css/dashboard.css',
       'python-demo-practice/src/static/css/dashboard.css',
-      300  // Fast for CSS
+      600
     );
 
     // Step 6: Dashboard Logic
@@ -162,7 +162,7 @@ async function runDemo() {
     await createFileFromSource(ws,
       'src/static/js/dashboard.js',
       'python-demo-practice/src/static/js/dashboard.js',
-      250  // Fast for JS
+      600
     );
 
     // Step 7: Web Server
@@ -175,7 +175,7 @@ async function runDemo() {
     await createFileFromSource(ws,
       'web_app.py',
       'python-demo-practice/web_app.py',
-      200
+      600
     );
 
     // Finale

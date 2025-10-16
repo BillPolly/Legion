@@ -155,11 +155,11 @@ function handleMessage(message) {
 
       // Map agent names to display text
       const agentNames = {
-        'query_planner': '📝 Planning Queries',
-        'web_search': '🔍 Searching Web',
-        'link_checker': '🔗 Checking Links',
-        'content_extractor': '📄 Extracting Content',
-        'analyst': '📊 Generating Report'
+        'query_planner': '� Planning Queries',
+        'web_search': '� Searching Web',
+        'link_checker': '� Checking Links',
+        'content_extractor': '� Extracting Content',
+        'analyst': '� Generating Report'
       };
       const displayName = agentNames[message.data.agent] || message.data.agent;
 
@@ -217,7 +217,7 @@ function handleMessage(message) {
 function displaySearchResults(data) {
   const html = `
     <div class="results">
-      <h3>🔍 Search Results</h3>
+      <h3>� Search Results</h3>
       ${data.results.map(result => `
         <div class="result-item">
           <strong>${result.title}</strong><br>
@@ -232,7 +232,7 @@ function displaySearchResults(data) {
 function displayLinkResults(data) {
   const html = `
     <div class="results">
-      <h3>🔗 Link Verification</h3>
+      <h3>� Link Verification</h3>
       <p>Checked ${data.total} links: ${data.valid} valid, ${data.invalid} invalid</p>
       ${data.links.map(link => `
         <div class="result-item">
@@ -248,7 +248,7 @@ function displayLinkResults(data) {
 function displayReportLink(data) {
   const html = `
     <div class="results">
-      <h3>📊 Research Report Generated</h3>
+      <h3>� Research Report Generated</h3>
       <p>${data.message}</p>
       <a href="${data.report_path}" class="report-link" target="_blank">View Report</a>
     </div>
@@ -259,7 +259,7 @@ function displayReportLink(data) {
 function displayPagePreviews(data) {
   const html = `
     <div class="results">
-      <h3>📄 Page Previews (${data.pages.length} pages)</h3>
+      <h3>� Page Previews (${data.pages.length} pages)</h3>
       ${data.pages.map(page => `
         <div class="page-preview">
           <div class="url"><a href="${page.url}" target="_blank">${page.url}</a></div>
@@ -285,7 +285,7 @@ function displayFinalReport(data) {
 
   const html = `
     <div class="results">
-      <h3>📊 ${data.title}</h3>
+      <h3>� ${data.title}</h3>
       <p><strong>Word Count:</strong> ${data.word_count} words</p>
       <p><strong>Sources:</strong> ${data.sources.length} verified sources</p>
       <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
@@ -301,13 +301,13 @@ document.addEventListener('click', (e) => {
   if (link && link.href) {
     e.preventDefault();
 
-    console.log('🔗 LINK CLICKED:', link.href);
-    console.log('🪟 window.parent:', window.parent);
-    console.log('🪟 window.parent === window:', window.parent === window);
+    console.log('� LINK CLICKED:', link.href);
+    console.log('� window.parent:', window.parent);
+    console.log('� window.parent === window:', window.parent === window);
 
     // Try to post message to parent (VSCode webview wrapper)
     try {
-      console.log('📤 Sending postMessage to parent...');
+      console.log('� Sending postMessage to parent...');
       window.parent.postMessage({
         type: 'open-link',
         url: link.href
@@ -316,7 +316,7 @@ document.addEventListener('click', (e) => {
     } catch (err) {
       console.error('❌ postMessage failed:', err);
       // Fallback if not in iframe
-      console.log('🔄 Using fallback window.open');
+      console.log('� Using fallback window.open');
       window.open(link.href, '_blank');
     }
   }
@@ -324,17 +324,4 @@ document.addEventListener('click', (e) => {
 
 // Connect on page load
 connect();
-
-// Listen for script execution requests from VSCode webview wrapper
-window.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'executeScript') {
-    console.log('🎯 Received script execution request:', event.data.script);
-    try {
-      // Execute the script
-      const result = eval(event.data.script);
-      console.log('✅ Script executed successfully:', result);
-    } catch (error) {
-      console.error('❌ Script execution failed:', error);
-    }
-  }
-});
+���������������
