@@ -7,7 +7,7 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from research_agent.prompts import (
+from prompts import (
     query_planner_prompt,
     content_summarizer_prompt,
     analyst_prompt

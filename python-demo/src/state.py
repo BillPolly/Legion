@@ -8,7 +8,7 @@ from typing_extensions import TypedDict
 from langgraph.graph import MessagesState, add_messages
 from langchain_core.messages import BaseMessage, AnyMessage
 
-from .models import (
+from models import (
     SearchQuery,
     SearchResults,
     LinkCheckResults,

@@ -12,8 +12,8 @@ from bs4 import BeautifulSoup
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage
 
-from ..state import ResearchState
-from ..models import SearchResult
+from state import ResearchState
+from models import SearchResult
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ async def summarize_content(llm: ChatOpenAI, url: str, content: str, topic: str)
         }
 
     # Import prompt template
-    from ..prompts import content_summarizer_prompt
+    from prompts import content_summarizer_prompt
 
     # Create messages from template
     messages = content_summarizer_prompt.format_messages(

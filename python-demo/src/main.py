@@ -12,9 +12,9 @@ from dotenv import load_dotenv
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import HumanMessage
 
-from .state import ResearchState
-from .models import AgentName
-from .agents import (
+from state import ResearchState
+from models import AgentName
+from agents import (
     supervisor_node,
     query_planner_node,
     web_search_node,

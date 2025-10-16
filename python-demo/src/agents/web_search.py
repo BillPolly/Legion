@@ -8,8 +8,8 @@ import logging
 import requests
 from langchain_core.messages import HumanMessage, AIMessage
 
-from ..state import ResearchState
-from ..models import SearchResults, SearchResult
+from state import ResearchState
+from models import SearchResults, SearchResult
 
 logger = logging.getLogger(__name__)
 

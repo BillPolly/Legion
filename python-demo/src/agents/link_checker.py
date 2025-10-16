@@ -8,8 +8,8 @@ import aiohttp
 import asyncio
 from langchain_core.messages import HumanMessage, AIMessage
 
-from ..state import ResearchState
-from ..models import LinkCheckResults, LinkCheckResult
+from state import ResearchState
+from models import LinkCheckResults, LinkCheckResult
 
 logger = logging.getLogger(__name__)
 

@@ -7,8 +7,8 @@ import logging
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage
 
-from ..state import ResearchState
-from ..models import ResearchReport
+from state import ResearchState
+from models import ResearchReport
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ async def analyst_node(state: ResearchState) -> dict:
     logger.info(f"Generating report from {len(valid_sources)} verified sources")
 
     # Import prompt template
-    from ..prompts import analyst_prompt
+    from prompts import analyst_prompt
 
     # Prepare sources text
     sources_text = "\n\n".join([

@@ -20,9 +20,9 @@ from dotenv import load_dotenv
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-from research_agent.main import create_workflow
+from main import create_workflow
 from langchain_core.messages import HumanMessage
-from research_agent.models import AgentName
+from models import AgentName
 
 # Load environment variables
 load_dotenv()
@@ -40,7 +40,7 @@ class DashboardHTTPRequestHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == '/' or self.path == '/index.html':
-            self.path = '/src/research_agent/dashboard.html'
+            self.path = '/src/dashboard.html'
         return SimpleHTTPRequestHandler.do_GET(self)
 
     def log_message(self, format, *args):

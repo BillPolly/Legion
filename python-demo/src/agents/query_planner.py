@@ -8,8 +8,8 @@ import logging
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage
 
-from ..state import ResearchState
-from ..models import SearchQuery
+from state import ResearchState
+from models import SearchQuery
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ async def query_planner_node(state: ResearchState) -> dict:
     logger.info("📝 Planning search queries...")
 
     # Import prompt template
-    from ..prompts import query_planner_prompt
+    from prompts import query_planner_prompt
 
     # Get LLM with structured output
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.7)

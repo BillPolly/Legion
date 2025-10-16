@@ -11,9 +11,9 @@ import json
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from research_agent.main import create_workflow
+from main import create_workflow
 from langchain_core.messages import HumanMessage
-from research_agent.models import AgentName
+from models import AgentName
 
 
 async def test_full_workflow():

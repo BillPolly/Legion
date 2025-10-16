@@ -8,8 +8,8 @@ import logging
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 
-from ..state import ResearchState
-from ..models import SupervisorDecision, AgentName
+from state import ResearchState
+from models import SupervisorDecision, AgentName
 
 logger = logging.getLogger(__name__)
 
