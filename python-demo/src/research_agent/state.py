@@ -5,8 +5,8 @@ Following LangChain best practices for state handling
 
 from typing import Annotated, List, Optional
 from typing_extensions import TypedDict
-from langgraph.graph import MessagesState
-from langchain_core.messages import BaseMessage
+from langgraph.graph import MessagesState, add_messages
+from langchain_core.messages import BaseMessage, AnyMessage
 
 from .models import (
     SearchQuery,

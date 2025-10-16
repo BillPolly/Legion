@@ -11,7 +11,6 @@ from typing import List
 from bs4 import BeautifulSoup
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage
-from langgraph.config import get_stream_writer
 
 from ..state import ResearchState
 from ..models import SearchResult
@@ -92,9 +91,6 @@ async def content_extractor_node(state: ResearchState) -> dict:
     """
     logger.info("📄 Extracting and summarizing content...")
 
-    # Get stream writer
-    writer = get_stream_writer()
-
     search_results = state.get('search_results')
     link_check_results = state.get('link_check_results')
 
@@ -115,15 +111,6 @@ async def content_extractor_node(state: ResearchState) -> dict:
         }
 
     logger.info(f"Extracting content from {len(valid_sources)} URLs...")
-
-    writer({
-        "type": "step_update",
-        "data": {
-            "title": "📄 Extracting Content",
-            "subtitle": f"Fetching {len(valid_sources)} pages...",
-            "progress": 70
-        }
-    })
 
     # Fetch all page contents
     async with aiohttp.ClientSession() as session:
@@ -158,29 +145,6 @@ async def content_extractor_node(state: ResearchState) -> dict:
         summaries.append(summary)
 
     logger.info(f"✓ Extracted and summarized {len(summaries)} pages")
-
-    # Emit page previews
-    writer({
-        "type": "page_previews",
-        "data": {
-            "pages": [
-                {
-                    "url": s["url"],
-                    "preview": s["summary"][:200] + "..." if len(s["summary"]) > 200 else s["summary"]
-                }
-                for s in summaries
-            ]
-        }
-    })
-
-    writer({
-        "type": "step_update",
-        "data": {
-            "title": "✓ Content Extracted",
-            "subtitle": f"Summarized {len(summaries)} pages",
-            "progress": 80
-        }
-    })
 
     # Add to conversation
     messages_to_add = [

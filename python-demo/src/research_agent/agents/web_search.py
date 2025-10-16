@@ -7,7 +7,6 @@ import os
 import logging
 import requests
 from langchain_core.messages import HumanMessage, AIMessage
-from langgraph.config import get_stream_writer
 
 from ..state import ResearchState
 from ..models import SearchResults, SearchResult
@@ -20,17 +19,6 @@ async def web_search_node(state: ResearchState) -> dict:
     Execute web search using generated queries
     """
     logger.info("🔍 Executing web search...")
-
-    # Get stream writer
-    writer = get_stream_writer()
-    writer({
-        "type": "step_update",
-        "data": {
-            "title": "🔍 Searching the Web",
-            "subtitle": "Querying search API...",
-            "progress": 30
-        }
-    })
 
     queries = state.get('search_queries', [])
     if not queries:
@@ -86,23 +74,6 @@ async def web_search_node(state: ResearchState) -> dict:
         raise RuntimeError(f"Web search failed: {str(e)}")
 
     logger.info(f"✓ Found {len(search_results.results)} results")
-
-    # Emit search results
-    writer({
-        "type": "search_results",
-        "data": {
-            "results": [{"title": r.title, "url": r.url} for r in search_results.results[:5]]
-        }
-    })
-
-    writer({
-        "type": "step_update",
-        "data": {
-            "title": "✓ Search Complete",
-            "subtitle": f"Found {len(search_results.results)} results",
-            "progress": 40
-        }
-    })
 
     # Add to conversation
     messages_to_add = [

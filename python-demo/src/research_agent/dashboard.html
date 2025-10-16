@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Multi-Agent Research Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     * {
       margin: 0;
@@ -37,16 +38,71 @@
       padding: 20px;
       margin-bottom: 20px;
       backdrop-filter: blur(10px);
+      transition: opacity 0.5s ease, transform 0.5s ease, max-height 0.5s ease, padding 0.5s ease, margin 0.5s ease;
     }
 
     .status h2 {
       margin-bottom: 10px;
       font-size: 24px;
+      transition: all 0.3s ease;
     }
 
     .status p {
       font-size: 18px;
       opacity: 0.9;
+      transition: all 0.3s ease;
+    }
+
+    .step-history {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid rgba(255,255,255,0.2);
+      max-height: 200px;
+      overflow-y: auto;
+      transition: opacity 0.3s ease, max-height 0.3s ease;
+    }
+
+    .step-history.hidden {
+      opacity: 0;
+      max-height: 0;
+      padding-top: 0;
+      margin-top: 0;
+      border-top: none;
+      overflow: hidden;
+    }
+
+    .status.fade-out {
+      opacity: 0;
+      transform: translateY(-20px);
+      max-height: 0;
+      padding: 0;
+      margin-bottom: 0;
+      overflow: hidden;
+    }
+
+    .step-item {
+      padding: 8px 12px;
+      margin: 5px 0;
+      background: rgba(255,255,255,0.1);
+      border-radius: 5px;
+      font-size: 14px;
+      opacity: 0;
+      animation: fadeIn 0.3s ease forwards;
+    }
+
+    .step-item.complete {
+      opacity: 0.6;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .progress-bar {
@@ -58,10 +114,16 @@
     }
 
     .progress-fill {
-      background: #4ade80;
+      background: linear-gradient(90deg, #60a5fa 0%, #3b82f6 100%);
       height: 100%;
       width: 0%;
-      transition: width 0.5s ease;
+      transition: width 0.3s ease-out, background 0.5s ease;
+      box-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+    }
+
+    .progress-fill.complete {
+      background: linear-gradient(90deg, #4ade80 0%, #22c55e 100%);
+      box-shadow: 0 0 10px rgba(74, 222, 128, 0.8);
     }
 
     .results {
@@ -195,6 +257,98 @@
       color: #666;
       font-style: italic;
     }
+
+    .markdown-content {
+      line-height: 1.6;
+      color: #333;
+    }
+
+    .markdown-content h1,
+    .markdown-content h2,
+    .markdown-content h3,
+    .markdown-content h4 {
+      margin-top: 24px;
+      margin-bottom: 16px;
+      font-weight: 600;
+      color: #667eea;
+    }
+
+    .markdown-content h1 {
+      font-size: 2em;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 0.3em;
+    }
+
+    .markdown-content h2 {
+      font-size: 1.5em;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 0.3em;
+    }
+
+    .markdown-content h3 {
+      font-size: 1.25em;
+    }
+
+    .markdown-content p {
+      margin-bottom: 16px;
+    }
+
+    .markdown-content ul,
+    .markdown-content ol {
+      margin-bottom: 16px;
+      padding-left: 2em;
+    }
+
+    .markdown-content li {
+      margin-bottom: 8px;
+    }
+
+    .markdown-content code {
+      background: rgba(102, 126, 234, 0.1);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 0.9em;
+    }
+
+    .markdown-content pre {
+      background: rgba(102, 126, 234, 0.05);
+      border-left: 3px solid #667eea;
+      padding: 16px;
+      overflow-x: auto;
+      border-radius: 5px;
+      margin-bottom: 16px;
+    }
+
+    .markdown-content pre code {
+      background: none;
+      padding: 0;
+    }
+
+    .markdown-content blockquote {
+      border-left: 4px solid #667eea;
+      padding-left: 16px;
+      margin: 16px 0;
+      color: #666;
+      font-style: italic;
+    }
+
+    .markdown-content a {
+      color: #667eea;
+      text-decoration: none;
+    }
+
+    .markdown-content a:hover {
+      text-decoration: underline;
+    }
+
+    .markdown-content strong {
+      font-weight: 600;
+    }
+
+    .markdown-content em {
+      font-style: italic;
+    }
   </style>
 </head>
 <body>
@@ -221,6 +375,7 @@
       <div class="progress-bar">
         <div id="progress-fill" class="progress-fill"></div>
       </div>
+      <div id="step-history" class="step-history"></div>
     </div>
 
     <div id="results-container"></div>
@@ -235,6 +390,13 @@
     const resultsContainer = document.getElementById('results-container');
     const topicInput = document.getElementById('topic-input');
     const startButton = document.getElementById('start-button');
+    const stepHistory = document.getElementById('step-history');
+
+    let currentProgress = 0;
+    let targetProgress = 0;
+    let progressInterval = null;
+    let lastAgent = null;
+    let simulationInterval = null;
 
     function connect() {
       ws = new WebSocket('ws://localhost:8765');
@@ -266,6 +428,49 @@
       };
     }
 
+    function smoothProgress() {
+      if (progressInterval) clearInterval(progressInterval);
+
+      progressInterval = setInterval(() => {
+        if (currentProgress < targetProgress) {
+          currentProgress += 0.5;
+          if (currentProgress > targetProgress) currentProgress = targetProgress;
+          progressFill.style.width = currentProgress + '%';
+        } else {
+          clearInterval(progressInterval);
+        }
+      }, 50);
+    }
+
+    function setProgress(target) {
+      targetProgress = target;
+      smoothProgress();
+
+      // Clear any existing simulation
+      if (simulationInterval) {
+        clearInterval(simulationInterval);
+        simulationInterval = null;
+      }
+
+      // Turn progress bar green when complete
+      if (target >= 100) {
+        progressFill.classList.add('complete');
+      } else {
+        progressFill.classList.remove('complete');
+      }
+
+      // Start simulating progress toward next milestone (but don't reach it)
+      if (target < 100) {
+        const nextTarget = Math.min(target + 18, 95); // Simulate up to 18% ahead, but max 95%
+        simulationInterval = setInterval(() => {
+          if (currentProgress < nextTarget) {
+            currentProgress += 0.15;
+            progressFill.style.width = currentProgress + '%';
+          }
+        }, 100);
+      }
+    }
+
     function startResearch() {
       const topic = topicInput.value.trim();
       if (!topic) {
@@ -273,19 +478,47 @@
         return;
       }
 
+      // Reset progress
+      currentProgress = 0;
+      targetProgress = 0;
+      progressFill.style.width = '0%';
+      progressFill.classList.remove('complete');
+      lastAgent = null;
+
       // Disable button and clear previous results
       startButton.disabled = true;
       startButton.textContent = 'Researching...';
       resultsContainer.innerHTML = '';
+      stepHistory.innerHTML = '';
+      stepHistory.classList.remove('hidden');
+
+      // Show status section again
+      const statusElement = document.querySelector('.status');
+      statusElement.classList.remove('fade-out');
+
       currentStep.textContent = 'Starting research...';
       currentDetail.textContent = `Topic: ${topic}`;
-      progressFill.style.width = '0%';
 
       // Send start message to server
       ws.send(JSON.stringify({
         type: 'start_research',
         topic: topic
       }));
+    }
+
+    function addStepToHistory(agent, displayName) {
+      // Mark previous step as complete
+      const items = stepHistory.querySelectorAll('.step-item');
+      items.forEach(item => item.classList.add('complete'));
+
+      // Add new step
+      const stepItem = document.createElement('div');
+      stepItem.className = 'step-item';
+      stepItem.textContent = displayName;
+      stepHistory.appendChild(stepItem);
+
+      // Auto scroll to bottom
+      stepHistory.scrollTop = stepHistory.scrollHeight;
     }
 
     // Event listeners
@@ -298,6 +531,33 @@
 
     function handleMessage(message) {
       switch (message.type) {
+        case 'progress':
+          // Skip supervisor messages
+          if (message.data.agent === 'supervisor') {
+            return;
+          }
+
+          // Map agent names to display text
+          const agentNames = {
+            'query_planner': '📝 Planning Queries',
+            'web_search': '🔍 Searching Web',
+            'link_checker': '🔗 Checking Links',
+            'content_extractor': '📄 Extracting Content',
+            'analyst': '📊 Generating Report'
+          };
+          const displayName = agentNames[message.data.agent] || message.data.agent;
+
+          // Add to history if this is a new agent
+          if (message.data.agent !== lastAgent) {
+            addStepToHistory(message.data.agent, displayName);
+            lastAgent = message.data.agent;
+          }
+
+          currentStep.textContent = displayName;
+          currentDetail.textContent = 'Processing...';
+          setProgress(message.data.progress);
+          break;
+
         case 'step_update':
           currentStep.textContent = message.data.title;
           currentDetail.textContent = message.data.subtitle || '';
@@ -321,9 +581,17 @@
           break;
 
         case 'complete':
-          currentStep.textContent = '✅ Analysis Complete!';
-          currentDetail.textContent = message.data.message || 'All tasks finished successfully';
-          progressFill.style.width = '100%';
+          displayFinalReport(message.data);
+          currentStep.textContent = '✅ Research Complete!';
+          currentDetail.textContent = `Generated ${message.data.word_count}-word report with ${message.data.sources.length} sources`;
+          setProgress(100);
+          startButton.disabled = false;
+          startButton.textContent = 'Start Research';
+          break;
+
+        case 'error':
+          currentStep.textContent = '❌ Error';
+          currentDetail.textContent = message.data.message || 'An error occurred';
           startButton.disabled = false;
           startButton.textContent = 'Start Research';
           break;
@@ -386,6 +654,57 @@
       `;
       resultsContainer.innerHTML += html;
     }
+
+    function displayFinalReport(data) {
+      // Get the status element
+      const statusElement = document.querySelector('.status');
+
+      // After 1 second (to show green bar), fade out the entire status section
+      setTimeout(() => {
+        statusElement.classList.add('fade-out');
+      }, 1000);
+
+      // Render markdown content
+      const markdownHtml = marked.parse(data.content);
+
+      const html = `
+        <div class="results">
+          <h3>📊 ${data.title}</h3>
+          <p><strong>Word Count:</strong> ${data.word_count} words</p>
+          <p><strong>Sources:</strong> ${data.sources.length} verified sources</p>
+          <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+          <div class="markdown-content">${markdownHtml}</div>
+        </div>
+      `;
+      resultsContainer.innerHTML = html;
+    }
+
+    // Intercept all link clicks and send to parent frame (VSCode webview)
+    document.addEventListener('click', (e) => {
+      const link = e.target.closest('a');
+      if (link && link.href) {
+        e.preventDefault();
+
+        console.log('🔗 LINK CLICKED:', link.href);
+        console.log('🪟 window.parent:', window.parent);
+        console.log('🪟 window.parent === window:', window.parent === window);
+
+        // Try to post message to parent (VSCode webview wrapper)
+        try {
+          console.log('📤 Sending postMessage to parent...');
+          window.parent.postMessage({
+            type: 'open-link',
+            url: link.href
+          }, '*');
+          console.log('✅ postMessage sent successfully');
+        } catch (err) {
+          console.error('❌ postMessage failed:', err);
+          // Fallback if not in iframe
+          console.log('🔄 Using fallback window.open');
+          window.open(link.href, '_blank');
+        }
+      }
+    });
 
     // Connect on page load
     connect();

@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta property="og:locale" content="en_US" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Rethinking AI Agents: A Principal-Agent Perspective" />
+<meta property="og:description" content="Rethinking AI agents as guided actors: Balancing autonomy and accountability in organizations" />
+<meta property="og:url" content="https://cmr.berkeley.edu/2025/07/rethinking-ai-agents-a-principal-agent-perspective/"  />
+<meta property="og:site_name" content="California Management Review" />
+<meta property="og:image" content="https://cmr.berkeley.edu//assets/images/blog/2025-07-jarrahi.jpg" />
+<link rel="icon" href="/assets/images/favicon/favicon.png">
+
+<title>Rethinking AI Agents: A Principal-Agent Perspective | California Management Review</title>
+
+<meta name="description" content="Rethinking AI agents as guided actors: Balancing autonomy and accountability in organizations">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans+Condensed:400,500|IBM+Plex+Sans:300,300i,400,500,500i|IBM+Plex+Serif:400,400i,700,700i&display=swap" rel="stylesheet">
+<link href="/assets/css/theme-new.css" rel="stylesheet">
+
+
+<script type="text/javascript" src="//platform-api.sharethis.com/js/sharethis.js#property=5dbf6c4abb2d99001231ec52&product=inline-share-buttons"></script>
+<meta name="twitter:creator" content="@CMR_UCBerkeley" />
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@CMR_UCBerkeley" />
+<meta property="twitter:url" content="https://cmr.berkeley.edu/2025/07/rethinking-ai-agents-a-principal-agent-perspective/" />
+<meta property="twitter:title" content="Rethinking AI Agents: A Principal-Agent Perspective" />
+<meta property="twitter:description" content="Rethinking AI agents as guided actors: Balancing autonomy and accountability in organizations" />
+<meta property="twitter:image" content="https://cmr.berkeley.edu//assets/images/blog/2025-07-jarrahi.jpg" />
+
+<meta name="citation_title" content="Rethinking AI Agents: A Principal-Agent Perspective">
+
+
+
+
+
+
+
+    
+    
+    <meta name="citation_author" content="Mohammad Hossein Jarrahi">
+    
+
+    
+    
+    <meta name="citation_author" content="Paavo Ritala">
+    
+
+
+
+
+<meta name="citation_publication_date" content="2025/07/23">
+<meta name="citation_journal_title" content="California Management Review Insights">
+<meta name="citation_pdf_url" content="https://cmr.berkeley.edu/assets/documents/pdf/2025-07-rethinking-ai-agents-a-principal-agent-perspective.pdf">
+
+
+
+
+
+
+
+
+
+<script>
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+      define(function() {
+        return factory(root);
+      });
+    } else if (typeof exports === 'object') {
+      module.exports = factory;
+    } else {
+      root.echo = factory(root);
+    }
+  })(this, function (root) {
+
+    'use strict';
+
+    var echo = {};
+
+    var callback = function () {};
+
+    var offset, poll, delay, useDebounce, unload;
+
+    var isHidden = function (element) {
+      return (element.offsetParent === null);
+    };
+
+    var inView = function (element, view) {
+      if (isHidden(element)) {
+        return false;
+      }
+
+      var box = element.getBoundingClientRect();
+      return (box.right >= view.l && box.bottom >= view.t && box.left <= view.r && box.top <= view.b);
+    };
+
+    var debounceOrThrottle = function () {
+      if(!useDebounce && !!poll) {
+        return;
+      }
+      clearTimeout(poll);
+      poll = setTimeout(function(){
+        echo.render();
+        poll = null;
+      }, delay);
+    };
+
+    echo.init = function (opts) {
+      opts = opts || {};
+      var offsetAll = opts.offset || 0;
+      var offsetVertical = opts.offsetVertical || offsetAll;
+      var offsetHorizontal = opts.offsetHorizontal || offsetAll;
+      var optionToInt = function (opt, fallback) {
+        return parseInt(opt || fallback, 10);
+      };
+      offset = {
+        t: optionToInt(opts.offsetTop, offsetVertical),
+        b: optionToInt(opts.offsetBottom, offsetVertical),
+        l: optionToInt(opts.offsetLeft, offsetHorizontal),
+        r: optionToInt(opts.offsetRight, offsetHorizontal)
+      };
+      delay = optionToInt(opts.throttle, 250);
+      useDebounce = opts.debounce !== false;
+      unload = !!opts.unload;
+      callback = opts.callback || callback;
+      echo.render();
+      if (document.addEventListener) {
+        root.addEventListener('scroll', debounceOrThrottle, false);
+        root.addEventListener('load', debounceOrThrottle, false);
+      } else {
+        root.attachEvent('onscroll', debounceOrThrottle);
+        root.attachEvent('onload', debounceOrThrottle);
+      }
+    };
+
+    echo.render = function (context) {
+      var nodes = (context || document).querySelectorAll('[data-echo], [data-echo-background]');
+      var length = nodes.length;
+      var src, elem;
+      var view = {
+        l: 0 - offset.l,
+        t: 0 - offset.t,
+        b: (root.innerHeight || document.documentElement.clientHeight) + offset.b,
+        r: (root.innerWidth || document.documentElement.clientWidth) + offset.r
+      };
+      for (var i = 0; i < length; i++) {
+        elem = nodes[i];
+        if (inView(elem, view)) {
+
+          if (unload) {
+            elem.setAttribute('data-echo-placeholder', elem.src);
+          }
+
+          if (elem.getAttribute('data-echo-background') !== null) {
+            elem.style.backgroundImage = 'url(' + elem.getAttribute('data-echo-background') + ')';
+          }
+          else if (elem.src !== (src = elem.getAttribute('data-echo'))) {
+            elem.src = src;
+          }
+
+          if (!unload) {
+            elem.removeAttribute('data-echo');
+            elem.removeAttribute('data-echo-background');
+          }
+
+          callback(elem, 'load');
+        }
+        else if (unload && !!(src = elem.getAttribute('data-echo-placeholder'))) {
+
+          if (elem.getAttribute('data-echo-background') !== null) {
+            elem.style.backgroundImage = 'url(' + src + ')';
+          }
+          else {
+            elem.src = src;
+          }
+
+          elem.removeAttribute('data-echo-placeholder');
+          callback(elem, 'unload');
+        }
+      }
+      if (!length) {
+        echo.detach();
+      }
+    };
+
+    echo.detach = function () {
+      if (document.removeEventListener) {
+        root.removeEventListener('scroll', debounceOrThrottle);
+      } else {
+        root.detachEvent('onscroll', debounceOrThrottle);
+      }
+      clearTimeout(poll);
+    };
+
+    return echo;
+
+  });
+</script>
+<script>
+    echo.init({
+      offset: 2500,
+      throttle: 250,
+      unload: false,
+      callback: function (element, op) {
+        //console.log(element, 'has been', op + 'ed')
+      }
+    });
+</script>
+
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-R56HCYX3CD"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-R56HCYX3CD');
+</script>
+
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+
+</head>
+
+
+
+
+<body class="layout-post">
+
+
+<!-- Begin Menu Navigation
+================================================== -->
+
+
+
+
+        <div class="header-alert-large">
+          <div class="header-alert-content-lg">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12 col-lg-12 col-sm-12">
+                    <span class="nav-search"><a href="/search/index.html"><i class="fa fa-search"></i></a></span>
+                    <span class="nav-subscribe"><a target="_blank" href="https://us.sagepub.com/nam/california-management-review/journal202706">Subscribe</a></span>
+                    <span class="nav-submit"><a target="_blank" href="https://mc.manuscriptcentral.com/uc-cmr">Submit</a></span>
+                    </div>
+                 </div>
+            </div>
+            </div>
+        </div>
+
+
+
+<header class="navbar navbar-toggleable-md navbar-light bg-white mediumnavigation">
+    <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarsWow" aria-controls="navbarsWow" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="container">
+
+        <!-- Begin Logo -->
+        <div class="navbar-logo" style="margin-right:50px;">
+        <a href="/"><img src="/assets/images/logos/cmr-logo.svg"></a>
+        </div>
+        <!-- End Logo -->
+
+        <!-- Begin Menu -->
+        <div class="collapse navbar-collapse" id="navbarsWow">
+
+            <!-- Begin Menu -->
+            <ul class="navbar-nav ml-auto">
+
+
+                <li class="dropdown menu-large nav-item"> <a href="#" class="nav-link" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Topics &nbsp; <i class="fa fa-angle-down"></i></a>
+                    <ul class="dropdown-menu megamenu">
+                        <div class="row">
+                            <li class="col-md-3">
+                                <ul>
+                                    <li class="dropdown-header">Strategy & Competitive Advantage</li>
+                                    <li class="divider"></li>
+                                    <li><a class="dropdown-item" href="/topic/business-models/">Business Models</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/strategy/">Strategy</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/strategic-agility/">Strategic Agility</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/competitive-advantage/">Competitive Advantage</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/alliances-mergers/">Alliances & Mergers</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/growth-strategy/">Growth Strategy</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/capabilities/">Capabilities</a>
+                                    </li>
+                                    <br>
+                                    <li class="dropdown-header">Leadership & Decision-Making</li>
+                                    <li class="divider"></li>
+                                    <li><a class="dropdown-item" href="/topic/leadership/">Leadership</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/decision-making/">Decision-Making</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/change-management/">Change Management</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/negotiations/">Negotiations</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/crisis-management/">Crisis Management</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="#">&nbsp;</a></li>   
+                                    <br>
+                                    <li class="dropdown-header">Stakeholders & Governance</li>
+                                    <li class="divider"></li>
+                                    <li><a class="dropdown-item" href="/topic/board-of-directors/">Board of Directors</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/corporate-governance/">Corporate Governance</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/shareholder-engagement/">Shareholder Engagement</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/inclusivity-transparency/">Inclusivity & Transparency</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/disclosure-accountability/">Disclosure & Accountability</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="#">&nbsp;</a></li>  
+                                    <br>
+                                    <li class="dropdown-header">Risk, Resilience, & Compliance</li>
+                                    <li class="divider"></li>
+                                    <li><a class="dropdown-item" href="/topic/risk-management/">Risk Management</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/resilience/">Resilience</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/regulatory-compliance/">Regulatory Compliance</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/security-privacy/">Security & Privacy</a>
+                                    </li>                                      
+                                    <li><a class="dropdown-item" href="/topic/legal/">Legal</a>
+                                    </li>
+                                     <br>                                 
+                                </ul>
+                            </li>
+                            <li class="col-md-3">
+                                <ul>
+                                    <li class="dropdown-header">Innovation & Entrepreneurship</li>
+                                    <li class="divider"></li>
+                                    <li><a class="dropdown-item" href="/topic/innovation/">Innovation</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/open-innovation/">Open Innovation</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/entrepreneurship/">Entrepreneurship</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/research-development/">Research & Development</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/product-development/">Product Development</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="#">&nbsp;</a></li>  
+                                    <li><a class="dropdown-item" href="#">&nbsp;</a></li>                                     
+                                    <br>
+                                    <li class="dropdown-header">Technology & Digital Transformation</li>
+                                    <li class="divider"></li>
+                                    <li><a class="dropdown-item" href="/topic/blockchain/">Blockchain</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/digital-transformation/">Digital Transformation</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/digital-platforms/">Digital Platforms</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/information-technology/">Information Technology</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/technology-strategy/">Technology Strategy</a>
+                                    </li>                                    
+                                    <li><a class="dropdown-item" href="/topic/cybersecurity/">Cybersecurity</a>
+                                    </li>
+                                    <br>
+                                    <li class="dropdown-header">Artificial Intelligence</li>
+                                    <li class="divider"></li>
+                                    <li><a class="dropdown-item" href="/topic/artificial-intelligence/">Artificial Intelligence</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/agentic-ai/">Agentic AI</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/generative-ai/">Generative AI</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/automation/">Automation</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="#">&nbsp;</a></li>
+                                    <li><a class="dropdown-item" href="#">&nbsp;</a></li>  
+                                    <br>
+                                    <li class="dropdown-header">Data & Analytics</li>
+                                    <li class="divider"></li>
+                                    <li><a class="dropdown-item" href="/topic/business-intelligence/">Business Intelligence</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/data-management/">Data Management</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/data-analysis/">Data Analysis</a>
+                                    </li>                                    
+                                    <li><a class="dropdown-item" href="/topic/predictive-modeling/">Predictive Modeling</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/demographics/">Demographics</a>
+                                    </li>                                     
+                                     <br>                               
+                                </ul>
+                            </li>
+                            <li class="col-md-3">
+                                <ul>
+                                    <li class="dropdown-header">Sales & Marketing</li>
+                                    <li class="divider"></li>
+                                    <li><a class="dropdown-item" href="/topic/sales/">Sales</a>
+                                    </li>                                  
+                                    <li><a class="dropdown-item" href="/topic/customer-relationships/">Customer Relationships</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/marketing-strategy/">Marketing Strategy</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/digital-marketing/">Digital Marketing</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/social-media/">Social Media</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/advertising/">Advertising</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/brand-management/">Brand Management</a>
+                                    </li>    
+                                    <br>                                   
+                                    <li class="dropdown-header">Organizational Design & Culture</li>
+                                    <li class="divider"></li>
+                                    <li><a class="dropdown-item" href="/topic/organizational-design/">Organizational Design</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/organizational-behavior/">Organizational Behavior</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/teams-collaboration/">Teams & Collaboration</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/communication/">Communication</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/culture/">Culture</a>
+                                    </li> 
+                                    <li><a class="dropdown-item" href="#">&nbsp;</a></li>                                                                         
+                                     <br>                           
+                                    <li class="dropdown-header">People & Talent</li>
+                                    <li class="divider"></li>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/talent-management/">Talent Management</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/human-resource-management/">Human Resource Management</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/employee-wellness/">Employee Wellness</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/diversity-equity-inclusion/">Diversity, Equity, & Inclusion</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/conflict-resolution/">Conflict Resolution</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="#">&nbsp;</a></li>  
+                                    <br>
+                                   <li class="dropdown-header">Operations & Supply Chain</li>
+                                    <li class="divider"></li>
+                                    <li><a class="dropdown-item" href="/topic/project-management/">Project Management</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/supply-chain-management/">Supply Chain Management</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/logistics/">Logistics</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/planning-forecasting/">Planning & Forecasting</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/quality-management/">Quality Management</a>
+                                    </li>
+                                      <br>                                
+                                </ul>
+                            </li>
+                            <li class="col-md-3">
+                                <ul>
+                                    <li class="dropdown-header">Sustainability, CSR, & Ethics</li>
+                                    <li class="divider"></li>
+                                    <li><a class="dropdown-item" href="/topic/sustainability/">Sustainability</a>
+                                    </li>                                  
+                                    <li><a class="dropdown-item" href="/topic/business-ethics/">Business Ethics</a>
+                                    </li>                                      
+                                    <li><a class="dropdown-item" href="/topic/corporate-social-responsibility/">Corporate Social Responsibility</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/climate-change/">Climate Change</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/circular-economy/">Circular Economy</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/social-impact/">Social Impact</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/esg/">ESG</a>
+                                    </li>
+                                    <br>
+                                    <li class="dropdown-header">Global Business</li>
+                                    <li class="divider"></li>
+                                    <li><a class="dropdown-item" href="/topic/globalization/">Globalization</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/cross-cultural-issues/">Cross-Cultural Issues</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/global-supply-chains/">Global Supply Chains</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/international-partnerships/">International Partnerships</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/emerging-markets/">Emerging Markets</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="#">&nbsp;</a></li>   
+                                    <br>
+                                    <li class="dropdown-header">Government & Society</li>
+                                    <li class="divider"></li>
+                                    <li><a class="dropdown-item" href="/topic/government/">Government</a>
+                                    </li>  
+                                    <li><a class="dropdown-item" href="/topic/public-policy/">Public Policy</a>
+                                    </li>     
+                                    <li><a class="dropdown-item" href="/topic/public-interest/">Public Interest</a>
+                                    </li>                                                                                                    
+                                    <li><a class="dropdown-item" href="/topic/regulation/">Regulation</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/labor/">Labor</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/lobbying/">Lobbying</a>
+                                    </li> 
+                                     <br>                                                            
+                                    <li class="dropdown-header">Industries</li>
+                                    <li class="divider"></li>
+                                    <li><a class="dropdown-item" href="/topic/finance/">Finance</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/education/">Education</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/healthcare/">Healthcare</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/entertainment/">Entertainment</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/commodities/">Commodities</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/topic/transportation/">Transportation</a>
+                                    </li>                                 
+                                    <br>
+                                </ul>
+                            </li>
+                        </div>
+                    </ul>
+                </li>
+
+
+
+                <li class="dropdown menu-large nav-item"> <a href="#" class="nav-link" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Journal &nbsp; <i class="fa fa-angle-down"></i></a>
+                    <ul class="dropdown-menu megamenu">
+                        <div class="row">
+                            <li class="col-md-3">
+                                <div class="row">
+                                    <div class="col-md-10">
+                                    <a href="/browse/issues/67_4/"><img class="img-fluid" style="margin-left: 1.5rem; border-radius: 4px; box-shadow:0 6px 10px 0 rgba(0,0,0,0.1);" src="/assets/images/covers/67_4.png"></a>
+                                    </div>
+                                    <div class="col-md-2">
+                                        &nbsp;
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="col-md-5">
+                                <ul>
+                                    <span style="margin-bottom:0.5rem; margin-left: 1.15rem;" class="badge badge-info">&nbsp; SUMMER 2025 &nbsp; </span>
+                                    <!--<span style="font-weight:700; font-size: 0.8rem; color:grey; margin-left:0.6rem;">Volume 67 • Issue 4 </span>-->
+                                    <a href="/browse/issues/67_4/"><h4 style="margin-left: 1.15rem; color: #3f3f3f; font-family: 'IBM Plex Sans Condensed', sans-serif;">Profiting from AI</h4></a>
+                                    <p style="margin-left: 1.15rem; font-weight:500; color: grey;">Our summer issue features contributions on artificial intelligence, strategic agility, and digital transformation</p>
+                                </ul>
+                                <ul>
+            
+                                </ul>
+                                <ul style="margin-left:1.15rem;"><hr></ul>
+                                <ul>
+                                    <span style="margin-bottom:0.5rem; margin-left: 1.15rem;" class="badge badge-primary">&nbsp; NEW &nbsp; </span>
+                                    <a href="/spotlight"><h4 style="margin-left: 1.15rem; color: #3f3f3f; font-family: 'IBM Plex Sans Condensed', sans-serif;">Introducing Spotlight</h4></a>
+                                      <p style="margin-left: 1.15rem; font-weight:500; color: grey;">A new kind of practitioner-focused research designed to complement our traditional In-Depth articles</p>
+                                </ul>
+                                <ul>
+                                    <li><a class="dropdown-item megalink" href="/spotlight/">Learn more <i class="fa fa-arrow-circle-right"></i></a>
+                                    </li><br>
+                                </ul>
+
+                            </li>
+                            <li class="col-md-1"></li>
+
+                            <li class="col-md-3">
+                                <ul>
+                                    <li class="dropdown-header">Browse</li>
+                                    <li class="divider"></li>
+                                    <li><a class="dropdown-item" href="/browse/current/">Current Issue</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/browse/issues/">All Issues</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/browse/articles/">Latest</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/browse/indepth/">In-Depth</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/browse/spotlight/">Spotlight</a>
+                                    </li>
+                                </ul>
+                            </li>
+                        </div>
+                    </ul>
+                </li>
+
+
+
+                <li class="dropdown menu-large nav-item"> <a href="#" class="nav-link" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Insights &nbsp; <i class="fa fa-angle-down"></i></a>
+                    <ul class="dropdown-menu megamenu">
+                        <div class="row">
+                            <li class="col-md-3">
+                                <ul>
+                                    <a href="/2025/10/how-ai-and-social-intrapreneurship-can-help-companies-navigate-today-s-political-headwinds/"><img class="img-fluid" style="margin-left: 1.5rem; border-radius: 4px; box-shadow:0 6px 10px 0 rgba(0,0,0,0.1);" src="/assets/images/blog/2025-10-corbett.jpg"></a>
+                                </ul>
+                            </li>
+
+                           <li class="col-md-6 contentbox" style="margin-left:1rem;">
+                                <ul>
+                                    <a href="/topic/corporate-social-responsibility/"><span class="topicheading">Corporate Social Responsibility</span></a>
+                                    <a href="/2025/10/how-ai-and-social-intrapreneurship-can-help-companies-navigate-today-s-political-headwinds/"><h5>AI and Social Intrapreneurship</h5></a>
+                                    <p>Accelerating social innovation under uncertainty </p>
+                                    <span><img class="post-icon" src="/assets/images/logos/insight-color.svg"></span>
+                                    <span class="post-date" style="text-transform:uppercase; font-weight:500; color:rgb(143, 143, 143);">Insight</span>
+                                    <span class="post-date">Michael Corbett</span>
+                                </ul>
+                            </li>
+
+
+                            <li class="col-md-2">
+                                <ul>
+                                    <li class="dropdown-header">Browse</li>
+                                    <li class="divider"></li>
+                                    <li><a class="dropdown-item" href="/insights/">Latest</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/browse/collections/">Collections</a>
+                                    </li>
+                                </ul>
+                            </li>
+                        </div>
+                    </ul>
+                </li>
+
+             <li class="dropdown menu-large nav-item"> <a href="#" class="nav-link" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Cases &nbsp; <i class="fa fa-angle-down"></i></a>
+                    <ul class="dropdown-menu megamenu">
+                        <div class="row">
+                            <li class="col-md-3">
+                                <ul>
+                                    <a href="/2025/10/orsted/"><img class="img-fluid" style="margin-left: 1.5rem; border-radius: 4px; box-shadow:0 6px 10px 0 rgba(0,0,0,0.1);" src="/assets/images/cases/2025-orsted.jpg"></a>
+                                </ul>
+                            </li>
+
+                           <li class="col-md-6 contentbox" style="margin-left:1rem;">
+                                <ul>
+                                    <a href="/topic/teams-collaboration/"><span class="topicheading">Teams & Collaboration</span></a>
+                                    <a href="/2025/10/orsted/"><h5>Ørsted: Co-Creating a People Positive Framework for the Renewable Energy Transition</h5></a>
+                                    <p>Ørsted has implemented many project-by-project community benefit initiatives</p>
+                                    <span><img class="post-icon" src="/assets/images/logos/bhcs-color.svg"></span>
+                                    <span class="post-date" style="text-transform:uppercase; font-weight:500; color:rgb(143, 143, 143);">Case Study</span>
+                                    <span class="post-date">Dara O'Rourke and Robert Strand</span>
+                                </ul>
+                            </li>
+
+                          <li class="col-md-2">
+                                <ul>
+                                    <li class="dropdown-header">Browse</li>
+                                    <li class="divider"></li>
+                                    <li><a class="dropdown-item" target="_blank" href="https://cases.haas.berkeley.edu/browse/latest/">Latest</a>
+                                    </li>
+                                    <li><a class="dropdown-item" target="_blank" href="https://cases.haas.berkeley.edu/browse/cases/">All Cases</a>
+                                    </li>
+                                    <li><a class="dropdown-item" target="_blank" href="https://cases.haas.berkeley.edu/browse/collections/">Collections</a>
+                                    </li>
+                                </ul>
+                            </li>
+                        </div>
+                    </ul>
+                </li>
+
+             <li class="dropdown menu-large nav-item"> <a href="#" class="nav-link" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Publish &nbsp; <i class="fa fa-angle-down"></i></a>
+                    <ul class="dropdown-menu megamenu">
+                        <div class="row">
+                            <li class="col-md-3">
+                                <ul>
+                                    <a href="/resources/paper-calls"><img class="img-fluid" style="margin-left: 1.5rem; border-radius: 4px; box-shadow:0 6px 10px 0 rgba(0,0,0,0.1);" src="/assets/images/site/print.png"></a>
+                                </ul>
+                            </li>
+
+                           <li class="col-md-3 contentbox" style="margin-left:1rem;">
+                                <ul>
+                                    <span style="margin-bottom:0.5rem;" class="badge badge-info">&nbsp; OPEN &nbsp; </span>
+                                    <a href="/resources/paper-calls/"><h5>Paper Calls</h5></a>
+                                    <p>Explore our open paper calls and submit your research</p>
+                                    <br>
+                                </ul>
+                            </li>
+
+                            <li class="col-md-1"></li>
+
+                            <li class="col-md-2">
+                                <ul>
+                                    <li class="dropdown-header">About</li>
+                                    <li class="divider"></li>
+                                    <li><a class="dropdown-item" href="/about/publication-information/">Publication Information</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/about/subscriptions/">Subscriptions</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/about/permissions/">Permissions</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/about/rankings/">Journal Rankings</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/about/best-article-award/">Best Article Award</a>
+                                    </li>                                    
+                                    <li><a class="dropdown-item" href="/contact/">Contact Us</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="col-md-2">
+                                <ul>
+                                    <li class="dropdown-header">Resources</li>
+                                    <li class="divider"></li>
+                                    <li><a class="dropdown-item" href="/resources/access-options/">Access Options</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/resources/submit/">Submission Guidelines</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/resources/review/">Reviewer Guidelines</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/resources/sample-articles/">Sample Articles</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/resources/paper-calls/">Paper Calls</a>
+                                    </li>
+                                </ul>
+                            </li>
+                        </div>
+                    </ul>
+                </li>
+
+
+
+            </ul>
+            <!-- End Menu -->
+
+        </div>
+    </div>
+
+
+
+</header>
+
+
+
+<!-- End Menu Navigation
+================================================== -->
+
+
+
+<div class="site-content">
+
+    <div class="container">
+
+
+    <!-- Site Title
+    ================================================== -->
+
+    <div class="mainheading" style="display:none;">
+        <h1 class="sitetitle">California Management Review</h1>
+        <p class="lead">
+             California Management Review is a premier professional management journal for practitioners published at UC Berkeley Haas School of Business.
+        </p>
+    </div>
+
+
+
+
+    <!-- Content
+    ================================================== -->
+    <div class="main-content">
+        </div>
+</div>
+
+
+
+<!-- Page Banner
+================================================== -->
+
+
+<!-- We reopen main-content and container -->
+
+<div class="container">
+
+    <div class="main-content" style="margin-top: -110px;">
+
+
+<!-- Begin Article
+================================================== -->
+
+	<div class="row">
+
+
+
+    <div class="col-md-2 col-sm-3">
+      <div class="row">
+        <div class="col-md-11">
+
+    <!---- CMR Insights Logo --->
+          <div style="background-color:#15284B; margin-top:40px; padding-top:1rem; padding-bottom:0.2rem; text-align:center; border-left: 5px solid; border-color:#FDB515; border-radius: 0px 10px 10px 0px;">
+          <h5><span style="color:#FDB515;"><i class="fa fa-check-square"></i> INSIGHT</span></h5>
+          </div>
+
+
+
+
+    <!---- Page Information --->
+
+
+        </div>
+        <div class="col-md-1">
+          <p>&nbsp;</p>
+        </div>
+      </div>
+    </div>
+
+
+
+
+
+
+		<!-- Post -->
+
+		<div class="col-md-9 col-lg-9 col-sm-9">
+			<div class="mainheading">
+
+                
+                <!-- Post Lead Topic -->
+                <a href="/topic/agentic-ai"><span class="contentbox topicheading">Agentic AI</span></a>
+                <!-- End Lead Topic -->
+
+                <!-- Post Title -->
+				<h1 class="posttitle">Rethinking AI Agents: A Principal-Agent Perspective</h1>
+        
+
+        
+        
+
+
+        <p>
+        
+        
+          
+              
+              
+                  Mohammad Hossein Jarrahi
+              
+          
+              
+              
+                  and Paavo Ritala
+              
+          
+        
+        </p>
+
+
+        
+
+			</div>
+
+			<!-- Post Featured Image -->
+			<img class="featured-image img-fluid" src="/assets/images/blog/2025-07-jarrahi.jpg" alt="Rethinking AI Agents: A Principal-Agent Perspective">
+			<!-- End Featured Image -->
+
+      <!-- Image Attribution -->
+      <p class="post-image-attribution">Image Credit | <a href="https://stock.adobe.com/images/digital-brain-illustration-with-futuristic-background-concept-of-artificial-intelligence-singularity-machine-learning-ai-deep-learning-blockchain-neural-network-concept/263787533?prev_url=detail">Sono Creative</a></p>
+
+      <!-- Post Description -->
+      <div class="post-description">Rethinking AI agents as guided actors: Balancing autonomy and accountability in organizations</div>
+      <!-- End Post Description -->
+
+
+      <!-- Post Label -->
+      
+        
+        <span class="post-date" style="text-transform:uppercase; font-weight:500;"><span style="color:#FDB515"><i class="fa fa-check-square"></i> &nbsp; Insight </span> | frontier</span>
+        
+      
+      <!-- End Post Label -->
+
+      <!-- Post Date -->
+          <span class="post-date"><time class="post-date" datetime="2025-07-23">23 Jul 2025</time></span>
+          
+      <!-- End Post Date -->
+
+      <!-- Print PDF Button -->
+
+
+<a href="/assets/documents/pdf/2025-07-rethinking-ai-agents-a-principal-agent-perspective.pdf"><span class="smalltype"> <span style="color:grey;"><i class="fa fa-print"></i> &nbsp; PDF</span></a>
+
+
+
+
+      <!-- End Print PDF Button -->
+
+
+      <!-- Share buttons -->
+      <script type="text/javascript" src="//platform-api.sharethis.com/js/sharethis.js#property=5dbf6c4abb2d99001231ec52&product=inline-share-buttons"></script>
+      <!-- End share buttons -->
+
+      <hr>
+
+			<!-- Post Content -->
+      <!------------------------------------------------------->
+
+
+
+
+
+
+			<div class="article-post">
+
+        
+
+
+        <p>The promise of AI agents has captured the business world’s imagination, dominating headlines and strategic discussions across industries. In fact, much of the AI discussion during 2025 will be about AI agents. This begs the question: What is unique about AI agents and how will they transform your company?</p>
+
+        
+
+        
+        
+
+        <div class="row">
+          <div class="col-md-8">
+            <div class="aside smalltype" style="background:#eeeeee; font-family:'IBM Plex Sans', sans-serif; font-weight:300;">
+              <h5>Related Articles</h5>
+              <p> <p>Marcus Holgersson, Linus Dahlander, Henry W. Chesbrough, and Marcel Bogers, “<a href="https://cmr.berkeley.edu/2024/11/67-1-open-innovation-in-the-age-of-ai/">Open Innovation in the Age of AI</a>.” California Management Review, 67/1 (2024): 5-20.</p>
+
+<p>Jan Recker, Frederik von Briel, Youngjin Yoo, Varun Nagaraj, and Mickey McManus, “<a href="https://cmr.berkeley.edu/2023/05/65-3-orchestrating-human-machine-designer-ensembles-during-product-innovation/">Orchestrating human-machine designer ensembles during product innovation</a>.” California Management Review 65/3 (2023): 27-47.</p>
+<br>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="aside smalltype" style="background:transparent;">
+              <h5>Related Topics</h5>
+                         <!-- Post Categories -->
+                            <div>
+                                
+                                
+                                
+                                <a class="topicheading" style="font-weight:300;" href="/topic/artificial-intelligence">Artificial Intelligence</a><br>
+                                
+                                <a class="topicheading" style="font-weight:300;" href="/topic/automation">Automation</a><br>
+                                
+                                <a class="topicheading" style="font-weight:300;" href="/topic/disclosure-accountability">Disclosure & Accountability</a><br>
+                                
+                                <a class="topicheading" style="font-weight:300;" href="/topic/leadership">Leadership</a><br>
+                                
+                              </div>
+                    <!-- End Post Categories -->           
+            </div>
+          </div>
+        </div>
+
+
+        
+
+				
+<p>AI agents not only reason and learn but also interact directly with the environment, making decisions and executing them without direct human input. In other words, they <a href="https://cmr.berkeley.edu/2025/05/agentic-ai-101/">bridge knowledge and action</a> by proactively orchestrating complex workflows.</p>
+
+<p>Today’s AI agents also differ from agents of the past (with their well-structured inputs and outputs), as they can be much more adaptive across a wide range of granular tasks (where fixed paths cannot be hardcoded) based on foundation models. In short, the new AI agents should be able to deal with uncertainty, combine different tasks and workflows, coordinate across different systems and tools, and do all this within changing environments.</p>
+
+<p>A simple example of an AI agent could be a personal AI agent that autonomously books flights, reserves hotels, and coordinates itineraries based on user preferences. More advanced examples of an AI agent in action could be onboarding clients, approving expenses, or customer service agents in retail. Unlike traditional chatbots, AI agents can autonomously interpret customer intent, process refunds, update shipping details, or escalate issues and exceptions to human supervisors—seamlessly combining reasoning, decision-making, and execution. In B2B settings, agentic AI systems can integrate data on industry trends with internal data on key customers’ needs, therefore improving the ability to target and tailor offerings to corporate clients.</p>
+
+<p>Companies like Google, OpenAI, and Anthropic have recently debuted increasingly sophisticated AI agents, showcasing how <a href="https://www.technologyreview.com/2025/01/23/1110484/openai-launches-operator-an-agent-that-can-use-a-computer-for-you/">the next competition ground</a> in foundation models has shifted to the terrain of AI agents. While Silicon Valley CEOs predict AI agents will outnumber <a href="https://techcrunch.com/podcast/marc-benioff-says-its-crazy-talk-that-ai-will-hurt-salesforce-wants-a-billion-ai-agents-in-a-year/?guccounter=1&amp;guce_referrer=aHR0cHM6Ly90aGVjb252ZXJzYXRpb24uY29tLw&amp;guce_referrer_sig=AQAAADE4nfRhginVWdtMUmHaXtOYw3Ok4cnjz8XAMlhQHR-pF4Yr7KDB17zpnTVMxEeDllhqVOsA75z68gSp4iQEb_tqlY072hxxsxlSjdP4krNN8nY24N4P62jlUoXmUo3oH_rCG9U_ciUu-ph1r3v8Zo9WVT4Q5hAt4m20ehwDJjvk">humans</a> soon and be used in <a href="https://techcrunch.com/podcast/marc-benioff-says-its-crazy-talk-that-ai-will-hurt-salesforce-wants-a-billion-ai-agents-in-a-year/?guccounter=1&amp;guce_referrer=aHR0cHM6Ly90aGVjb252ZXJzYXRpb24uY29tLw&amp;guce_referrer_sig=AQAAADE4nfRhginVWdtMUmHaXtOYw3Ok4cnjz8XAMlhQHR-pF4Yr7KDB17zpnTVMxEeDllhqVOsA75z68gSp4iQEb_tqlY072hxxsxlSjdP4krNN8nY24N4P62jlUoXmUo3oH_rCG9U_ciUu-ph1r3v8Zo9WVT4Q5hAt4m20ehwDJjvk">billions</a>, most organizations are still grappling with fundamental questions about what these agents are and how they should be deployed efficiently and responsibly. As such, the gap between the visionary rhetoric of autonomous AI agents and the practical realities of implementation remains wide. Despite rising interest and investment in AI agents and tech giants increasingly facilitating the infrastructure that enables <a href="https://build.microsoft.com/en-US/sessions/KEY010?source=sessions">“open scalable agentic systems”</a>, organizations face difficult questions about their role, functions, and governance. Questions such as “<a href="https://www.theverge.com/2024/10/10/24266333/ai-agents-assistants-openai-google-deepmind-bots">Can they actually be trusted</a> with something serious” will shape the efficiency and effectiveness gains available from agentic systems.</p>
+
+<p>The concept of AI agents is still shrouded <a href="https://www.forrester.com/blogs/the-state-of-ai-agents-lots-of-potential-and-confusion/">in confusion</a>, with definitions varying widely across disciplines and applications. This definitional ambiguity creates challenges, especially in high-stakes organizational settings in which full autonomy is not always desirable or practical. Instead, it is more helpful to view AI agents as systems that integrate reasoning, decision-making, and execution <em>on behalf</em> of users. Specifically, we argue that looking at the role and function of AI agents through the lens of <a href="https://www.pon.harvard.edu/tag/principal-agent-theory/">principal-agent relationships</a> offers a more actionable perspective in business and organizational contexts.</p>
+
+<p>The <strong>principal-agent framework</strong>, as traditionally defined in economic and organizational theory, describes a relationship where the principal delegates tasks to the agent, who acts on the principal’s behalf<sup>1</sup>. Applying this lens to AI agents emphasizes intelligent agents working for humans and their role as systems designed to fulfill specific objectives while operating within human-defined constraints. From this perspective, AI agents function as intermediaries that balance autonomy with alignment to organizational goals.</p>
+
+<h2 id="dimensions-of-ai-agents-in-organizations">Dimensions of AI Agents in Organizations</h2>
+
+<p>In what follows, we discuss key guiding principles for effective AI agent development and integration into business (see Figure 1), which can help organizations prepare for both efficient and responsible adoption while addressing key challenges.</p>
+
+<p><img src="/assets/images/blog/2025-07-jarrahi-figure1.png" style="box-shadow:none;" /></p>
+
+<h4 id="interactivity-and-adaptability">Interactivity and Adaptability</h4>
+
+<p>Effective AI agents sense the environment, adapt to dynamic conditions, and proactively address challenges without waiting for explicit instructions. To be adaptive and transcend their training data, the agents must be given the latitude <a href="https://hbr.org/2025/01/how-much-supervision-should-companies-give-ai-agents">to learn and grow</a><sup>2</sup> in real-world situations. Because of their collaboration with other tools and systems, they can interact dynamically with the outside environment and act as active participants in organizational processes. This ability to integrate contextual cues and respond in real time improves their utility in changing environments. For example, a customer service AI can detect patterns of dissatisfaction in real time and escalate or even address issues before they become widespread. Furthermore, its ability to learn from interactions allows it to improve responses and anticipate common queries. Another example is the use of AI agents in cybersecurity, where the different agents are searching for anomalies in the process and customer data of the organization, and report back whenever potential suspicious activity is detected.</p>
+
+<h4 id="guided-autonomy">Guided Autonomy</h4>
+
+<p>While AI agents of the future are expected to achieve full autonomy, this is not always feasible or desirable in practice. Therefore, to act efficiently and responsibly, AI agents must strike a balance between autonomy and human oversight. Unlike fully autonomous systems, the principle of guided autonomy is about giving agents the leeway to execute decisions within defined boundaries of delegation. This approach provides a clear framework within which the agent operates, reducing risks associated with unrestrained autonomy when AI agents may face unknown unknowns. The boundaries of delegation can grow as agents expand their learning. This guided approach enables humans to continuously express their goals, monitor the agent’s behavior<sup>3</sup>, and effectively provide feedback. For example, in supply chain management, an AI agent may autonomously reallocate resources to address logistical bottlenecks and know when to escalate significant disruptions to human managers for resolution. In the domain of marketing and communications, AI agents could be developing targeted messaging based on customers’ product use, while enabling human oversight on the process.</p>
+
+<h4 id="collective-intelligence-of-multiple-agents">Collective Intelligence of Multiple Agents</h4>
+
+<p>There is increasing understanding that AI agents work better when they are specialized, rather than “multitasking” - in this sense, managing a multi-agent system resembles managing a multi-disciplinary team of professionals. When <a href="https://hai.stanford.edu/news/predictions-ai-2025-collaborative-agents-ai-skepticism-and-new-risks?utm_source=linkedin&amp;utm_medium=social&amp;utm_content=Stanford%20HAI_linkedin_HAI_202501130802_sf210223688&amp;utm_campaign=&amp;sf210223688=1">working together</a> as a team or “swarm”, AI agents must interact with other agents, enterprise systems, processes, and stakeholders, while relying on human guidance where necessary, to function effectively within the volatile organizational environment. For example, generative AI systems (capable of generating new content) and analytical AI systems<sup>4</sup> (with classification and prediction capabilities) can leverage the strengths of different system architectures to automate workflows. For example, in financial institutions, AI agents managing risk assessments communicate with other agents which handle compliance to ensure that investments adhere to regulatory requirements while maximizing returns. In the domain of market research, there might be a separate “research agent” and “reporting agent”, whose workflows are combined to provide integrated reports to different audiences and domain experts inside the company.</p>
+
+<h4 id="safety-accountability-and-interoperability-through-orchestration">Safety, Accountability, and Interoperability through Orchestration</h4>
+
+<p>Similarly as in human principal-agent relationships, AI systems require mechanisms to ensure their actions are safe, predictable, and accountable. However, generative AI foundation models often exhibit surprising performances that can be unpredictable, inconsistent, and even erratic. While they may be useful for simple tasks, these behaviors can prove catastrophic for more critical organizational processes, particularly when autonomous execution is concerned. A useful strategy is to combine these models with rule-based control mechanisms and structured reasoning<sup>5</sup> to mitigate the erratic behavior of generative AI systems, which may include not only hallucinations<sup>6</sup> but even deceptive actions<sup>7</sup>. As AI pioneer <a href="https://www.businessinsider.com/yoshua-bengio-ai-godfather-agents-2025-1">Yoshua Bengio</a> recently noted, “The good news is that if we build non-agentic systems, they can be used to control agentic systems.”</p>
+
+<p>Another important strategy in the orchestration layer is standardization, including shared protocols and data formats, to ensure compatibility and communication between diverse agents and systems. This includes a technical layer that integrates with existing technology stacks and communication with other AI agents but also shared protocols located outside of AI agents<sup>8</sup> that guide how agents may interact with institutions like legal systems.</p>
+
+<h4 id="individualization-and-alignment">Individualization and Alignment</h4>
+
+<p>AI agents must tailor their actions to the needs and goals of specific stakeholders - a phenomenon known as the <a href="https://research.ibm.com/blog/what-is-alignment-ai">alignment problem</a>. Getting AI alignment right requires an “individualization engine,” where AI agents can cater to the needs and objectives of stakeholders and dynamically adjust their outputs to reflect various individual priorities and organizational goals (e.g., profit maximization versus environmental sustainability). As an example, AI agents in sales can assist sales representatives by learning their preferred negotiation tactics and customer engagement strategies, as well as creating personalized campaigns by analyzing different customers’ data and aligning their recommendations accordingly.</p>
+
+<h2 id="challenges-in-principal-agent-dynamics">Challenges in Principal-Agent Dynamics</h2>
+
+<p>Despite their potential, AI agents introduce unique challenges that mirror many traditional principal-agent problems. To address these systematically, organizations should implement risk mitigation strategies (see Table 1).</p>
+
+<p>Table 1: Challenges in Principal-Agent Dynamics and relevant mitigation strategies</p>
+
+<p><img src="/assets/images/blog/2025-07-jarrahi-table1.png" style="box-shadow:none;" /></p>
+
+<h4 id="goal-misalignment">Goal Misalignment</h4>
+
+<p>The goals carried out by the AI agent may diverge from the broader strategic objectives of the organization, particularly if incentives or constraints are misaligned. For example, an AI agent optimizing sales might prioritize upselling products, inadvertently damaging customer trust or satisfaction.</p>
+
+<p>The risk mitigation strategy may involve defining the goals of the agents through approaches such as the SMART approach<sup>9</sup> (specific, measurable, achievable, relevant, time-bound) and implementing regular audits of agent decisions. For instance, a retail AI agent should have clear upper limits on discount offerings and must maintain a minimum customer satisfaction score while optimizing for sales. Furthermore, if there is no continuous human-in-the-loop strategy, routine or ad-hoc audits of agentic workflows and decisions should be conducted.</p>
+
+<h4 id="information-asymmetry">Information Asymmetry</h4>
+
+<p>AI agents often have access to vast amounts of data and information processing capabilities that their human principals cannot fully interpret or monitor. This can lead to potential misuse or “overinterpretation” of data. For example, a hiring AI might leverage hidden correlations in data to make decisions, potentially perpetuating biases that may go unnoticed or unchecked by the organization.</p>
+
+<p>The risk mitigation strategy could be to deploy transparency dashboards<sup>10</sup> that track key decision variables and require the AI to generate plain-language explanations for all critical decisions. For hiring scenarios, this might include mandatory documentation of the specific qualifications and criteria used for each candidate’s evaluation and may involve the application of another agent as an explainability agent.</p>
+
+<h4 id="division-of-work">Division of Work</h4>
+
+<p>One of the key challenges in applying agentic AI is defining the dynamic division of labor between humans and AI agents and finding the right places for AI augmentation and automation<sup>11</sup>. For instance, what types of problems require human input? Are humans only involved in handling exceptions, or do they play a broader role? The confusion about responsibility in automated systems can result in a phenomenon described as a “moral crumple zone<sup>12</sup>”, where responsibility is diffused and misinterpreted between humans and agents.</p>
+
+<p>The risk mitigation strategy involves carefully articulating the boundary conditions under which decision-making can be reliably delegated to agentic AI systems and the circumstances in which human decision-makers must get involved (i.e., human-in-the-loop). Effective business process management<sup>13</sup> can be particularly useful for developing the right combination of human resources and agentic roles, much like teammates in specific organizational processes, yet considering also the inherent differences in human and AI capabilities.</p>
+
+<h4 id="multi-agent-system-complexity">Multi-Agent System Complexity</h4>
+
+<p>It is gradually becoming clear that AI agents work best when specialized agents are combined into a multi-agent system. However, the complexity of interactions between multiple agents can result in new unpredictabilities, particularly when they reflect competing goals and may use different technical architectures. Too many agents with too many tasks can result in overly complex and difficult-to understand systems. For example, Moderna recently deployed 3,000 ‘<a href="https://www.wsj.com/articles/why-moderna-merged-its-tech-and-hr-departments-95318c2a?st=gDXBpk&amp;reflink=article_copyURL_share">tailored GPTs</a>’ to support specific tasks (e.g. dose selection for clinical trials and drafting responses to regulatory questions). While these tools can effectively assist with individual tasks (the trees), they risk losing sight of the broader strategic context (the forest). These challenges require new approaches to multi-agent governance with clear standards for accountability and transparency. Beyond standardizing the multi-agent environment, there is a need for <a href="https://www.anthropic.com/research/building-effective-agents">orchestrator agents</a>, which serve as the entity that coordinates the interactions of multiple AI agents, improving overall efficiency and effectiveness. Accenture calls these <a href="https://www.bloomberg.com/news/articles/2024-12-13/ai-agents-and-why-big-tech-is-betting-on-them-for-2025?accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzb3VyY2UiOiJTdWJzY3JpYmVyR2lmdGVkQXJ0aWNsZSIsImlhdCI6MTczNDIzNjU3MiwiZXhwIjoxNzM0ODQxMzcyLCJhcnRpY2xlSWQiOiJTT0ZXR1ZUMEcxS1cwMCIsImJjb25uZWN0SWQiOiIwNEFGQkMxQkYyMTA0NUVEODg3MzQxQkQwQzIyNzRBMCJ9.5N873GpOGzb-w0vYDmgxDBqgCGyojK7V9r8gRaceBtU&amp;leadSource=uverify%20wall">“strategic agents</a>,” which act as a team leader by coordinating multiple utility agents. As an example, in a logistics network, an orchestrator agent can ensure multiple agents (in charge of handling inventory, routing, etc.) communicate effectively and align their tasks to optimize the whole supply chain.</p>
+
+<p>In addition, as multi-agent systems gradually take on more complex tasks and important responsibilities, an organization-wide AI governance strategy is needed to build guardrails for agents to maintain coherence and safety. For example, <a href="https://www.bloomberg.com/news/articles/2024-12-13/ai-agents-and-why-big-tech-is-betting-on-them-for-2025?accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzb3VyY2UiOiJTdWJzY3JpYmVyR2lmdGVkQXJ0aWNsZSIsImlhdCI6MTczNDIzNjU3MiwiZXhwIjoxNzM0ODQxMzcyLCJhcnRpY2xlSWQiOiJTT0ZXR1ZUMEcxS1cwMCIsImJjb25uZWN0SWQiOiIwNEFGQkMxQkYyMTA0NUVEODg3MzQxQkQwQzIyNzRBMCJ9.5N873GpOGzb-w0vYDmgxDBqgCGyojK7V9r8gRaceBtU&amp;leadSource=uverify%20wall">at McKinsey</a>, a central team reviews all developed agents based on risk, legal, and data policies before they are rolled out.</p>
+
+<h2 id="conclusions">Conclusions</h2>
+
+<p>AI agents bring us one step closer to the idealist vision of AI as <a href="https://www.theverge.com/2024/10/10/24266333/ai-agents-assistants-openai-google-deepmind-botsd-bots">a true partner, not just a tool</a>. However, adopting AI agents requires an AI governance regime that goes beyond the technical capabilities of these systems, integrates them into organizational processes and ensures adaptability, interoperability, and the safety of AI agents as collective swarm systems.</p>
+
+<p>By adopting the principal-agent perspective, companies and their leaders can create more accountable, effective, and responsive AI agents. Ultimately, AI agents become embedded in all the core workflows of organizations and will be augmenting most if not all human work. The principles such as guided autonomy, individualization, and adaptability will help design such organizations.</p>
+
+<h2 id="references">References</h2>
+
+<ol>
+  <li>Caers, R., Bois, C. D., Jegers, M., Gieter, S. D., Schepers, C., &amp; Pepermans, R. “Principal‐Agent Relationships on the Stewardship‐Agency Axis.” Nonprofit Management and Leadership, 17/1 (2006): 25-47.</li>
+  <li>Walsh, M. “How Much Supervision Should Companies Give AI Agents?”Harvard Business Review, (2025).</li>
+  <li>Bansal, G., Vaughan, J. W., Amershi, S., Horvitz, E., Fourney, A., Mozannar, H., &amp; Weld, D. S. “Challenges in Human-Agent Communication.” arXiv preprint arXiv:2412.10380, (2024).</li>
+  <li>Davenport, T. and High, P. “How Gen AI and Analytical AI Differ — and When to Use Each. Harvard Business Review, (2024).</li>
+  <li>Shah, C., &amp; White, R. W. “Agents are not enough.” arXiv preprint arXiv:2412.16241, (2024).</li>
+  <li>Hannigan, T. R., McCarthy, I. P., &amp; Spicer, A. “Beware of botshit: How to manage the epistemic risks of generative chatbots.” Business Horizons, 67/5 (2024): 471-486.</li>
+  <li>Meinke, A., Schoen, B., Scheurer, J., Balesni, M., Shah, R., &amp; Hobbhahn, M. “Frontier models are capable of in-context scheming.” arXiv preprint arXiv:2412.04984, (2024).</li>
+  <li>Chan, A., Wei, K., Huang, S., Rajkumar, N., Perrier, E., Lazar, S., … &amp; Anderljung, M. “Infrastructure for AI Agents.” arXiv preprint arXiv:2501.10114, (2025).</li>
+  <li>Purdy, M. “What Is Agentic AI, and How Will It Change Work?” Harvard Business Review, (2024).</li>
+  <li>Chen, Y., Wu, A., DePodesta, T., Yeh, C., Li, K., Marin, N. C., … &amp; Viégas, F. “Designing a dashboard for transparency and control of conversational AI.” arXiv preprint arXiv:2406.07882, (2024).</li>
+  <li>Ritala, P., Ruokonen, M., &amp; Ramaul, L. “Transforming boundaries: how does ChatGPT change knowledge work?” Journal of Business Strategy, 45/3 (2023): 214-220.</li>
+  <li>Elish, M. C. “Moral crumple zones: Cautionary tales in human-robot interaction.” Engaging Science, Technology, and Society, 5/0 (2019): 40-60.</li>
+  <li>Davenport, T. and Redman, P. “How to Marry Process Management and AI.” Harvard Business Review, (2025).</li>
+</ol>
+
+
+
+
+
+                    <!-- Post Tags -->
+                    
+                    
+                    <div class="aside smalltype" style="background:transparent; width:80%">
+                      <h5>Keywords</h5>
+                        <ul class="tags smalltype">
+                            
+                            
+                            <li>
+                            <!--<a href="/tags/artificial-intelligence/">-->
+                              <span class="badge badge-dark" style="text-transform:uppercase; font-size: .7rem; font-family: 'IBM Plex Sans', sans-serif;">
+                                <!--<i class="fa fa-tag"></i> &nbsp; -->
+                                Artificial intelligence</span></a>
+                            </li>
+                            
+                            <li>
+                            <!--<a href="/tags/organization/">-->
+                              <span class="badge badge-dark" style="text-transform:uppercase; font-size: .7rem; font-family: 'IBM Plex Sans', sans-serif;">
+                                <!--<i class="fa fa-tag"></i> &nbsp; -->
+                                Organization</span></a>
+                            </li>
+                            
+                            <li>
+                            <!--<a href="/tags/strategic-alignment/">-->
+                              <span class="badge badge-dark" style="text-transform:uppercase; font-size: .7rem; font-family: 'IBM Plex Sans', sans-serif;">
+                                <!--<i class="fa fa-tag"></i> &nbsp; -->
+                                Strategic alignment</span></a>
+                            </li>
+                            
+                            <li>
+                            <!--<a href="/tags/technology-acceptance/">-->
+                              <span class="badge badge-dark" style="text-transform:uppercase; font-size: .7rem; font-family: 'IBM Plex Sans', sans-serif;">
+                                <!--<i class="fa fa-tag"></i> &nbsp; -->
+                                Technology acceptance</span></a>
+                            </li>
+                            
+                            <li>
+                            <!--<a href="/tags/technology-management/">-->
+                              <span class="badge badge-dark" style="text-transform:uppercase; font-size: .7rem; font-family: 'IBM Plex Sans', sans-serif;">
+                                <!--<i class="fa fa-tag"></i> &nbsp; -->
+                                Technology management</span></a>
+                            </li>
+                            
+                        </ul>
+                    </div>
+                    
+                    <!-- End Tags -->
+
+
+
+                <div class="clearfix"></div>
+			</div>
+
+
+
+      <!-- Alt Layout for Executive Summaries -->
+      
+      <!-- End Alt Layout for Executive Summaries -->
+
+
+
+            <br>
+
+<!-- Author Box site.data.profiles.authors -->
+
+
+<hr>
+
+
+
+
+
+
+
+
+<div class="row post-top-meta">
+<div class="col-md-2">
+<img class="author-thumb" src="/assets/images/avatar/mohammad-hossein-jarrahi.jpg?s=250&d=mm&r=x" alt="Mohammad Hossein Jarrahi">
+</div>
+<div class="col-md-10">
+<a target="_blank" class="link-dark" href="www.jarrahi.com">Mohammad Hossein Jarrahi</a><a target="_blank" href="https://www.linkedin.com/in/mohammad-hossein-jarrahi-01b48225/" class="btn follow">Follow</a>
+<span class="author-description">Mohammad Hossein Jarrahi is a Professor of Information Science at UNC Chapel Hill. His research focuses on the intersection of work, business, and AI, with a particular emphasis on human-AI symbiosis in the future of work and management.</span>
+</div>
+</div>
+
+
+<div class="row post-top-meta">
+<div class="col-md-2">
+<img class="author-thumb" src="/assets/images/avatar/paavo-ritala.jpg?s=250&d=mm&r=x" alt="Paavo Ritala">
+</div>
+<div class="col-md-10">
+<a target="_blank" class="link-dark" href="https://www.lut.fi/en/profiles/paavo-ritala">Paavo Ritala</a><a target="_blank" href="https://www.linkedin.com/in/paavo-ritala-6475a31/" class="btn follow">Follow</a>
+<span class="author-description">Paavo Ritala is a Professor of Strategy and Innovation at the Business School at LUT University, Finland. His main research themes include ecosystems and platforms, the role of data, algorithms, and digital technologies in organizations, and circular and regenerative economy.</span>
+</div>
+</div>
+
+
+
+
+
+
+
+            <!-- Prev/Next -->
+            <div class="row PageNavigation mt-4 prevnextlinks">
+              
+                <div class="col-md-6 rightborder pl-0">
+                    <a class="thepostlink" href="/2025/07/ai-automation-and-augmentation-a-roadmap-for-executives/"><span style="color:#8a8a8a; font-size: 0.8rem;">&laquo; PREVIOUS </span><br> AI Automation and Augmentation: A Roadmap for Executives</a>
+                </div>
+              
+              
+                <div class="col-md-6 text-right pr-0">
+                    <a class="thepostlink" href="/2025/07/leading-the-green-shift-strategic-levers-for-managers-driving-sustainable-business-transformation/"><span style="color:#8a8a8a; font-size: 0.8rem;">NEXT &raquo;</span><br> Leading the Green Shift: Strategic Levers for Managers Driving Sustainable Business Transformation </a>
+                </div>
+              
+            </div>
+            <!-- End Prev/Next -->
+
+                <br><br>
+
+
+
+
+<div class="recommended-posts row">
+
+  
+  
+  
+
+<div class="col-sm-12 col-md-6 col-lg-6 wrapthumbnail">
+  <a href="/2025/11/68-1-lessons-from-netflixs-success/">
+    
+      
+      <div class="thumbnail" style="background-image:url(/assets/images/blog/2025-11-68-1-chatterjee.jpg);"></div>
+      
+    
+  </a>
+
+    <div class="contentbox">
+      <a href="/topic/growth-strategy/"><span class="topicheading">Growth Strategy</span></a>
+      <div><a href="/2025/11/68-1-lessons-from-netflixs-success/"><h5>Lessons From Netflix's Success</h5></a></div>
+      <div class="smalltype">The streaming company has remained dominant through a focus on...</div>
+      
+    <span><img class="post-icon" src="/assets/images/logos/spotlight-color.svg"></span>
+    <span class="post-date" style="text-transform:uppercase; font-weight:500; color:rgb(143, 143, 143);">Spotlight</span>
+
+
+      <span class="post-date">                            
+                            
+                                
+                                
+                                
+                                  Sayan Chatterjee &nbsp;
+                                
+                            
+ </span>
+    </div>
+    
+
+</div>
+
+
+
+
+
+
+      
+
+
+
+
+
+    
+  
+  
+
+<div class="col-sm-12 col-md-6 col-lg-6 wrapthumbnail">
+  <a href="/2025/11/68-1-data-breaches-fight-ai-with-ai/">
+    
+      
+      <div class="thumbnail" style="background-image:url(/assets/images/blog/2025-11-68-1-uddin.jpg);"></div>
+      
+    
+  </a>
+
+    <div class="contentbox">
+      <a href="/topic/security-privacy/"><span class="topicheading">Security & Privacy</span></a>
+      <div><a href="/2025/11/68-1-data-breaches-fight-ai-with-ai/"><h5>Data Breaches: Fight AI with AI</h5></a></div>
+      <div class="smalltype">The same AI capabilities that pose an increased data risk...</div>
+      
+    <span><img class="post-icon" src="/assets/images/logos/spotlight-color.svg"></span>
+    <span class="post-date" style="text-transform:uppercase; font-weight:500; color:rgb(143, 143, 143);">Spotlight</span>
+
+
+      <span class="post-date">                            
+                            
+                                
+                                
+                                
+                                  Mohammad Rajib Uddin et al. &nbsp;
+                                
+                            
+ </span>
+    </div>
+    
+
+</div>
+
+
+
+
+
+
+      
+        
+
+</div>
+<br><br>
+
+
+          <!--Begin Comments
+            ==================================================
+
+            <section>
+            <div id="comments">
+                <section class="disqus">
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = 'california-management-review'; 
+        var disqus_developer = 0;
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = window.location.protocol + '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</section>
+
+            </div>
+            </section>
+        -->
+
+
+
+		</div>
+		<!-- End Post -->
+
+        <!-- Right Sidebar 
+        <div class="col-md-3 col-lg-3">
+          <div class="row">
+            <div class="col-md-2 col-lg-2">
+              &nbsp;
+            </div>
+            <div class="col-md-10 col-lg-10">
+              <div class="sidebar-right" style="margin-top:2rem;">
+                <div class="sidebar">
+
+    
+<div class="aside" style="background:transparent;">
+  <h5>Current Issue</h5>
+   <a href="/browse/current/"><img class="img-fluid" style="border-radius: 4px; box-shadow:0 6px 10px 0 rgba(0,0,0,0.1);" src="/assets/images/covers/67_4.png" alt="Summer 2025 | Volume 67 Issue 4" /></a><br><br>
+    <span style="text-transform:uppercase;" class="badge badge-info">&nbsp;Summer 2025 &nbsp; </span>
+    <p style="font-weight:500; font-family:'IBM Plex Sans Condensed'; font-size: 16px;">Profiting from AI</p>
+    <div class="article-main"><a class="arrowlink" style="font-size:12px; margin-top:-3rem;" href="/browse/current/">Browse issue <i class="fa fa-arrow-circle-right"></i></a></div>
+</div>
+
+
+    
+
+    
+              <div class="aside" style="background:transparent;">
+
+  <a href="/browse/latest/articles/"><h5>Recent Articles</h5></a>
+
+<div>
+
+
+
+
+<hr><p><strong><a href="/2025/08/67-4-profiting-from-ai-evidence-from-ericssons-pursuit-to-capture-value/">Profiting from AI: Evidence from Ericsson’s Pursuit to Capture Value</a></strong></p>
+
+
+
+<hr><p><strong><a href="/2025/08/67-4-post-error-adjustments-strategic-agility-and-organizational-zemblanity/">Post-Error Adjustments: Strategic Agility and Organizational Zemblanity</a></strong></p>
+
+
+
+<hr><p><strong><a href="/2025/08/67-4-platform-governance-for-established-companies/">Platform Governance for Established Companies</a></strong></p>
+
+
+
+<hr><p><strong><a href="/2025/08/67-4-how-to-implement-bottom-up-organizing-lessons-from-agile-piloting-and-scaling/">How to Implement Bottom-Up Organizing: Lessons from Agile Piloting and Scaling</a></strong></p>
+
+
+
+<div class="article-main"><a class="arrowlink" style="font-size:12px;" href="/browse/articles/">See more <i class="fa fa-arrow-circle-right"></i></a></div>
+</div>
+
+</div>
+
+    
+
+
+
+</div>
+
+              </div>
+
+
+
+
+            </div>
+          </div>
+        </div>
+
+      -->
+
+	</div>
+
+<!-- End Article
+================================================== -->
+
+    </div>
+
+    </div> <!-- /.container -->
+
+
+    <!-- Before Footer
+    ================================================== -->
+    <div class="beforefooter">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8">
+                    <h3>California Management Review</h3>
+                    <!--<p style="font-weight:500;">Berkeley-Haas's Premier Management Journal for Academics and Professionals</p>-->
+                    <p>Published at Berkeley Haas for more than sixty years, California Management Review seeks to share knowledge that challenges convention and shows a better way of doing business.</p>
+                    <div class="article-main"><a class="arrowlink" href="/about/publication-information/">Learn more <i class="fa fa-arrow-circle-right"></i></a></div>
+                </div>
+
+
+                <div class="col-md-4 text-right footersocial">
+                    <h5>Follow Us</h5>
+                    <a href="https://www.facebook.com/pages/California-Management-Review/158692584156353"><i class="fa fa-facebook" style="color:#3b5998"></i></a>
+                    <a href="https://twitter.com/CMR_UCBerkeley"><i class="fa fa-twitter" style="color:black"></i></a>
+                    <a href="https://www.youtube.com/channel/UCKXvPGqxAlIFgkttRSTEQAA"><i class="fa fa-youtube-play" style="color:#c4302b"></i></a>
+                    <a href="https://www.linkedin.com/company/california-management-review"><i class="fa fa-linkedin" style="color:#0077b5"></i></a>
+                    <a type="application/rss+xml" href="/feed.xml"><i class="fa fa-rss" style="color:#ee802f"></i></a>
+
+                <div class="article-main" style="float:right;">
+                    <a href="/signup.html" role="button" class="btn">Join our mailing list</a>
+                </div>
+
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Begin Footer
+    ================================================== -->
+    <footer class="footer">
+
+        <div class="container">
+
+            <div class="row">
+                <div class="col-sm-3">
+                <div class="footer-widget">
+                <a href="https://haas.berkeley.edu">
+                <img src="/assets/images/logos/berkeley-haas-logo.svg"></a>
+                <p>Haas School of Business<br>
+                University of California, Berkeley</p>
+
+                <br>
+
+                <p class="footer-copyright">California Management Review<br>
+                F465 Berkeley Haas School of Business<br>
+				2220 Piedmont Ave. Berkeley, CA 94720-1900<br>
+				(510) 725-7826 |
+				<a href="mailto:cmr@haas.berkeley.edu">cmr@haas.berkeley.edu</a><br><br>
+                <span style="font-size:0.8em;">Copyright © 2025 UC Regents | <a target="blank" href="http://www.berkeley.edu">UC Berkeley</a> | <a target="blank" href="http://hts.haas.berkeley.edu/privacy">Privacy Policy</a></span></p>
+
+
+                </div>
+                </div>
+
+
+                <div class="col-sm-1">
+                <div class="footer-widget">
+                </div>
+                </div>
+
+
+
+
+                <div class="col-sm-3">
+                <div class="footer-widget">
+                <h5 class="title">About</h5>
+                <ul>
+                <li><a href="/about/publication-information/">Publication Information</a></li>
+                <li><a href="/about/subscriptions/">Subscriptions</a></li>
+                <li><a href="/about/permissions/">Permissions</a></li>
+                <li><a href="/about/advertising/">Advertising</a></li>
+                <li><a href="/about/rankings/">Journal Rankings</a></li>
+                <li><a href="/about/best-article-award/">Best Article Award</a></li>
+                <li><a href="/about/press/">Press Releases</a></li>
+                </ul>
+                </div>
+                </div>
+
+
+                <div class="col-sm-3">
+                <div class="footer-widget">
+                <h5 class="title">Resources</h5>
+                <ul>
+                <li><a href="/resources/access-options/">Access Options</a></li>
+                <li><a href="/resources/submit/">Submission Guidelines</a></li>
+                <li><a href="/resources/review/">Reviewer Guidelines</a></li>
+                <li><a href="/resources/sample-articles/">Sample Articles</a></li>
+                <li><a href="/resources/paper-calls/">Paper Calls</a></li>
+                <li><a href="/contact">Contact Us</a></li>
+                <li><a target="_blank" href="https://mc.manuscriptcentral.com/uc-cmr">Submit &amp; Review &nbsp; <i class="fa fa-external-link"></i></a></li>
+                </ul>
+                </div>
+                </div>
+
+
+               <div class="col-sm-2">
+                <div class="footer-widget">
+                <h5 class="title">Browse</h5>
+                <ul>
+                <li><a href="/browse/current/">Current Issue</a></li>
+                <li><a href="/browse/issues/">All Issues</a></li>
+                <li><a href="/browse/articles/">Articles</a></li>
+                <li><a href="/insights/">Insights</a></li>
+                <li><a target="_blank" href="https://cases.haas.berkeley.edu">Cases &nbsp; <i class="fa fa-external-link"></i></a></li>
+                </ul>
+                </div>
+                </div>
+
+
+
+            </div>
+
+
+
+        </div>
+
+    </footer>
+    <!-- End Footer
+    ================================================== -->
+
+
+</div> <!-- /.site-content>
+
+<!- JavaScript
+================================================== -->
+
+
+<script src="/assets/js/jquery.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+
+<script src="/assets/js/ie10-viewport-bug-workaround.js"></script>
+
+<script type='text/javascript' src='/assets/js/masonry.pkgd.min.js'></script>
+
+<script src="/assets/js/theme.js"></script>
+
+<script src="/assets/js/printThis.js"></script>
+
+
+</body>
+
+</html>

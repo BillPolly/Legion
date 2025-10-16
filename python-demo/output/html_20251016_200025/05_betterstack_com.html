@@ -1,0 +1,2610 @@
+<!DOCTYPE html>
+<html lang='en' prefix='og: https://ogp.me/ns#'>
+<head>
+<meta content='text/html; charset=UTF-8' http-equiv='Content-Type'>
+<title>Practical Guide to Asynchronous Programming in Python | Better Stack Community</title>
+<meta content='width=device-width,initial-scale=1' name='viewport'>
+<link href='https://cdnjs.betterstackcdn.com' rel='preconnect'>
+<link href='https://cdnjs.betterstackcdn.com' rel='dns-prefetch'>
+<link href='https://www.googletagmanager.com' rel='preconnect'>
+<link href='https://www.googletagmanager.com' rel='dns-prefetch'>
+<link href='https://plausible.io' rel='preconnect'>
+<link href='https://plausible.io' rel='dns-prefetch'>
+<link href='https://forms.hsforms.com' rel='preconnect'>
+<link href='https://forms.hsforms.com' rel='dns-prefetch'>
+<link href='https://js.hsforms.net' rel='preconnect'>
+<link href='https://js.hsforms.net' rel='dns-prefetch'>
+<link href='https://connect.facebook.net' rel='preconnect'>
+<link href='https://connect.facebook.net' rel='dns-prefetch'>
+<link href='https://static.ads-twitter.com' rel='preconnect'>
+<link href='https://static.ads-twitter.com' rel='dns-prefetch'>
+<link href='https://bat.bing.com' rel='preconnect'>
+<link href='https://bat.bing.com' rel='dns-prefetch'>
+<link href='https://snap.licdn.com' rel='preconnect'>
+<link href='https://snap.licdn.com' rel='dns-prefetch'>
+<link href='https://googleads.g.doubleclick.net' rel='preconnect'>
+<link href='https://googleads.g.doubleclick.net' rel='dns-prefetch'>
+<link href='https://analytics.twitter.com' rel='preconnect'>
+<link href='https://analytics.twitter.com' rel='dns-prefetch'>
+<link href='https://betterstackcdn.com' rel='preconnect'>
+<link href='https://betterstackcdn.com' rel='dns-prefetch'>
+
+<link href='/assets/favicon-384a72f48a07e7e1e50c207c892df24ecca4d42b2fe82ffa2dd49189f0a7857e.png' rel='shortcut icon'>
+<meta content='Learn how to use Python&#39;s `asyncio` library to write efficient, concurrent code. This guide covers async functions, async generators, and semaphores, helping you handle multiple tasks concurrently for improved performance. Ideal for I/O-bound tasks and large datasets.' name='description'>
+<meta content='website' property='og:type'>
+<meta content='Practical Guide to Asynchronous Programming in Python | Better Stack Community' property='og:title'>
+<meta content='Learn how to use Python&#39;s `asyncio` library to write efficient, concurrent code. This guide covers async functions, async generators, and semaphores, helping you handle multiple tasks concurrently for improved performance. Ideal for I/O-bound tasks and large datasets.' property='og:description'>
+<meta content='https://betterstack.com/og-image/python-async-programming.png' property='og:image'>
+<meta content='summary_large_image' property='twitter:card'>
+<meta content='betterstackhq' property='twitter:site'>
+<meta content='Practical Guide to Asynchronous Programming in Python | Better Stack Community' property='twitter:title'>
+<meta content='Learn how to use Python&#39;s `asyncio` library to write efficient, concurrent code. This guide covers async functions, async generators, and semaphores, helping you handle multiple tasks concurrently for improved performance. Ideal for I/O-bound tasks and large datasets.' property='twitter:description'>
+<meta content='https://betterstack.com/og-image/python-async-programming.png' property='twitter:image'>
+<meta content='no-cache' name='turbo-cache-control'>
+<link href='https://betterstack.com/community/guides/scaling-python/python-async-programming/' rel='canonical'>
+<link href='https://betterstack.com/community/guides/scaling-python/python-async-programming/?format=markdown' rel='alternate' type='text/markdown'>
+<meta content='https://betterstack.com/community/guides/scaling-python/python-async-programming/' property='og:url'>
+<meta name="csrf-param" content="authenticity_token" />
+<meta name="csrf-token" content="8alrwIvDGJ8Wvuwq8bl5BvZ16bUs2wux-KV5YBj6ih5jod8HAjI63HTxrHdT0gjnodMHGf-NmCto-SO4_it__Q" />
+<meta name="csp-nonce" content="74ff0c65e75b75d187f6da6fa54bba36" />
+
+<link href='https://cdnjs.betterstackcdn.com/@vueform/multiselect@2.5.7/themes/default.css' rel='stylesheet'>
+<link href='https://cdnjs.betterstackcdn.com/floating-vue@2.0.0-beta.24/dist/style.css' rel='stylesheet'>
+<link href='https://cdnjs.betterstackcdn.com/@docsearch/css@3.5.2/dist/style.css' rel='stylesheet'>
+
+<link as='font' crossorigin='anonymous' href='https://betterstackcdn.com/static/fonts/Roobert/Roobert-Regular.woff2' rel='preload'>
+<link as='font' crossorigin='anonymous' href='https://betterstackcdn.com/static/fonts/Roobert/Roobert-Regular.woff' rel='preload'>
+<link as='font' crossorigin='anonymous' href='https://betterstackcdn.com/static/fonts/Roobert/Roobert-Medium.woff2' rel='preload'>
+<link as='font' crossorigin='anonymous' href='https://betterstackcdn.com/static/fonts/Roobert/Roobert-Medium.woff' rel='preload'>
+<link as='font' crossorigin='anonymous' href='https://betterstackcdn.com/static/fonts/Roobert/Roobert-SemiBold.woff2' rel='preload'>
+<link as='font' crossorigin='anonymous' href='https://betterstackcdn.com/static/fonts/Roobert/Roobert-SemiBold.woff' rel='preload'>
+<link as='font' crossorigin='anonymous' href='https://betterstackcdn.com/static/fonts/Roobert/Roobert-Bold.woff2' rel='preload'>
+<link as='font' crossorigin='anonymous' href='https://betterstackcdn.com/static/fonts/Roobert/Roobert-Bold.woff' rel='preload'>
+<style>
+  @font-face {
+    font-family: "Roobert";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src:
+      url("https://betterstackcdn.com/static/fonts/Roobert/Roobert-Regular.woff2") format("woff2"),
+      url("https://betterstackcdn.com/static/fonts/Roobert/Roobert-Regular.woff") format("woff");
+  }
+  @font-face {
+    font-family: "Roobert";
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src:
+      url("https://betterstackcdn.com/static/fonts/Roobert/Roobert-Medium.woff2") format("woff2"),
+      url("https://betterstackcdn.com/static/fonts/Roobert/Roobert-Medium.woff") format("woff");
+  }
+  
+  @font-face {
+    font-family: "Roobert";
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src:
+      url("https://betterstackcdn.com/static/fonts/Roobert/Roobert-SemiBold.woff2") format("woff2"),
+      url("https://betterstackcdn.com/static/fonts/Roobert/Roobert-SemiBold.woff") format("woff");
+  }
+  @font-face {
+    font-family: "Roobert";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src:
+      url("https://betterstackcdn.com/static/fonts/Roobert/Roobert-Bold.woff2") format("woff2"),
+      url("https://betterstackcdn.com/static/fonts/Roobert/Roobert-Bold.woff") format("woff");
+  }
+</style>
+
+<link rel="preload" href="/static/fonts/Helvetica/HelveticaNowText-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="/static/fonts/Helvetica/HelveticaNowText-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="/static/fonts/Helvetica/HelveticaNowText-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="/static/fonts/Helvetica/HelveticaNowDisplay-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="/static/fonts/Helvetica/HelveticaNowDisplay-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<style>
+  @font-face {
+    font-family: 'Helvetica Now Text';
+    src: local('Helvetica Now Text  Regular'),
+         local('HelveticaNowText-Regular'),
+         url('/static/fonts/Helvetica/HelveticaNowText-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  
+  @font-face {
+    font-family: 'Helvetica Now Text';
+    src: local('Helvetica Now Text  Medium'),
+      local('HelveticaNowText-Medium'),
+      url('/static/fonts/Helvetica/HelveticaNowText-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
+  
+  @font-face {
+    font-family: 'Helvetica Now Text';
+    src: local('Helvetica Now Text  Bold'),
+      local('HelveticaNowText-Bold'),
+      url('/static/fonts/Helvetica/HelveticaNowText-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+  
+  @font-face {
+    font-family: 'Helvetica Now Display';
+    src: local('Helvetica Now Display Medium'),
+      local('HelveticaNowDisplay-Medium'),
+      url('/static/fonts/Helvetica/HelveticaNowDisplay-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
+  
+  @font-face {
+    font-family: 'Helvetica Now Display';
+    src: local('Helvetica Now Display Bold'),
+      local('HelveticaNowDisplay-Bold'),
+      url('/static/fonts/Helvetica/HelveticaNowDisplay-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+</style>
+
+<script nonce='74ff0c65e75b75d187f6da6fa54bba36'>
+// Store pixel IDs and configuration globally
+window.trackingConfig = {
+  gaId: 'G-9FLKD0MQYY',
+  adwordsId: 'AW-10805602682',
+  facebookId: '1062799887416376',
+  twitterId: 'o7hjd',
+  microsoftId: '17516957',
+  linkedinId: '3533474',
+  redditId: 't2_bywzx23t',
+  plausibleDomain: 'betterstack.com',
+  domains: ["betterstack.com","betterstack.test","betteruptime.com","uptime.betterstack.com","logtail.com","telemetry.betterstack.com","errors.betterstack.com","warehouse.betterstack.com"],
+  initialized: {
+    ga: false,
+    facebook: false,
+    twitter: false,
+    microsoft: false,
+    linkedin: false,
+    reddit: false,
+    plausible: false
+  }
+};
+
+
+</script>
+<script async src='https://www.googletagmanager.com/gtag/js?id=G-9FLKD0MQYY'></script>
+<script nonce='74ff0c65e75b75d187f6da6fa54bba36'>
+// Setup gtag function but don't initialize tracking
+window.dataLayer = window.dataLayer || [];
+function gtag(){window.dataLayer.push(arguments);}
+
+// Initialize Google Analytics only when consent is granted
+function initializeGoogleAnalytics() {
+  if (window.trackingConfig.initialized.ga) return;
+
+  gtag('js', new Date());
+  gtag('set', 'linker', { 'domains': window.trackingConfig.domains });
+  gtag('config', window.trackingConfig.gaId, {
+    linker: { domains: window.trackingConfig.domains }
+  });
+  gtag('config', window.trackingConfig.adwordsId, {
+    linker: { domains: window.trackingConfig.domains }
+  });
+
+  window.trackingConfig.initialized.ga = true;
+}
+</script>
+<script nonce='74ff0c65e75b75d187f6da6fa54bba36'>
+// Initialize Facebook Pixel only when consent is granted
+function initializeFacebookPixel() {
+  if (window.trackingConfig.initialized.facebook) return;
+
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+  n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+  document,'script','https://connect.facebook.net/en_US/fbevents.js');
+
+  fbq('init', window.trackingConfig.facebookId);
+  fbq('track', 'PageView');
+
+  window.trackingConfig.initialized.facebook = true;
+}
+</script>
+<script nonce='74ff0c65e75b75d187f6da6fa54bba36'>
+function initializeTwitterPixel() {
+  if (window.trackingConfig.initialized.twitter) return;
+
+  !function(e,t,n,s,u,a){e.twq||(s=e.twq=function(){s.exe?s.exe.apply(s,arguments):s.queue.push(arguments);
+  },s.version='1.1',s.queue=[],u=t.createElement(n),u.async=!0,u.src='https://static.ads-twitter.com/uwt.js',
+  a=t.getElementsByTagName(n)[0],a.parentNode.insertBefore(u,a))}(window,document,'script');
+
+  twq('config', window.trackingConfig.twitterId);
+  twq('track','PageView');
+
+  window.trackingConfig.initialized.twitter = true;
+}
+</script>
+<script nonce='74ff0c65e75b75d187f6da6fa54bba36'>
+function initializeMicrosoftAds() {
+  if (window.trackingConfig.initialized.microsoft) return;
+
+  !function(e,t,n,a,o){var c,r,d;e[o]=e[o]||[],c=function(){
+    var t={ti:window.trackingConfig.microsoftId};
+    t.q=e[o],e[o]=new UET(t),e[o].push("pageLoad")
+  },
+  (r=t.createElement(n)).src="//bat.bing.com/bat.js",r.async=1,
+  r.onload=r.onreadystatechange=function(){
+    var e=this.readyState;
+    e&&"loaded"!==e&&"complete"!==e||(c(),r.onload=r.onreadystatechange=null)
+  },
+  m=t.querySelector("[nonce]"),
+  m&&r.setAttribute("nonce",m.nonce||m.getAttribute("nonce")),
+  (d=t.getElementsByTagName(n)[0]).parentNode.insertBefore(r,d)
+  }(window,document,"script",0,"uetq");
+
+  window.trackingConfig.initialized.microsoft = true;
+}
+</script>
+<script nonce='74ff0c65e75b75d187f6da6fa54bba36'>
+function initializeLinkedInPixel() {
+  if (window.trackingConfig.initialized.linkedin) return;
+
+  _linkedin_partner_id = window.trackingConfig.linkedinId;
+  window._linkedin_data_partner_ids = window._linkedin_data_partner_ids || [];
+  window._linkedin_data_partner_ids.push(_linkedin_partner_id);
+
+  (function(l) {
+    if (!l){
+      window.lintrk = function(a,b){window.lintrk.q.push([a,b])};
+      window.lintrk.q=[];
+    }
+    var s = document.getElementsByTagName("script")[0];
+    var b = document.createElement("script");
+    b.type = "text/javascript";
+    b.async = true;
+    b.src = "https://snap.licdn.com/li.lms-analytics/insight.min.js";
+    s.parentNode.insertBefore(b, s);
+  })(window.lintrk);
+
+  window.trackingConfig.initialized.linkedin = true;
+}
+</script>
+<script nonce='74ff0c65e75b75d187f6da6fa54bba36'>
+function initializeRedditPixel() {
+  if (window.trackingConfig.initialized.reddit) return;
+
+  !function(w,d){
+    if(!w.rdt){
+      var p=w.rdt=function(){
+        p.sendEvent?p.sendEvent.apply(p,arguments):p.callQueue.push(arguments)
+      };
+      p.callQueue=[];
+      var t=d.createElement("script");
+      t.src="https://www.redditstatic.com/ads/pixel.js",
+      t.async=!0;
+      var s=d.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(t,s)
+    }
+  }(window,document);
+
+  rdt('init', window.trackingConfig.redditId, {
+    "optOut":false,
+    "useDecimalCurrencyValues":true
+  });
+  rdt('track', 'PageVisit');
+
+  window.trackingConfig.initialized.reddit = true;
+}
+</script>
+<script nonce='74ff0c65e75b75d187f6da6fa54bba36'>
+function initializePlausible() {
+  if (window.trackingConfig.initialized.plausible) return;
+  if (document.querySelector('script[data-domain]')) return;
+
+  var script = document.createElement('script');
+  script.defer = true;
+  script.setAttribute('data-domain', window.trackingConfig.plausibleDomain);
+  script.src = 'https://plausible.io/js/plausible.js';
+  document.head.appendChild(script);
+
+  window.trackingConfig.initialized.plausible = true;
+}
+</script>
+<script nonce='74ff0c65e75b75d187f6da6fa54bba36'>
+// Function to initialize all tracking pixels
+function initializeAllTracking() {
+  initializeGoogleAnalytics();
+  initializeFacebookPixel();
+  initializeTwitterPixel();
+  initializeMicrosoftAds();
+  initializeLinkedInPixel();
+  initializeRedditPixel();
+  initializePlausible();
+}
+
+// Function to check consent and initialize if granted
+function checkConsentAndInitialize() {
+  // Check for cookie consent
+  var consent = document.cookie.match(/cookie_consent=([^;]+)/);
+
+  if (consent && consent[1] === 'accept_all') {
+    // Full consent - initialize all tracking
+    initializeAllTracking();
+  }
+}
+
+// Check consent on page load
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', checkConsentAndInitialize);
+} else {
+  checkConsentAndInitialize();
+}
+
+// Listen for consent being granted
+document.addEventListener('cookie-consent-granted', function(event) {
+  if (event.detail.consentType === 'accept_all') {
+    initializeAllTracking();
+  }
+});
+
+// Handle Turbo navigation
+document.addEventListener('turbo:load', function() {
+  checkConsentAndInitialize();
+
+  // Track page views only if pixels are initialized
+  if (window.trackingConfig.initialized.ga && typeof gtag === 'function') {
+    gtag('set', 'page_path', location.pathname);
+    gtag('event', 'page_view');
+  }
+
+  if (window.trackingConfig.initialized.facebook && typeof fbq === 'function') {
+    fbq('track', 'PageView');
+  }
+
+  if (window.trackingConfig.initialized.twitter && typeof twq === 'function') {
+    twq('track','PageView');
+  }
+
+  if (window.trackingConfig.initialized.microsoft && typeof uetq !== 'undefined' && window.uetq) {
+    uetq.push('event', 'page_view', { 'page_path': location.pathname });
+  }
+
+  if (window.trackingConfig.initialized.reddit && typeof rdt === 'function') {
+    rdt('track', 'PageVisit');
+  }
+});
+
+// Remove noscript elements which break DOMParser (keep this as-is)
+document.addEventListener('turbo:before-render', function(event) {
+  event.detail.newBody.querySelectorAll('noscript').forEach((e) => e.remove());
+});
+</script>
+
+
+<script type="importmap" data-turbo-track="reload" nonce="74ff0c65e75b75d187f6da6fa54bba36">{
+  "imports": {
+    "admin_controllers/article_form_controller": "https://betterstackcdn.com/assets/admin_controllers/article_form_controller-e4fa299ab2eb55887c8f95708f77144b343ff704b4963922ee833aa555535aa8.js",
+    "admin_controllers": "https://betterstackcdn.com/assets/admin_controllers/index-78a8601ba025c41875d69cf8411879b9a67529d18f955b520d80607ae14e8f92.js",
+    "api/NaturalLanguageParserApi": "https://betterstackcdn.com/assets/api/NaturalLanguageParserApi-85b37b6b92355d1e219a4bae338bc7aef7b710fa8dea2257be09ee5302773488.js",
+    "application_controllers/account_settings_controller": "https://betterstackcdn.com/assets/application_controllers/account_settings_controller-e324c20d71fd7a9530a9aa9ef46681e9852d4a087f2509c358b012a57dac3791.js",
+    "application_controllers/command_controller": "https://betterstackcdn.com/assets/application_controllers/command_controller-e8f4a37918c2dfed6e891a1aaada15cc6d2d966902ade26571f3cc5b7d466f6b.js",
+    "application_controllers/command_palette_controller": "https://betterstackcdn.com/assets/application_controllers/command_palette_controller-957a2e9ae9145462fff93afd9b2158a9c09d2bdb0d69883abaeff31f7d456e34.js",
+    "application_controllers/command_palette_hierarchy_controller": "https://betterstackcdn.com/assets/application_controllers/command_palette_hierarchy_controller-9be0e77e074797b7b4630c7cc4dcf3a6e2f620a58000ec5faacd29a3269e7eb4.js",
+    "application_controllers/dropdown_controller": "https://betterstackcdn.com/assets/application_controllers/dropdown_controller-90e1847b1832217861e8235a17989a95cacf733a192303f6c3ac0e625fb3fbac.js",
+    "application_controllers/front_chat_controller": "https://betterstackcdn.com/assets/application_controllers/front_chat_controller-8f1481909e1db88871056038be4eeec8ad834b53bf1618e334709916825bc83a.js",
+    "application_controllers/hotkeys_controller": "https://betterstackcdn.com/assets/application_controllers/hotkeys_controller-5416d2f7507f93471c56405f14787b29d2a3dc181a0cdaea64f7f7fc3a6c616b.js",
+    "application_controllers": "https://betterstackcdn.com/assets/application_controllers/index-b413b449a5eb7c74f3ea106230ecd111ceecccc86a78eb73e9862d07aba3bbe2.js",
+    "application_controllers/input_self_select_controller": "https://betterstackcdn.com/assets/application_controllers/input_self_select_controller-072d38d7b81a7d9d9ea3b6502523a7dd2e6576d63c58e1926eb44c29cef66ebf.js",
+    "application_controllers/marketing_banner_controller": "https://betterstackcdn.com/assets/application_controllers/marketing_banner_controller-3a913a56793a2a6a6f3c24efe4777251e98c52965a514dee2c0ee29758c47921.js",
+    "application_controllers/marketing_banner_form_controller": "https://betterstackcdn.com/assets/application_controllers/marketing_banner_form_controller-681defe294545a43ebb320fff6eabeb092d35d39d5dfb5a3876194a04d5b7e27.js",
+    "application_controllers/menu_controller": "https://betterstackcdn.com/assets/application_controllers/menu_controller-02962009f37e4a5996a9be5752276cea7045b13a195aba6900a8bfd8f041ca7a.js",
+    "application_controllers/nav_toggle_controller": "https://betterstackcdn.com/assets/application_controllers/nav_toggle_controller-ab73f9d4faa411ee92d77b97e272222101e2f3ace9c9f2913fb2a804ec95c94c.js",
+    "application_controllers/notification_toast_controller": "https://betterstackcdn.com/assets/application_controllers/notification_toast_controller-b60fb61e4af2ade913ec285cb68bf4ae2e0665afecca89d68ffacdf42baee348.js",
+    "application_controllers/notification_toasts_controller": "https://betterstackcdn.com/assets/application_controllers/notification_toasts_controller-d68d43e1d4e7c8fd8c0e85e77ec6d7b2255c756208f64f110e2ac1171556ed97.js",
+    "application_controllers/payment/calculator_controller": "https://betterstackcdn.com/assets/application_controllers/payment/calculator_controller-288c5aab5caa70911fd99a8c6140f58ee214916dd0177f4bd53b981679604a16.js",
+    "application_controllers/payment/change_plan_controller": "https://betterstackcdn.com/assets/application_controllers/payment/change_plan_controller-ceace7badaad2dc74dec418b33a88185b525bf0e99cf8eec7b5a965f91efe542.js",
+    "application_controllers/payment/enter_card_controller": "https://betterstackcdn.com/assets/application_controllers/payment/enter_card_controller-d88c337a986af58209982b307f4ef4a63f8650a22b3f660f9b92307c283bb302.js",
+    "application_controllers/payment/plan_controller": "https://betterstackcdn.com/assets/application_controllers/payment/plan_controller-f1efabc185501bf3612df45148e123e3606c6e701b2f0a10be1e0a6c4ae31570.js",
+    "application_controllers/payment/refund_controller": "https://betterstackcdn.com/assets/application_controllers/payment/refund_controller-b7170f2bc96c9c9fdc8db7d8d6c7df92896b99254df5101e230de61b0f589816.js",
+    "application_controllers/plan_product_controller": "https://betterstackcdn.com/assets/application_controllers/plan_product_controller-88fcccffaad3d14eea1401dae808a4a86fbb21814f97f0cf435435c5742310e2.js",
+    "application_controllers/plan_product_variable_controller": "https://betterstackcdn.com/assets/application_controllers/plan_product_variable_controller-911c5bd04c633be0d600405c4b713f329d621b5303fa0cefdc62e50406bac306.js",
+    "application_controllers/roles/permission_toggle_controller": "https://betterstackcdn.com/assets/application_controllers/roles/permission_toggle_controller-869a912bfe37c898d5e8c72676b18c3710d5e7882d747507f708356e55b57f47.js",
+    "application_controllers/search/base_controller": "https://betterstackcdn.com/assets/application_controllers/search/base_controller-a52f099f2824c9a43a9b31ca0118ed2a748f8eb322e9530ff0823e7d939497ff.js",
+    "application_controllers/single_sign_on/generic_controller": "https://betterstackcdn.com/assets/application_controllers/single_sign_on/generic_controller-b6c2c57be0e8425938c5d6bb386993035681569d3b9f0a9e48b4c9be5c4414b4.js",
+    "application_controllers/single_sign_on/okta_controller": "https://betterstackcdn.com/assets/application_controllers/single_sign_on/okta_controller-1c56311534f55f83dc2b268d6d09aae5c80410edabb373998c08adddcafc0408.js",
+    "application_controllers/transition_controller": "https://betterstackcdn.com/assets/application_controllers/transition_controller-4626bea2d3c05026c84e1b63e8a3b5cb4c99d25fae18e0aa6c55afee4ac6fc2d.js",
+    "articles/tabs": "https://betterstackcdn.com/assets/articles/tabs-a692706326f0098142c83e43b04216ac96958fc972ea33ec9a99eb936ece4144.js",
+    "articles_controllers/body_controller": "https://betterstackcdn.com/assets/articles_controllers/body_controller-4da5c48692c2a13ae6472630fd35c84e662f4bf90cf3a25dd82de475f1968589.js",
+    "articles_controllers/clipboard_controller": "https://betterstackcdn.com/assets/articles_controllers/clipboard_controller-9c23d8c2889d087f0738c0e1e3ea6103cf94a86cc1d6501d5e795a680e7b2a40.js",
+    "articles_controllers/code_controller": "https://betterstackcdn.com/assets/articles_controllers/code_controller-bf1740fbe50808d996fdeff816ad38dd4bd9203555c7e42719fa0f937835d4b7.js",
+    "articles_controllers": "https://betterstackcdn.com/assets/articles_controllers/index-c5f6c4278f445c74157dfac0a0401a7d7c2ceddd984ebea12365ec4794ba1cd0.js",
+    "articles_controllers/lightbox_controller": "https://betterstackcdn.com/assets/articles_controllers/lightbox_controller-836650f4a330aabbb1fc330e59ab09d33cd0833dc61c375d39ea9d6e23b91530.js",
+    "articles_controllers/search_controller": "https://betterstackcdn.com/assets/articles_controllers/search_controller-a6ee5b5c5b670e271ac756dd4e649da2b251198c97c098109d6652b58c27ac96.js",
+    "articles_controllers/toc_controller": "https://betterstackcdn.com/assets/articles_controllers/toc_controller-936a64661723239cf1b9e7c470c7d31e246991ca6e60a04910d46ce8df3c9191.js",
+    "articles_controllers/toggle_controller": "https://betterstackcdn.com/assets/articles_controllers/toggle_controller-96e93e95acd698a653d928cf8cee79bd0e3568906eac21f613bf4237b456ad8a.js",
+    "betterstack_v2/carousel": "https://betterstackcdn.com/assets/betterstack_v2/carousel-8b4ff45011768ab81dcb2dcde0394fc0e6ad2e0972a0d0a04e34847d43545e31.js",
+    "betterstack_v2/collapse": "https://betterstackcdn.com/assets/betterstack_v2/collapse-856d4649e6c96c3021a1a63720fe72e55371b40071779d3e4ca1f1d3dd14ef3f.js",
+    "betterstack_v2/cookie_consent": "https://betterstackcdn.com/assets/betterstack_v2/cookie_consent-d3444a26ebed3f0db1ffaef2cc99ae0111f6049bbfaa905503745b9d51cf3fd5.js",
+    "betterstack_v2/gallery": "https://betterstackcdn.com/assets/betterstack_v2/gallery-775670a8f892aabcb79d072533f48726b52fc979269bf250657db36c2c299577.js",
+    "betterstack_v2/menu": "https://betterstackcdn.com/assets/betterstack_v2/menu-624888cac1f4a9cdf28d3f41c85e4869d373e2a95feb3627dd20e9fd41b3b9e6.js",
+    "betterstack_v2/search": "https://betterstackcdn.com/assets/betterstack_v2/search-0bd114de87039c5e51f1ef37dbacf83c836bd863ad52643f2c54088a61b0631f.js",
+    "betterstack_v2/slide": "https://betterstackcdn.com/assets/betterstack_v2/slide-662518d0d1acfe45c139ede711ecbc0e7aa86421a4a154dcea39d3cd11ffaaa9.js",
+    "betterstack_v2/toggle": "https://betterstackcdn.com/assets/betterstack_v2/toggle-81084e44d5bfbaaee7d6384b0695cffc157359da21b2729e60699abe54d36928.js",
+    "channels": "https://betterstackcdn.com/assets/channels/index-21ef1d08b57dd49454e6501484552a4379a7a39e6ac580a7b7e746f1d3a07211.js",
+    "channels/turbo_betterstack": "https://betterstackcdn.com/assets/channels/turbo_betterstack-05ff1f446e0370ef173af20add9ecdb75630c106a778559caf3889f626c5d680.js",
+    "common/aos": "https://betterstackcdn.com/assets/common/aos-f1a1f8ecd7b8fa7ae6059d3d3d118a96f39c942440212694c3f63acc829feaee.js",
+    "common/billing": "https://betterstackcdn.com/assets/common/billing-7c658055ea77204422372dbacd95090526b3f2754e3ee8316d54722a67c62e47.js",
+    "common/copy": "https://betterstackcdn.com/assets/common/copy-7ce59b335de2f6c16979e77bcfc2c46543b7ee9830f7e6666c780fd77762e56b.js",
+    "common/data-disable-with-spinner": "https://betterstackcdn.com/assets/common/data-disable-with-spinner-efdfddfc6ad93240b7bf06cab6b6cc58f58fcbd7593a4ea88f470d1f9f98c395.js",
+    "common/drag-n-drop": "https://betterstackcdn.com/assets/common/drag-n-drop-62bc8f61cd6e0e8b283e76ab33d596a78191c72778184c7ec45373760b55ec78.js",
+    "common/lazy": "https://betterstackcdn.com/assets/common/lazy-5ff77a166b2ffd435dad328bbce4f0d0b7e4abdf8ddfb3b6829af89c8696d154.js",
+    "common/links": "https://betterstackcdn.com/assets/common/links-739ab025114317aafe9527006a020921576551f8c1b5795de81b69d185d57290.js",
+    "common/modals": "https://betterstackcdn.com/assets/common/modals-fd41ccf9bde76eef888bac5497debaba7400d0715af2aced091ec7771f49d333.js",
+    "common/posthog": "https://betterstackcdn.com/assets/common/posthog-91d3bdd2d7693c1c06a0e7f90179f61e4935e962a98ba2a8dc71ab4c49162cd7.js",
+    "common/railsSetup": "https://betterstackcdn.com/assets/common/railsSetup-bc58f6b7724baf61a04ce3e95e4ab64d9b26a7397ecfe13adc899c88fa52d6b2.js",
+    "common/recaptchaSubmit": "https://betterstackcdn.com/assets/common/recaptchaSubmit-e2973c037d48a6095c5f8fda35137b22cd8474e2d872655f1c6ce25b2b2eeb40.js",
+    "common/side-menu-scroll": "https://betterstackcdn.com/assets/common/side-menu-scroll-3c4c90000631ce24ec48315281471ea21a2c6ea41a38070101c9f806b33a0eec.js",
+    "common/stripe": "https://betterstackcdn.com/assets/common/stripe-a0155326dbf64cc75def6ae07d96ee3aceee6e7904ad1be25c79885997756e36.js",
+    "common_controllers/auth_controller": "https://betterstackcdn.com/assets/common_controllers/auth_controller-53d14cf6d707ebb4c3abf2159f8cf9b28e59f782d986868e66162b5f3e3d133a.js",
+    "common_controllers/careers_roles_controller": "https://betterstackcdn.com/assets/common_controllers/careers_roles_controller-0d3b43289e3977a26db70fce10d76b56b10ddc90dbeccafcd54bd3f5632dc91b.js",
+    "common_controllers/carousel_controller": "https://betterstackcdn.com/assets/common_controllers/carousel_controller-4aa5452588826e21863c36d3a0da76325d832a506ab95061b558181b0c4ae362.js",
+    "common_controllers/collapse_controller": "https://betterstackcdn.com/assets/common_controllers/collapse_controller-655bede410fe08e0cb5b11af7c3f52d29321c861bed48a069a8934f5d4027027.js",
+    "common_controllers/dev_bar_controller": "https://betterstackcdn.com/assets/common_controllers/dev_bar_controller-121683e08dbc41c5941804d629c2c64b95681eafe7bb63c2b8390910d698b164.js",
+    "common_controllers/header_controller": "https://betterstackcdn.com/assets/common_controllers/header_controller-97e7f256af7c52d773f133ccfbd3d0e7c8bc749be88a90d6ef6fb10deb7acf10.js",
+    "common_controllers": "https://betterstackcdn.com/assets/common_controllers/index-2864a31228906d4bafdc34860f4444d81f739bbf867d377ed3d6f176d2fe77f8.js",
+    "common_controllers/modal_opener_controller": "https://betterstackcdn.com/assets/common_controllers/modal_opener_controller-a5a5439a50f0331f119f597f67dcd7362942e949883e5920d28d1c949dc341c3.js",
+    "common_controllers/onboarding/features_controller": "https://betterstackcdn.com/assets/common_controllers/onboarding/features_controller-9a1eb00c2afed2246b3a25e320ac3a395be8a632ee249ae749ee7265e720560c.js",
+    "common_controllers/onboarding/payment_controller": "https://betterstackcdn.com/assets/common_controllers/onboarding/payment_controller-85befafb73e6890f3832f466d26cdc911c6d8ef5c91ef46b4088791157a6aa71.js",
+    "common_controllers/onboarding/plan_controller": "https://betterstackcdn.com/assets/common_controllers/onboarding/plan_controller-8c5f775968f9078ff699450e714caf54d6716bb9a52c4ba9e224c82fb6fcb4f5.js",
+    "common_controllers/onboarding/telemetry_bundles_controller": "https://betterstackcdn.com/assets/common_controllers/onboarding/telemetry_bundles_controller-ba9f6822868adc911c01b4c1acdd79d03b9dfe2a0ef2b48b71890bb193aca036.js",
+    "common_controllers/onboarding/test_call_controller": "https://betterstackcdn.com/assets/common_controllers/onboarding/test_call_controller-c16f94fa71ce6939eab10b7b546644e38bcf998f3b099cddfbee063d5820d9a9.js",
+    "common_controllers/pricing_controller": "https://betterstackcdn.com/assets/common_controllers/pricing_controller-d37f84db4cbb549ddaa9b01b70c0ecd41296409b0bd26c2198e74a1cdd4ab881.js",
+    "common_controllers/recaptcha_controller": "https://betterstackcdn.com/assets/common_controllers/recaptcha_controller-596493da7d7d1ce6d16e71718b852f4eb2e82fe023d97c9e8c120d78417142ff.js",
+    "common_controllers/side_nav_controller": "https://betterstackcdn.com/assets/common_controllers/side_nav_controller-707a8e3260edf053acbc4031b6c6ed8c72d43aaa5fab91e16be549ca7cbbc943.js",
+    "common_controllers/signup_controller": "https://betterstackcdn.com/assets/common_controllers/signup_controller-21d7a21e25e43ffa774ef661be7f907b62f6b8d2a7a687dd148b6864f38bde00.js",
+    "common_controllers/status_page_layout_controller": "https://betterstackcdn.com/assets/common_controllers/status_page_layout_controller-91e9a59e28f7f476076d68f3c43b7201e908838c34d04c424980ace5c8808fdc.js",
+    "common_controllers/timezone_controller": "https://betterstackcdn.com/assets/common_controllers/timezone_controller-6ed64be28438c5daba2318ecaa0b8dfdf8254e14f4f7bae27fab18051406d686.js",
+    "common_controllers/warehouse_code_block_controller": "https://betterstackcdn.com/assets/common_controllers/warehouse_code_block_controller-387b744aa0e0fa6f73f5af1fd303e49d4f6d9d766baaebb24c12ecfc32926dd6.js",
+    "components/DatePicker": "https://betterstackcdn.com/assets/components/DatePicker-7eadc2b16818d4b2f35f006b508764d21553dab176e58ae9a3100f81570e802b.js",
+    "components/Modal": "https://betterstackcdn.com/assets/components/Modal-d4d8c38aeaba2a7f418c3cdec44fc1f2eee7b0df200159067369bcb518405c8b.js",
+    "components/NativeSelect": "https://betterstackcdn.com/assets/components/NativeSelect-a4089278409e9ce7404ae6965275ed50d1ab1f86bf4ae7e60c7dd05f35415346.js",
+    "components/SideNavigation": "https://betterstackcdn.com/assets/components/SideNavigation-9978e3afae885b86eae5b904888db356d9a70838388754a2b47047e81e3cab4a.js",
+    "components/ThemeSwitcher": "https://betterstackcdn.com/assets/components/ThemeSwitcher-7a70b2478a638f3a877384ca7607d80fee6d88ad7a60ba003f7189efbc477f6b.js",
+    "components/Toasts": "https://betterstackcdn.com/assets/components/Toasts-541193cb5366fa11241829548852b80b166daf975ef25b67f482546c66697fe7.js",
+    "components/UserMenu": "https://betterstackcdn.com/assets/components/UserMenu-7a3bec82bcc032a32916144d822a6f12da83c3e4ada8d8d0c2806601fafb7c69.js",
+    "components/WithSpinner": "https://betterstackcdn.com/assets/components/WithSpinner-a1994526e64c1b62e5353716bb7d6106c12037e3198d20f9ba848bfc18413952.js",
+    "components/admin/AiArticle": "https://betterstackcdn.com/assets/components/admin/AiArticle-4ca22817be98dcea01f68f8f3edd0177b24e1e8f0019d0c19b3ae3e35d8688e6.js",
+    "components/admin/AiArticlesList": "https://betterstackcdn.com/assets/components/admin/AiArticlesList-45b94d5c11551803ee2fee8e86bfa575edf027c1b6d8f4ec620cc8a84d17b92f.js",
+    "components/admin/AiAssistant": "https://betterstackcdn.com/assets/components/admin/AiAssistant-cdf8c80f6ce0e9578ca8bba2c9a2b27b4d27a70519a86c3e409885d47a51c178.js",
+    "components/admin/AiSummary": "https://betterstackcdn.com/assets/components/admin/AiSummary-6892b82e92027d3aa4f66453979341ca521af5a647564c5aae60108d3fac7917.js",
+    "components/admin/ArticleLink": "https://betterstackcdn.com/assets/components/admin/ArticleLink-44a4cd0bda5bdc66870b018f63e909e0b3473d30a24066330c005bbbf3f735f7.js",
+    "components/admin/ArticlesSelect": "https://betterstackcdn.com/assets/components/admin/ArticlesSelect-1fca94ccfb65d5985c301b593c7bf378d79483f06cdf6351ad725ec7265e95e5.js",
+    "components/billing/BillableBadge": "https://betterstackcdn.com/assets/components/billing/BillableBadge-e40b9f093ce4f292833f467680e2618c7a6f6ca0533199106eca51a2db3bd034.js",
+    "components/billing/ChangePlans": "https://betterstackcdn.com/assets/components/billing/ChangePlans-9060307c039c2643acf0bece5afa3a7c3319c272924ded121556e39bec4e9d68.js",
+    "components/billing/FeatureCountSlider": "https://betterstackcdn.com/assets/components/billing/FeatureCountSlider-6234bcfc54b2822c1a4c9f6c09213c76913d7ff99f72f08e51396d41bec9a198.js",
+    "components/billing/PaymentMethodsSelect": "https://betterstackcdn.com/assets/components/billing/PaymentMethodsSelect-996b26e1ef4543e07851ffecf89e461740c784384b9dc9ca1e7a0fd69c0e9462.js",
+    "components/billing/ProductVariables": "https://betterstackcdn.com/assets/components/billing/ProductVariables-cc4e6f59031e131079b63975a86154fbd2ab0bfd60a8bc0434a1d8581b09c7fe.js",
+    "components/billing/RegionDropdown": "https://betterstackcdn.com/assets/components/billing/RegionDropdown-16d1565273c168843543ba16a2d44d422d0eef4210113a67a883eaf301e25bdb.js",
+    "components/billing/ResponderSeatsSelector": "https://betterstackcdn.com/assets/components/billing/ResponderSeatsSelector-e7aec2c01b0c609133baa1fa7db3a8d8649afb2b4e81792d4692421e858eec71.js",
+    "components/billing/UpcomingPlan": "https://betterstackcdn.com/assets/components/billing/UpcomingPlan-4dabf426c149cf141f0472b280c5b02be6a889e387f70923358a36d76ee084eb.js",
+    "components/charts/BarChart": "https://betterstackcdn.com/assets/components/charts/BarChart-a632dbfbd2416f7499b4ffc34295b5c457f3e381d9b070ac5df71cb710d1a400.js",
+    "components/charts/theme": "https://betterstackcdn.com/assets/components/charts/theme-2a76f6adfc8fdf27dcab3d986e33e1615b40d5aa8a45ea42111a6b2c21d96d51.js",
+    "components/charts/utils/formatTooltip": "https://betterstackcdn.com/assets/components/charts/utils/formatTooltip-925271204ad8136f984ba81afc7dcd21ddf1a3268e4b1ba4e64579e42f0f9eec.js",
+    "components/dev_bar/CopyImpersonateLink": "https://betterstackcdn.com/assets/components/dev_bar/CopyImpersonateLink-3d29b64036e5303bf06ce51b4153702a109bb02802d11461579e1387c215601e.js",
+    "components/docs/Code": "https://betterstackcdn.com/assets/components/docs/Code-946ce8466a8ec2971f7f2121d3d97f6132a0204c72ca52cf3f0d4e5d300e1395.js",
+    "components/docs/CodeTab": "https://betterstackcdn.com/assets/components/docs/CodeTab-94f14fc2c62b31d247e40b488f43aa01af5613bb8f26c1a3c9b79f17d6ec0cb9.js",
+    "components/docs/CopyDropdown": "https://betterstackcdn.com/assets/components/docs/CopyDropdown-3bda0f6798e473879a60aec29d19d104af19d576abf0b7caeae70bed888dcaaf.js",
+    "components/docs/TokenLoader": "https://betterstackcdn.com/assets/components/docs/TokenLoader-8169d5e62d8e4c646990472f076c1041b00a955315423e044dbf3a86d96f0fe3.js",
+    "components/docs/TokenNotice": "https://betterstackcdn.com/assets/components/docs/TokenNotice-7326d70fe198ce330c63a26c1cfcc42404a88c1433bb6356df5ad08d83376243.js",
+    "components/docs/TokenPicker": "https://betterstackcdn.com/assets/components/docs/TokenPicker-5b0beb2305e6eb036cd58234e83b3c7e1aaa65e67ec47f348ee48b3466913fa2.js",
+    "components/forms/AuditLogsToggle": "https://betterstackcdn.com/assets/components/forms/AuditLogsToggle-6f439b71957afea7fc21580c2824b6c7893f2dc835dd7363128a7bf85c0f72d5.js",
+    "components/forms/BasicForm": "https://betterstackcdn.com/assets/components/forms/BasicForm-560a755196bbfe6cd2255545825ceda73cd480f9181fbd11dffe6c39bcd694b2.js",
+    "components/forms/Collapse": "https://betterstackcdn.com/assets/components/forms/Collapse-825c637f5fb62eb9f93a5625c0a11284c9d4427275f25cc2f766ed190cd585db.js",
+    "components/forms/CopyOnClick": "https://betterstackcdn.com/assets/components/forms/CopyOnClick-cc7fa4d5232c8ef2cdb78e5e479a1a0a6bfdd3fc54bce84d923c9277b55940f0.js",
+    "components/forms/DotsDropdown": "https://betterstackcdn.com/assets/components/forms/DotsDropdown-3b32b3e4d8298a7a30c78b7ca503d100b8791b6eaf65fbfd75a12e6dbc0d5a1a.js",
+    "components/forms/Dropdown": "https://betterstackcdn.com/assets/components/forms/Dropdown-b380ccb8b1d9bba07f327125080da9f08630782913cbd10dc164b5a5d8cc3e6a.js",
+    "components/forms/GatedToggle": "https://betterstackcdn.com/assets/components/forms/GatedToggle-0a0066a528d41a8090d06eafc35f8fb108f67a6cda4be63b205c24fe38f92481.js",
+    "components/forms/HeadersJson": "https://betterstackcdn.com/assets/components/forms/HeadersJson-da702bb3caa2d9341e46247cc2957065e621ebe24eeb975f4f2316ce5489c819.js",
+    "components/forms/HighlightedTextarea": "https://betterstackcdn.com/assets/components/forms/HighlightedTextarea-d802325b8e244edcaa6051a4a53373d4c326f0ef94942d642efd6b70f735aa52.js",
+    "components/forms/HolidayModeForm": "https://betterstackcdn.com/assets/components/forms/HolidayModeForm-cc978fef6fc4eed15358b6e85576ed7011694b518557c67dfcf24ecf54da5bf1.js",
+    "components/forms/LogoField": "https://betterstackcdn.com/assets/components/forms/LogoField-f73580ff83f6fb76d981cf7e5a77ad7b2dddcb099ba9bc525ba1d2b015db01cd.js",
+    "components/forms/ModalTemplate": "https://betterstackcdn.com/assets/components/forms/ModalTemplate-9991651c72836fd93bbf16c42d5d7ddba25d62fb6b3a0cf51eb196bbb4556c2d.js",
+    "components/forms/MultiplyingInput": "https://betterstackcdn.com/assets/components/forms/MultiplyingInput-bf394a5af5f6185984bbd9451431e579046e6e421e06423686a06ac4b4dde12d.js",
+    "components/forms/Select": "https://betterstackcdn.com/assets/components/forms/Select-5d5612ddc20b9a309504f8695d83990c743179114c6734e948b6dd7667b494f1.js",
+    "components/forms/SelectWithSearch": "https://betterstackcdn.com/assets/components/forms/SelectWithSearch-95f2dc1299c421203ce340f471a4adf4d3eab60f07d447b5e83ab61c49b76af8.js",
+    "components/forms/SessionsForm": "https://betterstackcdn.com/assets/components/forms/SessionsForm-842c0ce4cb54fdfde9dea096edded57f9cd5baafc2e0dfd9ff6b9a2bb0348c9e.js",
+    "components/forms/Slider": "https://betterstackcdn.com/assets/components/forms/Slider-44e75e3a15bf349f4be6c2f9705215206ec22a076cacc0e1488466c6cf64ef7a.js",
+    "components/forms/Spinner": "https://betterstackcdn.com/assets/components/forms/Spinner-dcee28b4cf6396c26c1c3937255b70ecf57044246e8c26d3bb43bdaa0b2ee323.js",
+    "components/forms/TimezoneSelect": "https://betterstackcdn.com/assets/components/forms/TimezoneSelect-3784a4fd692d674f18441b48affd82b0920503f38230da555c03ba897ce5207e.js",
+    "components/forms/Toggle": "https://betterstackcdn.com/assets/components/forms/Toggle-e57d7bc5c5e33b6c16d69068f4681130e57cdd015b685507cdd541e724abe877.js",
+    "components/forms/Tooltip": "https://betterstackcdn.com/assets/components/forms/Tooltip-2acff8282e8bab23a81bcc1202b77c3ddb5bb20ba9f8337c3dbccc25c6b00ebc.js",
+    "components": "https://betterstackcdn.com/assets/components/index-7e8dca1f7f5da02d3f3a4f37f22881d941f51fedfb4dbc6b537847538cbe5d0b.js",
+    "components/notifications/Dropdown": "https://betterstackcdn.com/assets/components/notifications/Dropdown-a9b0d008db06fadf7eae5260389e653689f485c54407bf9af7cf5ce342d02cec.js",
+    "components/notifications/Item": "https://betterstackcdn.com/assets/components/notifications/Item-98b763260aab2d8e72fbef52a6f2011c2c1c07523c883c30fc9a048f1d974b68.js",
+    "components/onboarding/PhonePrefixSelect": "https://betterstackcdn.com/assets/components/onboarding/PhonePrefixSelect-5b1f30ae687ae2a2f37447d29fb835d81efd72c3e8f0832b8da3dc75e4d2d49b.js",
+    "components/sessions/EmailPrompt": "https://betterstackcdn.com/assets/components/sessions/EmailPrompt-f36b5cd9201cc86ec4a2a681f9a1b70f626391182f70d4e7f85f7cc49e6fd2e1.js",
+    "components/shared/DatePickerRangeSelector": "https://betterstackcdn.com/assets/components/shared/DatePickerRangeSelector-d35d8ddf8d9e770a6534ab1f1ea87f320e14b3729f918054ace71a384aad999b.js",
+    "components/shared/DateRangeSelector": "https://betterstackcdn.com/assets/components/shared/DateRangeSelector-e472a9ba918260c903eb42dcba803a13fbe613dc937667de87f95d7939cd1431.js",
+    "components/stores/DocsStore": "https://betterstackcdn.com/assets/components/stores/DocsStore-27b35375a28d45ca3832d16a89beaf8b9588238bb8d14903f902f3ecf9610a7b.js",
+    "components/stores/FollowerStore": "https://betterstackcdn.com/assets/components/stores/FollowerStore-dc174f2b77b5edafec9b280314cae3e8a4e725b012f19ad8fff5774d840d36b0.js",
+    "components/stores/MainStore": "https://betterstackcdn.com/assets/components/stores/MainStore-a65a3c2b6006c0302f37c635224178394dd911571b3d607023aebd648cae248c.js",
+    "components/stores/RegionStore": "https://betterstackcdn.com/assets/components/stores/RegionStore-a39f9a7d7ed61716ae0c98236397744fe666a78166ce7b2afb1becad3f50f94b.js",
+    "components/stores/ToastStore": "https://betterstackcdn.com/assets/components/stores/ToastStore-ec3b3046396239a7485982edbbf0e924a72df2b56f59afa1d1dd6961f0eabcc6.js",
+    "components/stores/UsageStore": "https://betterstackcdn.com/assets/components/stores/UsageStore-2dd7508bd70f4d3f57c7f9f5497383eb98221fdd99bbaa9a85c7b0618fddd862.js",
+    "components/stores/index": "https://betterstackcdn.com/assets/components/stores/index-accca1539fb53abba4bb1039513f2e520c9f8a46c38a91895f7343434678c9d3.js",
+    "components/usage/Chart": "https://betterstackcdn.com/assets/components/usage/Chart-f67a183e555714fb4e3de10f75c492bd58fbe26042b655abf63e056f4b6728f3.js",
+    "components/usage/DateRangeSelector": "https://betterstackcdn.com/assets/components/usage/DateRangeSelector-775a5733df452d0c9c5b5b5ba5e9b6146595872fa3f9f405b4d830f9f46affca.js",
+    "components/usage/DimensionTab": "https://betterstackcdn.com/assets/components/usage/DimensionTab-f45279ba765e2750b0f928b6f0e5b90715432faee4f6ceeacc7318c45b3099f7.js",
+    "components/usage/ProductLink": "https://betterstackcdn.com/assets/components/usage/ProductLink-d502a128a35d269c7de82461ab27231e9fe1452583cdede63871219eda41b038.js",
+    "components/usage/ResolutionSelector": "https://betterstackcdn.com/assets/components/usage/ResolutionSelector-4842a913a61a138fb2bf7ba7cc33933fdb571ef1d8ce26071c5eba70807c1970.js",
+    "components/usage/Table": "https://betterstackcdn.com/assets/components/usage/Table-6a361562bbb9b73fc313529aec7afc90d807d138dc7b93598c62b8ef7ce8f97d.js",
+    "composables/useCollapseHeight": "https://betterstackcdn.com/assets/composables/useCollapseHeight-929a9aae2097ecba0322d08ab53e31ec3689d0bfd1c5d2a0364b92e602a9e0bd.js",
+    "composables/useCommand": "https://betterstackcdn.com/assets/composables/useCommand-64d5bb708b92d50db670883ea3693e9a80f7b3bec932586b80fba7f6fad41673.js",
+    "composables/useHotkey": "https://betterstackcdn.com/assets/composables/useHotkey-6e284a9ed4bd74011a62a393f4bf3642fc36aacb59bf653a4b488f4e9d2659b0.js",
+    "composables/useTheme": "https://betterstackcdn.com/assets/composables/useTheme-5acecba48a6c12a058faa51a961d232cec020ee46c4fc74c5325ad54a48799d7.js",
+    "entrypoints/admin_articles": "https://betterstackcdn.com/assets/entrypoints/admin_articles-fbba0e518421881f56e61dd5fb5cdfd84440fad7b55146c5ec536c762e84c77d.js",
+    "entrypoints/application": "https://betterstackcdn.com/assets/entrypoints/application-7f8668fde49be983f50202f58a7cc5daecadbded5732c0792f193973093fd50e.js",
+    "entrypoints/articles": "https://betterstackcdn.com/assets/entrypoints/articles-306ae992e2881c1c55233c1184f8ba8fe50ea5059f1eaef58f1f161046569773.js",
+    "entrypoints/auth": "https://betterstackcdn.com/assets/entrypoints/auth-72ec0a984faa36f3d4605cbd0547745977369cff3a2c0971c617d516d1947f6a.js",
+    "entrypoints/betterstack_v2": "https://betterstackcdn.com/assets/entrypoints/betterstack_v2-e5d0583025e8a9d3622ba6d9f822ef91f8ad172453ec181183cbb5501e97813d.js",
+    "entrypoints/front": "https://betterstackcdn.com/assets/entrypoints/front-3104bee446e386ffb7debcc4d59b64bba6296962b8df85bf0956b25cf94916db.js",
+    "entrypoints/logtail": "https://betterstackcdn.com/assets/entrypoints/logtail-8db65d2b4a11155396938f51f65ebd724281e4aaa260fdce2867ca829f25e814.js",
+    "entrypoints/mobile": "https://betterstackcdn.com/assets/entrypoints/mobile-aa465d39d591acd1f4a65b3912b709c29d33329f1b8c251e702526f5a480eae5.js",
+    "entrypoints/onboarding": "https://betterstackcdn.com/assets/entrypoints/onboarding-ace22d64c5ed26ad00b45cebecc92a65e4f8fb12a12ce49df819116634c54b57.js",
+    "entrypoints/playwright": "https://betterstackcdn.com/assets/entrypoints/playwright-745e0fcdef3e6ab76063c07fb60dda94b19fdc7424acdb8adac53b4a235f53d8.js",
+    "entrypoints/uptime": "https://betterstackcdn.com/assets/entrypoints/uptime-48e6200fd8139d58fb0226ac22a0f2517bec2fa2394c9438ec77e258a76d158f.js",
+    "front/router": "https://betterstackcdn.com/assets/front/router-2552b07f1bd1eb8d50116e81e9fef4e64e28bf4412a2c884f89da2c25f86b36e.js",
+    "logtail_controllers": "https://betterstackcdn.com/assets/logtail_controllers/index-284b62abe258c98c1c95a3d4ce0e89234ea725aaf513fe44e4df316dbc9536a1.js",
+    "logtail_controllers/plans_controller": "https://betterstackcdn.com/assets/logtail_controllers/plans_controller-c0478e1d4d70ea8da3efea072238839b6ec6a9be7985205450739161d9b14afa.js",
+    "mobile_controllers/ButtonBridgeComponent": "https://betterstackcdn.com/assets/mobile_controllers/ButtonBridgeComponent-9745764cc74a8138fd0a1979a4cf25ffc5c54e4ca766c8e2b9b2918eafea5ea6.js",
+    "mobile_controllers/EventBridgeComponent": "https://betterstackcdn.com/assets/mobile_controllers/EventBridgeComponent-433bd97883dca4cbf84a828495d9ed149ed96d554e87c32c3d6b06fdefd7abb0.js",
+    "mobile_controllers": "https://betterstackcdn.com/assets/mobile_controllers/index-1b4403919185e5c5018da05a4d22ff741897a94772617b40443679cddc758c46.js",
+    "mobile_controllers/otp_entry_controller": "https://betterstackcdn.com/assets/mobile_controllers/otp_entry_controller-cd6ee09130eaaf28c2e3d6365f8253cfec2f4fbe1ffcbb276da0f5b8a820e500.js",
+    "routes": "https://betterstackcdn.com/assets/routes-6f2a9ad972c81e2eaf5244fbdd4c3e8802b2562f8f54e8efb27378a28fa222ab.js",
+    "services/ThemeSwitcher": "https://betterstackcdn.com/assets/services/ThemeSwitcher-26ac6052fa74b3ddf3c4bf789475ad64dc56541638ddc6f01b03fe920bc03e39.js",
+    "shared/channels/appearance_subscription": "https://betterstackcdn.com/assets/shared/channels/appearance_subscription-e48891d86912086da0d069d3fc1e557679849777e18328bf3d3915768e28ef88.js",
+    "shared/channels/consumer": "https://betterstackcdn.com/assets/shared/channels/consumer-9094b3c7456e6db1b76f25091aaaeb776bf0e7b6470d1170503f061f8c0320b6.js",
+    "shared/channels/create_follower_subscription": "https://betterstackcdn.com/assets/shared/channels/create_follower_subscription-399b541859dd7294a4fb276630fddd76d3ed0b61d1677da017cd6e85f93a7165.js",
+    "shared/channels/followee_subscription": "https://betterstackcdn.com/assets/shared/channels/followee_subscription-a5f5af624351cb0e74b76ba2da7bdef947742ffcf7c91427cc9e8c68216d5729.js",
+    "shared/collaboration/Appearances": "https://betterstackcdn.com/assets/shared/collaboration/Appearances-76498dee462941067ce815c00173d816124ba06f3b32dfcfb7a20dd31428fede.js",
+    "shared/collaboration/GhostCursors": "https://betterstackcdn.com/assets/shared/collaboration/GhostCursors-9b79dff896a56835c266c6546723e2ef49cc09a2adbfc9ee10017199e8d133dc.js",
+    "shared/collaboration/follower/Controls": "https://betterstackcdn.com/assets/shared/collaboration/follower/Controls-8a73a92a6229809da66946019bbf81988703cddc6731344aa158d87760908095.js",
+    "shared/collaboration/follower/DirectFollower": "https://betterstackcdn.com/assets/shared/collaboration/follower/DirectFollower-101290d62b1f7b23d71546d05c631467b05fcc88adebeed6f7f94ed588bd8f49.js",
+    "shared/collaboration/follower/Error": "https://betterstackcdn.com/assets/shared/collaboration/follower/Error-e41f0592d2f3cd268f4257c823dc00d548b3435d96f183fd01735ad702770e00.js",
+    "shared/collaboration/follower/Follower": "https://betterstackcdn.com/assets/shared/collaboration/follower/Follower-6ba33f3e43f68a9b4677a85ef7f71bab0973ca4bd460a1e1157dd0e1d37ca3b2.js",
+    "shared/collaboration/follower/FollowerGhostCursors": "https://betterstackcdn.com/assets/shared/collaboration/follower/FollowerGhostCursors-750d0cf5d2ac03173fb662356cf1d225d42c2a4c8d70cd566f9fcf98c6d69974.js",
+    "shared/collaboration/follower/LoadingScreen": "https://betterstackcdn.com/assets/shared/collaboration/follower/LoadingScreen-a3c51fd6fa723228cb8eb7ed71961d42446af8997d6db489d7a4e680dd427f65.js",
+    "shared/collaboration/follower/ProxyFollower": "https://betterstackcdn.com/assets/shared/collaboration/follower/ProxyFollower-a6ccfeb59c243de5d8af8ceb101c1a544056e8cc05cb08f37938f8cc0b6d16b5.js",
+    "shared/collaboration/utils": "https://betterstackcdn.com/assets/shared/collaboration/utils-02c066e1ccf49e6e0c2169b31fedeb399dbfe7621efd1d409e0551b8188acb80.js",
+    "shared/command_palette/CommandIndexWorker": "https://betterstackcdn.com/assets/shared/command_palette/CommandIndexWorker-69e57cca509001590a79763d16e3759241e53fd4ec7cc1d3be888773a08f1d56.js",
+    "shared/command_palette/CommandPalette": "https://betterstackcdn.com/assets/shared/command_palette/CommandPalette-30d3919f9c8121705793d661e66acf0423fe51c6522584d4feae977cec295e4c.js",
+    "shared/command_palette/Commands": "https://betterstackcdn.com/assets/shared/command_palette/Commands-ae273d7cc062974a3a23edca19d585b42f6916e896a10f42dd898d9a244b70d9.js",
+    "shared/command_palette/CommandsManager": "https://betterstackcdn.com/assets/shared/command_palette/CommandsManager-f2e5205eaa1d8c76db5f952aff20cacad7818debdb418643f73ac89ce02754da.js",
+    "shared/command_palette/HotkeyManager": "https://betterstackcdn.com/assets/shared/command_palette/HotkeyManager-63fe810ca3beb7253d04f94df3c0dd0b35a61a19a2e368e63d07b3a31586671f.js",
+    "shared/utils/DelayedBuffer": "https://betterstackcdn.com/assets/shared/utils/DelayedBuffer-20668184fd95a03924ecefcbf4b42b57420600566f7cc765cd68ecaba3d3d4cd.js",
+    "shared/utils/interop": "https://betterstackcdn.com/assets/shared/utils/interop-daca5e539fdcabb7a9cb4fc59b05559cd3c30948b1a60795799697b4454c8524.js",
+    "shared/utils/is-mac": "https://betterstackcdn.com/assets/shared/utils/is-mac-81d334e8227fbe0e75c6d4ad4464116a12b189138d3e1d7f209f8c6084024a6c.js",
+    "shared/utils/script-loader": "https://betterstackcdn.com/assets/shared/utils/script-loader-4886929f7a57103d558c8254a36ae54caf4ea4289e3e0e3ebf639cced345a7cf.js",
+    "uptime_controllers": "https://betterstackcdn.com/assets/uptime_controllers/index-560c9c7d7c838776a8498d30e3c9dddd357d9359b6e976359b67213f4af759b1.js",
+    "uptime_controllers/plans_controller": "https://betterstackcdn.com/assets/uptime_controllers/plans_controller-bebb0eb6858ef6f824d7ccc85703040aa403a3bee190e94a8e0b7ea0cc80acaf.js",
+    "utils/RangeTimestamp": "https://betterstackcdn.com/assets/utils/RangeTimestamp-304cbfee602af707d73a79b7fdbf4c0193d4ff1b1e8e96e95236f9b58d957978.js",
+    "utils/RelativeTimestamp": "https://betterstackcdn.com/assets/utils/RelativeTimestamp-1ee1d7cafab487cc43764ad26039c6f4c4c0c6831a05fb0dd3eba99b1544f6fa.js",
+    "utils/authToken": "https://betterstackcdn.com/assets/utils/authToken-cc7b2cee3136e9c6c810d112530de2867e61db82dfd4e067c5f203ff8ca98cd2.js",
+    "utils/cardBrands": "https://betterstackcdn.com/assets/utils/cardBrands-a82315cf9bba81d639198abb057c1bcf20e549d2d274cad13ba223314b8f339a.js",
+    "utils/chartTooltipPosition": "https://betterstackcdn.com/assets/utils/chartTooltipPosition-3b861299f8ec7aa6f6d916c9079cd3f68125a8caa65d0a3f9a74a76843553934.js",
+    "utils/date": "https://betterstackcdn.com/assets/utils/date-119fcfe1c9949bfe558a552d7ed547621a40438d34ef3584fbca87d26904ec1c.js",
+    "utils/externalRoutes": "https://betterstackcdn.com/assets/utils/externalRoutes-2bfdb99d6fbb3e8652f2556ab57d9141a902a216d702c6cbdc86bb49a7880717.js",
+    "utils/fetchJson": "https://betterstackcdn.com/assets/utils/fetchJson-8b845eea03fbe41cbeb5b43c6bb1472687926bb26c0b296527456a476ae272f5.js",
+    "utils/formatters": "https://betterstackcdn.com/assets/utils/formatters-4c2e6ac8bc4ee21413cf18070bce42474d44725371f19ce93e9651dbed7996c3.js",
+    "utils/highlight": "https://betterstackcdn.com/assets/utils/highlight-70bbda46b7c3deaac0fa9c28875911b6584d2501c34c1f76bd3116be95ea9809.js",
+    "utils/hotkeyLabel": "https://betterstackcdn.com/assets/utils/hotkeyLabel-5061f2fe7c94df327501e9880b6867aea0d2d88da48803ba106b531b47f0d981.js",
+    "utils/importmap": "https://betterstackcdn.com/assets/utils/importmap-6f8ea4345f77b855f0a92735e18879af3074ee1083969dc3b024c8b601f9bb5b.js",
+    "utils/isTouchDevice": "https://betterstackcdn.com/assets/utils/isTouchDevice-4ac873eec720a42a328a50762f6fcd8f81ecda1c173760191214a91c39bd6d8a.js",
+    "utils/miniBindVueApp": "https://betterstackcdn.com/assets/utils/miniBindVueApp-60c14424c58ff4b7ca44d71ef4da77e5c3307b128e38d90ddf467a830c523a54.js",
+    "utils/naturalLanguageTimeParser": "https://betterstackcdn.com/assets/utils/naturalLanguageTimeParser-258e308fd9153a4f424ced6330f91a12da1c435cd4237cf42944cfe2c1423307.js",
+    "utils/permissions": "https://betterstackcdn.com/assets/utils/permissions-ded94fd04a9f9fcb8abd813fef9984d42eb98c91797b077788e277101f7d1eb9.js",
+    "utils/platforms": "https://betterstackcdn.com/assets/utils/platforms-8471fbbd5524246690a79db10a0de8cfe3f3a4ccafe4cbbc15452257d7cd12ea.js",
+    "utils/queryParams": "https://betterstackcdn.com/assets/utils/queryParams-e40f404214bd37fdf023b1606d779400941ac2c9095bda2af3bd3c83175c26c1.js",
+    "utils/rebindComponents": "https://betterstackcdn.com/assets/utils/rebindComponents-5a11e98a886694ca09940823b822c85e92f51db0d5392d317dabeda12db09a6f.js",
+    "utils/timeago": "https://betterstackcdn.com/assets/utils/timeago-d190ecec5b7023da6ce29edc42237940294addb01cc065fa28ce2b5e9392671f.js",
+    "utils/timestampToDayjs": "https://betterstackcdn.com/assets/utils/timestampToDayjs-82636f2116002255318ae58995b84256a7d888198af0e35663f0ac3f715f1a21.js",
+    "utils/timezone": "https://betterstackcdn.com/assets/utils/timezone-d3385c412fea7fa001e0050878fa3d917937c2a5f95e838b971220c12dad2811.js",
+    "utils/timezoneList": "https://betterstackcdn.com/assets/utils/timezoneList-1fb8c701972df29cd6ff2d3e5595a5fc7c8d0614061bae13dfbb1ccb10db30d2.js",
+    "vendor/aos@2.3.4": "https://betterstackcdn.com/assets/vendor/aos@2.3.4-7a80d593b3ca74edd21586d98453a64a0453310df51d59070170920241c80fd9.js",
+    "vendor/cuid@2.1.8": "https://betterstackcdn.com/assets/vendor/cuid@2.1.8-47eb5af21a5ebe16f0a31c030a1d77730761dd9a7236ff65e38c96436231215d.js",
+    "vendor/domurl@2.3.4": "https://betterstackcdn.com/assets/vendor/domurl@2.3.4-1792ba3abc585cbfdb42ee91f9165eadbd762eb82a5933a9c65f88395a98beee.js",
+    "vendor/floating-vue@5.2.0": "https://betterstackcdn.com/assets/vendor/floating-vue@5.2.0-6ddc07ce54f3979a24cc6497250098b5a6645d312d83a5b2f3aeb0337be2f2cc.js",
+    "vendor/frontapp-ui-bridge@2.0.0-beta1": "https://betterstackcdn.com/assets/vendor/frontapp-ui-bridge@2.0.0-beta1-605515b0c0946060e9edc009c3124cdaf9c9ef9a690a156776ca68d94691311c.js",
+    "vendor/mime-match@1.0.2": "https://betterstackcdn.com/assets/vendor/mime-match@1.0.2-189caad6b6e7a40023bd3922e2b7055aaa9f5acfde3097a122f263d8396f1b04.js",
+    "vendor/namespace-emitter@2.0.1": "https://betterstackcdn.com/assets/vendor/namespace-emitter@2.0.1-fb67bef0eba2a59a6f2881130446c3a200e383c81dde25d81d904db5388aff0c.js",
+    "vendor/pinia@3.0.0": "https://betterstackcdn.com/assets/vendor/pinia@3.0.0-4a3c6d0c27ca2f497e4079c604bcf2d82374fe0392818bc756e2797fca90e879.js",
+    "vendor/pinia@3.0.0.prod": "https://betterstackcdn.com/assets/vendor/pinia@3.0.0.prod-8024b6cd190b62ea41d6d4000879d32e5d00b41d1d56897914edad56779c2de9.js",
+    "vendor/primevue@4.0.7": "https://betterstackcdn.com/assets/vendor/primevue@4.0.7-7e176d99bc19a452e902338aa86bd84da1fcf579ce1bd1ef5104c06bb0b1e119.js",
+    "vendor/sentry-vue@8.13.0": "https://betterstackcdn.com/assets/vendor/sentry-vue@8.13.0-fb76b9be2def89eec9225cd58c02f04bc2b25fb0abf97b99c4310e883f29fce2.js",
+    "vendor/stimulus@2.0.0": "https://betterstackcdn.com/assets/vendor/stimulus@2.0.0-ae4c99362995244fcebb7d705be3fa2b9c3c42db45bce65ce4e1c156876eb9d5.js",
+    "vendor/transloadit-prettier-bytes@0.0.9": "https://betterstackcdn.com/assets/vendor/transloadit-prettier-bytes@0.0.9-e0e88b9b4dca563b135b7d2bede084c9df9b3372f169404f2bb3b3363035db89.js",
+    "vendor/turbo-rails@8.0.4": "https://betterstackcdn.com/assets/vendor/turbo-rails@8.0.4-1c2f8aced350adcb838b5c1a1872ca5c4ef776de037b62aa7ccc9a43900298c5.js",
+    "vendor/vueform-multiselect@2.6.10": "https://betterstackcdn.com/assets/vendor/vueform-multiselect@2.6.10-62c381244c4d05dddbff92828457b52c5e3df5e3c44d10d940b81fe8b29f3ac2.js",
+    "vendor/wildcard@1.1.2": "https://betterstackcdn.com/assets/vendor/wildcard@1.1.2-6d5020e17607d260fbc2f13480248a9cbbb9d31dfad6b9fb8430f7b89985c6c9.js",
+    "@betterstack/shared/channels/appearance_subscription": "https://betterstackcdn.com/assets/shared/channels/appearance_subscription-e48891d86912086da0d069d3fc1e557679849777e18328bf3d3915768e28ef88.js",
+    "@betterstack/shared/channels/consumer": "https://betterstackcdn.com/assets/shared/channels/consumer-9094b3c7456e6db1b76f25091aaaeb776bf0e7b6470d1170503f061f8c0320b6.js",
+    "@betterstack/shared/channels/create_follower_subscription": "https://betterstackcdn.com/assets/shared/channels/create_follower_subscription-399b541859dd7294a4fb276630fddd76d3ed0b61d1677da017cd6e85f93a7165.js",
+    "@betterstack/shared/channels/followee_subscription": "https://betterstackcdn.com/assets/shared/channels/followee_subscription-a5f5af624351cb0e74b76ba2da7bdef947742ffcf7c91427cc9e8c68216d5729.js",
+    "@betterstack/shared/collaboration/Appearances": "https://betterstackcdn.com/assets/shared/collaboration/Appearances-76498dee462941067ce815c00173d816124ba06f3b32dfcfb7a20dd31428fede.js",
+    "@betterstack/shared/collaboration/GhostCursors": "https://betterstackcdn.com/assets/shared/collaboration/GhostCursors-9b79dff896a56835c266c6546723e2ef49cc09a2adbfc9ee10017199e8d133dc.js",
+    "@betterstack/shared/collaboration/follower/Controls": "https://betterstackcdn.com/assets/shared/collaboration/follower/Controls-8a73a92a6229809da66946019bbf81988703cddc6731344aa158d87760908095.js",
+    "@betterstack/shared/collaboration/follower/DirectFollower": "https://betterstackcdn.com/assets/shared/collaboration/follower/DirectFollower-101290d62b1f7b23d71546d05c631467b05fcc88adebeed6f7f94ed588bd8f49.js",
+    "@betterstack/shared/collaboration/follower/Error": "https://betterstackcdn.com/assets/shared/collaboration/follower/Error-e41f0592d2f3cd268f4257c823dc00d548b3435d96f183fd01735ad702770e00.js",
+    "@betterstack/shared/collaboration/follower/Follower": "https://betterstackcdn.com/assets/shared/collaboration/follower/Follower-6ba33f3e43f68a9b4677a85ef7f71bab0973ca4bd460a1e1157dd0e1d37ca3b2.js",
+    "@betterstack/shared/collaboration/follower/FollowerGhostCursors": "https://betterstackcdn.com/assets/shared/collaboration/follower/FollowerGhostCursors-750d0cf5d2ac03173fb662356cf1d225d42c2a4c8d70cd566f9fcf98c6d69974.js",
+    "@betterstack/shared/collaboration/follower/LoadingScreen": "https://betterstackcdn.com/assets/shared/collaboration/follower/LoadingScreen-a3c51fd6fa723228cb8eb7ed71961d42446af8997d6db489d7a4e680dd427f65.js",
+    "@betterstack/shared/collaboration/follower/ProxyFollower": "https://betterstackcdn.com/assets/shared/collaboration/follower/ProxyFollower-a6ccfeb59c243de5d8af8ceb101c1a544056e8cc05cb08f37938f8cc0b6d16b5.js",
+    "@betterstack/shared/collaboration/utils": "https://betterstackcdn.com/assets/shared/collaboration/utils-02c066e1ccf49e6e0c2169b31fedeb399dbfe7621efd1d409e0551b8188acb80.js",
+    "@betterstack/shared/command_palette/CommandIndexWorker": "https://betterstackcdn.com/assets/shared/command_palette/CommandIndexWorker-69e57cca509001590a79763d16e3759241e53fd4ec7cc1d3be888773a08f1d56.js",
+    "@betterstack/shared/command_palette/CommandPalette": "https://betterstackcdn.com/assets/shared/command_palette/CommandPalette-30d3919f9c8121705793d661e66acf0423fe51c6522584d4feae977cec295e4c.js",
+    "@betterstack/shared/command_palette/Commands": "https://betterstackcdn.com/assets/shared/command_palette/Commands-ae273d7cc062974a3a23edca19d585b42f6916e896a10f42dd898d9a244b70d9.js",
+    "@betterstack/shared/command_palette/CommandsManager": "https://betterstackcdn.com/assets/shared/command_palette/CommandsManager-f2e5205eaa1d8c76db5f952aff20cacad7818debdb418643f73ac89ce02754da.js",
+    "@betterstack/shared/command_palette/HotkeyManager": "https://betterstackcdn.com/assets/shared/command_palette/HotkeyManager-63fe810ca3beb7253d04f94df3c0dd0b35a61a19a2e368e63d07b3a31586671f.js",
+    "@betterstack/shared/utils/DelayedBuffer": "https://betterstackcdn.com/assets/shared/utils/DelayedBuffer-20668184fd95a03924ecefcbf4b42b57420600566f7cc765cd68ecaba3d3d4cd.js",
+    "@betterstack/shared/utils/interop": "https://betterstackcdn.com/assets/shared/utils/interop-daca5e539fdcabb7a9cb4fc59b05559cd3c30948b1a60795799697b4454c8524.js",
+    "@betterstack/shared/utils/is-mac": "https://betterstackcdn.com/assets/shared/utils/is-mac-81d334e8227fbe0e75c6d4ad4464116a12b189138d3e1d7f209f8c6084024a6c.js",
+    "@betterstack/shared/utils/script-loader": "https://betterstackcdn.com/assets/shared/utils/script-loader-4886929f7a57103d558c8254a36ae54caf4ea4289e3e0e3ebf639cced345a7cf.js",
+    "vue": "https://cdnjs.betterstackcdn.com/vue@3.5.13/dist/vue.esm-browser.prod.js",
+    "pinia": "https://betterstackcdn.com/assets/vendor/pinia@3.0.0.prod-8024b6cd190b62ea41d6d4000879d32e5d00b41d1d56897914edad56779c2de9.js",
+    "vue-turbolinks": "https://cdnjs.betterstackcdn.com/vue-turbolinks@2.2.2/index.js",
+    "@sentry/vue": "https://betterstackcdn.com/assets/vendor/sentry-vue@8.13.0-fb76b9be2def89eec9225cd58c02f04bc2b25fb0abf97b99c4310e883f29fce2.js",
+    "@headlessui/vue": "https://cdnjs.betterstackcdn.com/@headlessui/vue@1.7.4/dist/headlessui.esm.js",
+    "primevue": "https://betterstackcdn.com/assets/vendor/primevue@4.0.7-7e176d99bc19a452e902338aa86bd84da1fcf579ce1bd1ef5104c06bb0b1e119.js",
+    "vueform-multiselect": "https://betterstackcdn.com/assets/vendor/vueform-multiselect@2.6.10-62c381244c4d05dddbff92828457b52c5e3df5e3c44d10d940b81fe8b29f3ac2.js",
+    "vueform-slider": "https://cdnjs.betterstackcdn.com/@vueform/slider@2.1.10/dist/slider.js",
+    "@hotwired/turbo-rails": "https://betterstackcdn.com/assets/vendor/turbo-rails@8.0.4-1c2f8aced350adcb838b5c1a1872ca5c4ef776de037b62aa7ccc9a43900298c5.js",
+    "@hotwired/hotwire-native-bridge": "https://cdnjs.betterstackcdn.com/@hotwired/hotwire-native-bridge@1.0.0/dist/hotwire-native-bridge.js",
+    "@rails/actioncable": "https://cdnjs.betterstackcdn.com/@rails/actioncable@8.0/app/assets/javascripts/actioncable.esm.js",
+    "@rails/activestorage": "https://cdnjs.betterstackcdn.com/@rails/activestorage@8.0/app/assets/javascripts/activestorage.js",
+    "js-cookie": "https://cdnjs.betterstackcdn.com/js-cookie@3.0.1/dist/js.cookie.min.mjs",
+    "lazysizes": "https://cdnjs.betterstackcdn.com/lazysizes@5.3.2/lazysizes.min.js",
+    "posthog-js": "https://cdnjs.betterstackcdn.com/posthog-js@1.64.0/dist/es.js",
+    "el-transition": "https://cdnjs.betterstackcdn.com/el-transition@0.0.7/index.js",
+    "dayjs": "https://cdnjs.betterstackcdn.com/dayjs@1.11.7/esm/index.js",
+    "dayjs/": "https://cdnjs.betterstackcdn.com/dayjs@1.11.7/esm/",
+    "dayjs/plugin/quarterOfYear.js": "https://cdnjs.betterstackcdn.com/dayjs@1.11.7/esm/plugin/quarterOfYear/index.js",
+    "dayjs/plugin/timezone.js": "https://cdnjs.betterstackcdn.com/dayjs@1.11.7/esm/plugin/timezone/index.js",
+    "dayjs/plugin/utc.js": "https://cdnjs.betterstackcdn.com/dayjs@1.11.7/esm/plugin/utc/index.js",
+    "underscore/": "https://cdnjs.betterstackcdn.com/underscore@1.13.6/modules/",
+    "nanoevents": "https://cdnjs.betterstackcdn.com/nanoevents@7.0.1/index.js",
+    "decimal": "https://cdnjs.betterstackcdn.com/decimal.js@10.4.3/decimal.mjs",
+    "lodash/": "https://cdnjs.betterstackcdn.com/lodash-es@4.17.21/",
+    "lodash.throttle": "https://cdnjs.betterstackcdn.com/lodash-es@4.17.21/throttle",
+    "aos": "https://betterstackcdn.com/assets/vendor/aos@2.3.4-7a80d593b3ca74edd21586d98453a64a0453310df51d59070170920241c80fd9.js",
+    "stimulus": "https://betterstackcdn.com/assets/vendor/stimulus@2.0.0-ae4c99362995244fcebb7d705be3fa2b9c3c42db45bce65ce4e1c156876eb9d5.js",
+    "@hotwired/stimulus": "https://betterstackcdn.com/assets/vendor/stimulus@2.0.0-ae4c99362995244fcebb7d705be3fa2b9c3c42db45bce65ce4e1c156876eb9d5.js",
+    "domurl": "https://betterstackcdn.com/assets/vendor/domurl@2.3.4-1792ba3abc585cbfdb42ee91f9165eadbd762eb82a5933a9c65f88395a98beee.js",
+    "@floating-ui/dom": "https://cdnjs.betterstackcdn.com/@floating-ui/dom@1.4.4/dist/floating-ui.dom.browser.min.mjs",
+    "@floating-ui/core": "https://cdnjs.betterstackcdn.com/@floating-ui/core@1.3.1/dist/floating-ui.core.browser.min.mjs",
+    "floating-vue": "https://betterstackcdn.com/assets/vendor/floating-vue@5.2.0-6ddc07ce54f3979a24cc6497250098b5a6645d312d83a5b2f3aeb0337be2f2cc.js",
+    "overtype": "https://cdnjs.betterstackcdn.com/overtype@1.2.4/dist/overtype.min.js",
+    "echarts": "https://cdnjs.betterstackcdn.com/echarts@5.4.0/dist/echarts.esm.min.js",
+    "echarts/core": "https://cdnjs.betterstackcdn.com/echarts@5.4.0/dist/echarts.esm.min.js",
+    "vue-echarts": "https://cdnjs.betterstackcdn.com/vue-echarts@6.6.1/dist/index.esm.min.js",
+    "resize-detector": "https://cdnjs.betterstackcdn.com/resize-detector@0.3.0/esm/index.js",
+    "vue-demi": "https://cdnjs.betterstackcdn.com/vue-demi@0.14.10/lib/index.mjs",
+    "@uppy/aws-s3": "https://cdnjs.betterstackcdn.com/@uppy/aws-s3@3.2.0/lib/index.js",
+    "@uppy/aws-s3-multipart": "https://cdnjs.betterstackcdn.com/@uppy/aws-s3-multipart@3.4.0/lib/index.js",
+    "@uppy/core": "https://cdnjs.betterstackcdn.com/@uppy/core@3.2.1/lib/index.js",
+    "@uppy/core/": "https://cdnjs.betterstackcdn.com/@uppy/core@3.2.1/",
+    "@uppy/companion-client": "https://cdnjs.betterstackcdn.com/@uppy/companion-client@3.1.3/lib/index.js",
+    "@uppy/utils/": "https://cdnjs.betterstackcdn.com/@uppy/utils@5.4.0/",
+    "@uppy/store-default": "https://cdnjs.betterstackcdn.com/@uppy/store-default@3.0.3/lib/index.js",
+    "mime-match": "https://betterstackcdn.com/assets/vendor/mime-match@1.0.2-189caad6b6e7a40023bd3922e2b7055aaa9f5acfde3097a122f263d8396f1b04.js",
+    "namespace-emitter": "https://betterstackcdn.com/assets/vendor/namespace-emitter@2.0.1-fb67bef0eba2a59a6f2881130446c3a200e383c81dde25d81d904db5388aff0c.js",
+    "nanoid/non-secure": "https://cdnjs.betterstackcdn.com/nanoid@4.0.1/non-secure/index.js",
+    "preact": "https://cdnjs.betterstackcdn.com/preact@10.11.0/dist/preact.module.js",
+    "@transloadit/prettier-bytes": "https://betterstackcdn.com/assets/vendor/transloadit-prettier-bytes@0.0.9-e0e88b9b4dca563b135b7d2bede084c9df9b3372f169404f2bb3b3363035db89.js",
+    "wildcard": "https://betterstackcdn.com/assets/vendor/wildcard@1.1.2-6d5020e17607d260fbc2f13480248a9cbbb9d31dfad6b9fb8430f7b89985c6c9.js",
+    "@frontapp/plugin-sdk": "https://cdnjs.betterstackcdn.com/@frontapp/plugin-sdk@1.0.1/dist/index.es.js",
+    "@frontapp/ui-bridge": "https://betterstackcdn.com/assets/vendor/frontapp-ui-bridge@2.0.0-beta1-605515b0c0946060e9edc009c3124cdaf9c9ef9a690a156776ca68d94691311c.js",
+    "cuid": "https://betterstackcdn.com/assets/vendor/cuid@2.1.8-47eb5af21a5ebe16f0a31c030a1d77730761dd9a7236ff65e38c96436231215d.js",
+    "rxjs": "https://cdnjs.betterstackcdn.com/rxjs@^7.4.0/dist/esm/index.js",
+    "rxjs/": "https://cdnjs.betterstackcdn.com/rxjs@^7.4.0/dist/esm/",
+    "tslib": "https://cdnjs.betterstackcdn.com/tslib@2.3.1/tslib.es6.js",
+    "virtua": "https://cdnjs.betterstackcdn.com/virtua@0.39.0/lib/vue/index.mjs",
+    "flexsearch": "https://cdnjs.betterstackcdn.com/flexsearch@0.7.43/dist/flexsearch.light.module.min.js",
+    "marked": "https://cdnjs.betterstackcdn.com/marked@4.3.0/lib/marked.esm.js"
+  }
+}</script>
+<link rel="modulepreload" href="https://cdnjs.betterstackcdn.com/vue@3.5.13/dist/vue.esm-browser.prod.js" nonce="74ff0c65e75b75d187f6da6fa54bba36">
+<link rel="modulepreload" href="https://betterstackcdn.com/assets/vendor/pinia@3.0.0.prod-8024b6cd190b62ea41d6d4000879d32e5d00b41d1d56897914edad56779c2de9.js" nonce="74ff0c65e75b75d187f6da6fa54bba36">
+<link rel="modulepreload" href="https://cdnjs.betterstackcdn.com/vue-turbolinks@2.2.2/index.js" nonce="74ff0c65e75b75d187f6da6fa54bba36">
+<script type="esms-options" nonce="74ff0c65e75b75d187f6da6fa54bba36">{"nonce":"74ff0c65e75b75d187f6da6fa54bba36"}</script>
+<script src="/assets/es-module-shims.min-33856f01931af6ab3debe2944dbc30f573bdb83bd54374a81cb2bb99615f9d7d.js" defer="defer" data-turbo-track="reload" nonce="74ff0c65e75b75d187f6da6fa54bba36"></script>
+<script type="module" nonce="74ff0c65e75b75d187f6da6fa54bba36">
+//<![CDATA[
+import * as Sentry from '@sentry/vue'
+Sentry.init({
+  dsn: "https://5d12720845819aced5e1d8d5ed797725@o1399417.ingest.sentry.io/4507566687649792",
+  // integrations: [Sentry.browserProfilingIntegration(), Sentry.browserTracingIntegration()],
+  ignoreErrors: ["ignore:service_returned_401", "No error message"],
+  environment: "production",
+  release: window.cfg.app_version,
+  // tracesSampleRate: 0.1,
+  // profilesSampleRate: 0.1,
+  denyUrls: [/chat-assets\.frontapp\.com/i],
+  app: [],
+});
+Sentry.setUser({ email: "" });
+window.Sentry = Sentry;
+
+
+//]]>
+</script>
+<script type="module" nonce="74ff0c65e75b75d187f6da6fa54bba36">import "entrypoints/articles"</script>
+<script type="application/javascript" nonce="74ff0c65e75b75d187f6da6fa54bba36">
+//<![CDATA[
+if (!HTMLScriptElement?.supports?.('importmap')) {
+  alert('Your browser is not supported. Please upgrade to a newer version of Chrome, Firefox, Safari or other modern browser.')
+}
+
+//]]>
+</script>
+<script type="module" nonce="74ff0c65e75b75d187f6da6fa54bba36">import "channels"</script>
+<link rel="stylesheet" href="https://betterstackcdn.com/assets/articles-9e95c9f8731abe7c7c8726e7f1a5fcc025fdc5fe22dad1d9a32ef12e4aafb33f.css" media="all" data-turbo-track="reload" />
+<style>
+  @supports (-webkit-hyphens:none) {
+    .book, .book:hover {
+      filter: unset;
+    }
+  }
+</style>
+
+<script type="application/ld+json" nonce="74ff0c65e75b75d187f6da6fa54bba36">
+//<![CDATA[
+[
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Practical Guide to Asynchronous Programming in Python",
+    "author": "Stanley Ulili",
+    "image": "/og-image/python-async-programming.png",
+    "genre": "",
+    "keywords": "",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Better Stack",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://betterstack.com/assets/logo-6d1ba4929d4173d57e8e907177cfc3d3ead1da9136c6a8c0e1e00861a3a385e9.png"
+      }
+    },
+    "url": "https://betterstack.com/community/guides/scaling-python/python-async-programming/",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://google.com/article"
+    },
+    "datePublished": "2025-04-15T10:49:52Z",
+    "dateCreated": "2025-04-15T10:49:52Z",
+    "dateModified": "2025-04-15T11:37:43Z",
+    "description": "Learn how to use Python's `asyncio` library to write efficient, concurrent code. This guide covers async functions, async generators, and semaphores, helping you handle multiple tasks concurrently for improved performance. Ideal for I/O-bound tasks and large datasets."
+  }
+]
+
+
+//]]>
+</script><link as='font' crossorigin='anonymous' href='https://betterstackcdn.com/static/fonts/Roobert/Roobert-Regular.woff2' rel='preload'>
+<link as='font' crossorigin='anonymous' href='https://betterstackcdn.com/static/fonts/Roobert/Roobert-Regular.woff' rel='preload'>
+<link as='font' crossorigin='anonymous' href='https://betterstackcdn.com/static/fonts/Roobert/Roobert-Medium.woff2' rel='preload'>
+<link as='font' crossorigin='anonymous' href='https://betterstackcdn.com/static/fonts/Roobert/Roobert-Medium.woff' rel='preload'>
+<link as='font' crossorigin='anonymous' href='https://betterstackcdn.com/static/fonts/Roobert/Roobert-SemiBold.woff2' rel='preload'>
+<link as='font' crossorigin='anonymous' href='https://betterstackcdn.com/static/fonts/Roobert/Roobert-SemiBold.woff' rel='preload'>
+<link as='font' crossorigin='anonymous' href='https://betterstackcdn.com/static/fonts/Roobert/Roobert-Bold.woff2' rel='preload'>
+<link as='font' crossorigin='anonymous' href='https://betterstackcdn.com/static/fonts/Roobert/Roobert-Bold.woff' rel='preload'>
+<style>
+  @font-face {
+    font-family: "Roobert";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src:
+      url("https://betterstackcdn.com/static/fonts/Roobert/Roobert-Regular.woff2") format("woff2"),
+      url("https://betterstackcdn.com/static/fonts/Roobert/Roobert-Regular.woff") format("woff");
+  }
+  @font-face {
+    font-family: "Roobert";
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src:
+      url("https://betterstackcdn.com/static/fonts/Roobert/Roobert-Medium.woff2") format("woff2"),
+      url("https://betterstackcdn.com/static/fonts/Roobert/Roobert-Medium.woff") format("woff");
+  }
+  
+  @font-face {
+    font-family: "Roobert";
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src:
+      url("https://betterstackcdn.com/static/fonts/Roobert/Roobert-SemiBold.woff2") format("woff2"),
+      url("https://betterstackcdn.com/static/fonts/Roobert/Roobert-SemiBold.woff") format("woff");
+  }
+  @font-face {
+    font-family: "Roobert";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src:
+      url("https://betterstackcdn.com/static/fonts/Roobert/Roobert-Bold.woff2") format("woff2"),
+      url("https://betterstackcdn.com/static/fonts/Roobert/Roobert-Bold.woff") format("woff");
+  }
+</style>
+
+<link as='font' crossorigin='anonymous' href='https://betterstackcdn.com/static/fonts/Inter/Inter-latin.woff2' rel='preload'>
+<style>
+  @font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url("https://betterstackcdn.com/static/fonts/Inter/Inter-latin.woff2") format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+</style>
+
+<link rel="preload" href="/static/fonts/Helvetica/HelveticaNowText-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="/static/fonts/Helvetica/HelveticaNowText-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="/static/fonts/Helvetica/HelveticaNowText-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="/static/fonts/Helvetica/HelveticaNowDisplay-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="/static/fonts/Helvetica/HelveticaNowDisplay-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<style>
+  @font-face {
+    font-family: 'Helvetica Now Text';
+    src: local('Helvetica Now Text  Regular'),
+         local('HelveticaNowText-Regular'),
+         url('/static/fonts/Helvetica/HelveticaNowText-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  
+  @font-face {
+    font-family: 'Helvetica Now Text';
+    src: local('Helvetica Now Text  Medium'),
+      local('HelveticaNowText-Medium'),
+      url('/static/fonts/Helvetica/HelveticaNowText-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
+  
+  @font-face {
+    font-family: 'Helvetica Now Text';
+    src: local('Helvetica Now Text  Bold'),
+      local('HelveticaNowText-Bold'),
+      url('/static/fonts/Helvetica/HelveticaNowText-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+  
+  @font-face {
+    font-family: 'Helvetica Now Display';
+    src: local('Helvetica Now Display Medium'),
+      local('HelveticaNowDisplay-Medium'),
+      url('/static/fonts/Helvetica/HelveticaNowDisplay-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
+  
+  @font-face {
+    font-family: 'Helvetica Now Display';
+    src: local('Helvetica Now Display Bold'),
+      local('HelveticaNowDisplay-Bold'),
+      url('/static/fonts/Helvetica/HelveticaNowDisplay-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+</style>
+
+<meta content='Guides' name='meta-docsearch-hierarchy1'>
+<meta content='Scaling Python Applications' name='meta-docsearch-hierarchy2'>
+<meta content='Basics' name='meta-docsearch-hierarchy3'>
+<meta content='Practical Guide to Asynchronous Programming in Python' name='meta-docsearch-hierarchy4'>
+<meta content='Asynchronous Programming in Python' name='meta-docsearch-name'>
+<meta content='Practical Guide to Asynchronous Programming in Python' name='meta-docsearch-title'>
+<meta content='Learn how to use Python&#39;s `asyncio` library to write efficient, concurrent code. This guide covers async functions, async generators, and semaphores, helping you handle multiple tasks concurrently for improved performance. Ideal for I/O-bound tasks and large datasets.' name='meta-docsearch-description'>
+<meta content='' name='meta-docsearch-og_description'>
+<meta content='Stanley Ulili' name='meta-docsearch-authors'>
+
+</head>
+<body>
+<script type="application/javascript" nonce="74ff0c65e75b75d187f6da6fa54bba36">
+//<![CDATA[
+window.cfg = {"base_host":"betterstack.com","base_url":"https://betterstack.com","better_stack_url":"https://betterstack.com","uptime_url":"https://uptime.betterstack.com","logtail_url":"https://telemetry.betterstack.com","posthog":{"api_host":"https://t.betterstack.com","api_key":"phc_Tbfg4EiRsr5iefFoth2Y1Hi3sttTeLQ5RV5TLg4hL1W","related_domains":["betteruptime.com","logtail.com"]},"permissions":{},"controller":"articles","action":"show","app":"betterstack","theme":"system","organization_id":null,"team_id":null,"environment":"production","browser_timezone":null,"signed_in":false,"team_switcher_items":[],"organization_switcher_items":[],"user_timezone":"America/Danmarkshavn"};
+
+
+//]]>
+</script>
+<div class='main articles bg-[#0B0C14]'>
+<header class='z-40 top-0 left-0 right-0 flex justify-center helvetica bg-[#0B0C14]/80 relative before:absolute before:-z-10 before:inset-0 before:backdrop-blur-2xl' data-controller='header' id='navbar'>
+<nav class='grow flex justify-between border-b mx-5 max-w-[1110px] h-[52px] text-[13px] leading-[100%] text-[#C9D3EE] border-[#727DA1]/15'>
+<div class='flex items-stretch gap-3'>
+<a aria-label='Go to homepage' class='flex items-center py-3' href='/'>
+<svg width='154' height='21' class='scale-[65%] -mx-6' alt='Better Stack' style='--currentColor: currentColor;'><use href='/assets/v2/better-stack-logo-9c2c27b1c897de8a071fe7cfb98b4b7efbaf8ab8ff0b2a0c34a4eb64efd10c5d.svg#root' /></svg>
+</a>
+<div class='hidden md:flex items-stretch gap-4'>
+<button aria-controls='platform-menu' aria-haspopup='menu' class='pl-3 py-3 pr-6 -mr-3 group relative flex items-center'>
+<div class='transition group-hover:text-white'>Platform</div>
+<span class='absolute right-2 text-[#656A7B]'><svg class='group-hover:rotate-180 transition  w-[11px] h-[11px] inline' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/outline/chevron-down-cca530bad38d12d2a5a13e35495026b5d47fa305d0e814160b4daca6fbd53171.svg#root' /></svg></span>
+<div class='hidden group-hover:block absolute z-40 top-full left-0 text-left' id='platform-menu' role='menu' tabindex='-1'>
+<div class='rounded-lg border backdrop-blur-2xl flex w-[650px] p-[6px] bg-[#181926]/80 border-[#1F2433]/75'>
+<div class='flex-1 md:px-2 py-3 flex flex-col gap-1 border-b md:border-b-0 md:border-r relative border-[#1F2433]/40'>
+<div class='absolute -top-7 bottom-full left-0 right-0'></div>
+<a class='-my-1 p-1 flex items-center gap-3 group/uptime ml-[6px]' href='/uptime'>
+<svg width='69' height='20' alt='' style='--currentColor: currentColor;'><use href='/assets/v2/uptime-logo-243105a2b5b950d4a5a6dec4850e01473a34d273f42f9b7430a392e857055520.svg#root' /></svg>
+<div class='border-l relative top-[1px] h-[12px] border-[#727DA1]/30'></div>
+<div class='text-sm text-neutral-200 flex items-center'>
+<span class='mr-1'>Better Stack</span>
+<svg class='transition-all relative top-[1px]  h-4 w-0 group-hover/uptime:w-4 inline' alt='' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/mini/arrow-right-1bd1a0652761c987fd4e2e5c81a148beaed0db735ed4f59c143cd8e8300c9b5b.svg#root' /></svg>
+<svg class='transition-all relative top-[1px]  h-4 w-4 group-hover/uptime:w-0 inline' alt='' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/mini/chevron-right-19fb77a3dd1378fbed094bbbf344e322dccd1a4afbbaefae57ad99f10af6e7d2.svg#root' /></svg>
+</div>
+</a>
+<hr class='mt-2 border-t border-[#1F2433]/40'>
+<a class="block px-2 flex gap-2 transition py-[10px] hover:bg-[#727DA1]/15 rounded leading-[145%]" href="/incident-management"><span class='text-[#7C87F7]'><svg width='25' height='24' alt='' class='relative top-[-2px] scale-[90%]' style='--currentColor: currentColor;'><use href='/assets/v2/calendar-e01f18ec0cbee2d67b19bf1a3a944136cef3e60dca636c186ba5418888387510.svg#root' /></svg></span>
+<div>
+<div class='font-medium'>Incident management &amp; on-call</div>
+<div class='mt-1 text-xs text-neutral-200'>Move fast when things break</div>
+</div>
+</a><a class="block px-2 flex gap-2 transition py-[10px] hover:bg-[#727DA1]/15 rounded leading-[145%]" href="/uptime"><span class='mr-1 text-[#7C87F7]'><svg width='25' height='25' alt='' class='relative top-[-2px] scale-[90%]' style='--currentColor: currentColor;'><use href='/assets/v2/radar-b2f556acf302170d43bbb022fc5fe6630b9ce916cfbcd9c30fdc55a923ce9ac7.svg#root' /></svg></span>
+<div>
+<div class='font-medium'>Uptime monitoring</div>
+<div class='mt-1 text-xs text-neutral-200'>The most reliable uptime monitoring</div>
+</div>
+</a><a class="block px-2 flex gap-2 transition py-[10px] hover:bg-[#727DA1]/15 rounded leading-[145%]" href="/status-page"><span class='mr-1 text-[#7C87F7]'><svg width='20' height='20' alt='' class='relative top-[-1px] left-[2px]' style='--currentColor: currentColor;'><use href='/assets/v2/page-ab64af15c60e2932fd1d53c00b870bf0ce5d92e478c4912ac1048abcadd92eaa.svg#root' /></svg></span>
+<div>
+<div class='font-medium'>Status page</div>
+<div class='mt-1 text-xs text-neutral-200'>Communicate downtime &amp; build trust</div>
+</div>
+</a></div>
+<div class='flex-1 mt-2 md:mt-0 md:px-2 py-3 flex flex-col gap-1'>
+<a class='ml-1 -my-1 p-1 flex items-center gap-3 group/logtail' href='/telemetry'>
+<svg width='227' height='48' alt='' class='w-[95px] h-5' style='--currentColor: currentColor;'><use href='/assets/v2/telemetry-logo-e036c18f5004877bb26fbb8e473511285043edf4b86ef577dd9fb4f320c96350.svg#root' /></svg>
+<div class='border-l relative top-[1px] h-[12px] border-[#727DA1]/30'></div>
+<div class='text-sm text-neutral-200 flex items-center'>
+<span class='mr-1'>Better Stack</span>
+<svg class='transition-all relative top-[1px]  h-4 w-0 group-hover/logtail:w-4 inline' alt='' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/mini/arrow-right-1bd1a0652761c987fd4e2e5c81a148beaed0db735ed4f59c143cd8e8300c9b5b.svg#root' /></svg>
+<svg class='transition-all relative top-[1px]  h-4 w-4 group-hover/logtail:w-0 inline' alt='' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/mini/chevron-right-19fb77a3dd1378fbed094bbbf344e322dccd1a4afbbaefae57ad99f10af6e7d2.svg#root' /></svg>
+</div>
+</a>
+<hr class='mt-2 border-t border-[#1F2433]/40'>
+<a class="block px-2 flex gap-2 transition py-[10px] hover:bg-[#727DA1]/15 rounded leading-[145%]" href="/tracing"><span class='text-[#7C87F7]'><svg width='20' height='20' alt='' class='relative' style='--currentColor: currentColor;'><use href='/assets/v2/telescope-9eb44571e05155e9f8c43621d26f9d6421c8992f82a0f4f235c46c11b3a705a1.svg#root' /></svg></span>
+<div>
+<div class='font-medium'>Tracing</div>
+<div class='mt-1 text-xs text-neutral-200'>eBPF-based OpenTelemetry-native tracing</div>
+</div>
+</a><a class="block px-2 flex gap-2 transition py-[10px] hover:bg-[#727DA1]/15 rounded leading-[145%]" href="/log-management"><span class='text-[#7C87F7]'><svg width='25' height='24' alt='' class='relative top-[-2px] scale-[90%]' style='--currentColor: currentColor;'><use href='/assets/v2/code-insert-c87bfcea37e7279b1825a0ada9182ba85c5a7b923ab6806c24b6dcce06b2fd21.svg#root' /></svg></span>
+<div>
+<div class='font-medium'>Log management</div>
+<div class='mt-1 text-xs text-neutral-200'>Collect insights across your stack</div>
+</div>
+</a><a class="block px-2 flex gap-2 transition py-[10px] hover:bg-[#727DA1]/15 rounded leading-[145%]" href="/infrastructure-monitoring"><span class='mr-1 text-[#7C87F7]'><svg width='20' height='20' alt='' class='relative' style='--currentColor: currentColor;'><use href='/assets/v2/server-be93748da10d8aa1e5796383248b2fde4fb6fca6c8b814d138cb0abe882e32dd.svg#root' /></svg></span>
+<div>
+<div class='font-medium'>Infrastructure monitoring</div>
+<div class='mt-1 text-xs text-neutral-200'>OpenTelemetry-native infrastructure monitoring</div>
+</div>
+</a></div>
+
+</div>
+</div>
+</button>
+<a class='hidden lg:flex p-3 hover:text-white transition items-center' href='https://betterstack.com/docs/'>
+<span>Documentation</span>
+</a>
+<a class='hidden lg:flex p-3 hover:text-white transition items-center' href='/pricing'>
+<span>Pricing</span>
+</a>
+<form action='https://betterstack.com/community' class='m-0 flex items-stretch'>
+<button aria-controls='community-menu' aria-haspopup='menu' class='p-3 group relative flex items-center' type='submit'>
+<div class='transition group-hover:text-white'>Community</div>
+<span class='absolute -right-1 text-[#656A7B]'><svg class='group-hover:rotate-180 transition  w-[11px] h-[11px] inline' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/outline/chevron-down-cca530bad38d12d2a5a13e35495026b5d47fa305d0e814160b4daca6fbd53171.svg#root' /></svg></span>
+<div class='hidden group-hover:block absolute z-40 top-full left-0 text-left' id='community-menu' role='menu' tabindex='-1'>
+<div class='rounded-lg border backdrop-blur-2xl flex flex-col gap-1 w-[174px] p-[6px] bg-[#181926]/80 border-[#1F2433]/75'>
+<a class="block px-2 flex items-center gap-2 transition py-[6px] hover:bg-[#727DA1]/15 rounded-[6px] leading-[145%] md:hidden" href="https://betterstack.com/community"><span class='text-neutral-200'><svg class='mx-[2px]  w-4 h-4 inline' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/solid/users-f23e8dd88769d6f8e2b524bd6c5ab74d2664c6aa88015bceece39efcc0ef04fe.svg#root' /></svg></span>
+Community home
+</a><a class="block px-2 flex items-center gap-2 transition py-[6px] hover:bg-[#727DA1]/15 rounded-[6px] leading-[145%]" href="https://betterstack.com/community/guides"><span class='text-neutral-200'><svg width='20' height='20' alt='' style='--currentColor: currentColor;'><use href='/assets/v2/guides-9590fd551bbc8905a70a749af125c2cc55f0b20fdaab1cc74da218eb0b797b09.svg#root' /></svg></span>
+Guides
+</a><a class="block px-2 flex items-center gap-2 transition py-[6px] hover:bg-[#727DA1]/15 rounded-[6px] leading-[145%]" href="https://betterstack.com/community/questions"><span class='text-neutral-200'><svg width='20' height='20' alt='' style='--currentColor: currentColor;'><use href='/assets/v2/questions-8bd8c639116adcfb9f127a004fb9d9b6f9874815f5e5ba637b3f478bacef080d.svg#root' /></svg></span>
+Questions
+</a><a class="block px-2 flex items-center gap-2 transition py-[6px] hover:bg-[#727DA1]/15 rounded-[6px] leading-[145%]" href="https://betterstack.com/community/comparisons"><span class='text-neutral-200'><svg width='20' height='20' alt='' style='--currentColor: currentColor;'><use href='/assets/v2/comparisons-7d7b384296879ff707081b77ae1db6c06eb6454d2935a316933228bced2517e3.svg#root' /></svg></span>
+Comparisons
+</a>
+</div>
+</div>
+</button>
+</form>
+<button aria-controls='company-menu' aria-haspopup='menu' class='p-3 group relative flex items-center'>
+<div class='transition group-hover:text-white'>Company</div>
+<span class='absolute -right-1 text-[#656A7B]'><svg class='group-hover:rotate-180 transition  w-[11px] h-[11px] inline' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/outline/chevron-down-cca530bad38d12d2a5a13e35495026b5d47fa305d0e814160b4daca6fbd53171.svg#root' /></svg></span>
+<div class='hidden group-hover:block absolute z-40 top-full left-0 text-left' id='company-menu' role='menu' tabindex='-1'>
+<div class='rounded-lg border backdrop-blur-2xl flex flex-col gap-1 w-[190px] p-[6px] bg-[#181926]/80 border-[#1F2433]/75'>
+<a class="block px-2 flex items-center gap-2 transition py-[6px] hover:bg-[#727DA1]/15 rounded-[6px] leading-[145%]" href="/careers"><span class='text-neutral-200'><svg width='20' height='20' alt='' style='--currentColor: currentColor;'><use href='/assets/v2/ship-208a1620a787a3eca8466e51e15a1d345e57bf027bb6f801e3a1757174f68922.svg#root' /></svg></span>
+Work at Better Stack
+</a><a class="block px-2 flex items-center gap-2 transition py-[6px] hover:bg-[#727DA1]/15 rounded-[6px] leading-[145%]" href="/careers/engineering"><span class='text-neutral-200'><svg width='20' height='20' alt='' style='--currentColor: currentColor;'><use href='/assets/v2/code-4a71a0deac2a5812eea4e52b975f52e57610c7cb32b264f18c3ad14d27e21993.svg#root' /></svg></span>
+Engineering
+</a><a class="block px-2 flex items-center gap-2 transition py-[6px] hover:bg-[#727DA1]/15 rounded-[6px] leading-[145%]" href="/security"><span class='text-neutral-200'><svg width='20' height='20' alt='' class='  w-5 h-5 inline' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/solid/shield-check-ae14c88a7e8235929d903e7dc6dc10f9f181e6ea84a7a0216afd39e76c69fb19.svg#root' /></svg></span>
+Security
+</a><a class="block px-2 flex items-center gap-2 transition py-[6px] hover:bg-[#727DA1]/15 rounded-[6px] leading-[145%]" href="https://betterstack.com/community/blog"><span class='text-neutral-200'><svg width='20' height='20' alt='' style='--currentColor: currentColor;'><use href='/assets/v2/blog-f0211515e8499b865f4c191a1cadcb6f0f935edf96541915d6ad88a9c18329cb.svg#root' /></svg></span>
+Blog
+</a><a class="block px-2 flex items-center gap-2 transition py-[6px] hover:bg-[#727DA1]/15 rounded-[6px] leading-[145%]" href="https://betterstack.com/tag/changelog"><span class='text-neutral-200'><svg class='  w-5 h-5 inline' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/solid/newspaper-6d1d07b10d6612db428d1eca9aa14a48055e9d49088f2d6d357623345fba416e.svg#root' /></svg></span>
+Changelog
+</a>
+</div>
+</div>
+</button>
+<a class='hidden lg:flex p-3 hover:text-white transition items-center' href='/enterprise'>
+<span>Enterprise</span>
+</a>
+</div>
+</div>
+<div class='flex items-center sm:gap-2 whitespace-nowrap -mr-3 md:mr-0'>
+<a class="p-2 transition hover:text-white" data-turbo="false" href="/users/sign-in">Sign in</a>
+<a class="px-2 h-[27px] flex items-center rounded bg-button-gradient text-white font-medium" data-turbo="false" href="/users/sign-up">Sign up</a>
+<button aria-label='Open menu' class='p-2 group relative md:hidden text-neutral-300' id='open-menu'>
+<svg class='  w-5 h-5 inline' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/outline/bars-3-d11352170fae74c33b4520557b20d42501501e0331499921355c67a6e46dda6a.svg#root' /></svg>
+</button>
+<button aria-label='Close menu' class='hidden p-2 group relative md:hidden text-neutral-300' id='close-menu'>
+<svg class='  w-5 h-5 inline' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/outline/x-mark-f0e7dfc8c91378f48c8552b6c6b7b83b0f08d92f2db567705faf1cdb1de593cb.svg#root' /></svg>
+</button>
+</div>
+<div class='hidden md:hidden p-5 fixed z-40 left-0 right-0 backdrop-blur-2xl top-[52px] bg-[#181926]/80 text-[#C9D3EE] max-h-[calc(100dvh-52px)] overflow-y-scroll' id='mobile-menu'>
+<div class='js-menu-section flex flex-col gap-1' data-section='root'>
+<button class='p-3 group relative flex items-center' data-section='platform'>
+Platform
+<span class='text-[#656A7B]'><svg class='ml-[6px]  w-[11px] h-[11px] inline' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/outline/chevron-right-659997b7153305bba45633be19c673efd238e025e09de428494831efb81827a5.svg#root' /></svg></span>
+</button>
+<a class="p-3" href="https://betterstack.com/docs/">Documentation</a>
+<a class="p-3" href="/pricing">Pricing</a>
+<button class='p-3 group relative flex items-center' data-section='community'>
+Community
+<span class='text-[#656A7B]'><svg class='ml-[6px]  w-[11px] h-[11px] inline' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/outline/chevron-right-659997b7153305bba45633be19c673efd238e025e09de428494831efb81827a5.svg#root' /></svg></span>
+</button>
+<button class='p-3 group relative flex items-center' data-section='company'>
+Company
+<span class='text-[#656A7B]'><svg class='ml-[6px]  w-[11px] h-[11px] inline' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/outline/chevron-right-659997b7153305bba45633be19c673efd238e025e09de428494831efb81827a5.svg#root' /></svg></span>
+</button>
+<a class="p-3" href="/enterprise">Enterprise</a>
+</div>
+<div class='js-menu-section hidden' data-section='platform'>
+<button class='mb-2 p-3 group relative flex items-center' data-section='root'>
+<svg class='mr-[6px]  w-[11px] h-[11px] inline' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/outline/chevron-left-d20b7c7675b39e291274af8f1befa30fecd323b03ebb59f81e52c8c8bb36b0e0.svg#root' /></svg>
+Back
+</button>
+
+<div class='flex-1 md:px-2 py-3 flex flex-col gap-1 border-b md:border-b-0 md:border-r relative border-[#1F2433]/40'>
+<div class='absolute -top-7 bottom-full left-0 right-0'></div>
+<a class='-my-1 p-1 flex items-center gap-3 group/uptime ml-[6px]' href='/uptime'>
+<svg width='69' height='20' alt='' style='--currentColor: currentColor;'><use href='/assets/v2/uptime-logo-243105a2b5b950d4a5a6dec4850e01473a34d273f42f9b7430a392e857055520.svg#root' /></svg>
+<div class='border-l relative top-[1px] h-[12px] border-[#727DA1]/30'></div>
+<div class='text-sm text-neutral-200 flex items-center'>
+<span class='mr-1'>Better Stack</span>
+<svg class='transition-all relative top-[1px]  h-4 w-0 group-hover/uptime:w-4 inline' alt='' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/mini/arrow-right-1bd1a0652761c987fd4e2e5c81a148beaed0db735ed4f59c143cd8e8300c9b5b.svg#root' /></svg>
+<svg class='transition-all relative top-[1px]  h-4 w-4 group-hover/uptime:w-0 inline' alt='' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/mini/chevron-right-19fb77a3dd1378fbed094bbbf344e322dccd1a4afbbaefae57ad99f10af6e7d2.svg#root' /></svg>
+</div>
+</a>
+<hr class='mt-2 border-t border-[#1F2433]/40'>
+<a class="block px-2 flex gap-2 transition py-[10px] hover:bg-[#727DA1]/15 rounded leading-[145%]" href="/incident-management"><span class='text-[#7C87F7]'><svg width='25' height='24' alt='' class='relative top-[-2px] scale-[90%]' style='--currentColor: currentColor;'><use href='/assets/v2/calendar-e01f18ec0cbee2d67b19bf1a3a944136cef3e60dca636c186ba5418888387510.svg#root' /></svg></span>
+<div>
+<div class='font-medium'>Incident management &amp; on-call</div>
+<div class='mt-1 text-xs text-neutral-200'>Move fast when things break</div>
+</div>
+</a><a class="block px-2 flex gap-2 transition py-[10px] hover:bg-[#727DA1]/15 rounded leading-[145%]" href="/uptime"><span class='mr-1 text-[#7C87F7]'><svg width='25' height='25' alt='' class='relative top-[-2px] scale-[90%]' style='--currentColor: currentColor;'><use href='/assets/v2/radar-b2f556acf302170d43bbb022fc5fe6630b9ce916cfbcd9c30fdc55a923ce9ac7.svg#root' /></svg></span>
+<div>
+<div class='font-medium'>Uptime monitoring</div>
+<div class='mt-1 text-xs text-neutral-200'>The most reliable uptime monitoring</div>
+</div>
+</a><a class="block px-2 flex gap-2 transition py-[10px] hover:bg-[#727DA1]/15 rounded leading-[145%]" href="/status-page"><span class='mr-1 text-[#7C87F7]'><svg width='20' height='20' alt='' class='relative top-[-1px] left-[2px]' style='--currentColor: currentColor;'><use href='/assets/v2/page-ab64af15c60e2932fd1d53c00b870bf0ce5d92e478c4912ac1048abcadd92eaa.svg#root' /></svg></span>
+<div>
+<div class='font-medium'>Status page</div>
+<div class='mt-1 text-xs text-neutral-200'>Communicate downtime &amp; build trust</div>
+</div>
+</a></div>
+<div class='flex-1 mt-2 md:mt-0 md:px-2 py-3 flex flex-col gap-1'>
+<a class='ml-1 -my-1 p-1 flex items-center gap-3 group/logtail' href='/telemetry'>
+<svg width='227' height='48' alt='' class='w-[95px] h-5' style='--currentColor: currentColor;'><use href='/assets/v2/telemetry-logo-e036c18f5004877bb26fbb8e473511285043edf4b86ef577dd9fb4f320c96350.svg#root' /></svg>
+<div class='border-l relative top-[1px] h-[12px] border-[#727DA1]/30'></div>
+<div class='text-sm text-neutral-200 flex items-center'>
+<span class='mr-1'>Better Stack</span>
+<svg class='transition-all relative top-[1px]  h-4 w-0 group-hover/logtail:w-4 inline' alt='' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/mini/arrow-right-1bd1a0652761c987fd4e2e5c81a148beaed0db735ed4f59c143cd8e8300c9b5b.svg#root' /></svg>
+<svg class='transition-all relative top-[1px]  h-4 w-4 group-hover/logtail:w-0 inline' alt='' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/mini/chevron-right-19fb77a3dd1378fbed094bbbf344e322dccd1a4afbbaefae57ad99f10af6e7d2.svg#root' /></svg>
+</div>
+</a>
+<hr class='mt-2 border-t border-[#1F2433]/40'>
+<a class="block px-2 flex gap-2 transition py-[10px] hover:bg-[#727DA1]/15 rounded leading-[145%]" href="/tracing"><span class='text-[#7C87F7]'><svg width='20' height='20' alt='' class='relative' style='--currentColor: currentColor;'><use href='/assets/v2/telescope-9eb44571e05155e9f8c43621d26f9d6421c8992f82a0f4f235c46c11b3a705a1.svg#root' /></svg></span>
+<div>
+<div class='font-medium'>Tracing</div>
+<div class='mt-1 text-xs text-neutral-200'>eBPF-based OpenTelemetry-native tracing</div>
+</div>
+</a><a class="block px-2 flex gap-2 transition py-[10px] hover:bg-[#727DA1]/15 rounded leading-[145%]" href="/log-management"><span class='text-[#7C87F7]'><svg width='25' height='24' alt='' class='relative top-[-2px] scale-[90%]' style='--currentColor: currentColor;'><use href='/assets/v2/code-insert-c87bfcea37e7279b1825a0ada9182ba85c5a7b923ab6806c24b6dcce06b2fd21.svg#root' /></svg></span>
+<div>
+<div class='font-medium'>Log management</div>
+<div class='mt-1 text-xs text-neutral-200'>Collect insights across your stack</div>
+</div>
+</a><a class="block px-2 flex gap-2 transition py-[10px] hover:bg-[#727DA1]/15 rounded leading-[145%]" href="/infrastructure-monitoring"><span class='mr-1 text-[#7C87F7]'><svg width='20' height='20' alt='' class='relative' style='--currentColor: currentColor;'><use href='/assets/v2/server-be93748da10d8aa1e5796383248b2fde4fb6fca6c8b814d138cb0abe882e32dd.svg#root' /></svg></span>
+<div>
+<div class='font-medium'>Infrastructure monitoring</div>
+<div class='mt-1 text-xs text-neutral-200'>OpenTelemetry-native infrastructure monitoring</div>
+</div>
+</a></div>
+
+</div>
+<div class='js-menu-section hidden flex flex-col gap-1' data-section='community'>
+<button class='mb-2 p-3 group relative flex items-center' data-section='root'>
+<svg class='mr-[6px]  w-[11px] h-[11px] inline' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/outline/chevron-left-d20b7c7675b39e291274af8f1befa30fecd323b03ebb59f81e52c8c8bb36b0e0.svg#root' /></svg>
+Back
+</button>
+
+<a class="block px-2 flex items-center gap-2 transition py-[6px] hover:bg-[#727DA1]/15 rounded-[6px] leading-[145%] md:hidden" href="https://betterstack.com/community"><span class='text-neutral-200'><svg class='mx-[2px]  w-4 h-4 inline' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/solid/users-f23e8dd88769d6f8e2b524bd6c5ab74d2664c6aa88015bceece39efcc0ef04fe.svg#root' /></svg></span>
+Community home
+</a><a class="block px-2 flex items-center gap-2 transition py-[6px] hover:bg-[#727DA1]/15 rounded-[6px] leading-[145%]" href="https://betterstack.com/community/guides"><span class='text-neutral-200'><svg width='20' height='20' alt='' style='--currentColor: currentColor;'><use href='/assets/v2/guides-9590fd551bbc8905a70a749af125c2cc55f0b20fdaab1cc74da218eb0b797b09.svg#root' /></svg></span>
+Guides
+</a><a class="block px-2 flex items-center gap-2 transition py-[6px] hover:bg-[#727DA1]/15 rounded-[6px] leading-[145%]" href="https://betterstack.com/community/questions"><span class='text-neutral-200'><svg width='20' height='20' alt='' style='--currentColor: currentColor;'><use href='/assets/v2/questions-8bd8c639116adcfb9f127a004fb9d9b6f9874815f5e5ba637b3f478bacef080d.svg#root' /></svg></span>
+Questions
+</a><a class="block px-2 flex items-center gap-2 transition py-[6px] hover:bg-[#727DA1]/15 rounded-[6px] leading-[145%]" href="https://betterstack.com/community/comparisons"><span class='text-neutral-200'><svg width='20' height='20' alt='' style='--currentColor: currentColor;'><use href='/assets/v2/comparisons-7d7b384296879ff707081b77ae1db6c06eb6454d2935a316933228bced2517e3.svg#root' /></svg></span>
+Comparisons
+</a>
+</div>
+<div class='js-menu-section hidden pb-5 flex flex-col gap-1' data-section='company'>
+<button class='mb-2 p-3 group relative flex items-center' data-section='root'>
+<svg class='mr-[6px]  w-[11px] h-[11px] inline' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/outline/chevron-left-d20b7c7675b39e291274af8f1befa30fecd323b03ebb59f81e52c8c8bb36b0e0.svg#root' /></svg>
+Back
+</button>
+
+<a class="block px-2 flex items-center gap-2 transition py-[6px] hover:bg-[#727DA1]/15 rounded-[6px] leading-[145%]" href="/careers"><span class='text-neutral-200'><svg width='20' height='20' alt='' style='--currentColor: currentColor;'><use href='/assets/v2/ship-208a1620a787a3eca8466e51e15a1d345e57bf027bb6f801e3a1757174f68922.svg#root' /></svg></span>
+Work at Better Stack
+</a><a class="block px-2 flex items-center gap-2 transition py-[6px] hover:bg-[#727DA1]/15 rounded-[6px] leading-[145%]" href="/careers/engineering"><span class='text-neutral-200'><svg width='20' height='20' alt='' style='--currentColor: currentColor;'><use href='/assets/v2/code-4a71a0deac2a5812eea4e52b975f52e57610c7cb32b264f18c3ad14d27e21993.svg#root' /></svg></span>
+Engineering
+</a><a class="block px-2 flex items-center gap-2 transition py-[6px] hover:bg-[#727DA1]/15 rounded-[6px] leading-[145%]" href="/security"><span class='text-neutral-200'><svg width='20' height='20' alt='' class='  w-5 h-5 inline' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/solid/shield-check-ae14c88a7e8235929d903e7dc6dc10f9f181e6ea84a7a0216afd39e76c69fb19.svg#root' /></svg></span>
+Security
+</a><a class="block px-2 flex items-center gap-2 transition py-[6px] hover:bg-[#727DA1]/15 rounded-[6px] leading-[145%]" href="https://betterstack.com/community/blog"><span class='text-neutral-200'><svg width='20' height='20' alt='' style='--currentColor: currentColor;'><use href='/assets/v2/blog-f0211515e8499b865f4c191a1cadcb6f0f935edf96541915d6ad88a9c18329cb.svg#root' /></svg></span>
+Blog
+</a><a class="block px-2 flex items-center gap-2 transition py-[6px] hover:bg-[#727DA1]/15 rounded-[6px] leading-[145%]" href="https://betterstack.com/tag/changelog"><span class='text-neutral-200'><svg class='  w-5 h-5 inline' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/solid/newspaper-6d1d07b10d6612db428d1eca9aa14a48055e9d49088f2d6d357623345fba416e.svg#root' /></svg></span>
+Changelog
+</a>
+</div>
+</div>
+</nav>
+</header>
+
+<header class='dark sticky top-0 z-30 flex justify-center leading-none w-full backdrop-blur-2xl bg-[#0B0C14]/80 text-[13px]'>
+<div class='mx-2 sm:mx-5 flex grow overflow-x-scroll no-scrollbars relative max-w-[1110px]'>
+<nav class='grow flex items-center border-b h-[49px] border-[#727DA1]/15'>
+<div class='grow flex items-stretch gap-5 md:justify-between'>
+<ul class='flex items-center gap-5 whitespace-nowrap'>
+<li class='flex relative dropdown-trigger hover:text-white'>
+<a class='w-full p-2' href='/community/?utm_content&amp;utm_medium=guides&amp;utm_source=community&amp;utm_term=python-async-programming'>
+Community
+</a>
+</li>
+<li class='flex relative dropdown-trigger hover:text-white'>
+<a class='w-full p-2 text-white rounded bg-[#98A4F714]' href='/community/guides/?utm_content&amp;utm_medium=guides&amp;utm_source=community&amp;utm_term=python-async-programming'>
+Guides
+</a>
+</li>
+<li class='flex relative dropdown-trigger hover:text-white'>
+<a class='w-full p-2' href='/community/questions/?utm_content&amp;utm_medium=guides&amp;utm_source=community&amp;utm_term=python-async-programming'>
+Questions
+</a>
+</li>
+<li class='flex relative dropdown-trigger hover:text-white'>
+<a class='w-full p-2' href='/community/comparisons/?utm_content&amp;utm_medium=guides&amp;utm_source=community&amp;utm_term=python-async-programming'>
+Comparisons
+</a>
+</li>
+<li class='flex relative dropdown-trigger hover:text-white'>
+<a class='w-full p-2' href='/community/blog/?utm_content&amp;utm_medium=guides&amp;utm_source=community&amp;utm_term=python-async-programming'>
+Blog
+</a>
+</li>
+</ul>
+
+<a class='flex items-center hover:text-white md:hidden' href='https://betterstack.com/docs/'>Docs</a>
+<div class='sticky md:absolute z-10 right-2 md:right-0 top-0 bottom-0 flex items-center gap-5 whitespace-nowrap'>
+<a class='hover:text-white hidden md:block' href='https://betterstack.com/docs/'>Documentation</a>
+<div id='docsearch-container'></div>
+<script src='https://cdnjs.betterstackcdn.com/@docsearch/js@3.5.2/dist/umd/index.js'></script>
+<script nonce="74ff0c65e75b75d187f6da6fa54bba36">
+//<![CDATA[
+function loadDocsearch() {
+  if (!window.docsearch) {
+    setTimeout(loadDocsearch, 50);
+    return;
+  }
+
+  window.docsearch({
+    container: '#docsearch-container',
+    appId: '4N04E5JBP3',
+    indexName: 'betterstack22',
+    apiKey: '1acd2b32f9173069cd6467c9d186e21f',
+    maxResultsPerGroup: 20,
+    searchParameters: {
+      hitsPerPage: 20,
+    },
+  });
+
+  // This hack prevents scrolling after closing the modal in Safari.
+  // https://github.com/algolia/docsearch/issues/1260
+  document.getElementsByClassName('DocSearch DocSearch-Button')[0]?.addEventListener('click', function (event) {
+    document.querySelectorAll('.js-docsearch-anchor').forEach((element) => {
+      element.parentNode.removeChild(element);
+    });
+
+    const input = document.createElement('input')
+    input.setAttribute('type', 'text')
+
+    const div = document.createElement('div');
+    div.appendChild(input);
+    div.classList.add('fixed', 'js-docsearch-anchor');
+
+    document.body.appendChild(div);
+  });
+
+  // Without this CMD+K would open one modal per visited page with the search.
+  // Docsearch does not support 'destroy', so we need to hack it.
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'k' && event.metaKey) {
+      event.stopPropagation();
+      event.preventDefault();
+      document.getElementsByClassName('DocSearch DocSearch-Button')[0]?.click();
+    }
+  });
+}
+
+loadDocsearch();
+
+//]]>
+</script>
+</div>
+</div>
+</nav>
+</div>
+<div class='absolute pointer-events-none top-0 bottom-0 right-0 bg-linear-to-l md:hidden w-28 from-[#0B0C14] via-[#0B0C14]'></div>
+</header>
+
+<div class='bg-white'><main>
+<div class='dark bg-primary-hero'>
+<div class='mx-auto pt-4 pb-8 px-7 max-w-[1130px]'>
+<a class='text-base text-[#C9D3EE]' href='/community/guides/scaling-python/'>
+<svg class='inline mr-2 -mt-[2px]  w-4 h-4 inline' style='--currentColor: currentColor;'><use href='/assets/icons/heroicons_v2/outline/arrow-left-6c26a881b448fa9cc1f545100e08a3ab246af938bfe9c6a7cf8fdb3c23e66f4a.svg#root' /></svg>
+Back to Scaling Python Applications guides
+</a>
+<div class='pt-10 md:pt-16 lg:pt-20'>
+<h1 class='font-helveticaDisplay font-bold text-center text-white overflow-hidden text-ellipsis mx-auto text-[36px] md:text-[48px] lg:text-[54px] leading-[120%] max-w-[640px]'>
+Practical Guide to Asynchronous Programming in Python
+</h1>
+<div class='mt-4 flex justify-center text-base flex-wrap'>
+<a class="px-[10px] py-[2px] mr-2 mt-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.05] border border-white/[0.05] text-white whitespace-nowrap" href="/tag/python?utm_content&amp;utm_medium=guides&amp;utm_source=community&amp;utm_term=python-async-programming">Python</a>
+</div>
+<div class='mt-10 md:mt-16 mt-20 text-center'>
+<div class='text-white'>Stanley Ulili</div>
+<div class='mt-1 uppercase whitespace-nowrap text-xs font-medium text-neutral-300 tracking-[1.56px]'>
+Updated on April 15, 2025
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class='container mx-auto py-8 lg:py-16 max-w-[1130px]'>
+<div class='lg:flex' data-controller='toc'>
+<div class='grow xl:flex'>
+<div class='sticky hidden xl:block mr-12 shrink-0 w-[190px]' data-toc-target='toc'>
+<div class='text-base text-neutral-300 sticky scroll-smooth overflow-y-auto pretty-scrollbars max-h-screen top-[100px] pb-40'>
+<h6 class='text-neutral-800 font-bold'>Contents</h6>
+<div class='table-of-contents flat'>
+<ul>
+<li>
+<a href="#prerequisites">Prerequisites</a>
+</li>
+<li>
+<a href="#step-1-understanding-the-basics-of-asynchronous-programming">Step 1 — Understanding the basics of asynchronous programming</a>
+</li>
+<li>
+<a href="#step-2-your-first-async-program-with-asyncio">Step 2 — Your first async program with <code>asyncio</code></a>
+</li>
+<li>
+<a href="#step-3-working-with-async-generators-and-for-loops">Step 3 — Working with async generators and for loops</a>
+</li>
+<li>
+<a href="#step-4-managing-many-async-tasks-with-semaphores">Step 4 — Managing many async tasks with semaphores</a>
+</li>
+<li>
+<a href="#final-thoughts">Final thoughts</a>
+</li>
+</ul>
+
+</div>
+</div>
+
+</div>
+<div class='grow shrink-0 prose max-w-[616px]' data-controller='body' data-toc-target='content'>
+<p><a rel="" target="_blank" class="" href="https://www.python.org/">Python<span class="whitespace-nowrap"><svg class='relative -top-[1px] ml-1  w-4 h-4 inline' style='--currentColor: currentColor;'><use href='https://betterstack.com/assets/icons/heroicons_v2/mini/arrow-top-right-on-square-d4a4b2dfe559997065a0de05c441ef56d661be449bf96d9ce30eb4e0af2516cf.svg#root' /></svg></span></a> gives you powerful tools for asynchronous programming. This lets you write concurrent code without dealing with the headaches of traditional threading.</p><p>The <code class="prettyprint">asyncio</code> library, added in Python 3.4 and improved in later versions, offers a clean way to write single-threaded concurrent code using coroutines, event loops, and Future objects.</p><p>In this guide, I&#39;ll show you how to create and use effective asynchronous patterns in your Python applications.</p><p><div>
+<a class='not-prose block my-8 p-9 rounded-lg text-13 bg-logs-ad md:h-[254px] no-underline!' href='/telemetry?utm_content=upsell&amp;utm_medium=guides&amp;utm_source=community&amp;utm_term=python-async-programming'>
+<p class='inline-block font-bold ad-title-text text-transparent text-app-display-large'>
+The fastest log
+<br>
+search on the planet
+</p>
+<p class='mt-2 max-w-[253px] text-[#C9D3EE]'>Better Stack lets you see inside any stack, debug any issue, and resolve any&nbsp;incident.</p>
+<button class='mt-5 inline-block px-3 py-2 bg-neutral-700 rounded font-medium text-white bg-deprecated-primary-100 border border-deprecated-primary-200 leading-none whitespace-nowrap'>
+Explore more
+</button>
+</a>
+</div>
+</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<p>Before you start, make sure you have a recent version of <a rel="" target="_blank" class="" href="https://www.python.org/downloads/">Python<span class="whitespace-nowrap"><svg class='relative -top-[1px] ml-1  w-4 h-4 inline' style='--currentColor: currentColor;'><use href='https://betterstack.com/assets/icons/heroicons_v2/mini/arrow-top-right-on-square-d4a4b2dfe559997065a0de05c441ef56d661be449bf96d9ce30eb4e0af2516cf.svg#root' /></svg></span></a> (3.7 or higher) installed on your computer. </p>
+<h2 id="step-1-understanding-the-basics-of-asynchronous-programming">Step 1 — Understanding the basics of asynchronous programming</h2>
+<p>For the best experience, create a new Python project to try out these concepts as you read.</p><p>Start by making a new directory and setting up a virtual environment:</p><div class='relative mb-5 bg-neutral-40 border border-neutral-50 rounded-md text-[15px] shadow-2xs' data-controller='clipboard'>
+  <div class='px-4 py-[6px] bg-white flex items-center rounded-t-md'>
+    <div class='text-[15px] font-medium inline align-middle grow'><span class="text-app-small">&nbsp;</span></div>
+    
+    <div class="copy-button hidden sm:flex sm:items-center" data-clipboard-target='confirmation'>
+  <button class='text-sm p-1' data-action='click->clipboard#copy'>
+    <svg alt='copy code to clipboard' height='18' width='18' class='m-0' style='--currentColor: currentColor;'><use href='https://betterstack.com/assets/articles/clipboard-d6c07cf2face9fc42a34bcb0088c7164f06f39c14281e7e510185191e9a8188a.svg#root' /></svg>
+  </button>
+  <span class='copy-confirmation text-sm p-0'>Copied!</span>
+</div>
+
+  </div>
+  <div class='code-wrapper overflow-x-auto p-2 rounded command' data-clipboard-target='content' data-controller='code'>
+  <pre class='highlight language-command'><code>mkdir python-async &amp;&amp; cd python-async
+</code></pre>
+</div>
+</div>
+
+<div class='relative mb-5 bg-neutral-40 border border-neutral-50 rounded-md text-[15px] shadow-2xs' data-controller='clipboard'>
+  <div class='px-4 py-[6px] bg-white flex items-center rounded-t-md'>
+    <div class='text-[15px] font-medium inline align-middle grow'><span class="text-app-small">&nbsp;</span></div>
+    
+    <div class="copy-button hidden sm:flex sm:items-center" data-clipboard-target='confirmation'>
+  <button class='text-sm p-1' data-action='click->clipboard#copy'>
+    <svg alt='copy code to clipboard' height='18' width='18' class='m-0' style='--currentColor: currentColor;'><use href='https://betterstack.com/assets/articles/clipboard-d6c07cf2face9fc42a34bcb0088c7164f06f39c14281e7e510185191e9a8188a.svg#root' /></svg>
+  </button>
+  <span class='copy-confirmation text-sm p-0'>Copied!</span>
+</div>
+
+  </div>
+  <div class='code-wrapper overflow-x-auto p-2 rounded command' data-clipboard-target='content' data-controller='code'>
+  <pre class='highlight language-command'><code>python3 -m venv venv
+</code></pre>
+</div>
+</div>
+
+<p>Activate the virtual environment:</p><div class='relative mb-5 bg-neutral-40 border border-neutral-50 rounded-md text-[15px] shadow-2xs' data-controller='clipboard'>
+  <div class='px-4 py-[6px] bg-white flex items-center rounded-t-md'>
+    <div class='text-[15px] font-medium inline align-middle grow'><span class="text-app-small">&nbsp;</span></div>
+    
+    <div class="copy-button hidden sm:flex sm:items-center" data-clipboard-target='confirmation'>
+  <button class='text-sm p-1' data-action='click->clipboard#copy'>
+    <svg alt='copy code to clipboard' height='18' width='18' class='m-0' style='--currentColor: currentColor;'><use href='https://betterstack.com/assets/articles/clipboard-d6c07cf2face9fc42a34bcb0088c7164f06f39c14281e7e510185191e9a8188a.svg#root' /></svg>
+  </button>
+  <span class='copy-confirmation text-sm p-0'>Copied!</span>
+</div>
+
+  </div>
+  <div class='code-wrapper overflow-x-auto p-2 rounded command' data-clipboard-target='content' data-controller='code'>
+  <pre class='highlight language-command'><code>source venv/bin/activate
+</code></pre>
+</div>
+</div>
+
+<p>Let&#39;s start with a simple example that shows the main problem asynchronous programming solves - operations that block execution. Create a file named <code class="prettyprint">main.py</code> with this code:</p><div class='relative mb-5 bg-neutral-40 border border-neutral-50 rounded-md text-[15px] shadow-2xs' data-controller='clipboard'>
+  <div class='px-4 py-[6px] bg-white flex items-center rounded-t-md'>
+    <div class='text-[15px] font-medium inline align-middle grow'><span class="text-app-small">main.py</span></div>
+    
+    <div class="copy-button hidden sm:flex sm:items-center" data-clipboard-target='confirmation'>
+  <button class='text-sm p-1' data-action='click->clipboard#copy'>
+    <svg alt='copy code to clipboard' height='18' width='18' class='m-0' style='--currentColor: currentColor;'><use href='https://betterstack.com/assets/articles/clipboard-d6c07cf2face9fc42a34bcb0088c7164f06f39c14281e7e510185191e9a8188a.svg#root' /></svg>
+  </button>
+  <span class='copy-confirmation text-sm p-0'>Copied!</span>
+</div>
+
+  </div>
+  <div class='code-wrapper overflow-x-auto p-2 rounded python' data-clipboard-target='content' data-controller='code'>
+  <pre class='highlight language-python'><code>import time
+
+def fetch_data(source):
+    print(f&quot;Fetching data from {source}...&quot;)
+    time.sleep(2)  # Simulating I/O operation
+    print(f&quot;Done fetching from {source}&quot;)
+    return f&quot;Data from {source}&quot;
+
+def main():
+    start_time = time.time()
+
+    # Sequential execution of three operations
+    data1 = fetch_data(&quot;source_1&quot;)
+    data2 = fetch_data(&quot;source_2&quot;)
+    data3 = fetch_data(&quot;source_3&quot;)
+
+    results = [data1, data2, data3]
+
+    end_time = time.time()
+    print(f&quot;Total execution time: {end_time - start_time:.2f} seconds&quot;)
+    print(f&quot;Results: {results}&quot;)
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+</div>
+</div>
+
+<p>In this example, you fetch data from three sources using the <code class="prettyprint">fetch_data</code> function, which has a 2-second delay to simulate I/O operations. The <code class="prettyprint">main</code> function runs these tasks one after the other, so each one waits for the previous to finish before starting. </p><p>This means the total execution time is about 6 seconds (2 seconds per task). This shows the problem with blocking operations—each task delays the next. In the next step, you&#39;ll see how asynchronous programming solves this by running tasks at the same time.</p><p>Run your script with this command:</p><div class='relative mb-5 bg-neutral-40 border border-neutral-50 rounded-md text-[15px] shadow-2xs' data-controller='clipboard'>
+  <div class='px-4 py-[6px] bg-white flex items-center rounded-t-md'>
+    <div class='text-[15px] font-medium inline align-middle grow'><span class="text-app-small">&nbsp;</span></div>
+    
+    <div class="copy-button hidden sm:flex sm:items-center" data-clipboard-target='confirmation'>
+  <button class='text-sm p-1' data-action='click->clipboard#copy'>
+    <svg alt='copy code to clipboard' height='18' width='18' class='m-0' style='--currentColor: currentColor;'><use href='https://betterstack.com/assets/articles/clipboard-d6c07cf2face9fc42a34bcb0088c7164f06f39c14281e7e510185191e9a8188a.svg#root' /></svg>
+  </button>
+  <span class='copy-confirmation text-sm p-0'>Copied!</span>
+</div>
+
+  </div>
+  <div class='code-wrapper overflow-x-auto p-2 rounded command' data-clipboard-target='content' data-controller='code'>
+  <pre class='highlight language-command'><code>python main.py
+</code></pre>
+</div>
+</div>
+
+<p>You&#39;ll see output like this:</p><div class='relative mb-5 bg-neutral-40 border border-neutral-50 rounded-md text-[15px] shadow-2xs' data-controller='clipboard'>
+  <div class='px-4 py-[6px] bg-white flex items-center rounded-t-md'>
+    <div class='text-[15px] font-medium inline align-middle grow'><span class="text-app-small"><svg alt='' height='20' width='20' class='m-0 -mt-1 inline fill-neutral-200' style='--currentColor: currentColor;'><use href='https://betterstack.com/assets/articles/document-text-1d6fae2c063acba111755197aff163c1cdb90458bd11a8f4900ef9a62c23eddf.svg#root' /></svg> Output</span></div>
+    
+    
+  </div>
+  <div class='code-wrapper overflow-x-auto p-2 rounded text' data-clipboard-target='content' data-controller='code'>
+  <pre class='highlight language-text'><code class="whitespace-pre-wrap!">Fetching data from source_1...
+Done fetching from source_1
+Fetching data from source_2...
+Done fetching from source_2
+Fetching data from source_3...
+Done fetching from source_3
+Total execution time: 6.01 seconds
+Results: [&#39;Data from source_1&#39;, &#39;Data from source_2&#39;, &#39;Data from source_3&#39;]
+</code></pre>
+</div>
+</div>
+
+<p>Notice that the total time is about 6 seconds (3 operations × 2 seconds each). This happens because each function call blocks execution until it finishes, forcing everything to run in sequence even though these operations don&#39;t depend on each other.</p><p>Asynchronous programming fixes this problem by letting your program work on other tasks while waiting for I/O operations to finish.</p>
+<h2 id="step-2-your-first-async-program-with-asyncio">Step 2 — Your first async program with <code class="prettyprint">asyncio</code></h2>
+<p>Now that you understand the problem with blocking operations, let’s solve it using Python’s <code class="prettyprint">asyncio</code> library. <code class="prettyprint">asyncio</code> allows you to write asynchronous code that runs concurrently, so tasks don’t block each other. This means you can perform I/O operations (like fetching data) without waiting for one task to finish before starting the next.</p><p>In this step, you&#39;ll rewrite the previous example to use asynchronous programming. The goal is to run all the data-fetching operations concurrently, making the program run faster by handling multiple tasks simultaneously.</p><p>Update your <code class="prettyprint">main.py</code> file with the highlighted code below:</p><div class='relative mb-5 bg-neutral-40 border border-neutral-50 rounded-md text-[15px] shadow-2xs' data-controller='clipboard'>
+  <div class='px-4 py-[6px] bg-white flex items-center rounded-t-md'>
+    <div class='text-[15px] font-medium inline align-middle grow'><span class="text-app-small">main.py</span></div>
+    
+    <div class="copy-button hidden sm:flex sm:items-center" data-clipboard-target='confirmation'>
+  <button class='text-sm p-1' data-action='click->clipboard#copy'>
+    <svg alt='copy code to clipboard' height='18' width='18' class='m-0' style='--currentColor: currentColor;'><use href='https://betterstack.com/assets/articles/clipboard-d6c07cf2face9fc42a34bcb0088c7164f06f39c14281e7e510185191e9a8188a.svg#root' /></svg>
+  </button>
+  <span class='copy-confirmation text-sm p-0'>Copied!</span>
+</div>
+
+  </div>
+  <div class='code-wrapper overflow-x-auto p-2 rounded python' data-clipboard-target='content' data-controller='code'>
+  <pre class='highlight language-python'><code><div class='code-highlight top bottom'>import asyncio</div>
+import time
+
+<div class='code-highlight top'>async def fetch_data(source):</div>
+<div class='code-highlight'>    print(f&quot;Fetching data from {source}...&quot;)</div>
+<div class='code-highlight'>    await asyncio.sleep(2)  # Simulating I/O operation</div>
+<div class='code-highlight'>    print(f&quot;Done fetching from {source}&quot;)</div>
+<div class='code-highlight'>    return f&quot;Data from {source}&quot;</div>
+<div class='code-highlight'></div>
+<div class='code-highlight bottom'>async def main():</div>
+    start_time = time.time()
+
+    # Concurrent execution of three operations
+<div class='code-highlight top'>    # Create tasks with the coroutine objects directly</div>
+<div class='code-highlight'>    data1_task = asyncio.create_task(fetch_data(&quot;source_1&quot;))</div>
+<div class='code-highlight'>    data2_task = asyncio.create_task(fetch_data(&quot;source_2&quot;))</div>
+<div class='code-highlight'>    data3_task = asyncio.create_task(fetch_data(&quot;source_3&quot;))</div>
+<div class='code-highlight'></div>
+<div class='code-highlight'>    # Wait for all tasks to complete</div>
+<div class='code-highlight bottom'>    results = await asyncio.gather(data1_task, data2_task, data3_task)</div>
+
+    end_time = time.time()
+    print(f&quot;Total execution time: {end_time - start_time:.2f} seconds&quot;)
+    print(f&quot;Results: {results}&quot;)
+
+if __name__ == &quot;__main__&quot;:
+<div class='code-highlight top bottom'>    asyncio.run(main())</div>
+</code></pre>
+</div>
+</div>
+
+<p>The <code class="prettyprint">async</code> keyword before a function marks it as a coroutine, which is a special type of function that can pause and resume execution. </p><p>The <code class="prettyprint">await</code> keyword pauses the execution of the coroutine until the awaited task finishes. <code class="prettyprint">asyncio.sleep(2)</code> is the async version of <code class="prettyprint">time.sleep(2)</code> and allows control to be given back to the event loop during the delay. </p><p><code class="prettyprint">asyncio.create_task()</code> is used to schedule coroutines to run concurrently, while <code class="prettyprint">asyncio.gather()</code> waits for multiple tasks to finish and returns their results. </p><p>Finally, <code class="prettyprint">asyncio.run()</code> runs the main coroutine and manages the event loop, ensuring the proper execution of the asynchronous tasks.</p><p>Run this updated script:</p><div class='relative mb-5 bg-neutral-40 border border-neutral-50 rounded-md text-[15px] shadow-2xs' data-controller='clipboard'>
+  <div class='px-4 py-[6px] bg-white flex items-center rounded-t-md'>
+    <div class='text-[15px] font-medium inline align-middle grow'><span class="text-app-small">&nbsp;</span></div>
+    
+    <div class="copy-button hidden sm:flex sm:items-center" data-clipboard-target='confirmation'>
+  <button class='text-sm p-1' data-action='click->clipboard#copy'>
+    <svg alt='copy code to clipboard' height='18' width='18' class='m-0' style='--currentColor: currentColor;'><use href='https://betterstack.com/assets/articles/clipboard-d6c07cf2face9fc42a34bcb0088c7164f06f39c14281e7e510185191e9a8188a.svg#root' /></svg>
+  </button>
+  <span class='copy-confirmation text-sm p-0'>Copied!</span>
+</div>
+
+  </div>
+  <div class='code-wrapper overflow-x-auto p-2 rounded command' data-clipboard-target='content' data-controller='code'>
+  <pre class='highlight language-command'><code>python main.py
+</code></pre>
+</div>
+</div>
+
+<p>You&#39;ll see output like this:</p><div class='relative mb-5 bg-neutral-40 border border-neutral-50 rounded-md text-[15px] shadow-2xs' data-controller='clipboard'>
+  <div class='px-4 py-[6px] bg-white flex items-center rounded-t-md'>
+    <div class='text-[15px] font-medium inline align-middle grow'><span class="text-app-small"><svg alt='' height='20' width='20' class='m-0 -mt-1 inline fill-neutral-200' style='--currentColor: currentColor;'><use href='https://betterstack.com/assets/articles/document-text-1d6fae2c063acba111755197aff163c1cdb90458bd11a8f4900ef9a62c23eddf.svg#root' /></svg> Output</span></div>
+    
+    
+  </div>
+  <div class='code-wrapper overflow-x-auto p-2 rounded text' data-clipboard-target='content' data-controller='code'>
+  <pre class='highlight language-text'><code class="whitespace-pre-wrap!">Fetching data from source_1...
+Fetching data from source_2...
+Fetching data from source_3...
+Done fetching from source_1
+Done fetching from source_2
+Done fetching from source_3
+Total execution time: 2.00 seconds
+Results: [&#39;Data from source_1&#39;, &#39;Data from source_2&#39;, &#39;Data from source_3&#39;]
+</code></pre>
+</div>
+</div>
+
+<p>The most significant difference is the execution time. Instead of 6 seconds in the blocking version, the async version finishes in just about 2 seconds. This happens because all three operations run concurrently, waiting for their delays in parallel instead of one after another.</p><p><div data-controller='lightbox' class='relative cursor-pointer'>
+  <figure data-action='click->lightbox#open' data-lightbox-target='picture'>
+    <picture>
+      <source media="(max-width: 800px)" data-srcset="https://imagedelivery.betterstackcdn.com/xZXo0QFi-1_4Zimer-T0XQ/c396c449-98ba-4fbb-5970-45a796e0dd00/md1x 1x, https://imagedelivery.betterstackcdn.com/xZXo0QFi-1_4Zimer-T0XQ/c396c449-98ba-4fbb-5970-45a796e0dd00/md2x 2x" width=500 height=119 />
+      <source media="(min-width: 801px)" data-srcset="https://imagedelivery.betterstackcdn.com/xZXo0QFi-1_4Zimer-T0XQ/c396c449-98ba-4fbb-5970-45a796e0dd00/lg1x 1x, https://imagedelivery.betterstackcdn.com/xZXo0QFi-1_4Zimer-T0XQ/c396c449-98ba-4fbb-5970-45a796e0dd00/lg2x 2x" width=650 height=155 />
+      <img alt="Gantt chart comparing blocking vs asynchronous execution" width="2702" height="646" class="w-full lazyload" data-src="https://imagedelivery.betterstackcdn.com/xZXo0QFi-1_4Zimer-T0XQ/c396c449-98ba-4fbb-5970-45a796e0dd00/orig" src="" />
+    </picture>
+  </figure>
+  <figure class='hidden lightbox' data-lightbox-target='container'>
+    <img alt="Gantt chart comparing blocking vs asynchronous execution" width="2702" height="646" loading="lazy" data-action="click-&gt;lightbox#close" data-lightbox-target="img" src="https://imagedelivery.betterstackcdn.com/xZXo0QFi-1_4Zimer-T0XQ/c396c449-98ba-4fbb-5970-45a796e0dd00/orig" />
+  </figure>
+</div>
+</p><p>Notice how all three &quot;Fetching data&quot; messages appear before any &quot;Done fetching&quot; messages. This shows that the operations are indeed running at the same time.</p>
+<h2 id="step-3-working-with-async-generators-and-for-loops">Step 3 — Working with async generators and for loops</h2>
+<p>Async programming becomes even more powerful when combined with async generators and <code class="prettyprint">async for</code> loops. This allows you to efficiently generate and process a collection of data sources concurrently. </p><p>Update your example to process a collection of data sources using an async for loop:</p><div class='relative mb-5 bg-neutral-40 border border-neutral-50 rounded-md text-[15px] shadow-2xs' data-controller='clipboard'>
+  <div class='px-4 py-[6px] bg-white flex items-center rounded-t-md'>
+    <div class='text-[15px] font-medium inline align-middle grow'><span class="text-app-small">main.py</span></div>
+    
+    <div class="copy-button hidden sm:flex sm:items-center" data-clipboard-target='confirmation'>
+  <button class='text-sm p-1' data-action='click->clipboard#copy'>
+    <svg alt='copy code to clipboard' height='18' width='18' class='m-0' style='--currentColor: currentColor;'><use href='https://betterstack.com/assets/articles/clipboard-d6c07cf2face9fc42a34bcb0088c7164f06f39c14281e7e510185191e9a8188a.svg#root' /></svg>
+  </button>
+  <span class='copy-confirmation text-sm p-0'>Copied!</span>
+</div>
+
+  </div>
+  <div class='code-wrapper overflow-x-auto p-2 rounded python' data-clipboard-target='content' data-controller='code'>
+  <pre class='highlight language-python'><code>import asyncio
+import time
+
+async def fetch_data(source):
+    print(f&quot;Fetching data from {source}...&quot;)
+    await asyncio.sleep(2)  # Simulating I/O operation
+    print(f&quot;Done fetching from {source}&quot;)
+    return f&quot;Data from {source}&quot;
+
+<div class='code-highlight top'>async def process_sources(sources):</div>
+<div class='code-highlight'>    tasks = []</div>
+<div class='code-highlight'>    for source in sources:</div>
+<div class='code-highlight'>        task = asyncio.create_task(fetch_data(source))</div>
+<div class='code-highlight'>        tasks.append(task)</div>
+<div class='code-highlight'></div>
+<div class='code-highlight'>    results = await asyncio.gather(*tasks)</div>
+<div class='code-highlight'>    return results</div>
+<div class='code-highlight'></div>
+<div class='code-highlight'>async def data_generator(count):</div>
+<div class='code-highlight'>    for i in range(1, count + 1):</div>
+<div class='code-highlight bottom'>        yield f&quot;async_source_{i}&quot;</div>
+
+async def main():
+    start_time = time.time()
+
+    # Generate sources asynchronously
+<div class='code-highlight top'>    sources = []</div>
+<div class='code-highlight'>    async for source in data_generator(5):</div>
+<div class='code-highlight'>        sources.append(source)</div>
+<div class='code-highlight'></div>
+<div class='code-highlight'>    # Process all sources concurrently</div>
+<div class='code-highlight bottom'>    results = await process_sources(sources)</div>
+
+    end_time = time.time()
+    print(f&quot;\nProcessed {len(results)} sources&quot;)
+    print(f&quot;Total execution time: {end_time - start_time:.2f} seconds&quot;)
+    print(f&quot;Results: {results}&quot;)
+
+if __name__ == &quot;__main__&quot;:
+    asyncio.run(main())
+</code></pre>
+</div>
+</div>
+
+<p>In this example, an async generator function, <code class="prettyprint">data_generator</code>, is used to yield data source names. Instead of iterating over a regular list, you use an <code class="prettyprint">async for</code> loop to collect these sources asynchronously. This allows the source list to be generated concurrently, without blocking other tasks.</p><p>The <code class="prettyprint">process_sources</code> function handles all the data sources concurrently. It creates and manages tasks for each source using <code class="prettyprint">asyncio.create_task()</code> and waits for them to complete with <code class="prettyprint">asyncio.gather()</code>. This ensures all tasks run in parallel, improving efficiency compared to sequential execution.</p><p>The program generates the data sources asynchronously and processes them concurrently, speeding up execution and enabling you to handle multiple tasks at once.</p><p>Run the updated script:</p><div class='relative mb-5 bg-neutral-40 border border-neutral-50 rounded-md text-[15px] shadow-2xs' data-controller='clipboard'>
+  <div class='px-4 py-[6px] bg-white flex items-center rounded-t-md'>
+    <div class='text-[15px] font-medium inline align-middle grow'><span class="text-app-small">&nbsp;</span></div>
+    
+    <div class="copy-button hidden sm:flex sm:items-center" data-clipboard-target='confirmation'>
+  <button class='text-sm p-1' data-action='click->clipboard#copy'>
+    <svg alt='copy code to clipboard' height='18' width='18' class='m-0' style='--currentColor: currentColor;'><use href='https://betterstack.com/assets/articles/clipboard-d6c07cf2face9fc42a34bcb0088c7164f06f39c14281e7e510185191e9a8188a.svg#root' /></svg>
+  </button>
+  <span class='copy-confirmation text-sm p-0'>Copied!</span>
+</div>
+
+  </div>
+  <div class='code-wrapper overflow-x-auto p-2 rounded command' data-clipboard-target='content' data-controller='code'>
+  <pre class='highlight language-command'><code>python main.py
+</code></pre>
+</div>
+</div>
+
+<p>You&#39;ll see output similar to this:</p><div class='relative mb-5 bg-neutral-40 border border-neutral-50 rounded-md text-[15px] shadow-2xs' data-controller='clipboard'>
+  <div class='px-4 py-[6px] bg-white flex items-center rounded-t-md'>
+    <div class='text-[15px] font-medium inline align-middle grow'><span class="text-app-small"><svg alt='' height='20' width='20' class='m-0 -mt-1 inline fill-neutral-200' style='--currentColor: currentColor;'><use href='https://betterstack.com/assets/articles/document-text-1d6fae2c063acba111755197aff163c1cdb90458bd11a8f4900ef9a62c23eddf.svg#root' /></svg> Output</span></div>
+    
+    
+  </div>
+  <div class='code-wrapper overflow-x-auto p-2 rounded text' data-clipboard-target='content' data-controller='code'>
+  <pre class='highlight language-text'><code class="whitespace-pre-wrap!">Fetching data from async_source_1...
+Fetching data from async_source_2...
+Fetching data from async_source_3...
+Fetching data from async_source_4...
+Fetching data from async_source_5...
+Done fetching from async_source_1
+Done fetching from async_source_2
+Done fetching from async_source_3
+Done fetching from async_source_4
+Done fetching from async_source_5
+Total execution time: 2.00 seconds
+Results: [&#39;Data from async_source_1&#39;, &#39;Data from async_source_2&#39;, &#39;Data from async_source_3&#39;, &#39;Data from async_source_4&#39;, &#39;Data from async_source_5&#39;]
+</code></pre>
+</div>
+</div>
+
+<p>The power of this approach becomes clear as you scale up. Even though you’ve added more sources (5 instead of 3), the execution time stays around 2 seconds because all operations run concurrently.</p>
+<h2 id="step-4-managing-many-async-tasks-with-semaphores">Step 4 — Managing many async tasks with semaphores</h2>
+<p>When you have many concurrent tasks running, limiting how many tasks can run simultaneously is often necessary. This prevents overloading system resources and ensures your program runs efficiently. Asyncio provides <code class="prettyprint">Semaphore</code> objects, which are useful for controlling the maximum number of concurrent operations.</p><p>In this example, you’ll modify your code to limit the number of simultaneous tasks using a semaphore. This allows you to control concurrency, so only a certain number of tasks can run in parallel at any given time.</p><p>Remove all code in <code class="prettyprint">main.py</code> and add the following:</p><div class='relative mb-5 bg-neutral-40 border border-neutral-50 rounded-md text-[15px] shadow-2xs' data-controller='clipboard'>
+  <div class='px-4 py-[6px] bg-white flex items-center rounded-t-md'>
+    <div class='text-[15px] font-medium inline align-middle grow'><span class="text-app-small">main.py</span></div>
+    
+    <div class="copy-button hidden sm:flex sm:items-center" data-clipboard-target='confirmation'>
+  <button class='text-sm p-1' data-action='click->clipboard#copy'>
+    <svg alt='copy code to clipboard' height='18' width='18' class='m-0' style='--currentColor: currentColor;'><use href='https://betterstack.com/assets/articles/clipboard-d6c07cf2face9fc42a34bcb0088c7164f06f39c14281e7e510185191e9a8188a.svg#root' /></svg>
+  </button>
+  <span class='copy-confirmation text-sm p-0'>Copied!</span>
+</div>
+
+  </div>
+  <div class='code-wrapper overflow-x-auto p-2 rounded python' data-clipboard-target='content' data-controller='code'>
+  <pre class='highlight language-python'><code>import asyncio
+import time
+import random
+
+async def fetch_data(source, semaphore):
+    # The semaphore limits how many coroutines can enter this block simultaneously
+    async with semaphore:
+        print(f&quot;Fetching data from {source}...&quot;)
+        # Random delay between 1 and 3 seconds to simulate variable I/O time
+        delay = random.uniform(1, 3)
+        await asyncio.sleep(delay)
+        print(f&quot;Done fetching from {source} (took {delay:.2f}s)&quot;)
+        return f&quot;Data from {source}&quot;
+
+async def main():
+    # Generate 10 data sources
+    sources = [f&quot;limited_source_{i}&quot; for i in range(1, 11)]
+
+    # Limit concurrency to 3 simultaneous operations
+    semaphore = asyncio.Semaphore(3)    
+    start_time = time.time()
+
+    # Create tasks with the semaphore
+    tasks = [fetch_data(source, semaphore) for source in sources]
+    results = await asyncio.gather(*tasks)
+
+    end_time = time.time()
+    print(f&quot;\nProcessed {len(results)} sources&quot;)
+    print(f&quot;Total execution time: {end_time - start_time:.2f} seconds&quot;)
+
+if __name__ == &quot;__main__&quot;:
+    asyncio.run(main())
+</code></pre>
+</div>
+</div>
+
+<p>In this example:</p>
+<ol>
+<li>We create a <code class="prettyprint">Semaphore</code> with a value of 3, limiting concurrency to three tasks at a time.</li>
+<li>Each <code class="prettyprint">fetch_data</code> coroutine acquires the semaphore before executing and releases it when done.</li>
+<li>We simulate variable response times using <code class="prettyprint">random.uniform()</code> and <code class="prettyprint">asyncio.sleep()</code>.</li>
+</ol>
+<p>This ensures that no more than 3 operations are active at any time, regardless of how many total sources we&#39;re processing.</p><p>Run the script:</p><div class='relative mb-5 bg-neutral-40 border border-neutral-50 rounded-md text-[15px] shadow-2xs' data-controller='clipboard'>
+  <div class='px-4 py-[6px] bg-white flex items-center rounded-t-md'>
+    <div class='text-[15px] font-medium inline align-middle grow'><span class="text-app-small">&nbsp;</span></div>
+    
+    <div class="copy-button hidden sm:flex sm:items-center" data-clipboard-target='confirmation'>
+  <button class='text-sm p-1' data-action='click->clipboard#copy'>
+    <svg alt='copy code to clipboard' height='18' width='18' class='m-0' style='--currentColor: currentColor;'><use href='https://betterstack.com/assets/articles/clipboard-d6c07cf2face9fc42a34bcb0088c7164f06f39c14281e7e510185191e9a8188a.svg#root' /></svg>
+  </button>
+  <span class='copy-confirmation text-sm p-0'>Copied!</span>
+</div>
+
+  </div>
+  <div class='code-wrapper overflow-x-auto p-2 rounded command' data-clipboard-target='content' data-controller='code'>
+  <pre class='highlight language-command'><code>python main.py
+</code></pre>
+</div>
+</div>
+
+<p>You&#39;ll see output similar to this:</p><div class='relative mb-5 bg-neutral-40 border border-neutral-50 rounded-md text-[15px] shadow-2xs' data-controller='clipboard'>
+  <div class='px-4 py-[6px] bg-white flex items-center rounded-t-md'>
+    <div class='text-[15px] font-medium inline align-middle grow'><span class="text-app-small"><svg alt='' height='20' width='20' class='m-0 -mt-1 inline fill-neutral-200' style='--currentColor: currentColor;'><use href='https://betterstack.com/assets/articles/document-text-1d6fae2c063acba111755197aff163c1cdb90458bd11a8f4900ef9a62c23eddf.svg#root' /></svg> Output</span></div>
+    
+    
+  </div>
+  <div class='code-wrapper overflow-x-auto p-2 rounded text' data-clipboard-target='content' data-controller='code'>
+  <pre class='highlight language-text'><code class="whitespace-pre-wrap!">Fetching data from limited_source_1...
+Fetching data from limited_source_2...
+Fetching data from limited_source_3...
+...
+Done fetching from limited_source_8 (took 1.91s)
+Done fetching from limited_source_10 (took 1.43s)
+Done fetching from limited_source_9 (took 2.25s)
+
+Processed 10 sources
+Total execution time: 7.55 seconds
+</code></pre>
+</div>
+</div>
+
+<p>Notice that precisely 3 operations are running at the start, and as each one finishes, a new one begins. This pattern continues until all sources are processed. The semaphore ensures we maintain a constant level of concurrency, as illustrated in the diagram below:</p><p><div data-controller='lightbox' class='relative cursor-pointer'>
+  <figure data-action='click->lightbox#open' data-lightbox-target='picture'>
+    <picture>
+      <source media="(max-width: 800px)" data-srcset="https://imagedelivery.betterstackcdn.com/xZXo0QFi-1_4Zimer-T0XQ/5cea6058-b4b6-4989-74d3-1103af9b3000/md1x 1x, https://imagedelivery.betterstackcdn.com/xZXo0QFi-1_4Zimer-T0XQ/5cea6058-b4b6-4989-74d3-1103af9b3000/md2x 2x" width=500 height=216 />
+      <source media="(min-width: 801px)" data-srcset="https://imagedelivery.betterstackcdn.com/xZXo0QFi-1_4Zimer-T0XQ/5cea6058-b4b6-4989-74d3-1103af9b3000/lg1x 1x, https://imagedelivery.betterstackcdn.com/xZXo0QFi-1_4Zimer-T0XQ/5cea6058-b4b6-4989-74d3-1103af9b3000/lg2x 2x" width=650 height=281 />
+      <img alt="Semaphore limiting concurrency to 3 tasks at a time. The top shows unlimited concurrent execution, while the bottom shows controlled execution with the semaphore." width="2818" height="1222" class="w-full lazyload" data-src="https://imagedelivery.betterstackcdn.com/xZXo0QFi-1_4Zimer-T0XQ/5cea6058-b4b6-4989-74d3-1103af9b3000/orig" src="" />
+    </picture>
+  </figure>
+  <figure class='hidden lightbox' data-lightbox-target='container'>
+    <img alt="Semaphore limiting concurrency to 3 tasks at a time. The top shows unlimited concurrent execution, while the bottom shows controlled execution with the semaphore." width="2818" height="1222" loading="lazy" data-action="click-&gt;lightbox#close" data-lightbox-target="img" src="https://imagedelivery.betterstackcdn.com/xZXo0QFi-1_4Zimer-T0XQ/5cea6058-b4b6-4989-74d3-1103af9b3000/orig" />
+  </figure>
+</div>
+</p><p>Without a semaphore, all tasks would start simultaneously (top section), but with the semaphore limiting to 3 concurrent tasks (bottom section), we see a controlled execution pattern that prevents resource overload.</p>
+<h2 id="final-thoughts">Final thoughts</h2>
+<p>In this guide, you’ve learned how to use Python&#39;s <code class="prettyprint">asyncio</code> library to write concurrent code efficiently. You can handle multiple tasks concurrently without blocking your program by using async functions, async generators, and semaphores. This is especially useful for I/O-bound tasks or large datasets.</p><p>Asynchronous programming significantly improves performance, and <code class="prettyprint">asyncio</code> makes it easy to implement concurrency in a single-threaded environment. Check the <a rel="" target="_blank" class="" href="https://docs.python.org/3/library/asyncio.html">official Python documentation on asyncio<span class="whitespace-nowrap"><svg class='relative -top-[1px] ml-1  w-4 h-4 inline' style='--currentColor: currentColor;'><use href='https://betterstack.com/assets/icons/heroicons_v2/mini/arrow-top-right-on-square-d4a4b2dfe559997065a0de05c441ef56d661be449bf96d9ce30eb4e0af2516cf.svg#root' /></svg></span></a>.</p>
+<div class='docsearch-ignore'>
+<div class='mt-11 text-center'>
+<div class='text-neutral-300 mt-6'>
+Got an article suggestion?
+<a class="underline! text-neutral-300!" href="mailto:hello@betterstack.com?subject=Suggestion%20for%20Practical%20Guide%20to%20Asynchronous%20Programming%20in%20Python&amp;body=">Let us know</a>
+</div>
+<div class='flex justify-center items-center space-x-3 mt-4'>
+<a href='https://twitter.com/share?ref_src=twsrc%5Etfw&amp;url=https://betterstack.com/community/guides/scaling-python/python-async-programming/&amp;text=Practical+Guide+to+Asynchronous+Programming+in+Python+%7C+Better+Stack+Community&amp;via=betterstackhq' rel='nofollow noopener' target='_blank'>
+<svg width='16' height='16' alt='Share on Twitter' class='rounded-none! m-0!' style='--currentColor: currentColor;'><use href='/assets/articles/icons/twitter-9f204d944c0004673ca3cfee636e2ce84838056f165f5da4c41c70f6f17186ca.svg#root' /></svg>
+</a>
+<a href='https://www.facebook.com/sharer/sharer.php?u=https://betterstack.com/community/guides/scaling-python/python-async-programming/' rel='nofollow noopener' target='_blank'>
+<svg width='16' height='16' alt='Share on Facebook' class='rounded-none! m-0!' style='--currentColor: currentColor;'><use href='/assets/articles/icons/facebook-5bcb42d7157228520cef17bf8a5f1932b948e4e5348c4fa4a6dbec85d99ccca2.svg#root' /></svg>
+</a>
+<a href='mailto:?subject=Practical%20Guide%20to%20Asynchronous%20Programming%20in%20Python&amp;body=https%3A%2F%2Fbetterstack.com%2Fcommunity%2Fguides%2Fscaling-python%2Fpython-async-programming%2F'>
+<svg width='16' height='16' alt='Share via e-mail' class='rounded-none! m-0!' style='--currentColor: currentColor;'><use href='/assets/articles/icons/mail-1d67882050a14f30177189223f672ec8d08d614d3f13106d0a1926564edb3834.svg#root' /></svg>
+</a>
+</div>
+</div>
+<div class='mt-20 text-center heading-h5'>Next article</div>
+<a class='mt-5 bg-neutral-40 rounded-lg flex hover:no-underline!' href='/community/guides/scaling-python/anyio-python/'>
+<div class='p-5 grow'>
+<div class='text-xl font-bold text-neutral-800'>Getting Started with AnyIO in Python</div>
+<div class='mt-2 text-neutral-300'>AnyIO simplifies asynchronous programming in Python by providing a unified interface for different async backends like asyncio and trio. This guide covers key features such as task concurrency, error handling, and timeouts, helping you build efficient, non-blocking applications with ease.</div>
+</div>
+<div class='p-5 flex items-center'>→</div>
+</a>
+
+<div class='mt-24 flex flex-col items-center'>
+<a href='https://creativecommons.org/licenses/by-nc-sa/4.0/' rel='nofollow noopener' target='_blank'>
+<img alt="Licensed under CC-BY-NC-SA" class="m-0 lazyload" width="89" height="31" data-src="https://betterstackcdn.com/assets/articles/cc-by-nc-sa-7307db5857413b3bfb311aa010567860748cda927f6806df17576173fba6cc4f.png" src="" />
+</a>
+<p class='mt-5 text-center text-neutral-300 max-w-[365px]'>This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.</p>
+</div>
+</div>
+
+</div>
+</div>
+<div class='hidden lg:block ml-12 xl:-mr-8 shrink-0 w-[205px]'>
+<ol class='-mt-2 mb-7 text-base overflow-y-auto pb-24'>
+<li class='text-neutral-300' data-controller='collapse'>
+<div class='flex space-x-2 text-neutral-800 open py-1 side-menu-item cursor-pointer font-bold border-b border-neutral-50' data-action='click-&gt;collapse#toggle'>
+<a class='grow py-2' href=''>Basics</a>
+</div>
+<ol class='mb-4' data-collapse-target='content'>
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/introduction-to-flask/'>Building Web APIs with Flask</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/introduction-to-fastapi/'>Building Web APIs with FastAPI</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/introduction-to-litestar/'>Building Web APIs with Litestar</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/ruff-explained/'>Linting with Ruff</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/click-explained/'>Creating composable CLIs with click in Python</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/python-debugging/'>Debugging Python Code with ipdb</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/flask-vs-fastapi/'>Flask vs FastAPI</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/django-vs-fastapi/'>Django vs FastAPI</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/introduction-to-drf/'>Building Web APIs with Django Rest Framework</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/pyproject-explained/'>Managing Python Projects</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/profiling-in-python/'>Profiling in Python</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/poetry-explained/'>Getting Started with Poetry</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/pyenv-explained/'>Manage Multiple Python Versions With pyenv</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/pdm-explained/'>Introduction to PDM</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/sqlalchemy-orm/'>SQLAlchemy ORM for Python</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/tortoise-orm/'>TortoiseORM for Python</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/tortoiseorm-vs-sqlalchemy/'>TortoiseORM vs SQLAlchemy</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/httpx-explained/'>Getting Started with HTTPX</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/sqlmodel-orm/'>Getting Started with SQLModel</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/peewee-orm/'>Getting Started with Peewee ORM</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/duckdb-python/'>DuckDB for Python</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/python-pattern-matching/'>Structural Pattern Matching in Python</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/python-unittest-mock/'>Mastering unittest.mock in Python</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/pipx-python/'>Optimize Your Workflow in Python with pipx</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/python-subprocess/'>An Introduction to Python Subprocess</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/ipython-explained/'>Getting Started with IPython</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/python-type-hints/'>A Complete Guide to Python Type Hints</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/django-orm-intro/'>Introduction to Django ORM</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/jinja-templating/'>Jinja Templating</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/duckdb-vs-sqlite/'>DuckDB vs SQLite</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/python-generators/'>Introduction to Python Generators</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a aria-current='page' class='grow py-2 text-deprecated-primary-700' href='/community/guides/scaling-python/python-async-programming/'>Asynchronous Programming in Python</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/anyio-python/'>Getting Started with AnyIO in Python</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/pipenv-python/'>Getting Started with Pipenv</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/poetry-vs-pip/'>Poetry vs Pip</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/conda-vs-pip/'>Conda vs Pip</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/pymongo-explained/'>Getting Started with PyMongo</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/python-dependency-injection/'>Dependency Injection in Python</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-nodejs/json-data-in-python/'>JSON Data in Python</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/csv-files-in-python/'>CSV Files in Python</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/yaml-files-in-python/'>Working with YAML Files in Python</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/python-http-server/'>One-Line Python HTTP Server: Quick Start Guide</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/flask-docker/'>Containerizing Flask Applications with Docker</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/fastapi-with-docker/'>FastAPI with Docker</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/pylint-explained/'>Getting Started with Pylint</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/fastapi-docker-best-practices/'>FastAPI Docker Best Practices</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/graphql-with-python-fastapi/'>Using GraphQL with Python and FastAPI</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/background-tasks-in-fastapi/'>How to Use Background Tasks in FastAPI </a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/marshmallow-explained/'>Introduction to Marshmallow in Python</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/pandas-csv/'>Python Pandas: Working with CSV Files</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/authentication-fastapi/'>Authentication and Authorization with FastAPI</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/graphql-in-django/'>Getting Started with GraphQL in Django</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/fastapi-websockets/'>Getting Started with FastAPI WebSockets</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/uploading-files-using-fastapi/'>Uploading Files Using FastAPI: A Complete Guide to Secure File Handling</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/litestar-to-fastapi-migration/'>Migrating from Litestar to FastAPI</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/django-websockets/'>Getting Started with Django WebSockets</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/flask-websockets/'>Getting Started with Flask WebSockets</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/litestar-websockets/'>Getting Started with Litestar WebSockets</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/sanic-websockets/'>Getting Started with Sanic WebSockets</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/python-3-14-new-features/'>What&#39;s New in Python 3.14</a>
+</div>
+</li>
+
+</ol>
+</li>
+
+<li class='text-neutral-300' data-controller='collapse'>
+<div class='flex space-x-2 py-1 side-menu-item cursor-pointer font-bold border-b border-neutral-50' data-action='click-&gt;collapse#toggle'>
+<a class='grow py-2' href=''>Job Scheduling</a>
+</div>
+<ol class='mb-4 hidden' data-collapse-target='content'>
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/python-scheduled-tasks/'>Task scheduling in Python</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/apscheduler-scheduled-tasks/'>Job Scheduling in Python with APScheduler </a>
+</div>
+</li>
+
+</ol>
+</li>
+
+<li class='text-neutral-300' data-controller='collapse'>
+<div class='flex space-x-2 py-1 side-menu-item cursor-pointer font-bold border-b border-neutral-50' data-action='click-&gt;collapse#toggle'>
+<a class='grow py-2' href=''>Building Reliable Python Applications</a>
+</div>
+<ol class='mb-4 hidden' data-collapse-target='content'>
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/dockerize-django/'>Dockerizing Django Applications</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/django-postgresql/'>Using Django with PostgreSQL</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/python-errors/'>Solutions to Common Python Errors</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/gunicorn-explained/'>A Complete Guide to Gunicorn</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/pydantic-explained/'>A Complete Guide to Pydantic</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/uv-explained/'>Introduction to UV</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/testing/locust-explained/'>Load Testing with Locust</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/pyright-explained/'>Introduction to Pyright</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/mypy-explained/'>Introduction to Mypy</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/error-handling-fastapi/'>FastAPI Error Handling Patterns</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/flask-error-handling/'>Flask Error Handling Patterns</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/django-docker-best-practices/'>Django Docker Best Practices</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/error-handling-django/'>Django Error Handling Patterns</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/python-timeouts/'>Timeouts in Python</a>
+</div>
+</li>
+
+</ol>
+</li>
+
+<li class='text-neutral-300' data-controller='collapse'>
+<div class='flex space-x-2 py-1 side-menu-item cursor-pointer font-bold border-b border-neutral-50' data-action='click-&gt;collapse#toggle'>
+<a class='grow py-2' href=''>Logging</a>
+</div>
+<ol class='mb-4 hidden' data-collapse-target='content'>
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/logging/how-to-start-logging-with-python/'>Logging in Python</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/logging/loguru/'>Logging with Loguru</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/logging/how-to-start-logging-with-django/'>Logging in Django</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/logging/how-to-start-logging-with-flask/'>Logging in Flask</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/logging/python/python-logging-best-practices/'>Python Logging Best Practices</a>
+</div>
+</li>
+
+</ol>
+</li>
+
+<li class='text-neutral-300' data-controller='collapse'>
+<div class='flex space-x-2 py-1 side-menu-item cursor-pointer font-bold border-b border-neutral-50' data-action='click-&gt;collapse#toggle'>
+<a class='grow py-2' href=''>Python Comparisons</a>
+</div>
+<ol class='mb-4 hidden' data-collapse-target='content'>
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/poetry-vs-rye/'>Poetry vs Rye</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-nodejs/fastapi-vs-django-vs-flask/'>FastAPI vs Django vs Flask</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/litestar-vs-fastapi/'>Litestar vs FastAPI</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/django-alternatives-web-dev/'>Top 10 Django Alternatives for Web Development</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/django-vs-laravel/'>Django vs Laravel</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/django-vs-ruby-on-rails/'>Django vs Ruby on Rails</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/rails-vs-laravel-vs-django/'>Ruby on Rails vs Laravel vs Django</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/spring-boot-vs-django/'>Spring Boot vs. Django</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/django-vs-phoenix/'>Django vs Phoenix</a>
+</div>
+</li>
+
+<li class='text-neutral-300'>
+<div class='flex space-x-2'>
+<a class='grow py-2' href='/community/guides/scaling-python/mise-vs-uv/'>Mise vs uv: Choosing the Right Python Package and Version Manager</a>
+</div>
+</li>
+
+</ol>
+</li>
+
+</ol>
+
+</div>
+</div>
+</div>
+</main>
+</div>
+<div class='dark'>
+<nav class='bg-white text-base border-t dark:bg-[#0B0C14] border-neutral-300/10 text-[#363D4E] dark:text-neutral-200'>
+<div class='mx-auto px-5 md:px-10 pt-8 lg:pt-14 pb-10 md:pb-20 md:flex max-w-[1110px]'>
+<div class='flex-2 lg:grow flex gap-5'>
+<div class='flex-1 lg:flex-2 flex flex-col lg:flex-row'>
+<div class='lg:mr-16 flex-1'>
+<div class='mb-16 hidden md:block'>
+<div class='font-medium text-black dark:text-white'>Platform</div>
+<a class="inline-block -mx-1 px-1 mt-3" href="/enterprise">Enterprise</a>
+<br>
+<a class="inline-block -mx-1 px-1 mt-3" href="/uptime">Uptime</a>
+<br>
+<a class="inline-block -mx-1 px-1 mt-3" href="/telemetry">Telemetry</a>
+</div>
+<div class='mb-16'>
+<div class='font-medium text-black dark:text-white'>Solutions</div>
+<a class="inline-block -mx-1 px-1 mt-3" href="/telemetry">Log management</a>
+<br>
+<a class="inline-block -mx-1 px-1 mt-3" href="/tracing">Tracing</a>
+<br>
+<a class="inline-block -mx-1 px-1 mt-3" href="/infrastructure-monitoring">Infrastructure monitoring</a>
+<br>
+<a class="inline-block -mx-1 px-1 mt-3" href="/uptime">Uptime monitoring</a>
+<br>
+<a class="inline-block -mx-1 px-1 mt-3" href="/website-monitoring">Website monitoring</a>
+<br>
+<a class="inline-block -mx-1 px-1 mt-3" href="/incident-management">Incident management</a>
+<br>
+<a class="inline-block -mx-1 px-1 mt-3" href="/status-page">Status page</a>
+<br>
+<a class="inline-block -mx-1 px-1 mt-3" href="/incident-management">Slack-based incident management</a>
+<br>
+<a class="inline-block -mx-1 px-1 mt-3" href="/dashboards">Dashboards</a>
+<br>
+<a class="inline-block -mx-1 px-1 mt-3" href="/integrations">Integrations</a>
+</div>
+</div>
+<div class='flex-1'>
+<div class='mb-16 hidden lg:block'>
+<div class='font-medium text-black dark:text-white'>Resources</div>
+<a class="inline-block -mx-1 px-1 mt-3 whitespace-nowrap" href="/help">Help &amp; Support</a>
+<br>
+<a class="inline-block -mx-1 px-1 mt-3" href="https://betterstack.com/docs/uptime">Uptime docs</a>
+<br>
+<a class="inline-block -mx-1 px-1 mt-3" href="https://betterstack.com/docs/logs">Logs docs</a>
+
+</div>
+<div class='mb-16 lg:hidden'>
+<div class='font-medium text-black dark:text-white'>Company</div>
+<a class="inline-block -mx-1 px-1 mt-3" href="/careers">Work at Better Stack</a>
+<br class='lg:hidden'>
+<a class="inline-block -mx-1 px-1 mt-3" href="/careers/engineering">Engineering</a>
+<br class='lg:hidden'>
+<a class="inline-block -mx-1 px-1 mt-3" href="/security">Security</a>
+
+</div>
+<div class='mb-16'>
+<div class='font-medium text-black dark:text-white'>Community</div>
+<a class="inline-block -mx-1 px-1 mt-3" href="https://betterstack.com/community/guides">Guides</a>
+<br>
+<a class="inline-block -mx-1 px-1 mt-3" href="https://betterstack.com/community/questions">Questions</a>
+<br>
+<a class="inline-block -mx-1 px-1 mt-3" href="https://betterstack.com/community/comparisons">Comparisons</a>
+<br>
+<a class="inline-block -mx-1 px-1 mt-3" href="https://betterstack.com/community/blog">Blog</a>
+<br>
+<a class="inline-block -mx-1 px-1 mt-3" href="https://betterstack.com/community/write-for-us">Write for us</a>
+</div>
+</div>
+</div>
+<div class='lg:ml-12 flex-1 flex flex-col'>
+<div class='mb-16 hidden lg:flex flex-col items-start'>
+<div class='font-medium text-black dark:text-white'>Company</div>
+<a class="inline-block -mx-1 px-1 mt-3" href="/careers">Work at Better Stack</a>
+<br class='lg:hidden'>
+<a class="inline-block -mx-1 px-1 mt-3" href="/careers/engineering">Engineering</a>
+<br class='lg:hidden'>
+<a class="inline-block -mx-1 px-1 mt-3" href="/security">Security</a>
+
+</div>
+<div class='mb-16 lg:hidden'>
+<div class='font-medium text-black dark:text-white'>Resources</div>
+<a class="inline-block -mx-1 px-1 mt-3 whitespace-nowrap" href="/help">Help &amp; Support</a>
+<br>
+<a class="inline-block -mx-1 px-1 mt-3" href="https://betterstack.com/docs/uptime">Uptime docs</a>
+<br>
+<a class="inline-block -mx-1 px-1 mt-3" href="https://betterstack.com/docs/logs">Logs docs</a>
+
+</div>
+<div class='flex flex-col items-start'>
+<div class='font-medium text-black dark:text-white'>Compare</div>
+<a class="inline-block -mx-1 px-1 mt-3" href="/pingdom-alternative">Pingdom</a>
+<a class="inline-block -mx-1 px-1 mt-3" href="/pagerduty-alternative">Pagerduty</a>
+<a class="inline-block -mx-1 px-1 mt-3" href="/statuspage-io-alternative">StatusPage.io</a>
+<a class="inline-block -mx-1 px-1 mt-3" href="/uptime-robot-alternative">Uptime Robot</a>
+<a class="inline-block -mx-1 px-1 mt-3" href="/statuscake-alternative">StatusCake</a>
+<a class="inline-block -mx-1 px-1 mt-3" href="/opsgenie-alternative">Opsgenie</a>
+<a class="inline-block -mx-1 px-1 mt-3" href="/victorops-alternative">VictorOps</a>
+</div>
+</div>
+</div>
+<div class='md:ml-12 flex-1 flex flex-col items-start grow max-w-[450px]'>
+<div class='font-medium text-black dark:text-white'>From the community</div>
+<a class="inline-block -mx-1 px-1 mt-4" href="https://betterstack.com/community/guides/incident-management/what-is-incident-management/">What Is Incident Management? Beginner’s Guide</a>
+<a class="inline-block -mx-1 px-1 mt-4" href="https://betterstack.com/community/guides/incident-management/on-call-scheduling/">How to Create a Developer-Friendly On-Call Schedule in 7 steps</a>
+<a class="inline-block -mx-1 px-1 mt-4" href="https://betterstack.com/community/comparisons/free-status-page-tools/">8 Best Free &amp; Open Source Status Page Tools in 2024</a>
+<a class="inline-block -mx-1 px-1 mt-4" href="https://betterstack.com/community/comparisons/api-monitoring-tools/">10 Best API Monitoring Tools in 2024</a>
+<a class="inline-block -mx-1 px-1 mt-4" href="https://betterstack.com/community/comparisons/incident-management-tools/">5 Most Used Incident Management Tools (Reviewed &amp; Ranked)</a>
+</div>
+</div>
+</nav>
+<footer class='bg-[#F3F4F7] dark:bg-[#05060F]'>
+<div class='mx-auto text-base lg:px-5 max-w-[1110px] text-[#363D4E] dark:text-neutral-200'>
+<div class='px-5 pt-9 flex flex-col lg:flex-row justify-between items-center lg:items-end border-t border-neutral-300/10'>
+<div>
+<svg width='154' height='21' alt='' class='text-black dark:text-white scale-75 lg:scale-100' style='--currentColor: currentColor;'><use href='/assets/v2/better-stack-logo-9c2c27b1c897de8a071fe7cfb98b4b7efbaf8ab8ff0b2a0c34a4eb64efd10c5d.svg#root' /></svg>
+<p class='mt-3 hidden lg:block max-w-[342px]'>
+AI-native platform for on-call and incident response with effortless monitoring, status pages, tracing, infrastructure monitoring and log management.
+</p>
+</div>
+<div class='flex items-center gap-6 whitespace-nowrap'>
+<a class="hidden lg:block -mx-1 px-1" href="tel:+1 (628) 900-3830">+1 (628) 900-3830</a>
+<a class="hidden lg:block -mx-1 px-1" href="mailto:hello@betterstack.com">hello@betterstack.com</a>
+<div class='hidden lg:block h-4 border-l border-neutral-300/10'></div>
+<div class='hidden lg:flex'><div class='flex gap-4 text-neutral-300'>
+<a aria-label='Better Stack on Instagram' href='https://www.instagram.com/betterstackhq/' rel='nofollow noopener' target='_blank'><svg width='16' height='17' style='--currentColor: currentColor;'><use href='/assets/v2/instagram-066b0a8bf9a2b4e6190df1006bf54f82e9d8b728aaeb1923c8a04241da2241f6.svg#root' /></svg></a>
+<a aria-label='Better Stack on TikTok' href='https://www.tiktok.com/@betterstack' rel='nofollow noopener' target='_blank'><svg width='16' height='17' style='--currentColor: currentColor;'><use href='/assets/v2/tiktok-55c5dd5af34508af8ff69681209f990933e2e317bc7b488c5380c489d606a790.svg#root' /></svg></a>
+<a aria-label='Better Stack on LinkedIn' href='https://www.linkedin.com/company/betterstack' rel='nofollow noopener' target='_blank'><svg width='16' height='17' style='--currentColor: currentColor;'><use href='/assets/v2/linkedin-8092c81ea063712b5eca63a9f811b15c2e6e31704794c9ab11d1c38649a70b55.svg#root' /></svg></a>
+<a aria-label='Better Stack on Twitter' href='https://twitter.com/betterstackhq' rel='nofollow noopener' target='_blank'><svg width='16' height='16' style='--currentColor: currentColor;'><use href='/assets/v2/twitter-8ba5b2fad263891e55b5f8d9dd9d5bc48c86755d3fd511eb43f0ebd49f5638a1.svg#root' /></svg></a>
+<a aria-label='Better Stack on Github' href='https://github.com/BetterStackHQ/' rel='nofollow noopener' target='_blank'><svg width='16' height='17' style='--currentColor: currentColor;'><use href='/assets/v2/github-3088a4db2d8907ace75e6aac2e6a72f48d89a89f81e11ad095d3774a010e8dd4.svg#root' /></svg></a>
+<a aria-label='Better Stack on YouTube' href='https://www.youtube.com/@betterstack' rel='nofollow noopener' target='_blank'><svg width='22' height='17' style='--currentColor: currentColor;'><use href='/assets/v2/youtube-27b2900e08ac156e49ab03a32a235b28b3bab8f1a8ca931b3c76b1f07d02cb18.svg#root' /></svg></a>
+</div>
+</div>
+</div>
+</div>
+<div class='px-5 lg:px-2 lg:mx-3 mt-5 py-3 lg:border-t flex flex-col lg:flex-row justify-between items-center border-neutral-300/10 dark:border-[#1F2433]/70 text-[12px] leading-[18px]'>
+<div class='flex items-center gap-6 whitespace-nowrap dark:text-neutral-300'>
+<a class="-mx-1 px-1" href="/terms">Terms of Use</a>
+<a class="-mx-1 px-1" href="/privacy">Privacy Policy</a>
+<a class="-mx-1 px-1" href="/dpa">GDPR</a>
+<a class='hidden sm:block -mx-1 px-1' href='https://status.betterstack.com/' target='_blank'>
+<svg width='14' height='15' alt='All services are up' class='mr-1 hidden lg:inline' style='--currentColor: currentColor;'><use href='/assets/v2/status-green-20b1a09ba1ba0273ec0746c4a1e9cba1cebdf89bed405cc386572faa13d966e4.svg#root' /></svg>
+System status
+</a>
+</div>
+<div class='mt-8 mb-2 flex lg:hidden'><div class='flex gap-4 text-neutral-300'>
+<a aria-label='Better Stack on Instagram' href='https://www.instagram.com/betterstackhq/' rel='nofollow noopener' target='_blank'><svg width='16' height='17' style='--currentColor: currentColor;'><use href='/assets/v2/instagram-066b0a8bf9a2b4e6190df1006bf54f82e9d8b728aaeb1923c8a04241da2241f6.svg#root' /></svg></a>
+<a aria-label='Better Stack on TikTok' href='https://www.tiktok.com/@betterstack' rel='nofollow noopener' target='_blank'><svg width='16' height='17' style='--currentColor: currentColor;'><use href='/assets/v2/tiktok-55c5dd5af34508af8ff69681209f990933e2e317bc7b488c5380c489d606a790.svg#root' /></svg></a>
+<a aria-label='Better Stack on LinkedIn' href='https://www.linkedin.com/company/betterstack' rel='nofollow noopener' target='_blank'><svg width='16' height='17' style='--currentColor: currentColor;'><use href='/assets/v2/linkedin-8092c81ea063712b5eca63a9f811b15c2e6e31704794c9ab11d1c38649a70b55.svg#root' /></svg></a>
+<a aria-label='Better Stack on Twitter' href='https://twitter.com/betterstackhq' rel='nofollow noopener' target='_blank'><svg width='16' height='16' style='--currentColor: currentColor;'><use href='/assets/v2/twitter-8ba5b2fad263891e55b5f8d9dd9d5bc48c86755d3fd511eb43f0ebd49f5638a1.svg#root' /></svg></a>
+<a aria-label='Better Stack on Github' href='https://github.com/BetterStackHQ/' rel='nofollow noopener' target='_blank'><svg width='16' height='17' style='--currentColor: currentColor;'><use href='/assets/v2/github-3088a4db2d8907ace75e6aac2e6a72f48d89a89f81e11ad095d3774a010e8dd4.svg#root' /></svg></a>
+<a aria-label='Better Stack on YouTube' href='https://www.youtube.com/@betterstack' rel='nofollow noopener' target='_blank'><svg width='22' height='17' style='--currentColor: currentColor;'><use href='/assets/v2/youtube-27b2900e08ac156e49ab03a32a235b28b3bab8f1a8ca931b3c76b1f07d02cb18.svg#root' /></svg></a>
+</div>
+</div>
+<div class='flex items-center text-neutral-300'>
+&copy; 2025 Better Stack, Inc.
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="root" fill="none" height="15" viewBox="0 0 14 15" width="14" class="ml-2 transition hover:-rotate-[15deg] hidden lg:inline"><mask id="a" fill="#000" height="14" maskUnits="userSpaceOnUse" width="14" x=".84082" y=".910156"><path d="m.84082.910156h14v14h-14z" fill="#fff"></path><path clip-rule="evenodd" d="m12.4541 1.91016h-4.37651v.54686h-.54823v.54771 1.85936 1.2038h-.54617v.54725h-.87535v.54642h-.87576v.54777h-.54616v.54551h-.0011-.54589-.54734v-.65488h-.54706v2.84474h.54616v.6549h.54824v.547h.54699v.4392.6557.5469.4376.0003h.65647v-.0003h.43765v-.4376h-.43765v-.5469h.43765v-.6557h.54706v-.5478h.65609v.5472h.43768v.1982h1.09412v-.4377h-.54709v-.8541h.54701v-.5472h.54712v-.87494h.54616v-1.86076h.65821v.43832h.547v-.54706h-.0011v-.43832h-1.20411v-1.2027h.65671v-1.09465h2.1892v-.0002h.5459v-2.40707h-.5459zm-9.41064 5.25148h-.54617v-1.20358h-.65647v3.50119h.54616v.43769h.65648zm7.22294-1.74985h1.6412v.54706h-1.6412zm-1.62526-2.63729h.00042v-.00005h.80045v.00013h.26677v1.06726h-.26682v-.00107h-.8004v-.26582h-.00042zm.26682.79945h.534v-.53268h-.534z" fill="#000" fill-rule="evenodd"></path></mask><path d="m8.07759 1.91016v-.952682h-.95268v.952682zm4.37651 0h.9527v-.952682h-.9527zm-4.37651.54686v.95268h.95268v-.95268zm-.54823 0v-.95268h-.95268v.95268zm0 3.61087v.95268h.95268v-.95268zm-.54617 0v-.95268h-.95267v.95268zm0 .54725v.95268h.95268v-.95268zm-.87535 0v-.95268h-.95267v.95268zm0 .54642v.95268h.95268v-.95268zm-.87576 0v-.95268h-.95268v.95268zm0 .54777v.95268h.95268v-.95268zm-.54616 0v-.95268h-.95268v.95268zm0 .54551v.95268h.95268v-.95268zm-1.09433 0h-.95268v.95268h.95268zm0-.65488h.95268v-.95268h-.95268zm-.54706 0v-.95268h-.95268v.95268zm0 2.84474h-.95268v.9527h.95268zm.54616 0h.95268v-.9527h-.95268zm0 .6549h-.95268v.9526h.95268zm.54824 0h.95268v-.9527h-.95268zm0 .547h-.95268v.9527h.95268zm.54699 0h.95268v-.9527h-.95268zm0 2.0797h-.95268v.9527h.95268zm.65647 0v.9527h.95268v-.9527zm0-.0003v-.9526h-.95268v.9526zm.43765 0v.9527h.95268v-.9527zm0-.4376h.95268v-.9527h-.95268zm-.43765 0h-.95268v.9527h.95268zm0-.5469v-.9527h-.95268v.9527zm.43765 0v.9527h.95268v-.9527zm0-.6557v-.9527h-.95268v.9527zm.54706 0v.9527h.95268v-.9527zm0-.5478v-.9526h-.95268v.9526zm.65609 0h.95268v-.9526h-.95268zm0 .5472h-.95267v.9527h.95267zm.43768 0h.95268v-.9527h-.95268zm0 .1982h-.95268v.9526h.95268zm1.09412 0v.9526h.95268v-.9526zm0-.4377h.95268v-.9527h-.95268zm-.54709 0h-.95267v.9527h.95267zm0-.8541v-.9527h-.95267v.9527zm.54701 0v.9527h.95268v-.9527zm0-.5472v-.9527h-.95268v.9527zm.54712 0v.9527h.95267v-.9527zm0-.87494v-.95267h-.95268v.95267zm.54616 0v.95264h.95271v-.95264zm0-1.86076v-.95268h-.95268v.95268zm.65821 0h.9527v-.95268h-.9527zm0 .43832h-.9527v.95268h.9527zm.547 0v.95268h.9527v-.95268zm0-.54706h.9527v-.95268h-.9527zm-.0011 0h-.95264v.95268h.95264zm0-.43832h.9527v-.95268h-.9527zm-1.20411 0h-.95268v.95268h.95268zm0-1.2027v-.95268h-.95268v.95268zm.65671 0v.95268h.9527v-.95268zm0-1.09465v-.95268h-.95267v.95268zm2.1892 0v.95267h.9527v-.95267zm0-.0002v-.95268h-.9527v.95268zm.5459 0v.95267h.9526v-.95267zm0-2.40707h.9526v-.95268h-.9526zm-.5459 0h-.9527v.95268h.9527zm-9.95681 4.70462h-.95268v.95268h.95268zm.54617 0h.95267v-.95268h-.95267zm-.54617-1.20358h.95268v-.95268h-.95268zm-.65647 0v-.95268h-.952678v.95268zm0 3.50119h-.952678v.95265h.952678zm.54616 0h.95268v-.95268h-.95268zm0 .43769h-.95268v.95266h.95268zm.65648 0v.95266h.95267v-.95266zm8.86414-4.48515h.9526v-.95268h-.9526zm-1.6412 0v-.95268h-.9527v.95268zm1.6412.54706v.95268h.9526v-.95268zm-1.6412 0h-.9527v.95268h.9527zm-1.62484-3.18435v.95268h.95268v-.95268zm-.00042 0v-.95268h-.95267v.95268zm.00042-.00005v-.95268h-.95268v.95268zm.80045 0h.95269v-.95268h-.95269zm0 .00013h-.95268v.95268h.95268zm.26677 0h.95272v-.95268h-.95272zm0 1.06726v.95268h.95272v-.95268zm-.26682 0h-.95268v.95268h.95268zm0-.00107h.95264v-.95268h-.95264zm-.8004 0h-.95268v.95267h.95268zm0-.26582h.95268v-.95268h-.95268zm-.00042 0h-.95267v.95268h.95267zm.26682-.001h-.95268v.95268h.95268zm.534 0v.95268h.95264v-.95268zm0-.53268h.95264v-.95268h-.95264zm-.534 0v-.95268h-.95268v.95268zm-.83037-.17844h4.37651v-1.905352h-4.37651zm.95268-.40581v-.54686h-1.90536v.54686zm-1.50091.95268h.54823v-1.90536h-.54823zm.95268-.40497v-.54771h-1.90536v.54771zm0 1.85936v-1.85936h-1.90536v1.85936zm0 1.2038v-1.2038h-1.90536v1.2038zm-1.49885.95268h.54617v-1.90536h-.54617zm.95268-.40543v-.54725h-1.90535v.54725zm-1.82803.95268h.87535v-1.90536h-.87535zm.95268-.40626v-.54642h-1.90535v.54642zm-1.82844.95268h.87576v-1.90536h-.87576zm.95268-.40491v-.54777h-1.90536v.54777zm-1.49884.95268h.54616v-1.90536h-.54616zm.95268-.40717v-.54551h-1.90536v.54551zm-.95378.95268h.0011v-1.90535h-.0011zm-.54589 0h.54589v-1.90535h-.54589zm-.54734 0h.54734v-1.90535h-.54734zm-.95268-1.60756v.65488h1.90536v-.65488zm.40562.95268h.54706v-1.90536h-.54706zm.95268 1.89206v-2.84474h-1.90536v2.84474zm-.40652-.9527h-.54616v1.9054h.54616zm.95268 1.6076v-.6549h-1.90536v.6549zm-.40444-.9527h-.54824v1.9053h.54824zm.95268 1.4997v-.547h-1.90536v.547zm-.40569-.9527h-.54699v1.9054h.54699zm.95268 1.3919v-.4392h-1.90536v.4392zm0 .6557v-.6557h-1.90536v.6557zm0 .5469v-.5469h-1.90536v.5469zm0 .4376v-.4376h-1.90536v.4376zm0 .0003v-.0003h-1.90536v.0003zm-.29621-.9526h-.65647v1.9053h.65647zm-.95268.9523v.0003h1.90536v-.0003zm1.39033-.9526h-.43765v1.9053h.43765zm-.95268.515v.4376h1.90536v-.4376zm.51503.9527h.43765v-1.9054h-.43765zm-.95268-1.4996v.5469h1.90536v-.5469zm1.39033-.9527h-.43765v1.9054h.43765zm-.95268.297v.6557h1.90536v-.6557zm1.49974-.9527h-.54706v1.9054h.54706zm-.95268.4049v.5478h1.90536v-.5478zm1.60877-.9526h-.65609v1.9053h.65609zm.95268 1.4998v-.5472h-1.90535v.5472zm-.515-.9527h-.43768v1.9054h.43768zm.95268 1.1509v-.1982h-1.90536v.1982zm.14144-.9527h-1.09412v1.9053h1.09412zm-.95268.515v.4377h1.90536v-.4377zm.40559.9527h.54709v-1.9054h-.54709zm-.95267-1.8068v.8541h1.90535v-.8541zm1.49968-.9527h-.54701v1.9054h.54701zm-.95268.4055v.5472h1.90536v-.5472zm1.4998-.9527h-.54712v1.9054h.54712zm-.95268.07776v.87494h1.90535v-.87494zm1.49884-.95267h-.54616v1.90531h.54616zm-.95268-.90809v1.86076h1.90539v-1.86076zm1.61089-.95268h-.65821v1.90536h.65821zm.9527 1.391v-.43832h-1.9054v.43832zm-.4057-.95268h-.547v1.90536h.547zm-.95264.40562v.54706h1.90534v-.54706zm.95154.95268h.0011v-1.90536h-.0011zm-.95264-1.391v.43832h1.90534v-.43832zm-.25147.95268h1.20411v-1.90536h-1.20411zm-.95268-2.15538v1.2027h1.90539v-1.2027zm1.60939-.95268h-.65671v1.90536h.65671zm-.95267-.14197v1.09465h1.90537v-1.09465zm3.14187-.95268h-2.1892v1.90535h2.1892zm-.9527.95248v.0002h1.9054v-.0002zm1.4986-.95268h-.5459v1.90535h.5459zm-.9527-1.45439v2.40707h1.9053v-2.40707zm.4068.95268h.5459v-1.90536h-.5459zm-.9527-1.49954v.54686h1.9054v-.54686zm-9.00411 6.20416h.54617v-1.90536h-.54617zm-.95268-2.15626v1.20358h1.90536v-1.20358zm.29621.95268h.65647v-1.90536h-.65647zm.95268 2.54851v-3.50119h-1.905358v3.50119zm-.40652-.95268h-.54616v1.90533h.54616zm.95268 1.39037v-.43769h-1.90536v.43769zm-.2962-.95268h-.65648v1.90534h.65648zm-.95268-1.78262v2.7353h1.90535v-2.7353zm9.81682-2.70253h-1.6412v1.90536h1.6412zm.9526 1.49974v-.54706h-1.9053v.54706zm-2.5938.95268h1.6412v-1.90536h-1.6412zm-.9527-1.49974v.54706h1.9054v-.54706zm-.67214-3.58997h-.00042v1.90536h.00042zm-.95268.95263v.00005h1.90536v-.00005zm1.75313-.95268h-.80045v1.90536h.80045zm.95269.95281v-.00013h-1.90537v.00013zm-.68592-.95268h-.26677v1.90536h.26677zm.95272 2.01994v-1.06726h-1.9054v1.06726zm-1.21954.95268h.26682v-1.90536h-.26682zm-.95268-.95375v.00107h1.90532v-.00107zm.95268-.95268h-.8004v1.90535h.8004zm.15228.95268v-.26582h-1.90536v.26582zm-.9531.68686h.00042v-1.90536h-.00042zm-.95267-1.75313v.80045h1.90535v-.80045zm1.21949 1.75213h.534v-1.90536h-.534zm-.41868-1.48536v.53268h1.90532v-.53268zm.41868.95268h.534v-1.90536h-.534zm.95268-.42v-.53268h-1.90536v.53268z" fill="#646e87" mask="url(#a)"></path></svg>
+
+</div>
+</div>
+</div>
+</footer>
+</div>
+
+</div>
+<div class='hidden fixed bottom-22 z-50 inset-x-2 max-w-lg p-5 border rounded-lg backdrop-blur-xl md:bottom-8 md:left-8 md:right-auto border-[#939DB81A] bg-[#0F101A]' id='cookie-consent-banner'>
+<h3 class='font-semibold text-white leading-normal text-[13px] md:text-md'>Please accept cookies</h3>
+<p class='mt-2 font-normal text-neutral-200 leading-normal text-[13px] md:text-md'>
+We use cookies to authenticate users, improve the product user experience, and for personalized ads.
+<a target="_blank" class="border-0 transition text-brand-primary-100 hover:text-neutral-100 focus-visible -m-1 p-1" href="/privacy">Learn more.</a>
+</p>
+<div class='mt-4 flex flex-row gap-3'>
+<button class='bg-gray-900 px-2 font-medium text-neutral-200 rounded py-0.5 text-[13px] border border-[#939DB833] bg-[#171926]' id='cookie-deny'>Deny</button>
+<button class='bg-gray-900 px-2 font-medium text-neutral-200 rounded py-0.5 text-[13px] border border-[#939DB833] bg-[#171926]' id='cookie-accept-required'>Accept required</button>
+<button class='ml-auto px-2 font-medium text-white rounded bg-button-gradient py-0.5 text-[13px]' id='cookie-accept-all'>Accept all</button>
+</div>
+</div>
+
+<script src='https://cdnjs.betterstackcdn.com/prismjs@1.29.0/components/prism-core.min.js'></script>
+<script src='https://cdnjs.betterstackcdn.com/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js'></script>
+<script src='https://cdnjs.betterstackcdn.com/prismjs@1.29.0/plugins/keep-markup/prism-keep-markup.min.js'></script>
+</body>
+</html>

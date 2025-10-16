@@ -6,7 +6,6 @@ Generates research report using LLM with structured output
 import logging
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage
-from langgraph.config import get_stream_writer
 
 from ..state import ResearchState
 from ..models import ResearchReport
@@ -19,17 +18,6 @@ async def analyst_node(state: ResearchState) -> dict:
     Generate final research report from verified sources
     """
     logger.info("📊 Generating research report...")
-
-    # Get stream writer
-    writer = get_stream_writer()
-    writer({
-        "type": "step_update",
-        "data": {
-            "title": "📊 Generating Report",
-            "subtitle": "Analyzing all sources...",
-            "progress": 90
-        }
-    })
 
     search_results = state.get('search_results')
     link_check_results = state.get('link_check_results')
@@ -84,14 +72,6 @@ async def analyst_node(state: ResearchState) -> dict:
         )
 
         logger.info(f"✓ Report generated: {report.word_count} words")
-
-        # Emit report completion
-        writer({
-            "type": "complete",
-            "data": {
-                "message": f"Research complete! Generated {report.word_count}-word report with {len(report.sources)} sources."
-            }
-        })
 
         # Add to conversation
         messages_to_add = [

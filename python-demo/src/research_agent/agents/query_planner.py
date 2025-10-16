@@ -7,7 +7,6 @@ Following LangChain best practices with structured output
 import logging
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage
-from langgraph.config import get_stream_writer
 
 from ..state import ResearchState
 from ..models import SearchQuery
@@ -20,17 +19,6 @@ async def query_planner_node(state: ResearchState) -> dict:
     Generate optimized search queries using LLM with structured output
     """
     logger.info("📝 Planning search queries...")
-
-    # Get stream writer for custom updates
-    writer = get_stream_writer()
-    writer({
-        "type": "step_update",
-        "data": {
-            "title": "📝 Planning Search Queries",
-            "subtitle": f"Analyzing topic: {state['topic']}",
-            "progress": 10
-        }
-    })
 
     # Import prompt template
     from ..prompts import query_planner_prompt
@@ -51,16 +39,6 @@ async def query_planner_node(state: ResearchState) -> dict:
         search_query = await structured_llm.ainvoke(messages)
 
         logger.info(f"✓ Generated query: {search_query.query}")
-
-        # Emit completion update
-        writer({
-            "type": "step_update",
-            "data": {
-                "title": "✓ Search Query Generated",
-                "subtitle": f"Query: {search_query.query}",
-                "progress": 20
-            }
-        })
 
         # Add to conversation history
         messages_to_add = [

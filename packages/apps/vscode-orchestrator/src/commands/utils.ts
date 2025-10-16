@@ -16,6 +16,22 @@ export async function openUrl(args: OpenUrlArgs): Promise<any> {
       }
     );
 
+    // Listen for messages from the webview
+    panel.webview.onDidReceiveMessage(
+      async (message) => {
+        console.log('🎯 Extension received message from webview:', message);
+
+        if (message.command === 'openUrl') {
+          console.log('✅ Opening URL in column 3:', message.url);
+          // Recursively open new URL in column 3
+          await openUrl({ url: message.url, column: 3 });
+          console.log('✅ URL opened successfully');
+        } else {
+          console.log('⚠️ Unknown command:', message.command);
+        }
+      }
+    );
+
     // Set the webview content to an iframe loading the URL
     panel.webview.html = `
       <!DOCTYPE html>
@@ -37,6 +53,33 @@ export async function openUrl(args: OpenUrlArgs): Promise<any> {
             border: none;
           }
         </style>
+        <script>
+          const vscode = acquireVsCodeApi();
+
+          console.log('🎯 VSCode webview wrapper initialized');
+
+          // Listen for messages from iframe
+          window.addEventListener('message', (event) => {
+            console.log('📨 Webview received message:', event.data);
+
+            if (event.data && event.data.type === 'open-link') {
+              console.log('✅ Valid open-link message, forwarding to extension...');
+              console.log('🔗 URL:', event.data.url);
+
+              // Forward to VS Code extension
+              vscode.postMessage({
+                command: 'openUrl',
+                url: event.data.url
+              });
+
+              console.log('📤 Message forwarded to VSCode extension');
+            } else {
+              console.log('⚠️ Message type not recognized:', event.data?.type);
+            }
+          });
+
+          console.log('✅ Message listener registered');
+        </script>
       </head>
       <body>
         <iframe src="${args.url}" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>

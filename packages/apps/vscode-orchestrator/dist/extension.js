@@ -3863,6 +3863,18 @@ async function openUrl(args) {
         // Keep webview state when hidden
       }
     );
+    panel.webview.onDidReceiveMessage(
+      async (message) => {
+        console.log("\u{1F3AF} Extension received message from webview:", message);
+        if (message.command === "openUrl") {
+          console.log("\u2705 Opening URL in column 3:", message.url);
+          await openUrl({ url: message.url, column: 3 });
+          console.log("\u2705 URL opened successfully");
+        } else {
+          console.log("\u26A0\uFE0F Unknown command:", message.command);
+        }
+      }
+    );
     panel.webview.html = `
       <!DOCTYPE html>
       <html lang="en">
@@ -3883,6 +3895,33 @@ async function openUrl(args) {
             border: none;
           }
         </style>
+        <script>
+          const vscode = acquireVsCodeApi();
+
+          console.log('\u{1F3AF} VSCode webview wrapper initialized');
+
+          // Listen for messages from iframe
+          window.addEventListener('message', (event) => {
+            console.log('\u{1F4E8} Webview received message:', event.data);
+
+            if (event.data && event.data.type === 'open-link') {
+              console.log('\u2705 Valid open-link message, forwarding to extension...');
+              console.log('\u{1F517} URL:', event.data.url);
+
+              // Forward to VS Code extension
+              vscode.postMessage({
+                command: 'openUrl',
+                url: event.data.url
+              });
+
+              console.log('\u{1F4E4} Message forwarded to VSCode extension');
+            } else {
+              console.log('\u26A0\uFE0F Message type not recognized:', event.data?.type);
+            }
+          });
+
+          console.log('\u2705 Message listener registered');
+        </script>
       </head>
       <body>
         <iframe src="${args.url}" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>

@@ -81,19 +81,55 @@ async def handle_research_request(topic: str, websocket):
             "progress_percent": 0
         }
 
-        # Stream workflow execution with custom updates
-        async for chunk in app.astream(initial_state, stream_mode=["custom", "updates"]):
-            stream_mode, data = chunk
+        # Stream workflow execution
+        async for chunk in app.astream(initial_state, stream_mode=["updates"]):
+            # chunk is a tuple: (stream_mode, data)
+            if isinstance(chunk, tuple):
+                stream_mode, data = chunk
+            else:
+                data = chunk
 
-            if stream_mode == "custom":
-                # Forward custom updates to WebSocket
-                await websocket.send(json.dumps(data))
-                logger.debug(f"Sent custom update: {data.get('type')}")
+            node_name = list(data.keys())[0] if data else None
+            node_data = data.get(node_name, {}) if node_name else {}
+
+            # Send progress update for each node
+            if node_name:
+                progress_map = {
+                    "query_planner": 20,
+                    "web_search": 40,
+                    "link_checker": 60,
+                    "content_extractor": 80,
+                    "analyst": 100
+                }
+
+                await websocket.send(json.dumps({
+                    "type": "progress",
+                    "data": {
+                        "agent": node_name,
+                        "progress": progress_map.get(node_name, 0)
+                    }
+                }))
+
+                # Send final report if analyst completed
+                if node_name == "analyst" and node_data.get("report"):
+                    report = node_data["report"]
+                    await websocket.send(json.dumps({
+                        "type": "complete",
+                        "data": {
+                            "title": report.title,
+                            "summary": report.summary,
+                            "content": report.content,
+                            "sources": report.sources,
+                            "word_count": report.word_count
+                        }
+                    }))
 
         logger.info("Research workflow completed")
 
     except Exception as e:
+        import traceback
         logger.error(f"Research failed: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         await websocket.send(json.dumps({
             "type": "error",
             "data": {"message": f"Research failed: {str(e)}"}
@@ -143,11 +179,8 @@ async def main():
     # Start WebSocket server
     websocket_server = await start_websocket_server('localhost', 8765)
 
-    # Open browser
-    logger.info("Opening browser...")
-    webbrowser.open('http://localhost:8000')
-
     logger.info("Server running. Press Ctrl+C to stop.")
+    logger.info("Open http://localhost:8000 in your browser")
 
     # Keep running
     await asyncio.Future()  # Run forever

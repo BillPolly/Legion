@@ -62,7 +62,8 @@
     "test:e2e": "jest --runInBand --testMatch='**/__tests__/e2e/**/*.test.ts'",
     "vscode:create-file": "node scripts/create-file.js",
     "vscode:open-url": "node scripts/open-url.js",
-    "vscode:show-flashcard": "node scripts/show-flashcard.js"
+    "vscode:show-flashcard": "node scripts/show-flashcard.js",
+    "vscode:demo": "node scripts/demo-workflow.js"
   },
   "dependencies": {
     "ws": "^8.18.0"

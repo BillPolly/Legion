@@ -7,7 +7,6 @@ import logging
 import aiohttp
 import asyncio
 from langchain_core.messages import HumanMessage, AIMessage
-from langgraph.config import get_stream_writer
 
 from ..state import ResearchState
 from ..models import LinkCheckResults, LinkCheckResult
@@ -45,9 +44,6 @@ async def link_checker_node(state: ResearchState) -> dict:
     """
     logger.info("🔗 Checking links...")
 
-    # Get stream writer
-    writer = get_stream_writer()
-
     search_results = state.get('search_results')
     if not search_results or not search_results.results:
         return {
@@ -58,15 +54,6 @@ async def link_checker_node(state: ResearchState) -> dict:
     # Extract URLs
     urls = [result.url for result in search_results.results]
     logger.info(f"Checking {len(urls)} URLs...")
-
-    writer({
-        "type": "step_update",
-        "data": {
-            "title": "🔗 Checking Links",
-            "subtitle": f"Verifying {len(urls)} URLs...",
-            "progress": 50
-        }
-    })
 
     # Check all URLs in parallel
     async with aiohttp.ClientSession() as session:
@@ -85,26 +72,6 @@ async def link_checker_node(state: ResearchState) -> dict:
     )
 
     logger.info(f"✓ {len(valid)}/{len(urls)} links valid")
-
-    # Emit link check results
-    writer({
-        "type": "link_check_results",
-        "data": {
-            "total": len(urls),
-            "valid": len(valid),
-            "invalid": len(invalid),
-            "links": [{"url": r.url, "status": "valid" if r.is_valid else "invalid"} for r in results[:5]]
-        }
-    })
-
-    writer({
-        "type": "step_update",
-        "data": {
-            "title": "✓ Links Verified",
-            "subtitle": f"{len(valid)}/{len(urls)} links valid",
-            "progress": 60
-        }
-    })
 
     # Add to conversation
     messages_to_add = [
