@@ -11,8 +11,8 @@
     "./types": "./src/types/index.js"
   },
   "scripts": {
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "test:integration": "node --experimental-vm-modules node_modules/jest/bin/jest.js __tests__/integration"
+    "test": "NODE_OPTIONS='--experimental-vm-modules' npx jest",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' npx jest __tests__/integration"
   },
   "keywords": [
     "legion",
