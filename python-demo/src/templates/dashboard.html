@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Agent Research Dashboard</title>
+  <link rel="stylesheet" href="/static/css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Multi-Agent Research System</h1>
+
+    <div id="connection-status" class="connection-status disconnected">
+      ⚠️ Connecting to server...
+    </div>
+
+    <div class="input-form">
+      <input
+        type="text"
+        id="topic-input"
+        placeholder="Enter research topic (e.g., 'AI agents in 2025')"
+        autocomplete="off"
+      />
+      <button id="start-button" disabled>Start Research</button>
+    </div>
+
+    <div class="status">
+      <h2 id="current-step">Initializing...</h2>
+      <p id="current-detail">Waiting for agents to start...</p>
+      <div class="progress-bar">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+      <div id="step-history" class="step-history"></div>
+    </div>
+
+    <div id="results-container"></div>
+  </div>
+
+  <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

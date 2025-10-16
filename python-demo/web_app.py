@@ -34,13 +34,23 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Get the project root directory
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+
 
 class DashboardHTTPRequestHandler(SimpleHTTPRequestHandler):
-    """HTTP request handler that serves dashboard.html"""
+    """HTTP request handler that serves static files and templates"""
 
     def do_GET(self):
+        # Serve dashboard.html for root
         if self.path == '/' or self.path == '/index.html':
-            self.path = '/src/dashboard.html'
+            self.path = '/src/templates/dashboard.html'
+        # Serve static files (CSS, JS)
+        elif self.path.startswith('/static/'):
+            self.path = '/src' + self.path
+
+        # Change to project root for serving files
+        os.chdir(PROJECT_ROOT)
         return SimpleHTTPRequestHandler.do_GET(self)
 
     def log_message(self, format, *args):
@@ -50,6 +60,8 @@ class DashboardHTTPRequestHandler(SimpleHTTPRequestHandler):
 
 def start_http_server(port=8000):
     """Start HTTP server in separate thread"""
+    # Change to project root before starting server
+    os.chdir(PROJECT_ROOT)
     server = HTTPServer(('localhost', port), DashboardHTTPRequestHandler)
     logger.info(f"HTTP server started on http://localhost:{port}")
     server.serve_forever()
