@@ -324,4 +324,18 @@ document.addEventListener('click', (e) => {
 
 // Connect on page load
 connect();
-���������������
+
+// Listen for script execution requests from VSCode webview wrapper
+window.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'executeScript') {
+    console.log('� Received script execution request:', event.data.script);
+    try {
+      // Execute the script
+      const result = eval(event.data.script);
+      console.log('✅ Script executed successfully:', result);
+    } catch (error) {
+      console.error('❌ Script execution failed:', error);
+    }
+  }
+});
+����������������

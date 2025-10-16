@@ -13,7 +13,8 @@ export async function openUrl(args: OpenUrlArgs): Promise<any> {
       viewColumn as vscode.ViewColumn, // Editor column
       {
         enableScripts: true, // Allow JavaScript in the webview
-        retainContextWhenHidden: true // Keep webview state when hidden
+        retainContextWhenHidden: true, // Keep webview state when hidden
+        localResourceRoots: [] // Allow loading external resources
       }
     );
 
@@ -109,7 +110,7 @@ export async function openUrl(args: OpenUrlArgs): Promise<any> {
         </script>
       </head>
       <body>
-        <iframe src="${args.url}" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-top-navigation allow-top-navigation-by-user-activation"></iframe>
+        <iframe src="${args.url}" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
       </body>
       </html>
     `;

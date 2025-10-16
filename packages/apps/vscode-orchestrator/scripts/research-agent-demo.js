@@ -77,6 +77,15 @@ async function runDemo() {
     ws.on('error', reject);
   });
 
+  // Start timer
+  const startTime = Date.now();
+  const timerInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    const mins = Math.floor(elapsed / 60);
+    const secs = elapsed % 60;
+    process.stdout.write(`\r⏱️  Elapsed: ${mins}:${secs.toString().padStart(2, '0')}`);
+  }, 1000);
+
   console.log('🎬 Starting Multi-Agent Research System Demo...\n');
 
   try {
@@ -87,111 +96,117 @@ async function runDemo() {
       4000
     );
 
-    // Step 1: Models
+    // Core Infrastructure
+    await showFlashcard(ws, '📦 Package Init', 'src/__init__.py', 1500);
+    await createFileFromSource(ws, 'src/__init__.py', 'python-demo-practice/src/__init__.py', 600);
+
+    await showFlashcard(ws, '📊 Data Models', 'Pydantic models for type-safe agent communication', 1500);
+    await createFileFromSource(ws, 'src/models.py', 'python-demo-practice/src/models.py', 600);
+
+    await showFlashcard(ws, '🔄 State Management', 'TypedDict for LangGraph workflow state', 1500);
+    await createFileFromSource(ws, 'src/state.py', 'python-demo-practice/src/state.py', 600);
+
+    await showFlashcard(ws, '💬 LLM Prompts', 'Carefully crafted prompts for each agent', 1500);
+    await createFileFromSource(ws, 'src/prompts.py', 'python-demo-practice/src/prompts.py', 600);
+
+    await showFlashcard(ws, '🔀 LangGraph Workflow', 'Orchestrating multi-agent collaboration', 1500);
+    await createFileFromSource(ws, 'src/main.py', 'python-demo-practice/src/main.py', 600);
+
+    // Agents
+    await showFlashcard(ws, '🤖 Agent Package', 'src/agents/__init__.py', 1500);
+    await createFileFromSource(ws, 'src/agents/__init__.py', 'python-demo-practice/src/agents/__init__.py', 600);
+
+    await showFlashcard(ws, '📝 Query Planner', 'Planning intelligent search queries', 1500);
+    await createFileFromSource(ws, 'src/agents/query_planner.py', 'python-demo-practice/src/agents/query_planner.py', 600);
+
+    await showFlashcard(ws, '🔍 Web Search', 'Executing searches via Serper API', 1500);
+    await createFileFromSource(ws, 'src/agents/web_search.py', 'python-demo-practice/src/agents/web_search.py', 600);
+
+    await showFlashcard(ws, '🔗 Link Checker', 'Validating URL accessibility', 1500);
+    await createFileFromSource(ws, 'src/agents/link_checker.py', 'python-demo-practice/src/agents/link_checker.py', 600);
+
+    await showFlashcard(ws, '📄 Content Extractor', 'Extracting and summarizing pages', 1500);
+    await createFileFromSource(ws, 'src/agents/content_extractor.py', 'python-demo-practice/src/agents/content_extractor.py', 600);
+
+    await showFlashcard(ws, '📊 Analyst', 'Generating comprehensive reports', 1500);
+    await createFileFromSource(ws, 'src/agents/analyst.py', 'python-demo-practice/src/agents/analyst.py', 600);
+
+    await showFlashcard(ws, '🎯 Supervisor', 'Routing workflow between agents', 1500);
+    await createFileFromSource(ws, 'src/agents/supervisor.py', 'python-demo-practice/src/agents/supervisor.py', 600);
+
+    // Frontend
+    await showFlashcard(ws, '🎨 Dashboard HTML', 'Clean structure for real-time UI', 1500);
+    await createFileFromSource(ws, 'src/templates/dashboard.html', 'python-demo-practice/src/templates/dashboard.html', 600);
+
+    await showFlashcard(ws, '✨ Dashboard CSS', 'Beautiful gradients and animations', 1500);
+    await createFileFromSource(ws, 'src/static/css/dashboard.css', 'python-demo-practice/src/static/css/dashboard.css', 600);
+
+    await showFlashcard(ws, '⚡ Dashboard JS', 'WebSocket client with progress tracking', 1500);
+    await createFileFromSource(ws, 'src/static/js/dashboard.js', 'python-demo-practice/src/static/js/dashboard.js', 600);
+
+    // Web Server
+    await showFlashcard(ws, '🌐 Web Server', 'HTTP + WebSocket server', 1500);
+    await createFileFromSource(ws, 'web_app.py', 'python-demo-practice/web_app.py', 600);
+
+    // Installation
     await showFlashcard(ws,
-      '📊 Step 1: Data Models',
-      'Creating Pydantic models for type-safe agent communication',
-      3000
+      '📦 Installing Dependencies',
+      'pip install langchain langgraph anthropic python-dotenv websockets',
+      2000
     );
 
-    await createFileFromSource(ws,
-      'src/models.py',
-      'python-demo-practice/src/models.py',
-      600
-    );
-
-    // Step 2: State
+    // Starting Server
     await showFlashcard(ws,
-      '🔄 Step 2: Agent State',
-      'Defining TypedDict for LangGraph workflow state',
-      3000
+      '🚀 Starting Server',
+      'Launching HTTP (8000) and WebSocket (8765) servers...',
+      2000
     );
 
-    await createFileFromSource(ws,
-      'src/state.py',
-      'python-demo-practice/src/state.py',
-      600
-    );
+    // Open dashboard
+    console.log('\n\n🌐 Opening dashboard...');
+    await sendCommand(ws, 'openUrl', { url: 'http://localhost:8000', column: 2 });
+    await new Promise(r => setTimeout(r, 2000));
 
-    // Step 3: Web Search Agent
+    // Fill search input
     await showFlashcard(ws,
-      '🔍 Step 3: Web Search Agent',
-      'Integrating Serper API for intelligent web search',
-      3000
+      '🔍 Running Research',
+      'Topic: "AI agents in 2025"',
+      2000
     );
 
-    await createFileFromSource(ws,
-      'src/agents/web_search.py',
-      'python-demo-practice/src/agents/web_search.py',
-      600
-    );
+    console.log('📝 Filling search input...');
+    await sendCommand(ws, 'fillInput', {
+      url: 'http://localhost:8000',
+      selector: '#topic-input',
+      value: 'AI agents in 2025'
+    });
 
-    // Step 4: Dashboard HTML
-    await showFlashcard(ws,
-      '🎨 Step 4: Dashboard HTML',
-      'Creating clean HTML structure for real-time UI',
-      3000
-    );
+    await new Promise(r => setTimeout(r, 500));
 
-    await createFileFromSource(ws,
-      'src/templates/dashboard.html',
-      'python-demo-practice/src/templates/dashboard.html',
-      600
-    );
-
-    // Step 5: Dashboard Styles
-    await showFlashcard(ws,
-      '✨ Step 5: Dashboard Styles',
-      'Crafting beautiful CSS with gradients and animations',
-      3000
-    );
-
-    await createFileFromSource(ws,
-      'src/static/css/dashboard.css',
-      'python-demo-practice/src/static/css/dashboard.css',
-      600
-    );
-
-    // Step 6: Dashboard Logic
-    await showFlashcard(ws,
-      '⚡ Step 6: Dashboard Logic',
-      'WebSocket client with real-time progress tracking',
-      3000
-    );
-
-    await createFileFromSource(ws,
-      'src/static/js/dashboard.js',
-      'python-demo-practice/src/static/js/dashboard.js',
-      600
-    );
-
-    // Step 7: Web Server
-    await showFlashcard(ws,
-      '🌐 Step 7: Web Server',
-      'Python HTTP server with static file handling',
-      3000
-    );
-
-    await createFileFromSource(ws,
-      'web_app.py',
-      'python-demo-practice/web_app.py',
-      600
-    );
-
-    // Finale
-    await showFlashcard(ws,
-      '✨ Demo Complete!',
-      'Multi-agent research system with professional frontend',
-      3000
-    );
+    // Click start button
+    console.log('🖱️  Clicking start button...');
+    await sendCommand(ws, 'clickElement', {
+      url: 'http://localhost:8000',
+      selector: '#start-button'
+    });
 
     await sendCommand(ws, 'closeFlashcard', {});
 
-    console.log('\n🎉 Demo complete! All files created successfully.');
-    console.log('\nNext: Run from existing python-demo directory to see it in action!');
+    // Stop timer
+    clearInterval(timerInterval);
+    const totalTime = Math.floor((Date.now() - startTime) / 1000);
+    const mins = Math.floor(totalTime / 60);
+    const secs = totalTime % 60;
+
+    console.log(`\n\n🎉 Demo complete!`);
+    console.log(`⏱️  Total time: ${mins}:${secs.toString().padStart(2, '0')}`);
+    console.log(`📁 ${15} files created`);
+    console.log(`🤖 6 AI agents built`);
+    console.log(`🌐 Dashboard live at http://localhost:8000`);
 
   } catch (error) {
     console.error('\n❌ Error:', error.message);
+    clearInterval(timerInterval);
   } finally {
     ws.close();
     process.exit(0);

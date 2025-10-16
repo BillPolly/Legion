@@ -3920,8 +3920,10 @@ async function openUrl(args) {
       {
         enableScripts: true,
         // Allow JavaScript in the webview
-        retainContextWhenHidden: true
+        retainContextWhenHidden: true,
         // Keep webview state when hidden
+        localResourceRoots: []
+        // Allow loading external resources
       }
     );
     registerWebviewPanel(args.url, panel);
@@ -4009,7 +4011,7 @@ async function openUrl(args) {
         </script>
       </head>
       <body>
-        <iframe src="${args.url}" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-top-navigation allow-top-navigation-by-user-activation"></iframe>
+        <iframe src="${args.url}" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
       </body>
       </html>
     `;
