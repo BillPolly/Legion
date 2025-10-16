@@ -1,0 +1,34 @@
+{
+  "name": "@legion/panel-server",
+  "version": "1.0.0",
+  "description": "Standalone panel server for Legion processes - manages dynamic UI panels via WebSocket",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "panel-server": "./src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand --forceExit",
+    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest --testMatch='**/__tests__/unit/**/*.test.js' --runInBand --forceExit",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest --testMatch='**/__tests__/integration/**/*.test.js' --runInBand --forceExit",
+    "test:e2e": "NODE_OPTIONS='--experimental-vm-modules' jest --testMatch='**/__tests__/e2e/**/*.test.js' --runInBand --forceExit"
+  },
+  "keywords": [
+    "legion",
+    "panels",
+    "websocket",
+    "actor-model",
+    "ui-server"
+  ],
+  "author": "Legion Framework",
+  "license": "MIT",
+  "dependencies": {
+    "@legion/actors": "^1.0.0",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@types/node": "20.x",
+    "jest": "^29.7.0"
+  }
+}
