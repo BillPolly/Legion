@@ -132,7 +132,10 @@ export class ActorSpace {
         }
 
         // Create WebSocket server
-        this._wss = new WebSocketServer({ port });
+        this._wss = new WebSocketServer({
+            port,
+            perMessageDeflate: false  // Disable compression to avoid RSV1 errors
+        });
 
         console.log(`ActorSpace ${this.spaceId}: Listening on port ${port}`);
 

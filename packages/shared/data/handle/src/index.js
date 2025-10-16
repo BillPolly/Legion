@@ -8,8 +8,8 @@
 // Core Handle class - universal base for all proxy types
 export { Handle } from './Handle.js';
 
-// RemoteHandle - Handle that proxies to remote Handles via Actor channels
-export { RemoteHandle } from './remote/RemoteHandle.js';
+// RemoteHandle - Convenience wrapper for accessing remote Handles via ActorSpace
+export { RemoteHandle } from './RemoteHandle.js';
 
 // DataSource interface and utilities
 export { 

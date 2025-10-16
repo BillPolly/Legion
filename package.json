@@ -8,6 +8,7 @@
     "packages/*",
     "packages/agents/*",
     "packages/apps/*",
+    "packages/core/*",
     "packages/frontend/*",
     "packages/planning/*",
     "packages/shared/*",
@@ -17,7 +18,9 @@
     "packages/prompting/*",
     "packages/data/*",
     "packages/km/*",
-    "packages/km/examples/*"
+    "packages/km/examples/*",
+    "packages/codex/codex-cli",
+    "packages/codex/sdk/typescript"
   ],
   "scripts": {
     "mcp": "node scripts/mcp.js",
@@ -99,6 +102,7 @@
     "deasync": "^0.1.30",
     "fast-content-type-parse": "^3.0.0",
     "jest-mock": "^30.0.5",
+    "playwright": "^1.56.0",
     "side-channel": "^1.1.0",
     "source-map": "^0.7.6",
     "universal-github-app-jwt": "^2.2.2",

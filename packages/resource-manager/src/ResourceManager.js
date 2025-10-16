@@ -1,37 +1,60 @@
 /**
  * ResourceManager with Proxy-based transparent access
- * 
+ *
  * This ResourceManager uses JavaScript Proxy to provide transparent
  * property access while maintaining all the benefits of centralized
  * resource management.
- * 
+ *
  * @example
  * const rm = new ResourceManager();
- * 
+ *
  * // Set resources - looks like plain object
  * rm.apiKey = 'sk-123';
  * rm.basePath = '/workspace';
- * 
- * // Get resources - also like plain object  
+ *
+ * // Get resources - also like plain object
  * console.log(rm.apiKey); // 'sk-123'
- * 
+ *
  * // Can still use methods when needed
  * rm.load({ apiKey: 'sk-456', model: 'gpt-4' });
  * console.log(rm.has('model')); // true
  */
 
+import { Handle } from '@legion/handle';
+import { ActorRegistry } from '@legion/actor-handle-system';
+
 const isTestEnvironment = () =>
   process.env.JEST_WORKER_ID !== undefined || process.env.NODE_ENV === 'test';
-export class ResourceManager {
+
+export class ResourceManager extends Handle {
   static _instance = null;
   static _initPromise = null;
   
   constructor(initialResources = {}) {
+    // Create DataSource for ResourceManager before calling super()
+    const dataSource = {
+      query: (querySpec) => {
+        return this._queryResources(querySpec);
+      },
+      subscribe: (querySpec, callback) => {
+        return this._subscribeResources(querySpec, callback);
+      },
+      getSchema: () => {
+        return { type: 'ResourceManager', resources: this._resources ? Array.from(this._resources.keys()) : [] };
+      },
+      queryBuilder: (sourceHandle) => {
+        return this._createQueryBuilder(sourceHandle);
+      }
+    };
+
+    // Call Handle constructor
+    super(dataSource);
+
     // Implement singleton pattern
     if (ResourceManager._instance) {
       return ResourceManager._instance;
     }
-    
+
     // Internal storage
     this._resources = new Map();
 
@@ -45,6 +68,9 @@ export class ResourceManager {
 
     // Connection cache for MongoDB and other database clients
     this._connectionCache = new Map();
+
+    // NEW: Add actor registry
+    this._actorRegistry = new ActorRegistry();
     
     // Load initial resources if provided
     if (initialResources) {
@@ -408,7 +434,15 @@ export class ResourceManager {
   get size() {
     return this._resources.size;
   }
-  
+
+  /**
+   * Get the ActorRegistry instance
+   * @returns {ActorRegistry} The actor registry for managing actors
+   */
+  get actors() {
+    return this._actorRegistry;
+  }
+
   /**
    * Create a child ResourceManager with this as parent
    * Child can access parent resources but changes don't affect parent
@@ -1869,6 +1903,54 @@ export class ResourceManager {
     // For now, we'll throw an error to indicate this needs proper implementation
     // In a real actor system, this would use message queues
     throw new Error('Synchronous query wrapper not yet implemented - use async DataSource methods directly');
+  }
+
+  /**
+   * Query resources managed by ResourceManager
+   * Implements DataSource interface method
+   * @param {Object} querySpec - Query specification
+   * @returns {Array} Array of matching resources
+   * @private
+   */
+  _queryResources(querySpec) {
+    // Simple implementation - return all resources
+    // In future, could filter based on querySpec
+    const resources = [];
+    for (const [key, value] of this._resources.entries()) {
+      resources.push({ key, value });
+    }
+    return resources;
+  }
+
+  /**
+   * Subscribe to resource changes
+   * Implements DataSource interface method
+   * @param {Object} querySpec - Query specification
+   * @param {Function} callback - Callback for changes
+   * @returns {Function} Unsubscribe function
+   * @private
+   */
+  _subscribeResources(querySpec, callback) {
+    // Simple implementation - no-op for now
+    // In future, could track resource changes
+    return () => {}; // Unsubscribe function
+  }
+
+  /**
+   * Create query builder for ResourceManager
+   * Implements DataSource interface method
+   * @param {Handle} sourceHandle - Source handle
+   * @returns {Object} Query builder
+   * @private
+   */
+  _createQueryBuilder(sourceHandle) {
+    // Simple implementation - return basic query builder
+    return {
+      where: () => this,
+      select: () => this,
+      orderBy: () => this,
+      limit: () => this
+    };
   }
 }
 

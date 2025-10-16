@@ -90,7 +90,7 @@ export class PanelServer {
         return;
       }
 
-      // Panel HTML endpoint
+      // Panel redirect endpoint
       if (req.url?.startsWith('/panel')) {
         const url = new URL(req.url, `http://${this.host}:${this.port}`);
         const processId = url.searchParams.get('processId');
@@ -102,12 +102,18 @@ export class PanelServer {
           return;
         }
 
-        // Register panel and serve HTML
+        // Register panel and redirect to client
         this.panelManager.registerPanel(processId, panelId);
-        const html = this.panelManager.getPanelHtml(processId, panelId);
+        const panelUrl = this.panelManager.getPanelUrl(processId, panelId);
 
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end(html);
+        res.writeHead(302, { 'Location': panelUrl });
+        res.end();
+        return;
+      }
+
+      // WebSocket endpoints - do NOT respond, let WebSocketServer handle them
+      if (req.url?.startsWith('/ws/')) {
+        // WebSocketServer will handle these
         return;
       }
 
@@ -123,6 +129,7 @@ export class PanelServer {
     this.processWss = new WebSocketServer({
       server: this.server,
       path: '/ws/process',
+      perMessageDeflate: false  // Disable compression to avoid RSV1 errors with large messages
     });
 
     this.processWss.on('connection', (ws) => {
@@ -133,6 +140,7 @@ export class PanelServer {
     this.panelWss = new WebSocketServer({
       server: this.server,
       path: '/ws/panel',
+      perMessageDeflate: false  // Disable compression to avoid RSV1 errors with large messages
     });
 
     this.panelWss.on('connection', (ws, req) => {
@@ -168,9 +176,18 @@ export class PanelServer {
     const processActor = {
       isActor: true,
       id: `process-actor-${processId}`,
+      remoteActor: null,  // Will be set after channel is ready
 
       receive: async (messageType, data) => {
         this.log(`[Process ${processId}] Received: ${messageType}`);
+
+        if (messageType === 'channel_connected') {
+          // Channel is now fully established, send connection-ready
+          if (processActor.remoteActor) {
+            processActor.remoteActor.receive('connection-ready', { processId });
+          }
+          return;
+        }
 
         if (messageType === 'request-panel') {
           // Process is requesting a panel to be created
@@ -195,6 +212,9 @@ export class PanelServer {
     // Create remote actor for sending messages to process
     const remoteActor = channel.makeRemote('process-client');
 
+    // Store remote actor reference in process actor so it can send connection-ready when channel_connected fires
+    processActor.remoteActor = remoteActor;
+
     // Store connection
     const connection = {
       id: processId,
@@ -218,8 +238,7 @@ export class PanelServer {
       }
     });
 
-    // Notify process that connection is ready
-    remoteActor.receive('connection-ready', { processId });
+    // NOTE: Do NOT send connection-ready here! It will be sent when channel_connected event fires
   }
 
   /**
@@ -243,9 +262,18 @@ export class PanelServer {
     const panelActor = {
       isActor: true,
       id: `panel-actor-${panelId}`,
+      remoteActor: null,  // Will be set after channel is ready
 
       receive: async (messageType, data) => {
         this.log(`[Panel ${panelId}] Received: ${messageType}`);
+
+        if (messageType === 'channel_connected') {
+          // Channel is now fully established, send connection-ready
+          if (panelActor.remoteActor) {
+            panelActor.remoteActor.receive('connection-ready', { panelId, processId });
+          }
+          return;
+        }
 
         // Route panel messages back to the process
         this.routeToProcess(processId, messageType, { ...data, panelId });
@@ -262,6 +290,9 @@ export class PanelServer {
 
     // Create remote actor for sending messages to panel
     const remoteActor = channel.makeRemote('panel-client');
+
+    // Store remote actor reference in panel actor so it can send connection-ready when channel_connected fires
+    panelActor.remoteActor = remoteActor;
 
     // Store connection
     const connection = {
@@ -281,8 +312,7 @@ export class PanelServer {
       this.routeToProcess(processId, 'panel-closed', { panelId });
     });
 
-    // Notify panel that connection is ready
-    remoteActor.receive('connection-ready', { panelId, processId });
+    // NOTE: Do NOT send connection-ready here! It will be sent when channel_connected event fires
   }
 
   /**

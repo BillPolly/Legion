@@ -116,10 +116,5 @@ export function createMockDataSource() {
   };
 }
 
-/**
- * Legacy alias for backward compatibility with existing tests
- * @deprecated Use createMockDataSource() instead
- */
-export function createMockDataSource() {
-  return createMockDataSource();
-}
+// Note: createMockDataSource is already exported above (line 91)
+// No legacy alias needed

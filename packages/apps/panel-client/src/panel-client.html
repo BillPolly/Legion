@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Legion Panel</title>
+  <link rel="stylesheet" href="panel-client.css">
+</head>
+<body>
+  <div id="app">
+    <div class="panel-container">
+      <div class="panel-header">
+        <h1>Legion Panel Server</h1>
+        <div class="subtitle" id="subtitle">Initializing...</div>
+      </div>
+      <div class="panel-body">
+        <div class="status-bar">
+          Status: <span id="status">Connecting...</span>
+        </div>
+
+        <div class="counter" id="counter">0</div>
+
+        <div style="text-align: center;">
+          <button class="button" id="send-btn">Send Message</button>
+          <button class="button" id="data-btn">Request Data</button>
+        </div>
+
+        <h3 style="margin-top: 30px;">Message Log:</h3>
+        <div class="log" id="log">
+          <div class="log-entry">Initializing...</div>
+        </div>
+
+        <div class="data-display" id="data"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="panel-client.js"></script>
+</body>
+</html>

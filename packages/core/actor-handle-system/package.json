@@ -1,0 +1,32 @@
+{
+  "name": "@legion/actor-handle-system",
+  "version": "1.0.0",
+  "description": "Actor-Handle system integration for Legion framework",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch"
+  },
+  "keywords": [
+    "actors",
+    "handles",
+    "legion-framework",
+    "registry"
+  ],
+  "author": "Legion Framework",
+  "license": "MIT",
+  "dependencies": {
+    "@legion/actors": "*"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "transform": {},
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ]
+  }
+}

@@ -19,7 +19,7 @@ License text not found.
 License text not found.
 
 ============================================================
-semver@7.7.2
+semver@7.7.3
 (git+https://github.com/npm/node-semver.git)
 
 The ISC License

@@ -1,0 +1,17 @@
+{
+  "name": "@legion/panel-client",
+  "version": "1.0.0",
+  "description": "Browser client for Legion panel display",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "dependencies": {
+    "@legion/actors": "*",
+    "@legion/components": "*"
+  },
+  "license": "MIT"
+}
