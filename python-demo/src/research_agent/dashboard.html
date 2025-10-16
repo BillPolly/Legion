@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Agent Research Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: white;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 36px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .status {
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+    }
+
+    .status h2 {
+      margin-bottom: 10px;
+      font-size: 24px;
+    }
+
+    .status p {
+      font-size: 18px;
+      opacity: 0.9;
+    }
+
+    .progress-bar {
+      background: rgba(255,255,255,0.2);
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 15px;
+    }
+
+    .progress-fill {
+      background: #4ade80;
+      height: 100%;
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    .results {
+      background: rgba(255,255,255,0.95);
+      border-radius: 10px;
+      padding: 20px;
+      color: #333;
+      margin-top: 20px;
+    }
+
+    .results h3 {
+      margin-bottom: 15px;
+      color: #667eea;
+    }
+
+    .result-item {
+      padding: 10px;
+      border-left: 3px solid #667eea;
+      margin-bottom: 10px;
+      background: rgba(102, 126, 234, 0.05);
+    }
+
+    .link-status {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-left: 10px;
+    }
+
+    .link-status.valid {
+      background: #4ade80;
+      color: white;
+    }
+
+    .link-status.invalid {
+      background: #f87171;
+      color: white;
+    }
+
+    .connection-status {
+      text-align: center;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+
+    .connection-status.connected {
+      background: rgba(74, 222, 128, 0.2);
+    }
+
+    .connection-status.disconnected {
+      background: rgba(248, 113, 113, 0.2);
+    }
+
+    .report-link {
+      display: inline-block;
+      margin-top: 15px;
+      padding: 10px 20px;
+      background: #667eea;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+
+    .report-link:hover {
+      background: #5568d3;
+    }
+
+    .input-form {
+      background: rgba(255,255,255,0.95);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+    }
+
+    #topic-input {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid #667eea;
+      border-radius: 5px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    #topic-input:focus {
+      border-color: #764ba2;
+    }
+
+    #start-button {
+      padding: 12px 30px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    #start-button:hover:not(:disabled) {
+      background: #5568d3;
+    }
+
+    #start-button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .page-preview {
+      background: rgba(102, 126, 234, 0.05);
+      border-left: 3px solid #667eea;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 14px;
+    }
+
+    .page-preview .url {
+      font-weight: bold;
+      color: #667eea;
+      margin-bottom: 5px;
+    }
+
+    .page-preview .text {
+      color: #666;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Multi-Agent Research System</h1>
+
+    <div id="connection-status" class="connection-status disconnected">
+      ⚠️ Connecting to server...
+    </div>
+
+    <div class="input-form">
+      <input
+        type="text"
+        id="topic-input"
+        placeholder="Enter research topic (e.g., 'AI agents in 2025')"
+        autocomplete="off"
+      />
+      <button id="start-button" disabled>Start Research</button>
+    </div>
+
+    <div class="status">
+      <h2 id="current-step">Initializing...</h2>
+      <p id="current-detail">Waiting for agents to start...</p>
+      <div class="progress-bar">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+    </div>
+
+    <div id="results-container"></div>
+  </div>
+
+  <script>
+    let ws;
+    const connectionStatus = document.getElementById('connection-status');
+    const currentStep = document.getElementById('current-step');
+    const currentDetail = document.getElementById('current-detail');
+    const progressFill = document.getElementById('progress-fill');
+    const resultsContainer = document.getElementById('results-container');
+    const topicInput = document.getElementById('topic-input');
+    const startButton = document.getElementById('start-button');
+
+    function connect() {
+      ws = new WebSocket('ws://localhost:8765');
+
+      ws.onopen = () => {
+        console.log('Connected to dashboard server');
+        connectionStatus.textContent = '✅ Connected to server';
+        connectionStatus.className = 'connection-status connected';
+        startButton.disabled = false;
+      };
+
+      ws.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        console.log('Received:', message);
+        handleMessage(message);
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+
+      ws.onclose = () => {
+        console.log('Disconnected from server');
+        connectionStatus.textContent = '⚠️ Disconnected from server';
+        connectionStatus.className = 'connection-status disconnected';
+        startButton.disabled = true;
+        // Attempt to reconnect after 3 seconds
+        setTimeout(connect, 3000);
+      };
+    }
+
+    function startResearch() {
+      const topic = topicInput.value.trim();
+      if (!topic) {
+        alert('Please enter a research topic');
+        return;
+      }
+
+      // Disable button and clear previous results
+      startButton.disabled = true;
+      startButton.textContent = 'Researching...';
+      resultsContainer.innerHTML = '';
+      currentStep.textContent = 'Starting research...';
+      currentDetail.textContent = `Topic: ${topic}`;
+      progressFill.style.width = '0%';
+
+      // Send start message to server
+      ws.send(JSON.stringify({
+        type: 'start_research',
+        topic: topic
+      }));
+    }
+
+    // Event listeners
+    startButton.addEventListener('click', startResearch);
+    topicInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        startResearch();
+      }
+    });
+
+    function handleMessage(message) {
+      switch (message.type) {
+        case 'step_update':
+          currentStep.textContent = message.data.title;
+          currentDetail.textContent = message.data.subtitle || '';
+          progressFill.style.width = message.data.progress + '%';
+          break;
+
+        case 'search_results':
+          displaySearchResults(message.data);
+          break;
+
+        case 'link_check_results':
+          displayLinkResults(message.data);
+          break;
+
+        case 'report_ready':
+          displayReportLink(message.data);
+          break;
+
+        case 'page_previews':
+          displayPagePreviews(message.data);
+          break;
+
+        case 'complete':
+          currentStep.textContent = '✅ Analysis Complete!';
+          currentDetail.textContent = message.data.message || 'All tasks finished successfully';
+          progressFill.style.width = '100%';
+          startButton.disabled = false;
+          startButton.textContent = 'Start Research';
+          break;
+      }
+    }
+
+    function displaySearchResults(data) {
+      const html = `
+        <div class="results">
+          <h3>🔍 Search Results</h3>
+          ${data.results.map(result => `
+            <div class="result-item">
+              <strong>${result.title}</strong><br>
+              <small>${result.url}</small>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      resultsContainer.innerHTML = html;
+    }
+
+    function displayLinkResults(data) {
+      const html = `
+        <div class="results">
+          <h3>🔗 Link Verification</h3>
+          <p>Checked ${data.total} links: ${data.valid} valid, ${data.invalid} invalid</p>
+          ${data.links.map(link => `
+            <div class="result-item">
+              ${link.url}
+              <span class="link-status ${link.status}">${link.status}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      resultsContainer.innerHTML += html;
+    }
+
+    function displayReportLink(data) {
+      const html = `
+        <div class="results">
+          <h3>📊 Research Report Generated</h3>
+          <p>${data.message}</p>
+          <a href="${data.report_path}" class="report-link" target="_blank">View Report</a>
+        </div>
+      `;
+      resultsContainer.innerHTML += html;
+    }
+
+    function displayPagePreviews(data) {
+      const html = `
+        <div class="results">
+          <h3>📄 Page Previews (${data.pages.length} pages)</h3>
+          ${data.pages.map(page => `
+            <div class="page-preview">
+              <div class="url"><a href="${page.url}" target="_blank">${page.url}</a></div>
+              <div class="text">${page.preview}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      resultsContainer.innerHTML += html;
+    }
+
+    // Connect on page load
+    connect();
+  </script>
+</body>
+</html>
