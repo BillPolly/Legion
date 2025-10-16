@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Legion Chat Room Demo</title>
+    <title>Legion Chat Room Demo - Declarative Components</title>
     <style>
         * {
             margin: 0;
@@ -233,226 +233,21 @@
     <div id="app"></div>
 
     <script type="module">
-        // We need to use browser-compatible imports
-        // For now, let's inline a minimal ActorSpace client implementation
+        import { ChatApp } from './chat-app.js';
 
-        class SimpleActorSpace {
-            constructor(spaceId) {
-                this.spaceId = spaceId;
-                this.ws = null;
-                this.messageId = 0;
-                this.pendingCalls = new Map();
-                this.onMessage = null;
-            }
+        // Initialize chat application
+        const container = document.getElementById('app');
+        const app = new ChatApp(container);
 
-            async connect(url) {
-                return new Promise((resolve, reject) => {
-                    this.ws = new WebSocket(url);
-
-                    this.ws.onopen = () => {
-                        console.log('Connected to server');
-                        resolve();
-                    };
-
-                    this.ws.onerror = (error) => {
-                        console.error('WebSocket error:', error);
-                        reject(error);
-                    };
-
-                    this.ws.onmessage = (event) => {
-                        const message = JSON.parse(event.data);
-                        console.log('Received:', message);
-
-                        if (message.targetGuid && message.targetGuid.startsWith(this.spaceId)) {
-                            // This is a response to our call
-                            const pending = this.pendingCalls.get(message.targetGuid);
-                            if (pending) {
-                                pending.resolve(message.payload);
-                                this.pendingCalls.delete(message.targetGuid);
-                            }
-                        } else if (this.onMessage) {
-                            this.onMessage(message);
-                        }
-                    };
-
-                    this.ws.onclose = () => {
-                        console.log('Disconnected from server');
-                    };
-                });
-            }
-
-            async call(targetGuid, messageType, data) {
-                const sourceGuid = `${this.spaceId}-${this.messageId++}`;
-
-                const message = {
-                    targetGuid: targetGuid,
-                    sourceGuid: sourceGuid,
-                    payload: [messageType, data]
-                };
-
-                console.log('Sending:', message);
-                this.ws.send(JSON.stringify(message));
-
-                return new Promise((resolve, reject) => {
-                    this.pendingCalls.set(sourceGuid, { resolve, reject });
-                    setTimeout(() => {
-                        if (this.pendingCalls.has(sourceGuid)) {
-                            this.pendingCalls.delete(sourceGuid);
-                            reject(new Error('Request timeout'));
-                        }
-                    }, 10000);
-                });
-            }
-
-            close() {
-                if (this.ws) {
-                    this.ws.close();
-                }
-            }
-        }
-
-        // App state
-        let actorSpace = null;
-        let username = null;
-
-        // DOM helpers
-        function render(html) {
-            document.getElementById('app').innerHTML = html;
-        }
-
-        function showLogin() {
-            render(`
-                <div class="login-container">
-                    <h1>💬 Legion Chat</h1>
-                    <p>Enter your name to join the chat room</p>
-                    <input type="text" id="username-input" placeholder="Your name..." autofocus />
-                    <button onclick="window.handleLogin()">Join Chat</button>
-                    <div id="error" class="error"></div>
-                </div>
-            `);
-        }
-
-        function showChat() {
-            render(`
-                <div class="chat-container">
-                    <div class="chat-header">
-                        <h1>💬 Legion Chat Room</h1>
-                        <div class="status">Connected as <strong>${username}</strong></div>
-                    </div>
-                    <div class="users-bar" id="users-bar">
-                        <strong>Users:</strong> <span id="users-list">Loading...</span>
-                    </div>
-                    <div class="messages-container" id="messages"></div>
-                    <div class="input-container">
-                        <input type="text" id="message-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') window.handleSend()" />
-                        <button onclick="window.handleSend()">Send</button>
-                    </div>
-                </div>
-            `);
-        }
-
-        function addMessage(msg) {
-            const container = document.getElementById('messages');
-            const div = document.createElement('div');
-
-            if (msg.type === 'system') {
-                div.className = 'message system';
-                div.textContent = msg.text;
-            } else if (msg.type === 'chat') {
-                div.className = 'message chat' + (msg.username === username ? ' own' : '');
-                div.innerHTML = `
-                    <div class="username">${msg.username}</div>
-                    <div class="text">${msg.text}</div>
-                `;
-            }
-
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function updateUsers(users) {
-            const usersList = document.getElementById('users-list');
-            if (usersList) {
-                usersList.textContent = users.join(', ');
-            }
-        }
-
-        // Handlers
-        window.handleLogin = async function() {
-            const input = document.getElementById('username-input');
-            const error = document.getElementById('error');
-            const name = input.value.trim();
-
-            if (!name) {
-                error.textContent = 'Please enter a name';
-                return;
-            }
-
-            try {
-                error.textContent = 'Connecting...';
-
-                // Connect to server
-                actorSpace = new SimpleActorSpace('browser-client');
-                await actorSpace.connect('ws://localhost:8080');
-
-                // Join chat room
-                const result = await actorSpace.call('chat-room', 'join', { username: name });
-
-                username = name;
-                showChat();
-
-                // Display message history
-                result.messages.forEach(addMessage);
-                updateUsers(result.users);
-
-                // Focus message input
-                document.getElementById('message-input').focus();
-
-            } catch (err) {
-                error.textContent = 'Connection failed: ' + err.message;
-                console.error(err);
-            }
-        };
-
-        window.handleSend = async function() {
-            const input = document.getElementById('message-input');
-            const text = input.value.trim();
-
-            if (!text) return;
-
-            try {
-                // Send message
-                await actorSpace.call('chat-room', 'send-message', {
-                    username: username,
-                    text: text
-                });
-
-                // Get updated messages
-                const messages = await actorSpace.call('chat-room', 'get-messages', {});
-
-                // Display last message
-                const lastMsg = messages[messages.length - 1];
-                if (lastMsg) {
-                    addMessage(lastMsg);
-                }
-
-                // Clear input
-                input.value = '';
-
-            } catch (err) {
-                console.error('Failed to send message:', err);
-            }
-        };
+        // Start the app
+        app.initialize().catch(error => {
+            console.error('Failed to start chat app:', error);
+        });
 
         // Cleanup on page unload
         window.addEventListener('beforeunload', () => {
-            if (actorSpace && username) {
-                actorSpace.call('chat-room', 'leave', { username });
-            }
+            app.cleanup();
         });
-
-        // Start with login
-        showLogin();
     </script>
 </body>
 </html>

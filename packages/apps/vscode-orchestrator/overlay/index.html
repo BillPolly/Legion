@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo Overlay</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="card" class="card hidden">
+    <div class="card-content">
+      <h1 id="card-title"></h1>
+      <p id="card-subtitle"></p>
+    </div>
+  </div>
+
+  <script>
+    const ws = new WebSocket('ws://localhost:17900');
+    const card = document.getElementById('card');
+    const title = document.getElementById('card-title');
+    const subtitle = document.getElementById('card-subtitle');
+
+    ws.onopen = () => {
+      console.log('Connected to overlay server');
+    };
+
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+
+      if (message.type === 'showCard') {
+        title.textContent = message.title || '';
+        subtitle.textContent = message.subtitle || '';
+        card.classList.remove('hidden');
+        card.classList.add('visible');
+      } else if (message.type === 'hideCard') {
+        card.classList.remove('visible');
+        card.classList.add('hidden');
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+
+    ws.onclose = () => {
+      console.log('Disconnected from overlay server');
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "name": "chat-room-example",
+  "type": "module",
+  "scripts": {
+    "computer-use": "node cu-cli.js"
+  }
+}

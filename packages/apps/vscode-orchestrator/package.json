@@ -1,0 +1,80 @@
+{
+  "name": "vscode-orchestrator",
+  "displayName": "VSCode Demo Orchestrator",
+  "description": "External control of VSCode for demo recording and automation",
+  "version": "0.1.0",
+  "publisher": "legion",
+  "engines": {
+    "vscode": "^1.92.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "orchestrator.toggle",
+        "title": "Toggle Orchestrator Server"
+      }
+    ],
+    "configuration": {
+      "title": "VSCode Orchestrator",
+      "properties": {
+        "orchestrator.port": {
+          "type": "number",
+          "default": 17892,
+          "description": "WebSocket server port"
+        },
+        "orchestrator.typing.cpsDefault": {
+          "type": "number",
+          "default": 40,
+          "description": "Default characters per second for typing animation"
+        },
+        "orchestrator.typing.chunkSize": {
+          "type": "number",
+          "default": 160,
+          "description": "Chunk size for chunked insert"
+        },
+        "orchestrator.typing.intervalMs": {
+          "type": "number",
+          "default": 50,
+          "description": "Interval between chunks in milliseconds"
+        },
+        "orchestrator.disableOnTypeFormat": {
+          "type": "boolean",
+          "default": true,
+          "description": "Disable on-type formatting during animated edits"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "package": "vsce package --no-dependencies",
+    "test": "jest --runInBand",
+    "test:unit": "jest --runInBand --testMatch='**/__tests__/unit/**/*.test.ts'",
+    "test:integration": "jest --runInBand --testMatch='**/__tests__/integration/**/*.test.ts'",
+    "test:e2e": "jest --runInBand --testMatch='**/__tests__/e2e/**/*.test.ts'",
+    "vscode:create-file": "node scripts/create-file.js",
+    "vscode:open-url": "node scripts/open-url.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.92.0",
+    "@types/ws": "^8.18.1",
+    "@vscode/vsce": "^3.6.0",
+    "esbuild": "^0.25.3",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.8.3"
+  }
+}
