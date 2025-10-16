@@ -3,6 +3,7 @@ import { openFile, saveFile, replaceAll } from './commands/file-ops.js';
 import { typeText, chunkedInsert } from './commands/animated-edit.js';
 import { setCursor, reveal, highlight } from './commands/cursor-ops.js';
 import { openUrl, sleep, batch } from './commands/utils.js';
+import { showFlashcard, closeFlashcard } from './commands/flashcard.js';
 
 export class CommandRegistry {
   private handlers: Map<string, CommandHandler> = new Map();
@@ -29,6 +30,10 @@ export class CommandRegistry {
     // Browser & utilities
     this.handlers.set('openUrl', openUrl);
     this.handlers.set('sleep', sleep);
+
+    // Flashcard
+    this.handlers.set('showFlashcard', showFlashcard);
+    this.handlers.set('closeFlashcard', closeFlashcard);
 
     // Batch - special handling needed
     this.handlers.set('batch', async (args) => {

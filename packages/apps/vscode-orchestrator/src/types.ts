@@ -64,4 +64,10 @@ export interface BatchArgs {
   ops: Array<{ cmd: string; args: any }>;
 }
 
+export interface FlashcardArgs {
+  title: string;
+  subtitle?: string;
+  column?: number;
+}
+
 export type CommandHandler = (args: any) => Promise<any>;

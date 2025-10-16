@@ -2254,7 +2254,7 @@ var require_websocket = __commonJS({
     } = require_event_target();
     var { format, parse } = require_extension();
     var { toBuffer } = require_buffer_util();
-    var closeTimeout = 30 * 1e3;
+    var closeTimeout2 = 30 * 1e3;
     var kAborted = Symbol("kAborted");
     var protocolVersions = [8, 13];
     var readyStates = ["CONNECTING", "OPEN", "CLOSING", "CLOSED"];
@@ -3060,7 +3060,7 @@ var require_websocket = __commonJS({
     function setCloseTimer(websocket) {
       websocket._closeTimer = setTimeout(
         websocket._socket.destroy.bind(websocket._socket),
-        closeTimeout
+        closeTimeout2
       );
     }
     function socketOnClose() {
@@ -3645,10 +3645,10 @@ __export(extension_exports, {
   deactivate: () => deactivate
 });
 module.exports = __toCommonJS(extension_exports);
-var vscode6 = __toESM(require("vscode"));
+var vscode7 = __toESM(require("vscode"));
 
 // src/orchestrator-server.ts
-var vscode5 = __toESM(require("vscode"));
+var vscode6 = __toESM(require("vscode"));
 
 // ../../../node_modules/ws/wrapper.mjs
 var import_stream = __toESM(require_stream(), 1);
@@ -3913,6 +3913,168 @@ async function batch(args, executeCommand) {
   return { operations: results.length, results };
 }
 
+// src/commands/flashcard.ts
+var vscode5 = __toESM(require("vscode"));
+var flashcardPanel = null;
+var closeTimeout = null;
+async function showFlashcard(args) {
+  const column = args.column ?? vscode5.ViewColumn.Three;
+  const title = args.title || "";
+  const subtitle = args.subtitle || "";
+  const durationMs = 2e3;
+  if (closeTimeout) {
+    clearTimeout(closeTimeout);
+    closeTimeout = null;
+  }
+  if (!flashcardPanel) {
+    flashcardPanel = vscode5.window.createWebviewPanel(
+      "orchestratorFlashcard",
+      "Demo Progress",
+      column,
+      {
+        enableScripts: true,
+        retainContextWhenHidden: true
+      }
+    );
+    flashcardPanel.onDidDispose(() => {
+      flashcardPanel = null;
+      if (closeTimeout) {
+        clearTimeout(closeTimeout);
+        closeTimeout = null;
+      }
+    });
+  }
+  flashcardPanel.webview.html = getFlashcardHtml(title, subtitle, durationMs);
+  flashcardPanel.reveal(column, true);
+  closeTimeout = setTimeout(() => {
+    if (flashcardPanel) {
+      flashcardPanel.dispose();
+      flashcardPanel = null;
+    }
+    closeTimeout = null;
+  }, durationMs);
+  return {
+    title,
+    subtitle,
+    column,
+    duration: durationMs
+  };
+}
+async function closeFlashcard() {
+  if (flashcardPanel) {
+    flashcardPanel.dispose();
+    flashcardPanel = null;
+    return { closed: true };
+  }
+  return { closed: false, message: "No flashcard panel open" };
+}
+function getFlashcardHtml(title, subtitle, durationMs) {
+  const fadeOutStart = durationMs - 500;
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flashcard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes fadeOut {
+      from {
+        opacity: 1;
+        transform: scale(1);
+      }
+      to {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+    }
+
+    body.fade-out {
+      animation: fadeOut 0.5s ease-out forwards;
+    }
+
+    .card {
+      text-align: center;
+      padding: 48px;
+      max-width: 800px;
+    }
+
+    h1 {
+      color: white;
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      line-height: 1.2;
+    }
+
+    p {
+      color: rgba(255, 255, 255, 0.95);
+      font-size: 28px;
+      font-weight: 300;
+      line-height: 1.6;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .subtitle {
+      margin-top: 16px;
+      font-size: 24px;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>${escapeHtml(title)}</h1>
+    ${subtitle ? `<p class="subtitle">${escapeHtml(subtitle)}</p>` : ""}
+  </div>
+  <script>
+    // Start fade out before close
+    setTimeout(() => {
+      document.body.classList.add('fade-out');
+    }, ${fadeOutStart});
+  </script>
+</body>
+</html>`;
+}
+function escapeHtml(text) {
+  const map = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  };
+  return text.replace(/[&<>"']/g, (m) => map[m]);
+}
+
 // src/command-handler.ts
 var CommandRegistry = class {
   handlers = /* @__PURE__ */ new Map();
@@ -3930,6 +4092,8 @@ var CommandRegistry = class {
     this.handlers.set("highlight", highlight);
     this.handlers.set("openUrl", openUrl);
     this.handlers.set("sleep", sleep2);
+    this.handlers.set("showFlashcard", showFlashcard);
+    this.handlers.set("closeFlashcard", closeFlashcard);
     this.handlers.set("batch", async (args) => {
       return batch(args, this.execute.bind(this));
     });
@@ -3969,7 +4133,7 @@ var OrchestratorServer = class {
         });
         this.wss.on("listening", () => {
           this.log(`Orchestrator WebSocket server listening on ws://127.0.0.1:${this.port}`);
-          vscode5.window.showInformationMessage(
+          vscode6.window.showInformationMessage(
             `Orchestrator server started on port ${this.port}`
           );
           resolve();
@@ -4060,32 +4224,32 @@ var OrchestratorServer = class {
 var server = null;
 var outputChannel;
 async function activate(context) {
-  outputChannel = vscode6.window.createOutputChannel("VSCode Orchestrator");
+  outputChannel = vscode7.window.createOutputChannel("VSCode Orchestrator");
   outputChannel.appendLine("VSCode Orchestrator extension activated");
-  const config = vscode6.workspace.getConfiguration("orchestrator");
+  const config = vscode7.workspace.getConfiguration("orchestrator");
   const port = config.get("port") ?? 17892;
   server = new OrchestratorServer(port, outputChannel);
   try {
     await server.start();
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
-    vscode6.window.showErrorMessage(`Failed to start Orchestrator server: ${errorMsg}`);
+    vscode7.window.showErrorMessage(`Failed to start Orchestrator server: ${errorMsg}`);
     outputChannel.appendLine(`Failed to start server: ${errorMsg}`);
   }
-  const toggleCommand = vscode6.commands.registerCommand(
+  const toggleCommand = vscode7.commands.registerCommand(
     "orchestrator.toggle",
     async () => {
       if (server) {
         await server.stop();
         server = null;
-        vscode6.window.showInformationMessage("Orchestrator server stopped");
+        vscode7.window.showInformationMessage("Orchestrator server stopped");
       } else {
         server = new OrchestratorServer(port, outputChannel);
         try {
           await server.start();
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);
-          vscode6.window.showErrorMessage(`Failed to start Orchestrator server: ${errorMsg}`);
+          vscode7.window.showErrorMessage(`Failed to start Orchestrator server: ${errorMsg}`);
         }
       }
     }
