@@ -2,9 +2,9 @@ import type { CommandHandler } from './types.js';
 import { openFile, saveFile, replaceAll } from './commands/file-ops.js';
 import { typeText, chunkedInsert, lineByLineInsert } from './commands/animated-edit.js';
 import { setCursor, reveal, highlight } from './commands/cursor-ops.js';
-import { openUrl, sleep, batch } from './commands/utils.js';
+import { openUrl, sleep, batch, closeTab, closeAllTabs } from './commands/utils.js';
 import { showFlashcard, closeFlashcard } from './commands/flashcard.js';
-import { executeScript, fillInput, clickElement, scrollTo } from './commands/webview-ops.js';
+import { executeScript, fillInput, clickElement, scrollTo, closeWebview } from './commands/webview-ops.js';
 
 export class CommandRegistry {
   private handlers: Map<string, CommandHandler> = new Map();
@@ -32,6 +32,8 @@ export class CommandRegistry {
     // Browser & utilities
     this.handlers.set('openUrl', openUrl);
     this.handlers.set('sleep', sleep);
+    this.handlers.set('closeTab', closeTab);
+    this.handlers.set('closeAllTabs', closeAllTabs);
 
     // Flashcard
     this.handlers.set('showFlashcard', showFlashcard);
@@ -42,6 +44,7 @@ export class CommandRegistry {
     this.handlers.set('fillInput', fillInput);
     this.handlers.set('clickElement', clickElement);
     this.handlers.set('scrollTo', scrollTo);
+    this.handlers.set('closeWebview', closeWebview);
 
     // Batch - special handling needed
     this.handlers.set('batch', async (args) => {

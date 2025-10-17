@@ -3946,6 +3946,14 @@ function registerWebviewPanel(url, panel) {
     webviewPanels.delete(url);
   });
 }
+async function closeWebview(args) {
+  const panel = webviewPanels.get(args.url);
+  if (!panel) {
+    return { closed: false, message: "No webview found for URL", url: args.url };
+  }
+  panel.dispose();
+  return { closed: true, url: args.url };
+}
 
 // src/commands/utils.ts
 async function openUrl(args) {
@@ -4130,6 +4138,27 @@ async function openUrl(args) {
 async function sleep2(args) {
   await new Promise((resolve) => setTimeout(resolve, args.ms));
   return { slept: args.ms };
+}
+async function closeTab(args) {
+  const column = args?.column;
+  if (column !== void 0) {
+    const editor = vscode4.window.visibleTextEditors.find(
+      (e) => e.viewColumn === column
+    );
+    if (editor) {
+      await vscode4.window.showTextDocument(editor.document, editor.viewColumn);
+      await vscode4.commands.executeCommand("workbench.action.closeActiveEditor");
+      return { closed: true, column };
+    }
+    return { closed: false, message: "No editor in that column" };
+  } else {
+    await vscode4.commands.executeCommand("workbench.action.closeActiveEditor");
+    return { closed: true, column: "active" };
+  }
+}
+async function closeAllTabs() {
+  await vscode4.commands.executeCommand("workbench.action.closeAllEditors");
+  return { closed: "all" };
 }
 async function batch(args, executeCommand) {
   const results = [];
@@ -4326,12 +4355,15 @@ var CommandRegistry = class {
     this.handlers.set("highlight", highlight);
     this.handlers.set("openUrl", openUrl);
     this.handlers.set("sleep", sleep2);
+    this.handlers.set("closeTab", closeTab);
+    this.handlers.set("closeAllTabs", closeAllTabs);
     this.handlers.set("showFlashcard", showFlashcard);
     this.handlers.set("closeFlashcard", closeFlashcard);
     this.handlers.set("executeScript", executeScript);
     this.handlers.set("fillInput", fillInput);
     this.handlers.set("clickElement", clickElement);
     this.handlers.set("scrollTo", scrollTo);
+    this.handlers.set("closeWebview", closeWebview);
     this.handlers.set("batch", async (args) => {
       return batch(args, this.execute.bind(this));
     });

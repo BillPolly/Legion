@@ -203,6 +203,32 @@ export async function sleep(args: SleepArgs): Promise<any> {
   return { slept: args.ms };
 }
 
+export async function closeTab(args?: { column?: number }): Promise<any> {
+  const column = args?.column;
+
+  if (column !== undefined) {
+    // Close specific column
+    const editor = vscode.window.visibleTextEditors.find(
+      e => e.viewColumn === column
+    );
+    if (editor) {
+      await vscode.window.showTextDocument(editor.document, editor.viewColumn);
+      await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+      return { closed: true, column };
+    }
+    return { closed: false, message: 'No editor in that column' };
+  } else {
+    // Close active editor
+    await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+    return { closed: true, column: 'active' };
+  }
+}
+
+export async function closeAllTabs(): Promise<any> {
+  await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+  return { closed: 'all' };
+}
+
 export async function batch(
   args: BatchArgs,
   executeCommand: (cmd: string, cmdArgs: any) => Promise<any>

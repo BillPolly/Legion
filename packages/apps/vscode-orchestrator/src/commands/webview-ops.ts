@@ -94,3 +94,17 @@ export function registerWebviewPanel(url: string, panel: vscode.WebviewPanel): v
 export function getWebviewPanel(url: string): vscode.WebviewPanel | undefined {
   return webviewPanels.get(url);
 }
+
+/**
+ * Close a webview panel by URL
+ */
+export async function closeWebview(args: { url: string }): Promise<any> {
+  const panel = webviewPanels.get(args.url);
+
+  if (!panel) {
+    return { closed: false, message: 'No webview found for URL', url: args.url };
+  }
+
+  panel.dispose();
+  return { closed: true, url: args.url };
+}
