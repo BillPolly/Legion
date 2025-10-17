@@ -54,13 +54,17 @@ async function showFlashcard(ws, title, subtitle, duration = 3000) {
 }
 
 // Helper to create file with streaming from source
-async function createFileFromSource(ws, sourcePath, targetPath, cps = 150) {
+async function createFileFromSource(ws, sourcePath, targetPath, cps = 600) {
   console.log(`\n📝 Creating ${targetPath}...`);
   const content = readFileSync(join(SOURCE_DIR, sourcePath), 'utf-8');
   await sendCommand(ws, 'open', { file: targetPath, column: 1, create: true });
   await sendCommand(ws, 'type', { text: content, cps });
   await sendCommand(ws, 'save', {});
   console.log(`✅ ${targetPath} created (${content.length} characters)`);
+
+  // Wait for formatting, then close the tab
+  await new Promise(r => setTimeout(r, 1500));
+  await sendCommand(ws, 'closeTab', { column: 1 });
 }
 
 async function runDemo() {
@@ -102,6 +106,9 @@ async function runDemo() {
     const prdPath = `file://${SOURCE_DIR}/src/static/prd.html`;
     await sendCommand(ws, 'openUrl', { url: prdPath, column: 2 });
     await new Promise(r => setTimeout(r, 10000)); // Give time to read the PRD
+
+    // Close PRD
+    await sendCommand(ws, 'closeWebview', { url: prdPath });
 
     // Opening
     await showFlashcard(ws,
@@ -184,6 +191,9 @@ async function runDemo() {
     const prPath = `file://${SOURCE_DIR}/src/static/pr.html`;
     await sendCommand(ws, 'openUrl', { url: prPath, column: 2 });
     await new Promise(r => setTimeout(r, 8000)); // Give time to read the PR
+
+    // Close PR
+    await sendCommand(ws, 'closeWebview', { url: prPath });
 
     // Open dashboard
     console.log('\n\n🌐 Opening dashboard...');
