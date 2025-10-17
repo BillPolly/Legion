@@ -40,6 +40,19 @@ export async function openFile(args: OpenArgs): Promise<any> {
     await vscode.languages.setTextDocumentLanguage(doc, args.language);
   }
 
+  // CRITICAL: Set cursor to start of document to ensure typing starts at position 0,0
+  const startPos = new vscode.Position(0, 0);
+  editor.selection = new vscode.Selection(startPos, startPos);
+  editor.revealRange(new vscode.Range(startPos, startPos));
+
+  // Close any open autocomplete/suggestions to prevent interference during typing
+  try {
+    await vscode.commands.executeCommand('closeParameterHints');
+    await vscode.commands.executeCommand('hideSuggestWidget');
+  } catch {
+    // Commands might not exist, ignore
+  }
+
   return { file: args.file, uri: fileUri.toString() };
 }
 

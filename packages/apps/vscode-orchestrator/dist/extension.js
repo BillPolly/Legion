@@ -3689,6 +3689,9 @@ async function openFile(args) {
   if (args.language) {
     await vscode.languages.setTextDocumentLanguage(doc, args.language);
   }
+  const startPos = new vscode.Position(0, 0);
+  editor.selection = new vscode.Selection(startPos, startPos);
+  editor.revealRange(new vscode.Range(startPos, startPos));
   return { file: args.file, uri: fileUri.toString() };
 }
 async function saveFile() {
