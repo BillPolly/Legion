@@ -1,5 +1,5 @@
 import type { CommandHandler } from './types.js';
-import { openFile, saveFile, replaceAll } from './commands/file-ops.js';
+import { openFile, saveFile, replaceAll, closeFile } from './commands/file-ops.js';
 import { typeText, chunkedInsert, lineByLineInsert } from './commands/animated-edit.js';
 import { setCursor, reveal, highlight } from './commands/cursor-ops.js';
 import { openUrl, sleep, batch, closeTab, closeAllTabs } from './commands/utils.js';
@@ -18,6 +18,7 @@ export class CommandRegistry {
     this.handlers.set('open', openFile);
     this.handlers.set('save', saveFile);
     this.handlers.set('replaceAll', replaceAll);
+    this.handlers.set('closeFile', closeFile);
 
     // Animated editing
     this.handlers.set('type', typeText);

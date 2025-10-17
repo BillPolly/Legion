@@ -62,9 +62,9 @@ async function createFileFromSource(ws, sourcePath, targetPath, cps = 600) {
   await sendCommand(ws, 'save', {});
   console.log(`✅ ${targetPath} created (${content.length} characters)`);
 
-  // Wait for formatting, then close the tab
+  // Wait for formatting, then close the file by name
   await new Promise(r => setTimeout(r, 1500));
-  await sendCommand(ws, 'closeTab', { column: 1 });
+  await sendCommand(ws, 'closeFile', { file: targetPath });
 }
 
 async function runDemo() {

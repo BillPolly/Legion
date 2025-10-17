@@ -3720,6 +3720,26 @@ async function replaceAll(args) {
   editor.revealRange(new vscode.Range(startPos, startPos));
   return { length: args.text.length };
 }
+async function closeFile(args) {
+  const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+  if (!workspaceFolder) {
+    throw new Error("No workspace folder open");
+  }
+  const filePath = path.join(workspaceFolder.uri.fsPath, args.file);
+  const fileUri = vscode.Uri.file(filePath);
+  const tabs = vscode.window.tabGroups.all.flatMap((group) => group.tabs);
+  const tab = tabs.find((tab2) => {
+    if (tab2.input instanceof vscode.TabInputText) {
+      return tab2.input.uri.toString() === fileUri.toString();
+    }
+    return false;
+  });
+  if (!tab) {
+    return { closed: false, message: "File not open", file: args.file };
+  }
+  await vscode.window.tabGroups.close(tab);
+  return { closed: true, file: args.file };
+}
 
 // src/commands/animated-edit.ts
 var vscode2 = __toESM(require("vscode"));
@@ -3735,26 +3755,27 @@ async function typeText(args) {
   const msPerChar = 1e3 / cps;
   const text = args.text;
   vscode2.window.setStatusBarMessage(`Typing at ${cps} cps...`, text.length * msPerChar);
+  let currentPosition = editor.selection.active;
   for (let i = 0; i < text.length; i++) {
     const char = text[i];
-    const position = editor.selection.active;
     await editor.edit((editBuilder) => {
-      editBuilder.insert(position, char);
+      editBuilder.insert(currentPosition, char);
     }, {
       undoStopBefore: false,
       undoStopAfter: false
     });
-    let newPosition;
     if (char === "\n") {
-      newPosition = new vscode2.Position(position.line + 1, 0);
+      currentPosition = new vscode2.Position(currentPosition.line + 1, 0);
     } else {
-      newPosition = position.translate(0, 1);
+      currentPosition = currentPosition.translate(0, 1);
     }
-    editor.selection = new vscode2.Selection(newPosition, newPosition);
-    editor.revealRange(
-      new vscode2.Range(newPosition, newPosition),
-      vscode2.TextEditorRevealType.InCenterIfOutsideViewport
-    );
+    editor.selection = new vscode2.Selection(currentPosition, currentPosition);
+    if (i % 100 === 0) {
+      editor.revealRange(
+        new vscode2.Range(currentPosition, currentPosition),
+        vscode2.TextEditorRevealType.InCenterIfOutsideViewport
+      );
+    }
     await sleep(msPerChar);
   }
   return { chars: text.length, cps };
@@ -4347,6 +4368,7 @@ var CommandRegistry = class {
     this.handlers.set("open", openFile);
     this.handlers.set("save", saveFile);
     this.handlers.set("replaceAll", replaceAll);
+    this.handlers.set("closeFile", closeFile);
     this.handlers.set("type", typeText);
     this.handlers.set("chunkedInsert", chunkedInsert);
     this.handlers.set("lineByLine", lineByLineInsert);

@@ -17,33 +17,38 @@ export async function typeText(args: TypeArgs): Promise<any> {
 
   vscode.window.setStatusBarMessage(`Typing at ${cps} cps...`, text.length * msPerChar);
 
+  // Track position ourselves instead of relying on cursor
+  let currentPosition = editor.selection.active;
+
   for (let i = 0; i < text.length; i++) {
     const char = text[i];
-    const position = editor.selection.active;
 
     await editor.edit((editBuilder) => {
-      editBuilder.insert(position, char);
+      editBuilder.insert(currentPosition, char);
     }, {
       undoStopBefore: false,
       undoStopAfter: false
     });
 
-    // Move cursor forward - handle newlines specially
-    let newPosition;
+    // Update our tracked position - handle newlines specially
     if (char === '\n') {
       // Move to next line, column 0
-      newPosition = new vscode.Position(position.line + 1, 0);
+      currentPosition = new vscode.Position(currentPosition.line + 1, 0);
     } else {
       // Move one character to the right
-      newPosition = position.translate(0, 1);
+      currentPosition = currentPosition.translate(0, 1);
     }
-    editor.selection = new vscode.Selection(newPosition, newPosition);
 
-    // Reveal cursor
-    editor.revealRange(
-      new vscode.Range(newPosition, newPosition),
-      vscode.TextEditorRevealType.InCenterIfOutsideViewport
-    );
+    // Update editor selection to match our tracked position
+    editor.selection = new vscode.Selection(currentPosition, currentPosition);
+
+    // Reveal cursor periodically (every 100 chars) to avoid slowdown
+    if (i % 100 === 0) {
+      editor.revealRange(
+        new vscode.Range(currentPosition, currentPosition),
+        vscode.TextEditorRevealType.InCenterIfOutsideViewport
+      );
+    }
 
     await sleep(msPerChar);
   }

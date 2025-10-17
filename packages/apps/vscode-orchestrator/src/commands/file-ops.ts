@@ -80,3 +80,29 @@ export async function replaceAll(args: ReplaceAllArgs): Promise<any> {
 
   return { length: args.text.length };
 }
+
+export async function closeFile(args: { file: string }): Promise<any> {
+  const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+  if (!workspaceFolder) {
+    throw new Error('No workspace folder open');
+  }
+
+  const filePath = path.join(workspaceFolder.uri.fsPath, args.file);
+  const fileUri = vscode.Uri.file(filePath);
+
+  // Find the tab with this file
+  const tabs = vscode.window.tabGroups.all.flatMap(group => group.tabs);
+  const tab = tabs.find(tab => {
+    if (tab.input instanceof vscode.TabInputText) {
+      return tab.input.uri.toString() === fileUri.toString();
+    }
+    return false;
+  });
+
+  if (!tab) {
+    return { closed: false, message: 'File not open', file: args.file };
+  }
+
+  await vscode.window.tabGroups.close(tab);
+  return { closed: true, file: args.file };
+}
