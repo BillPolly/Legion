@@ -3910,6 +3910,19 @@ function registerWebviewPanel(url, panel) {
 async function openUrl(args) {
   const viewColumn = args.column ?? 2;
   try {
+    let htmlContent;
+    try {
+      const response = await fetch(args.url);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      htmlContent = await response.text();
+      console.log(`\u2705 Fetched content from ${args.url}: ${htmlContent.length} bytes`);
+    } catch (fetchError) {
+      const errorMsg = fetchError instanceof Error ? fetchError.message : String(fetchError);
+      console.error(`\u274C Failed to fetch ${args.url}: ${errorMsg}`);
+      throw new Error(`Failed to fetch URL: ${errorMsg}`);
+    }
     const panel = vscode4.window.createWebviewPanel(
       "orchestratorBrowser",
       // Internal ID
@@ -3952,20 +3965,9 @@ async function openUrl(args) {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline';">
-        <style>
-          body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100vh;
-            overflow: hidden;
-          }
-          iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-          }
-        </style>
+      </head>
+      <body>
+        <div id="content-container"></div>
         <script>
           const vscode = acquireVsCodeApi();
 
@@ -3979,91 +3981,67 @@ async function openUrl(args) {
             });
           }
 
-          logToExtension('info', 'VSCode webview wrapper initialized');
+          logToExtension('info', 'Webview initialized, waiting for content');
 
-          // Monitor iframe load events
-          window.addEventListener('DOMContentLoaded', () => {
-            const iframe = document.querySelector('iframe');
-
-            logToExtension('info', 'Iframe element found, setting up monitors', {
-              src: iframe.src
-            });
-
-            iframe.addEventListener('load', () => {
-              logToExtension('info', 'Iframe load event fired', {
-                src: iframe.src,
-                contentWindow: !!iframe.contentWindow
-              });
-            });
-
-            iframe.addEventListener('error', (e) => {
-              logToExtension('error', 'Iframe error event', {
-                error: e.toString()
-              });
-            });
-          });
-
-          // Listen for messages from iframe
-          window.addEventListener('message', (event) => {
-            logToExtension('info', 'Webview received message from iframe', {
-              type: event.data?.type,
-              origin: event.origin
-            });
-
-            if (event.data && event.data.type === 'open-link') {
-              logToExtension('info', 'Valid open-link message, forwarding to extension', {
-                url: event.data.url
-              });
-
-              // Forward to VS Code extension
-              vscode.postMessage({
-                command: 'openUrl',
-                url: event.data.url
-              });
-
-              logToExtension('info', 'Message forwarded to VSCode extension');
-            } else {
-              logToExtension('warn', 'Message type not recognized', {
-                type: event.data?.type
-              });
-            }
-          });
-
-          // Listen for messages from VSCode extension (for script execution)
+          // Listen for content from extension
           window.addEventListener('message', (event) => {
             const message = event.data;
 
-            if (message && message.type === 'executeScript') {
-              logToExtension('info', 'Executing script in iframe', {
-                script: message.script
+            if (message && message.type === 'injectContent') {
+              logToExtension('info', 'Received content to inject', {
+                contentLength: message.html ? message.html.length : 0
               });
 
-              // Execute script in iframe context
-              const iframe = document.querySelector('iframe');
-              if (iframe && iframe.contentWindow) {
-                try {
-                  iframe.contentWindow.postMessage({
-                    type: 'executeScript',
-                    script: message.script
-                  }, '*');
-                  logToExtension('info', 'Script execution message sent to iframe');
-                } catch (error) {
-                  logToExtension('error', 'Failed to send script to iframe', {
-                    error: error.toString()
+              try {
+                const container = document.getElementById('content-container');
+                if (container) {
+                  container.innerHTML = message.html;
+                  logToExtension('info', 'Content injected successfully', {
+                    contentPreview: message.html.substring(0, 200)
                   });
+
+                  // Intercept all link clicks
+                  container.addEventListener('click', (e) => {
+                    const target = e.target;
+                    const link = target.closest('a');
+
+                    if (link && link.href) {
+                      e.preventDefault();
+                      e.stopPropagation();
+
+                      logToExtension('info', 'Link clicked, opening in new webview', {
+                        url: link.href
+                      });
+
+                      // Send to extension to open in column 3
+                      vscode.postMessage({
+                        command: 'openUrl',
+                        url: link.href
+                      });
+                    }
+                  }, true);
+
+                  logToExtension('info', 'Link click interception enabled');
+                } else {
+                  logToExtension('error', 'Content container not found');
                 }
+              } catch (e) {
+                logToExtension('error', 'Failed to inject content', {
+                  error: e.toString()
+                });
               }
             }
           });
 
           logToExtension('info', 'Message listeners registered');
         </script>
-      </head>
-      <body>
-        <iframe src="${args.url}"></iframe>
       </body>
       </html>
     `;
+    panel.webview.postMessage({
+      type: "injectContent",
+      html: htmlContent
+    });
     return { url: args.url, column: viewColumn, panel: "created" };
   } catch (error) {
     throw new Error(`Failed to open URL: ${error instanceof Error ? error.message : String(error)}`);
