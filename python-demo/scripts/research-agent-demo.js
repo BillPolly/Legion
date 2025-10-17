@@ -57,31 +57,20 @@ async function runDemo() {
   // Target directory is the current working directory where the user runs the script
   const targetDir = process.cwd();
 
-  // Calculate workspace root (parent of targetDir)
-  // targetDir = /Users/williampearson/Legion/vibe-demo
-  // workspaceRoot = /Users/williampearson/Legion
-  const workspaceRoot = dirname(targetDir);
-
   // Helper to create file with streaming from source
   async function createFileFromSource(ws, sourcePath, targetPath, cps = 600) {
     console.log(`\n📝 Creating ${targetPath}...`);
     const content = readFileSync(join(SOURCE_DIR, sourcePath), 'utf-8');
 
-    // Create absolute path for the target file
-    const absoluteTargetPath = join(targetDir, targetPath);
-
-    // Calculate relative path from workspace root for the orchestrator
-    // This makes the orchestrator see: vibe-demo/src/models.py
-    const relativeToWorkspace = relative(workspaceRoot, absoluteTargetPath);
-
-    await sendCommand(ws, 'open', { file: relativeToWorkspace, column: 1, create: true });
+    // Just use the simple target path - orchestrator will handle it correctly
+    await sendCommand(ws, 'open', { file: targetPath, column: 1, create: true });
     await sendCommand(ws, 'type', { text: content, cps });
     await sendCommand(ws, 'save', {});
     console.log(`✅ ${targetPath} created (${content.length} characters)`);
 
-    // Wait for formatting, then close the file by name (using same relative path)
+    // Wait for formatting, then close the file
     await new Promise(r => setTimeout(r, 1500));
-    await sendCommand(ws, 'closeFile', { file: relativeToWorkspace });
+    await sendCommand(ws, 'closeFile', { file: targetPath });
   }
   console.log(`🎯 Creating project in: ${targetDir}\n`);
   console.log('🧹 Setting up directory structure...');
@@ -118,7 +107,7 @@ async function runDemo() {
 
     const prdPath = `file://${SOURCE_DIR}/src/static/prd.html`;
     await sendCommand(ws, 'openUrl', { url: prdPath, column: 2 });
-    await new Promise(r => setTimeout(r, 10000)); // Give time to read the PRD
+    await new Promise(r => setTimeout(r, 20000)); // Give time to read the PRD
 
     // Close PRD
     await sendCommand(ws, 'closeWebview', { url: prdPath });
@@ -203,7 +192,7 @@ async function runDemo() {
 
     const prPath = `file://${SOURCE_DIR}/src/static/pr.html`;
     await sendCommand(ws, 'openUrl', { url: prPath, column: 2 });
-    await new Promise(r => setTimeout(r, 8000)); // Give time to read the PR
+    await new Promise(r => setTimeout(r, 20000)); // Give time to read the PR
 
     // Close PR
     await sendCommand(ws, 'closeWebview', { url: prPath });

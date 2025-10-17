@@ -1,59 +1,87 @@
 #!/usr/bin/env node
 /**
  * Start screen recording for demo
- * Records VSCode window only using Quartz to get bounds
+ * Records full screen using ffmpeg
+ * Runs WebSocket server to receive stop command
  */
 
-import { execSync } from 'child_process';
-import { writeFileSync } from 'fs';
+import { spawn } from 'child_process';
+import WebSocket, { WebSocketServer } from 'ws';
 
-const PID_FILE = '/tmp/demo-recording.pid';
+const WS_PORT = 9999;
 const OUTPUT_FILE = process.cwd() + '/demo-recording.mp4';
 
-console.log('🎥 Starting VSCode window recording...');
+console.log('🎥 Starting full screen recording...');
 console.log(`📁 Output will be saved to: ${OUTPUT_FILE}`);
 
 try {
-  // Get VSCode window bounds using python with Quartz
-  const pythonScript = `
-import Quartz
-import sys
+  // Start ffmpeg with spawn - full screen capture (no cropping)
+  const ffmpeg = spawn('ffmpeg', [
+    '-f', 'avfoundation',
+    '-i', '2:none',
+    '-r', '30',
+    '-y',
+    OUTPUT_FILE
+  ], {
+    stdio: ['pipe', 'pipe', 'pipe']
+  });
 
-window_list = Quartz.CGWindowListCopyWindowInfo(
-    Quartz.kCGWindowListOptionOnScreenOnly | Quartz.kCGWindowListExcludeDesktopElements,
-    Quartz.kCGNullWindowID
-)
+  console.log(`✅ Recording started (PID: ${ffmpeg.pid})`);
+  console.log('📌 Recording full screen');
+  console.log(`📌 Output: ${OUTPUT_FILE}`);
 
-for window in window_list:
-    owner = window.get('kCGWindowOwnerName', '')
-    name = window.get('kCGWindowName', '')
-    layer = window.get('kCGWindowLayer', 999)
-    if owner == 'Code' and layer == 0 and name:
-        bounds = window['kCGWindowBounds']
-        print(f"{int(bounds['X'])},{int(bounds['Y'])},{int(bounds['Width'])},{int(bounds['Height'])}")
-        sys.exit(0)
+  // Log ffmpeg output
+  ffmpeg.stderr.on('data', (data) => {
+    // Only log important messages, not every frame
+    const msg = data.toString();
+    if (msg.includes('error') || msg.includes('Error')) {
+      console.error('⚠️ ', msg.trim());
+    }
+  });
 
-print("0,0,1920,1080")
-`;
+  ffmpeg.on('close', (code) => {
+    console.log(`\n✅ FFmpeg exited with code ${code}`);
+    console.log(`📁 Video saved to: ${OUTPUT_FILE}`);
+    process.exit(0);
+  });
 
-  const bounds = execSync(`python3 -c "${pythonScript.replace(/"/g, '\\"')}"`, { encoding: 'utf-8' }).trim();
-  const [x, y, width, height] = bounds.split(',').map(Number);
+  // Create WebSocket server to listen for stop command
+  const wss = new WebSocketServer({ port: WS_PORT });
 
-  console.log(`📐 VSCode window: ${width}x${height} at (${x},${y})`);
+  console.log(`🔌 WebSocket server listening on port ${WS_PORT}`);
+  console.log('📌 Run stop-recording.js to stop\n');
 
-  // Start ffmpeg screen recording with crop filter
-  const command = `ffmpeg -f avfoundation -i "2:none" -r 30 -filter:v "crop=${width}:${height}:${x}:${y}" -y "${OUTPUT_FILE}" > /tmp/ffmpeg.log 2>&1 & echo $!`;
+  wss.on('connection', (ws) => {
+    console.log('🔌 Stop command received via WebSocket');
 
-  const pid = execSync(command, { encoding: 'utf-8' }).trim();
+    ws.on('message', (message) => {
+      const cmd = message.toString();
 
-  writeFileSync(PID_FILE, pid);
+      if (cmd === 'stop') {
+        console.log('⏳ Sending quit command to ffmpeg...');
 
-  console.log(`✅ Recording started (PID: ${pid})`);
-  console.log('📌 Recording VSCode window only');
-  console.log('📌 When finished, run: node scripts/stop-recording.js');
+        // Send 'q' to ffmpeg stdin to stop gracefully
+        ffmpeg.stdin.write('q\n');
+
+        // Wait for ffmpeg to close, then respond
+        ffmpeg.on('close', () => {
+          ws.send('done');
+          setTimeout(() => {
+            wss.close();
+          }, 100);
+        });
+      }
+    });
+  });
+
+  // Handle Ctrl+C
+  process.on('SIGINT', () => {
+    console.log('\n\n🛑 Interrupted by user');
+    console.log('⏳ Stopping ffmpeg gracefully...');
+    ffmpeg.stdin.write('q\n');
+  });
 
 } catch (error) {
   console.error('❌ Failed to start recording:', error.message);
-  console.error('\nMake sure VSCode is open');
   process.exit(1);
 }
