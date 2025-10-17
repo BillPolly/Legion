@@ -3731,7 +3731,7 @@ async function typeText(args) {
   if (!editor) {
     throw new Error("No active editor");
   }
-  const cps = Math.max(5, Math.min(120, args.cps ?? 40));
+  const cps = args.cps ?? 40;
   const msPerChar = 1e3 / cps;
   const text = args.text;
   vscode2.window.setStatusBarMessage(`Typing at ${cps} cps...`, text.length * msPerChar);
@@ -3800,6 +3800,45 @@ async function chunkedInsert(args) {
     await sleep(intervalMs);
   }
   return { chars: insertedChars, chunks };
+}
+async function lineByLineInsert(args) {
+  const editor = vscode2.window.activeTextEditor;
+  if (!editor) {
+    throw new Error("No active editor");
+  }
+  const linesPerSecond = args.linesPerSecond ?? 10;
+  const msPerLine = 1e3 / linesPerSecond;
+  const text = args.text;
+  const lines = text.split("\n");
+  vscode2.window.setStatusBarMessage(
+    `Inserting ${lines.length} lines at ${linesPerSecond} lps...`,
+    lines.length * msPerLine
+  );
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const isLastLine = i === lines.length - 1;
+    const lineWithNewline = isLastLine ? line : line + "\n";
+    const position = editor.selection.active;
+    await editor.edit((editBuilder) => {
+      editBuilder.insert(position, lineWithNewline);
+    }, {
+      undoStopBefore: false,
+      undoStopAfter: false
+    });
+    let newPosition;
+    if (isLastLine) {
+      newPosition = position.translate(0, line.length);
+    } else {
+      newPosition = new vscode2.Position(position.line + 1, 0);
+    }
+    editor.selection = new vscode2.Selection(newPosition, newPosition);
+    editor.revealRange(
+      new vscode2.Range(newPosition, newPosition),
+      vscode2.TextEditorRevealType.InCenterIfOutsideViewport
+    );
+    await sleep(msPerLine);
+  }
+  return { lines: lines.length, linesPerSecond };
 }
 
 // src/commands/cursor-ops.ts
@@ -4273,6 +4312,7 @@ var CommandRegistry = class {
     this.handlers.set("replaceAll", replaceAll);
     this.handlers.set("type", typeText);
     this.handlers.set("chunkedInsert", chunkedInsert);
+    this.handlers.set("lineByLine", lineByLineInsert);
     this.handlers.set("setCursor", setCursor);
     this.handlers.set("reveal", reveal);
     this.handlers.set("highlight", highlight);

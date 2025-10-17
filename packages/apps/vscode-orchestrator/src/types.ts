@@ -30,6 +30,11 @@ export interface ChunkedInsertArgs {
   intervalMs?: number;
 }
 
+export interface LineByLineInsertArgs {
+  text: string;
+  linesPerSecond?: number;
+}
+
 export interface ReplaceAllArgs {
   text: string;
 }

@@ -1,6 +1,6 @@
 import type { CommandHandler } from './types.js';
 import { openFile, saveFile, replaceAll } from './commands/file-ops.js';
-import { typeText, chunkedInsert } from './commands/animated-edit.js';
+import { typeText, chunkedInsert, lineByLineInsert } from './commands/animated-edit.js';
 import { setCursor, reveal, highlight } from './commands/cursor-ops.js';
 import { openUrl, sleep, batch } from './commands/utils.js';
 import { showFlashcard, closeFlashcard } from './commands/flashcard.js';
@@ -22,6 +22,7 @@ export class CommandRegistry {
     // Animated editing
     this.handlers.set('type', typeText);
     this.handlers.set('chunkedInsert', chunkedInsert);
+    this.handlers.set('lineByLine', lineByLineInsert);
 
     // Cursor & visibility
     this.handlers.set('setCursor', setCursor);
@@ -45,6 +46,11 @@ export class CommandRegistry {
     // Batch - special handling needed
     this.handlers.set('batch', async (args) => {
       return batch(args, this.execute.bind(this));
+    });
+
+    // Debug command to list all available commands
+    this.handlers.set('listCommands', async () => {
+      return { commands: this.getCommands() };
     });
   }
 
