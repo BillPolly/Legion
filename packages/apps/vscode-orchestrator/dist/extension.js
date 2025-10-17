@@ -3934,6 +3934,12 @@ async function openUrl(args) {
           console.log("\u2705 Opening URL in column 3:", message.url);
           await openUrl({ url: message.url, column: 3 });
           console.log("\u2705 URL opened successfully");
+        } else if (message.command === "log") {
+          const logMessage = `[WEBVIEW] ${message.message}`;
+          console.log(`${message.level.toUpperCase()}: ${logMessage}`, message.data);
+          if (global.orchestratorLogger) {
+            global.orchestratorLogger.log(message.level, logMessage, message.data);
+          }
         } else {
           console.log("\u26A0\uFE0F Unknown command:", message.command);
         }
@@ -3945,6 +3951,7 @@ async function openUrl(args) {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline';">
         <style>
           body, html {
             margin: 0;
@@ -3962,15 +3969,51 @@ async function openUrl(args) {
         <script>
           const vscode = acquireVsCodeApi();
 
-          console.log('\u{1F3AF} VSCode webview wrapper initialized');
+          // Helper to send logs to extension
+          function logToExtension(level, message, data = {}) {
+            vscode.postMessage({
+              command: 'log',
+              level: level,
+              message: message,
+              data: data
+            });
+          }
+
+          logToExtension('info', 'VSCode webview wrapper initialized');
+
+          // Monitor iframe load events
+          window.addEventListener('DOMContentLoaded', () => {
+            const iframe = document.querySelector('iframe');
+
+            logToExtension('info', 'Iframe element found, setting up monitors', {
+              src: iframe.src
+            });
+
+            iframe.addEventListener('load', () => {
+              logToExtension('info', 'Iframe load event fired', {
+                src: iframe.src,
+                contentWindow: !!iframe.contentWindow
+              });
+            });
+
+            iframe.addEventListener('error', (e) => {
+              logToExtension('error', 'Iframe error event', {
+                error: e.toString()
+              });
+            });
+          });
 
           // Listen for messages from iframe
           window.addEventListener('message', (event) => {
-            console.log('\u{1F4E8} Webview received message:', event.data);
+            logToExtension('info', 'Webview received message from iframe', {
+              type: event.data?.type,
+              origin: event.origin
+            });
 
             if (event.data && event.data.type === 'open-link') {
-              console.log('\u2705 Valid open-link message, forwarding to extension...');
-              console.log('\u{1F517} URL:', event.data.url);
+              logToExtension('info', 'Valid open-link message, forwarding to extension', {
+                url: event.data.url
+              });
 
               // Forward to VS Code extension
               vscode.postMessage({
@@ -3978,9 +4021,11 @@ async function openUrl(args) {
                 url: event.data.url
               });
 
-              console.log('\u{1F4E4} Message forwarded to VSCode extension');
+              logToExtension('info', 'Message forwarded to VSCode extension');
             } else {
-              console.log('\u26A0\uFE0F Message type not recognized:', event.data?.type);
+              logToExtension('warn', 'Message type not recognized', {
+                type: event.data?.type
+              });
             }
           });
 
@@ -3989,7 +4034,9 @@ async function openUrl(args) {
             const message = event.data;
 
             if (message && message.type === 'executeScript') {
-              console.log('\u{1F3AF} Executing script in iframe:', message.script);
+              logToExtension('info', 'Executing script in iframe', {
+                script: message.script
+              });
 
               // Execute script in iframe context
               const iframe = document.querySelector('iframe');
@@ -3999,19 +4046,21 @@ async function openUrl(args) {
                     type: 'executeScript',
                     script: message.script
                   }, '*');
-                  console.log('\u2705 Script execution message sent to iframe');
+                  logToExtension('info', 'Script execution message sent to iframe');
                 } catch (error) {
-                  console.error('\u274C Failed to send script to iframe:', error);
+                  logToExtension('error', 'Failed to send script to iframe', {
+                    error: error.toString()
+                  });
                 }
               }
             }
           });
 
-          console.log('\u2705 Message listeners registered');
+          logToExtension('info', 'Message listeners registered');
         </script>
       </head>
       <body>
-        <iframe src="${args.url}" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
+        <iframe src="${args.url}"></iframe>
       </body>
       </html>
     `;
@@ -4243,18 +4292,315 @@ var CommandRegistry = class {
   }
 };
 
+// src/utils/FileLogger.ts
+var fs = __toESM(require("fs/promises"));
+var path2 = __toESM(require("path"));
+var FileLogger = class {
+  logDir;
+  sessionId;
+  sessionFile;
+  messageCount = 0;
+  startTime;
+  initialized = false;
+  // Log rotation and cleanup configuration
+  maxLogFiles;
+  maxLogAge;
+  maxLogSize;
+  enableRotation;
+  constructor(options = {}) {
+    this.logDir = options.outputDir || path2.join(__dirname, "../../.logs");
+    this.sessionId = this.generateSessionId();
+    const timestamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-").replace("T", "_").replace("Z", "");
+    this.sessionFile = path2.join(this.logDir, `orchestrator-${timestamp}.log`);
+    this.startTime = /* @__PURE__ */ new Date();
+    this.maxLogFiles = options.maxLogFiles || 5;
+    this.maxLogAge = options.maxLogAge || 7 * 24 * 60 * 60 * 1e3;
+    this.maxLogSize = options.maxLogSize || 10 * 1024 * 1024;
+    this.enableRotation = options.enableRotation !== false;
+  }
+  /**
+   * Generate a unique session ID with timestamp
+   */
+  generateSessionId() {
+    const now = /* @__PURE__ */ new Date();
+    const timestamp = now.toISOString().replace(/[:.]/g, "-").replace("T", "_").replace("Z", "");
+    const random = Math.random().toString(36).substring(2, 8);
+    return `${timestamp}_${random}`;
+  }
+  /**
+   * Initialize the logger and create necessary directories
+   */
+  async initialize() {
+    if (this.initialized) return;
+    try {
+      await fs.mkdir(this.logDir, { recursive: true });
+      const backupDir = path2.join(this.logDir, "backup");
+      await fs.mkdir(backupDir, { recursive: true });
+      await this.moveAllLogsToBackup();
+      if (this.enableRotation) {
+        await this.performMaintenance();
+      }
+      const header = this.formatSessionHeader();
+      await fs.writeFile(this.sessionFile, header, "utf8");
+      this.initialized = true;
+      console.log(`\u{1F4DD} File logger initialized: ${this.sessionFile}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`Failed to initialize file logger: ${message}`);
+      throw error;
+    }
+  }
+  /**
+   * Format the session header
+   */
+  formatSessionHeader() {
+    return `${"=".repeat(80)}
+VSCODE ORCHESTRATOR SESSION LOG
+Session ID: ${this.sessionId}
+Start Time: ${this.startTime.toISOString()}
+${"=".repeat(80)}
+
+`;
+  }
+  /**
+   * Log a message with level and context
+   */
+  async log(level, message, context = {}) {
+    if (!this.initialized) {
+      await this.initialize();
+    }
+    await this.checkLogRotation();
+    const timestamp = (/* @__PURE__ */ new Date()).toISOString();
+    let formattedMessage = `[${timestamp}] [${level.toUpperCase()}] ${message}`;
+    if (context && Object.keys(context).length > 0) {
+      formattedMessage += `
+Context: ${JSON.stringify(context, null, 2)}`;
+    }
+    formattedMessage += "\n";
+    try {
+      await fs.appendFile(this.sessionFile, formattedMessage, "utf8");
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error(`Failed to log message: ${msg}`);
+    }
+  }
+  /**
+   * Log session summary at the end
+   */
+  async logSummary(summary = {}) {
+    if (!this.initialized) return;
+    const endTime = /* @__PURE__ */ new Date();
+    const duration = endTime.getTime() - this.startTime.getTime();
+    const formattedSummary = `
+${"=".repeat(80)}
+SESSION SUMMARY
+${"=".repeat(80)}
+End Time: ${endTime.toISOString()}
+Duration: ${this.formatDuration(duration)}
+Total Messages: ${this.messageCount}
+${Object.entries(summary).map(([key, value]) => `${key}: ${value}`).join("\n")}
+${"=".repeat(80)}
+`;
+    try {
+      await fs.appendFile(this.sessionFile, formattedSummary, "utf8");
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error(`Failed to log summary: ${msg}`);
+    }
+  }
+  /**
+   * Format duration in human-readable format
+   */
+  formatDuration(ms) {
+    const seconds = Math.floor(ms / 1e3);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    if (hours > 0) {
+      return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${seconds % 60}s`;
+    } else {
+      return `${seconds}s`;
+    }
+  }
+  /**
+   * Get the session file path
+   */
+  getSessionFile() {
+    return this.sessionFile;
+  }
+  /**
+   * Get the session ID
+   */
+  getSessionId() {
+    return this.sessionId;
+  }
+  /**
+   * Move ALL log files from .logs/ to .logs/backup/
+   */
+  async moveAllLogsToBackup() {
+    try {
+      const backupDir = path2.join(this.logDir, "backup");
+      const files = await fs.readdir(this.logDir);
+      const logFiles = files.filter(
+        (file) => file.endsWith(".log") && file !== "backup"
+      );
+      if (logFiles.length === 0) {
+        return;
+      }
+      for (const file of logFiles) {
+        try {
+          const filePath = path2.join(this.logDir, file);
+          const backupFile = path2.join(backupDir, file);
+          await fs.rename(filePath, backupFile);
+          console.log(`\u{1F4DD} Moved ${file} to backup`);
+        } catch (error) {
+          const msg = error instanceof Error ? error.message : String(error);
+          console.error(`Failed to move ${file} to backup: ${msg}`);
+          try {
+            await fs.unlink(path2.join(this.logDir, file));
+          } catch {
+          }
+        }
+      }
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error(`Failed to move logs to backup: ${msg}`);
+    }
+  }
+  /**
+   * Get all backup log files, sorted by modification time (newest first)
+   */
+  async getLogFiles() {
+    try {
+      const backupDir = path2.join(this.logDir, "backup");
+      const files = await fs.readdir(backupDir);
+      const logFiles = files.filter((file) => file.endsWith(".log"));
+      const fileStats = await Promise.all(
+        logFiles.map(async (file) => {
+          const filePath = path2.join(backupDir, file);
+          const stats = await fs.stat(filePath);
+          return {
+            name: file,
+            path: filePath,
+            mtime: stats.mtime,
+            size: stats.size,
+            age: Date.now() - stats.mtime.getTime()
+          };
+        })
+      );
+      return fileStats.sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error(`Failed to get log files: ${msg}`);
+      return [];
+    }
+  }
+  /**
+   * Clean up old log files based on age and count limits
+   */
+  async cleanupOldLogs() {
+    if (!this.enableRotation) return;
+    try {
+      const logFiles = await this.getLogFiles();
+      const filesToDelete = [];
+      for (const file of logFiles) {
+        if (file.age > this.maxLogAge) {
+          filesToDelete.push(file);
+        }
+      }
+      const remainingFiles = logFiles.filter((f) => !filesToDelete.includes(f));
+      if (remainingFiles.length > this.maxLogFiles) {
+        const excessFiles = remainingFiles.slice(this.maxLogFiles);
+        filesToDelete.push(...excessFiles);
+      }
+      for (const file of filesToDelete) {
+        try {
+          await fs.unlink(file.path);
+          console.log(`\u{1F4DD} Cleaned up old log file: ${file.name} (${this.formatDuration(file.age)} old)`);
+        } catch (error) {
+          const msg = error instanceof Error ? error.message : String(error);
+          console.error(`Failed to delete log file ${file.name}: ${msg}`);
+        }
+      }
+      if (filesToDelete.length > 0) {
+        console.log(`\u{1F4DD} Log cleanup complete: removed ${filesToDelete.length} old log files`);
+      }
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error(`Failed to cleanup logs: ${msg}`);
+    }
+  }
+  /**
+   * Check if current log file needs rotation due to size
+   */
+  async checkLogRotation() {
+    if (!this.enableRotation || !this.initialized) return;
+    try {
+      const stats = await fs.stat(this.sessionFile);
+      if (stats.size > this.maxLogSize) {
+        await this.rotateCurrentLog();
+      }
+    } catch (error) {
+    }
+  }
+  /**
+   * Rotate the current log file if it gets too large
+   */
+  async rotateCurrentLog() {
+    try {
+      const timestamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-").replace("T", "_").replace("Z", "");
+      const rotatedFile = path2.join(this.logDir, `orchestrator-${this.sessionId}-rotated-${timestamp}.log`);
+      await fs.rename(this.sessionFile, rotatedFile);
+      const header = this.formatSessionHeader();
+      await fs.writeFile(this.sessionFile, header, "utf8");
+      console.log(`\u{1F4DD} Log rotated: ${path2.basename(rotatedFile)} (size limit exceeded)`);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error(`Failed to rotate log: ${msg}`);
+    }
+  }
+  /**
+   * Perform cleanup and log statistics
+   */
+  async performMaintenance() {
+    if (!this.enableRotation) return;
+    try {
+      await this.cleanupOldLogs();
+      const logFiles = await this.getLogFiles();
+      const totalSize = logFiles.reduce((sum, file) => sum + file.size, 0);
+      const totalSizeMB = (totalSize / (1024 * 1024)).toFixed(2);
+      console.log(`\u{1F4DD} Log maintenance complete: ${logFiles.length} files, ${totalSizeMB}MB total`);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error(`Failed to perform log maintenance: ${msg}`);
+    }
+  }
+  /**
+   * Close the logger
+   */
+  close() {
+    this.initialized = false;
+  }
+};
+
 // src/orchestrator-server.ts
 var OrchestratorServer = class {
   wss = null;
   commandRegistry;
   port;
   outputChannel;
+  fileLogger;
   constructor(port, outputChannel2) {
     this.port = port;
     this.outputChannel = outputChannel2;
     this.commandRegistry = new CommandRegistry();
+    const logDir = "/Users/williampearson/Legion/packages/apps/vscode-orchestrator/.logs";
+    this.fileLogger = new FileLogger({ outputDir: logDir });
   }
   async start() {
+    await this.fileLogger.initialize();
+    global.orchestratorLogger = this.fileLogger;
     return new Promise((resolve, reject) => {
       try {
         this.wss = new import_websocket_server.default({
@@ -4285,7 +4631,11 @@ var OrchestratorServer = class {
     ws.on("message", async (data) => {
       try {
         const message = JSON.parse(data.toString());
-        this.log(`Received command: ${message.cmd} (id: ${message.id})`);
+        this.log(`Received command: ${message.cmd} (id: ${message.id})`, {
+          cmd: message.cmd,
+          id: message.id,
+          args: message.args
+        });
         const response = await this.handleCommand(message);
         ws.send(JSON.stringify(response));
       } catch (error) {
@@ -4310,6 +4660,7 @@ var OrchestratorServer = class {
   async handleCommand(message) {
     try {
       if (!this.commandRegistry.hasCommand(message.cmd)) {
+        this.log(`Unknown command: ${message.cmd}`, { cmd: message.cmd });
         return {
           id: message.id,
           ok: false,
@@ -4318,6 +4669,10 @@ var OrchestratorServer = class {
         };
       }
       const result = await this.commandRegistry.execute(message.cmd, message.args);
+      this.log(`Command executed successfully: ${message.cmd}`, {
+        cmd: message.cmd,
+        result
+      });
       return {
         id: message.id,
         ok: true,
@@ -4325,7 +4680,11 @@ var OrchestratorServer = class {
       };
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-      this.log(`Command execution error: ${errorMsg}`);
+      this.log(`Command execution error: ${errorMsg}`, {
+        cmd: message.cmd,
+        error: errorMsg,
+        stack: error instanceof Error ? error.stack : void 0
+      });
       return {
         id: message.id,
         ok: false,
@@ -4344,9 +4703,12 @@ var OrchestratorServer = class {
       });
     }
   }
-  log(message) {
+  log(message, context = {}) {
     const timestamp = (/* @__PURE__ */ new Date()).toISOString();
     this.outputChannel.appendLine(`[${timestamp}] ${message}`);
+    this.fileLogger.log("info", message, context).catch((err) => {
+      console.error("File logging failed:", err);
+    });
   }
 };
 

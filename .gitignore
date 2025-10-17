@@ -44,6 +44,8 @@ npm-debug.log*
 logs/
 */logs/
 **/logs/
+.logs/
+**/.logs/
 
 # Temporary directories
 tmp/
@@ -126,3 +128,7 @@ artifacts/
 # Cloned repositories
 gem/
 ROMA/
+
+# Output directories
+output/
+**/output/

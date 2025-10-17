@@ -31,6 +31,15 @@ export async function openUrl(args: OpenUrlArgs): Promise<any> {
           // Recursively open new URL in column 3
           await openUrl({ url: message.url, column: 3 });
           console.log('✅ URL opened successfully');
+        } else if (message.command === 'log') {
+          // Forward webview logs to file logger via global handler
+          const logMessage = `[WEBVIEW] ${message.message}`;
+          console.log(`${message.level.toUpperCase()}: ${logMessage}`, message.data);
+
+          // Send to global logger if available
+          if ((global as any).orchestratorLogger) {
+            (global as any).orchestratorLogger.log(message.level, logMessage, message.data);
+          }
         } else {
           console.log('⚠️ Unknown command:', message.command);
         }
@@ -44,6 +53,7 @@ export async function openUrl(args: OpenUrlArgs): Promise<any> {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline';">
         <style>
           body, html {
             margin: 0;
@@ -61,15 +71,51 @@ export async function openUrl(args: OpenUrlArgs): Promise<any> {
         <script>
           const vscode = acquireVsCodeApi();
 
-          console.log('🎯 VSCode webview wrapper initialized');
+          // Helper to send logs to extension
+          function logToExtension(level, message, data = {}) {
+            vscode.postMessage({
+              command: 'log',
+              level: level,
+              message: message,
+              data: data
+            });
+          }
+
+          logToExtension('info', 'VSCode webview wrapper initialized');
+
+          // Monitor iframe load events
+          window.addEventListener('DOMContentLoaded', () => {
+            const iframe = document.querySelector('iframe');
+
+            logToExtension('info', 'Iframe element found, setting up monitors', {
+              src: iframe.src
+            });
+
+            iframe.addEventListener('load', () => {
+              logToExtension('info', 'Iframe load event fired', {
+                src: iframe.src,
+                contentWindow: !!iframe.contentWindow
+              });
+            });
+
+            iframe.addEventListener('error', (e) => {
+              logToExtension('error', 'Iframe error event', {
+                error: e.toString()
+              });
+            });
+          });
 
           // Listen for messages from iframe
           window.addEventListener('message', (event) => {
-            console.log('📨 Webview received message:', event.data);
+            logToExtension('info', 'Webview received message from iframe', {
+              type: event.data?.type,
+              origin: event.origin
+            });
 
             if (event.data && event.data.type === 'open-link') {
-              console.log('✅ Valid open-link message, forwarding to extension...');
-              console.log('🔗 URL:', event.data.url);
+              logToExtension('info', 'Valid open-link message, forwarding to extension', {
+                url: event.data.url
+              });
 
               // Forward to VS Code extension
               vscode.postMessage({
@@ -77,9 +123,11 @@ export async function openUrl(args: OpenUrlArgs): Promise<any> {
                 url: event.data.url
               });
 
-              console.log('📤 Message forwarded to VSCode extension');
+              logToExtension('info', 'Message forwarded to VSCode extension');
             } else {
-              console.log('⚠️ Message type not recognized:', event.data?.type);
+              logToExtension('warn', 'Message type not recognized', {
+                type: event.data?.type
+              });
             }
           });
 
@@ -88,7 +136,9 @@ export async function openUrl(args: OpenUrlArgs): Promise<any> {
             const message = event.data;
 
             if (message && message.type === 'executeScript') {
-              console.log('🎯 Executing script in iframe:', message.script);
+              logToExtension('info', 'Executing script in iframe', {
+                script: message.script
+              });
 
               // Execute script in iframe context
               const iframe = document.querySelector('iframe');
@@ -98,19 +148,21 @@ export async function openUrl(args: OpenUrlArgs): Promise<any> {
                     type: 'executeScript',
                     script: message.script
                   }, '*');
-                  console.log('✅ Script execution message sent to iframe');
+                  logToExtension('info', 'Script execution message sent to iframe');
                 } catch (error) {
-                  console.error('❌ Failed to send script to iframe:', error);
+                  logToExtension('error', 'Failed to send script to iframe', {
+                    error: error.toString()
+                  });
                 }
               }
             }
           });
 
-          console.log('✅ Message listeners registered');
+          logToExtension('info', 'Message listeners registered');
         </script>
       </head>
       <body>
-        <iframe src="${args.url}" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
+        <iframe src="${args.url}"></iframe>
       </body>
       </html>
     `;

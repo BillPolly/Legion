@@ -2,20 +2,30 @@ import * as vscode from 'vscode';
 import { WebSocketServer, WebSocket } from 'ws';
 import type { CommandEnvelope, ResponseEnvelope } from './types.js';
 import { CommandRegistry } from './command-handler.js';
+import { FileLogger } from './utils/FileLogger.js';
 
 export class OrchestratorServer {
   private wss: WebSocketServer | null = null;
   private commandRegistry: CommandRegistry;
   private port: number;
   private outputChannel: vscode.OutputChannel;
+  private fileLogger: FileLogger;
 
   constructor(port: number, outputChannel: vscode.OutputChannel) {
     this.port = port;
     this.outputChannel = outputChannel;
     this.commandRegistry = new CommandRegistry();
+    // Hardcode log directory to package location
+    const logDir = '/Users/williampearson/Legion/packages/apps/vscode-orchestrator/.logs';
+    this.fileLogger = new FileLogger({ outputDir: logDir });
   }
 
   async start(): Promise<void> {
+    await this.fileLogger.initialize();
+
+    // Make logger available globally for webview logging
+    (global as any).orchestratorLogger = this.fileLogger;
+
     return new Promise((resolve, reject) => {
       try {
         this.wss = new WebSocketServer({
@@ -50,7 +60,11 @@ export class OrchestratorServer {
     ws.on('message', async (data: Buffer) => {
       try {
         const message: CommandEnvelope = JSON.parse(data.toString());
-        this.log(`Received command: ${message.cmd} (id: ${message.id})`);
+        this.log(`Received command: ${message.cmd} (id: ${message.id})`, {
+          cmd: message.cmd,
+          id: message.id,
+          args: message.args
+        });
 
         const response = await this.handleCommand(message);
         ws.send(JSON.stringify(response));
@@ -80,6 +94,7 @@ export class OrchestratorServer {
   private async handleCommand(message: CommandEnvelope): Promise<ResponseEnvelope> {
     try {
       if (!this.commandRegistry.hasCommand(message.cmd)) {
+        this.log(`Unknown command: ${message.cmd}`, { cmd: message.cmd });
         return {
           id: message.id,
           ok: false,
@@ -90,6 +105,11 @@ export class OrchestratorServer {
 
       const result = await this.commandRegistry.execute(message.cmd, message.args);
 
+      this.log(`Command executed successfully: ${message.cmd}`, {
+        cmd: message.cmd,
+        result: result
+      });
+
       return {
         id: message.id,
         ok: true,
@@ -97,7 +117,11 @@ export class OrchestratorServer {
       };
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-      this.log(`Command execution error: ${errorMsg}`);
+      this.log(`Command execution error: ${errorMsg}`, {
+        cmd: message.cmd,
+        error: errorMsg,
+        stack: error instanceof Error ? error.stack : undefined
+      });
 
       return {
         id: message.id,
@@ -119,8 +143,13 @@ export class OrchestratorServer {
     }
   }
 
-  private log(message: string): void {
+  private log(message: string, context: any = {}): void {
     const timestamp = new Date().toISOString();
     this.outputChannel.appendLine(`[${timestamp}] ${message}`);
+
+    // Also log to file (async, don't await to avoid blocking)
+    this.fileLogger.log('info', message, context).catch(err => {
+      console.error('File logging failed:', err);
+    });
   }
 }

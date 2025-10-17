@@ -16,9 +16,9 @@ const PORT = 17892;
 const URL = `ws://localhost:${PORT}`;
 
 // Path to source files (relative to this script)
-// This script is in packages/apps/vscode-orchestrator/scripts/
-// python-demo is in Legion root
-const SOURCE_DIR = join(__dirname, '../../../../python-demo');
+// This script is in python-demo/scripts/
+// Source files are in python-demo (parent directory)
+const SOURCE_DIR = join(__dirname, '..');
 
 // Helper to send command and wait for response
 function sendCommand(ws, cmd, args) {
@@ -98,6 +98,10 @@ async function runDemo() {
       4000
     );
 
+    // Dependencies
+    await showFlashcard(ws, '📦 Dependencies', 'requirements.txt - Python packages', 1500);
+    await createFileFromSource(ws, 'requirements.txt', 'requirements.txt', 600);
+
     // Core Infrastructure
     await showFlashcard(ws, '📦 Package Init', 'src/__init__.py', 1500);
     await createFileFromSource(ws, 'src/__init__.py', 'src/__init__.py', 600);
@@ -157,40 +161,10 @@ async function runDemo() {
       2000
     );
 
-    // Starting Server
-    await showFlashcard(ws,
-      '🚀 Starting Server',
-      'Launching HTTP (8000) and WebSocket (8765) servers...',
-      2000
-    );
-
     // Open dashboard
     console.log('\n\n🌐 Opening dashboard...');
     await sendCommand(ws, 'openUrl', { url: 'http://localhost:8000', column: 2 });
     await new Promise(r => setTimeout(r, 2000));
-
-    // Fill search input
-    await showFlashcard(ws,
-      '🔍 Running Research',
-      'Topic: "AI agents in 2025"',
-      2000
-    );
-
-    console.log('📝 Filling search input...');
-    await sendCommand(ws, 'fillInput', {
-      url: 'http://localhost:8000',
-      selector: '#topic-input',
-      value: 'AI agents in 2025'
-    });
-
-    await new Promise(r => setTimeout(r, 500));
-
-    // Click start button
-    console.log('🖱️  Clicking start button...');
-    await sendCommand(ws, 'clickElement', {
-      url: 'http://localhost:8000',
-      selector: '#start-button'
-    });
 
     await sendCommand(ws, 'closeFlashcard', {});
 
@@ -202,7 +176,7 @@ async function runDemo() {
 
     console.log(`\n\n🎉 Demo complete!`);
     console.log(`⏱️  Total time: ${mins}:${secs.toString().padStart(2, '0')}`);
-    console.log(`📁 ${15} files created`);
+    console.log(`📁 16 files created`);
     console.log(`🤖 6 AI agents built`);
     console.log(`🌐 Dashboard live at http://localhost:8000`);
 
