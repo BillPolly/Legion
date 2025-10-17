@@ -4009,6 +4009,29 @@ async function openUrl(args) {
                     contentPreview: message.html.substring(0, 200)
                   });
 
+                  // Extract and execute scripts from injected HTML
+                  const scripts = container.querySelectorAll('script');
+                  logToExtension('info', 'Found scripts in injected content', {
+                    count: scripts.length
+                  });
+
+                  scripts.forEach((oldScript) => {
+                    const newScript = document.createElement('script');
+
+                    // Copy all attributes
+                    Array.from(oldScript.attributes).forEach(attr => {
+                      newScript.setAttribute(attr.name, attr.value);
+                    });
+
+                    // Copy script content
+                    newScript.textContent = oldScript.textContent;
+
+                    // Replace old script with new one to execute it
+                    oldScript.parentNode.replaceChild(newScript, oldScript);
+                  });
+
+                  logToExtension('info', 'Scripts executed');
+
                   // Intercept all link clicks
                   container.addEventListener('click', (e) => {
                     const target = e.target;
