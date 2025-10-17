@@ -91,6 +91,18 @@ async function runDemo() {
   console.log('🎬 Starting Multi-Agent Research System Demo...\n');
 
   try {
+    // Show PRD first
+    console.log('📋 Showing Product Requirements Document...');
+    await showFlashcard(ws,
+      '📋 Product Requirements',
+      'Multi-Agent Research System with 6 AI Agents',
+      2000
+    );
+
+    const prdPath = `file://${targetDir}/src/static/prd.html`;
+    await sendCommand(ws, 'openUrl', { url: prdPath, column: 2 });
+    await new Promise(r => setTimeout(r, 10000)); // Give time to read the PRD
+
     // Opening
     await showFlashcard(ws,
       '🤖 Multi-Agent Research System',
@@ -160,6 +172,18 @@ async function runDemo() {
       'pip install langchain langgraph anthropic python-dotenv websockets',
       2000
     );
+
+    // Show PR
+    console.log('\n\n📋 Here is the PR...');
+    await showFlashcard(ws,
+      '📋 Here is the PR',
+      'feat: Add Multi-Agent Research System with 6 AI Agents',
+      2000
+    );
+
+    const prPath = `file://${targetDir}/src/static/pr.html`;
+    await sendCommand(ws, 'openUrl', { url: prPath, column: 2 });
+    await new Promise(r => setTimeout(r, 8000)); // Give time to read the PR
 
     // Open dashboard
     console.log('\n\n🌐 Opening dashboard...');

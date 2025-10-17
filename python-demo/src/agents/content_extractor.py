@@ -14,6 +14,7 @@ from langchain_core.messages import HumanMessage, AIMessage
 
 from state import ResearchState
 from models import SearchResult
+from security import sanitize_web_content
 
 logger = logging.getLogger(__name__)
 
@@ -140,8 +141,20 @@ async def content_extractor_node(state: ResearchState) -> dict:
                 f.write(html)
             logger.info(f"Saved HTML: {html_path}")
 
-        # Summarize content
-        summary = await summarize_content(llm, url, content, state['topic'])
+        # Security: Check for prompt injection and wrap in delimiters
+        is_safe, sanitized_content, reason = sanitize_web_content(url, content)
+
+        if not is_safe:
+            logger.warning(f"⚠️ Skipping {url}: {reason}")
+            summaries.append({
+                "url": url,
+                "summary": f"Content skipped due to security concern: {reason}",
+                "key_points": []
+            })
+            continue
+
+        # Summarize content (sanitized_content is already wrapped in delimiters)
+        summary = await summarize_content(llm, url, sanitized_content, state['topic'])
         summaries.append(summary)
 
     logger.info(f"✓ Extracted and summarized {len(summaries)} pages")

@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pull Request #1: Add Multi-Agent Research System · your-org/research-system</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+            background-color: #0d1117;
+            color: #f0f6fc;
+            padding: 20px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .pr-header {
+            border-bottom: 1px solid #21262d;
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+        }
+
+        .pr-title {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #f0f6fc;
+        }
+
+        .pr-number {
+            color: #9198a1;
+            font-weight: 400;
+        }
+
+        .pr-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #1a7f37;
+            color: #fff;
+            padding: 5px 12px;
+            border-radius: 999px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+
+        .pr-status::before {
+            content: "✓";
+            font-size: 18px;
+        }
+
+        .pr-meta {
+            color: #9198a1;
+            font-size: 14px;
+        }
+
+        .pr-meta strong {
+            color: #f0f6fc;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 16px;
+            border-bottom: 1px solid #21262d;
+            margin: 24px 0;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            color: #f0f6fc;
+            font-weight: 600;
+            border-bottom: 2px solid #f78166;
+            margin-bottom: -1px;
+        }
+
+        .commit-message {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 24px 0;
+            font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
+        }
+
+        .commit-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #f0f6fc;
+        }
+
+        .commit-body {
+            color: #c9d1d9;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .commit-body ul {
+            margin: 8px 0 8px 24px;
+        }
+
+        .commit-body li {
+            margin: 4px 0;
+        }
+
+        .stats {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            padding: 16px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            margin: 24px 0;
+            font-size: 14px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-additions {
+            color: #3fb950;
+        }
+
+        .stat-deletions {
+            color: #f85149;
+        }
+
+        .files-changed {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            margin: 24px 0;
+        }
+
+        .files-header {
+            padding: 16px;
+            border-bottom: 1px solid #21262d;
+            font-weight: 600;
+            color: #f0f6fc;
+        }
+
+        .file-category {
+            padding: 12px 16px;
+            border-bottom: 1px solid #21262d;
+            font-weight: 600;
+            color: #9198a1;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .file-item {
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid #21262d;
+            font-family: ui-monospace, 'Cascadia Code', monospace;
+            font-size: 13px;
+        }
+
+        .file-item:hover {
+            background: #161b22;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-status {
+            color: #3fb950;
+            font-weight: 600;
+            min-width: 40px;
+        }
+
+        .file-icon {
+            color: #7d8590;
+        }
+
+        .file-name {
+            color: #f0f6fc;
+        }
+
+        .checks {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 24px 0;
+        }
+
+        .check-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #3fb950;
+            font-size: 14px;
+        }
+
+        .check-icon {
+            font-size: 18px;
+        }
+
+        .review-section {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 24px 0;
+        }
+
+        .review-header {
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #f0f6fc;
+        }
+
+        .review-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            color: #c9d1d9;
+            font-size: 14px;
+        }
+
+        .review-approved {
+            color: #3fb950;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 24px;
+            color: #7d8590;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="pr-header">
+            <div class="pr-status">Open</div>
+            <h1 class="pr-title">
+                feat: Add Multi-Agent Research System with 6 AI Agents
+                <span class="pr-number">#1</span>
+            </h1>
+            <div class="pr-meta">
+                <strong>ai-developer</strong> wants to merge 1 commit into <strong>main</strong> from <strong>feature/multi-agent-research</strong>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab">Files changed 17</div>
+        </div>
+
+        <div class="commit-message">
+            <div class="commit-title">feat: Add Multi-Agent Research System with 6 AI Agents</div>
+            <div class="commit-body">
+                Implements a sophisticated multi-agent research system using LangGraph that performs comprehensive web research with verified sources.
+
+                <ul>
+                    <li><strong>6 AI Agents</strong>: Query Planner, Web Search, Link Checker, Content Extractor, Analyst, Supervisor</li>
+                    <li><strong>LangGraph Workflow</strong>: Stateful multi-agent orchestration with typed state management</li>
+                    <li><strong>Real-time Dashboard</strong>: WebSocket-powered UI with live progress tracking</li>
+                    <li><strong>Verified Sources</strong>: Link validation and content extraction with summaries</li>
+                    <li><strong>Security Guardrails</strong>: Anti-prompt injection defense for scraped pages with pattern detection and delimiter wrapping</li>
+                    <li><strong>Comprehensive Reports</strong>: Markdown reports with executive summaries and analysis</li>
+                </ul>
+
+                <strong>Technical Stack:</strong>
+                <ul>
+                    <li>LangChain + LangGraph for agent orchestration</li>
+                    <li>Pydantic for type-safe data models</li>
+                    <li>Serper API for web search</li>
+                    <li>Async/await for concurrent operations</li>
+                    <li>WebSocket for real-time updates</li>
+                </ul>
+
+                🤖 Generated with AI-powered vibe coding
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <strong>17</strong> files changed
+            </div>
+            <div class="stat-item stat-additions">
+                <strong>+2,562</strong> additions
+            </div>
+            <div class="stat-item stat-deletions">
+                <strong>0</strong> deletions
+            </div>
+        </div>
+
+        <div class="checks">
+            <div class="check-item">
+                <span class="check-icon">✓</span>
+                <span>All checks have passed — 6 successful checks</span>
+            </div>
+        </div>
+
+        <div class="files-changed">
+            <div class="files-header">Files changed (17)</div>
+
+            <div class="file-category">Dependencies</div>
+            <div class="file-item">
+                <span class="file-status">+12</span>
+                <span class="file-icon">📄</span>
+                <span class="file-name">requirements.txt</span>
+            </div>
+
+            <div class="file-category">Core Infrastructure</div>
+            <div class="file-item">
+                <span class="file-status">+5</span>
+                <span class="file-icon">🐍</span>
+                <span class="file-name">src/__init__.py</span>
+            </div>
+            <div class="file-item">
+                <span class="file-status">+128</span>
+                <span class="file-icon">🐍</span>
+                <span class="file-name">src/models.py</span>
+            </div>
+            <div class="file-item">
+                <span class="file-status">+64</span>
+                <span class="file-icon">🐍</span>
+                <span class="file-name">src/state.py</span>
+            </div>
+            <div class="file-item">
+                <span class="file-status">+89</span>
+                <span class="file-icon">🐍</span>
+                <span class="file-name">src/prompts.py</span>
+            </div>
+            <div class="file-item">
+                <span class="file-status">+112</span>
+                <span class="file-icon">🛡️</span>
+                <span class="file-name">src/security.py</span>
+            </div>
+            <div class="file-item">
+                <span class="file-status">+198</span>
+                <span class="file-icon">🐍</span>
+                <span class="file-name">src/main.py</span>
+            </div>
+
+            <div class="file-category">AI Agents</div>
+            <div class="file-item">
+                <span class="file-status">+18</span>
+                <span class="file-icon">🐍</span>
+                <span class="file-name">src/agents/__init__.py</span>
+            </div>
+            <div class="file-item">
+                <span class="file-status">+72</span>
+                <span class="file-icon">🐍</span>
+                <span class="file-name">src/agents/query_planner.py</span>
+            </div>
+            <div class="file-item">
+                <span class="file-status">+93</span>
+                <span class="file-icon">🐍</span>
+                <span class="file-name">src/agents/web_search.py</span>
+            </div>
+            <div class="file-item">
+                <span class="file-status">+85</span>
+                <span class="file-icon">🐍</span>
+                <span class="file-name">src/agents/link_checker.py</span>
+            </div>
+            <div class="file-item">
+                <span class="file-status">+164</span>
+                <span class="file-icon">🐍</span>
+                <span class="file-name">src/agents/content_extractor.py</span>
+            </div>
+            <div class="file-item">
+                <span class="file-status">+112</span>
+                <span class="file-icon">🐍</span>
+                <span class="file-name">src/agents/analyst.py</span>
+            </div>
+            <div class="file-item">
+                <span class="file-status">+78</span>
+                <span class="file-icon">🐍</span>
+                <span class="file-name">src/agents/supervisor.py</span>
+            </div>
+
+            <div class="file-category">Frontend</div>
+            <div class="file-item">
+                <span class="file-status">+156</span>
+                <span class="file-icon">🌐</span>
+                <span class="file-name">src/templates/dashboard.html</span>
+            </div>
+            <div class="file-item">
+                <span class="file-status">+245</span>
+                <span class="file-icon">🎨</span>
+                <span class="file-name">src/static/css/dashboard.css</span>
+            </div>
+            <div class="file-item">
+                <span class="file-status">+189</span>
+                <span class="file-icon">⚡</span>
+                <span class="file-name">src/static/js/dashboard.js</span>
+            </div>
+
+            <div class="file-category">Web Server</div>
+            <div class="file-item">
+                <span class="file-status">+142</span>
+                <span class="file-icon">🐍</span>
+                <span class="file-name">web_app.py</span>
+            </div>
+        </div>
+
+        <div class="review-section">
+            <div class="review-header">Reviews</div>
+            <div class="review-item review-approved">
+                <span class="check-icon">✓</span>
+                <span><strong>tech-lead</strong> approved these changes · 2 minutes ago</span>
+            </div>
+            <div class="review-item">
+                <span style="color: #7d8590;">💬</span>
+                <span>"Impressive implementation! Love the multi-agent architecture and real-time dashboard."</span>
+            </div>
+        </div>
+
+        <div class="footer">
+            This is a demonstration mockup · Multi-Agent Research System Demo
+        </div>
+    </div>
+</body>
+</html>
