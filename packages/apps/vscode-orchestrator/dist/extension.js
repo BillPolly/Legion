@@ -3692,6 +3692,14 @@ async function openFile(args) {
   const startPos = new vscode.Position(0, 0);
   editor.selection = new vscode.Selection(startPos, startPos);
   editor.revealRange(new vscode.Range(startPos, startPos));
+  try {
+    await vscode.commands.executeCommand("closeParameterHints");
+    await vscode.commands.executeCommand("hideSuggestWidget");
+    await vscode.commands.executeCommand("editor.action.triggerSuggest");
+    await vscode.commands.executeCommand("closeFindWidget");
+  } catch {
+  }
+  await new Promise((resolve) => setTimeout(resolve, 100));
   return { file: args.file, uri: fileUri.toString() };
 }
 async function saveFile() {
@@ -3758,30 +3766,84 @@ async function typeText(args) {
   const msPerChar = 1e3 / cps;
   const text = args.text;
   vscode2.window.setStatusBarMessage(`Typing at ${cps} cps...`, text.length * msPerChar);
-  let currentPosition = editor.selection.active;
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    await editor.edit((editBuilder) => {
-      editBuilder.insert(currentPosition, char);
-    }, {
-      undoStopBefore: false,
-      undoStopAfter: false
-    });
-    if (char === "\n") {
-      currentPosition = new vscode2.Position(currentPosition.line + 1, 0);
-    } else {
-      currentPosition = currentPosition.translate(0, 1);
+  const config = vscode2.workspace.getConfiguration("editor");
+  const originalSettings = {
+    quickSuggestions: config.get("quickSuggestions"),
+    parameterHints: config.get("parameterHints.enabled"),
+    suggestOnTriggerCharacters: config.get("suggestOnTriggerCharacters"),
+    acceptSuggestionOnCommitCharacter: config.get("acceptSuggestionOnCommitCharacter"),
+    tabCompletion: config.get("tabCompletion"),
+    wordBasedSuggestions: config.get("wordBasedSuggestions"),
+    inlineSuggest: config.get("inlineSuggest.enabled"),
+    autoClosingBrackets: config.get("autoClosingBrackets"),
+    autoClosingQuotes: config.get("autoClosingQuotes"),
+    autoClosingDelete: config.get("autoClosingDelete"),
+    autoClosingOvertype: config.get("autoClosingOvertype"),
+    formatOnType: config.get("formatOnType"),
+    formatOnPaste: config.get("formatOnPaste"),
+    snippetSuggestions: config.get("snippetSuggestions")
+  };
+  try {
+    await config.update("quickSuggestions", false, vscode2.ConfigurationTarget.Global);
+    await config.update("parameterHints.enabled", false, vscode2.ConfigurationTarget.Global);
+    await config.update("suggestOnTriggerCharacters", false, vscode2.ConfigurationTarget.Global);
+    await config.update("acceptSuggestionOnCommitCharacter", false, vscode2.ConfigurationTarget.Global);
+    await config.update("tabCompletion", "off", vscode2.ConfigurationTarget.Global);
+    await config.update("wordBasedSuggestions", "off", vscode2.ConfigurationTarget.Global);
+    await config.update("inlineSuggest.enabled", false, vscode2.ConfigurationTarget.Global);
+    await config.update("autoClosingBrackets", "never", vscode2.ConfigurationTarget.Global);
+    await config.update("autoClosingQuotes", "never", vscode2.ConfigurationTarget.Global);
+    await config.update("autoClosingDelete", "never", vscode2.ConfigurationTarget.Global);
+    await config.update("autoClosingOvertype", "never", vscode2.ConfigurationTarget.Global);
+    await config.update("formatOnType", false, vscode2.ConfigurationTarget.Global);
+    await config.update("formatOnPaste", false, vscode2.ConfigurationTarget.Global);
+    await config.update("snippetSuggestions", "none", vscode2.ConfigurationTarget.Global);
+    let currentPosition = editor.selection.active;
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      await editor.edit((editBuilder) => {
+        editBuilder.insert(currentPosition, char);
+      }, {
+        undoStopBefore: false,
+        undoStopAfter: false
+      });
+      if (char === "\n") {
+        currentPosition = new vscode2.Position(currentPosition.line + 1, 0);
+      } else {
+        currentPosition = currentPosition.translate(0, 1);
+      }
+      editor.selection = new vscode2.Selection(currentPosition, currentPosition);
+      if (i % 100 === 0) {
+        editor.revealRange(
+          new vscode2.Range(currentPosition, currentPosition),
+          vscode2.TextEditorRevealType.InCenterIfOutsideViewport
+        );
+      }
+      await sleep(msPerChar);
     }
-    editor.selection = new vscode2.Selection(currentPosition, currentPosition);
-    if (i % 100 === 0) {
-      editor.revealRange(
-        new vscode2.Range(currentPosition, currentPosition),
-        vscode2.TextEditorRevealType.InCenterIfOutsideViewport
-      );
+    const endOfDocument = editor.document.lineAt(editor.document.lineCount - 1).range.end;
+    if (currentPosition.isBefore(endOfDocument)) {
+      await editor.edit((editBuilder) => {
+        editBuilder.delete(new vscode2.Range(currentPosition, endOfDocument));
+      });
     }
-    await sleep(msPerChar);
+    return { chars: text.length, cps };
+  } finally {
+    await config.update("quickSuggestions", originalSettings.quickSuggestions, vscode2.ConfigurationTarget.Global);
+    await config.update("parameterHints.enabled", originalSettings.parameterHints, vscode2.ConfigurationTarget.Global);
+    await config.update("suggestOnTriggerCharacters", originalSettings.suggestOnTriggerCharacters, vscode2.ConfigurationTarget.Global);
+    await config.update("acceptSuggestionOnCommitCharacter", originalSettings.acceptSuggestionOnCommitCharacter, vscode2.ConfigurationTarget.Global);
+    await config.update("tabCompletion", originalSettings.tabCompletion, vscode2.ConfigurationTarget.Global);
+    await config.update("wordBasedSuggestions", originalSettings.wordBasedSuggestions, vscode2.ConfigurationTarget.Global);
+    await config.update("inlineSuggest.enabled", originalSettings.inlineSuggest, vscode2.ConfigurationTarget.Global);
+    await config.update("autoClosingBrackets", originalSettings.autoClosingBrackets, vscode2.ConfigurationTarget.Global);
+    await config.update("autoClosingQuotes", originalSettings.autoClosingQuotes, vscode2.ConfigurationTarget.Global);
+    await config.update("autoClosingDelete", originalSettings.autoClosingDelete, vscode2.ConfigurationTarget.Global);
+    await config.update("autoClosingOvertype", originalSettings.autoClosingOvertype, vscode2.ConfigurationTarget.Global);
+    await config.update("formatOnType", originalSettings.formatOnType, vscode2.ConfigurationTarget.Global);
+    await config.update("formatOnPaste", originalSettings.formatOnPaste, vscode2.ConfigurationTarget.Global);
+    await config.update("snippetSuggestions", originalSettings.snippetSuggestions, vscode2.ConfigurationTarget.Global);
   }
-  return { chars: text.length, cps };
 }
 async function chunkedInsert(args) {
   const editor = vscode2.window.activeTextEditor;

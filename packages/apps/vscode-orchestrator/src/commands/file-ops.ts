@@ -49,9 +49,14 @@ export async function openFile(args: OpenArgs): Promise<any> {
   try {
     await vscode.commands.executeCommand('closeParameterHints');
     await vscode.commands.executeCommand('hideSuggestWidget');
+    await vscode.commands.executeCommand('editor.action.triggerSuggest'); // Trigger and immediately close
+    await vscode.commands.executeCommand('closeFindWidget');
   } catch {
     // Commands might not exist, ignore
   }
+
+  // Brief delay to ensure commands execute
+  await new Promise(resolve => setTimeout(resolve, 100));
 
   return { file: args.file, uri: fileUri.toString() };
 }

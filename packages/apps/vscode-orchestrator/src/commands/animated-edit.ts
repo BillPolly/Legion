@@ -17,43 +17,106 @@ export async function typeText(args: TypeArgs): Promise<any> {
 
   vscode.window.setStatusBarMessage(`Typing at ${cps} cps...`, text.length * msPerChar);
 
-  // Track position ourselves instead of relying on cursor
-  let currentPosition = editor.selection.active;
+  // DISABLE ALL EDITOR FEATURES DURING TYPING - just insert text!
+  const config = vscode.workspace.getConfiguration('editor');
 
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
+  // Save all original settings
+  const originalSettings = {
+    quickSuggestions: config.get('quickSuggestions'),
+    parameterHints: config.get('parameterHints.enabled'),
+    suggestOnTriggerCharacters: config.get('suggestOnTriggerCharacters'),
+    acceptSuggestionOnCommitCharacter: config.get('acceptSuggestionOnCommitCharacter'),
+    tabCompletion: config.get('tabCompletion'),
+    wordBasedSuggestions: config.get('wordBasedSuggestions'),
+    inlineSuggest: config.get('inlineSuggest.enabled'),
+    autoClosingBrackets: config.get('autoClosingBrackets'),
+    autoClosingQuotes: config.get('autoClosingQuotes'),
+    autoClosingDelete: config.get('autoClosingDelete'),
+    autoClosingOvertype: config.get('autoClosingOvertype'),
+    formatOnType: config.get('formatOnType'),
+    formatOnPaste: config.get('formatOnPaste'),
+    snippetSuggestions: config.get('snippetSuggestions')
+  };
 
-    await editor.edit((editBuilder) => {
-      editBuilder.insert(currentPosition, char);
-    }, {
-      undoStopBefore: false,
-      undoStopAfter: false
-    });
+  try {
+    // Disable EVERYTHING that could insert/modify text
+    await config.update('quickSuggestions', false, vscode.ConfigurationTarget.Global);
+    await config.update('parameterHints.enabled', false, vscode.ConfigurationTarget.Global);
+    await config.update('suggestOnTriggerCharacters', false, vscode.ConfigurationTarget.Global);
+    await config.update('acceptSuggestionOnCommitCharacter', false, vscode.ConfigurationTarget.Global);
+    await config.update('tabCompletion', 'off', vscode.ConfigurationTarget.Global);
+    await config.update('wordBasedSuggestions', 'off', vscode.ConfigurationTarget.Global);
+    await config.update('inlineSuggest.enabled', false, vscode.ConfigurationTarget.Global);
+    await config.update('autoClosingBrackets', 'never', vscode.ConfigurationTarget.Global);
+    await config.update('autoClosingQuotes', 'never', vscode.ConfigurationTarget.Global);
+    await config.update('autoClosingDelete', 'never', vscode.ConfigurationTarget.Global);
+    await config.update('autoClosingOvertype', 'never', vscode.ConfigurationTarget.Global);
+    await config.update('formatOnType', false, vscode.ConfigurationTarget.Global);
+    await config.update('formatOnPaste', false, vscode.ConfigurationTarget.Global);
+    await config.update('snippetSuggestions', 'none', vscode.ConfigurationTarget.Global);
 
-    // Update our tracked position - handle newlines specially
-    if (char === '\n') {
-      // Move to next line, column 0
-      currentPosition = new vscode.Position(currentPosition.line + 1, 0);
-    } else {
-      // Move one character to the right
-      currentPosition = currentPosition.translate(0, 1);
+    // Track position ourselves instead of relying on cursor
+    let currentPosition = editor.selection.active;
+
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+
+      await editor.edit((editBuilder) => {
+        editBuilder.insert(currentPosition, char);
+      }, {
+        undoStopBefore: false,
+        undoStopAfter: false
+      });
+
+      // Update our tracked position - handle newlines specially
+      if (char === '\n') {
+        // Move to next line, column 0
+        currentPosition = new vscode.Position(currentPosition.line + 1, 0);
+      } else {
+        // Move one character to the right
+        currentPosition = currentPosition.translate(0, 1);
+      }
+
+      // Update editor selection to match our tracked position
+      editor.selection = new vscode.Selection(currentPosition, currentPosition);
+
+      // Reveal cursor periodically (every 100 chars) to avoid slowdown
+      if (i % 100 === 0) {
+        editor.revealRange(
+          new vscode.Range(currentPosition, currentPosition),
+          vscode.TextEditorRevealType.InCenterIfOutsideViewport
+        );
+      }
+
+      await sleep(msPerChar);
     }
 
-    // Update editor selection to match our tracked position
-    editor.selection = new vscode.Selection(currentPosition, currentPosition);
-
-    // Reveal cursor periodically (every 100 chars) to avoid slowdown
-    if (i % 100 === 0) {
-      editor.revealRange(
-        new vscode.Range(currentPosition, currentPosition),
-        vscode.TextEditorRevealType.InCenterIfOutsideViewport
-      );
+    // NASTY HACK: Delete everything after the cursor position (garbage inserted by autocomplete/extensions)
+    const endOfDocument = editor.document.lineAt(editor.document.lineCount - 1).range.end;
+    if (currentPosition.isBefore(endOfDocument)) {
+      await editor.edit((editBuilder) => {
+        editBuilder.delete(new vscode.Range(currentPosition, endOfDocument));
+      });
     }
 
-    await sleep(msPerChar);
+    return { chars: text.length, cps };
+  } finally {
+    // Restore ALL original settings - re-enable language features
+    await config.update('quickSuggestions', originalSettings.quickSuggestions, vscode.ConfigurationTarget.Global);
+    await config.update('parameterHints.enabled', originalSettings.parameterHints, vscode.ConfigurationTarget.Global);
+    await config.update('suggestOnTriggerCharacters', originalSettings.suggestOnTriggerCharacters, vscode.ConfigurationTarget.Global);
+    await config.update('acceptSuggestionOnCommitCharacter', originalSettings.acceptSuggestionOnCommitCharacter, vscode.ConfigurationTarget.Global);
+    await config.update('tabCompletion', originalSettings.tabCompletion, vscode.ConfigurationTarget.Global);
+    await config.update('wordBasedSuggestions', originalSettings.wordBasedSuggestions, vscode.ConfigurationTarget.Global);
+    await config.update('inlineSuggest.enabled', originalSettings.inlineSuggest, vscode.ConfigurationTarget.Global);
+    await config.update('autoClosingBrackets', originalSettings.autoClosingBrackets, vscode.ConfigurationTarget.Global);
+    await config.update('autoClosingQuotes', originalSettings.autoClosingQuotes, vscode.ConfigurationTarget.Global);
+    await config.update('autoClosingDelete', originalSettings.autoClosingDelete, vscode.ConfigurationTarget.Global);
+    await config.update('autoClosingOvertype', originalSettings.autoClosingOvertype, vscode.ConfigurationTarget.Global);
+    await config.update('formatOnType', originalSettings.formatOnType, vscode.ConfigurationTarget.Global);
+    await config.update('formatOnPaste', originalSettings.formatOnPaste, vscode.ConfigurationTarget.Global);
+    await config.update('snippetSuggestions', originalSettings.snippetSuggestions, vscode.ConfigurationTarget.Global);
   }
-
-  return { chars: text.length, cps };
 }
 
 export async function chunkedInsert(args: ChunkedInsertArgs): Promise<any> {
