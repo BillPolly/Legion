@@ -3885,6 +3885,8 @@ async function highlight(args) {
 
 // src/commands/utils.ts
 var vscode4 = __toESM(require("vscode"));
+var fs = __toESM(require("fs"));
+var import_url = require("url");
 
 // src/commands/webview-ops.ts
 var webviewPanels = /* @__PURE__ */ new Map();
@@ -3951,12 +3953,18 @@ async function openUrl(args) {
   try {
     let htmlContent;
     try {
-      const response = await fetch(args.url);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      if (args.url.startsWith("file://")) {
+        const filePath = (0, import_url.fileURLToPath)(args.url);
+        htmlContent = fs.readFileSync(filePath, "utf-8");
+        console.log(`\u2705 Read file from ${args.url}: ${htmlContent.length} bytes`);
+      } else {
+        const response = await fetch(args.url);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        htmlContent = await response.text();
+        console.log(`\u2705 Fetched content from ${args.url}: ${htmlContent.length} bytes`);
       }
-      htmlContent = await response.text();
-      console.log(`\u2705 Fetched content from ${args.url}: ${htmlContent.length} bytes`);
     } catch (fetchError) {
       const errorMsg = fetchError instanceof Error ? fetchError.message : String(fetchError);
       console.error(`\u274C Failed to fetch ${args.url}: ${errorMsg}`);
@@ -4003,7 +4011,7 @@ async function openUrl(args) {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline';">
+        <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob: file:; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: file: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline' file:; font-src * data: file:;">
       </head>
       <body>
         <div id="content-container"></div>
@@ -4327,6 +4335,9 @@ var CommandRegistry = class {
     this.handlers.set("batch", async (args) => {
       return batch(args, this.execute.bind(this));
     });
+    this.handlers.set("listCommands", async () => {
+      return { commands: this.getCommands() };
+    });
   }
   async execute(cmd, args) {
     const handler = this.handlers.get(cmd);
@@ -4344,7 +4355,7 @@ var CommandRegistry = class {
 };
 
 // src/utils/FileLogger.ts
-var fs = __toESM(require("fs/promises"));
+var fs2 = __toESM(require("fs/promises"));
 var path2 = __toESM(require("path"));
 var FileLogger = class {
   logDir;
@@ -4384,15 +4395,15 @@ var FileLogger = class {
   async initialize() {
     if (this.initialized) return;
     try {
-      await fs.mkdir(this.logDir, { recursive: true });
+      await fs2.mkdir(this.logDir, { recursive: true });
       const backupDir = path2.join(this.logDir, "backup");
-      await fs.mkdir(backupDir, { recursive: true });
+      await fs2.mkdir(backupDir, { recursive: true });
       await this.moveAllLogsToBackup();
       if (this.enableRotation) {
         await this.performMaintenance();
       }
       const header = this.formatSessionHeader();
-      await fs.writeFile(this.sessionFile, header, "utf8");
+      await fs2.writeFile(this.sessionFile, header, "utf8");
       this.initialized = true;
       console.log(`\u{1F4DD} File logger initialized: ${this.sessionFile}`);
     } catch (error) {
@@ -4429,7 +4440,7 @@ Context: ${JSON.stringify(context, null, 2)}`;
     }
     formattedMessage += "\n";
     try {
-      await fs.appendFile(this.sessionFile, formattedMessage, "utf8");
+      await fs2.appendFile(this.sessionFile, formattedMessage, "utf8");
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       console.error(`Failed to log message: ${msg}`);
@@ -4453,7 +4464,7 @@ ${Object.entries(summary).map(([key, value]) => `${key}: ${value}`).join("\n")}
 ${"=".repeat(80)}
 `;
     try {
-      await fs.appendFile(this.sessionFile, formattedSummary, "utf8");
+      await fs2.appendFile(this.sessionFile, formattedSummary, "utf8");
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       console.error(`Failed to log summary: ${msg}`);
@@ -4492,7 +4503,7 @@ ${"=".repeat(80)}
   async moveAllLogsToBackup() {
     try {
       const backupDir = path2.join(this.logDir, "backup");
-      const files = await fs.readdir(this.logDir);
+      const files = await fs2.readdir(this.logDir);
       const logFiles = files.filter(
         (file) => file.endsWith(".log") && file !== "backup"
       );
@@ -4503,13 +4514,13 @@ ${"=".repeat(80)}
         try {
           const filePath = path2.join(this.logDir, file);
           const backupFile = path2.join(backupDir, file);
-          await fs.rename(filePath, backupFile);
+          await fs2.rename(filePath, backupFile);
           console.log(`\u{1F4DD} Moved ${file} to backup`);
         } catch (error) {
           const msg = error instanceof Error ? error.message : String(error);
           console.error(`Failed to move ${file} to backup: ${msg}`);
           try {
-            await fs.unlink(path2.join(this.logDir, file));
+            await fs2.unlink(path2.join(this.logDir, file));
           } catch {
           }
         }
@@ -4525,12 +4536,12 @@ ${"=".repeat(80)}
   async getLogFiles() {
     try {
       const backupDir = path2.join(this.logDir, "backup");
-      const files = await fs.readdir(backupDir);
+      const files = await fs2.readdir(backupDir);
       const logFiles = files.filter((file) => file.endsWith(".log"));
       const fileStats = await Promise.all(
         logFiles.map(async (file) => {
           const filePath = path2.join(backupDir, file);
-          const stats = await fs.stat(filePath);
+          const stats = await fs2.stat(filePath);
           return {
             name: file,
             path: filePath,
@@ -4567,7 +4578,7 @@ ${"=".repeat(80)}
       }
       for (const file of filesToDelete) {
         try {
-          await fs.unlink(file.path);
+          await fs2.unlink(file.path);
           console.log(`\u{1F4DD} Cleaned up old log file: ${file.name} (${this.formatDuration(file.age)} old)`);
         } catch (error) {
           const msg = error instanceof Error ? error.message : String(error);
@@ -4588,7 +4599,7 @@ ${"=".repeat(80)}
   async checkLogRotation() {
     if (!this.enableRotation || !this.initialized) return;
     try {
-      const stats = await fs.stat(this.sessionFile);
+      const stats = await fs2.stat(this.sessionFile);
       if (stats.size > this.maxLogSize) {
         await this.rotateCurrentLog();
       }
@@ -4602,9 +4613,9 @@ ${"=".repeat(80)}
     try {
       const timestamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-").replace("T", "_").replace("Z", "");
       const rotatedFile = path2.join(this.logDir, `orchestrator-${this.sessionId}-rotated-${timestamp}.log`);
-      await fs.rename(this.sessionFile, rotatedFile);
+      await fs2.rename(this.sessionFile, rotatedFile);
       const header = this.formatSessionHeader();
-      await fs.writeFile(this.sessionFile, header, "utf8");
+      await fs2.writeFile(this.sessionFile, header, "utf8");
       console.log(`\u{1F4DD} Log rotated: ${path2.basename(rotatedFile)} (size limit exceeded)`);
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);

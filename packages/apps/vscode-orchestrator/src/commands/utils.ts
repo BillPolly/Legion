@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import { fileURLToPath } from 'url';
 import type { OpenUrlArgs, SleepArgs, BatchArgs } from '../types.js';
 import { registerWebviewPanel } from './webview-ops.js';
 
@@ -9,12 +11,20 @@ export async function openUrl(args: OpenUrlArgs): Promise<any> {
     // Fetch the URL content server-side
     let htmlContent: string;
     try {
-      const response = await fetch(args.url);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      // Handle file:// URLs
+      if (args.url.startsWith('file://')) {
+        const filePath = fileURLToPath(args.url);
+        htmlContent = fs.readFileSync(filePath, 'utf-8');
+        console.log(`✅ Read file from ${args.url}: ${htmlContent.length} bytes`);
+      } else {
+        // Handle http/https URLs
+        const response = await fetch(args.url);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        htmlContent = await response.text();
+        console.log(`✅ Fetched content from ${args.url}: ${htmlContent.length} bytes`);
       }
-      htmlContent = await response.text();
-      console.log(`✅ Fetched content from ${args.url}: ${htmlContent.length} bytes`);
     } catch (fetchError) {
       const errorMsg = fetchError instanceof Error ? fetchError.message : String(fetchError);
       console.error(`❌ Failed to fetch ${args.url}: ${errorMsg}`);
@@ -68,7 +78,7 @@ export async function openUrl(args: OpenUrlArgs): Promise<any> {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline';">
+        <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob: file:; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: file: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline' file:; font-src * data: file:;">
       </head>
       <body>
         <div id="content-container"></div>

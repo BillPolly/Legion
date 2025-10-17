@@ -99,7 +99,7 @@ async function runDemo() {
       2000
     );
 
-    const prdPath = `file://${targetDir}/src/static/prd.html`;
+    const prdPath = `file://${SOURCE_DIR}/src/static/prd.html`;
     await sendCommand(ws, 'openUrl', { url: prdPath, column: 2 });
     await new Promise(r => setTimeout(r, 10000)); // Give time to read the PRD
 
@@ -181,7 +181,7 @@ async function runDemo() {
       2000
     );
 
-    const prPath = `file://${targetDir}/src/static/pr.html`;
+    const prPath = `file://${SOURCE_DIR}/src/static/pr.html`;
     await sendCommand(ws, 'openUrl', { url: prPath, column: 2 });
     await new Promise(r => setTimeout(r, 8000)); // Give time to read the PR
 
