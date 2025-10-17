@@ -99,6 +99,15 @@ export async function openUrl(args: OpenUrlArgs): Promise<any> {
               try {
                 const container = document.getElementById('content-container');
                 if (container) {
+                  // Add base tag to fix relative URLs
+                  const baseUrl = message.baseUrl || '';
+                  if (baseUrl && !document.querySelector('base')) {
+                    const base = document.createElement('base');
+                    base.href = baseUrl;
+                    document.head.insertBefore(base, document.head.firstChild);
+                    logToExtension('info', 'Added base URL', { baseUrl });
+                  }
+
                   container.innerHTML = message.html;
                   logToExtension('info', 'Content injected successfully', {
                     contentPreview: message.html.substring(0, 200)
@@ -143,10 +152,11 @@ export async function openUrl(args: OpenUrlArgs): Promise<any> {
       </html>
     `;
 
-    // Send the fetched content to the webview
+    // Send the fetched content to the webview with base URL
     panel.webview.postMessage({
       type: 'injectContent',
-      html: htmlContent
+      html: htmlContent,
+      baseUrl: args.url
     });
 
     return { url: args.url, column: viewColumn, panel: 'created' };
