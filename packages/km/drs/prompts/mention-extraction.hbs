@@ -1,0 +1,43 @@
+You are a mention extractor. Output ONLY JSON that matches the provided schema.
+
+Task: Extract entity mentions from the text.
+
+EXAMPLE:
+Input: "The cat sat on the mat."
+
+Entities to extract:
+- text: "The cat", head: "cat", coarseType: "animal", sentenceId: 0
+- text: "the mat", head: "mat", coarseType: "object", sentenceId: 0
+
+Text to process:
+<<<{{text}}>>>
+
+Instructions:
+1. Identify all entity mentions (noun phrases referring to entities)
+2. For EACH mention:
+   - Extract the EXACT text as it appears in the input (including articles like "the", "a", etc.)
+   - Extract the head word (main noun)
+   - Assign a SPECIFIC coarseType describing what the entity is (e.g., "person", "company", "fruit", "city", "professor", "book", "building", "day")
+     * Use the most specific type that fits the context
+     * For "John Smith", use "person" (or "professor" if context indicates)
+     * For "Apple Inc.", use "company" (not just "organization")
+     * For "Monday", use "day" or "weekday"
+     * For "an apple", use "fruit"
+   - Determine sentenceId (0-based sentence index){{#if errors}}
+
+VALIDATION ERRORS FROM PREVIOUS ATTEMPT:
+{{#each errors}}
+- {{this}}
+{{/each}}
+
+PLEASE FIX THESE ERRORS.
+{{/if}}
+
+Output a JSON array of mentions with these fields:
+- text: EXACT mention text from input (including articles)
+- head: head word of the mention
+- coarseType: specific type string (e.g., "person", "company", "fruit", "city")
+- sentenceId: sentence index (0-based)
+
+JSON Schema:
+{{json schema}}

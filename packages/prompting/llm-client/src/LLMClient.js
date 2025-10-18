@@ -720,7 +720,7 @@ export class LLMClient {
    */
   isTransientNetworkError(error) {
     const errorMessage = (error.message || '').toLowerCase();
-    
+
     // Network connectivity issues
     if (errorMessage.includes('econnrefused') ||
         errorMessage.includes('econnreset') ||
@@ -732,10 +732,15 @@ export class LLMClient {
         errorMessage.includes('timeout')) {
       return true;
     }
-    
+
     // Temporary DNS issues
     if (errorMessage.includes('getaddrinfo') ||
         errorMessage.includes('dns')) {
+      return true;
+    }
+
+    // Gemini API transient errors - empty response
+    if (errorMessage.includes('no text content in gemini response')) {
       return true;
     }
     

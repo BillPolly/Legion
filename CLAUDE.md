@@ -1,5 +1,8 @@
 # CLAUDE.md
 
+Never unstructure objects using spread if it is possible to avoid! Do proper OO coding where you are manipulating objects that mantain their identity.
+use of spread where you do not use proper clasess must be avoided at all costs. 
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## ⚠️ CRITICAL - REAL LLM CALLS ARE AVAILABLE! (READ THIS FIRST!)

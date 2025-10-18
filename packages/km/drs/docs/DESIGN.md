@@ -1231,6 +1231,68 @@ class DRSValidator {
 }
 ```
 
+## Evaluation Utilities
+
+### DRS-to-Text Converter
+
+**Purpose:** Convert ClausalDRS back to natural language for semantic evaluation.
+
+**Approach:** Deterministic template-based rendering (no LLM).
+
+**Output:** Literal but accurate paraphrase (e.g., "Every student read a book").
+
+```javascript
+class DRSToText {
+  generateParaphrase(drs: ClausalDRS): string
+}
+```
+
+**Algorithm:**
+1. Walk the DRS structure (referents + conditions)
+2. Apply templates for each pattern:
+   - Quantifiers: `Every(x1) + student(x1)` → "Every student"
+   - Events: `read(e1) + Agent(e1,x1) + Theme(e1,x2)` → "[x1] read [x2]"
+   - Negation: `Not(S1)` → "It is not the case that [S1]"
+   - Conditionals: `Imp(S1,S2)` → "If [S1] then [S2]"
+3. Handle verb conjugation and determiners with simple rules
+4. Return literal paraphrase
+
+**Advantages:**
+- Fast (no API calls)
+- Deterministic and reproducible
+- No LLM costs
+- Easy to test and debug
+
+**Future Enhancement:** Add LLM-based "fluent mode" for more natural paraphrases.
+
+### Semantic Equivalence Evaluator
+
+**Purpose:** Judge if DRS paraphrase captures the same meaning as original text.
+
+**Approach:** LLM-based semantic comparison.
+
+```javascript
+class SemanticEquivalenceEvaluator {
+  constructor(llmClient)
+  async evaluate(originalText: string, paraphrase: string): Promise<EvaluationResult>
+}
+
+// EvaluationResult
+{
+  equivalent: boolean,      // True if semantically equivalent
+  confidence: number,       // 0.0-1.0 confidence score
+  explanation: string       // LLM's reasoning
+}
+```
+
+**Use Case:** End-to-end validation of DRS pipeline accuracy.
+
+**Workflow:**
+1. Text → DRS (Stages 0-6)
+2. DRS → Paraphrase (DRSToText)
+3. Compare original vs paraphrase (SemanticEquivalenceEvaluator)
+4. High equivalence score = DRS correctly captured meaning
+
 ## Dependencies
 
 ### Legion Packages

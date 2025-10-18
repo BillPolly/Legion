@@ -1,0 +1,73 @@
+You are a coreference resolver. Output ONLY JSON that matches the provided schema.
+
+Task: Cluster the mentions into entities that refer to the same real-world thing.
+
+CRITICAL RULES:
+1. Each mention belongs to EXACTLY ONE entity
+2. Each entity is a list of mentions that refer to the same thing
+3. Use ONLY mention IDs from the mention table below
+4. Assign a canonical name for each entity
+5. Determine type, number (SING/PLUR), and gender (MASC/FEM/NEUT/UNKNOWN) for each entity
+
+Text:
+<<<{{text}}>>>
+
+Mention Table:
+{{json mentions}}
+
+Instructions:
+1. Read the text and mention table carefully
+2. Identify which mentions refer to the same entity:
+   - Pronouns ("he", "she", "it", "they") refer to previously mentioned entities
+   - Repeated names refer to the same entity
+   - Descriptions that clearly refer to the same thing
+3. For EACH entity cluster:
+   - canonical: Choose the most descriptive mention text as the canonical name
+   - type: Assign a SPECIFIC type describing what the entity is (e.g., "person", "company", "fruit", "city", "professor", "book", "building", "day")
+     * Use the most specific type that fits the context
+     * For a person, use "person" (or "professor", "student", etc. if context indicates)
+     * For a company, use "company" (not just "organization")
+     * For temporal expressions, use "day", "weekday", "month", etc.
+     * For objects, use specific types like "fruit", "book", "building", etc.
+   - mentions: List ALL mention IDs that refer to this entity
+   - number: "SING" for singular, "PLUR" for plural
+   - gender: "MASC" for masculine, "FEM" for feminine, "NEUT" for neuter, "UNKNOWN" if unclear
+   - kbId: (optional) WordNet synset ID if known
+4. VERIFY: Every mention ID appears in EXACTLY ONE entity{{#if errors}}
+
+VALIDATION ERRORS FROM PREVIOUS ATTEMPT:
+{{#each errors}}
+- {{this}}
+{{/each}}
+
+FIX THESE ERRORS in your output.{{/if}}
+
+Example:
+Text: "John met Mary. She smiled."
+Mentions: [
+  {id: "m1", text: "John"},
+  {id: "m2", text: "Mary"},
+  {id: "m3", text: "She"}
+]
+
+Output: [
+  {
+    "canonical": "John",
+    "type": "person",
+    "mentions": ["m1"],
+    "number": "SING",
+    "gender": "MASC"
+  },
+  {
+    "canonical": "Mary",
+    "type": "person",
+    "mentions": ["m2", "m3"],
+    "number": "SING",
+    "gender": "FEM"
+  }
+]
+
+Now cluster the mentions above.
+
+JSON Schema:
+{{json schema}}

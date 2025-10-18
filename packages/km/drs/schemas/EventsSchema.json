@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["events", "unaryFacts", "binaryFacts"],
+  "properties": {
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "lemma", "tense", "aspect", "neg", "roles"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^e\\d+$"},
+          "lemma": {"type": "string"},
+          "tense": {"type": "string", "enum": ["PAST", "PRESENT", "FUTURE"]},
+          "aspect": {"type": "string", "enum": ["NONE", "PROGRESSIVE", "PERFECT"]},
+          "modal": {"type": ["string", "null"]},
+          "neg": {"type": "boolean"},
+          "roles": {"type": "object"}
+        }
+      }
+    },
+    "unaryFacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["pred", "args"],
+        "properties": {
+          "pred": {"type": "string"},
+          "args": {
+            "type": "array",
+            "items": {"type": "string"},
+            "minItems": 1,
+            "maxItems": 1
+          }
+        }
+      }
+    },
+    "binaryFacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["pred", "args"],
+        "properties": {
+          "pred": {"type": "string"},
+          "args": {
+            "type": "array",
+            "items": {"type": "string"},
+            "minItems": 2,
+            "maxItems": 2
+          }
+        }
+      }
+    }
+  }
+}

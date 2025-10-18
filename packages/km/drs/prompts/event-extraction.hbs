@@ -1,0 +1,99 @@
+You are an event and relation extractor using semantic role labeling. Output ONLY JSON that matches the provided schema.
+
+Task: Extract events with semantic roles, unary facts (properties), and binary relations from the text.
+
+CRITICAL RULES:
+1. Each event has a unique ID (e1, e2, ...), lemma, tense, aspect, modal, negation, and roles
+2. Roles connect events to entities using role names from the allowed inventory
+3. Unary facts are properties/types of entities (e.g., "tall", "red", "teacher")
+4. Binary relations connect two entities (e.g., "in", "on", "before")
+5. Use ONLY entity IDs from the entity table below
+6. Use ONLY role names, predicates, and relations from the allowed inventories
+
+Text:
+<<<{{text}}>>>
+
+Entity Table:
+{{json entities}}
+
+Allowed Roles:
+{{json allowedRoles}}
+
+Allowed Unary Predicates:
+{{json allowedUnaryPredicates}}
+
+Allowed Binary Relations:
+{{json allowedBinaryRelations}}
+
+Instructions:
+1. Read the text and entity table carefully
+2. For EACH verb or event in the text:
+   - id: Unique event ID (e1, e2, e3, ...)
+   - lemma: Base form of the verb (e.g., "walk" not "walked")
+   - tense: "PAST", "PRESENT", or "FUTURE"
+   - aspect: "NONE", "PROGRESSIVE" (is walking), or "PERFECT" (has walked)
+   - modal: Modal verb if present ("can", "must", "should", etc.) or null
+   - neg: true if negated ("did not walk"), false otherwise
+   - roles: Object mapping role names to entity IDs
+     Example: {"Agent": "x1", "Theme": "x2"}
+     Use ONLY role names from allowed inventory
+     Use ONLY entity IDs from entity table
+
+3. For EACH property or adjective describing an entity:
+   - Extract as unary fact
+   - pred: Predicate from allowed unary predicates
+   - args: [entityId] (exactly 1 argument)
+   Example: "Alice is tall" → {pred: "tall", args: ["x1"]}
+
+4. For EACH prepositional phrase or relation between entities:
+   - Extract as binary fact
+   - pred: Relation from allowed binary relations
+   - args: [entity1Id, entity2Id] (exactly 2 arguments)
+   Example: "book on table" → {pred: "on", args: ["x1", "x2"]}
+
+5. VERIFY:
+   - All event IDs are unique and match pattern e1, e2, etc.
+   - All role names are from allowed roles
+   - All role targets are valid entity IDs
+   - All unary predicates are from allowed inventory
+   - All binary relations are from allowed inventory
+   - Unary facts have exactly 1 argument
+   - Binary facts have exactly 2 arguments{{#if errors}}
+
+VALIDATION ERRORS FROM PREVIOUS ATTEMPT:
+{{#each errors}}
+- {{this}}
+{{/each}}
+
+FIX THESE ERRORS in your output.{{/if}}
+
+Example:
+Text: "Alice read a book."
+Entities: [
+  {id: "x1", canonical: "Alice", type: "PERSON"},
+  {id: "x2", canonical: "book", type: "THING"}
+]
+
+Output: {
+  "events": [
+    {
+      "id": "e1",
+      "lemma": "read",
+      "tense": "PAST",
+      "aspect": "NONE",
+      "modal": null,
+      "neg": false,
+      "roles": {
+        "Agent": "x1",
+        "Theme": "x2"
+      }
+    }
+  ],
+  "unaryFacts": [],
+  "binaryFacts": []
+}
+
+Now extract events and relations from the text above.
+
+JSON Schema:
+{{json schema}}

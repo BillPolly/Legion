@@ -1,0 +1,34 @@
+{
+  "name": "@legion/drs",
+  "version": "1.0.0",
+  "description": "Discourse Representation Structure (DRS) pipeline for semantic parsing",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./DRSOrchestrator": "./src/DRSOrchestrator.js"
+  },
+  "scripts": {
+    "test": "node --experimental-vm-modules ../../../node_modules/.bin/jest --testMatch='**/__tests__/**/*.test.js' --runInBand",
+    "test:unit": "node --experimental-vm-modules ../../../node_modules/.bin/jest --testMatch='**/__tests__/unit/**/*.test.js' --runInBand",
+    "test:integration": "node --experimental-vm-modules ../../../node_modules/.bin/jest --testMatch='**/__tests__/integration/**/*.test.js' --runInBand"
+  },
+  "dependencies": {
+    "@legion/llm-client": "^1.0.0",
+    "@legion/schema": "^1.0.0",
+    "@legion/semantic-inventory": "^1.0.0",
+    "@legion/wordnet": "^1.0.0",
+    "@legion/semantic-search": "^1.0.0",
+    "@legion/resource-manager": "^1.0.0",
+    "@legion/nlp": "^1.0.0",
+    "natural": "^6.0.0",
+    "handlebars": "^4.7.8"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {}
+  }
+}

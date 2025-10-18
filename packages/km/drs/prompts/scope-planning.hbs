@@ -1,0 +1,132 @@
+You are a quantifier scope planner for discourse representation structures. Output ONLY JSON that matches the provided schema.
+
+Task: Create a scope plan with boxes and operators for quantifiers, negation, and conditionals.
+
+CRITICAL RULES:
+1. Boxes represent discourse referent containers (S0, S1, S2, ...)
+2. Operators define scope relationships: Some, Every, Not, If, Or
+3. All entities and events must be assigned to exactly one box
+4. Box IDs must match pattern S0, S1, S2, etc.
+5. All operator references must point to valid boxes
+
+Text:
+<<<{{text}}>>>
+
+Entities:
+{{json entities}}
+
+Events:
+{{json events}}
+
+Scope Operators:
+1. Some(var in box) - Existential quantifier (indefinites: "a book", "someone")
+2. Every(var over box) - Universal quantifier (universals: "every student", "all books")
+3. Not(box) - Negation (negatives: "not", "didn't")
+4. If(cond, then) - Conditional (conditionals: "if...then")
+5. Or(left, right) - Disjunction (disjunctions: "or")
+
+Instructions:
+1. Identify quantifier cues in the text:
+   - Indefinites ("a", "an", "some") → Use Some operator
+   - Universals ("every", "all", "each") → Use Every operator
+   - Negation ("not", "didn't", "never") → Use Not operator
+   - Conditionals ("if...then") → Use If operator
+   - Disjunctions ("or") → Use Or operator
+
+2. Create boxes (S0, S1, S2, ...) for scope structure:
+   - S0 is the main/root box
+   - Create additional boxes for quantifiers, negation, conditionals
+   - Nested scopes require multiple boxes
+
+3. For EACH operator, specify:
+   - Some: { kind: "Some", var: "entityId", in: "boxId" }
+   - Every: { kind: "Every", var: "entityId", over: "boxId" }
+   - Not: { kind: "Not", box: "boxId" }
+   - If: { kind: "If", cond: "condBoxId", then: "thenBoxId" }
+   - Or: { kind: "Or", left: "leftBoxId", right: "rightBoxId" }
+
+4. Assign entities and events to boxes:
+   - assign.entities: Map each entity ID to its introduction box
+   - assign.events: Map each event ID to its box
+   - Every entity and event must appear exactly once
+
+5. VERIFY:
+   - All box references exist in boxes array
+   - All var references are valid entity IDs
+   - All entities and events are assigned to exactly one box{{#if errors}}
+
+VALIDATION ERRORS FROM PREVIOUS ATTEMPT:
+{{#each errors}}
+- {{this}}
+{{/each}}
+
+FIX THESE ERRORS in your output.{{/if}}
+
+Example 1 - Simple sentence with indefinite:
+Text: "Alice read a book."
+Entities: [
+  {id: "x1", canonical: "Alice"},
+  {id: "x2", canonical: "book"}
+]
+Events: [
+  {id: "e1", lemma: "read"}
+]
+
+Output: {
+  "boxes": ["S0", "S1"],
+  "ops": [
+    {"kind": "Some", "var": "x2", "in": "S1"}
+  ],
+  "assign": {
+    "entities": {"x1": "S0", "x2": "S1"},
+    "events": {"e1": "S0"}
+  }
+}
+
+Example 2 - Universal quantifier:
+Text: "Every student read a book."
+Entities: [
+  {id: "x1", canonical: "student"},
+  {id: "x2", canonical: "book"}
+]
+Events: [
+  {id: "e1", lemma: "read"}
+]
+
+Output: {
+  "boxes": ["S0", "S1", "S2"],
+  "ops": [
+    {"kind": "Every", "var": "x1", "over": "S1"},
+    {"kind": "Some", "var": "x2", "in": "S2"}
+  ],
+  "assign": {
+    "entities": {"x1": "S1", "x2": "S2"},
+    "events": {"e1": "S1"}
+  }
+}
+
+Example 3 - Negation:
+Text: "Alice did not read the book."
+Entities: [
+  {id: "x1", canonical: "Alice"},
+  {id: "x2", canonical: "book"}
+]
+Events: [
+  {id: "e1", lemma: "read"}
+]
+
+Output: {
+  "boxes": ["S0", "S1"],
+  "ops": [
+    {"kind": "Not", "box": "S1"}
+  ],
+  "assign": {
+    "entities": {"x1": "S0", "x2": "S0"},
+    "events": {"e1": "S1"}
+  }
+}
+
+Now create a scope plan for the text above.
+
+JSON Schema:
+{{json schema}}

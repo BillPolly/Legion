@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["canonical", "type", "mentions", "number", "gender"],
+    "properties": {
+      "canonical": {"type": "string", "minLength": 1},
+      "type": {"type": "string"},
+      "mentions": {
+        "type": "array",
+        "items": {"type": "string", "pattern": "^m\\d+$"},
+        "minItems": 1
+      },
+      "number": {"type": "string", "enum": ["SING", "PLUR"]},
+      "gender": {"type": "string", "enum": ["MASC", "FEM", "NEUT", "UNKNOWN"]},
+      "kbId": {"type": "string"}
+    }
+  }
+}

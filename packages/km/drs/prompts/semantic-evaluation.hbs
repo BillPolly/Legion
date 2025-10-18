@@ -1,0 +1,93 @@
+You are a semantic equivalence evaluator. Your task is to determine whether two texts convey the same meaning.
+
+Output ONLY JSON that matches the provided schema.
+
+Task: Compare the original text with a paraphrase generated from its semantic representation (DRS). Determine if they are semantically equivalent.
+
+CRITICAL RULES:
+1. Focus on MEANING, not exact wording
+2. Equivalent means the core propositional content is the same
+3. Minor differences in word choice don't matter if meaning is preserved
+4. Differences in quantifier scope, negation, or participants DO matter
+5. Provide honest assessment - it's OK if they're not equivalent
+
+Original Text:
+<<<{{originalText}}>>>
+
+Paraphrase (from DRS):
+<<<{{paraphrase}}>>>
+
+Instructions:
+1. Identify the core propositions in the original text:
+   - Who/what entities are mentioned?
+   - What events/actions occur?
+   - What relationships exist?
+   - What quantifiers/modifiers apply? (every, some, not, if, etc.)
+
+2. Identify the core propositions in the paraphrase:
+   - Same analysis as above
+
+3. Compare the propositions:
+   - Are the same entities referenced?
+   - Are the same events described?
+   - Are the same relationships expressed?
+   - Are quantifiers and scope preserved?
+   - Is negation preserved?
+   - Are conditionals preserved?
+
+4. Make your judgment:
+   - equivalent: true if core meaning is the same, false otherwise
+   - confidence: 0.0-1.0 score (0.0 = very uncertain, 1.0 = completely certain)
+   - explanation: Brief reasoning for your judgment (1-2 sentences)
+
+Examples:
+
+Example 1 - Equivalent (simple sentence):
+Original: "Alice reads."
+Paraphrase: "A person reads."
+Output: {
+  "equivalent": true,
+  "confidence": 0.9,
+  "explanation": "Both describe a reading event with a person as agent. The paraphrase uses a generic term 'person' instead of the name 'Alice', but the core proposition is preserved."
+}
+
+Example 2 - Equivalent (quantifier):
+Original: "Every student read a book."
+Paraphrase: "Every student read a book."
+Output: {
+  "equivalent": true,
+  "confidence": 1.0,
+  "explanation": "Perfect match. Universal quantifier 'every' and existential 'a' are both preserved, maintaining the same quantifier scope."
+}
+
+Example 3 - Not Equivalent (missing negation):
+Original: "Bob does not run."
+Paraphrase: "Bob runs."
+Output: {
+  "equivalent": false,
+  "confidence": 1.0,
+  "explanation": "The negation is missing in the paraphrase. Original states Bob does NOT run, but paraphrase states Bob DOES run - opposite meanings."
+}
+
+Example 4 - Equivalent (conditional preserved):
+Original: "If Bob runs, Alice reads."
+Paraphrase: "If a person runs then a person reads."
+Output: {
+  "equivalent": true,
+  "confidence": 0.85,
+  "explanation": "The conditional structure (if-then) is preserved. Names are genericized to 'person', but the core conditional relationship between running and reading is maintained."
+}
+
+Example 5 - Not Equivalent (wrong participant):
+Original: "Alice gave Bob a book."
+Paraphrase: "Bob gave Alice a book."
+Output: {
+  "equivalent": false,
+  "confidence": 1.0,
+  "explanation": "The roles are reversed. In the original, Alice is the giver and Bob is the recipient. In the paraphrase, Bob is the giver and Alice is the recipient."
+}
+
+Now evaluate the texts above.
+
+JSON Schema:
+{{json schema}}

@@ -37,6 +37,9 @@ export class TemplatedPrompt {
     this.sessionLogger = sessionLogger;
     this.querySpec = querySpec;
 
+    // Register Handlebars helpers
+    this._registerHelpers();
+
     // Detect format from schema or default to 'json'
     this.outputFormat = this._detectOutputFormat(responseSchema);
 
@@ -48,6 +51,17 @@ export class TemplatedPrompt {
 
     // Generate and cache the output prompt
     this.outputPrompt = this.generateOutputPrompt();
+  }
+
+  /**
+   * Register Handlebars helpers
+   * @private
+   */
+  _registerHelpers() {
+    // Register json helper for JSON stringification
+    Handlebars.registerHelper('json', function(context) {
+      return JSON.stringify(context, null, 2);
+    });
   }
 
   /**
