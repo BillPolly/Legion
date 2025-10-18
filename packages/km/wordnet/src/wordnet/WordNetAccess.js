@@ -7,7 +7,7 @@ import natural from 'natural';
 
 export class WordNetAccess {
   constructor() {
-    this.wordnet = natural.WordNet;
+    this.wordnet = new natural.WordNet();
   }
 
   async getSynset(offset, pos) {
@@ -30,65 +30,89 @@ export class WordNetAccess {
     });
   }
 
-  async getValidForms(pos) {
-    return new Promise((resolve) => {
-      this.wordnet.validForms(pos, (forms) => {
-        resolve(forms || []);
-      });
-    });
-  }
-
   /**
-   * Get all synsets for a part of speech
+   * Get all synsets for a part of speech by reading index file directly
    * @param {string} pos - Part of speech (n, v, a, s, r)
    * @param {number|null} maxCount - Maximum number of synsets to return
    * @returns {Promise<Array>} Array of synset info objects
    */
   async getAllSynsets(pos, maxCount = null) {
-    try {
-      const forms = await this.getValidForms(pos);
-      const synsets = new Map(); // Use Map to avoid duplicates
-      let processedForms = 0;
-      
-      console.log(`Found ${forms.length} valid forms for POS: ${pos}`);
-      
-      for (const form of forms) {
-        try {
-          const results = await this.lookup(form);
-          
-          for (const result of results) {
-            if (result.pos === pos) {
-              const key = `${result.synsetOffset}_${result.pos}`;
-              if (!synsets.has(key)) {
-                synsets.set(key, {
-                  offset: result.synsetOffset,
-                  pos: result.pos,
-                  lemma: form
-                });
-              }
-            }
-          }
-          
-          processedForms++;
-          if (processedForms % 100 === 0) {
-            console.log(`  Processed ${processedForms}/${forms.length} forms, found ${synsets.size} synsets`);
-          }
-          
-          if (maxCount && synsets.size >= maxCount) {
-            console.log(`  Reached max count limit: ${maxCount}`);
-            break;
-          }
-          
-        } catch (error) {
-          console.warn(`  Warning: Could not process form "${form}": ${error.message}`);
+    const fs = await import('fs');
+    const readline = await import('readline');
+
+    // Map pos to index file
+    const posToFile = {
+      'n': 'index.noun',
+      'v': 'index.verb',
+      'a': 'index.adj',
+      's': 'index.adj', // Satellite adjectives in same file
+      'r': 'index.adv'
+    };
+
+    const filename = posToFile[pos];
+    if (!filename) {
+      throw new Error(`Unknown POS: ${pos}`);
+    }
+
+    // Get index file path from wordnet instance
+    const indexFilePath = this.wordnet.nounIndex.filePath.replace('index.noun', filename);
+
+    const synsets = new Map();
+
+    const fileStream = fs.createReadStream(indexFilePath);
+    const rl = readline.createInterface({
+      input: fileStream,
+      crlfDelay: Infinity
+    });
+
+    let lineCount = 0;
+    for await (const line of rl) {
+      // Skip copyright header and empty lines
+      if (line.trim() === '' || line.match(/^\s*\d+\s/)) {
+        continue;
+      }
+
+      // Parse index line format: word pos sense_count ... offsets
+      const parts = line.trim().split(/\s+/);
+      if (parts.length < 3) continue;
+
+      const word = parts[0];
+      const wordPos = parts[1];
+      const senseCount = parseInt(parts[2]);
+
+      if (isNaN(senseCount) || senseCount === 0) continue;
+
+      // Find offsets at end of line (8-digit numbers)
+      const offsets = parts.slice(parts.length - senseCount).filter(p => /^\d{8}$/.test(p));
+
+      // Add each synset
+      for (const offset of offsets) {
+        const offsetNum = parseInt(offset);
+        const key = `${offsetNum}_${wordPos}`;
+
+        if (!synsets.has(key)) {
+          synsets.set(key, {
+            offset: offsetNum,
+            pos: wordPos,
+            lemma: word
+          });
+        }
+
+        if (maxCount && synsets.size >= maxCount) {
+          rl.close();
+          fileStream.destroy();
+          console.log(`  Reached max count limit: ${maxCount}`);
+          return Array.from(synsets.values());
         }
       }
-      
-      return Array.from(synsets.values());
-      
-    } catch (error) {
-      console.error(`Error getting synsets for POS ${pos}:`, error);
-      return [];
+
+      lineCount++;
+      if (lineCount % 10000 === 0) {
+        console.log(`  Processed ${lineCount} words, found ${synsets.size} unique synsets`);
+      }
     }
+
+    console.log(`  Total: ${lineCount} words, ${synsets.size} unique synsets for POS: ${pos}`);
+    return Array.from(synsets.values());
   }
 }

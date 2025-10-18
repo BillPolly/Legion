@@ -159,21 +159,31 @@ export class QdrantVectorStore {
     // Generate numeric IDs - Qdrant prefers numeric IDs for better performance
     const points = vectors.map((v, idx) => {
       let id = v.id;
-      
+
       // If ID is already a number, use it
       if (typeof id === 'number') {
         // Keep as is
-      } 
+      }
       // If ID is a string that looks like a number, convert it
       else if (typeof id === 'string' && /^\d+$/.test(id)) {
         id = parseInt(id, 10);
       }
-      // Generate a numeric ID based on timestamp and index
+      // For string IDs, create a deterministic hash to numeric ID
+      else if (typeof id === 'string') {
+        // Simple hash function: convert string to numeric ID
+        let hash = 0;
+        for (let i = 0; i < id.length; i++) {
+          hash = ((hash << 5) - hash) + id.charCodeAt(i);
+          hash = hash & hash; // Convert to 32-bit integer
+        }
+        // Ensure positive ID
+        id = Math.abs(hash);
+      }
+      // Fallback: Generate a numeric ID based on timestamp and index
       else {
-        // Use timestamp + index to create a unique numeric ID
         id = Date.now() * 1000 + idx;
       }
-      
+
       return {
         id: id,
         vector: v.vector,

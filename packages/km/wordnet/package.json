@@ -7,10 +7,9 @@
   "main": "src/index.js",
   "scripts": {
     "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest --forceExit",
-    "test-basic": "node src/scripts/test-basic.js",
-    "load": "node src/index.js",
-    "load-test": "node src/index.js --test",
-    "validate": "node src/scripts/validate-ontology.js"
+    "load-wordnet": "node scripts/load-wordnet-simple.js",
+    "check-wordnet": "node scripts/check-wordnet.js",
+    "index-semantic": "node scripts/index-semantic-search.js"
   },
   "keywords": ["wordnet", "ontology", "knowledge-graph", "nlp", "semantic"],
   "author": "Legion Team",
