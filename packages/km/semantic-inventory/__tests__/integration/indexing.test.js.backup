@@ -1,0 +1,405 @@
+/**
+ * Integration tests for SemanticInventoryIndexer
+ *
+ * Tests indexing using SMALL TEST DATA from data/test-synsets/
+ * - Real Qdrant vector database
+ * - Real semantic search with embeddings
+ * - Test synsets from JSON file (NO MongoDB query)
+ *
+ * NO MOCKS for main functionality - only for peripheral things if absolutely necessary.
+ * Tests FAIL FAST if resources are not available.
+ *
+ * CRITICAL: Uses ONLY 50 test synsets - NO full indexing during development!
+ */
+
+import { ResourceManager } from '@legion/resource-manager';
+import { SemanticInventoryIndexer } from '../../src/SemanticInventoryIndexer.js';
+
+describe('SemanticInventoryIndexer Integration Tests (Small Test Data)', () => {
+  let resourceManager;
+  let indexer;
+  let semanticSearch;
+
+  beforeAll(async () => {
+    // Get ResourceManager singleton (NO timeout - resources must be available)
+    resourceManager = await ResourceManager.getInstance();
+
+    // Get semantic search provider (REAL, NO MOCK)
+    semanticSearch = await resourceManager.get('semanticSearch');
+    if (!semanticSearch) {
+      throw new Error('SemanticSearch not available - test environment not properly configured');
+    }
+
+    // Create indexer
+    indexer = new SemanticInventoryIndexer(resourceManager);
+    await indexer.initialize();
+
+    // Clean up any existing test data in TEST collection (test_wordnet_entity_types)
+    try {
+      await semanticSearch.deleteCollection('test_wordnet_entity_types');
+    } catch (error) {
+      // Collection might not exist, that's fine
+    }
+  }, 120000); // 2 minute timeout for initialization
+
+  afterAll(async () => {
+    // Clean up
+    if (indexer) {
+      await indexer.close();
+    }
+  });
+
+  describe('indexEntityTypes with test data', () => {
+    test('should index ONLY test synsets (50 nouns) with entity type categorization', async () => {
+      // Run indexing in TEST MODE (uses data/test-synsets/entity-types.json)
+      // Use test_ collection prefix to avoid polluting production collections
+      const startTime = Date.now();
+      await indexer.indexEntityTypes({ testMode: true, collectionPrefix: 'test_' });
+      const indexingTime = Date.now() - startTime;
+
+      // Verify TEST collection was created and populated
+      const count = await semanticSearch.count('test_wordnet_entity_types');
+
+      // Should have exactly 50 test synsets
+      expect(count).toBe(50);
+
+      console.log(`✓ Indexed ${count} entity types from test data in ${indexingTime}ms (${(indexingTime / count).toFixed(0)}ms per item)`);
+
+      // Performance check: With parallel processing, should be < 10 seconds for 50 items
+      // Sequential processing would take 20-30 seconds
+      expect(indexingTime).toBeLessThan(10000);
+    }, 60000); // 1 minute timeout for test indexing
+
+    test('should categorize test nouns into correct entity types', async () => {
+      // Query for specific entity types to verify categorization worked
+      const personResults = await semanticSearch.semanticSearch(
+        'test_wordnet_entity_types',
+        'teacher',
+        { limit: 3, threshold: 0.5 }
+      );
+
+      // Verify we got results
+      expect(personResults.length).toBeGreaterThan(0);
+
+      // Verify first result is the teacher from test data
+      const firstResult = personResults[0];
+      expect(firstResult.document).toHaveProperty('label');
+      expect(firstResult.document).toHaveProperty('entityType');
+      expect(firstResult.document).toHaveProperty('synonyms');
+      expect(firstResult.document).toHaveProperty('definition');
+
+      // Should be categorized as PERSON
+      expect(firstResult.document.label).toBe('PERSON');
+      expect(firstResult.document.entityType).toBe('PERSON');
+
+      console.log(`Sample entity type: ${firstResult.document.label}`);
+      console.log(`Synonyms: ${firstResult.document.synonyms.join(', ')}`);
+      console.log(`Definition: ${firstResult.document.definition}`);
+    }, 30000);
+
+    test('should include searchText field with combined content', async () => {
+      // Get any entity type point
+      const results = await semanticSearch.semanticSearch(
+        'test_wordnet_entity_types',
+        'person',
+        { limit: 1 }
+      );
+
+      expect(results.length).toBeGreaterThan(0);
+
+      const doc = results[0].document;
+      expect(doc).toHaveProperty('searchText');
+      expect(typeof doc.searchText).toBe('string');
+      expect(doc.searchText.length).toBeGreaterThan(0);
+
+      // searchText should combine synonyms, definition, and examples
+      expect(doc.searchText).toContain(doc.definition);
+    }, 30000);
+
+    test('should assign valid entity type categories from test data', async () => {
+      const validCategories = [
+        'PERSON',
+        'LOCATION',
+        'ORGANIZATION',
+        'ARTIFACT',
+        'EVENT',
+        'TIME',
+        'QUANTITY',
+        'ABSTRACT',
+        'PHYSICAL_OBJECT',
+        'THING'
+      ];
+
+      // Query with simpler single word that matches test data
+      const results = await semanticSearch.semanticSearch(
+        'test_wordnet_entity_types',
+        'teacher',
+        { limit: 10 }
+      );
+
+      expect(results.length).toBeGreaterThan(0);
+
+      // Verify all results have valid entity type categories
+      for (const result of results) {
+        expect(validCategories).toContain(result.document.label);
+        expect(validCategories).toContain(result.document.entityType);
+      }
+
+      console.log(`Verified ${results.length} entity types have valid categories`);
+    }, 30000);
+  });
+
+  describe('getStats', () => {
+    test('should return accurate collection statistics for test data', async () => {
+      const stats = await indexer.getStats({ collectionPrefix: 'test_' });
+
+      expect(stats).toHaveProperty('entity_types');
+      expect(stats.entity_types).toBe(50); // Exactly 50 test synsets
+
+      console.log('Indexer stats:', stats);
+    }, 30000);
+  });
+
+  describe('indexRoles with test data', () => {
+    beforeAll(async () => {
+      // Clean up any existing test data in TEST collection (test_wordnet_roles)
+      try {
+        await semanticSearch.deleteCollection('test_wordnet_roles');
+      } catch (error) {
+        // Collection might not exist, that's fine
+      }
+    });
+
+    test('should index semantic roles from test data', async () => {
+      // Run indexing in TEST MODE (uses data/test-synsets/semantic-roles.json)
+      const startTime = Date.now();
+      await indexer.indexRoles({ testMode: true, collectionPrefix: 'test_' });
+      const indexingTime = Date.now() - startTime;
+
+      // Verify TEST collection was created and populated
+      const count = await semanticSearch.count('test_wordnet_roles');
+
+      // Should have exactly 10 test roles
+      expect(count).toBe(10);
+
+      console.log(`✓ Indexed ${count} semantic roles from test data in ${indexingTime}ms (${(indexingTime / count).toFixed(0)}ms per item)`);
+
+      // Performance check: Should be very fast for just 10 items
+      expect(indexingTime).toBeLessThan(5000);
+    }, 60000);
+
+    test('should query semantic roles correctly', async () => {
+      // Query for agent role
+      const results = await semanticSearch.semanticSearch(
+        'test_wordnet_roles',
+        'causer of action',
+        { limit: 3, threshold: 0.5 }
+      );
+
+      expect(results.length).toBeGreaterThan(0);
+
+      // Verify result structure
+      const firstResult = results[0];
+      expect(firstResult.document).toHaveProperty('label');
+      expect(firstResult.document).toHaveProperty('definition');
+      expect(firstResult.document).toHaveProperty('examples');
+      expect(firstResult.document).toHaveProperty('roleType');
+
+      console.log(`Sample role: ${firstResult.document.label}`);
+      console.log(`Definition: ${firstResult.document.definition}`);
+    }, 30000);
+
+    test('should have valid role types', async () => {
+      const validRoleTypes = ['core', 'peripheral'];
+
+      // Query with terms that match role definitions
+      const results = await semanticSearch.semanticSearch(
+        'test_wordnet_roles',
+        'agent action',
+        { limit: 10 }
+      );
+
+      expect(results.length).toBeGreaterThan(0);
+
+      // Verify all have valid roleType
+      for (const result of results) {
+        expect(validRoleTypes).toContain(result.document.roleType);
+      }
+
+      console.log(`Verified ${results.length} roles have valid roleTypes`);
+    }, 30000);
+  });
+
+  describe('indexPredicates with test data', () => {
+    beforeAll(async () => {
+      // Clean up any existing test data in TEST collection (test_wordnet_predicates)
+      try {
+        await semanticSearch.deleteCollection('test_wordnet_predicates');
+      } catch (error) {
+        // Collection might not exist, that's fine
+      }
+    });
+
+    test('should index predicates from test data (adjectives + nouns + verbs)', async () => {
+      // Run indexing in TEST MODE (uses data/test-synsets/predicates.json)
+      const startTime = Date.now();
+      await indexer.indexPredicates({ testMode: true, collectionPrefix: 'test_' });
+      const indexingTime = Date.now() - startTime;
+
+      // Verify TEST collection was created and populated
+      const count = await semanticSearch.count('test_wordnet_predicates');
+
+      // Should have exactly 60 test predicates (20 adj + 20 nouns + 20 verbs)
+      expect(count).toBe(60);
+
+      console.log(`✓ Indexed ${count} predicates from test data in ${indexingTime}ms (${(indexingTime / count).toFixed(0)}ms per item)`);
+
+      // Performance check: With parallel processing, should be < 12 seconds for 60 items
+      expect(indexingTime).toBeLessThan(12000);
+    }, 60000);
+
+    test('should query predicates correctly', async () => {
+      // Query for adjectives
+      const results = await semanticSearch.semanticSearch(
+        'test_wordnet_predicates',
+        'big',
+        { limit: 3, threshold: 0.5 }
+      );
+
+      expect(results.length).toBeGreaterThan(0);
+
+      // Verify result structure
+      const firstResult = results[0];
+      expect(firstResult.document).toHaveProperty('synonyms');
+      expect(firstResult.document).toHaveProperty('definition');
+      expect(firstResult.document).toHaveProperty('pos');
+
+      console.log(`Sample predicate: ${firstResult.document.synonyms.join(', ')}`);
+      console.log(`POS: ${firstResult.document.pos}`);
+      console.log(`Definition: ${firstResult.document.definition}`);
+    }, 30000);
+
+    test('should include all POS types (a, n, v)', async () => {
+      const validPOS = ['a', 'n', 'v'];
+
+      // Query for adjectives
+      const adjResults = await semanticSearch.semanticSearch(
+        'test_wordnet_predicates',
+        'big',
+        { limit: 5 }
+      );
+
+      // Query for nouns
+      const nounResults = await semanticSearch.semanticSearch(
+        'test_wordnet_predicates',
+        'teacher',
+        { limit: 5 }
+      );
+
+      // Query for verbs
+      const verbResults = await semanticSearch.semanticSearch(
+        'test_wordnet_predicates',
+        'walk',
+        { limit: 5 }
+      );
+
+      // Combine all results
+      const results = [...adjResults, ...nounResults, ...verbResults];
+      expect(results.length).toBeGreaterThan(0);
+
+      // Verify we have all POS types
+      const posTypes = new Set(results.map(r => r.document.pos));
+
+      // Should have all 3 POS types
+      expect(posTypes.has('a')).toBe(true);
+      expect(posTypes.has('n')).toBe(true);
+      expect(posTypes.has('v')).toBe(true);
+
+      // All should be valid POS
+      for (const result of results) {
+        expect(validPOS).toContain(result.document.pos);
+      }
+
+      console.log(`Found POS types: ${Array.from(posTypes).join(', ')}`);
+    }, 30000);
+  });
+
+  describe('indexRelations with test data', () => {
+    beforeAll(async () => {
+      // Clean up any existing test data in TEST collection (test_wordnet_relations)
+      try {
+        await semanticSearch.deleteCollection('test_wordnet_relations');
+      } catch (error) {
+        // Collection might not exist, that's fine
+      }
+    });
+
+    test('should index relations from test data (30 adverbs)', async () => {
+      // Run indexing in TEST MODE (uses data/test-synsets/relations.json)
+      const startTime = Date.now();
+      await indexer.indexRelations({ testMode: true, collectionPrefix: 'test_' });
+      const indexingTime = Date.now() - startTime;
+
+      // Verify TEST collection was created and populated
+      const count = await semanticSearch.count('test_wordnet_relations');
+
+      // Should have exactly 30 test relations
+      expect(count).toBe(30);
+
+      console.log(`✓ Indexed ${count} relations from test data in ${indexingTime}ms (${(indexingTime / count).toFixed(0)}ms per item)`);
+
+      // Performance check: With parallel processing, should be < 6 seconds for 30 items
+      expect(indexingTime).toBeLessThan(6000);
+    }, 60000);
+
+    test('should categorize relations into correct types', async () => {
+      // Query for spatial relations
+      const spatialResults = await semanticSearch.semanticSearch(
+        'test_wordnet_relations',
+        'inside location place position',
+        { limit: 10, threshold: 0.3 }
+      );
+
+      expect(spatialResults.length).toBeGreaterThan(0);
+
+      // Verify result structure
+      const firstResult = spatialResults[0];
+      expect(firstResult.document).toHaveProperty('relationType');
+      expect(firstResult.document).toHaveProperty('synonyms');
+      expect(firstResult.document).toHaveProperty('definition');
+
+      console.log(`Sample relation: ${firstResult.document.synonyms.join(', ')}`);
+      console.log(`Relation type: ${firstResult.document.relationType}`);
+      console.log(`Definition: ${firstResult.document.definition}`);
+    }, 30000);
+
+    test('should have valid relation types (spatial, temporal, logical)', async () => {
+      const validRelationTypes = ['spatial', 'temporal', 'logical'];
+
+      // Query with general terms that should match various relation types
+      // Use lower threshold to ensure we get results from small test set
+      const results = await semanticSearch.semanticSearch(
+        'test_wordnet_relations',
+        'in before because inside when',
+        { limit: 20, threshold: 0.1 }
+      );
+
+      expect(results.length).toBeGreaterThan(0);
+
+      // Verify all have valid relationType
+      for (const result of results) {
+        expect(validRelationTypes).toContain(result.document.relationType);
+      }
+
+      // Count distribution of relation types
+      const typeCounts = {};
+      for (const result of results) {
+        const type = result.document.relationType;
+        typeCounts[type] = (typeCounts[type] || 0) + 1;
+      }
+
+      console.log(`Relation type distribution: ${JSON.stringify(typeCounts)}`);
+      console.log(`Verified ${results.length} relations have valid relationTypes`);
+    }, 30000);
+  });
+});

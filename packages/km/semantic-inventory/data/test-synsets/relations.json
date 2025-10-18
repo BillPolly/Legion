@@ -1,0 +1,242 @@
+[
+  {
+    "synsetOffset": "00110426",
+    "pos": "r",
+    "synonyms": ["in", "inside"],
+    "definition": "to or toward the inside of",
+    "examples": ["come in", "the boat is in"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00110589",
+    "pos": "r",
+    "synonyms": ["out", "outside"],
+    "definition": "to or toward the outside of",
+    "examples": ["go out", "the cat is out"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00110750",
+    "pos": "r",
+    "synonyms": ["on", "upon"],
+    "definition": "in a position of contact or support",
+    "examples": ["the book is on the table"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00110912",
+    "pos": "r",
+    "synonyms": ["under", "below"],
+    "definition": "in or to a place that is lower",
+    "examples": ["under the bridge"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00111074",
+    "pos": "r",
+    "synonyms": ["above", "over"],
+    "definition": "in or to a place that is higher",
+    "examples": ["the plane flew above the clouds"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00111236",
+    "pos": "r",
+    "synonyms": ["near", "close"],
+    "definition": "at or within a short distance in space or time",
+    "examples": ["near the house"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00111398",
+    "pos": "r",
+    "synonyms": ["between"],
+    "definition": "in the interval separating two points",
+    "examples": ["between the houses"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00111560",
+    "pos": "r",
+    "synonyms": ["beside", "next to"],
+    "definition": "at the side of",
+    "examples": ["sit beside me"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00111722",
+    "pos": "r",
+    "synonyms": ["around", "about"],
+    "definition": "in the area or vicinity",
+    "examples": ["look around"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00111884",
+    "pos": "r",
+    "synonyms": ["through"],
+    "definition": "from one end or side to the other",
+    "examples": ["walk through the door"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00112046",
+    "pos": "r",
+    "synonyms": ["before"],
+    "definition": "at or in the front",
+    "examples": ["before the deadline"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00112208",
+    "pos": "r",
+    "synonyms": ["after"],
+    "definition": "happening at a time subsequent to a reference time",
+    "examples": ["after dinner"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00112370",
+    "pos": "r",
+    "synonyms": ["during"],
+    "definition": "throughout the course or duration of",
+    "examples": ["during the meeting"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00112532",
+    "pos": "r",
+    "synonyms": ["while"],
+    "definition": "at the same time that",
+    "examples": ["while you were sleeping"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00112694",
+    "pos": "r",
+    "synonyms": ["when"],
+    "definition": "at what time",
+    "examples": ["when did you arrive"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00112856",
+    "pos": "r",
+    "synonyms": ["then"],
+    "definition": "at that time",
+    "examples": ["I was young then"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00113018",
+    "pos": "r",
+    "synonyms": ["now"],
+    "definition": "at the present moment",
+    "examples": ["she is reading now"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00113180",
+    "pos": "r",
+    "synonyms": ["soon"],
+    "definition": "in the near future",
+    "examples": ["I will call you soon"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00113342",
+    "pos": "r",
+    "synonyms": ["later"],
+    "definition": "at a subsequent time or stage",
+    "examples": ["we'll discuss this later"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00113504",
+    "pos": "r",
+    "synonyms": ["always"],
+    "definition": "at all times; all the time and on every occasion",
+    "examples": ["I will always remember"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00113666",
+    "pos": "r",
+    "synonyms": ["because"],
+    "definition": "for the reason that",
+    "examples": ["I stayed because I liked it"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00113828",
+    "pos": "r",
+    "synonyms": ["therefore", "thus"],
+    "definition": "as a consequence",
+    "examples": ["therefore we must act"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00113990",
+    "pos": "r",
+    "synonyms": ["if"],
+    "definition": "on the condition that",
+    "examples": ["if you go, I will too"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00114152",
+    "pos": "r",
+    "synonyms": ["unless"],
+    "definition": "except on the condition that",
+    "examples": ["unless you stop, I will call"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00114314",
+    "pos": "r",
+    "synonyms": ["since"],
+    "definition": "from a particular time or event in the past until now",
+    "examples": ["I haven't seen him since Monday"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00114476",
+    "pos": "r",
+    "synonyms": ["although", "though"],
+    "definition": "despite the fact that",
+    "examples": ["although it was raining"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00114638",
+    "pos": "r",
+    "synonyms": ["however"],
+    "definition": "despite anything to the contrary",
+    "examples": ["however we must try"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00114800",
+    "pos": "r",
+    "synonyms": ["yet"],
+    "definition": "up to the present time",
+    "examples": ["I haven't finished yet"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00114962",
+    "pos": "r",
+    "synonyms": ["so"],
+    "definition": "in such a way that",
+    "examples": ["so that we can proceed"],
+    "lexicalFile": "adv.all"
+  },
+  {
+    "synsetOffset": "00115124",
+    "pos": "r",
+    "synonyms": ["accordingly"],
+    "definition": "in accordance with",
+    "examples": ["plan accordingly"],
+    "lexicalFile": "adv.all"
+  }
+]

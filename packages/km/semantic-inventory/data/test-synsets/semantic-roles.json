@@ -1,0 +1,112 @@
+[
+  {
+    "id": "role_agent",
+    "label": "Agent",
+    "definition": "The volitional causer of an action or event",
+    "examples": [
+      "John kicked the ball (John = Agent)",
+      "The company announced profits (company = Agent)"
+    ],
+    "verbnetClass": "agent",
+    "roleType": "core"
+  },
+  {
+    "id": "role_theme",
+    "label": "Theme",
+    "definition": "Entity undergoing change or movement",
+    "examples": [
+      "John kicked the ball (ball = Theme)",
+      "The package arrived (package = Theme)"
+    ],
+    "verbnetClass": "theme",
+    "roleType": "core"
+  },
+  {
+    "id": "role_patient",
+    "label": "Patient",
+    "definition": "Entity affected by the action",
+    "examples": [
+      "The doctor examined the patient",
+      "The storm damaged the building (building = Patient)"
+    ],
+    "verbnetClass": "patient",
+    "roleType": "core"
+  },
+  {
+    "id": "role_recipient",
+    "label": "Recipient",
+    "definition": "Receiver or beneficiary of an action",
+    "examples": [
+      "John gave Mary a book (Mary = Recipient)",
+      "She sent him a message (him = Recipient)"
+    ],
+    "verbnetClass": "recipient",
+    "roleType": "core"
+  },
+  {
+    "id": "role_experiencer",
+    "label": "Experiencer",
+    "definition": "Entity experiencing a mental or emotional state",
+    "examples": [
+      "John saw the movie (John = Experiencer)",
+      "She heard the noise (She = Experiencer)"
+    ],
+    "verbnetClass": "experiencer",
+    "roleType": "core"
+  },
+  {
+    "id": "role_instrument",
+    "label": "Instrument",
+    "definition": "Tool or means by which an action is performed",
+    "examples": [
+      "He cut the bread with a knife (knife = Instrument)",
+      "She opened the door with a key (key = Instrument)"
+    ],
+    "verbnetClass": "instrument",
+    "roleType": "peripheral"
+  },
+  {
+    "id": "role_location",
+    "label": "Location",
+    "definition": "Spatial location where an action or state occurs",
+    "examples": [
+      "The meeting took place in the office (office = Location)",
+      "They live in Paris (Paris = Location)"
+    ],
+    "verbnetClass": "location",
+    "roleType": "peripheral"
+  },
+  {
+    "id": "role_source",
+    "label": "Source",
+    "definition": "Origin point of movement or transfer",
+    "examples": [
+      "She came from Boston (Boston = Source)",
+      "He took the book from the shelf (shelf = Source)"
+    ],
+    "verbnetClass": "source",
+    "roleType": "peripheral"
+  },
+  {
+    "id": "role_goal",
+    "label": "Goal",
+    "definition": "Destination or endpoint of movement or action",
+    "examples": [
+      "She went to Paris (Paris = Goal)",
+      "He sent the package to his friend (friend = Goal)"
+    ],
+    "verbnetClass": "goal",
+    "roleType": "peripheral"
+  },
+  {
+    "id": "role_time",
+    "label": "Time",
+    "definition": "Temporal specification of when an action occurs",
+    "examples": [
+      "The meeting is at 3pm (3pm = Time)",
+      "They arrived yesterday (yesterday = Time)"
+    ],
+    "verbnetClass": "time",
+    "roleType": "peripheral"
+  }
+]

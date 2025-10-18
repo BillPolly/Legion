@@ -1,0 +1,156 @@
+[
+  {
+    "id": "role_agent",
+    "label": "Agent",
+    "definition": "The volitional causer of an action or event",
+    "examples": [
+      "John kicked the ball (John = Agent)",
+      "The company announced profits (company = Agent)"
+    ],
+    "verbnetClass": "agent",
+    "roleType": "core"
+  },
+  {
+    "id": "role_theme",
+    "label": "Theme",
+    "definition": "Entity undergoing change, movement, or being in a state",
+    "examples": [
+      "John kicked the ball (ball = Theme)",
+      "Mary is in the room (Mary = Theme)"
+    ],
+    "verbnetClass": "theme",
+    "roleType": "core"
+  },
+  {
+    "id": "role_patient",
+    "label": "Patient",
+    "definition": "Entity that is affected by or undergoes the action",
+    "examples": [
+      "John broke the window (window = Patient)",
+      "The storm damaged the house (house = Patient)"
+    ],
+    "verbnetClass": "patient",
+    "roleType": "core"
+  },
+  {
+    "id": "role_recipient",
+    "label": "Recipient",
+    "definition": "Entity that receives something",
+    "examples": [
+      "John gave Mary the book (Mary = Recipient)",
+      "She sent him a letter (him = Recipient)"
+    ],
+    "verbnetClass": "recipient",
+    "roleType": "core"
+  },
+  {
+    "id": "role_experiencer",
+    "label": "Experiencer",
+    "definition": "Entity that experiences a mental or emotional state",
+    "examples": [
+      "John fears spiders (John = Experiencer)",
+      "Mary loves chocolate (Mary = Experiencer)"
+    ],
+    "verbnetClass": "experiencer",
+    "roleType": "core"
+  },
+  {
+    "id": "role_stimulus",
+    "label": "Stimulus",
+    "definition": "Cause of a mental or emotional state",
+    "examples": [
+      "John fears spiders (spiders = Stimulus)",
+      "The news surprised her (news = Stimulus)"
+    ],
+    "verbnetClass": "stimulus",
+    "roleType": "core"
+  },
+  {
+    "id": "role_instrument",
+    "label": "Instrument",
+    "definition": "Tool or means used to perform the action",
+    "examples": [
+      "John cut the bread with a knife (knife = Instrument)",
+      "She opened the door with a key (key = Instrument)"
+    ],
+    "verbnetClass": "instrument",
+    "roleType": "peripheral"
+  },
+  {
+    "id": "role_location",
+    "label": "Location",
+    "definition": "Where the event takes place",
+    "examples": [
+      "John works in Boston (Boston = Location)",
+      "The meeting is in the conference room (conference room = Location)"
+    ],
+    "verbnetClass": "location",
+    "roleType": "peripheral"
+  },
+  {
+    "id": "role_source",
+    "label": "Source",
+    "definition": "Starting point or origin",
+    "examples": [
+      "John traveled from Paris (Paris = Source)",
+      "She took the book from the shelf (shelf = Source)"
+    ],
+    "verbnetClass": "source",
+    "roleType": "peripheral"
+  },
+  {
+    "id": "role_goal",
+    "label": "Goal",
+    "definition": "Endpoint or destination",
+    "examples": [
+      "John traveled to London (London = Goal)",
+      "She put the book on the shelf (shelf = Goal)"
+    ],
+    "verbnetClass": "goal",
+    "roleType": "peripheral"
+  },
+  {
+    "id": "role_time",
+    "label": "Time",
+    "definition": "Temporal specification of the event",
+    "examples": [
+      "John arrived at 3pm (3pm = Time)",
+      "The meeting is on Monday (Monday = Time)"
+    ],
+    "verbnetClass": "time",
+    "roleType": "peripheral"
+  },
+  {
+    "id": "role_manner",
+    "label": "Manner",
+    "definition": "How the action is performed",
+    "examples": [
+      "John ran quickly (quickly = Manner)",
+      "She spoke softly (softly = Manner)"
+    ],
+    "verbnetClass": "manner",
+    "roleType": "peripheral"
+  },
+  {
+    "id": "role_purpose",
+    "label": "Purpose",
+    "definition": "Why the action is performed",
+    "examples": [
+      "John studied to pass the exam (to pass = Purpose)",
+      "She works for money (for money = Purpose)"
+    ],
+    "verbnetClass": "purpose",
+    "roleType": "peripheral"
+  },
+  {
+    "id": "role_cause",
+    "label": "Cause",
+    "definition": "What caused the action or state",
+    "examples": [
+      "The heat melted the ice (heat = Cause)",
+      "Fear made him run (fear = Cause)"
+    ],
+    "verbnetClass": "cause",
+    "roleType": "peripheral"
+  }
+]

@@ -241,6 +241,10 @@ export class ResourceManager extends Handle {
       // Initialize service management
       this._initializeServiceManagement();
 
+      // Ensure required services (Qdrant, MongoDB) are running
+      // This will start Docker containers if needed
+      await this._ensureServicesRunning();
+
       // Initialize service clients (Qdrant, etc.)
       await this._initializeServiceClients();
 
@@ -1740,12 +1744,14 @@ export class ResourceManager extends Handle {
 
   /**
    * Ensure required services are running (Docker, Qdrant, MongoDB)
+   * CRITICAL: Integration tests need real services (Qdrant, MongoDB, etc.)
+   * This method starts services even in test mode to support integration testing.
    * @private
    */
   async _ensureServicesRunning() {
-    if (isTestEnvironment()) {
-      return;
-    }
+    // REMOVED: Early return in test mode
+    // Integration tests REQUIRE real services per Legion standards
+    // Tests should FAIL FAST if services can't start, not skip them
 
     const { execSync } = await import('child_process');
     
@@ -1794,16 +1800,17 @@ export class ResourceManager extends Handle {
       if (qdrantUrl) {
         try {
           // Check if Qdrant container exists and is running
-          const qdrantStatus = execSync('docker ps --format "{{.Names}}" | grep -i qdrant', { 
-            stdio: 'pipe' 
+          // Use || echo "" to prevent grep from failing when no matches found
+          const qdrantStatus = execSync('docker ps --format "{{.Names}}" | grep -i qdrant || echo ""', {
+            stdio: 'pipe'
           }).toString().trim();
-          
+
           if (!qdrantStatus) {
             // Check if container exists but is stopped
-            const stoppedQdrant = execSync('docker ps -a --format "{{.Names}}" | grep -i qdrant || echo ""', { 
-              stdio: 'pipe' 
+            const stoppedQdrant = execSync('docker ps -a --format "{{.Names}}" | grep -i qdrant || echo ""', {
+              stdio: 'pipe'
             }).toString().trim();
-            
+
             if (stoppedQdrant) {
               console.log('Starting existing Qdrant container...');
               execSync(`docker start ${stoppedQdrant.split('\n')[0]}`, { stdio: 'pipe' });
@@ -1816,7 +1823,7 @@ export class ResourceManager extends Handle {
                 { stdio: 'pipe' }
               );
             }
-            
+
             // Wait for Qdrant to be ready
             console.log('Waiting for Qdrant to be ready...');
             let retries = 10;
@@ -1834,9 +1841,15 @@ export class ResourceManager extends Handle {
               await new Promise(resolve => setTimeout(resolve, 1000));
               retries--;
             }
+
+            if (retries === 0) {
+              console.warn('Warning: Qdrant did not become ready in time');
+            }
+          } else {
+            console.log(`Qdrant container already running: ${qdrantStatus}`);
           }
         } catch (error) {
-          console.warn('Warning: Could not verify Qdrant status:', error.message);
+          console.warn('Warning: Could not start Qdrant:', error.message);
         }
       }
       

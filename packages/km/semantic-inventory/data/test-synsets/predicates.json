@@ -1,0 +1,482 @@
+[
+  {
+    "synsetOffset": 20000001,
+    "pos": "a",
+    "lexicalFile": "adj.all",
+    "synonyms": ["big", "large"],
+    "definition": "above average in size or number or quantity",
+    "examples": ["a big house", "large numbers"]
+  },
+  {
+    "synsetOffset": 20000002,
+    "pos": "a",
+    "lexicalFile": "adj.all",
+    "synonyms": ["small", "little"],
+    "definition": "limited or below average in size",
+    "examples": ["a small car"]
+  },
+  {
+    "synsetOffset": 20000003,
+    "pos": "a",
+    "lexicalFile": "adj.all",
+    "synonyms": ["good"],
+    "definition": "having desirable or positive qualities",
+    "examples": ["good news"]
+  },
+  {
+    "synsetOffset": 20000004,
+    "pos": "a",
+    "lexicalFile": "adj.all",
+    "synonyms": ["bad"],
+    "definition": "having undesirable or negative qualities",
+    "examples": ["bad weather"]
+  },
+  {
+    "synsetOffset": 20000005,
+    "pos": "a",
+    "lexicalFile": "adj.all",
+    "synonyms": ["new"],
+    "definition": "not previously used or worn",
+    "examples": ["a new shirt"]
+  },
+  {
+    "synsetOffset": 20000006,
+    "pos": "a",
+    "lexicalFile": "adj.all",
+    "synonyms": ["old"],
+    "definition": "of long duration",
+    "examples": ["an old friend"]
+  },
+  {
+    "synsetOffset": 20000007,
+    "pos": "a",
+    "lexicalFile": "adj.all",
+    "synonyms": ["happy"],
+    "definition": "enjoying or showing pleasure",
+    "examples": ["happy with the results"]
+  },
+  {
+    "synsetOffset": 20000008,
+    "pos": "a",
+    "lexicalFile": "adj.all",
+    "synonyms": ["sad"],
+    "definition": "experiencing or showing sorrow",
+    "examples": ["sad news"]
+  },
+  {
+    "synsetOffset": 20000009,
+    "pos": "a",
+    "lexicalFile": "adj.all",
+    "synonyms": ["fast", "quick"],
+    "definition": "acting or moving quickly",
+    "examples": ["fast runner"]
+  },
+  {
+    "synsetOffset": 20000010,
+    "pos": "a",
+    "lexicalFile": "adj.all",
+    "synonyms": ["slow"],
+    "definition": "not moving quickly",
+    "examples": ["slow traffic"]
+  },
+  {
+    "synsetOffset": 20000011,
+    "pos": "a",
+    "lexicalFile": "adj.all",
+    "synonyms": ["hot"],
+    "definition": "having a high temperature",
+    "examples": ["hot weather"]
+  },
+  {
+    "synsetOffset": 20000012,
+    "pos": "a",
+    "lexicalFile": "adj.all",
+    "synonyms": ["cold"],
+    "definition": "having a low temperature",
+    "examples": ["cold water"]
+  },
+  {
+    "synsetOffset": 20000013,
+    "pos": "a",
+    "lexicalFile": "adj.all",
+    "synonyms": ["strong"],
+    "definition": "having strength or power",
+    "examples": ["strong muscles"]
+  },
+  {
+    "synsetOffset": 20000014,
+    "pos": "a",
+    "lexicalFile": "adj.all",
+    "synonyms": ["weak"],
+    "definition": "lacking strength or power",
+    "examples": ["weak signal"]
+  },
+  {
+    "synsetOffset": 20000015,
+    "pos": "a",
+    "lexicalFile": "adj.all",
+    "synonyms": ["bright"],
+    "definition": "emitting much light",
+    "examples": ["bright sunshine"]
+  },
+  {
+    "synsetOffset": 20000016,
+    "pos": "a",
+    "lexicalFile": "adj.all",
+    "synonyms": ["dark"],
+    "definition": "devoid of or deficient in light",
+    "examples": ["dark room"]
+  },
+  {
+    "synsetOffset": 20000017,
+    "pos": "a",
+    "lexicalFile": "adj.all",
+    "synonyms": ["clean"],
+    "definition": "free from dirt or contamination",
+    "examples": ["clean clothes"]
+  },
+  {
+    "synsetOffset": 20000018,
+    "pos": "a",
+    "lexicalFile": "adj.all",
+    "synonyms": ["dirty"],
+    "definition": "soiled or unclean",
+    "examples": ["dirty hands"]
+  },
+  {
+    "synsetOffset": 20000019,
+    "pos": "a",
+    "lexicalFile": "adj.all",
+    "synonyms": ["easy"],
+    "definition": "not difficult",
+    "examples": ["an easy task"]
+  },
+  {
+    "synsetOffset": 20000020,
+    "pos": "a",
+    "lexicalFile": "adj.all",
+    "synonyms": ["hard", "difficult"],
+    "definition": "not easy; requiring effort",
+    "examples": ["a hard problem"]
+  },
+  {
+    "synsetOffset": 20000021,
+    "pos": "n",
+    "lexicalFile": "noun.person",
+    "synonyms": ["teacher", "instructor"],
+    "definition": "a person whose occupation is teaching",
+    "examples": []
+  },
+  {
+    "synsetOffset": 20000022,
+    "pos": "n",
+    "lexicalFile": "noun.person",
+    "synonyms": ["doctor"],
+    "definition": "a person who heals the sick",
+    "examples": []
+  },
+  {
+    "synsetOffset": 20000023,
+    "pos": "n",
+    "lexicalFile": "noun.animal",
+    "synonyms": ["dog"],
+    "definition": "a domesticated carnivorous mammal",
+    "examples": []
+  },
+  {
+    "synsetOffset": 20000024,
+    "pos": "n",
+    "lexicalFile": "noun.animal",
+    "synonyms": ["cat"],
+    "definition": "a small domesticated carnivorous mammal",
+    "examples": []
+  },
+  {
+    "synsetOffset": 20000025,
+    "pos": "n",
+    "lexicalFile": "noun.artifact",
+    "synonyms": ["car"],
+    "definition": "a motor vehicle with four wheels",
+    "examples": []
+  },
+  {
+    "synsetOffset": 20000026,
+    "pos": "n",
+    "lexicalFile": "noun.artifact",
+    "synonyms": ["book"],
+    "definition": "a written work",
+    "examples": []
+  },
+  {
+    "synsetOffset": 20000027,
+    "pos": "n",
+    "lexicalFile": "noun.object",
+    "synonyms": ["tree"],
+    "definition": "a tall plant with a woody trunk",
+    "examples": []
+  },
+  {
+    "synsetOffset": 20000028,
+    "pos": "n",
+    "lexicalFile": "noun.object",
+    "synonyms": ["rock"],
+    "definition": "a lump of hard mineral matter",
+    "examples": []
+  },
+  {
+    "synsetOffset": 20000029,
+    "pos": "n",
+    "lexicalFile": "noun.substance",
+    "synonyms": ["water"],
+    "definition": "a liquid essential for life",
+    "examples": []
+  },
+  {
+    "synsetOffset": 20000030,
+    "pos": "n",
+    "lexicalFile": "noun.substance",
+    "synonyms": ["air"],
+    "definition": "a mixture of gases",
+    "examples": []
+  },
+  {
+    "synsetOffset": 20000031,
+    "pos": "n",
+    "lexicalFile": "noun.food",
+    "synonyms": ["bread"],
+    "definition": "food made from dough",
+    "examples": []
+  },
+  {
+    "synsetOffset": 20000032,
+    "pos": "n",
+    "lexicalFile": "noun.food",
+    "synonyms": ["cheese"],
+    "definition": "a solid food made from milk",
+    "examples": []
+  },
+  {
+    "synsetOffset": 20000033,
+    "pos": "n",
+    "lexicalFile": "noun.location",
+    "synonyms": ["city"],
+    "definition": "a large urban area",
+    "examples": []
+  },
+  {
+    "synsetOffset": 20000034,
+    "pos": "n",
+    "lexicalFile": "noun.location",
+    "synonyms": ["country"],
+    "definition": "a nation with its own government",
+    "examples": []
+  },
+  {
+    "synsetOffset": 20000035,
+    "pos": "n",
+    "lexicalFile": "noun.time",
+    "synonyms": ["day"],
+    "definition": "time for earth to make one rotation",
+    "examples": []
+  },
+  {
+    "synsetOffset": 20000036,
+    "pos": "n",
+    "lexicalFile": "noun.time",
+    "synonyms": ["year"],
+    "definition": "a period of 365 days",
+    "examples": []
+  },
+  {
+    "synsetOffset": 20000037,
+    "pos": "n",
+    "lexicalFile": "noun.cognition",
+    "synonyms": ["idea"],
+    "definition": "a thought or suggestion",
+    "examples": []
+  },
+  {
+    "synsetOffset": 20000038,
+    "pos": "n",
+    "lexicalFile": "noun.cognition",
+    "synonyms": ["knowledge"],
+    "definition": "the psychological result of learning",
+    "examples": []
+  },
+  {
+    "synsetOffset": 20000039,
+    "pos": "n",
+    "lexicalFile": "noun.communication",
+    "synonyms": ["message"],
+    "definition": "a communication containing information",
+    "examples": []
+  },
+  {
+    "synsetOffset": 20000040,
+    "pos": "n",
+    "lexicalFile": "noun.communication",
+    "synonyms": ["language"],
+    "definition": "a systematic means of communication",
+    "examples": []
+  },
+  {
+    "synsetOffset": 20000041,
+    "pos": "v",
+    "lexicalFile": "verb.motion",
+    "synonyms": ["run"],
+    "definition": "move fast by using one's feet",
+    "examples": ["He ran to the store"]
+  },
+  {
+    "synsetOffset": 20000042,
+    "pos": "v",
+    "lexicalFile": "verb.motion",
+    "synonyms": ["walk"],
+    "definition": "move by advancing the feet alternately",
+    "examples": ["She walked to work"]
+  },
+  {
+    "synsetOffset": 20000043,
+    "pos": "v",
+    "lexicalFile": "verb.motion",
+    "synonyms": ["jump"],
+    "definition": "move by leaping",
+    "examples": ["The cat jumped on the table"]
+  },
+  {
+    "synsetOffset": 20000044,
+    "pos": "v",
+    "lexicalFile": "verb.communication",
+    "synonyms": ["say", "tell"],
+    "definition": "express in words",
+    "examples": ["He said hello"]
+  },
+  {
+    "synsetOffset": 20000045,
+    "pos": "v",
+    "lexicalFile": "verb.communication",
+    "synonyms": ["write"],
+    "definition": "mark or trace on a surface",
+    "examples": ["She wrote a letter"]
+  },
+  {
+    "synsetOffset": 20000046,
+    "pos": "v",
+    "lexicalFile": "verb.communication",
+    "synonyms": ["read"],
+    "definition": "interpret written words",
+    "examples": ["He reads the newspaper every day"]
+  },
+  {
+    "synsetOffset": 20000047,
+    "pos": "v",
+    "lexicalFile": "verb.perception",
+    "synonyms": ["see"],
+    "definition": "perceive by sight",
+    "examples": ["I see the car"]
+  },
+  {
+    "synsetOffset": 20000048,
+    "pos": "v",
+    "lexicalFile": "verb.perception",
+    "synonyms": ["hear"],
+    "definition": "perceive by ear",
+    "examples": ["I hear music"]
+  },
+  {
+    "synsetOffset": 20000049,
+    "pos": "v",
+    "lexicalFile": "verb.cognition",
+    "synonyms": ["think"],
+    "definition": "use one's mind actively",
+    "examples": ["She thought about the problem"]
+  },
+  {
+    "synsetOffset": 20000050,
+    "pos": "v",
+    "lexicalFile": "verb.cognition",
+    "synonyms": ["know"],
+    "definition": "be aware of the truth of something",
+    "examples": ["I know that he is right"]
+  },
+  {
+    "synsetOffset": 20000051,
+    "pos": "v",
+    "lexicalFile": "verb.change",
+    "synonyms": ["become"],
+    "definition": "enter or assume a certain state",
+    "examples": ["She became angry"]
+  },
+  {
+    "synsetOffset": 20000052,
+    "pos": "v",
+    "lexicalFile": "verb.change",
+    "synonyms": ["grow"],
+    "definition": "develop and reach maturity",
+    "examples": ["The child grew quickly"]
+  },
+  {
+    "synsetOffset": 20000053,
+    "pos": "v",
+    "lexicalFile": "verb.contact",
+    "synonyms": ["touch"],
+    "definition": "make physical contact with",
+    "examples": ["She touched his hand"]
+  },
+  {
+    "synsetOffset": 20000054,
+    "pos": "v",
+    "lexicalFile": "verb.contact",
+    "synonyms": ["hit"],
+    "definition": "deal a blow to",
+    "examples": ["He hit the ball"]
+  },
+  {
+    "synsetOffset": 20000055,
+    "pos": "v",
+    "lexicalFile": "verb.creation",
+    "synonyms": ["make", "create"],
+    "definition": "bring into existence",
+    "examples": ["She made a cake"]
+  },
+  {
+    "synsetOffset": 20000056,
+    "pos": "v",
+    "lexicalFile": "verb.creation",
+    "synonyms": ["build"],
+    "definition": "construct by assembling parts",
+    "examples": ["They built a house"]
+  },
+  {
+    "synsetOffset": 20000057,
+    "pos": "v",
+    "lexicalFile": "verb.consumption",
+    "synonyms": ["eat"],
+    "definition": "take in food",
+    "examples": ["She ate breakfast"]
+  },
+  {
+    "synsetOffset": 20000058,
+    "pos": "v",
+    "lexicalFile": "verb.consumption",
+    "synonyms": ["drink"],
+    "definition": "take in liquids",
+    "examples": ["He drank water"]
+  },
+  {
+    "synsetOffset": 20000059,
+    "pos": "v",
+    "lexicalFile": "verb.possession",
+    "synonyms": ["have", "possess"],
+    "definition": "have ownership of",
+    "examples": ["She has a car"]
+  },
+  {
+    "synsetOffset": 20000060,
+    "pos": "v",
+    "lexicalFile": "verb.possession",
+    "synonyms": ["give"],
+    "definition": "transfer possession to someone",
+    "examples": ["He gave her a present"]
+  }
+]

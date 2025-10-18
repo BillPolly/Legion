@@ -1,0 +1,80 @@
+{
+  "PERSON": {
+    "description": "Humans, groups of people",
+    "lexicalFiles": ["noun.person"],
+    "rootSynsets": [
+      "00007846_n",
+      "00001740_n",
+      "07942152_n"
+    ]
+  },
+  "LOCATION": {
+    "description": "Places, geographic entities",
+    "lexicalFiles": ["noun.location"],
+    "rootSynsets": [
+      "00027167_n",
+      "08493064_n",
+      "08516276_n"
+    ]
+  },
+  "ORGANIZATION": {
+    "description": "Companies, institutions, groups",
+    "lexicalFiles": ["noun.group"],
+    "rootSynsets": [
+      "08008335_n",
+      "08053576_n",
+      "08058098_n"
+    ]
+  },
+  "ARTIFACT": {
+    "description": "Man-made objects",
+    "lexicalFiles": ["noun.artifact"],
+    "rootSynsets": [
+      "00021939_n",
+      "03076708_n"
+    ]
+  },
+  "EVENT": {
+    "description": "Occurrences, happenings",
+    "lexicalFiles": ["noun.event"],
+    "rootSynsets": [
+      "00029378_n",
+      "00030358_n",
+      "00027167_n"
+    ]
+  },
+  "TIME": {
+    "description": "Temporal expressions",
+    "lexicalFiles": ["noun.time"],
+    "rootSynsets": [
+      "00028270_n",
+      "05052889_n"
+    ]
+  },
+  "QUANTITY": {
+    "description": "Measurements, amounts",
+    "lexicalFiles": ["noun.quantity"],
+    "rootSynsets": [
+      "00033615_n",
+      "00033615_n",
+      "00033615_n"
+    ]
+  },
+  "ABSTRACT": {
+    "description": "Ideas, concepts",
+    "lexicalFiles": ["noun.cognition", "noun.communication"],
+    "rootSynsets": [
+      "00031563_n",
+      "05803379_n"
+    ]
+  },
+  "PHYSICAL_OBJECT": {
+    "description": "Natural physical things",
+    "lexicalFiles": ["noun.object", "noun.substance"],
+    "rootSynsets": [
+      "00019128_n",
+      "00002684_n",
+      "00004258_n"
+    ]
+  }
+}

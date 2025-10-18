@@ -1,0 +1,31 @@
+{
+  "name": "@legion/semantic-inventory",
+  "version": "1.0.0",
+  "description": "Semantic symbol selection service providing categorized WordNet synsets for DRS",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./SemanticInventoryService": "./src/SemanticInventoryService.js",
+    "./SemanticInventoryIndexer": "./src/SemanticInventoryIndexer.js"
+  },
+  "scripts": {
+    "test": "node --experimental-vm-modules ../../../node_modules/.bin/jest --testMatch='**/__tests__/**/*.test.js' --runInBand",
+    "test:unit": "node --experimental-vm-modules ../../../node_modules/.bin/jest --testMatch='**/__tests__/unit/**/*.test.js' --runInBand",
+    "test:integration": "node --experimental-vm-modules ../../../node_modules/.bin/jest --testMatch='**/__tests__/integration/**/*.test.js' --runInBand",
+    "index-semantic-inventory": "node scripts/index-semantic-inventory.js",
+    "full-index": "node scripts/full-index.js",
+    "verify-indexing": "node scripts/verify-indexing.js"
+  },
+  "dependencies": {
+    "@legion/resource-manager": "^1.0.0",
+    "mongodb": "^6.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {}
+  }
+}

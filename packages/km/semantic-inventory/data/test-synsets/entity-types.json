@@ -1,0 +1,402 @@
+[
+  {
+    "synsetOffset": 10000001,
+    "pos": "n",
+    "lexicalFile": "noun.person",
+    "synonyms": ["teacher", "instructor"],
+    "definition": "a person whose occupation is teaching",
+    "examples": ["She is a math teacher"]
+  },
+  {
+    "synsetOffset": 10000002,
+    "pos": "n",
+    "lexicalFile": "noun.person",
+    "synonyms": ["doctor", "physician"],
+    "definition": "a licensed medical practitioner",
+    "examples": ["The doctor examined the patient"]
+  },
+  {
+    "synsetOffset": 10000003,
+    "pos": "n",
+    "lexicalFile": "noun.person",
+    "synonyms": ["student", "pupil"],
+    "definition": "a learner who is enrolled in an educational institution",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000004,
+    "pos": "n",
+    "lexicalFile": "noun.person",
+    "synonyms": ["engineer"],
+    "definition": "a person who designs and builds machines or structures",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000005,
+    "pos": "n",
+    "lexicalFile": "noun.person",
+    "synonyms": ["lawyer", "attorney"],
+    "definition": "a professional person authorized to practice law",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000006,
+    "pos": "n",
+    "lexicalFile": "noun.location",
+    "synonyms": ["city", "metropolis"],
+    "definition": "a large and densely populated urban area",
+    "examples": ["New York is a major city"]
+  },
+  {
+    "synsetOffset": 10000007,
+    "pos": "n",
+    "lexicalFile": "noun.location",
+    "synonyms": ["country", "nation"],
+    "definition": "a politically organized body of people under a single government",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000008,
+    "pos": "n",
+    "lexicalFile": "noun.location",
+    "synonyms": ["building", "edifice"],
+    "definition": "a structure that has a roof and walls",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000009,
+    "pos": "n",
+    "lexicalFile": "noun.location",
+    "synonyms": ["park"],
+    "definition": "a piece of open land for recreational use in an urban area",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000010,
+    "pos": "n",
+    "lexicalFile": "noun.location",
+    "synonyms": ["street", "road"],
+    "definition": "a thoroughfare for vehicles or pedestrians",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000011,
+    "pos": "n",
+    "lexicalFile": "noun.group",
+    "synonyms": ["company", "corporation"],
+    "definition": "a business organization",
+    "examples": ["She works for a tech company"]
+  },
+  {
+    "synsetOffset": 10000012,
+    "pos": "n",
+    "lexicalFile": "noun.group",
+    "synonyms": ["university", "college"],
+    "definition": "an institution of higher education",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000013,
+    "pos": "n",
+    "lexicalFile": "noun.group",
+    "synonyms": ["government"],
+    "definition": "the organization that is the governing authority",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000014,
+    "pos": "n",
+    "lexicalFile": "noun.group",
+    "synonyms": ["team"],
+    "definition": "a cooperative unit organized for a specific purpose",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000015,
+    "pos": "n",
+    "lexicalFile": "noun.group",
+    "synonyms": ["committee"],
+    "definition": "a group appointed to perform a specific function",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000016,
+    "pos": "n",
+    "lexicalFile": "noun.artifact",
+    "synonyms": ["computer"],
+    "definition": "an electronic device for processing data",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000017,
+    "pos": "n",
+    "lexicalFile": "noun.artifact",
+    "synonyms": ["car", "automobile"],
+    "definition": "a motor vehicle with four wheels",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000018,
+    "pos": "n",
+    "lexicalFile": "noun.artifact",
+    "synonyms": ["book"],
+    "definition": "a written or printed work consisting of pages",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000019,
+    "pos": "n",
+    "lexicalFile": "noun.artifact",
+    "synonyms": ["table", "desk"],
+    "definition": "a piece of furniture with a flat top and legs",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000020,
+    "pos": "n",
+    "lexicalFile": "noun.artifact",
+    "synonyms": ["phone", "telephone"],
+    "definition": "electronic equipment for voice communication",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000021,
+    "pos": "n",
+    "lexicalFile": "noun.event",
+    "synonyms": ["meeting", "conference"],
+    "definition": "a gathering of people for a specific purpose",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000022,
+    "pos": "n",
+    "lexicalFile": "noun.event",
+    "synonyms": ["party", "celebration"],
+    "definition": "a social gathering for pleasure",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000023,
+    "pos": "n",
+    "lexicalFile": "noun.event",
+    "synonyms": ["accident"],
+    "definition": "an unfortunate mishap",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000024,
+    "pos": "n",
+    "lexicalFile": "noun.event",
+    "synonyms": ["wedding"],
+    "definition": "a ceremony at which two people are married",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000025,
+    "pos": "n",
+    "lexicalFile": "noun.event",
+    "synonyms": ["concert"],
+    "definition": "a performance of music by musicians",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000026,
+    "pos": "n",
+    "lexicalFile": "noun.time",
+    "synonyms": ["Monday"],
+    "definition": "the second day of the week",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000027,
+    "pos": "n",
+    "lexicalFile": "noun.time",
+    "synonyms": ["year"],
+    "definition": "a period of time containing 365 or 366 days",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000028,
+    "pos": "n",
+    "lexicalFile": "noun.time",
+    "synonyms": ["morning"],
+    "definition": "the time from sunrise to noon",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000029,
+    "pos": "n",
+    "lexicalFile": "noun.time",
+    "synonyms": ["century"],
+    "definition": "a period of 100 years",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000030,
+    "pos": "n",
+    "lexicalFile": "noun.time",
+    "synonyms": ["minute"],
+    "definition": "a unit of time equal to 60 seconds",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000031,
+    "pos": "n",
+    "lexicalFile": "noun.quantity",
+    "synonyms": ["amount"],
+    "definition": "a quantity of something",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000032,
+    "pos": "n",
+    "lexicalFile": "noun.quantity",
+    "synonyms": ["number"],
+    "definition": "a mathematical value",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000033,
+    "pos": "n",
+    "lexicalFile": "noun.quantity",
+    "synonyms": ["dozen"],
+    "definition": "a collection of twelve items",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000034,
+    "pos": "n",
+    "lexicalFile": "noun.quantity",
+    "synonyms": ["kilogram", "kg"],
+    "definition": "a metric unit of weight",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000035,
+    "pos": "n",
+    "lexicalFile": "noun.quantity",
+    "synonyms": ["meter", "metre"],
+    "definition": "a metric unit of length",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000036,
+    "pos": "n",
+    "lexicalFile": "noun.cognition",
+    "synonyms": ["idea", "concept"],
+    "definition": "a general notion or conception",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000037,
+    "pos": "n",
+    "lexicalFile": "noun.cognition",
+    "synonyms": ["knowledge"],
+    "definition": "the psychological result of perception and reasoning",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000038,
+    "pos": "n",
+    "lexicalFile": "noun.cognition",
+    "synonyms": ["belief"],
+    "definition": "any cognitive content held as true",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000039,
+    "pos": "n",
+    "lexicalFile": "noun.communication",
+    "synonyms": ["message"],
+    "definition": "a communication containing information",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000040,
+    "pos": "n",
+    "lexicalFile": "noun.communication",
+    "synonyms": ["language"],
+    "definition": "a systematic means of communicating",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000041,
+    "pos": "n",
+    "lexicalFile": "noun.object",
+    "synonyms": ["rock", "stone"],
+    "definition": "a lump of hard consolidated mineral matter",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000042,
+    "pos": "n",
+    "lexicalFile": "noun.object",
+    "synonyms": ["tree"],
+    "definition": "a tall plant with a wooden trunk",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000043,
+    "pos": "n",
+    "lexicalFile": "noun.object",
+    "synonyms": ["flower"],
+    "definition": "the reproductive structure of a plant",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000044,
+    "pos": "n",
+    "lexicalFile": "noun.object",
+    "synonyms": ["star"],
+    "definition": "a celestial body of hot gas",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000045,
+    "pos": "n",
+    "lexicalFile": "noun.object",
+    "synonyms": ["cloud"],
+    "definition": "a visible mass of water vapor in the atmosphere",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000046,
+    "pos": "n",
+    "lexicalFile": "noun.substance",
+    "synonyms": ["water"],
+    "definition": "a liquid essential for life",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000047,
+    "pos": "n",
+    "lexicalFile": "noun.substance",
+    "synonyms": ["air"],
+    "definition": "a mixture of gases that surrounds the earth",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000048,
+    "pos": "n",
+    "lexicalFile": "noun.substance",
+    "synonyms": ["gold"],
+    "definition": "a soft yellow metallic element",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000049,
+    "pos": "n",
+    "lexicalFile": "noun.body",
+    "synonyms": ["heart"],
+    "definition": "the organ that pumps blood",
+    "examples": []
+  },
+  {
+    "synsetOffset": 10000050,
+    "pos": "n",
+    "lexicalFile": "noun.animal",
+    "synonyms": ["dog", "canine"],
+    "definition": "a domesticated carnivorous mammal",
+    "examples": []
+  }
+]

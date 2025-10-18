@@ -67,7 +67,8 @@ The DRS package leverages existing Legion infrastructure:
 |-----------|---------------|---------|
 | LLM Integration | `@legion/llm-client` | Structured outputs with TemplatedPrompt |
 | Validation | `@legion/schema` | JSON schema validation (NO Zod) |
-| WordNet Access | `@legion/wordnet` | Synset/relation data from triple store |
+| Semantic Inventory | `@legion/semantic-inventory` | Production-ready WordNet semantic search (189K vectors) |
+| WordNet Access | `@legion/wordnet` | Synset/relation data from MongoDB triple store |
 | Semantic Search | `@legion/semantic-search` | Vector search with Qdrant + local embeddings |
 | Configuration | `@legion/resource-manager` | Singleton config from .env |
 | NLP Services | `@legion/nlp` | Entity/relationship extraction patterns |
@@ -752,109 +753,59 @@ All schemas use `@legion/schema` package (NO Zod per CLAUDE.md).
 
 **Purpose:** Query WordNet via vector search to provide closed symbol inventories.
 
+**Package:** `@legion/semantic-inventory` (production-ready, fully indexed)
+
+**Status:**
+- ✅ 189,280 WordNet vectors indexed to Qdrant
+- ✅ All collections production-ready with full data
+- ✅ 62/62 tests passing
+- ✅ Average query time: ~3ms
+
 **Architecture:**
 ```javascript
-class SemanticInventoryService {
-  constructor(resourceManager) {
-    this.resourceManager = resourceManager;
-    this.semanticSearch = null;  // @legion/semantic-search
-    this.wordnetStore = null;    // @legion/wordnet triple store
-    this.initialized = false;
-  }
+import { SemanticInventoryService } from '@legion/semantic-inventory';
 
-  async initialize() {
-    // Get semantic search provider
-    this.semanticSearch = await this.resourceManager.get('semanticSearch');
+// The service is initialized via ResourceManager
+const resourceManager = await ResourceManager.getInstance();
+const semanticInventory = new SemanticInventoryService(resourceManager);
+await semanticInventory.initialize();
 
-    // Get WordNet triple store handle
-    this.wordnetStore = await this.resourceManager.get('wordnetStore');
+// Query for entity types
+const entityTypes = await semanticInventory.semanticSearchEntityTypes(text, {
+  limit: 20    // Default: 10
+});
+// Returns: ["PERSON", "LOCATION", "ORGANIZATION", "THING", ...]
 
-    // Ensure WordNet collection exists in vector store
-    await this._ensureWordNetIndexed();
-
-    this.initialized = true;
-  }
-
-  async semanticSearchEntityTypes(text) {
-    // Query vector store for synsets related to entity types
-    // Return top-k entity type labels
-    const results = await this.semanticSearch.semanticSearch(
-      'wordnet_entity_types',
-      text,
-      { limit: 20, threshold: 0.6 }
-    );
-
-    return results.map(r => r.document.label);
-    // Example: ["PERSON", "LOCATION", "ORGANIZATION", "THING", ...]
-  }
-
-  async semanticSearchRelationTypes(text) {
-    // Query for semantic roles
-    const roleResults = await this.semanticSearch.semanticSearch(
-      'wordnet_roles',
-      text,
-      { limit: 30, threshold: 0.5 }
-    );
-
-    // Query for unary predicates
-    const predicateResults = await this.semanticSearch.semanticSearch(
-      'wordnet_predicates',
-      text,
-      { limit: 50, threshold: 0.5 }
-    );
-
-    // Query for binary relations
-    const relationResults = await this.semanticSearch.semanticSearch(
-      'wordnet_relations',
-      text,
-      { limit: 30, threshold: 0.5 }
-    );
-
-    return {
-      roles: roleResults.map(r => r.document.label),
-      unaryPredicates: predicateResults.map(r => r.document.label),
-      binaryRelations: relationResults.map(r => r.document.label)
-    };
-  }
-
-  async _ensureWordNetIndexed() {
-    // Check if collections exist
-    const collections = ['wordnet_entity_types', 'wordnet_roles',
-                        'wordnet_predicates', 'wordnet_relations'];
-
-    for (const collection of collections) {
-      const count = await this.semanticSearch.count(collection);
-      if (count === 0) {
-        await this._indexWordNetCollection(collection);
-      }
-    }
-  }
-
-  async _indexWordNetCollection(collection) {
-    // Query WordNet triple store for relevant synsets
-    // Generate embeddings using semantic search
-    // Insert into Qdrant
-    // Implementation depends on WordNet schema
-  }
-}
+// Query for relation types (roles, predicates, relations)
+const inventory = await semanticInventory.semanticSearchRelationTypes(text, {
+  rolesLimit: 10,        // Default: 10
+  predicatesLimit: 10,   // Default: 10
+  relationsLimit: 10     // Default: 10
+});
+// Returns: {
+//   roles: ["Agent", "Theme", "Recipient", ...],
+//   unaryPredicates: ["student", "book", "heavy", ...],
+//   binaryRelations: ["in", "on", "before", ...]
+// }
 ```
 
 ### WordNet Embedding Strategy
 
 **Approach:** Pre-compute embeddings for curated WordNet synsets and store in Qdrant.
 
-**Collections:**
-1. **wordnet_entity_types:** Synsets for entity categories (person, location, organization, etc.)
-2. **wordnet_roles:** Semantic roles (Agent, Theme, Recipient, Location, Time, etc.)
-3. **wordnet_predicates:** Adjectives and nouns as properties (heavy, red, book, etc.)
-4. **wordnet_relations:** Spatial/temporal relations (in, on, before, after, etc.)
+**Production Collections (Fully Indexed):**
+1. **wordnet_entity_types:** 82,192 noun synsets categorized into entity types (PERSON, LOCATION, ORGANIZATION, etc.)
+2. **wordnet_roles:** 14 semantic roles from VerbNet (Agent, Theme, Patient, Recipient, Experiencer, Instrument, Location, Source, Goal, Time, Manner, Purpose, Cause, Stimulus)
+3. **wordnet_predicates:** 103,449 synsets (adjectives, nouns, verbs as properties)
+4. **wordnet_relations:** 3,625 adverb synsets as binary relations (spatially, temporally, causally, etc.)
 
-**Indexing Process:**
-1. Query `@legion/wordnet` triple store for relevant synsets
-2. Extract: synset ID, lemmas, gloss, examples
+**Indexing Process (Completed by `@legion/semantic-inventory`):**
+1. Query `@legion/wordnet` MongoDB triple store for relevant synsets
+2. Extract: synset ID, lemmas, gloss, examples, lexicalFile
 3. Concatenate as searchable text: `"lemma1, lemma2: gloss. Example sentence."`
-4. Generate embeddings using `@legion/semantic-search` (local ONNX)
-5. Insert into Qdrant with metadata (label, synset ID, POS)
+4. Generate embeddings using Nomic local embeddings (768D, nomic-embed-text-v1.5)
+5. Insert into Qdrant with metadata (label, synset ID, POS, category)
+6. Batch processing (100 vectors per batch) for efficient indexing
 
 ## Constrained Decoding & Repair
 
@@ -1288,6 +1239,7 @@ class DRSValidator {
 |---------|---------|
 | `@legion/llm-client` | LLM integration with TemplatedPrompt |
 | `@legion/schema` | JSON schema validation |
+| `@legion/semantic-inventory` | Production WordNet semantic search (189K vectors) |
 | `@legion/wordnet` | WordNet triple store access |
 | `@legion/semantic-search` | Vector search with Qdrant |
 | `@legion/resource-manager` | Configuration and dependency injection |
@@ -1318,6 +1270,6 @@ class DRSValidator {
 
 ---
 
-**Document Version:** 1.0
-**Last Updated:** 2025-10-17
-**Status:** MVP Design Complete
+**Document Version:** 1.1
+**Last Updated:** 2025-10-18
+**Status:** MVP Design Complete | Semantic Inventory: Production Ready (189K vectors indexed)
